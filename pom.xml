@@ -10,6 +10,7 @@
 
     <properties>
         <spring.version>3.2.0.RELEASE</spring.version>
+        <jetty.version>9.0.0.RC0</jetty.version>
     </properties>
 
     <dependencies>
@@ -23,28 +24,18 @@
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-server</artifactId>
-            <version>9.0.0.RC0</version>
+            <version>${jetty.version}</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-servlet</artifactId>
-            <version>9.0.0.RC0</version>
+            <version>${jetty.version}</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-client</artifactId>
-            <version>9.0.0.RC0</version>
+            <version>${jetty.version}</version>
         </dependency>
-        <!--<dependency>-->
-            <!--<groupId>org.eclipse.jetty</groupId>-->
-            <!--<artifactId>example-jetty-embedded</artifactId>-->
-            <!--<version>9.0.0.RC0</version>-->
-        <!--</dependency>-->
-        <!--<dependency>-->
-            <!--<groupId>org.eclipse.jetty</groupId>-->
-            <!--<artifactId>example-jetty-embedded</artifactId>-->
-            <!--<version>9.0.0.RC0</version>-->
-        <!--</dependency>-->
 
         <!-- html -->
         <dependency>
