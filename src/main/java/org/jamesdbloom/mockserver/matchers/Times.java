@@ -1,10 +1,14 @@
 package org.jamesdbloom.mockserver.matchers;
 
+import static org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
+
+import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.jamesdbloom.mockserver.model.ModelObject;
 
 /**
  * @author jamesdbloom
  */
+@JsonAutoDetect(fieldVisibility = Visibility.ANY, getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class Times extends ModelObject {
 
     private int remainingTimes;

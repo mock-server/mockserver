@@ -1,5 +1,6 @@
 package org.jamesdbloom.mockserver.model;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -7,10 +8,10 @@ import java.util.List;
  * @author jamesdbloom
  */
 public class HttpResponse extends ModelObject {
-    private Integer responseCode;
-    private String body;
-    private List<Cookie> cookies;
-    private List<Header> headers;
+    private Integer responseCode = 200;
+    private String body = "";
+    private List<Cookie> cookies = new ArrayList<Cookie>();
+    private List<Header> headers = new ArrayList<Header>();
     private Delay delay;
 
     public HttpResponse withStatusCode(Integer responseCode) {

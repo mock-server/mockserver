@@ -60,11 +60,6 @@ public class MapMatcherTest {
     }
 
     @Test
-    public void matchesNullExpectation() {
-        assertTrue(new MapMatcher<String, String>(null).matches(keyToMultiValues));
-    }
-
-    @Test
     public void doesNotMatchDifferentKeys() {
         // given
         multimap.put("foo", "bar");
@@ -86,10 +81,5 @@ public class MapMatcherTest {
 
         // then
         assertFalse(mapMatcher.matches(keyToMultiValues));
-    }
-
-    @Test
-    public void doesNotMatchNullTest() {
-        assertFalse(mapMatcher.matches(null));
     }
 }

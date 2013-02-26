@@ -1,5 +1,6 @@
 package org.jamesdbloom.mockserver.model;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -7,12 +8,12 @@ import java.util.List;
  * @author jamesdbloom
  */
 public class HttpRequest extends ModelObject {
-    private String path = null;
-    private String body = null;
-    private List<Header> headers = null;
-    private List<Parameter> queryParameters = null;
-    private List<Parameter> bodyParameters = null;
-    private List<Cookie> cookies;
+    private String path = "";
+    private String body = "";
+    private List<Header> headers = new ArrayList<Header>();
+    private List<Parameter> queryParameters = new ArrayList<Parameter>();
+    private List<Parameter> bodyParameters = new ArrayList<Parameter>();
+    private List<Cookie> cookies = new ArrayList<Cookie>();
 
     public String getPath() {
         return path;
@@ -43,11 +44,7 @@ public class HttpRequest extends ModelObject {
     }
 
     public List<Header> getHeaders() {
-        if (headers == null) {
-            return null;
-        } else {
-            return headers;
-        }
+        return headers;
     }
 
     public HttpRequest withCookies(List<Cookie> cookies) {
@@ -61,11 +58,7 @@ public class HttpRequest extends ModelObject {
     }
 
     public List<Cookie> getCookies() {
-        if (cookies == null) {
-            return null;
-        } else {
-            return cookies;
-        }
+        return cookies;
     }
 
     public HttpRequest withQueryParameters(Parameter... queryParameters) {
@@ -74,11 +67,7 @@ public class HttpRequest extends ModelObject {
     }
 
     public List<Parameter> getQueryParameters() {
-        if (queryParameters == null) {
-            return null;
-        } else {
-            return queryParameters;
-        }
+        return queryParameters;
     }
 
     public HttpRequest withBodyParameters(Parameter... bodyParameters) {
@@ -87,10 +76,6 @@ public class HttpRequest extends ModelObject {
     }
 
     public List<Parameter> getBodyParameters() {
-        if (bodyParameters == null) {
-            return null;
-        } else {
-            return bodyParameters;
-        }
+        return bodyParameters;
     }
 }
