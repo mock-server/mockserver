@@ -37,8 +37,20 @@ Icon?
 ehthumbs.db
 Thumbs.db
 
-# JetBrains / eclipse config files #
-####################################
+# JetBrains config files #
+##########################
 .idea
-.iml
+*.iml
+
+# Eclipse config files #
+########################
 .project
+
+# Maven build artifacts files #
+###############################
+target
+
+# Gradle build artifacts files #
+################################
+.gradle
+build
