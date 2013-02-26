@@ -1,18 +1,21 @@
 package org.jamesdbloom.mockserver.model;
 
+import org.eclipse.jetty.http.HttpStatus;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author jamesdbloom
  */
 public class HttpResponse extends ModelObject {
-    private Integer responseCode = 200;
+    private Integer responseCode = HttpStatus.OK_200;
     private String body = "";
     private List<Cookie> cookies = new ArrayList<Cookie>();
     private List<Header> headers = new ArrayList<Header>();
-    private Delay delay;
+    private Delay delay = new Delay(TimeUnit.MICROSECONDS, 0);
 
     public HttpResponse withStatusCode(Integer responseCode) {
         this.responseCode = responseCode;

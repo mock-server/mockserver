@@ -1,18 +1,21 @@
 package org.jamesdbloom.mockserver.client;
 
 import org.jamesdbloom.mockserver.mappers.ExpectationMapper;
-import org.jamesdbloom.mockserver.matchers.HttpRequestMatcher;
 import org.jamesdbloom.mockserver.matchers.Times;
 import org.jamesdbloom.mockserver.model.HttpRequest;
+import org.jamesdbloom.mockserver.model.HttpResponse;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.mockito.Matchers.same;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.assertSame;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.spy;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 /**
@@ -27,7 +30,7 @@ public class MockServerClientTest {
 
     @Before
     public void setupTestFixture() {
-        mockServerClient = new MockServerClient("localhost", 8080);
+        mockServerClient = spy(new MockServerClient("localhost", 8080));
 
         initMocks(this);
     }
@@ -35,16 +38,22 @@ public class MockServerClientTest {
     @Test
     public void setupExpectation() {
         // given
-        HttpRequest httpRequest = new HttpRequest();
-        HttpRequestMatcher httpRequestMatcher = new HttpRequestMatcher();
-        when(expectationMapper.transformsToMatcher(same(httpRequest))).thenReturn(httpRequestMatcher);
+        final HttpRequest httpRequest = new HttpRequest();
+        final HttpResponse httpResponse = new HttpResponse();
+        ArgumentCaptor<ExpectationDTO> argumentCaptor = ArgumentCaptor.forClass(ExpectationDTO.class);
+        doAnswer(new Answer() {
+            public Object answer(InvocationOnMock invocation) {
+                return null;
+            }
+        }).when(mockServerClient).sendExpectation(argumentCaptor.capture());
 
         // when
-        ExpectationDTO expectationDTO = mockServerClient.when(httpRequest);
+        mockServerClient.when(httpRequest).respond(httpResponse);
 
         // then
-        assertEquals(expectationDTO.getHttpRequestMatcher(), httpRequestMatcher);
-        assertEquals(expectationDTO.getTimes(), Times.unlimited());
-        assertNull(expectationDTO.getHttpResponse());
+        ExpectationDTO expectationDTO = argumentCaptor.getValue();
+        assertSame(httpRequest, expectationDTO.getHttpRequest());
+        assertEquals(Times.unlimited(), expectationDTO.getTimes());
+        assertSame(httpResponse, expectationDTO.getHttpResponse());
     }
 }

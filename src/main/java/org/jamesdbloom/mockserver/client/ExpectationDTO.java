@@ -1,7 +1,10 @@
 package org.jamesdbloom.mockserver.client;
 
+import org.codehaus.jackson.annotate.JsonCreator;
+import org.codehaus.jackson.annotate.JsonProperty;
 import org.jamesdbloom.mockserver.matchers.HttpRequestMatcher;
 import org.jamesdbloom.mockserver.matchers.Times;
+import org.jamesdbloom.mockserver.model.HttpRequest;
 import org.jamesdbloom.mockserver.model.HttpResponse;
 import org.jamesdbloom.mockserver.model.ModelObject;
 
@@ -10,25 +13,23 @@ import org.jamesdbloom.mockserver.model.ModelObject;
  */
 public class ExpectationDTO extends ModelObject {
 
-    private final HttpRequestMatcher httpRequestMatcher;
-    private final MockServerClient mockServerClient;
-    private final Times times;
-    private HttpResponse httpResponse;
+    private final HttpRequest httpRequest;
 
-    public ExpectationDTO(MockServerClient mockServerClient, HttpRequestMatcher httpRequestMatcher, Times times) {
-        this.mockServerClient = mockServerClient;
-        this.httpRequestMatcher = httpRequestMatcher;
+    private final Times times;
+    private HttpResponse httpResponse = new HttpResponse();
+
+    @JsonCreator
+    public ExpectationDTO(@JsonProperty("httpRequest") HttpRequest httpRequest, @JsonProperty("times") Times times) {
+        this.httpRequest = httpRequest;
         this.times = times;
     }
 
-    public MockServerClient respond(HttpResponse httpResponse) {
+    public void respond(HttpResponse httpResponse) {
         this.httpResponse = httpResponse;
-        mockServerClient.sendExpectation(this);
-        return mockServerClient;
     }
 
-    public HttpRequestMatcher getHttpRequestMatcher() {
-        return httpRequestMatcher;
+    public HttpRequest getHttpRequest() {
+        return httpRequest;
     }
 
     public HttpResponse getHttpResponse() {

@@ -1,10 +1,15 @@
 package org.jamesdbloom.mockserver.model;
 
+import static org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
+
+import org.codehaus.jackson.annotate.JsonAutoDetect;
+
 import java.util.concurrent.TimeUnit;
 
 /**
  * @author jamesdbloom
  */
+@JsonAutoDetect(fieldVisibility = Visibility.ANY, getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class Delay extends ModelObject {
 
     private final TimeUnit timeUnit;

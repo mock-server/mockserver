@@ -24,7 +24,11 @@ public class MockServerServlet extends HttpServlet {
     public void doGet(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
         HttpRequest httpRequest = httpServletRequestMapper.createHttpRequest(httpServletRequest);
         HttpResponse httpResponse = mockServer.handle(httpRequest);
-        httpServletResponseMapper.mapHttpServletResponse(httpResponse, httpServletResponse);
+        if (httpResponse != null) {
+            httpServletResponseMapper.mapHttpServletResponse(httpResponse, httpServletResponse);
+        } else {
+            httpServletResponse.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        }
     }
 
     public void doPut(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {

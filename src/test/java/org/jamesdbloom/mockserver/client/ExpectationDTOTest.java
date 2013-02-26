@@ -2,6 +2,7 @@ package org.jamesdbloom.mockserver.client;
 
 import org.jamesdbloom.mockserver.matchers.HttpRequestMatcher;
 import org.jamesdbloom.mockserver.matchers.Times;
+import org.jamesdbloom.mockserver.model.HttpRequest;
 import org.jamesdbloom.mockserver.model.HttpResponse;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -18,23 +19,19 @@ import static org.mockito.Mockito.verify;
 @RunWith(VerboseMockitoJUnitRunner.class)
 public class ExpectationDTOTest {
 
-    @Mock
-    private MockServerClient mockServerClient;
-
     @Test
     public void createRequestAndResponseExpectation() {
         // given
-        HttpRequestMatcher httpRequestMatcher = new HttpRequestMatcher();
+        HttpRequest httpRequest = new HttpRequest();
         Times times = Times.unlimited();
         HttpResponse httpResponse = new HttpResponse();
 
         // when
-        ExpectationDTO expectationDTO = new ExpectationDTO(mockServerClient, httpRequestMatcher, times);
+        ExpectationDTO expectationDTO = new ExpectationDTO(httpRequest, times);
         expectationDTO.respond(httpResponse);
 
         // then
-        verify(mockServerClient).sendExpectation(same(expectationDTO));
-        assertSame(httpRequestMatcher, expectationDTO.getHttpRequestMatcher());
+        assertSame(httpRequest, expectationDTO.getHttpRequest());
         assertSame(times, expectationDTO.getTimes());
         assertSame(httpResponse, expectationDTO.getHttpResponse());
     }

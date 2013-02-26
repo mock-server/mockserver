@@ -1,5 +1,6 @@
 package org.jamesdbloom.mockserver.mappers;
 
+import com.google.common.collect.ImmutableMap;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.jamesdbloom.mockserver.client.ExpectationDTO;
 import org.jamesdbloom.mockserver.matchers.HttpRequestMatcher;
@@ -14,8 +15,10 @@ import org.springframework.mock.web.MockHttpServletRequest;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Map;
 
-import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.same;
@@ -42,22 +45,14 @@ public class ExpectationMapperTest {
     @Test
     public void deserialize() throws IOException {
         // given
-        HttpRequestMatcher httpRequestMatcher = new HttpRequestMatcher();
-        HttpResponse httpResponse = new HttpResponse();
-
-        ExpectationDTO expectationDTO = mock(ExpectationDTO.class);
-        when(expectationDTO.getHttpRequestMatcher()).thenReturn(httpRequestMatcher);
-        when(expectationDTO.getTimes()).thenReturn(Times.unlimited());
-        when(expectationDTO.getHttpResponse()).thenReturn(httpResponse);
-
-        when(objectMapper.readValue(any(InputStream.class), same(ExpectationDTO.class))).thenReturn(expectationDTO);
+        HttpResponse httpResponse = new HttpResponse().withBody("somebody");
+        when(objectMapper.readValue(any(InputStream.class), same(Map.class))).thenReturn(ImmutableMap.of("httpResponse", ImmutableMap.of("body", "somebody")));
 
         // when
         Expectation expectation = expectationMapper.deserialize(new MockHttpServletRequest());
 
         // then
-        assertSame(httpResponse, expectation.getHttpResponse());
-        assertTrue(expectation.contains(httpRequestMatcher));
+        assertEquals(httpResponse, expectation.getHttpResponse());
     }
 
     @Test(expected = RuntimeException.class)
@@ -72,20 +67,28 @@ public class ExpectationMapperTest {
     @Test
     public void serialize() throws IOException {
         // given
-        ExpectationDTO expectationDTO = mock(ExpectationDTO.class);
+        ExpectationDTO expectationDTO = new ExpectationDTO(new HttpRequest().withBody("somebody"), Times.unlimited());
+        expectationDTO.respond(new HttpResponse().withBody("somebody"));
 
         // when
         expectationMapper.serialize(expectationDTO);
 
         // then
-        verify(objectMapper).writeValueAsString(same(expectationDTO));
+        verify(objectMapper).writeValueAsString(ImmutableMap.of(
+                "times",
+                ImmutableMap.of("unlimited", "true", "remainingTimes", "1"),
+                "httpRequest",
+                ImmutableMap.of("headers", new ArrayList<Header>(), "body", "somebody", "responseCode", "200", "delay", ImmutableMap.of("timeUnit", "MICROSECONDS", "value", "0"), "cookies", new ArrayList<Cookie>()),
+                "httpResponse",
+                ImmutableMap.of("headers", new ArrayList<Header>(), "body", "somebody", "path", "", "cookies", new ArrayList<Cookie>(), "queryParameters", new ArrayList<Parameter>())
+        ));
     }
 
     @Test(expected = RuntimeException.class)
     public void serializeHandlesException() throws IOException {
         // given
         ExpectationDTO expectationDTO = mock(ExpectationDTO.class);
-        when(objectMapper.writeValueAsString(same(expectationDTO))).thenThrow(new IOException());
+        when(objectMapper.writeValueAsString(any(Map.class))).thenThrow(new IOException());
 
         // when
         expectationMapper.serialize(expectationDTO);

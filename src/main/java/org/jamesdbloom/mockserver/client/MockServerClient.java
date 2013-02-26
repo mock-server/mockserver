@@ -20,19 +20,19 @@ public class MockServerClient {
         mockServerURI = "http://" + host + ":" + port + "/";
     }
 
-    public ExpectationDTO when(final HttpRequest httpRequest) {
+    public ForwardChainExpectation when(final HttpRequest httpRequest) {
         return when(httpRequest, Times.unlimited());
     }
 
-    public ExpectationDTO when(HttpRequest httpRequest, Times times) {
-        return new ExpectationDTO(this, expectationMapper.transformsToMatcher(httpRequest), times);
+    public ForwardChainExpectation when(HttpRequest httpRequest, Times times) {
+        return new ForwardChainExpectation(this, new ExpectationDTO(httpRequest, times));
     }
 
     public void sendExpectation(ExpectationDTO expectationDTO) {
         HttpClient httpClient = new HttpClient();
         try {
             httpClient.start();
-            httpClient.newRequest(mockServerURI).method(HttpMethod.POST).content(new StringContentProvider(expectationMapper.serialize(expectationDTO))).send();
+            httpClient.newRequest(mockServerURI).method(HttpMethod.PUT).content(new StringContentProvider(expectationMapper.serialize(expectationDTO))).send();
         } catch (Exception e) {
             throw new RuntimeException(String.format("Exception sending expectation to MockServer as %s", expectationDTO), e);
         }

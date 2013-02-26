@@ -34,7 +34,7 @@ public class HttpServletRequestMapper {
     private void setBody(HttpRequest httpRequest, HttpServletRequest httpServletRequest) {
         try {
             InputStream requestInputStream = httpServletRequest.getInputStream();
-            if (requestInputStream != null) {
+            if (requestInputStream != null && httpServletRequest.getContentLength() > 0) {
                 byte[] bodyBytes = new byte[httpServletRequest.getContentLength()];
                 requestInputStream.read(bodyBytes);
                 httpRequest.withBody(new String(bodyBytes));

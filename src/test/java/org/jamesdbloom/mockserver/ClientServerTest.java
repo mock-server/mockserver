@@ -6,6 +6,7 @@ import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.http.HttpMethod;
+import org.eclipse.jetty.http.HttpStatus;
 import org.jamesdbloom.mockserver.client.MockServerClient;
 import org.jamesdbloom.mockserver.model.Cookie;
 import org.jamesdbloom.mockserver.model.Header;
@@ -31,10 +32,14 @@ public class ClientServerTest {
         MockServerClient mockServerClient = new MockServerClient("localhost", 8080);
 
         // when
-        mockServerClient.when(new HttpRequest()).respond(new HttpResponse());
+        mockServerClient.when(new HttpRequest()).respond(new HttpResponse().withBody("somebody"));
 
         // then
-        assertEquals(new HttpResponse(), makeRequest(new HttpRequest()));
+        HttpResponse server = new HttpResponse()
+                .withStatusCode(HttpStatus.OK_200)
+                .withHeaders(new Header("Content-Length", "" + "somebody".length()), new Header("Server", "Jetty(9.0.0.RC0)"))
+                .withBody("somebody");
+        assertEquals(server, makeRequest(new HttpRequest()));
     }
 
     public HttpResponse makeRequest(HttpRequest httpRequest) {
@@ -65,8 +70,8 @@ public class ClientServerTest {
             for (HttpField httpField : contentResponse.getHeaders()) {
                 headers.add(new Header(httpField.getName(), httpField.getValue()));
             }
-            if(headers.size() > 0) {
-               httpResponse.withHeaders(headers);
+            if (headers.size() > 0) {
+                httpResponse.withHeaders(headers);
             }
         } catch (Exception e) {
             throw new RuntimeException(String.format("Exception sending request to Mock Server as %s", httpRequest), e);
