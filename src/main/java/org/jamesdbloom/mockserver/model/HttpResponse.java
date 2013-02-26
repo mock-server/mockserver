@@ -1,13 +1,16 @@
 package org.jamesdbloom.mockserver.model;
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * @author jamesdbloom
  */
 public class HttpResponse extends ModelObject {
     private Integer responseCode;
     private String body;
-    private Cookie[] cookies;
-    private Header[] headers;
+    private List<Cookie> cookies;
+    private List<Header> headers;
     private Delay delay;
 
     public HttpResponse withStatusCode(Integer responseCode) {
@@ -28,21 +31,31 @@ public class HttpResponse extends ModelObject {
         return body;
     }
 
-    public HttpResponse withCookies(Cookie... cookies) {
+    public HttpResponse withCookies(List<Cookie> cookies) {
         this.cookies = cookies;
         return this;
     }
 
-    public Cookie[] getCookies() {
+    public HttpResponse withCookies(Cookie... cookies) {
+        this.cookies = Arrays.asList(cookies);
+        return this;
+    }
+
+    public List<Cookie> getCookies() {
         return cookies;
     }
 
-    public HttpResponse withHeaders(Header... headers) {
+    public HttpResponse withHeaders(List<Header> headers) {
         this.headers = headers;
         return this;
     }
 
-    public Header[] getHeaders() {
+    public HttpResponse withHeaders(Header... headers) {
+        this.headers = Arrays.asList(headers);
+        return this;
+    }
+
+    public List<Header> getHeaders() {
         return headers;
     }
 

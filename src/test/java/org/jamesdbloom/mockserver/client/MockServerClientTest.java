@@ -6,10 +6,8 @@ import org.jamesdbloom.mockserver.matchers.Times;
 import org.jamesdbloom.mockserver.model.HttpRequest;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.runners.VerboseMockitoJUnitRunner;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -29,7 +27,7 @@ public class MockServerClientTest {
 
     @Before
     public void setupTestFixture() {
-        mockServerClient = new MockServerClient();
+        mockServerClient = new MockServerClient("localhost", 8080);
 
         initMocks(this);
     }

@@ -25,12 +25,12 @@ public class HttpResponseTest {
 
     @Test
     public void returnsHeaders() {
-        assertEquals(new Header("name", "value"), new HttpResponse().withHeaders(new Header("name", "value")).getHeaders()[0]);
+        assertEquals(new Header("name", "value"), new HttpResponse().withHeaders(new Header("name", "value")).getHeaders().get(0));
     }
 
     @Test
     public void returnsCookies() {
-        assertEquals(new Cookie("name", "value"), new HttpResponse().withCookies(new Cookie("name", "value")).getCookies()[0]);
+        assertEquals(new Cookie("name", "value"), new HttpResponse().withCookies(new Cookie("name", "value")).getCookies().get(0));
     }
 
     @Test

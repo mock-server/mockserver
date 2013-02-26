@@ -8,22 +8,25 @@ import org.eclipse.jetty.servlet.ServletHandler;
  */
 public class EmbeddedJettyRunner {
 
-    private Server server;
+    private final Server server;
 
     public static void main(String[] args) throws Exception {
         int port = args.length == 1 ? Integer.parseInt(args[0]) : 8080;
-        new EmbeddedJettyRunner().start(port);
+        new EmbeddedJettyRunner(port);
     }
 
-    public EmbeddedJettyRunner start(int port) throws Exception {
+    public EmbeddedJettyRunner(int port) {
         server = new Server(port);
         ServletHandler handler = new ServletHandler();
         server.setHandler(handler);
 
         handler.addServletWithMapping(MockServerServlet.class.getName(), "/");
 
-        server.start();
-        return this;
+        try {
+            server.start();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to start embedded jetty server", e);
+        }
     }
 
     public EmbeddedJettyRunner stop() throws Exception {

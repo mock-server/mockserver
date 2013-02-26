@@ -12,9 +12,13 @@ import org.jamesdbloom.mockserver.model.HttpRequest;
  */
 public class MockServerClient {
 
-    private String mockServerURI = "http://localhost:8080/";
+    private final String mockServerURI;
 
     private ExpectationMapper expectationMapper = new ExpectationMapper();
+
+    public MockServerClient(String host, int port) {
+        mockServerURI = "http://" + host + ":" + port + "/";
+    }
 
     public ExpectationDTO when(final HttpRequest httpRequest) {
         return when(httpRequest, Times.unlimited());
@@ -28,13 +32,9 @@ public class MockServerClient {
         HttpClient httpClient = new HttpClient();
         try {
             httpClient.start();
+            httpClient.newRequest(mockServerURI).method(HttpMethod.POST).content(new StringContentProvider(expectationMapper.serialize(expectationDTO))).send();
         } catch (Exception e) {
-            throw new RuntimeException("Exception starting HttpClient", e);
+            throw new RuntimeException(String.format("Exception sending expectation to MockServer as %s", expectationDTO), e);
         }
-        httpClient.newRequest(mockServerURI).method(HttpMethod.POST).content(new StringContentProvider(expectationMapper.serialize(expectationDTO)));
-    }
-
-    public void setMockServerURI(String mockServerURI) {
-        this.mockServerURI = mockServerURI;
     }
 }
