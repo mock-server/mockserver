@@ -1,17 +1,13 @@
 package org.jamesdbloom.mockserver.matchers;
 
-import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.jamesdbloom.mockserver.model.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-
 /**
  * @author jamesdbloom
  */
-@JsonAutoDetect(fieldVisibility = Visibility.ANY, getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class HttpRequestMatcher extends ModelObject implements Matcher<HttpRequest> {
 
     private StringMatcher pathMatcher = null;

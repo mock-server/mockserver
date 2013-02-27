@@ -1,7 +1,5 @@
 package org.jamesdbloom.mockserver.model;
 
-import org.codehaus.jackson.annotate.JsonCreator;
-import org.codehaus.jackson.annotate.JsonProperty;
 import org.jamesdbloom.mockserver.client.serialization.model.ParameterDTO;
 
 /**
@@ -9,8 +7,7 @@ import org.jamesdbloom.mockserver.client.serialization.model.ParameterDTO;
  */
 public class Parameter extends KeyToMultiValue<String, String> {
 
-    @JsonCreator
-    public Parameter(@JsonProperty("name") String name, @JsonProperty("value") String... value) {
+    public Parameter(String name, String... value) {
         super(name, value);
     }
 

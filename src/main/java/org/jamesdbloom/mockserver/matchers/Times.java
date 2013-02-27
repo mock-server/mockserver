@@ -1,15 +1,11 @@
 package org.jamesdbloom.mockserver.matchers;
 
-import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.jamesdbloom.mockserver.client.serialization.model.TimesDTO;
 import org.jamesdbloom.mockserver.model.ModelObject;
-
-import static org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 
 /**
  * @author jamesdbloom
  */
-@JsonAutoDetect(fieldVisibility = Visibility.ANY, getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class Times extends ModelObject {
 
     private int remainingTimes;
