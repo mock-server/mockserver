@@ -1,12 +1,6 @@
 package org.jamesdbloom.mockserver.client.serialization.model;
 
-import org.codehaus.jackson.annotate.JsonCreator;
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.jamesdbloom.mockserver.matchers.HttpRequestMatcher;
-import org.jamesdbloom.mockserver.matchers.Times;
 import org.jamesdbloom.mockserver.mock.Expectation;
-import org.jamesdbloom.mockserver.model.HttpRequest;
-import org.jamesdbloom.mockserver.model.HttpResponse;
 import org.jamesdbloom.mockserver.model.ModelObject;
 
 /**
@@ -21,32 +15,44 @@ public class ExpectationDTO extends ModelObject {
     private TimesDTO times;
 
     public ExpectationDTO(Expectation expectation) {
-        httpRequest = new HttpRequestDTO(expectation.getHttpRequest());
-        httpResponse = new HttpResponseDTO(expectation.getHttpResponse());
-        times = new TimesDTO(expectation.getTimes());
+        if (expectation.getHttpRequest() != null) {
+            httpRequest = new HttpRequestDTO(expectation.getHttpRequest());
+        }
+        if (expectation.getHttpResponse() != null) {
+            httpResponse = new HttpResponseDTO(expectation.getHttpResponse());
+        }
+        if (expectation.getTimes() != null) {
+            times = new TimesDTO(expectation.getTimes());
+        }
+    }
+
+    public ExpectationDTO() {
     }
 
     public HttpRequestDTO getHttpRequest() {
         return httpRequest;
     }
 
-    public void setHttpRequest(HttpRequestDTO httpRequest) {
+    public ExpectationDTO setHttpRequest(HttpRequestDTO httpRequest) {
         this.httpRequest = httpRequest;
+        return this;
     }
 
     public TimesDTO getTimes() {
         return times;
     }
 
-    public void setTimes(TimesDTO times) {
+    public ExpectationDTO setTimes(TimesDTO times) {
         this.times = times;
+        return this;
     }
 
     public HttpResponseDTO getHttpResponse() {
         return httpResponse;
     }
 
-    public void setHttpResponse(HttpResponseDTO httpResponse) {
+    public ExpectationDTO setHttpResponse(HttpResponseDTO httpResponse) {
         this.httpResponse = httpResponse;
+        return this;
     }
 }

@@ -4,8 +4,6 @@ import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import org.jamesdbloom.mockserver.model.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -44,51 +42,60 @@ public class HttpRequestDTO extends ModelObject {
         });
     }
 
+    public HttpRequestDTO() {
+    }
+
     public String getPath() {
         return path;
     }
 
-    public void setPath(String path) {
+    public HttpRequestDTO setPath(String path) {
         this.path = path;
+        return this;
     }
 
     public String getBody() {
         return body;
     }
 
-    public void setBody(String body) {
+    public HttpRequestDTO setBody(String body) {
         this.body = body;
+        return this;
     }
 
     public List<HeaderDTO> getHeaders() {
         return headers;
     }
 
-    public void setHeaders(List<HeaderDTO> headers) {
+    public HttpRequestDTO setHeaders(List<HeaderDTO> headers) {
         this.headers = headers;
+        return this;
     }
 
     public List<ParameterDTO> getQueryParameters() {
         return queryParameters;
     }
 
-    public void setQueryParameters(List<ParameterDTO> queryParameters) {
+    public HttpRequestDTO setQueryParameters(List<ParameterDTO> queryParameters) {
         this.queryParameters = queryParameters;
+        return this;
     }
 
     public List<ParameterDTO> getBodyParameters() {
         return bodyParameters;
     }
 
-    public void setBodyParameters(List<ParameterDTO> bodyParameters) {
+    public HttpRequestDTO setBodyParameters(List<ParameterDTO> bodyParameters) {
         this.bodyParameters = bodyParameters;
+        return this;
     }
 
     public List<CookieDTO> getCookies() {
         return cookies;
     }
 
-    public void setCookies(List<CookieDTO> cookies) {
+    public HttpRequestDTO setCookies(List<CookieDTO> cookies) {
         this.cookies = cookies;
+        return this;
     }
 }

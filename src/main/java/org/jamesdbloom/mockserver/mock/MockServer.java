@@ -3,7 +3,6 @@ package org.jamesdbloom.mockserver.mock;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import org.jamesdbloom.mockserver.mappers.ExpectationMapper;
-import org.jamesdbloom.mockserver.matchers.HttpRequestMatcher;
 import org.jamesdbloom.mockserver.matchers.Times;
 import org.jamesdbloom.mockserver.model.HttpRequest;
 import org.jamesdbloom.mockserver.model.HttpResponse;

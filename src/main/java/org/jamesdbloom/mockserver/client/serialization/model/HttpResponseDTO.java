@@ -2,7 +2,10 @@ package org.jamesdbloom.mockserver.client.serialization.model;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
-import org.jamesdbloom.mockserver.model.*;
+import org.jamesdbloom.mockserver.model.Cookie;
+import org.jamesdbloom.mockserver.model.Header;
+import org.jamesdbloom.mockserver.model.HttpResponse;
+import org.jamesdbloom.mockserver.model.ModelObject;
 
 import java.util.List;
 
@@ -32,44 +35,52 @@ public class HttpResponseDTO extends ModelObject {
         delay = new DelayDTO(httpResponse.getDelay());
     }
 
+    public HttpResponseDTO() {
+    }
+
     public Integer getResponseCode() {
         return responseCode;
     }
 
-    public void setResponseCode(Integer responseCode) {
+    public HttpResponseDTO setResponseCode(Integer responseCode) {
         this.responseCode = responseCode;
+        return this;
     }
 
     public String getBody() {
         return body;
     }
 
-    public void setBody(String body) {
+    public HttpResponseDTO setBody(String body) {
         this.body = body;
+        return this;
     }
 
     public List<CookieDTO> getCookies() {
         return cookies;
     }
 
-    public void setCookies(List<CookieDTO> cookies) {
+    public HttpResponseDTO setCookies(List<CookieDTO> cookies) {
         this.cookies = cookies;
+        return this;
     }
 
     public List<HeaderDTO> getHeaders() {
         return headers;
     }
 
-    public void setHeaders(List<HeaderDTO> headers) {
+    public HttpResponseDTO setHeaders(List<HeaderDTO> headers) {
         this.headers = headers;
+        return this;
     }
 
     public DelayDTO getDelay() {
         return delay;
     }
 
-    public void setDelay(DelayDTO delay) {
+    public HttpResponseDTO setDelay(DelayDTO delay) {
         this.delay = delay;
+        return this;
     }
 }
 

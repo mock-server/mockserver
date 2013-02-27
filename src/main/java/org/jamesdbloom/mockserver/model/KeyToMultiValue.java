@@ -14,9 +14,13 @@ public class KeyToMultiValue<K, V> extends ModelObject {
     private final List<V> values;
 
     public KeyToMultiValue(K name, V... values) {
+        this(name, Arrays.asList(values));
+    }
+
+    public KeyToMultiValue(K name, List<V> values) {
         this.name = name;
         if (values != null) {
-            this.values = Arrays.asList(values);
+            this.values = values;
         } else {
             this.values = null;
         }

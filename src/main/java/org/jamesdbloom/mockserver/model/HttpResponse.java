@@ -1,6 +1,11 @@
 package org.jamesdbloom.mockserver.model;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
 import org.eclipse.jetty.http.HttpStatus;
+import org.jamesdbloom.mockserver.client.serialization.model.CookieDTO;
+import org.jamesdbloom.mockserver.client.serialization.model.HeaderDTO;
+import org.jamesdbloom.mockserver.client.serialization.model.HttpResponseDTO;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,6 +21,24 @@ public class HttpResponse extends ModelObject {
     private List<Cookie> cookies = new ArrayList<Cookie>();
     private List<Header> headers = new ArrayList<Header>();
     private Delay delay = new Delay(TimeUnit.MICROSECONDS, 0);
+
+    public HttpResponse(HttpResponseDTO httpResponse) {
+        responseCode = httpResponse.getResponseCode();
+        body = httpResponse.getBody();
+        headers = Lists.transform(httpResponse.getHeaders(), new Function<HeaderDTO, Header>() {
+            public Header apply(HeaderDTO header) {
+                return new Header(header);
+            }
+        });
+        cookies = Lists.transform(httpResponse.getCookies(), new Function<CookieDTO, Cookie>() {
+            public Cookie apply(CookieDTO cookie) {
+                return new Cookie(cookie);
+            }
+        });
+        delay = new Delay(httpResponse.getDelay());
+    }
+
+    public HttpResponse() { }
 
     public HttpResponse withStatusCode(Integer responseCode) {
         this.responseCode = responseCode;

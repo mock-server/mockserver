@@ -1,12 +1,12 @@
 package org.jamesdbloom.mockserver.matchers;
 
-import static org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.jamesdbloom.mockserver.model.*;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 
 /**
  * @author jamesdbloom

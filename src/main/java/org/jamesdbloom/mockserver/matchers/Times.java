@@ -1,9 +1,10 @@
 package org.jamesdbloom.mockserver.matchers;
 
-import static org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-
 import org.codehaus.jackson.annotate.JsonAutoDetect;
+import org.jamesdbloom.mockserver.client.serialization.model.TimesDTO;
 import org.jamesdbloom.mockserver.model.ModelObject;
+
+import static org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 
 /**
  * @author jamesdbloom
@@ -17,6 +18,19 @@ public class Times extends ModelObject {
     private Times(int remainingTimes, boolean unlimited) {
         this.remainingTimes = remainingTimes;
         this.unlimited = unlimited;
+    }
+
+    public Times(TimesDTO timesDTO) {
+        this.remainingTimes = timesDTO.getRemainingTimes();
+        this.unlimited = timesDTO.isUnlimited();
+    }
+
+    public int getRemainingTimes() {
+        return remainingTimes;
+    }
+
+    public boolean isUnlimited() {
+        return unlimited;
     }
 
     public static Times unlimited() {

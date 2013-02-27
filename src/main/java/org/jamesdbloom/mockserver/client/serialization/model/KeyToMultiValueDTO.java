@@ -1,11 +1,8 @@
 package org.jamesdbloom.mockserver.client.serialization.model;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
 import org.jamesdbloom.mockserver.model.KeyToMultiValue;
 import org.jamesdbloom.mockserver.model.ModelObject;
 
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -16,23 +13,28 @@ public class KeyToMultiValueDTO<K, V> extends ModelObject {
     private List<V> values;
 
     protected KeyToMultiValueDTO(KeyToMultiValue<K, V> keyToMultiValue) {
-        this.name = keyToMultiValue.getName();
-        this.values = keyToMultiValue.getValues();
+        name = keyToMultiValue.getName();
+        values = keyToMultiValue.getValues();
+    }
+
+    protected KeyToMultiValueDTO() {
     }
 
     public K getName() {
         return name;
     }
 
-    public void setName(K name) {
+    public KeyToMultiValueDTO setName(K name) {
         this.name = name;
+        return this;
     }
 
     public List<V> getValues() {
         return values;
     }
 
-    public void setValues(List<V> values) {
+    public KeyToMultiValueDTO setValues(List<V> values) {
         this.values = values;
+        return this;
     }
 }

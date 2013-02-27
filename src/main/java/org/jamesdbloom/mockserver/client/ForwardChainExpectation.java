@@ -1,7 +1,6 @@
 package org.jamesdbloom.mockserver.client;
 
 import com.google.common.annotations.VisibleForTesting;
-import org.jamesdbloom.mockserver.client.serialization.model.ExpectationDTO;
 import org.jamesdbloom.mockserver.mock.Expectation;
 import org.jamesdbloom.mockserver.model.HttpResponse;
 

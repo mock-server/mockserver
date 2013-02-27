@@ -4,7 +4,6 @@ import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpMethod;
 import org.jamesdbloom.mockserver.client.serialization.ExpectationSerializer;
-import org.jamesdbloom.mockserver.client.serialization.model.ExpectationDTO;
 import org.jamesdbloom.mockserver.matchers.Times;
 import org.jamesdbloom.mockserver.mock.Expectation;
 import org.jamesdbloom.mockserver.model.HttpRequest;

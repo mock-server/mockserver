@@ -1,6 +1,5 @@
 package org.jamesdbloom.mockserver.client;
 
-import org.jamesdbloom.mockserver.client.serialization.model.ExpectationDTO;
 import org.jamesdbloom.mockserver.mappers.ExpectationMapper;
 import org.jamesdbloom.mockserver.matchers.Times;
 import org.jamesdbloom.mockserver.mock.Expectation;
@@ -9,15 +8,10 @@ import org.jamesdbloom.mockserver.model.HttpRequest;
 import org.jamesdbloom.mockserver.model.HttpResponse;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 

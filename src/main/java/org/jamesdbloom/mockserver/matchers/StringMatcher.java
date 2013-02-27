@@ -1,12 +1,12 @@
 package org.jamesdbloom.mockserver.matchers;
 
-import static org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-
 import com.google.common.base.Strings;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonCreator;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.jamesdbloom.mockserver.model.ModelObject;
+
+import static org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 
 /**
  * @author jamesdbloom

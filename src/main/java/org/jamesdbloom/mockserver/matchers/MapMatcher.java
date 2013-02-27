@@ -1,7 +1,5 @@
 package org.jamesdbloom.mockserver.matchers;
 
-import static org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-
 import com.google.common.collect.Multimap;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonCreator;
@@ -10,6 +8,8 @@ import org.jamesdbloom.mockserver.model.KeyToMultiValue;
 import org.jamesdbloom.mockserver.model.ModelObject;
 
 import java.util.List;
+
+import static org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 
 /**
  * @author jamesdbloom

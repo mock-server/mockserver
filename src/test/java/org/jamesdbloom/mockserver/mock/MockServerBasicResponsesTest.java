@@ -1,16 +1,12 @@
 package org.jamesdbloom.mockserver.mock;
 
-import org.jamesdbloom.mockserver.mappers.ExpectationMapper;
 import org.jamesdbloom.mockserver.matchers.HttpRequestMatcher;
 import org.jamesdbloom.mockserver.model.*;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
-import static org.mockito.MockitoAnnotations.initMocks;
 
 /**
  * @author jamesdbloom
