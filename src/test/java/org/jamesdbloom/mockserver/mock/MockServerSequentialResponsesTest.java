@@ -20,10 +20,6 @@ import static org.mockito.MockitoAnnotations.initMocks;
  */
 public class MockServerSequentialResponsesTest {
 
-    @Mock
-    private ExpectationMapper expectationMapper;
-
-    @InjectMocks
     private MockServer mockServer;
 
     private HttpResponse[] httpResponse;
@@ -36,15 +32,10 @@ public class MockServerSequentialResponsesTest {
                 new HttpResponse()
         };
         mockServer = new MockServer();
-
-        initMocks(this);
     }
 
     @Test
     public void respondWhenPathMatchesMultipleSequentialExpectation() {
-        // given
-        when(expectationMapper.transformsToMatcher(new HttpRequest().withPath("somepath"))).thenReturn(new HttpRequestMatcher().withPath("somepath"));
-
         // when
         mockServer.when(new HttpRequest().withPath("somepath")).respond(httpResponse[0].withBody("somebody1"));
         mockServer.when(new HttpRequest().withPath("somepath")).respond(httpResponse[1].withBody("somebody2"));
@@ -58,9 +49,6 @@ public class MockServerSequentialResponsesTest {
 
     @Test
     public void respondWhenPathMatchesExpectationWithMultipleResponses() {
-        // given
-        when(expectationMapper.transformsToMatcher(new HttpRequest().withPath("somepath"))).thenReturn(new HttpRequestMatcher().withPath("somepath"));
-
         // when
         mockServer.when(new HttpRequest().withPath("somepath"), Times.exactly(2)).respond(httpResponse[0].withBody("somebody1"));
         mockServer.when(new HttpRequest().withPath("somepath"), Times.exactly(1)).respond(httpResponse[1].withBody("somebody2"));
@@ -75,10 +63,6 @@ public class MockServerSequentialResponsesTest {
 
     @Test
     public void respondWhenPathMatchesMultipleDifferentResponses() {
-        // given
-        when(expectationMapper.transformsToMatcher(new HttpRequest().withPath("somepath1"))).thenReturn(new HttpRequestMatcher().withPath("somepath1"));
-        when(expectationMapper.transformsToMatcher(new HttpRequest().withPath("somepath2"))).thenReturn(new HttpRequestMatcher().withPath("somepath2"));
-
         // when
         mockServer.when(new HttpRequest().withPath("somepath1")).respond(httpResponse[0].withBody("somebody1"));
         mockServer.when(new HttpRequest().withPath("somepath2")).respond(httpResponse[1].withBody("somebody2"));
@@ -94,9 +78,6 @@ public class MockServerSequentialResponsesTest {
 
     @Test
     public void doesNotRespondAfterMatchesFinishedExpectedTimes() {
-        // given
-        when(expectationMapper.transformsToMatcher(new HttpRequest().withPath("somepath"))).thenReturn(new HttpRequestMatcher().withPath("somepath"));
-
         // when
         mockServer.when(new HttpRequest().withPath("somepath"), Times.exactly(2)).respond(httpResponse[0].withBody("somebody"));
 

@@ -1,6 +1,6 @@
 package org.jamesdbloom.mockserver.server;
 
-import org.jamesdbloom.mockserver.mappers.ExpectationMapper;
+import org.jamesdbloom.mockserver.client.serialization.ExpectationSerializer;
 import org.jamesdbloom.mockserver.mappers.HttpServletRequestMapper;
 import org.jamesdbloom.mockserver.mappers.HttpServletResponseMapper;
 import org.jamesdbloom.mockserver.mock.Expectation;
@@ -8,7 +8,6 @@ import org.jamesdbloom.mockserver.mock.MockServer;
 import org.jamesdbloom.mockserver.model.Header;
 import org.jamesdbloom.mockserver.model.HttpRequest;
 import org.jamesdbloom.mockserver.model.HttpResponse;
-import org.jamesdbloom.mockserver.server.MockServerServlet;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -33,7 +32,7 @@ public class MockServerServletTest {
     @Mock
     private HttpServletResponseMapper httpServletResponseMapper;
     @Mock
-    private ExpectationMapper expectationMapper;
+    private ExpectationSerializer expectationSerializer;
     @InjectMocks
     private MockServerServlet mockServerServlet;
 
@@ -69,7 +68,7 @@ public class MockServerServletTest {
         MockHttpServletRequest httpServletRequest = new MockHttpServletRequest();
         Expectation expectation = mock(Expectation.class);
 
-        when(expectationMapper.deserialize(httpServletRequest)).thenReturn(expectation);
+        when(expectationSerializer.deserialize(httpServletRequest.getInputStream())).thenReturn(expectation);
 
         // when
         mockServerServlet.doPut(httpServletRequest, httpServletResponse);

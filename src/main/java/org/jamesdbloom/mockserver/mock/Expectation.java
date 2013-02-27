@@ -1,6 +1,7 @@
 package org.jamesdbloom.mockserver.mock;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.jamesdbloom.mockserver.mappers.ExpectationMapper;
 import org.jamesdbloom.mockserver.matchers.HttpRequestMatcher;
 import org.jamesdbloom.mockserver.matchers.Times;
 import org.jamesdbloom.mockserver.model.HttpRequest;
@@ -12,14 +13,25 @@ import org.jamesdbloom.mockserver.model.ModelObject;
  */
 public class Expectation extends ModelObject {
 
-    private final HttpRequestMatcher httpRequestMatcher;
+    private final HttpRequest httpRequest;
     private final Times times;
     private HttpResponse httpResponse;
-    private HttpResponse httpRequest;
 
-    public Expectation(HttpRequestMatcher httpRequestMatcher, Times times) {
-        this.httpRequestMatcher = httpRequestMatcher;
+    public Expectation(HttpRequest httpRequest, Times times) {
+        this.httpRequest = httpRequest;
         this.times = times;
+    }
+
+    public HttpRequest getHttpRequest() {
+        return httpRequest;
+    }
+
+    public HttpResponse getHttpResponse() {
+        return httpResponse.applyDelay();
+    }
+
+    public Times getTimes() {
+        return times;
     }
 
     public Expectation respond(HttpResponse httpResponse) {
@@ -27,12 +39,8 @@ public class Expectation extends ModelObject {
         return this;
     }
 
-    public HttpResponse getHttpResponse() {
-        return httpResponse.applyDelay();
-    }
-
     public boolean matches(HttpRequest httpRequest) {
-        boolean matches = times.greaterThenZero() && httpRequestMatcher.matches(httpRequest);
+        boolean matches = times.greaterThenZero() && new ExpectationMapper().transformsToMatcher(this.httpRequest).matches(httpRequest);
         if (matches) {
             times.decrement();
         }
@@ -43,12 +51,7 @@ public class Expectation extends ModelObject {
         times.setNotUnlimitedResponses();
     }
 
-    public boolean contains(HttpRequestMatcher httpRequestMatcher) {
-        return httpRequestMatcher != null && this.httpRequestMatcher.equals(httpRequestMatcher);
-    }
-
-    @VisibleForTesting
-    public HttpResponse getHttpRequest() {
-        return httpRequest;
+    public boolean contains(HttpRequest httpRequest) {
+        return httpRequest != null && this.httpRequest.equals(httpRequest);
     }
 }

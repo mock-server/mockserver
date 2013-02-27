@@ -20,6 +20,14 @@ public class Delay extends ModelObject {
         this.value = value;
     }
 
+    public TimeUnit getTimeUnit() {
+        return timeUnit;
+    }
+
+    public long getValue() {
+        return value;
+    }
+
     public void applyDelay() {
         try {
             timeUnit.sleep(value);

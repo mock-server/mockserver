@@ -20,10 +20,6 @@ import static org.mockito.MockitoAnnotations.initMocks;
  */
 public class MockServerOverlappingRequestsTest {
 
-    @Mock
-    private ExpectationMapper expectationMapper;
-
-    @InjectMocks
     private MockServer mockServer;
 
     private HttpResponse[] httpResponse;
@@ -36,16 +32,10 @@ public class MockServerOverlappingRequestsTest {
         };
 
         mockServer = new MockServer();
-
-        initMocks(this);
     }
 
     @Test
     public void respondWhenPathMatchesAlwaysReturnFirstMatching() {
-        // given
-        when(expectationMapper.transformsToMatcher(new HttpRequest().withPath("somepath").withCookies(new Cookie("name", "value")))).thenReturn(new HttpRequestMatcher().withPath("somepath").withCookies(new Cookie("name", "value")));
-        when(expectationMapper.transformsToMatcher(new HttpRequest().withPath("somepath"))).thenReturn(new HttpRequestMatcher().withPath("somepath"));
-
         // when
         mockServer.when(new HttpRequest().withPath("somepath").withCookies(new Cookie("name", "value"))).respond(httpResponse[0].withBody("somebody1"));
         mockServer.when(new HttpRequest().withPath("somepath")).respond(httpResponse[1].withBody("somebody2"));
@@ -57,10 +47,6 @@ public class MockServerOverlappingRequestsTest {
 
     @Test
     public void respondWhenPathMatchesReturnFirstMatchingWithRemainingTimes() {
-        // given
-        when(expectationMapper.transformsToMatcher(new HttpRequest().withPath("somepath").withCookies(new Cookie("name", "value")))).thenReturn(new HttpRequestMatcher().withPath("somepath").withCookies(new Cookie("name", "value")));
-        when(expectationMapper.transformsToMatcher(new HttpRequest().withPath("somepath"))).thenReturn(new HttpRequestMatcher().withPath("somepath"));
-
         // when
         mockServer.when(new HttpRequest().withPath("somepath").withCookies(new Cookie("name", "value")), Times.once()).respond(httpResponse[0].withBody("somebody1"));
         mockServer.when(new HttpRequest().withPath("somepath")).respond(httpResponse[1].withBody("somebody2"));

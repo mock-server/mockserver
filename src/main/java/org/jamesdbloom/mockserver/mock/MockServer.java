@@ -22,10 +22,9 @@ public class MockServer extends ModelObject {
     private ExpectationMapper expectationMapper = new ExpectationMapper();
 
     public Expectation when(final HttpRequest httpRequest) {
-        final HttpRequestMatcher httpRequestMatcher = expectationMapper.transformsToMatcher(httpRequest);
         Collection<Expectation> existingExpectationsWithMatchingRequest = Collections2.filter(expectations, new Predicate<Expectation>() {
             public boolean apply(Expectation expectation) {
-                return expectation.contains(httpRequestMatcher);
+                return expectation.contains(httpRequest);
             }
         });
         if (!existingExpectationsWithMatchingRequest.isEmpty()) {
@@ -39,7 +38,7 @@ public class MockServer extends ModelObject {
     }
 
     public Expectation when(HttpRequest httpRequest, Times times) {
-        Expectation expectation = new Expectation(expectationMapper.transformsToMatcher(httpRequest), times);
+        Expectation expectation = new Expectation(httpRequest, times);
         expectations.add(expectation);
         return expectation;
     }

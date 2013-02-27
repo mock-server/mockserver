@@ -3,8 +3,10 @@ package org.jamesdbloom.mockserver.client;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpMethod;
-import org.jamesdbloom.mockserver.mappers.ExpectationMapper;
+import org.jamesdbloom.mockserver.client.serialization.ExpectationSerializer;
+import org.jamesdbloom.mockserver.client.serialization.model.ExpectationDTO;
 import org.jamesdbloom.mockserver.matchers.Times;
+import org.jamesdbloom.mockserver.mock.Expectation;
 import org.jamesdbloom.mockserver.model.HttpRequest;
 
 /**
@@ -14,7 +16,7 @@ public class MockServerClient {
 
     private final String mockServerURI;
 
-    private ExpectationMapper expectationMapper = new ExpectationMapper();
+    private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
 
     public MockServerClient(String host, int port) {
         mockServerURI = "http://" + host + ":" + port + "/";
@@ -25,16 +27,16 @@ public class MockServerClient {
     }
 
     public ForwardChainExpectation when(HttpRequest httpRequest, Times times) {
-        return new ForwardChainExpectation(this, new ExpectationDTO(httpRequest, times));
+        return new ForwardChainExpectation(this, new Expectation(httpRequest, times));
     }
 
-    public void sendExpectation(ExpectationDTO expectationDTO) {
+    public void sendExpectation(Expectation expectation) {
         HttpClient httpClient = new HttpClient();
         try {
             httpClient.start();
-            httpClient.newRequest(mockServerURI).method(HttpMethod.PUT).content(new StringContentProvider(expectationMapper.serialize(expectationDTO))).send();
+            httpClient.newRequest(mockServerURI).method(HttpMethod.PUT).content(new StringContentProvider(expectationSerializer.serialize(expectation))).send();
         } catch (Exception e) {
-            throw new RuntimeException(String.format("Exception sending expectation to MockServer as %s", expectationDTO), e);
+            throw new RuntimeException(String.format("Exception sending expectation to MockServer as %s", expectation), e);
         }
     }
 }
