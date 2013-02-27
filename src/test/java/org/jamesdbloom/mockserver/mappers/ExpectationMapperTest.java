@@ -2,6 +2,7 @@ package org.jamesdbloom.mockserver.mappers;
 
 import com.google.common.collect.ImmutableMap;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.eclipse.jetty.http.HttpStatus;
 import org.jamesdbloom.mockserver.client.ExpectationDTO;
 import org.jamesdbloom.mockserver.matchers.HttpRequestMatcher;
 import org.jamesdbloom.mockserver.matchers.Times;
@@ -15,8 +16,10 @@ import org.springframework.mock.web.MockHttpServletRequest;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -30,6 +33,47 @@ import static org.mockito.MockitoAnnotations.initMocks;
  */
 public class ExpectationMapperTest {
 
+    private final HashMap fullMap = new HashMap() {{
+        put("times",
+                new HashMap() {{
+                    put("unlimited", "true");
+                    put("remainingTimes", "1");
+                }});
+        put("httpResponse",
+                new HashMap() {{
+                    put("headers", Arrays.asList(new Header("name", "value")));
+                    put("responseCode", "" + HttpStatus.BAD_GATEWAY_502);
+                    put("body", "somebody");
+                    put("delay",
+                            new HashMap() {{
+                                put("timeUnit", "MINUTES");
+                                put("value", "2");
+                            }});
+                    put("cookies", Arrays.asList(new Cookie("name", "value")));
+                }});
+        put("httpRequest",
+                new HashMap() {{
+                    put("headers", Arrays.asList(new Header("name", "value")));
+                    put("body", "somebody");
+                    put("bodyParameters", Arrays.asList(new Parameter("bodyParameterName", "bodyParameterValue")));
+                    put("path", "somepath");
+                    put("cookies", Arrays.asList(new Cookie("name", "value")));
+                    put("queryParameters", Arrays.asList(new Parameter("queryParameterName", "queryParameterValue")));
+                }});
+    }};
+    private final HttpResponse fullHttpResponse = new HttpResponse()
+            .withStatusCode(HttpStatus.BAD_GATEWAY_502)
+            .withBody("somebody")
+            .withHeaders(new Header("name", "value"))
+            .withCookies(new Cookie("name", "value"))
+            .withDelay(new Delay(TimeUnit.MINUTES, 2));
+    private final HttpRequest fullHttpRequest = new HttpRequest()
+            .withPath("somepath")
+            .withBody("somebody")
+            .withHeaders(new Header("name", "value"))
+            .withCookies(new Cookie("name", "value"))
+            .withQueryParameters(new Parameter("queryParameterName", "queryParameterValue"))
+            .withBodyParameters(new Parameter("bodyParameterName", "bodyParameterValue"));
     @Mock
     private ObjectMapper objectMapper;
     @InjectMocks
@@ -45,14 +89,14 @@ public class ExpectationMapperTest {
     @Test
     public void deserialize() throws IOException {
         // given
-        HttpResponse httpResponse = new HttpResponse().withBody("somebody");
-        when(objectMapper.readValue(any(InputStream.class), same(Map.class))).thenReturn(ImmutableMap.of("httpResponse", ImmutableMap.of("body", "somebody")));
+        when(objectMapper.readValue(any(InputStream.class), same(Map.class))).thenReturn(fullMap);
 
         // when
         Expectation expectation = expectationMapper.deserialize(new MockHttpServletRequest());
 
         // then
-        assertEquals(httpResponse, expectation.getHttpResponse());
+        assertEquals(fullHttpResponse, expectation.getHttpResponse());
+        assertEquals(fullHttpResponse, expectation.getHttpRequest());
     }
 
     @Test(expected = RuntimeException.class)
@@ -67,21 +111,14 @@ public class ExpectationMapperTest {
     @Test
     public void serialize() throws IOException {
         // given
-        ExpectationDTO expectationDTO = new ExpectationDTO(new HttpRequest().withBody("somebody"), Times.unlimited());
-        expectationDTO.respond(new HttpResponse().withBody("somebody"));
+        ExpectationDTO expectationDTO = new ExpectationDTO(fullHttpRequest,Times.unlimited());
+        expectationDTO.respond(fullHttpResponse);
 
         // when
         expectationMapper.serialize(expectationDTO);
 
         // then
-        verify(objectMapper).writeValueAsString(ImmutableMap.of(
-                "times",
-                ImmutableMap.of("unlimited", "true", "remainingTimes", "1"),
-                "httpRequest",
-                ImmutableMap.of("headers", new ArrayList<Header>(), "body", "somebody", "responseCode", "200", "delay", ImmutableMap.of("timeUnit", "MICROSECONDS", "value", "0"), "cookies", new ArrayList<Cookie>()),
-                "httpResponse",
-                ImmutableMap.of("headers", new ArrayList<Header>(), "body", "somebody", "path", "", "cookies", new ArrayList<Cookie>(), "queryParameters", new ArrayList<Parameter>())
-        ));
+        verify(objectMapper).writeValueAsString(fullMap);
     }
 
     @Test(expected = RuntimeException.class)

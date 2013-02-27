@@ -1,5 +1,6 @@
 package org.jamesdbloom.mockserver.mock;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.jamesdbloom.mockserver.matchers.HttpRequestMatcher;
 import org.jamesdbloom.mockserver.matchers.Times;
 import org.jamesdbloom.mockserver.model.HttpRequest;
@@ -14,6 +15,7 @@ public class Expectation extends ModelObject {
     private final HttpRequestMatcher httpRequestMatcher;
     private final Times times;
     private HttpResponse httpResponse;
+    private HttpResponse httpRequest;
 
     public Expectation(HttpRequestMatcher httpRequestMatcher, Times times) {
         this.httpRequestMatcher = httpRequestMatcher;
@@ -43,5 +45,10 @@ public class Expectation extends ModelObject {
 
     public boolean contains(HttpRequestMatcher httpRequestMatcher) {
         return httpRequestMatcher != null && this.httpRequestMatcher.equals(httpRequestMatcher);
+    }
+
+    @VisibleForTesting
+    public HttpResponse getHttpRequest() {
+        return httpRequest;
     }
 }
