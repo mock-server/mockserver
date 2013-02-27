@@ -3,6 +3,7 @@ package org.jamesdbloom.mockserver.model;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -22,7 +23,7 @@ public class KeyToMultiValue<K, V> extends ModelObject {
         if (values != null) {
             this.values = values;
         } else {
-            this.values = null;
+            this.values = new ArrayList<V>();
         }
     }
 
