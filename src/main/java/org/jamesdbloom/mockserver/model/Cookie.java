@@ -1,6 +1,6 @@
 package org.jamesdbloom.mockserver.model;
 
-import org.jamesdbloom.mockserver.client.serialization.model.CookieDTO;
+import java.util.List;
 
 /**
  * @author jamesdbloom
@@ -11,7 +11,7 @@ public class Cookie extends KeyToMultiValue<String, String> {
         super(name, value);
     }
 
-    public Cookie(CookieDTO cookie) {
-        super(cookie.getName(), cookie.getValues());
+    public Cookie(String name, List<String> value) {
+        super(name, value);
     }
 }

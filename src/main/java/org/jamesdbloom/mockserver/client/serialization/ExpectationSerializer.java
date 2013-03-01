@@ -29,7 +29,7 @@ public class ExpectationSerializer {
         try {
             ExpectationDTO expectationDTO = objectMapper.readValue(inputStream, ExpectationDTO.class);
             if (expectationDTO != null) {
-                expectation = new Expectation(expectationDTO);
+                expectation = expectationDTO.buildObject();
             }
         } catch (IOException ioe) {
             RuntimeException runtimeException = new RuntimeException("Exception while parsing response for http response expectation with value of", ioe);

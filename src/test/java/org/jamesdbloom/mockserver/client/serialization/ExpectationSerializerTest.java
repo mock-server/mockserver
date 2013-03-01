@@ -48,23 +48,21 @@ public class ExpectationSerializerTest {
                     new HttpRequestDTO()
                             .setPath("somepath")
                             .setBody("somebody")
-                            .setHeaders(Arrays.<HeaderDTO>asList((HeaderDTO) new HeaderDTO().setName("headerName").setValues(Arrays.asList("headerValue"))))
-                            .setCookies(Arrays.<CookieDTO>asList((CookieDTO) new CookieDTO().setName("cookieName").setValues(Arrays.asList("cookieValue"))))
-                            .setQueryParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO().setName("queryParameterName").setValues(Arrays.asList("queryParameterValue"))))
-                            .setBodyParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO().setName("bodyParameterName").setValues(Arrays.asList("bodyParameterValue")))))
+                            .setHeaders(Arrays.<HeaderDTO>asList((HeaderDTO) new HeaderDTO(new Header("headerName", Arrays.asList("headerValue")))))
+                            .setCookies(Arrays.<CookieDTO>asList((CookieDTO) new CookieDTO(new Cookie("cookieName", Arrays.asList("cookieValue")))))
+                            .setQueryParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")))))
+                            .setBodyParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("bodyParameterName", Arrays.asList("bodyParameterValue"))))))
             .setHttpResponse(
                     new HttpResponseDTO()
-                            .setResponseCode(HttpStatus.NOT_MODIFIED_304)
+                            .setStatusCode(HttpStatus.NOT_MODIFIED_304)
                             .setBody("somebody")
-                            .setHeaders(Arrays.<HeaderDTO>asList((HeaderDTO) new HeaderDTO().setName("headerName").setValues(Arrays.asList("headerValue"))))
-                            .setCookies(Arrays.<CookieDTO>asList((CookieDTO) new CookieDTO().setName("cookieName").setValues(Arrays.asList("cookieValue"))))
+                            .setHeaders(Arrays.<HeaderDTO>asList((HeaderDTO) new HeaderDTO(new Header("headerName", Arrays.asList("headerValue")))))
+                            .setCookies(Arrays.<CookieDTO>asList((CookieDTO) new CookieDTO(new Cookie("cookieName", Arrays.asList("cookieValue")))))
                             .setDelay(
                                     new DelayDTO()
                                             .setTimeUnit(TimeUnit.MICROSECONDS)
                                             .setValue(1)))
-            .setTimes(new TimesDTO()
-                    .setRemainingTimes(1)
-                    .setUnlimited(false));
+            .setTimes(new TimesDTO(Times.once()));
 
     @Mock
     private ObjectMapper objectMapper;

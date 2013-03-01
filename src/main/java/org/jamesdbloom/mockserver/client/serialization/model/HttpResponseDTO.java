@@ -13,14 +13,14 @@ import java.util.List;
  * @author jamesdbloom
  */
 public class HttpResponseDTO extends ModelObject {
-    private Integer responseCode;
+    private Integer statusCode;
     private String body;
     private List<CookieDTO> cookies;
     private List<HeaderDTO> headers;
     private DelayDTO delay;
 
     public HttpResponseDTO(HttpResponse httpResponse) {
-        responseCode = httpResponse.getResponseCode();
+        statusCode = httpResponse.getResponseCode();
         body = httpResponse.getBody();
         headers = Lists.transform(httpResponse.getHeaders(), new Function<Header, HeaderDTO>() {
             public HeaderDTO apply(Header header) {
@@ -38,12 +38,29 @@ public class HttpResponseDTO extends ModelObject {
     public HttpResponseDTO() {
     }
 
-    public Integer getResponseCode() {
-        return responseCode;
+    public HttpResponse buildObject() {
+        return new HttpResponse()
+                .withStatusCode(statusCode)
+                .withBody(body)
+                .withHeaders(Lists.transform(headers, new Function<HeaderDTO, Header>() {
+                    public Header apply(HeaderDTO header) {
+                        return header.buildObject();
+                    }
+                }))
+                .withCookies(Lists.transform(cookies, new Function<CookieDTO, Cookie>() {
+                    public Cookie apply(CookieDTO cookie) {
+                        return cookie.buildObject();
+                    }
+                }))
+                .withDelay(delay.buildObject());
     }
 
-    public HttpResponseDTO setResponseCode(Integer responseCode) {
-        this.responseCode = responseCode;
+    public Integer getStatusCode() {
+        return statusCode;
+    }
+
+    public HttpResponseDTO setStatusCode(Integer statusCode) {
+        this.statusCode = statusCode;
         return this;
     }
 

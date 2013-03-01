@@ -1,7 +1,5 @@
 package org.jamesdbloom.mockserver.model;
 
-import org.jamesdbloom.mockserver.client.serialization.model.DelayDTO;
-
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -15,11 +13,6 @@ public class Delay extends ModelObject {
     public Delay(TimeUnit timeUnit, long value) {
         this.timeUnit = timeUnit;
         this.value = value;
-    }
-
-    public Delay(DelayDTO delay) {
-        timeUnit = delay.getTimeUnit();
-        value = delay.getValue();
     }
 
     public TimeUnit getTimeUnit() {

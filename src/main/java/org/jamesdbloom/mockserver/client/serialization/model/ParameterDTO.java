@@ -11,6 +11,10 @@ public class ParameterDTO extends KeyToMultiValueDTO<String, String> {
         super(parameter);
     }
 
-    public ParameterDTO() {
+    protected ParameterDTO() {
+    }
+
+    public Parameter buildObject() {
+        return new Parameter(getName(), getValues());
     }
 }

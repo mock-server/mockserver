@@ -1,12 +1,5 @@
 package org.jamesdbloom.mockserver.model;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
-import org.jamesdbloom.mockserver.client.serialization.model.CookieDTO;
-import org.jamesdbloom.mockserver.client.serialization.model.HeaderDTO;
-import org.jamesdbloom.mockserver.client.serialization.model.HttpRequestDTO;
-import org.jamesdbloom.mockserver.client.serialization.model.ParameterDTO;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -22,32 +15,8 @@ public class HttpRequest extends ModelObject {
     private List<Parameter> bodyParameters = new ArrayList<Parameter>();
     private List<Cookie> cookies = new ArrayList<Cookie>();
 
-    public HttpRequest(HttpRequestDTO httpRequest) {
-        path = httpRequest.getPath();
-        body = httpRequest.getBody();
-        headers = Lists.transform(httpRequest.getHeaders(), new Function<HeaderDTO, Header>() {
-            public Header apply(HeaderDTO header) {
-                return new Header(header);
-            }
-        });
-        cookies = Lists.transform(httpRequest.getCookies(), new Function<CookieDTO, Cookie>() {
-            public Cookie apply(CookieDTO cookie) {
-                return new Cookie(cookie);
-            }
-        });
-        queryParameters = Lists.transform(httpRequest.getQueryParameters(), new Function<ParameterDTO, Parameter>() {
-            public Parameter apply(ParameterDTO parameter) {
-                return new Parameter(parameter);
-            }
-        });
-        bodyParameters = Lists.transform(httpRequest.getBodyParameters(), new Function<ParameterDTO, Parameter>() {
-            public Parameter apply(ParameterDTO parameter) {
-                return new Parameter(parameter);
-            }
-        });
+    public HttpRequest() {
     }
-
-    public HttpRequest() { }
 
     public String getPath() {
         return path;
@@ -95,6 +64,11 @@ public class HttpRequest extends ModelObject {
         return cookies;
     }
 
+    public HttpRequest withQueryParameters(List<Parameter> queryParameters) {
+        this.queryParameters = queryParameters;
+        return this;
+    }
+
     public HttpRequest withQueryParameters(Parameter... queryParameters) {
         this.queryParameters = Arrays.asList(queryParameters);
         return this;
@@ -102,6 +76,11 @@ public class HttpRequest extends ModelObject {
 
     public List<Parameter> getQueryParameters() {
         return queryParameters;
+    }
+
+    public HttpRequest withBodyParameters(List<Parameter> bodyParameters) {
+        this.bodyParameters = bodyParameters;
+        return this;
     }
 
     public HttpRequest withBodyParameters(Parameter... bodyParameters) {

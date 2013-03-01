@@ -11,6 +11,10 @@ public class HeaderDTO extends KeyToMultiValueDTO<String, String> {
         super(header);
     }
 
-    public HeaderDTO() {
+    protected HeaderDTO() {
+    }
+
+    public Header buildObject() {
+        return new Header(getName(), getValues());
     }
 }

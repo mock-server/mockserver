@@ -45,6 +45,32 @@ public class HttpRequestDTO extends ModelObject {
     public HttpRequestDTO() {
     }
 
+    public HttpRequest buildObject() {
+        return new HttpRequest()
+                .withPath(path)
+                .withBody(body)
+                .withHeaders(Lists.transform(headers, new Function<HeaderDTO, Header>() {
+                    public Header apply(HeaderDTO header) {
+                        return header.buildObject();
+                    }
+                }))
+                .withCookies(Lists.transform(cookies, new Function<CookieDTO, Cookie>() {
+                    public Cookie apply(CookieDTO cookie) {
+                        return cookie.buildObject();
+                    }
+                }))
+                .withQueryParameters(Lists.transform(queryParameters, new Function<ParameterDTO, Parameter>() {
+                    public Parameter apply(ParameterDTO parameter) {
+                        return parameter.buildObject();
+                    }
+                }))
+                .withBodyParameters(Lists.transform(bodyParameters, new Function<ParameterDTO, Parameter>() {
+                    public Parameter apply(ParameterDTO parameter) {
+                        return parameter.buildObject();
+                    }
+                }));
+    }
+
     public String getPath() {
         return path;
     }

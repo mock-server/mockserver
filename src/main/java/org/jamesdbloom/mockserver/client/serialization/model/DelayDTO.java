@@ -21,6 +21,10 @@ public class DelayDTO extends ModelObject {
     public DelayDTO() {
     }
 
+    public Delay buildObject() {
+        return new Delay(timeUnit, value);
+    }
+
     public TimeUnit getTimeUnit() {
         return timeUnit;
     }

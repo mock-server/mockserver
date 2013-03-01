@@ -24,17 +24,7 @@ public class KeyToMultiValueDTO<K, V> extends ModelObject {
         return name;
     }
 
-    public KeyToMultiValueDTO setName(K name) {
-        this.name = name;
-        return this;
-    }
-
     public List<V> getValues() {
         return values;
-    }
-
-    public KeyToMultiValueDTO setValues(List<V> values) {
-        this.values = values;
-        return this;
     }
 }

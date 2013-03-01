@@ -1,6 +1,6 @@
 package org.jamesdbloom.mockserver.model;
 
-import org.jamesdbloom.mockserver.client.serialization.model.ParameterDTO;
+import java.util.List;
 
 /**
  * @author jamesdbloom
@@ -11,7 +11,7 @@ public class Parameter extends KeyToMultiValue<String, String> {
         super(name, value);
     }
 
-    public Parameter(ParameterDTO parameter) {
-        super(parameter.getName(), parameter.getValues());
+    public Parameter(String name, List<String> value) {
+        super(name, value);
     }
 }

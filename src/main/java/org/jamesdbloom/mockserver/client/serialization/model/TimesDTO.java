@@ -19,21 +19,19 @@ public class TimesDTO extends ModelObject {
     public TimesDTO() {
     }
 
+    public Times buildObject() {
+        if (unlimited) {
+            return Times.unlimited();
+        } else {
+            return Times.exactly(remainingTimes);
+        }
+    }
+
     public int getRemainingTimes() {
         return remainingTimes;
     }
 
-    public TimesDTO setRemainingTimes(int remainingTimes) {
-        this.remainingTimes = remainingTimes;
-        return this;
-    }
-
     public boolean isUnlimited() {
         return unlimited;
-    }
-
-    public TimesDTO setUnlimited(boolean unlimited) {
-        this.unlimited = unlimited;
-        return this;
     }
 }

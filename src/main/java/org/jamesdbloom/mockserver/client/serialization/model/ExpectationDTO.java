@@ -1,6 +1,9 @@
 package org.jamesdbloom.mockserver.client.serialization.model;
 
+import org.jamesdbloom.mockserver.matchers.Times;
 import org.jamesdbloom.mockserver.mock.Expectation;
+import org.jamesdbloom.mockserver.model.HttpRequest;
+import org.jamesdbloom.mockserver.model.HttpResponse;
 import org.jamesdbloom.mockserver.model.ModelObject;
 
 /**
@@ -9,9 +12,7 @@ import org.jamesdbloom.mockserver.model.ModelObject;
 public class ExpectationDTO extends ModelObject {
 
     private HttpRequestDTO httpRequest;
-
     private HttpResponseDTO httpResponse;
-
     private TimesDTO times;
 
     public ExpectationDTO(Expectation expectation) {
@@ -27,6 +28,28 @@ public class ExpectationDTO extends ModelObject {
     }
 
     public ExpectationDTO() {
+    }
+
+    public Expectation buildObject() {
+        HttpRequest httpRequest;
+        HttpResponse httpResponse;
+        Times times;
+        if (this.httpRequest != null) {
+            httpRequest = this.httpRequest.buildObject();
+        } else {
+            throw new IllegalArgumentException("HttpRequest must be specified to create an Expectation");
+        }
+        if (this.httpResponse != null) {
+            httpResponse = this.httpResponse.buildObject();
+        } else {
+            throw new IllegalArgumentException("HttpResponse must be specified to create an Expectation");
+        }
+        if (this.times != null) {
+            times = this.times.buildObject();
+        } else {
+            times = Times.unlimited();
+        }
+        return new Expectation(httpRequest, times).respond(httpResponse);
     }
 
     public HttpRequestDTO getHttpRequest() {

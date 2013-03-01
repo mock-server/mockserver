@@ -1,6 +1,6 @@
 package org.jamesdbloom.mockserver.model;
 
-import org.jamesdbloom.mockserver.client.serialization.model.HeaderDTO;
+import java.util.List;
 
 /**
  * @author jamesdbloom
@@ -11,7 +11,7 @@ public class Header extends KeyToMultiValue<String, String> {
         super(name, value);
     }
 
-    public Header(HeaderDTO header) {
-        super(header.getName(), header.getValues());
+    public Header(String name, List<String> value) {
+        super(name, value);
     }
 }

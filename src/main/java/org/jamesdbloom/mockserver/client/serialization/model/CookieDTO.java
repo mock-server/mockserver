@@ -11,6 +11,10 @@ public class CookieDTO extends KeyToMultiValueDTO<String, String> {
         super(cookie);
     }
 
-    public CookieDTO() {
+    protected CookieDTO() {
+    }
+
+    public Cookie buildObject() {
+        return new Cookie(getName(), getValues());
     }
 }
