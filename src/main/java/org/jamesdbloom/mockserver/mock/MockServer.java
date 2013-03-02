@@ -18,7 +18,6 @@ import java.util.List;
 public class MockServer extends ModelObject {
 
     protected final List<Expectation> expectations = new ArrayList<Expectation>();
-    private ExpectationMapper expectationMapper = new ExpectationMapper();
 
     public Expectation when(final HttpRequest httpRequest) {
         Collection<Expectation> existingExpectationsWithMatchingRequest = Collections2.filter(expectations, new Predicate<Expectation>() {

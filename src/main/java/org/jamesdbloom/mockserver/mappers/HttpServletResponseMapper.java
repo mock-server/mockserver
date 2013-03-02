@@ -3,6 +3,8 @@ package org.jamesdbloom.mockserver.mappers;
 import org.jamesdbloom.mockserver.model.Cookie;
 import org.jamesdbloom.mockserver.model.Header;
 import org.jamesdbloom.mockserver.model.HttpResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -11,6 +13,8 @@ import java.io.IOException;
  * @author jamesdbloom
  */
 public class HttpServletResponseMapper {
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
+
     public void mapHttpServletResponse(HttpResponse httpResponse, HttpServletResponse httpServletResponse) {
         setStatusCode(httpResponse, httpServletResponse);
         setBody(httpResponse, httpServletResponse);
@@ -29,6 +33,7 @@ public class HttpServletResponseMapper {
             try {
                 httpServletResponse.getOutputStream().write(httpResponse.getBody().getBytes());
             } catch (IOException ioe) {
+                logger.error(String.format("IOException while writing %s to HttpServletResponse output stream", httpResponse.getBody()), ioe);
                 throw new RuntimeException(String.format("IOException while writing %s to HttpServletResponse output stream", httpResponse.getBody()), ioe);
             }
         }

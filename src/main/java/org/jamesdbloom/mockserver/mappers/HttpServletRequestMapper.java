@@ -3,6 +3,8 @@ package org.jamesdbloom.mockserver.mappers;
 import org.jamesdbloom.mockserver.model.Cookie;
 import org.jamesdbloom.mockserver.model.Header;
 import org.jamesdbloom.mockserver.model.HttpRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -15,6 +17,7 @@ import java.util.List;
  * @author jamesdbloom
  */
 public class HttpServletRequestMapper {
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public HttpRequest createHttpRequest(HttpServletRequest httpServletRequest) {
         HttpRequest httpRequest = new HttpRequest();
@@ -40,6 +43,7 @@ public class HttpServletRequestMapper {
                 httpRequest.withBody(new String(bodyBytes));
             }
         } catch (IOException ioe) {
+            logger.error("IOException while reading HttpServletRequest input stream", ioe);
             throw new RuntimeException("IOException while reading HttpServletRequest input stream", ioe);
         }
     }

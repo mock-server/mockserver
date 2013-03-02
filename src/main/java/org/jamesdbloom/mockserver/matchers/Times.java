@@ -16,11 +16,6 @@ public class Times extends ModelObject {
         this.unlimited = unlimited;
     }
 
-    public Times(TimesDTO timesDTO) {
-        this.remainingTimes = timesDTO.getRemainingTimes();
-        this.unlimited = timesDTO.isUnlimited();
-    }
-
     public int getRemainingTimes() {
         return remainingTimes;
     }
@@ -42,7 +37,12 @@ public class Times extends ModelObject {
     }
 
     public boolean greaterThenZero() {
-        return unlimited || remainingTimes > 0;
+        if(unlimited || remainingTimes > 0) {
+            return true;
+        } else {
+            logger.trace("Remaining count is 0");
+            return false;
+        }
     }
 
     public void decrement() {

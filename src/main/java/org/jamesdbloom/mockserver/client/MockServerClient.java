@@ -7,11 +7,14 @@ import org.jamesdbloom.mockserver.client.serialization.ExpectationSerializer;
 import org.jamesdbloom.mockserver.matchers.Times;
 import org.jamesdbloom.mockserver.mock.Expectation;
 import org.jamesdbloom.mockserver.model.HttpRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author jamesdbloom
  */
 public class MockServerClient {
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final String mockServerURI;
 
@@ -35,6 +38,7 @@ public class MockServerClient {
             httpClient.start();
             httpClient.newRequest(mockServerURI).method(HttpMethod.PUT).content(new StringContentProvider(expectationSerializer.serialize(expectation))).send();
         } catch (Exception e) {
+            logger.error(String.format("Exception sending expectation to MockServer as %s", expectation), e);
             throw new RuntimeException(String.format("Exception sending expectation to MockServer as %s", expectation), e);
         }
     }

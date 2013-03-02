@@ -2,11 +2,14 @@ package org.jamesdbloom.mockserver.server;
 
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author jamesdbloom
  */
 public class EmbeddedJettyRunner {
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final Server server;
 
@@ -25,6 +28,7 @@ public class EmbeddedJettyRunner {
         try {
             server.start();
         } catch (Exception e) {
+            logger.error("Failed to start embedded jetty server", e);
             throw new RuntimeException("Failed to start embedded jetty server", e);
         }
     }

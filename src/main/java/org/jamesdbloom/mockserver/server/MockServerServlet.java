@@ -6,6 +6,8 @@ import org.jamesdbloom.mockserver.mappers.HttpServletResponseMapper;
 import org.jamesdbloom.mockserver.mock.MockServer;
 import org.jamesdbloom.mockserver.model.HttpRequest;
 import org.jamesdbloom.mockserver.model.HttpResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -16,6 +18,7 @@ import java.io.IOException;
  * @author jamesdbloom
  */
 public class MockServerServlet extends HttpServlet {
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private MockServer mockServer = new MockServer();
     private HttpServletRequestMapper httpServletRequestMapper = new HttpServletRequestMapper();

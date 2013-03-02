@@ -11,6 +11,7 @@ import org.jamesdbloom.mockserver.model.ModelObject;
  */
 public class Expectation extends ModelObject {
 
+    public static final ExpectationMapper EXPECTATION_MAPPER = new ExpectationMapper();
     private final HttpRequest httpRequest;
     private final Times times;
     private HttpResponse httpResponse;
@@ -38,7 +39,7 @@ public class Expectation extends ModelObject {
     }
 
     public boolean matches(HttpRequest httpRequest) {
-        boolean matches = times.greaterThenZero() && new ExpectationMapper().transformsToMatcher(this.httpRequest).matches(httpRequest);
+        boolean matches = times.greaterThenZero() && EXPECTATION_MAPPER.transformsToMatcher(this.httpRequest).matches(httpRequest);
         if (matches) {
             times.decrement();
         }

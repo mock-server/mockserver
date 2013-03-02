@@ -21,6 +21,8 @@ public class MapMatcher<K, V> extends ModelObject implements Matcher<List<KeyToM
 
         if (containsAll(KeyToMultiValue.toMultiMap(values), this.multimap)) {
             result = true;
+        } else {
+            logger.trace("Failed to match {} with {}", values, multimap);
         }
 
         return result;

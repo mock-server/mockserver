@@ -26,8 +26,9 @@ public class Delay extends ModelObject {
     public void applyDelay() {
         try {
             timeUnit.sleep(value);
-        } catch (InterruptedException e) {
-            throw new RuntimeException("InterruptedException while apply delay to response", e);
+        } catch (InterruptedException ie) {
+            logger.error("InterruptedException while apply delay to response", ie);
+            throw new RuntimeException("InterruptedException while apply delay to response", ie);
         }
     }
 }

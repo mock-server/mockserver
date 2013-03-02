@@ -13,6 +13,8 @@ import org.jamesdbloom.mockserver.model.Header;
 import org.jamesdbloom.mockserver.model.HttpRequest;
 import org.jamesdbloom.mockserver.model.HttpResponse;
 import org.jamesdbloom.mockserver.server.EmbeddedJettyRunner;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -25,28 +27,60 @@ import static org.junit.Assert.assertEquals;
  */
 public class ClientServerTest {
 
+    private EmbeddedJettyRunner embeddedJettyRunner;
+    private MockServerClient mockServerClient;
+
+    @Before
+    public void startServerAndCreateClient() {
+        embeddedJettyRunner = new EmbeddedJettyRunner(8080);
+        mockServerClient = new MockServerClient("localhost", 8080);
+    }
+
+    @After
+    public void stopServer() throws Exception {
+        embeddedJettyRunner.stop();
+    }
+
     @Test
     public void clientCanCallServer() throws Exception {
-        // given
-        EmbeddedJettyRunner embeddedJettyRunner = new EmbeddedJettyRunner(8080);
-        MockServerClient mockServerClient = new MockServerClient("localhost", 8080);
-
         // when
         mockServerClient.when(new HttpRequest()).respond(new HttpResponse().withBody("somebody"));
 
         // then
-        HttpResponse server = new HttpResponse()
-                .withStatusCode(HttpStatus.OK_200)
-                .withHeaders(new Header("Content-Length", "" + "somebody".length()), new Header("Server", "Jetty(9.0.0.RC0)"))
-                .withBody("somebody");
-        assertEquals(server, makeRequest(new HttpRequest()));
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatus.OK_200)
+                        .withHeaders(new Header("Content-Length", "" + "somebody".length()), new Header("Server", "Jetty(9.0.0.RC0)"))
+                        .withBody("somebody"),
+                makeRequest(new HttpRequest()));
     }
 
-    public HttpResponse makeRequest(HttpRequest httpRequest) throws Exception {
+    @Test
+    public void clientCanCallServerMatchBody() throws Exception {
+        // when
+        mockServerClient.when(new HttpRequest().withPath("/somepath1")).respond(new HttpResponse().withBody("somebody1"));
+        mockServerClient.when(new HttpRequest().withPath("/somepath2")).respond(new HttpResponse().withBody("somebody2"));
+
+        // then
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatus.OK_200)
+                        .withHeaders(new Header("Content-Length", "" + "somebody2".length()), new Header("Server", "Jetty(9.0.0.RC0)"))
+                        .withBody("somebody2"),
+                makeRequest(new HttpRequest().withPath("/somepath2")));
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatus.OK_200)
+                        .withHeaders(new Header("Content-Length", "" + "somebody1".length()), new Header("Server", "Jetty(9.0.0.RC0)"))
+                        .withBody("somebody1"),
+                makeRequest(new HttpRequest().withPath("/somepath1")));
+    }
+
+    private HttpResponse makeRequest(HttpRequest httpRequest) throws Exception {
         HttpResponse httpResponse;
         HttpClient httpClient = new HttpClient();
         httpClient.start();
-        Request request = httpClient.newRequest("http://localhost:8080/" + httpRequest.getPath()).method(HttpMethod.GET).content(new StringContentProvider(httpRequest.getBody()));
+        Request request = httpClient.newRequest("http://localhost:8080" + (httpRequest.getPath().startsWith("/") ? "" : "/") + httpRequest.getPath()).method(HttpMethod.GET).content(new StringContentProvider(httpRequest.getBody()));
         for (Header header : httpRequest.getHeaders()) {
             for (String value : header.getValues()) {
                 request.header(header.getName(), value);

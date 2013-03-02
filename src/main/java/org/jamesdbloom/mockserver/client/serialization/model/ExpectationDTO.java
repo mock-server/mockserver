@@ -37,11 +37,13 @@ public class ExpectationDTO extends ModelObject {
         if (this.httpRequest != null) {
             httpRequest = this.httpRequest.buildObject();
         } else {
+            logger.warn("HttpRequest must be specified to create an Expectation");
             throw new IllegalArgumentException("HttpRequest must be specified to create an Expectation");
         }
         if (this.httpResponse != null) {
             httpResponse = this.httpResponse.buildObject();
         } else {
+            logger.warn("HttpResponse must be specified to create an Expectation");
             throw new IllegalArgumentException("HttpResponse must be specified to create an Expectation");
         }
         if (this.times != null) {
