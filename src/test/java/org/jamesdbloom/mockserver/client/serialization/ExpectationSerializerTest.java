@@ -30,6 +30,7 @@ public class ExpectationSerializerTest {
 
     private final Expectation fullExpectation = new Expectation(
             new HttpRequest()
+                    .withMethod("GET")
                     .withPath("somepath")
                     .withBody("somebody")
                     .withHeaders(new Header("headerName", "headerValue"))
@@ -46,6 +47,7 @@ public class ExpectationSerializerTest {
     private final ExpectationDTO fullExpectationDTO = new ExpectationDTO()
             .setHttpRequest(
                     new HttpRequestDTO()
+                            .setMethod("GET")
                             .setPath("somepath")
                             .setBody("somebody")
                             .setHeaders(Arrays.<HeaderDTO>asList((HeaderDTO) new HeaderDTO(new Header("headerName", Arrays.asList("headerValue")))))

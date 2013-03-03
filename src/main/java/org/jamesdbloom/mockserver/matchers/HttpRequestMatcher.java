@@ -10,12 +10,18 @@ import java.util.List;
  */
 public class HttpRequestMatcher extends ModelObject implements Matcher<HttpRequest> {
 
+    private StringMatcher methodMatcher = null;
     private StringMatcher pathMatcher = null;
     private StringMatcher bodyMatcher = null;
     private MapMatcher<String, String> headerMatcher = null;
     private MapMatcher<String, String> queryParameterMatcher = null;
     private MapMatcher<String, String> bodyParameterMatcher = null;
     private MapMatcher<String, String> cookieMatcher = null;
+
+    public HttpRequestMatcher withMethod(String method) {
+        this.methodMatcher = new StringMatcher(method);
+        return this;
+    }
 
     public HttpRequestMatcher withPath(String path) {
         this.pathMatcher = new StringMatcher(path);
@@ -68,7 +74,8 @@ public class HttpRequestMatcher extends ModelObject implements Matcher<HttpReque
     }
 
     public boolean matches(HttpRequest httpRequest) {
-        return matches(pathMatcher, httpRequest.getPath())
+        return matches(methodMatcher, httpRequest.getMethod())
+                && matches(pathMatcher, httpRequest.getPath())
                 && matches(bodyMatcher, httpRequest.getBody())
                 && matches(headerMatcher, (httpRequest.getHeaders() != null ? new ArrayList<KeyToMultiValue<String, String>>(httpRequest.getHeaders()) : null))
                 && matches(queryParameterMatcher, (httpRequest.getQueryParameters() != null ? new ArrayList<KeyToMultiValue<String, String>>(httpRequest.getQueryParameters()) : null))

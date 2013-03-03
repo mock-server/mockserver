@@ -15,7 +15,7 @@ public abstract class ModelObject {
 
     @Override
     public String toString() {
-        return ReflectionToStringBuilder.toString(this, ToStringStyle.SHORT_PREFIX_STYLE);
+        return ReflectionToStringBuilder.toStringExclude(this, "logger");
     }
 
     @Override

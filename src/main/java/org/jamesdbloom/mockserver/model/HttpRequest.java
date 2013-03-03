@@ -1,5 +1,7 @@
 package org.jamesdbloom.mockserver.model;
 
+import org.jamesdbloom.mockserver.matchers.HttpRequestMatcher;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -8,6 +10,7 @@ import java.util.List;
  * @author jamesdbloom
  */
 public class HttpRequest extends ModelObject {
+    private String method = "";
     private String path = "";
     private String body = "";
     private List<Header> headers = new ArrayList<Header>();
@@ -16,6 +19,15 @@ public class HttpRequest extends ModelObject {
     private List<Cookie> cookies = new ArrayList<Cookie>();
 
     public HttpRequest() {
+    }
+
+    public HttpRequest withMethod(String method) {
+        this.method = method;
+        return this;
+    }
+
+    public String getMethod() {
+        return method;
     }
 
     public String getPath() {

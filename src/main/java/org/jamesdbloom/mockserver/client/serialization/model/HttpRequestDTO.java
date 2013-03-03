@@ -10,6 +10,7 @@ import java.util.List;
  * @author jamesdbloom
  */
 public class HttpRequestDTO extends ModelObject {
+    private String method;
     private String path;
     private String body;
     private List<HeaderDTO> headers;
@@ -18,6 +19,7 @@ public class HttpRequestDTO extends ModelObject {
     private List<ParameterDTO> bodyParameters;
 
     public HttpRequestDTO(HttpRequest httpRequest) {
+        method = httpRequest.getMethod();
         path = httpRequest.getPath();
         body = httpRequest.getBody();
         headers = Lists.transform(httpRequest.getHeaders(), new Function<Header, HeaderDTO>() {
@@ -47,6 +49,7 @@ public class HttpRequestDTO extends ModelObject {
 
     public HttpRequest buildObject() {
         return new HttpRequest()
+                .withMethod(method)
                 .withPath(path)
                 .withBody(body)
                 .withHeaders(Lists.transform(headers, new Function<HeaderDTO, Header>() {
@@ -69,6 +72,15 @@ public class HttpRequestDTO extends ModelObject {
                         return parameter.buildObject();
                     }
                 }));
+    }
+
+    public String getMethod() {
+        return method;
+    }
+
+    public HttpRequestDTO setMethod(String method) {
+        this.method = method;
+        return this;
     }
 
     public String getPath() {

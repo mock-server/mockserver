@@ -26,6 +26,14 @@ public class MockServerServlet extends HttpServlet {
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
 
     public void doGet(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
+        doPOSTandGET(httpServletRequest, httpServletResponse);
+    }
+
+    public void doPost(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
+        doPOSTandGET(httpServletRequest, httpServletResponse);
+    }
+
+    private void doPOSTandGET(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
         HttpRequest httpRequest = httpServletRequestMapper.createHttpRequest(httpServletRequest);
         HttpResponse httpResponse = mockServer.handle(httpRequest);
         if (httpResponse != null) {
