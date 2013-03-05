@@ -14,8 +14,7 @@ public class HttpRequest extends ModelObject {
     private String path = "";
     private String body = "";
     private List<Header> headers = new ArrayList<Header>();
-    private List<Parameter> queryParameters = new ArrayList<Parameter>();
-    private List<Parameter> bodyParameters = new ArrayList<Parameter>();
+    private List<Parameter> parameters = new ArrayList<Parameter>();
     private List<Cookie> cookies = new ArrayList<Cookie>();
 
     public HttpRequest() {
@@ -76,31 +75,17 @@ public class HttpRequest extends ModelObject {
         return cookies;
     }
 
-    public HttpRequest withQueryParameters(List<Parameter> queryParameters) {
-        this.queryParameters = queryParameters;
+    public HttpRequest withParameters(List<Parameter> parameters) {
+        this.parameters = parameters;
         return this;
     }
 
-    public HttpRequest withQueryParameters(Parameter... queryParameters) {
-        this.queryParameters = Arrays.asList(queryParameters);
+    public HttpRequest withParameters(Parameter... parameters) {
+        this.parameters = Arrays.asList(parameters);
         return this;
     }
 
-    public List<Parameter> getQueryParameters() {
-        return queryParameters;
-    }
-
-    public HttpRequest withBodyParameters(List<Parameter> bodyParameters) {
-        this.bodyParameters = bodyParameters;
-        return this;
-    }
-
-    public HttpRequest withBodyParameters(Parameter... bodyParameters) {
-        this.bodyParameters = Arrays.asList(bodyParameters);
-        return this;
-    }
-
-    public List<Parameter> getBodyParameters() {
-        return bodyParameters;
+    public List<Parameter> getParameters() {
+        return parameters;
     }
 }

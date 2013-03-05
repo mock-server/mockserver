@@ -14,8 +14,7 @@ public class ExpectationMapper {
                 .withBody(httpRequest.getBody())
                 .withHeaders(httpRequest.getHeaders())
                 .withCookies(httpRequest.getCookies())
-                .withQueryParameters(httpRequest.getQueryParameters())
-                .withBodyParameters(httpRequest.getBodyParameters());
+                .withParameters(httpRequest.getParameters());
     }
 
 }

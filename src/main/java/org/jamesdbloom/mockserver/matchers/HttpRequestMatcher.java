@@ -14,8 +14,7 @@ public class HttpRequestMatcher extends ModelObject implements Matcher<HttpReque
     private StringMatcher pathMatcher = null;
     private StringMatcher bodyMatcher = null;
     private MapMatcher<String, String> headerMatcher = null;
-    private MapMatcher<String, String> queryParameterMatcher = null;
-    private MapMatcher<String, String> bodyParameterMatcher = null;
+    private MapMatcher<String, String> parameterMatcher = null;
     private MapMatcher<String, String> cookieMatcher = null;
 
     public HttpRequestMatcher withMethod(String method) {
@@ -43,23 +42,13 @@ public class HttpRequestMatcher extends ModelObject implements Matcher<HttpReque
         return this;
     }
 
-    public HttpRequestMatcher withQueryParameters(Parameter... parameters) {
-        this.queryParameterMatcher = new MapMatcher<String, String>(KeyToMultiValue.toMultiMap(parameters));
+    public HttpRequestMatcher withParameters(Parameter... parameters) {
+        this.parameterMatcher = new MapMatcher<String, String>(KeyToMultiValue.toMultiMap(parameters));
         return this;
     }
 
-    public HttpRequestMatcher withQueryParameters(List<Parameter> parameters) {
-        this.queryParameterMatcher = new MapMatcher<String, String>(KeyToMultiValue.toMultiMap(parameters));
-        return this;
-    }
-
-    public HttpRequestMatcher withBodyParameters(Parameter... parameter) {
-        this.bodyParameterMatcher = new MapMatcher<String, String>(KeyToMultiValue.toMultiMap(parameter));
-        return this;
-    }
-
-    public HttpRequestMatcher withBodyParameters(List<Parameter> parameter) {
-        this.bodyParameterMatcher = new MapMatcher<String, String>(KeyToMultiValue.toMultiMap(parameter));
+    public HttpRequestMatcher withParameters(List<Parameter> parameters) {
+        this.parameterMatcher = new MapMatcher<String, String>(KeyToMultiValue.toMultiMap(parameters));
         return this;
     }
 
@@ -78,8 +67,7 @@ public class HttpRequestMatcher extends ModelObject implements Matcher<HttpReque
                 && matches(pathMatcher, httpRequest.getPath())
                 && matches(bodyMatcher, httpRequest.getBody())
                 && matches(headerMatcher, (httpRequest.getHeaders() != null ? new ArrayList<KeyToMultiValue<String, String>>(httpRequest.getHeaders()) : null))
-                && matches(queryParameterMatcher, (httpRequest.getQueryParameters() != null ? new ArrayList<KeyToMultiValue<String, String>>(httpRequest.getQueryParameters()) : null))
-                && matches(bodyParameterMatcher, (httpRequest.getBodyParameters() != null ? new ArrayList<KeyToMultiValue<String, String>>(httpRequest.getBodyParameters()) : null))
+                && matches(parameterMatcher, (httpRequest.getParameters() != null ? new ArrayList<KeyToMultiValue<String, String>>(httpRequest.getParameters()) : null))
                 && matches(cookieMatcher, (httpRequest.getCookies() != null ? new ArrayList<KeyToMultiValue<String, String>>(httpRequest.getCookies()) : null));
     }
 

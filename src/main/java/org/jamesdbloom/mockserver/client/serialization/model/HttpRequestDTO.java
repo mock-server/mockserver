@@ -15,8 +15,7 @@ public class HttpRequestDTO extends ModelObject {
     private String body;
     private List<HeaderDTO> headers;
     private List<CookieDTO> cookies;
-    private List<ParameterDTO> queryParameters;
-    private List<ParameterDTO> bodyParameters;
+    private List<ParameterDTO> parameters;
 
     public HttpRequestDTO(HttpRequest httpRequest) {
         method = httpRequest.getMethod();
@@ -32,12 +31,7 @@ public class HttpRequestDTO extends ModelObject {
                 return new CookieDTO(cookie);
             }
         });
-        queryParameters = Lists.transform(httpRequest.getQueryParameters(), new Function<Parameter, ParameterDTO>() {
-            public ParameterDTO apply(Parameter parameter) {
-                return new ParameterDTO(parameter);
-            }
-        });
-        bodyParameters = Lists.transform(httpRequest.getBodyParameters(), new Function<Parameter, ParameterDTO>() {
+        parameters = Lists.transform(httpRequest.getParameters(), new Function<Parameter, ParameterDTO>() {
             public ParameterDTO apply(Parameter parameter) {
                 return new ParameterDTO(parameter);
             }
@@ -62,12 +56,7 @@ public class HttpRequestDTO extends ModelObject {
                         return cookie.buildObject();
                     }
                 }))
-                .withQueryParameters(Lists.transform(queryParameters, new Function<ParameterDTO, Parameter>() {
-                    public Parameter apply(ParameterDTO parameter) {
-                        return parameter.buildObject();
-                    }
-                }))
-                .withBodyParameters(Lists.transform(bodyParameters, new Function<ParameterDTO, Parameter>() {
+                .withParameters(Lists.transform(parameters, new Function<ParameterDTO, Parameter>() {
                     public Parameter apply(ParameterDTO parameter) {
                         return parameter.buildObject();
                     }
@@ -110,21 +99,12 @@ public class HttpRequestDTO extends ModelObject {
         return this;
     }
 
-    public List<ParameterDTO> getQueryParameters() {
-        return queryParameters;
+    public List<ParameterDTO> getParameters() {
+        return parameters;
     }
 
-    public HttpRequestDTO setQueryParameters(List<ParameterDTO> queryParameters) {
-        this.queryParameters = queryParameters;
-        return this;
-    }
-
-    public List<ParameterDTO> getBodyParameters() {
-        return bodyParameters;
-    }
-
-    public HttpRequestDTO setBodyParameters(List<ParameterDTO> bodyParameters) {
-        this.bodyParameters = bodyParameters;
+    public HttpRequestDTO setParameters(List<ParameterDTO> parameters) {
+        this.parameters = parameters;
         return this;
     }
 

@@ -22,8 +22,7 @@ public class ExpectationMapperTest {
                 .withBody("somebody")
                 .withHeaders(new Header("name", "value"))
                 .withCookies(new Cookie("name", "value"))
-                .withQueryParameters(new Parameter("queryParameterName", "queryParameterValue"))
-                .withBodyParameters(new Parameter("bodyParameterName", "bodyParameterValue"));
+                .withParameters(new Parameter("parameterName", "parameterValue"));
 
         // when
         HttpRequestMatcher httpRequestMapper = new ExpectationMapper().transformsToMatcher(httpRequest);

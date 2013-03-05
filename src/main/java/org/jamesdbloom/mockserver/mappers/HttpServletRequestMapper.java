@@ -20,9 +20,8 @@ import java.util.*;
  * @author jamesdbloom
  */
 public class HttpServletRequestMapper {
-    private Logger logger = LoggerFactory.getLogger(this.getClass());
-
     private static final List<String> REQUEST_WITH_BODY_PARAMETERS = Arrays.asList("POST", "PUT");
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public HttpRequest createHttpRequest(HttpServletRequest httpServletRequest) {
         HttpRequest httpRequest = new HttpRequest();
@@ -79,6 +78,7 @@ public class HttpServletRequestMapper {
 
     private void setParameters(HttpRequest httpRequest, HttpServletRequest httpServletRequest) {
         Map<String, String[]> allParametersMap = httpServletRequest.getParameterMap();
+        List<Parameter> mappedParameters = new ArrayList<Parameter>();
         if (httpServletRequest.getQueryString() != null) {
             Iterable<String> queryParameters = Splitter.on('&').split(StringUtils.removeStart(httpServletRequest.getQueryString(), "?"));
             Multimap<String, String> queryParameterMultimap = HashMultimap.create();
@@ -99,18 +99,16 @@ public class HttpServletRequestMapper {
                     }
                 }
             }
-            List<Parameter> mappedQueryParameters = new ArrayList<Parameter>();
+
             for (String queryName : queryParameterMultimap.keySet()) {
-                mappedQueryParameters.add(new Parameter(queryName, new ArrayList<String>(queryParameterMultimap.get(queryName))));
+                mappedParameters.add(new Parameter(queryName, new ArrayList<String>(queryParameterMultimap.get(queryName))));
             }
-            httpRequest.withQueryParameters(mappedQueryParameters);
         }
         if (REQUEST_WITH_BODY_PARAMETERS.contains(httpServletRequest.getMethod()) && allParametersMap.size() > 0) {
-            List<Parameter> mappedBodyParameters = new ArrayList<Parameter>();
             for (String queryName : allParametersMap.keySet()) {
-                mappedBodyParameters.add(new Parameter(queryName, Arrays.asList(allParametersMap.get(queryName))));
+                mappedParameters.add(new Parameter(queryName, Arrays.asList(allParametersMap.get(queryName))));
             }
-            httpRequest.withBodyParameters(mappedBodyParameters);
         }
+        httpRequest.withParameters(mappedParameters);
     }
 }

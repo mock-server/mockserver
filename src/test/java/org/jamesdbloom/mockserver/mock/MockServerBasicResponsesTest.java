@@ -84,12 +84,12 @@ public class MockServerBasicResponsesTest {
     }
 
     @Test
-    public void respondWhenPathMatchesAndAdditionalQueryParameters() {
+    public void respondWhenPathMatchesAndAdditionalParameters() {
         // when
         mockServer.when(httpRequest.withPath("somepath")).respond(httpResponse.withBody("somebody"));
 
         // then
-        assertEquals(httpResponse, mockServer.handle(new HttpRequest().withPath("somepath").withQueryParameters(new Parameter("name", "value"))));
+        assertEquals(httpResponse, mockServer.handle(new HttpRequest().withPath("somepath").withParameters(new Parameter("name", "value"))));
     }
 
     @Test
@@ -138,12 +138,12 @@ public class MockServerBasicResponsesTest {
     }
 
     @Test
-    public void respondWhenBodyMatchesAndAdditionalQueryParameters() {
+    public void respondWhenBodyMatchesAndAdditionalParameters() {
         // when
         mockServer.when(httpRequest.withBody("somebody")).respond(httpResponse.withBody("somebody"));
 
         // then
-        assertEquals(httpResponse, mockServer.handle(new HttpRequest().withBody("somebody").withQueryParameters(new Parameter("name", "value"))));
+        assertEquals(httpResponse, mockServer.handle(new HttpRequest().withBody("somebody").withParameters(new Parameter("name", "value"))));
     }
 
     @Test
@@ -192,111 +192,57 @@ public class MockServerBasicResponsesTest {
     }
 
     @Test
-    public void respondWhenQueryParameterMatchesExactly() {
+    public void respondWhenParameterMatchesExactly() {
         // when
-        mockServer.when(httpRequest.withQueryParameters(new Parameter("name", "value"))).respond(httpResponse.withBody("somebody"));
+        mockServer.when(httpRequest.withParameters(new Parameter("name", "value"))).respond(httpResponse.withBody("somebody"));
 
         // then
-        assertEquals(httpResponse, mockServer.handle(new HttpRequest().withQueryParameters(new Parameter("name", "value"))));
+        assertEquals(httpResponse, mockServer.handle(new HttpRequest().withParameters(new Parameter("name", "value"))));
     }
 
     @Test
-    public void respondWhenQueryParameterWithMultipleValuesMatchesExactly() {
+    public void respondWhenParameterWithMultipleValuesMatchesExactly() {
         // when
-        mockServer.when(httpRequest.withQueryParameters(new Parameter("name", "value1", "value2"))).respond(httpResponse.withBody("somebody"));
+        mockServer.when(httpRequest.withParameters(new Parameter("name", "value1", "value2"))).respond(httpResponse.withBody("somebody"));
 
         // then
-        assertEquals(httpResponse, mockServer.handle(new HttpRequest().withQueryParameters(new Parameter("name", "value1", "value2"))));
+        assertEquals(httpResponse, mockServer.handle(new HttpRequest().withParameters(new Parameter("name", "value1", "value2"))));
     }
 
     @Test
-    public void doNotRespondWhenQueryParameterWithMultipleValuesDoesNotMatch() {
+    public void doNotRespondWhenParameterWithMultipleValuesDoesNotMatch() {
         // when
-        mockServer.when(httpRequest.withQueryParameters(new Parameter("name", "value1", "value2"))).respond(httpResponse.withBody("somebody"));
+        mockServer.when(httpRequest.withParameters(new Parameter("name", "value1", "value2"))).respond(httpResponse.withBody("somebody"));
 
         // then
-        assertNull(mockServer.handle(new HttpRequest().withQueryParameters(new Parameter("name", "value1", "value3"))));
+        assertNull(mockServer.handle(new HttpRequest().withParameters(new Parameter("name", "value1", "value3"))));
     }
 
     @Test
-    public void doNotRespondWhenQueryParameterWithMultipleValuesHasMissingValue() {
+    public void doNotRespondWhenParameterWithMultipleValuesHasMissingValue() {
         // when
-        mockServer.when(httpRequest.withQueryParameters(new Parameter("name", "value1", "value2"))).respond(httpResponse.withBody("somebody"));
+        mockServer.when(httpRequest.withParameters(new Parameter("name", "value1", "value2"))).respond(httpResponse.withBody("somebody"));
 
         // then
-        assertNull(mockServer.handle(new HttpRequest().withQueryParameters(new Parameter("name", "value1"))));
+        assertNull(mockServer.handle(new HttpRequest().withParameters(new Parameter("name", "value1"))));
     }
 
     @Test
-    public void respondWhenQueryParameterMatchesAndExtraParameters() {
+    public void respondWhenParameterMatchesAndExtraParameters() {
         // when
-        mockServer.when(httpRequest.withQueryParameters(new Parameter("name", "value"))).respond(httpResponse.withBody("somebody"));
+        mockServer.when(httpRequest.withParameters(new Parameter("name", "value"))).respond(httpResponse.withBody("somebody"));
 
         // then
-        assertEquals(httpResponse, mockServer.handle(new HttpRequest().withQueryParameters(new Parameter("nameExtra", "valueExtra"), new Parameter("name", "value"), new Parameter("nameExtraExtra", "valueExtraExtra"))));
+        assertEquals(httpResponse, mockServer.handle(new HttpRequest().withParameters(new Parameter("nameExtra", "valueExtra"), new Parameter("name", "value"), new Parameter("nameExtraExtra", "valueExtraExtra"))));
     }
 
     @Test
-    public void respondWhenQueryParameterMatchesAndPathDifferent() {
+    public void respondWhenParameterMatchesAndPathDifferent() {
         // when
-        mockServer.when(httpRequest.withQueryParameters(new Parameter("name", "value"))).respond(httpResponse.withBody("somebody"));
+        mockServer.when(httpRequest.withParameters(new Parameter("name", "value"))).respond(httpResponse.withBody("somebody"));
 
         // then
-        assertEquals(httpResponse, mockServer.handle(new HttpRequest().withPath("somepath").withQueryParameters(new Parameter("name", "value"))));
-    }
-
-    @Test
-    public void respondWhenBodyParameterMatchesExactly() {
-        // when
-        mockServer.when(httpRequest.withBodyParameters(new Parameter("name", "value"))).respond(httpResponse.withBody("somebody"));
-
-        // then
-        assertEquals(httpResponse, mockServer.handle(new HttpRequest().withBodyParameters(new Parameter("name", "value"))));
-    }
-
-    @Test
-    public void respondWhenBodyParameterWithMultipleValuesMatchesExactly() {
-        // when
-        mockServer.when(httpRequest.withBodyParameters(new Parameter("name", "value1", "value2"))).respond(httpResponse.withBody("somebody"));
-
-        // then
-        assertEquals(httpResponse, mockServer.handle(new HttpRequest().withBodyParameters(new Parameter("name", "value1", "value2"))));
-    }
-
-    @Test
-    public void doNotRespondWhenBodyParameterWithMultipleValuesDoesNotMatch() {
-        // when
-        mockServer.when(httpRequest.withBodyParameters(new Parameter("name", "value1", "value2"))).respond(httpResponse.withBody("somebody"));
-
-        // then
-        assertNull(mockServer.handle(new HttpRequest().withBodyParameters(new Parameter("name", "value1", "value3"))));
-    }
-
-    @Test
-    public void doNotRespondWhenBodyParameterWithMultipleValuesHasMissingValue() {
-        // when
-        mockServer.when(httpRequest.withBodyParameters(new Parameter("name", "value1", "value2"))).respond(httpResponse.withBody("somebody"));
-
-        // then
-        assertNull(mockServer.handle(new HttpRequest().withBodyParameters(new Parameter("name", "value1"))));
-    }
-
-    @Test
-    public void respondWhenBodyParameterMatchesAndExtraParameters() {
-        // when
-        mockServer.when(httpRequest.withBodyParameters(new Parameter("name", "value"))).respond(httpResponse.withBody("somebody"));
-
-        // then
-        assertEquals(httpResponse, mockServer.handle(new HttpRequest().withBodyParameters(new Parameter("nameExtra", "valueExtra"), new Parameter("name", "value"), new Parameter("nameExtraExtra", "valueExtraExtra"))));
-    }
-
-    @Test
-    public void respondWhenBodyParameterMatchesAndPathDifferent() {
-        // when
-        mockServer.when(httpRequest.withBodyParameters(new Parameter("name", "value"))).respond(httpResponse.withBody("somebody"));
-
-        // then
-        assertEquals(httpResponse, mockServer.handle(new HttpRequest().withPath("somepath").withBodyParameters(new Parameter("name", "value"))));
+        assertEquals(httpResponse, mockServer.handle(new HttpRequest().withPath("somepath").withParameters(new Parameter("name", "value"))));
     }
 
     @Test

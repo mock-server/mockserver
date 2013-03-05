@@ -111,8 +111,7 @@ public class ClientServerTest {
                                 .withBody("somebody\nbodyParameterName=bodyParameterValue")
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
-                                .withQueryParameters(new Parameter("queryParameterName", "queryParameterValue"))
-                                .withBodyParameters(new Parameter("bodyParameterName", "bodyParameterValue"))
+                                .withParameters(new Parameter("parameterName", "parameterValue"))
                 )
                 .respond(
                         new HttpResponse()
@@ -132,11 +131,11 @@ public class ClientServerTest {
                         new HttpRequest()
                                 .withMethod("POST")
                                 .withPath("/somepath")
-                                .withBody("somebody\nbodyParameterName=bodyParameterValue")
+                                .withBody("somebody")
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
-                                .withQueryParameters(new Parameter("queryParameterName", "queryParameterValue"))
-                                .withBodyParameters(new Parameter("bodyParameterName", "bodyParameterValue")))
+                                .withParameters(new Parameter("parameterName", "parameterValue"))
+                )
         );
     }
 
@@ -151,8 +150,7 @@ public class ClientServerTest {
                                 .withBody("somebody")
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
-                                .withQueryParameters(new Parameter("queryParameterName", "queryParameterValue"))
-                                .withBodyParameters(new Parameter("bodyParameterName", "bodyParameterValue"))
+                                .withParameters(new Parameter("parameterName", "parameterValue"))
                 )
                 .respond(
                         new HttpResponse()
@@ -173,8 +171,8 @@ public class ClientServerTest {
                                 .withBody("someotherbody")
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
-                                .withQueryParameters(new Parameter("queryParameterName", "queryParameterValue"))
-                                .withBodyParameters(new Parameter("bodyParameterName", "bodyParameterValue")))
+                                .withParameters(new Parameter("parameterName", "parameterValue"))
+                )
         );
     }
 
@@ -182,11 +180,17 @@ public class ClientServerTest {
         HttpResponse httpResponse;
         HttpClient httpClient = new HttpClient();
         httpClient.start();
-        String queryString = buildQueryString(httpRequest.getQueryParameters());
-        if (queryString.length() > 0) {
-            queryString = '?' + queryString;
+        String queryString = "";
+        String body = httpRequest.getBody();
+        if (httpRequest.getMethod().equals("POST")) {
+            body += '\n' + buildQueryString(httpRequest.getParameters());
+        } else {
+            queryString = buildQueryString(httpRequest.getParameters());
+            if (queryString.length() > 0) {
+                queryString = '?' + queryString;
+            }
         }
-        String body = httpRequest.getBody() + '\n' + buildQueryString(httpRequest.getBodyParameters());
+
         Request request = httpClient.newRequest("http://localhost:8090" + (httpRequest.getPath().startsWith("/") ? "" : "/") + httpRequest.getPath() + queryString).method(HttpMethod.fromString(httpRequest.getMethod())).content(new StringContentProvider(body));
         for (Header header : httpRequest.getHeaders()) {
             for (String value : header.getValues()) {
@@ -216,9 +220,9 @@ public class ClientServerTest {
         return httpResponse;
     }
 
-    private String buildQueryString(List<Parameter> queryParameters) {
+    private String buildQueryString(List<Parameter> parameters) {
         String queryString = "";
-        for (Parameter parameter : queryParameters) {
+        for (Parameter parameter : parameters) {
             for (String parameterValue : parameter.getValues()) {
                 queryString += parameter.getName() + '=' + parameterValue + '&';
             }

@@ -85,33 +85,18 @@ public class HttpRequestMatcherTest {
     }
 
     @Test
-    public void matchesMatchingQueryParameters() {
-        assertTrue(new HttpRequestMatcher().withQueryParameters(new Parameter("name", "value")).matches(new HttpRequest().withQueryParameters(new Parameter("name", "value"))));
+    public void matchesMatchingParameters() {
+        assertTrue(new HttpRequestMatcher().withParameters(new Parameter("name", "value")).matches(new HttpRequest().withParameters(new Parameter("name", "value"))));
     }
 
     @Test
-    public void doesNotMatchIncorrectQueryParameterName() {
-        assertFalse(new HttpRequestMatcher().withQueryParameters(new Parameter("name", "value")).matches(new HttpRequest().withQueryParameters(new Parameter("name1", "value"))));
+    public void doesNotMatchIncorrectParameterName() {
+        assertFalse(new HttpRequestMatcher().withParameters(new Parameter("name", "value")).matches(new HttpRequest().withParameters(new Parameter("name1", "value"))));
     }
 
     @Test
-    public void doesNotMatchIncorrectQueryParameterValue() {
-        assertFalse(new HttpRequestMatcher().withQueryParameters(new Parameter("name", "value")).matches(new HttpRequest().withQueryParameters(new Parameter("name", "value1"))));
-    }
-
-    @Test
-    public void matchesMatchingBodyParameters() {
-        assertTrue(new HttpRequestMatcher().withBodyParameters(new Parameter("name", "value")).matches(new HttpRequest().withBodyParameters(new Parameter("name", "value"))));
-    }
-
-    @Test
-    public void doesNotMatchIncorrectBodyParameterName() {
-        assertFalse(new HttpRequestMatcher().withBodyParameters(new Parameter("name", "value")).matches(new HttpRequest().withBodyParameters(new Parameter("name1", "value"))));
-    }
-
-    @Test
-    public void doesNotMatchIncorrectBodyParameterValue() {
-        assertFalse(new HttpRequestMatcher().withBodyParameters(new Parameter("name", "value")).matches(new HttpRequest().withBodyParameters(new Parameter("name", "value1"))));
+    public void doesNotMatchIncorrectParameterValue() {
+        assertFalse(new HttpRequestMatcher().withParameters(new Parameter("name", "value")).matches(new HttpRequest().withParameters(new Parameter("name", "value1"))));
     }
 
 }

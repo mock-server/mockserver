@@ -35,8 +35,7 @@ public class ExpectationSerializerTest {
                     .withBody("somebody")
                     .withHeaders(new Header("headerName", "headerValue"))
                     .withCookies(new Cookie("cookieName", "cookieValue"))
-                    .withQueryParameters(new Parameter("queryParameterName", "queryParameterValue"))
-                    .withBodyParameters(new Parameter("bodyParameterName", "bodyParameterValue")),
+                    .withParameters(new Parameter("parameterName", "parameterValue")),
             Times.once()
     ).respond(new HttpResponse()
             .withStatusCode(HttpStatus.NOT_MODIFIED_304)
@@ -52,8 +51,8 @@ public class ExpectationSerializerTest {
                             .setBody("somebody")
                             .setHeaders(Arrays.<HeaderDTO>asList((HeaderDTO) new HeaderDTO(new Header("headerName", Arrays.asList("headerValue")))))
                             .setCookies(Arrays.<CookieDTO>asList((CookieDTO) new CookieDTO(new Cookie("cookieName", Arrays.asList("cookieValue")))))
-                            .setQueryParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")))))
-                            .setBodyParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("bodyParameterName", Arrays.asList("bodyParameterValue"))))))
+                            .setParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("parameterName", Arrays.asList("parameterValue")))))
+            )
             .setHttpResponse(
                     new HttpResponseDTO()
                             .setStatusCode(HttpStatus.NOT_MODIFIED_304)
@@ -65,7 +64,6 @@ public class ExpectationSerializerTest {
                                             .setTimeUnit(TimeUnit.MICROSECONDS)
                                             .setValue(1)))
             .setTimes(new TimesDTO(Times.once()));
-
     @Mock
     private ObjectMapper objectMapper;
     @InjectMocks

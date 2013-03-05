@@ -30,12 +30,8 @@ public class HttpRequestTest {
     }
 
     @Test
-    public void returnsQueryParameters() {
-        assertEquals(new Parameter("name", "value"), new HttpRequest().withQueryParameters(new Parameter("name", "value")).getQueryParameters().get(0));
+    public void returnsParameters() {
+        assertEquals(new Parameter("name", "value"), new HttpRequest().withParameters(new Parameter("name", "value")).getParameters().get(0));
     }
 
-    @Test
-    public void returnsBodyParameters() {
-        assertEquals(new Parameter("name", "value"), new HttpRequest().withBodyParameters(new Parameter("name", "value")).getBodyParameters().get(0));
-    }
 }
