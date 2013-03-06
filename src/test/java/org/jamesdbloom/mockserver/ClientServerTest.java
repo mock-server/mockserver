@@ -101,14 +101,14 @@ public class ClientServerTest {
     }
 
     @Test
-    public void clientCanCallServerPositionMatchEverything() throws Exception {
+    public void clientCanCallServerPositionMatchEverythingForGET() throws Exception {
         // when
         mockServerClient
                 .when(
                         new HttpRequest()
-                                .withMethod("POST")
+                                .withMethod("GET")
                                 .withPath("/somepath")
-                                .withBody("somebody\nbodyParameterName=bodyParameterValue")
+                                .withBody("somebody")
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
                                 .withParameters(new Parameter("parameterName", "parameterValue"))
@@ -126,15 +126,57 @@ public class ClientServerTest {
                 new HttpResponse()
                         .withStatusCode(HttpStatus.ACCEPTED_202)
                         .withBody("somebody")
-                        .withHeaders(new Header("Content-Length", "" + "somebody".length()), new Header("Server", "Jetty(9.0.0.RC0)")),
+                        .withHeaders(
+                                new Header("headerName", "headerValue"),
+                                new Header("Set-Cookie", "cookieName=cookieValue"),
+                                new Header("Expires", "Thu, 01 Jan 1970 00:00:00 GMT"),
+                                new Header("Content-Length", "" + "somebody".length()),
+                                new Header("Server", "Jetty(9.0.0.RC0)")
+                        ),
                 makeRequest(
                         new HttpRequest()
-                                .withMethod("POST")
+                                .withMethod("GET")
                                 .withPath("/somepath")
                                 .withBody("somebody")
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
                                 .withParameters(new Parameter("parameterName", "parameterValue"))
+                )
+        );
+    }
+
+    @Test
+    public void clientCanCallServerPositionMatchParametersForPOST() throws Exception {
+        // when
+        mockServerClient
+                .when(
+                        new HttpRequest()
+                                .withMethod("POST")
+                                .withPath("/somepath")
+                                .withBody("bodypParameterName=bodyParameterValue")
+                                .withParameters(new Parameter("queryParameterName", "queryParameterValue"))
+                )
+                .respond(
+                        new HttpResponse()
+                                .withStatusCode(HttpStatus.ACCEPTED_202)
+                                .withBody("somebody")
+                );
+
+        // then
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatus.ACCEPTED_202)
+                        .withBody("somebody")
+                        .withHeaders(
+                                new Header("Content-Length", "" + "somebody".length()),
+                                new Header("Server", "Jetty(9.0.0.RC0)")
+                        ),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("POST")
+                                .withPath("/somepath")
+                                .withBody("bodypParameterName=bodyParameterValue")
+                                .withParameters(new Parameter("queryParameterName", "queryParameterValue"))
                 )
         );
     }
@@ -180,18 +222,12 @@ public class ClientServerTest {
         HttpResponse httpResponse;
         HttpClient httpClient = new HttpClient();
         httpClient.start();
-        String queryString = "";
-        String body = httpRequest.getBody();
-        if (httpRequest.getMethod().equals("POST")) {
-            body += '\n' + buildQueryString(httpRequest.getParameters());
-        } else {
-            queryString = buildQueryString(httpRequest.getParameters());
-            if (queryString.length() > 0) {
-                queryString = '?' + queryString;
-            }
+        String queryString = buildQueryString(httpRequest.getParameters());
+        if (queryString.length() > 0) {
+            queryString = '?' + queryString;
         }
 
-        Request request = httpClient.newRequest("http://localhost:8090" + (httpRequest.getPath().startsWith("/") ? "" : "/") + httpRequest.getPath() + queryString).method(HttpMethod.fromString(httpRequest.getMethod())).content(new StringContentProvider(body));
+        Request request = httpClient.newRequest("http://localhost:8090" + (httpRequest.getPath().startsWith("/") ? "" : "/") + httpRequest.getPath() + queryString).method(HttpMethod.fromString(httpRequest.getMethod())).content(new StringContentProvider(httpRequest.getBody()));
         for (Header header : httpRequest.getHeaders()) {
             for (String value : header.getValues()) {
                 request.header(header.getName(), value);
@@ -204,7 +240,7 @@ public class ClientServerTest {
             }
         }
         if (stringBuilder.length() > 0) {
-            request.header("Set-Cookie", stringBuilder.toString());
+            request.header("Cookie", stringBuilder.toString());
         }
         ContentResponse contentResponse = request.send();
         httpResponse = new HttpResponse();
