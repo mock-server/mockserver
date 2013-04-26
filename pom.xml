@@ -101,11 +101,10 @@
             <artifactId>slf4j-api</artifactId>
             <version>1.7.2</version>
         </dependency>
-        <dependency> <!-- use logback in tests -->
+        <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>1.0.9</version>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 
