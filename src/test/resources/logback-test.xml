@@ -13,7 +13,7 @@
         </encoder>
     </appender>
 
-    <logger name="org.jamesdbloom" level="TRACE"/>
+    <logger name="org.mockserver" level="TRACE"/>
 
     <root level="warn">
         <appender-ref ref="FILE" />
