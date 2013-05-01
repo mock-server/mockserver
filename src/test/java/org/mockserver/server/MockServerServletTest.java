@@ -3,6 +3,7 @@ package org.mockserver.server;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.mappers.HttpServletRequestMapper;
 import org.mockserver.mappers.HttpServletResponseMapper;
+import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.MockServer;
 import org.mockserver.model.Header;
@@ -66,17 +67,21 @@ public class MockServerServletTest {
     @Test
     public void setupExpectation() throws IOException {
         // given
-        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
         MockHttpServletRequest httpServletRequest = new MockHttpServletRequest();
-        Expectation expectation = mock(Expectation.class);
+        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
+        HttpRequest httpRequest = mock(HttpRequest.class);
+        Times times = mock(Times.class);
+        Expectation expectation = new Expectation(httpRequest, times).respond(new HttpResponse());
 
         when(expectationSerializer.deserialize(httpServletRequest.getInputStream())).thenReturn(expectation);
+        when(mockServer.when(same(httpRequest), same(times))).thenReturn(expectation);
 
         // when
         mockServerServlet.doPut(httpServletRequest, httpServletResponse);
 
         // then
-        verify(mockServer).addExpectation(same(expectation));
+        verify(mockServer).when(same(httpRequest), same(times));
+        assertEquals(HttpServletResponse.SC_CREATED, httpServletResponse.getStatus());
     }
     
     @Test

@@ -18,24 +18,29 @@ public class MockServer extends ModelObject {
 
     protected final List<Expectation> expectations = new ArrayList<Expectation>();
 
-    public Expectation when(final HttpRequest httpRequest) {
-        Collection<Expectation> existingExpectationsWithMatchingRequest = Collections2.filter(expectations, new Predicate<Expectation>() {
-            public boolean apply(Expectation expectation) {
-                return expectation.contains(httpRequest);
-            }
-        });
-        if (!existingExpectationsWithMatchingRequest.isEmpty()) {
-            for (Expectation expectation : existingExpectationsWithMatchingRequest) {
-                expectation.setNotUnlimitedResponses();
-            }
-            return when(httpRequest, Times.once());
-        } else {
-            return when(httpRequest, Times.unlimited());
-        }
+    public Expectation when(HttpRequest httpRequest) {
+        return when(httpRequest, Times.unlimited());
     }
 
-    public Expectation when(HttpRequest httpRequest, Times times) {
-        Expectation expectation = new Expectation(httpRequest, times);
+    public Expectation when(final HttpRequest httpRequest, Times times) {
+        Expectation expectation;
+        if (times.isUnlimited()) {
+            Collection<Expectation> existingExpectationsWithMatchingRequest = Collections2.filter(expectations, new Predicate<Expectation>() {
+                public boolean apply(Expectation expectation) {
+                    return expectation.contains(httpRequest);
+                }
+            });
+            if (!existingExpectationsWithMatchingRequest.isEmpty()) {
+                for (Expectation existingExpectation : existingExpectationsWithMatchingRequest) {
+                    existingExpectation.setNotUnlimitedResponses();
+                }
+                expectation = new Expectation(httpRequest, Times.once());
+            } else {
+                expectation = new Expectation(httpRequest, Times.unlimited());
+            }
+        } else {
+            expectation = new Expectation(httpRequest, times);
+        }
         expectations.add(expectation);
         return expectation;
     }
@@ -43,16 +48,12 @@ public class MockServer extends ModelObject {
     public HttpResponse handle(HttpRequest httpRequest) {
         for (Expectation expectation : new ArrayList<Expectation>(expectations)) {
             if (expectation.matches(httpRequest)) {
-                if(!expectation.getTimes().greaterThenZero()) {
+                if (!expectation.getTimes().greaterThenZero()) {
                     expectations.remove(expectation);
                 }
                 return expectation.getHttpResponse();
             }
         }
         return null;
-    }
-
-    public void addExpectation(Expectation expectation) {
-        expectations.add(expectation);
     }
 }

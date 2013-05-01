@@ -27,18 +27,6 @@ public class MockServerBasicResponsesTest {
     }
 
     @Test
-    public void addsExpectation() {
-        // given
-        Expectation expectation = mock(Expectation.class);
-
-        // when
-        mockServer.addExpectation(expectation);
-
-        // then
-        assertSame(expectation, mockServer.expectations.get(0));
-    }
-
-    @Test
     public void respondWhenPathMatches() {
         // when
         mockServer.when(httpRequest.withPath("somepath")).respond(httpResponse.withBody("somebody"));

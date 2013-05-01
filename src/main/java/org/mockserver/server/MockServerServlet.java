@@ -3,6 +3,7 @@ package org.mockserver.server;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.mappers.HttpServletRequestMapper;
 import org.mockserver.mappers.HttpServletResponseMapper;
+import org.mockserver.mock.Expectation;
 import org.mockserver.mock.MockServer;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -44,7 +45,8 @@ public class MockServerServlet extends HttpServlet {
     }
 
     public void doPut(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws IOException {
-        mockServer.addExpectation(expectationSerializer.deserialize(httpServletRequest.getInputStream()));
+        Expectation expectation = expectationSerializer.deserialize(httpServletRequest.getInputStream());
+        mockServer.when(expectation.getHttpRequest(), expectation.getTimes()).respond(expectation.getHttpResponse());
         httpServletResponse.setStatus(HttpServletResponse.SC_CREATED);
     }
 
