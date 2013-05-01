@@ -31,3 +31,11 @@ dependencies {
     testCompile 'junit:junit:4.11'
     testCompile 'org.mockito:mockito-all:1.8.4'
 }
+
+task(run, dependsOn: 'classes', type: JavaExec) {
+    main = 'org.mockserver.server.EmbeddedJettyRunner'
+    classpath = sourceSets.main.runtimeClasspath
+    if(project.hasProperty("port")){
+        args port
+    }
+}
