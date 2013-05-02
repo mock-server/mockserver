@@ -167,4 +167,18 @@ public class MockServerServletTest {
         assertEquals(httpServletResponse.getStatus(), HttpServletResponse.SC_CREATED);
     }
 
+    @Test
+    public void shouldClearExpectations() throws IOException {
+        // given
+        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
+        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/clear");
+
+        // when
+        mockServerServlet.doPut(httpServletRequest, httpServletResponse);
+
+        // then
+        verify(mockServer).clear();
+        verifyNoMoreInteractions(httpServletRequestMapper);
+    }
+
 }

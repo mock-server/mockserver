@@ -56,4 +56,8 @@ public class MockServer extends ModelObject {
         }
         return null;
     }
+
+    public void clear() {
+        expectations.clear();
+    }
 }

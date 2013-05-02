@@ -26,8 +26,10 @@ public class MockServerCleanUpTest {
 
     @Test
     public void shouldRemoveExpectationWhenNoMoreTimes() {
-        // when
+        // given
         HttpResponse httpResponse = new HttpResponse().withBody("somebody");
+
+        // when
         mockServer.when(new HttpRequest().withPath("somepath"), Times.exactly(2)).respond(httpResponse);
 
         // then
@@ -35,6 +37,20 @@ public class MockServerCleanUpTest {
         assertEquals(httpResponse, mockServer.handle(new HttpRequest().withPath("somepath")));
         assertArrayEquals(new Expectation[]{}, mockServer.expectations.toArray());
         assertEquals(null, mockServer.handle(new HttpRequest().withPath("somepath")));
+    }
+
+    @Test
+    public void shouldClearAllExpectations() {
+        // given
+        HttpResponse httpResponse = new HttpResponse().withBody("somebody");
+        mockServer.when(new HttpRequest().withPath("somepath"), Times.unlimited()).respond(httpResponse);
+        mockServer.when(new HttpRequest().withPath("somepath"), Times.unlimited()).respond(httpResponse);
+
+        // when
+        mockServer.clear();
+
+        // then
+        assertArrayEquals(new Expectation[]{}, mockServer.expectations.toArray());
     }
 
 }
