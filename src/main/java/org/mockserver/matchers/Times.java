@@ -39,6 +39,7 @@ public class Times extends ModelObject {
         if(unlimited || remainingTimes > 0) {
             return true;
         } else {
+            logger.trace("Remaining count is 0");
             return false;
         }
     }

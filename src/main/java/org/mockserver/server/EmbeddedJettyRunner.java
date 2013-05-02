@@ -16,7 +16,7 @@ public class EmbeddedJettyRunner {
     public static void main(String[] args) throws Exception {
         int port = args.length == 1 ? Integer.parseInt(args[0]) : 8080;
         new EmbeddedJettyRunner(port);
-        logger.info("Started mock server listening on " + port);
+        logger.warn("Started mock server listening on " + port);
     }
 
     public EmbeddedJettyRunner(int port) {

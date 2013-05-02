@@ -39,6 +39,7 @@ public class Expectation extends ModelObject {
     }
 
     public boolean matches(HttpRequest httpRequest) {
+        logger.trace("\nMatching expectation: \n{} \nwith incoming request: \n{}\n", this.httpRequest, httpRequest);
         boolean matches = times.greaterThenZero() && EXPECTATION_MAPPER.transformsToMatcher(this.httpRequest).matches(httpRequest);
         if (matches) {
             times.decrement();

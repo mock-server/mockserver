@@ -1,8 +1,6 @@
 package org.mockserver.model;
 
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
+import org.apache.commons.lang3.builder.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,6 +9,10 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class ModelObject {
     protected Logger logger = LoggerFactory.getLogger(this.getClass());
+
+    static {
+        ReflectionToStringBuilder.setDefaultStyle(ToStringStyle.SHORT_PREFIX_STYLE);
+    }
 
     @Override
     public String toString() {
