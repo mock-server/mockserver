@@ -2,11 +2,35 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <groupId>org.sonatype.oss</groupId>
+        <artifactId>oss-parent</artifactId>
+        <version>7</version>
+    </parent>
+
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>mockserver</groupId>
+    <groupId>org.mockserver</groupId>
     <artifactId>mockserver</artifactId>
     <version>1.0-SNAPSHOT</version>
+
+    <name>Mock Server</name>
+    <description>A simple server to support mocking responses from any server / service that uses HTTP. The expectations that configure how the mock server will respond and to incoming requests can be setup using any language that can create JSON. In simple client is provided to make this easy in Java.</description>
+    <url>http://www.mock-server.com</url>
+
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <url>https://github.com/jamesdbloom/mockservice.git</url>
+        <connection>scm:git:https://github.com/jamesdbloom/mockservice.git</connection>
+        <developerConnection>scm:git:git@github.com:jamesdbloom/mockservice.git</developerConnection>
+    </scm>
 
     <properties>
         <spring.version>3.2.0.RELEASE</spring.version>
@@ -15,6 +39,11 @@
 
     <dependencies>
         <!-- http -->
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-http</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-server</artifactId>
@@ -31,13 +60,6 @@
             <version>${jetty.version}</version>
         </dependency>
 
-        <!-- html -->
-        <dependency>
-            <groupId>org.jsoup</groupId>
-            <artifactId>jsoup</artifactId>
-            <version>1.7.2</version>
-        </dependency>
-
         <!-- json (object serialisation) -->
         <dependency>
             <groupId>org.codehaus.jackson</groupId>
@@ -52,22 +74,12 @@
             <version>${spring.version}</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-web</artifactId>
-            <version>${spring.version}</version>
-        </dependency>
 
         <!-- apache commons -->
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
             <version>3.1</version>
-        </dependency>
-        <dependency>
-            <groupId>commons-collections</groupId>
-            <artifactId>commons-collections</artifactId>
-            <version>3.2.1</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
@@ -78,6 +90,19 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>14.0-rc3</version>
+        </dependency>
+
+        <!-- logging -->
+        <dependency> <!-- will map to any underlying logging framework -->
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.2</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.0.9</version>
+            <scope>runtime</scope>
         </dependency>
 
         <!-- Test -->
@@ -93,22 +118,29 @@
             <version>1.8.4</version>
             <scope>test</scope>
         </dependency>
-
-        <!-- logging -->
-        <dependency> <!-- will map to any underlying logging framework -->
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>1.7.2</version>
-        </dependency>
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>1.0.9</version>
-        </dependency>
     </dependencies>
 
     <build>
         <plugins>
+            <!-- dependency analysis -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>2.6</version>
+                <executions>
+                    <execution>
+                        <id>break-on-dependency-warnings</id>
+                        <goals>
+                            <goal>analyze-only</goal>
+                        </goals>
+                        <configuration>
+                            <failOnWarning>false</failOnWarning>
+                            <ignoreNonCompile>true</ignoreNonCompile>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- generate single runnable jar (assembly:single) -->
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
