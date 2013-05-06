@@ -1,5 +1,8 @@
-Mock Service
-------------
+Mock Server
+-----------
+
+What is Mock Server
+===================
 
 API to enable the mocking of any system you integrate with via HTTP (i.e. services, web sites, etc)
 
@@ -18,6 +21,15 @@ Responses can contain:
 * body
 * headers
 * cookies
+
+Why use Mock Server
+===================
+
+Mock server allows you to mock any server or service that you connect to over HTTP, such as REST or RPC service.  
+
+This is useful in the following scenarios:
+* testing - mocking HTTP dependencies allows the tests to run repeatably ensuring tests only fail when there is a bug.  It is particularly important to isolate the system under test from external changes that will cause the tests to fail even though those changes are not within the scope of the test.
+* de-coupling development - if a API or service is not yet fully developed mock server can mock the API allowing the teams to be isolated. This is particularly helpful during the initial development phases when the API / service may be extremely unstable and unreliable.
 
 Requirements
 ============
