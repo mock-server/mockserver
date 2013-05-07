@@ -1,12 +1,12 @@
-Mock Server
------------
+MockServer
+----------
 
-What is Mock Server
-===================
+What is MockServer
+==================
 
 API to enable the mocking of any system you integrate with via HTTP (i.e. services, web sites, etc)
 
-This API allows you to setup expectations using an example HTTP request and a HTTP response.  When the Mock Server then receives a matching request it will provide the specified response.
+This API allows you to setup expectations using an example HTTP request and a HTTP response.  When the MockServer then receives a matching request it will provide the specified response.
 
 Requests can be matched on:
 * path (regex or plain text)
@@ -22,12 +22,12 @@ Responses can contain:
 * headers
 * cookies
 
-Mock server has already been used on multiple large commercial projects to run large test suits that execute in parallel.
+MockServer has already been used on multiple large commercial projects to run large test suits that execute in parallel.
 
-Why use Mock Server
-===================
+Why use MockServer
+==================
 
-Mock server allows you to mock any server or service that you connect to over HTTP, such as REST or RPC service.  
+MockServer allows you to mock any server or service that you connect to over HTTP, such as REST or RPC service.  
 
 This is useful in the following scenarios:
 * testing 
@@ -35,16 +35,24 @@ This is useful in the following scenarios:
  * isolate the system under test to ensure tests run reliably and only fail when there is a genuine bug.  It is important only the system under test is tested and not its dependencies to avoid tests failing due to irrelevant external changes such as network failure or a server being rebooted / redeployed.
  * easily setup mock responses independently for each test to ensure test data is encapsulated with each test.  Avoid sharing data between tests that is difficult to manage and maintain and risks test infecting each other.
 * de-coupling development
- * start working against a service API before the service is available.  If an API or service is not yet fully developed mock server can mock the API allowing the teams who is using the service to start work without being delayed. 
+ * start working against a service API before the service is available.  If an API or service is not yet fully developed MockServer can mock the API allowing the teams who is using the service to start work without being delayed. 
  * isolate development teams particularly critical during the initial development phases when the APIs / services may be extremely unstable and volatile.  Using the mock server allows development work to continue even when an external service fails.
 
-How to use Mock Server
-======================
+How to use MockServer
+=====================
 
-To use the mock server:
+To use the MockServer:
  1. create mock response
  2. setup expectation
  3. run test
+
+A system with service dependancies as follows:
+
+![System In Production](/SystemInProduction.png)
+
+Could be tested with MockServer, mocking the service dependancies, as follows:
+
+![Mocking service dependancies with Mock Server](/SystemUnderTest.png)
 
 Requirements
 ============
