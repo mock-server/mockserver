@@ -84,11 +84,11 @@ The org.mockserver.model.HttpResponse class is used to specify the details of ea
     
 For example:
 
-        HttpResponse httpResponse =
-                new HttpResponse()
-                        .withStatusCode(200)
-                        .withHeaders(new Header("Content-Type", "application/json; charset=utf-8"))
-                        .withBody("{ message: 'a simple json response' ");
+    HttpResponse httpResponse =
+            new HttpResponse()
+                    .withStatusCode(200)
+                    .withHeaders(new Header("Content-Type", "application/json; charset=utf-8"))
+                    .withBody("{ message: 'a simple json response' ");
 
 JavaScript API
 
