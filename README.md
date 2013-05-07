@@ -51,6 +51,49 @@ Could be tested with MockServer, mocking the service dependancies, as follows:
 
 ![Mocking service dependancies with Mock Server](/SystemUnderTest.png)
 
+1. create mock response
+-----------------------
+
+The mock response can include any aspects of a HTTP request including: 
+* response code i.e. 200, 302, 404, etc
+* body - a string containing any content
+* cookies - each with a name and with one or more values, more complex cookies can be modeled by using the a Set-Cookie header
+* headers - each with a name and one or more values
+* delay - including both the time unit (java.util.concurrent.TimeUnit) and value
+
+Java API
+
+The org.mockserver.model.HttpResponse class is used to specify the details of each HTTP response with a fluent API:
+
+    public class HttpResponse extends ModelObject {
+
+        public HttpResponse withStatusCode(Integer responseCode);
+
+        public HttpResponse withBody(String body);
+
+        public HttpResponse withCookies(List<Cookie> cookies);
+
+        public HttpResponse withCookies(Cookie... cookies);
+
+        public HttpResponse withHeaders(List<Header> headers);
+
+        public HttpResponse withHeaders(Header... headers);
+
+        public HttpResponse withDelay(Delay delay);
+    }
+    
+For example:
+
+        HttpResponse httpResponse =
+                new HttpResponse()
+                        .withStatusCode(200)
+                        .withHeaders(new Header("Content-Type", "application/json; charset=utf-8"))
+                        .withBody("{ message: 'a simple json response' ");
+
+JavaScript API
+
+TODO
+
 Requirements
 ============
 
