@@ -1,10 +1,7 @@
-MockServer
-----------
-
 What is MockServer
 ==================
 
-API to enable the mocking of any system you integrate with via HTTP (i.e. services, web sites, etc)
+MockServer is an API to enable the mocking of any system you integrate with via HTTP (i.e. services, web sites, etc)
 
 This API allows you to setup expectations using an example HTTP request and a HTTP response.  When the MockServer then receives a matching request it will provide the specified response.
 
@@ -42,8 +39,8 @@ How to use MockServer
 =====================
 
 To use the MockServer:
- 1. create mock response
- 2. setup expectation
+ 1. create mock responses
+ 2. setup mock expectations
  3. run test
 
 A system with service dependancies as follows:
