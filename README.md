@@ -87,7 +87,10 @@ For example:
     HttpResponse httpResponse =
             new HttpResponse()
                     .withStatusCode(200)
-                    .withHeaders(new Header("Content-Type", "application/json; charset=utf-8"))
+                    .withHeaders(
+                            new Header("Content-Type", "application/json; charset=utf-8"),
+                            new Header("Cache-Control", "public, max-age=86400")
+                    )
                     .withBody("{ message: 'a simple json response' ");
 
 JavaScript API
