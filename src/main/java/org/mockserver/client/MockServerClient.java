@@ -36,7 +36,7 @@ public class MockServerClient {
         HttpClient httpClient = new HttpClient();
         try {
             httpClient.start();
-            httpClient.newRequest(mockServerURI).method(HttpMethod.PUT).content(new StringContentProvider(expectationSerializer.serialize(expectation))).send();
+            httpClient.newRequest(mockServerURI).method(HttpMethod.PUT).header("Content-Type", "application/json; charset=utf-8").content(new StringContentProvider(expectationSerializer.serialize(expectation))).send();
         } catch (Exception e) {
             logger.error(String.format("Exception sending expectation to MockServer as %s", expectation), e);
             throw new RuntimeException(String.format("Exception sending expectation to MockServer as %s", expectation), e);
