@@ -235,6 +235,12 @@ Before any mock expectation can be sent to the MockServer it must be started.
 
 As the MockServer depends on multiple other projects such as Embedded Jetty it is not possible for this project to provide a complete runnable.  Instead a build script in maven and a build script in gradle has been provided so make it simple to build and run the MockServer.
 
+First clone the repository as follows:
+
+    git clone https://github.com/jamesdbloom/mockservice.git
+    
+Next build and run the project using either Maven or Gradle.
+
 **Maven**
 
 To build a single executable jar file in maven run the following command:
@@ -243,16 +249,36 @@ To build a single executable jar file in maven run the following command:
 
 This will produce a jar file under the target directory called mockserver-1.0-SNAPSHOT-jar-with-dependencies.jar
 
+To run the MockServer then use the jar as follows:
+
+    java -jar <path to mockserver-1.0-SNAPSHOT-jar-with-dependencies.jar> <port>
     
-**2.2 Sending Mock Expectation**
+For example to run the MockServer on port 9999:
+
+    java -jar target/mockserver-1.0-SNAPSHOT-jar-with-dependencies.jar 9999
+    
+**Gradle**
+
+In gradle the project can be built and run in a single command as follows:
+
+    gradle run -Pport=<port>
+    
+For example to run the MockServer on port 9999:
+
+    gradle run -Pport=9999
+    
+**2.3 Sending Mock Expectation**
 
 Once the mock response and the request matcher has been created these need to be sent to the MockServer to setup a mock expectation.  
 
 **Java**
 
-In Java this can be done as below.  Please be careful to use the correct port and hostname for the MockServer.
+In Java this can be done as below.  The code below assumes you have started the MockServer on port 9999 and hostname "localhost".
 
-    MockServerClient mockServerClient = new MockServerClient("localhost", 9999);
+    String hostname = "localhost";
+    int port = 9999;
+
+    MockServerClient mockServerClient = new MockServerClient(hostname, port);
 
     HttpRequest httpRequest = new HttpRequest()
             .withMethod("POST")
@@ -270,8 +296,22 @@ In Java this can be done as below.  Please be careful to use the correct port an
                             new Header("Cache-Control", "public, max-age=86400")
                     )
                     .withBody("{ message: 'a simple json response' }");
+                    
+    Expectation expectation = new Expectation(httpRequest, Times.unlimited());
 
-    mockServerClient.sendExpectation(new Expectation(httpRequest, Times.unlimited()).respond(httpResponse));
+    mockServerClient.sendExpectation(expectation).respond(httpResponse));
+    
+The org.mockserver.matchers.Times class is used to specify how many times you want the MockServer to match a request:
+    
+To create an instance to Times use one of the static factor methods:
+
+    Times.unlimited();
+    Times.once();
+    Times.exactly(int count);
+    
+**Javascript**
+
+TODO
 
 Requirements
 ============
