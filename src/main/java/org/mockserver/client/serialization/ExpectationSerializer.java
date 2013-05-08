@@ -1,6 +1,8 @@
 package org.mockserver.client.serialization;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.CharEncoding;
+import org.apache.commons.lang3.CharSet;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.mockserver.client.serialization.model.ExpectationDTO;
 import org.mockserver.mock.Expectation;
@@ -9,6 +11,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 
 /**
  * @author jamesdbloom
@@ -30,7 +34,7 @@ public class ExpectationSerializer {
     public Expectation deserialize(InputStream inputStream) {
         Expectation expectation = null;
         try {
-            byte[] jsonExpectation = IOUtils.toByteArray(inputStream);
+            byte[] jsonExpectation = IOUtils.toByteArray(new InputStreamReader(inputStream), Charset.forName(CharEncoding.UTF_8));
             logger.debug("Received JSON expectation:\n" + new String(jsonExpectation));
             ExpectationDTO expectationDTO = objectMapper.readValue(jsonExpectation, ExpectationDTO.class);
             if (expectationDTO != null) {
