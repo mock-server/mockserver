@@ -1,4 +1,4 @@
-These instructions are currently being activity edited / created.  I have checked in the work so far but please check back in the next week or so to see the first completed version.
+These instructions are currently being actively edited / created.  I have checked in the work so far but please check back in the next week or so to see the first completed version.
 
 What is MockServer
 ==================
@@ -45,13 +45,13 @@ To use the MockServer:
  2. setup mock expectations
  3. run test
 
-A system with service dependancies as follows:
+A system with service dependencies as follows:
 
 ![System In Production](/SystemInProduction.png)
 
-Could be tested with MockServer, mocking the service dependancies, as follows:
+Could be tested with MockServer, mocking the service dependencies, as follows:
 
-![Mocking service dependancies with Mock Server](/SystemUnderTest.png)
+![Mocking service dependencies with Mock Server](/SystemUnderTest.png)
 
 1. create mock response
 -----------------------
@@ -59,7 +59,7 @@ Could be tested with MockServer, mocking the service dependancies, as follows:
 The mock response can include any aspects of a HTTP request including: 
 * **response code** i.e. 200, 302, 404, etc
 * **body** - a string containing any content
-* **cookies** - each with a name and with one or more values, more complex cookies can be modeled by using the a Set-Cookie header
+* **cookies** - each with a name and with one or more values, more complex cookies can be modelled by using the a Set-Cookie header
 * **headers** - each with a name and one or more values
 * **delay** - including both the time unit (java.util.concurrent.TimeUnit) and value
 
@@ -155,12 +155,12 @@ To specify when a response should be provided a request matcher must be provided
 A request can be matched on the following:
 * **method** i.e. GET, POST, PUT, HEAD, etc
 * **path** - a regular expression such as "/jamesdbloom/mockserver.*" or an exaxct match
-* **body** - a regular expression or an exaxct match
+* **body** - a regular expression or an exact match
 * **parameters** - match of query parameters, not all query parameters need to be specified but those that are specified must match exactly, query parameters not specified will be ignored
 * **headers** - not all headers need to be specified but those that are specified must match exactly, headers not specified will be ignored
 * **cookies** - not all cookies need to be specified but those that are specified must match exactly, cookies not specified will be ignored
 
-For full details of the regulat expression format supported for body and path see [Java API for java.util.regex.Pattern](http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html)
+For full details of the regular expression format supported for body and path see [Java API for java.util.regex.Pattern](http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html)
 
 **Java**
 
@@ -241,7 +241,7 @@ First clone the repository as follows:
 
     git clone https://github.com/jamesdbloom/mockservice.git
     
-Next build and run the project using either Maven or Gradle.
+Next build and run the project using either maven or gradle.
 
 **Maven**
 
