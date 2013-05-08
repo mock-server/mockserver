@@ -55,29 +55,27 @@ Could be tested with MockServer, mocking the service dependancies, as follows:
 -----------------------
 
 The mock response can include any aspects of a HTTP request including: 
-* response code i.e. 200, 302, 404, etc
-* body - a string containing any content
-* cookies - each with a name and with one or more values, more complex cookies can be modeled by using the a Set-Cookie header
-* headers - each with a name and one or more values
-* delay - including both the time unit (java.util.concurrent.TimeUnit) and value
+* **response code** i.e. 200, 302, 404, etc
+* **body** - a string containing any content
+* **cookies** - each with a name and with one or more values, more complex cookies can be modeled by using the a Set-Cookie header
+* **headers** - each with a name and one or more values
+* **delay** - including both the time unit (java.util.concurrent.TimeUnit) and value
 
-Java API
+**Java**
 
 The org.mockserver.model.HttpResponse class is used to specify the details of each HTTP response with a fluent API:
 
     public class HttpResponse extends ModelObject {
 
         public HttpResponse withStatusCode(Integer responseCode);
-
-        public HttpResponse withBody(String body);
-
+        
         public HttpResponse withCookies(List<Cookie> cookies);
-
         public HttpResponse withCookies(Cookie... cookies);
-
+        
         public HttpResponse withHeaders(List<Header> headers);
-
         public HttpResponse withHeaders(Header... headers);
+        
+        public HttpResponse withBody(String body);
 
         public HttpResponse withDelay(Delay delay);
     }
@@ -91,11 +89,72 @@ For example:
                             new Header("Content-Type", "application/json; charset=utf-8"),
                             new Header("Cache-Control", "public, max-age=86400")
                     )
-                    .withBody("{ message: 'a simple json response' ");
+                    .withBody("{ message: 'a simple json response' }");
+                    
 
-JavaScript API
+**Javascript**
 
-TODO
+A javascript client can describ the mock response using JSON.  
+
+    "httpResponse": {
+        "statusCode": 200,
+        "body": "",
+        "cookies": [],
+        "headers": [],
+        "delay": {
+            "timeUnit": "MICROSECONDS",
+            "value": 0
+        }
+    }
+    
+Each cookie or header array entry has the following syntax:
+
+    {
+        "name": "",
+        "values": ["", "", ...]
+    }
+    
+The "timeUnit" value in "delay" can be:
+
+    "NANOSECONDS"
+    "MICROSECONDS"
+    "MILLISECONDS"
+    "SECONDS"
+    "MINUTES"
+    "HOURS"
+    "DAYS"
+
+The same example as above would be:
+
+    "httpResponse": {
+        "statusCode": 200,
+        "body": "{ message: 'a simple json response' }",
+        "headers": [
+            {
+                "name": "Content-Type",
+                "values": ["application/json; charset=utf-8"]
+            },
+            {
+                "name": "Cache-Control",
+                "values": ["public, max-age=86400"]
+            }
+        ]
+    }
+    
+2. setup mock expectations
+--------------------------
+
+A mock expectation tells the mock server how to response when receiving a request.  To setup a mock expectation you need to provide the mock response (as described in 1. create mock response) and specify when and how often this response should be provided.  
+
+To specify when a response should be provided a request to match must be provided.  When the MockServer then receives a request that matches a matching request it will respond with the response specified in the mock expectation.
+
+A request can be matched on the following:
+* **method** i.e. GET, POST, PUT, HEAD, etc
+* **path** - a regular expression such as "/jamesdbloom/mockserver.*" or an exaxct match
+* **body** - a regular expression or an exaxct match
+* **parameters** - match of query parameters, not all query parameters need to be specified but those that are specified must match exactly, query parameters not specified will be ignored
+* **headers** - not all headers need to be specified but those that are specified must match exactly, headers not specified will be ignored
+* **cookies** - not all cookies need to be specified but those that are specified must match exactly, cookies not specified will be ignored
 
 Requirements
 ============
