@@ -1,7 +1,6 @@
 These instructions are currently being actively edited / created.  I have checked in the work so far but please check back in the next week or so to see the first completed version.
 
-What is MockServer
-==================
+# What is MockServer
 
 MockServer is an API to enable the mocking of any system you integrate with via HTTP (i.e. services, web sites, etc)
 
@@ -23,8 +22,7 @@ Responses can contain:
 
 MockServer has already been used on multiple large commercial projects to run large test suits that execute in parallel.
 
-Why use MockServer
-==================
+# Why use MockServer
 
 MockServer allows you to mock any server or service that you connect to over HTTP, such as REST or RPC service.  
 
@@ -37,8 +35,7 @@ This is useful in the following scenarios:
  * start working against a service API before the service is available.  If an API or service is not yet fully developed MockServer can mock the API allowing the teams who is using the service to start work without being delayed. 
  * isolate development teams particularly critical during the initial development phases when the APIs / services may be extremely unstable and volatile.  Using the mock server allows development work to continue even when an external service fails.
 
-How to use MockServer
-=====================
+# How to use MockServer
 
 To use the MockServer:
  1. create mock responses
@@ -53,8 +50,7 @@ Could be tested with MockServer, mocking the service dependencies, as follows:
 
 ![Mocking service dependencies with Mock Server](/SystemUnderTest.png)
 
-1. create mock response
------------------------
+### 1. create mock response
 
 The mock response can include any aspects of a HTTP request including: 
 * **response code** i.e. 200, 302, 404, etc
@@ -143,10 +139,9 @@ The same example as above would be:
         ]
     }
     
-2. setup mock expectations
---------------------------
+### 2. setup mock expectations
 
-**2.1 Request Matcher**
+#### 2.1 Request Matcher
 
 A mock expectation tells the mock server how to response when receiving a request.  To setup a mock expectation you need to provide the mock response (as described in 1. create mock response) and specify when and how often this response should be provided.  
 
@@ -231,7 +226,7 @@ The same example as above would be:
         "parameters": []
     }
     
-**2.2 Starting the MockServer**
+#### 2.2 Starting the MockServer
 
 Before any mock expectation can be sent to the MockServer it must be started.
 
@@ -269,7 +264,7 @@ For example to run the MockServer on port 9999:
 
     gradle run -Pport=9999
     
-**2.3 Sending Mock Expectation**
+#### 2.3 Sending Mock Expectation
 
 Once the mock response and the request matcher has been created these need to be sent to the MockServer to setup a mock expectation.  
 
@@ -315,8 +310,7 @@ To create an instance to Times use one of the static factor methods:
 
 TODO
 
-Requirements
-============
+## Requirements
 
 * Java 7 - because this API uses Jetty 9 to increase reliability, simplicity and flexibility which in turn requires Java 7 (http://webtide.intalio.com/2012/09/jetty-9-features/)
 
