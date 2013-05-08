@@ -1,3 +1,5 @@
+These instructions are currently being activity edited / created.  I have checked in the work so far but please check back in the next week or so to see the first completed version.
+
 What is MockServer
 ==================
 
