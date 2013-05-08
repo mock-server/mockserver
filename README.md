@@ -1,25 +1,20 @@
 # What is MockServer
 
-MockServer is an API to enable the mocking of any system you integrate with via HTTP (i.e. services, web sites, etc)
-
-This API allows you to setup expectations using an example HTTP request and a HTTP response.  When the MockServer then receives a matching request it will provide the specified response.
+MockServer is an API to enable the easy mocking of any system you integrate with via HTTP (i.e. services, web sites, etc) from either Java or JavaScript.
 
 Requests can be matched on:
 * path (regex or plain text)
 * body (regex or plain text)
 * headers
 * cookies
-* query parameters
+* query parameters (GET)
+* body parameters (POST)
 
 Responses can contain:
 * status code
 * body
 * headers
 * cookies
-
-Responses can also:
-* be returned only the specified number of times (or forever)
-* include a delay before the response is returned
 
 MockServer has already been used on multiple large commercial projects to run large test suits that execute in parallel.
 
@@ -91,7 +86,7 @@ For example:
                     .withBody("{ message: 'a simple json response' }");
                     
 
-**Javascript**
+**JavaScript**
 
 To mock a response in javascript use JSON to specify the details with the following format:  
 
@@ -191,7 +186,7 @@ For example:
             );
                     
 
-**Javascript**
+**JavaScript**
 
 To specify a request matcher in javascript use JSON to specify the details with the following format:  
 
@@ -309,9 +304,9 @@ To create an instance to Times use one of the static factor methods:
     Times.once();
     Times.exactly(int count);
     
-**Javascript**
+**JavaScript**
 
-In Javascript a AJAX request can be used to send mock expectation to MockServer, as follows:
+In JavaScript a AJAX request can be used to send mock expectation to MockServer, as follows:
 
     var xmlHttpRequest = new XMLHttpRequest();
     
