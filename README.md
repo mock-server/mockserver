@@ -160,3 +160,7 @@ Requirements
 ============
 
 * Java 7 - because this API uses Jetty 9 to increase reliability, simplicity and flexibility which in turn requires Java 7 (http://webtide.intalio.com/2012/09/jetty-9-features/)
+
+
+<br/>
+<a style="display: none;" href="https://plus.google.com/110954472544793839756?rel=author">James D Bloom</a>
