@@ -144,6 +144,8 @@ The same example as above would be:
 2. setup mock expectations
 --------------------------
 
+**2.1 Request Matcher**
+
 A mock expectation tells the mock server how to response when receiving a request.  To setup a mock expectation you need to provide the mock response (as described in 1. create mock response) and specify when and how often this response should be provided.  
 
 To specify when a response should be provided a request matcher must be provided.  When the MockServer then receives a request that matches a matching request it will respond with the response specified in the mock expectation.
@@ -156,7 +158,7 @@ A request can be matched on the following:
 * **headers** - not all headers need to be specified but those that are specified must match exactly, headers not specified will be ignored
 * **cookies** - not all cookies need to be specified but those that are specified must match exactly, cookies not specified will be ignored
 
-For full details of the regulat expression format supported for body and path see: http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html
+For full details of the regulat expression format supported for body and path see [Java API for java.util.regex.Pattern](http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html)
 
 **Java**
 
@@ -226,6 +228,50 @@ The same example as above would be:
         "headers": [],
         "parameters": []
     }
+    
+**2.2 Starting the MockServer**
+
+Before any mock expectation can be sent to the MockServer it must be started.
+
+As the MockServer depends on multiple other projects such as Embedded Jetty it is not possible for this project to provide a complete runnable.  Instead a build script in maven and a build script in gradle has been provided so make it simple to build and run the MockServer.
+
+**Maven**
+
+To build a single executable jar file in maven run the following command:
+
+    mvn clean package
+
+This will produce a jar file under the target directory called mockserver-1.0-SNAPSHOT-jar-with-dependencies.jar
+
+    
+**2.2 Sending Mock Expectation**
+
+Once the mock response and the request matcher has been created these need to be sent to the MockServer to setup a mock expectation.  
+
+**Java**
+
+In Java this can be done as below.  Please be careful to use the correct port and hostname for the MockServer.
+
+    MockServerClient mockServerClient = new MockServerClient("localhost", 9999);
+
+    HttpRequest httpRequest = new HttpRequest()
+            .withMethod("POST")
+            .withPath("/login")
+            .withBody("{username: 'foo', password: 'bar'}")
+            .withCookies(
+                    new Cookie("sessionId", "2By8LOhBmaW5nZXJwcmludCIlMDAzMW")
+            );
+
+    HttpResponse httpResponse =
+            new HttpResponse()
+                    .withStatusCode(200)
+                    .withHeaders(
+                            new Header("Content-Type", "application/json; charset=utf-8"),
+                            new Header("Cache-Control", "public, max-age=86400")
+                    )
+                    .withBody("{ message: 'a simple json response' }");
+
+    mockServerClient.sendExpectation(new Expectation(httpRequest, Times.unlimited()).respond(httpResponse));
 
 Requirements
 ============
