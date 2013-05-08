@@ -9,14 +9,17 @@ Requests can be matched on:
 * body (regex or plain text)
 * headers
 * cookies
-* query parameters (GET)
-* body parameters (POST)
+* query parameters
 
 Responses can contain:
 * status code
 * body
 * headers
 * cookies
+
+Responses can also:
+* be returned only the specified number of times (or forever)
+* include a delay before the response is returned
 
 MockServer has already been used on multiple large commercial projects to run large test suits that execute in parallel.
 
