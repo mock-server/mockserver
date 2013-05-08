@@ -1,5 +1,3 @@
-These instructions are currently being actively edited / created.  I have checked in the work so far but please check back in the next week or so to see the first completed version.
-
 # What is MockServer
 
 MockServer is an API to enable the mocking of any system you integrate with via HTTP (i.e. services, web sites, etc)
@@ -139,9 +137,9 @@ The same example as above would be:
         ]
     }
     
-### 2. setup mock expectations
+### 2. Setup mock expectations
 
-#### 2.1 Request Matcher
+#### 2.1 Request matcher
 
 A mock expectation tells the mock server how to response when receiving a request.  To setup a mock expectation you need to provide the mock response (as described in 1. create mock response) and specify when and how often this response should be provided.  
 
@@ -230,7 +228,7 @@ The same example as above would be:
 
 Before any mock expectation can be sent to the MockServer it must be started.
 
-As the MockServer depends on multiple other projects such as Embedded Jetty it is not possible for this project to provide a complete runnable.  Instead a build script in maven and a build script in gradle has been provided so make it simple to build and run the MockServer.
+As the MockServer depends on multiple other projects such as Embedded Jetty it is not possible for this project to provide a complete runnable.  Instead a build script in maven and a build script in gradle has been provided so the project can be built using even maven or gradle.
 
 First clone the repository as follows:
 
@@ -240,13 +238,15 @@ Next build and run the project using either maven or gradle.
 
 **Maven**
 
-To build a single executable jar file in maven run the following command:
+To build an executable jar containing all dependancies run the following command:
 
     mvn clean package
 
-This will produce a jar file under the target directory called mockserver-1.0-SNAPSHOT-jar-with-dependencies.jar
+This will produce a jar file under the target directory called, as follows:
 
-To run the MockServer then use the jar as follows:
+    target/mockserver-1.0-SNAPSHOT-jar-with-dependencies.jar
+
+Run the MockServer then using the executable jar as follows:
 
     java -jar <path to mockserver-1.0-SNAPSHOT-jar-with-dependencies.jar> <port>
     
@@ -264,13 +264,13 @@ For example to run the MockServer on port 9999:
 
     gradle run -Pport=9999
     
-#### 2.3 Sending Mock Expectation
+#### 2.3 Sending mock expectation
 
-Once the mock response and the request matcher has been created these need to be sent to the MockServer to setup a mock expectation.  
+To setup a mock expectation on the MockServer the mock response and request matcher must be sent to the MockServer.  
 
 **Java**
 
-In Java this can be done as below.  The code below assumes you have started the MockServer on port 9999 and hostname "localhost".
+In Java MockServerClient can be used to send mock expectation to MockServer, as follows:
 
     String hostname = "localhost";
     int port = 9999;
@@ -308,7 +308,58 @@ To create an instance to Times use one of the static factor methods:
     
 **Javascript**
 
-TODO
+In Javascript a AJAX request can be used to send mock expectation to MockServer, as follows:
+
+    var xmlHttpRequest = new XMLHttpRequest();
+    
+    xmlHttpRequest.open("PUT", "http://localhost:9999", false);
+    
+    xmlHttpRequest.setRequestHeader("Content-Type", "application/json; charset=utf-8");
+    
+    xmlHttpRequest.send(JSON.stringify({
+        "httpRequest": {
+            "method": "POST",
+            "path": "/login",
+            "cookies": [
+                {
+                    "name": "sessionId",
+                    "values": ["2By8LOhBmaW5nZXJwcmludCIlMDAzMW"]
+                }
+            ]
+        },
+        "httpResponse": {
+            "statusCode": 200,
+            "body": JSON.stringify({ code: "LOGIN_SUCCESS", message: 'login success' }),
+            "headers": [
+                {
+                    "name": "Content-Type",
+                    "values": ["application/json; charset=utf-8"]
+                },
+                {
+                    "name": "Cache-Control",
+                    "values": ["public, max-age=86400"]
+                }
+            ],
+            "delay": {
+                "timeUnit": "MICROSECONDS",
+                "value": 0
+            }
+        },
+        "times": {
+            "remainingTimes": 1,
+            "unlimited": true
+        }
+    }));
+    
+#### 3. Run test
+
+Once the mock expectations have been setup on the MockServer the test can be run. 
+    
+#### Ensuring tests can run in parallel
+
+To ensure all tests can run in parallel with completely isolated independent data it is important to include a value unique to each test for the request matcher.  
+
+For example the code above has a sessionId cookie in the request matcher.  If each test generates a different value (i.e. a UUID) for the sessionId cookie then each test can receive completely independent response.  Instead of a cookie value a query parameter or header (such as the Referer header) can also be used to ensure mock responses are unique to each test.
 
 ## Requirements
 
