@@ -63,9 +63,9 @@ The mock response can include any aspects of a HTTP request including:
 
 **Java**
 
-The org.mockserver.model.HttpResponse class is used to specify the details of each HTTP response with a fluent API:
+To mock a response in Java use the org.mockserver.model.HttpResponse class which specifies the details of each HTTP response with a fluent API:
 
-    public class HttpResponse extends ModelObject {
+    public class HttpResponse {
 
         public HttpResponse withStatusCode(Integer responseCode);
         
@@ -94,7 +94,7 @@ For example:
 
 **Javascript**
 
-A javascript client can describ the mock response using JSON.  
+To mock a response in javascript use JSON to specify the details with the following format:  
 
     "httpResponse": {
         "statusCode": 200,
@@ -146,7 +146,7 @@ The same example as above would be:
 
 A mock expectation tells the mock server how to response when receiving a request.  To setup a mock expectation you need to provide the mock response (as described in 1. create mock response) and specify when and how often this response should be provided.  
 
-To specify when a response should be provided a request to match must be provided.  When the MockServer then receives a request that matches a matching request it will respond with the response specified in the mock expectation.
+To specify when a response should be provided a request matcher must be provided.  When the MockServer then receives a request that matches a matching request it will respond with the response specified in the mock expectation.
 
 A request can be matched on the following:
 * **method** i.e. GET, POST, PUT, HEAD, etc
@@ -155,6 +155,77 @@ A request can be matched on the following:
 * **parameters** - match of query parameters, not all query parameters need to be specified but those that are specified must match exactly, query parameters not specified will be ignored
 * **headers** - not all headers need to be specified but those that are specified must match exactly, headers not specified will be ignored
 * **cookies** - not all cookies need to be specified but those that are specified must match exactly, cookies not specified will be ignored
+
+For full details of the regulat expression format supported for body and path see: http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html
+
+**Java**
+
+To specify a request matcher in Java use the org.mockserver.model.HttpRequest class which specifies the details of each HTTP response with a fluent API:
+
+    public class HttpRequest {
+    
+        public HttpRequest withMethod(String method);
+    
+        public HttpRequest withPath(String path);
+        
+        public HttpRequest withParameters(List<Parameter> parameters);
+        public HttpRequest withParameters(Parameter... parameters);
+    
+        public HttpRequest withBody(String body);
+        
+        public HttpRequest withHeaders(List<Header> headers);
+        public HttpRequest withHeaders(Header... headers);
+    
+        public HttpRequest withCookies(List<Cookie> cookies);
+        public HttpRequest withCookies(Cookie... cookies);
+    }
+    
+For example:
+
+    HttpRequest httpRequest = new HttpRequest()
+            .withMethod("POST")
+            .withPath("/login")
+            .withBody("{username: 'foo', password: 'bar'}")
+            .withCookies(
+                    new Cookie("sessionId", "2By8LOhBmaW5nZXJwcmludCIlMDAzMW")
+            );
+                    
+
+**Javascript**
+
+To specify a request matcher in javascript use JSON to specify the details with the following format:  
+
+    "httpRequest": {
+        "method": "",
+        "path": "",
+        "parameters": []
+        "body": "",
+        "cookies": [],
+        "headers": [],
+    }
+    
+Each cookie or header array entry has the following syntax:
+
+    {
+        "name": "",
+        "values": ["", "", ...]
+    }
+
+The same example as above would be:
+
+    "httpRequest": {
+        "method": "POST",
+        "path": "/login",
+        "body": "{username: 'foo', password: 'bar'}",
+        "cookies": [
+            {
+                "name": "sessionId",
+                "values": ["2By8LOhBmaW5nZXJwcmludCIlMDAzMW"]
+            }
+        ],
+        "headers": [],
+        "parameters": []
+    }
 
 Requirements
 ============
