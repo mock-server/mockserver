@@ -35,7 +35,7 @@ public class ExpectationSerializer {
         Expectation expectation = null;
         try {
             byte[] jsonExpectation = IOUtils.toByteArray(new InputStreamReader(inputStream), Charset.forName(CharEncoding.UTF_8));
-            logger.debug("Received JSON expectation:\n" + new String(jsonExpectation));
+            logger.debug("Received JSON expectation:\n" + new String(jsonExpectation, Charset.forName(CharEncoding.UTF_8)));
             ExpectationDTO expectationDTO = objectMapper.readValue(jsonExpectation, ExpectationDTO.class);
             if (expectationDTO != null) {
                 expectation = expectationDTO.buildObject();
