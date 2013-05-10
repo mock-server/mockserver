@@ -16,7 +16,8 @@ public class EmbeddedJettyRunner {
     public static void main(String[] args) throws Exception {
         int port = args.length == 1 ? Integer.parseInt(args[0]) : 8080;
         new EmbeddedJettyRunner(port);
-        logger.warn("Started mock server listening on " + port);
+        logger.info("Started mock server listening on " + port);
+        System.out.println("Started mock server listening on " + port);
     }
 
     public EmbeddedJettyRunner(int port) {
@@ -30,7 +31,7 @@ public class EmbeddedJettyRunner {
             server.start();
         } catch (Exception e) {
             logger.error("Failed to start embedded jetty server", e);
-            throw new RuntimeException("Failed to start embedded jetty server", e);
+            System.exit(1);
         }
     }
 
