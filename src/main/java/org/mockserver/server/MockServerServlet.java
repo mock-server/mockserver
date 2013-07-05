@@ -1,6 +1,5 @@
 package org.mockserver.server;
 
-import org.eclipse.jetty.server.Request;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.mappers.HttpServletRequestMapper;
 import org.mockserver.mappers.HttpServletResponseMapper;
@@ -46,11 +45,11 @@ public class MockServerServlet extends HttpServlet {
     }
 
     public void doPut(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws IOException {
+        Expectation expectation = expectationSerializer.deserialize(httpServletRequest.getInputStream());
         if (httpServletRequest.getRequestURI().equals("/clear")) {
-            mockServer.clear();
+            mockServer.clear(expectation.getHttpRequest());
             httpServletResponse.setStatus(HttpServletResponse.SC_OK);
         } else {
-            Expectation expectation = expectationSerializer.deserialize(httpServletRequest.getInputStream());
             mockServer.when(expectation.getHttpRequest(), expectation.getTimes()).respond(expectation.getHttpResponse());
             httpServletResponse.setStatus(HttpServletResponse.SC_CREATED);
         }

@@ -172,12 +172,15 @@ public class MockServerServletTest {
         // given
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
         MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/clear");
+        HttpRequest httpRequest = new HttpRequest();
+        Expectation expectation = new Expectation(httpRequest, Times.unlimited()).respond(new HttpResponse());
+        when(expectationSerializer.deserialize(httpServletRequest.getInputStream())).thenReturn(expectation);
 
         // when
         mockServerServlet.doPut(httpServletRequest, httpServletResponse);
 
         // then
-        verify(mockServer).clear();
+        verify(mockServer).clear(httpRequest);
         verifyNoMoreInteractions(httpServletRequestMapper);
     }
 

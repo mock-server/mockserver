@@ -5,7 +5,7 @@ import java.util.List;
 /**
  * @author jamesdbloom
  */
-public class Parameter extends KeyToMultiValue<String, String> {
+public class Parameter extends KeyToMultiValue {
 
     public Parameter(String name, String... value) {
         super(name, value);

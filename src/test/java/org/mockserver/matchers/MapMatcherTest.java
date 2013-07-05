@@ -17,15 +17,15 @@ import static org.junit.Assert.assertTrue;
  */
 public class MapMatcherTest {
 
-    private MapMatcher<String, String> mapMatcher;
+    private MapMatcher mapMatcher;
     private Multimap<String, String> multimap;
-    private List<KeyToMultiValue<String, String>> keyToMultiValues;
+    private List<KeyToMultiValue> keyToMultiValues;
 
     @Before
     public void setupTestFixture() {
         multimap = HashMultimap.create();
-        mapMatcher = new MapMatcher<String, String>(multimap);
-        keyToMultiValues = new ArrayList<KeyToMultiValue<String, String>>();
+        mapMatcher = new MapMatcher(multimap);
+        keyToMultiValues = new ArrayList<KeyToMultiValue>();
     }
 
     @Test
@@ -34,7 +34,19 @@ public class MapMatcherTest {
         multimap.put("foo", "bar");
 
         // when
-        keyToMultiValues.add(new KeyToMultiValue<String, String>("foo", "bar"));
+        keyToMultiValues.add(new KeyToMultiValue("foo", "bar"));
+
+        // then
+        assertTrue(mapMatcher.matches(keyToMultiValues));
+    }
+
+    @Test
+    public void matchesRegexMatchingValues() {
+        // given
+        multimap.put("foo", "b.*");
+
+        // when
+        keyToMultiValues.add(new KeyToMultiValue("foo", "bar"));
 
         // then
         assertTrue(mapMatcher.matches(keyToMultiValues));
@@ -46,9 +58,24 @@ public class MapMatcherTest {
         multimap.put("foo1", "bar1");
 
         // when
-        keyToMultiValues.add(new KeyToMultiValue<String, String>("foo0", "bar0"));
-        keyToMultiValues.add(new KeyToMultiValue<String, String>("foo1", "bar1"));
-        keyToMultiValues.add(new KeyToMultiValue<String, String>("foo2", "bar2"));
+        keyToMultiValues.add(new KeyToMultiValue("foo0", "bar0"));
+        keyToMultiValues.add(new KeyToMultiValue("foo1", "bar1"));
+        keyToMultiValues.add(new KeyToMultiValue("foo2", "bar2"));
+
+        // then
+        assertTrue(mapMatcher.matches(keyToMultiValues));
+    }
+
+    @Test
+    public void matchesMatchingRegexValuesWithExtraValues() {
+        // given
+        multimap.put("foo1", ".*1");
+        multimap.put("foo2", ".*2");
+
+        // when
+        keyToMultiValues.add(new KeyToMultiValue("foo0", "bar0"));
+        keyToMultiValues.add(new KeyToMultiValue("foo1", "bar1"));
+        keyToMultiValues.add(new KeyToMultiValue("foo2", "bar2"));
 
         // then
         assertTrue(mapMatcher.matches(keyToMultiValues));
@@ -65,7 +92,7 @@ public class MapMatcherTest {
         multimap.put("foo", "bar");
 
         // when
-        keyToMultiValues.add(new KeyToMultiValue<String, String>("foo2", "bar"));
+        keyToMultiValues.add(new KeyToMultiValue("foo2", "bar"));
 
         // then
         assertFalse(mapMatcher.matches(keyToMultiValues));
@@ -77,7 +104,21 @@ public class MapMatcherTest {
         multimap.put("foo", "bar");
 
         // when
-        keyToMultiValues.add(new KeyToMultiValue<String, String>("foo", "bar2"));
+        keyToMultiValues.add(new KeyToMultiValue("foo", "bar2"));
+
+        // then
+        assertFalse(mapMatcher.matches(keyToMultiValues));
+    }
+
+    @Test
+    public void doesNotMatchIncorrectRegex() {
+        // given
+        multimap.put("foo1", "a.*1");
+
+        // when
+        keyToMultiValues.add(new KeyToMultiValue("foo0", "bar0"));
+        keyToMultiValues.add(new KeyToMultiValue("foo1", "bar1"));
+        keyToMultiValues.add(new KeyToMultiValue("foo2", "bar2"));
 
         // then
         assertFalse(mapMatcher.matches(keyToMultiValues));

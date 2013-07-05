@@ -5,7 +5,7 @@ import java.util.List;
 /**
  * @author jamesdbloom
  */
-public class Header extends KeyToMultiValue<String, String> {
+public class Header extends KeyToMultiValue {
 
     public Header(String name, String... value) {
         super(name, value);

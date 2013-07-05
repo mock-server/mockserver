@@ -57,7 +57,11 @@ public class MockServer extends ModelObject {
         return null;
     }
 
-    public void clear() {
-        expectations.clear();
+    public void clear(HttpRequest httpRequest) {
+        for (Expectation expectation : new ArrayList<Expectation>(expectations)) {
+            if (expectation.matches(httpRequest)) {
+                expectations.remove(expectation);
+            }
+        }
     }
 }

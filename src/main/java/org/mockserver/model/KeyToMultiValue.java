@@ -10,42 +10,42 @@ import java.util.List;
 /**
  * @author jamesdbloom
  */
-public class KeyToMultiValue<K, V> extends ModelObject {
-    private final K name;
-    private final List<V> values;
+public class KeyToMultiValue extends ModelObject {
+    private final String name;
+    private final List<String> values;
 
-    public KeyToMultiValue(K name, V... values) {
+    public KeyToMultiValue(String name, String... values) {
         this(name, Arrays.asList(values));
     }
 
-    public KeyToMultiValue(K name, List<V> values) {
+    public KeyToMultiValue(String name, List<String> values) {
         this.name = name;
         if (values != null) {
             this.values = values;
         } else {
-            this.values = new ArrayList<V>();
+            this.values = new ArrayList<String>();
         }
     }
 
-    public static <K, V> Multimap<K, V> toMultiMap(List<? extends KeyToMultiValue<K, V>> keyToMultiValues) {
-        Multimap<K, V> headersMap = HashMultimap.create();
-        for (KeyToMultiValue<K, V> keyToMultiValue : keyToMultiValues) {
-            for (V value : keyToMultiValue.getValues()) {
+    public static Multimap<String, String> toMultiMap(List<? extends KeyToMultiValue> keyToMultiValues) {
+        Multimap<String, String> headersMap = HashMultimap.create();
+        for (KeyToMultiValue keyToMultiValue : keyToMultiValues) {
+            for (String value : keyToMultiValue.getValues()) {
                 headersMap.put(keyToMultiValue.getName(), value);
             }
         }
         return headersMap;
     }
 
-    public static <K, V> Multimap<K, V> toMultiMap(KeyToMultiValue<K, V>... keyToMultiValues) {
+    public static Multimap<String, String> toMultiMap(KeyToMultiValue... keyToMultiValues) {
         return toMultiMap(Arrays.asList(keyToMultiValues));
     }
 
-    public K getName() {
+    public String getName() {
         return name;
     }
 
-    public List<V> getValues() {
+    public List<String> getValues() {
         return values;
     }
 }

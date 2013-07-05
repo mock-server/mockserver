@@ -8,11 +8,11 @@ import java.util.List;
 /**
  * @author jamesdbloom
  */
-public class KeyToMultiValueDTO<K, V> extends ModelObject {
-    private K name;
-    private List<V> values;
+public class KeyToMultiValueDTO extends ModelObject {
+    private String name;
+    private List<String> values;
 
-    protected KeyToMultiValueDTO(KeyToMultiValue<K, V> keyToMultiValue) {
+    protected KeyToMultiValueDTO(KeyToMultiValue keyToMultiValue) {
         name = keyToMultiValue.getName();
         values = keyToMultiValue.getValues();
     }
@@ -20,11 +20,11 @@ public class KeyToMultiValueDTO<K, V> extends ModelObject {
     protected KeyToMultiValueDTO() {
     }
 
-    public K getName() {
+    public String getName() {
         return name;
     }
 
-    public List<V> getValues() {
+    public List<String> getValues() {
         return values;
     }
 }

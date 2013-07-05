@@ -21,7 +21,7 @@ public class StringMatcher extends ModelObject implements Matcher<String> {
 
         if (Strings.isNullOrEmpty(this.path)) {
             result = true;
-        } else if (path != null && path.matches(this.path)) {
+        } else if (path != null && (path.matches(this.path) || this.path.matches(path))) {
             result = true;
         } else {
             logger.trace("Failed to match {} with {}", path, this.path);

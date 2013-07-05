@@ -13,9 +13,9 @@ public class HttpRequestMatcher extends ModelObject implements Matcher<HttpReque
     private StringMatcher methodMatcher = null;
     private StringMatcher pathMatcher = null;
     private StringMatcher bodyMatcher = null;
-    private MapMatcher<String, String> headerMatcher = null;
-    private MapMatcher<String, String> parameterMatcher = null;
-    private MapMatcher<String, String> cookieMatcher = null;
+    private MapMatcher headerMatcher = null;
+    private MapMatcher parameterMatcher = null;
+    private MapMatcher cookieMatcher = null;
 
     public HttpRequestMatcher withMethod(String method) {
         this.methodMatcher = new StringMatcher(method);
@@ -33,42 +33,43 @@ public class HttpRequestMatcher extends ModelObject implements Matcher<HttpReque
     }
 
     public HttpRequestMatcher withHeaders(Header... headers) {
-        this.headerMatcher = new MapMatcher<String, String>(KeyToMultiValue.toMultiMap(headers));
+        this.headerMatcher = new MapMatcher(KeyToMultiValue.toMultiMap(headers));
         return this;
     }
 
     public HttpRequestMatcher withHeaders(List<Header> headers) {
-        this.headerMatcher = new MapMatcher<String, String>(KeyToMultiValue.toMultiMap(headers));
+        this.headerMatcher = new MapMatcher(KeyToMultiValue.toMultiMap(headers));
         return this;
     }
 
     public HttpRequestMatcher withParameters(Parameter... parameters) {
-        this.parameterMatcher = new MapMatcher<String, String>(KeyToMultiValue.toMultiMap(parameters));
+        this.parameterMatcher = new MapMatcher(KeyToMultiValue.toMultiMap(parameters));
         return this;
     }
 
     public HttpRequestMatcher withParameters(List<Parameter> parameters) {
-        this.parameterMatcher = new MapMatcher<String, String>(KeyToMultiValue.toMultiMap(parameters));
+        this.parameterMatcher = new MapMatcher(KeyToMultiValue.toMultiMap(parameters));
         return this;
     }
 
     public HttpRequestMatcher withCookies(Cookie... cookies) {
-        this.cookieMatcher = new MapMatcher<String, String>(KeyToMultiValue.toMultiMap(cookies));
+        this.cookieMatcher = new MapMatcher(KeyToMultiValue.toMultiMap(cookies));
         return this;
     }
 
     public HttpRequestMatcher withCookies(List<Cookie> cookies) {
-        this.cookieMatcher = new MapMatcher<String, String>(KeyToMultiValue.toMultiMap(cookies));
+        this.cookieMatcher = new MapMatcher(KeyToMultiValue.toMultiMap(cookies));
         return this;
     }
 
     public boolean matches(HttpRequest httpRequest) {
-        return matches(methodMatcher, httpRequest.getMethod())
-                && matches(pathMatcher, httpRequest.getPath())
-                && matches(bodyMatcher, httpRequest.getBody())
-                && matches(headerMatcher, (httpRequest.getHeaders() != null ? new ArrayList<KeyToMultiValue<String, String>>(httpRequest.getHeaders()) : null))
-                && matches(parameterMatcher, (httpRequest.getParameters() != null ? new ArrayList<KeyToMultiValue<String, String>>(httpRequest.getParameters()) : null))
-                && matches(cookieMatcher, (httpRequest.getCookies() != null ? new ArrayList<KeyToMultiValue<String, String>>(httpRequest.getCookies()) : null));
+        boolean methodMatches = matches(methodMatcher, httpRequest.getMethod());
+        boolean pathMatches = matches(pathMatcher, httpRequest.getPath());
+        boolean bodyMatches = matches(bodyMatcher, httpRequest.getBody());
+        boolean headersMatch = matches(headerMatcher, (httpRequest.getHeaders() != null ? new ArrayList<KeyToMultiValue>(httpRequest.getHeaders()) : null));
+        boolean parametersMatch = matches(parameterMatcher, (httpRequest.getParameters() != null ? new ArrayList<KeyToMultiValue>(httpRequest.getParameters()) : null));
+        boolean cookiesMatch = matches(cookieMatcher, (httpRequest.getCookies() != null ? new ArrayList<KeyToMultiValue>(httpRequest.getCookies()) : null));
+        return methodMatches && pathMatches && bodyMatches && headersMatch && parametersMatch && cookiesMatch;
     }
 
     private <T> boolean matches(Matcher<T> matcher, T t) {

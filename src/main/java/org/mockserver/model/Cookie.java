@@ -5,7 +5,7 @@ import java.util.List;
 /**
  * @author jamesdbloom
  */
-public class Cookie extends KeyToMultiValue<String, String> {
+public class Cookie extends KeyToMultiValue {
 
     public Cookie(String name, String... value) {
         super(name, value);
