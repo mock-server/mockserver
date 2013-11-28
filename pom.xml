@@ -10,7 +10,7 @@
 
     <groupId>org.mock-server</groupId>
     <artifactId>mockserver</artifactId>
-    <version>1.1-SNAPSHOT</version>
+    <version>1.1</version>
 
     <name>Mock Server</name>
     <description>A simple server to support mocking responses from any server / service that uses HTTP. The expectations that configure how the mock server will respond and to incoming requests can be setup using any language that can create JSON. In simple client is provided to make this easy in Java.</description>
