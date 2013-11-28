@@ -18,6 +18,10 @@ Responses can contain:
 
 MockServer has already been used on multiple large commercial projects to run large test suits that execute in parallel.
 
+# Maven Central
+
+MockServer is available on Maven Central at https://oss.sonatype.org/index.html#nexus-search;quick~mockserver
+
 # Why use MockServer
 
 MockServer allows you to mock any server or service that you connect to over HTTP, such as REST or RPC service.  
