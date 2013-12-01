@@ -1,7 +1,4 @@
 dependencies {
-    // mockserver
-    compile "org.mock-server:mockserver-core:1.2-SNAPSHOT"
-
     // http
     compile "org.eclipse.jetty:jetty-http:$jettyVersion"
     compile "org.eclipse.jetty:jetty-server:$jettyVersion"

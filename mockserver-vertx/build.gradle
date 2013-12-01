@@ -1,8 +1,4 @@
 dependencies {
-    // mockserver
-    compile "org.mock-server:mockserver-core:1.2-SNAPSHOT"
-    compile "org.mock-server:mockserver-client:1.2-SNAPSHOT"
-
     // http
     compile "io.vertx:vertx-core:$vertxVersion"
     compile "io.vertx:vertx-platform:$vertxVersion"

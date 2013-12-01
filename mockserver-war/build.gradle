@@ -1,9 +1,8 @@
+apply plugin: 'war'
+
 dependencies {
     // http
-    compile "org.eclipse.jetty:jetty-http:$jettyVersion"
-    compile "org.eclipse.jetty:jetty-server:$jettyVersion"
-    compile "org.eclipse.jetty:jetty-servlet:$jettyVersion"
-    compile "org.eclipse.jetty:jetty-client:$jettyVersion"
+    providedCompile "javax.servlet:javax.servlet-api:$servletVersion"
 
     // json
     compile "org.codehaus.jackson:jackson-mapper-asl:$jacksonMapperAslVersion"
@@ -23,11 +22,11 @@ dependencies {
     testCompile "org.springframework:spring-test:$springTestVersion"
 }
 
-task(run, dependsOn: 'classes', type: JavaExec) {
-    main = 'org.mockserver.server.EmbeddedJettyRunner'
-    classpath = sourceSets.main.runtimeClasspath
-    if(project.hasProperty("port")){
-        args port
-    }
-}
+//war {
+//    from 'src/rootContent' // adds a file-set to the root of the archive
+//    webInf { from 'src/additionalWebInf' } // adds a file-set to the WEB-INF dir.
+//    classpath fileTree('additionalLibs') // adds a file-set to the WEB-INF/lib dir.
+//    classpath configurations.moreLibs // adds a configuration to the WEB-INF/lib dir.
+//    webXml = file('src/someWeb.xml') // copies a file to WEB-INF/web.xml
+//}
 

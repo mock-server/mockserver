@@ -271,27 +271,27 @@ MockServer also has two client versions:
 
 To run as Embedded Jetty run the following command:
 
-    java -jar <path to mockserver-jetty-1.2-SNAPSHOT-jar-with-dependencies.jar> <port>
+    java -jar <path to mockserver-jetty-1.3-SNAPSHOT-jar-with-dependencies.jar> <port>
     
 **Vert.X**
 
 To run as Vert.X module run the following command:
 
-    vertx install mockserver-vertx-1.2-SNAPSHOT.jar
-    vertx runmod org.mock-server~mockserver-vertx~1.2-SNAPSHOT
+    vertx install mockserver-vertx-1.3-SNAPSHOT.jar
+    vertx runmod org.mock-server~mockserver-vertx~1.3-SNAPSHOT
     
 Alternatively build from source and run the Vert.X module as a zip file:
 
     git clone https://github.com/jamesdbloom/mockservice.git
     cd mockserver
     mvn clean package
-    vertx runzip mockserver-vertx/target/org.mock-server~mockserver-vertx~1.2-SNAPSHOT.zip
+    vertx runzip mockserver-vertx/target/org.mock-server~mockserver-vertx~1.3-SNAPSHOT.zip
 
 **Web Archive (WAR)**
 
 To run as a WAR deployed on any JEE web server:
 
-    deploy mockserver-war-1.2-SNAPSHOT.jar to web server
+    deploy mockserver-war-1.3-SNAPSHOT.jar to web server
     
 **Build From Source**
 
@@ -312,15 +312,15 @@ To build an executable jar containing all dependancies run the following command
 
 This will produce a jar file under the target directory called, as follows:
 
-    mockserver-jetty/target/mockserver-jetty-1.2-SNAPSHOT-jar-with-dependencies.jar
+    mockserver-jetty/target/mockserver-jetty-1.3-SNAPSHOT-jar-with-dependencies.jar
 
 Run the MockServer then using the executable jar as follows:
 
-    java -jar <path to mockserver-jetty-1.2-SNAPSHOT-jar-with-dependencies.jar> <port>
+    java -jar <path to mockserver-jetty-1.3-SNAPSHOT-jar-with-dependencies.jar> <port>
     
 For example to run the MockServer on port 9999:
 
-    java -jar mockserver-jetty/target/mockserver-jetty-1.2-SNAPSHOT-jar-with-dependencies.jar 9999
+    java -jar mockserver-jetty/target/mockserver-jetty-1.3-SNAPSHOT-jar-with-dependencies.jar 9999
     
 ***Gradle***
 

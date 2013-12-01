@@ -1,10 +1,9 @@
 package org.mockserver.mappers;
 
-import org.eclipse.jetty.http.HttpStatus;
+import org.junit.Test;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpResponse;
-import org.junit.Test;
 import org.mockserver.model.HttpStatusCode;
 import org.springframework.mock.web.MockHttpServletResponse;
 
