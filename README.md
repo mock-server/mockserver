@@ -115,6 +115,8 @@ For example:
 
 **JavaScript**
 
+A JavaScript client is provided called mockServerClient.js in the mockserver-client.jar maven dependency.  This can also be found at mockservice/mockserver-client/src/main/javascript/mockServerClient.js in the git repository.
+
 To mock a response in javascript use JSON to specify the details with the following format:  
 
     "httpResponse": {
@@ -215,6 +217,8 @@ For example:
 
 **JavaScript**
 
+A JavaScript client is provided called mockServerClient.js in the mockserver-client.jar maven dependency.  This can also be found at mockservice/mockserver-client/src/main/javascript/mockServerClient.js in the git repository.
+
 To specify a request matcher in javascript use JSON to specify the details with the following format:  
 
     "httpRequest": {
@@ -253,7 +257,38 @@ The same example as above would be:
 
 Before any mock expectation can be sent to the MockServer it must be started.
 
-As the MockServer depends on multiple other projects such as Embedded Jetty it is not possible for this project to provide a complete runnable.  Instead a build script in maven and a build script in gradle has been provided so the project can be built using even maven or gradle.
+MockServer can be run in multiple ways:
+* as a stand alone web server (using Embedded Jetty), 
+* as a deployable WAR (to run on any JEE web server),
+* as a Vert.X module,
+* as a NodeJS module (however this is currently been written and is not yet finished).
+
+MockServer also has two client versions:
+* one written in Java - org.mockserver.client.MockServerClient in mockserver-client 
+* and one written in JavaScript - mockServerClient.js in mockserver-client
+
+**Embedded Jetty**
+
+To run as Embedded Jetty run the following command:
+
+    java -jar <path to mockserver-jetty-1.2-SNAPSHOT-jar-with-dependencies.jar> <port>
+    
+**Vert.X**
+
+To run as Vert.X module run the following command:
+
+    vertx install mockserver-vertx-1.2-SNAPSHOT.jar
+    vertx runmod org.mock-server~mockserver-vertx~1.2-SNAPSHOT
+
+**Web Archive (WAR)**
+
+To run as a WAR deployed on any JEE web server:
+
+    deploy mockserver-war-1.2-SNAPSHOT.jar to web server
+    
+**Build From Source**
+
+Instead a build script in maven and a build script in gradle has been provided so the project can be built using either maven or gradle.
 
 First clone the repository as follows:
 
@@ -261,7 +296,7 @@ First clone the repository as follows:
     
 Next build and run the project using either maven or gradle.
 
-**Maven**
+***Maven***
 
 To build an executable jar containing all dependancies run the following command:
 
@@ -269,17 +304,17 @@ To build an executable jar containing all dependancies run the following command
 
 This will produce a jar file under the target directory called, as follows:
 
-    target/mockserver-1.0-SNAPSHOT-jar-with-dependencies.jar
+    mockserver-jetty/target/mockserver-jetty-1.2-SNAPSHOT-jar-with-dependencies.jar
 
 Run the MockServer then using the executable jar as follows:
 
-    java -jar <path to mockserver-1.0-SNAPSHOT-jar-with-dependencies.jar> <port>
+    java -jar <path to mockserver-jetty-1.2-SNAPSHOT-jar-with-dependencies.jar> <port>
     
 For example to run the MockServer on port 9999:
 
-    java -jar target/mockserver-1.0-SNAPSHOT-jar-with-dependencies.jar 9999
+    java -jar mockserver-jetty/target/mockserver-jetty-1.2-SNAPSHOT-jar-with-dependencies.jar 9999
     
-**Gradle**
+***Gradle***
 
 In gradle the project can be built and run in a single command as follows:
 
@@ -331,7 +366,7 @@ To create an instance to Times use one of the static factor methods:
     Times.once();
     Times.exactly(int count);
     
-**JavaScript**
+JavaScript**
 
 In JavaScript a AJAX request can be used to send mock expectation to MockServer, as follows:
 
