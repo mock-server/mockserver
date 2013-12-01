@@ -26,7 +26,13 @@ MockServer can be run in multiple ways:
 * as a Vert.X module,
 * as a NodeJS module (however this is currently been written and is not yet finished).
 
-MockServer also has two client versions one written in Java and one written in JavaScript.  It is not necessary to use the provided clients because the proptocol for expectations is simple JSON.  However, the clients avoid the need to understand the underlying JSON protocol and provide a simple API.
+# Client
+
+MockServer also has two client versions:
+* one written in Java - org.mockserver.client.MockServerClient in mockserver-client 
+* and one written in JavaScript - src/main/javascript/mockServerClient.js in mockserver-client
+
+It is not necessary to use the provided clients because the proptocol for expectations is simple JSON.  However, the clients avoid the need to understand the underlying JSON protocol and provide a simple API.
 
 # Maven Central
 
