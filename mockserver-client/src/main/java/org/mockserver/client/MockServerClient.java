@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
  * @author jamesdbloom
  */
 public class MockServerClient {
-    private Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final String mockServerURI;
 

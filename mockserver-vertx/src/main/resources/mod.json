@@ -1,0 +1,8 @@
+{
+    "main": "org.mockserver.server.MockServerVertical",
+    "description": "An API to easily mock any system or service you integrate with via HTTP from either Java or JavaScript.",
+    "licenses": ["The Apache Software License Version 2.0"],
+    "author": "James D Bloom",
+    "keywords": ["mock", "mocking", "http", "server", "service", "testing", "fake"],
+    "homepage": "http://www.mock-server.com/"
+}

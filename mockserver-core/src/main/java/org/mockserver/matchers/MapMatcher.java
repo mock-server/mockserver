@@ -23,7 +23,7 @@ public class MapMatcher extends ModelObject implements Matcher<List<KeyToMultiVa
         if (containsAll(KeyToMultiValue.toMultiMap(values), this.multimap)) {
             result = true;
         } else {
-            logger.trace("Failed to match {} with {}", values, multimap);
+            logger.trace("Map [{}] is not a subset of [{}]", this.multimap, KeyToMultiValue.toMultiMap(values));
         }
 
         return result;

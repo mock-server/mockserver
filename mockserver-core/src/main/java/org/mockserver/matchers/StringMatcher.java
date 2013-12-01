@@ -38,8 +38,8 @@ public class StringMatcher extends ModelObject implements Matcher<String> {
             }
         }
 
-        if (result) {
-            logger.trace("Failed to match {} with {}", path, this.path);
+        if (!result) {
+            logger.trace("Failed to match [{}] with [{}]", path, this.path);
         }
         return result;
     }

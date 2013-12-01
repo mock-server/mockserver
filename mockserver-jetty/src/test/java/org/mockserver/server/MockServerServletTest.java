@@ -47,7 +47,7 @@ public class MockServerServletTest {
     }
 
     @Test
-    public void respondWhenPathMatches() {
+    public void respondWhenPathMatches() throws IOException {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("somepath");
         HttpResponse httpResponse = new HttpResponse().withHeaders(new Header("name", "value")).withBody("somebody");
@@ -73,7 +73,9 @@ public class MockServerServletTest {
         Times times = mock(Times.class);
         Expectation expectation = new Expectation(httpRequest, times).respond(new HttpResponse());
 
-        when(expectationSerializer.deserialize(httpServletRequest.getInputStream())).thenReturn(expectation);
+        byte[] requestBytes = "requestBytes".getBytes();
+        httpServletRequest.setContent(requestBytes);
+        when(expectationSerializer.deserialize(requestBytes)).thenReturn(expectation);
         when(mockServer.when(same(httpRequest), same(times))).thenReturn(expectation);
 
         // when
@@ -174,7 +176,10 @@ public class MockServerServletTest {
         MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/clear");
         HttpRequest httpRequest = new HttpRequest();
         Expectation expectation = new Expectation(httpRequest, Times.unlimited()).respond(new HttpResponse());
-        when(expectationSerializer.deserialize(httpServletRequest.getInputStream())).thenReturn(expectation);
+
+        byte[] requestBytes = "requestBytes".getBytes();
+        httpServletRequest.setContent(requestBytes);
+        when(expectationSerializer.deserialize(requestBytes)).thenReturn(expectation);
 
         // when
         mockServerServlet.doPut(httpServletRequest, httpServletResponse);

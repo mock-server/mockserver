@@ -1,0 +1,37 @@
+dependencies {
+    // mockserver
+    compile "org.mock-server:mockserver-core:1.2-SNAPSHOT"
+    compile "org.mock-server:mockserver-client:1.2-SNAPSHOT"
+
+    // http
+    compile "org.eclipse.jetty:jetty-http:$jettyVersion"
+    compile "org.eclipse.jetty:jetty-server:$jettyVersion"
+    compile "org.eclipse.jetty:jetty-servlet:$jettyVersion"
+    compile "org.eclipse.jetty:jetty-client:$jettyVersion"
+
+    // json
+    compile "org.codehaus.jackson:jackson-mapper-asl:$jacksonMapperAslVersion"
+
+    // commons & guava
+    compile "org.apache.commons:commons-lang3:$commonsLang3Version"
+    compile "commons-io:commons-io:$commonsIoVersion"
+    compile "com.google.guava:guava:$guavaVersion"
+
+    // logging
+    compile "org.slf4j:slf4j-api:$slf4jVersion"
+    runtime "ch.qos.logback:logback-classic:$logbackClassicVersion"
+
+    // test
+    testCompile "junit:junit:$junitVersion"
+    testCompile "org.mockito:mockito-all:$mockitoAllVersion"
+    testCompile "org.springframework:spring-test:$springTestVersion"
+}
+
+task(run, dependsOn: 'classes', type: JavaExec) {
+    main = 'org.mockserver.server.EmbeddedJettyRunner'
+    classpath = sourceSets.main.runtimeClasspath
+    if(project.hasProperty("port")){
+        args port
+    }
+}
+

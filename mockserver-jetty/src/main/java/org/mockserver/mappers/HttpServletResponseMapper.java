@@ -1,5 +1,7 @@
 package org.mockserver.mappers;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.CharEncoding;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpResponse;
@@ -8,30 +10,34 @@ import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
 
 /**
  * @author jamesdbloom
  */
 public class HttpServletResponseMapper {
-    private Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public void mapHttpServletResponse(HttpResponse httpResponse, HttpServletResponse httpServletResponse) {
         setStatusCode(httpResponse, httpServletResponse);
-        setBody(httpResponse, httpServletResponse);
         setHeaders(httpResponse, httpServletResponse);
         setCookies(httpResponse, httpServletResponse);
+        setBody(httpResponse, httpServletResponse);
     }
 
     private void setStatusCode(HttpResponse httpResponse, HttpServletResponse httpServletResponse) {
-        if (httpResponse.getResponseCode() != null) {
-            httpServletResponse.setStatus(httpResponse.getResponseCode());
+        if (httpResponse.getStatusCode() != null) {
+            httpServletResponse.setStatus(httpResponse.getStatusCode());
         }
     }
 
     private void setBody(HttpResponse httpResponse, HttpServletResponse httpServletResponse) {
         if (httpResponse.getBody() != null) {
             try {
-                httpServletResponse.getOutputStream().write(httpResponse.getBody().getBytes());
+                OutputStreamWriter outputStreamWriter = new OutputStreamWriter(httpServletResponse.getOutputStream());
+                IOUtils.write(httpResponse.getBody().getBytes(Charset.forName(CharEncoding.UTF_8)), outputStreamWriter, Charset.forName(CharEncoding.UTF_8));
+                outputStreamWriter.flush();
             } catch (IOException ioe) {
                 logger.error(String.format("IOException while writing %s to HttpServletResponse output stream", httpResponse.getBody()), ioe);
                 throw new RuntimeException(String.format("IOException while writing %s to HttpServletResponse output stream", httpResponse.getBody()), ioe);

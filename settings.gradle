@@ -1,0 +1,7 @@
+include 'mockserver-core'
+include 'mockserver-client'
+include 'mockserver-jetty'
+include 'mockserver-vertx'
+
+rootProject.name='mockserver'
+

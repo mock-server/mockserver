@@ -46,7 +46,7 @@
             <artifactId>logback-classic</artifactId>
         </dependency>
 
-        <!-- Test -->
+        <!-- test -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>

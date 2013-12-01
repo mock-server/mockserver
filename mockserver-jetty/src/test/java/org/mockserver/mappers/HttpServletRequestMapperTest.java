@@ -19,7 +19,8 @@ public class HttpServletRequestMapperTest {
     public void createHttpRequestFromHttpServletRequest() {
         // given
         MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("GET", "somepath");
-        httpServletRequest.setQueryString("?parameterName1=parameterValue1_1&parameterName1=parameterValue1_2&parameterName2=parameterValue2&parameterName3=parameterValue3_1,parameterValue3_2");
+        httpServletRequest.setParameter("parameterName1", new String[]{"parameterValue1_2", "parameterValue1_1"});
+        httpServletRequest.setParameter("parameterName2", "parameterValue2");
         httpServletRequest.addHeader("headerName1", "headerValue1_1");
         httpServletRequest.addHeader("headerName1", "headerValue1_2");
         httpServletRequest.addHeader("headerName2", "headerValue2");
@@ -35,7 +36,6 @@ public class HttpServletRequestMapperTest {
         assertEquals(
                 Lists.newArrayList(
                         new Parameter("parameterName1", "parameterValue1_2", "parameterValue1_1"),
-                        new Parameter("parameterName3", "parameterValue3_2", "parameterValue3_1"),
                         new Parameter("parameterName2", "parameterValue2")
                 ), httpRequest.getParameters());
         assertEquals(Lists.newArrayList(new Header("headerName1", "headerValue1_1", "headerValue1_2"), new Header("headerName2", "headerValue2")), httpRequest.getHeaders());

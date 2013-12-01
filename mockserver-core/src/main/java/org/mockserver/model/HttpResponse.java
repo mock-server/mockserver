@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
  * @author jamesdbloom
  */
 public class HttpResponse extends ModelObject {
-    private Integer responseCode = 200;
+    private Integer statusCode = 200;
     private String body = "";
     private List<Cookie> cookies = new ArrayList<Cookie>();
     private List<Header> headers = new ArrayList<Header>();
@@ -18,13 +18,13 @@ public class HttpResponse extends ModelObject {
     public HttpResponse() {
     }
 
-    public HttpResponse withStatusCode(Integer responseCode) {
-        this.responseCode = responseCode;
+    public HttpResponse withStatusCode(Integer statusCode) {
+        this.statusCode = statusCode;
         return this;
     }
 
-    public Integer getResponseCode() {
-        return responseCode;
+    public Integer getStatusCode() {
+        return statusCode;
     }
 
     public HttpResponse withBody(String body) {

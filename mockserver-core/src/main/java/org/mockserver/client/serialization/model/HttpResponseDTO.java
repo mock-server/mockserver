@@ -21,7 +21,7 @@ public class HttpResponseDTO extends ModelObject {
     private DelayDTO delay = new DelayDTO();
 
     public HttpResponseDTO(HttpResponse httpResponse) {
-        statusCode = httpResponse.getResponseCode();
+        statusCode = httpResponse.getStatusCode();
         body = httpResponse.getBody();
         headers = Lists.transform(httpResponse.getHeaders(), new Function<Header, HeaderDTO>() {
             public HeaderDTO apply(Header header) {

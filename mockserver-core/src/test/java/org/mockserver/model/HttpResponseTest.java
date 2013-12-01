@@ -14,7 +14,7 @@ public class HttpResponseTest {
 
     @Test
     public void returnsResponseCode() {
-        assertEquals(new Integer(200), new HttpResponse().withStatusCode(200).getResponseCode());
+        assertEquals(new Integer(200), new HttpResponse().withStatusCode(200).getStatusCode());
     }
 
     @Test

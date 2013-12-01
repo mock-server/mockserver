@@ -50,12 +50,6 @@
             <artifactId>jackson-mapper-asl</artifactId>
         </dependency>
 
-        <!-- Spring -->
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-test</artifactId>
-        </dependency>
-
         <!-- apache commons -->
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -80,7 +74,7 @@
             <artifactId>logback-classic</artifactId>
         </dependency>
 
-        <!-- Test -->
+        <!-- test -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -88,6 +82,12 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-all</artifactId>
+        </dependency>
+
+        <!-- integration testing -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
         </dependency>
     </dependencies>
 

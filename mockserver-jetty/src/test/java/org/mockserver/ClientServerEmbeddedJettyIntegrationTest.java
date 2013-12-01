@@ -24,7 +24,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author jamesdbloom
  */
-public class ClientServerIntegrationTest {
+public class ClientServerEmbeddedJettyIntegrationTest {
 
     private EmbeddedJettyRunner embeddedJettyRunner;
     private MockServerClient mockServerClient;
@@ -48,8 +48,11 @@ public class ClientServerIntegrationTest {
         // then
         assertEquals(
                 new HttpResponse()
-                        .withStatusCode(HttpStatus.OK_200)
-                        .withHeaders(new Header("Content-Length", "" + "somebody".length()), new Header("Server", "Jetty(9.0.0.v20130308)"))
+                        .withStatusCode(HttpStatusCode.OK_200.code)
+                        .withHeaders(
+                                new Header("Transfer-Encoding", "chunked"),
+                                new Header("Server", "Jetty(9.0.0.v20130308)")
+                        )
                         .withBody("somebody"),
                 makeRequest(new HttpRequest()));
     }
@@ -63,14 +66,20 @@ public class ClientServerIntegrationTest {
         // then
         assertEquals(
                 new HttpResponse()
-                        .withStatusCode(HttpStatus.OK_200)
-                        .withHeaders(new Header("Content-Length", "" + "somebody2".length()), new Header("Server", "Jetty(9.0.0.v20130308)"))
+                        .withStatusCode(HttpStatusCode.OK_200.code)
+                        .withHeaders(
+                                new Header("Transfer-Encoding", "chunked"),
+                                new Header("Server", "Jetty(9.0.0.v20130308)")
+                        )
                         .withBody("somebody2"),
                 makeRequest(new HttpRequest().withPath("/somepath2")));
         assertEquals(
                 new HttpResponse()
-                        .withStatusCode(HttpStatus.OK_200)
-                        .withHeaders(new Header("Content-Length", "" + "somebody1".length()), new Header("Server", "Jetty(9.0.0.v20130308)"))
+                        .withStatusCode(HttpStatusCode.OK_200.code)
+                        .withHeaders(
+                                new Header("Transfer-Encoding", "chunked"),
+                                new Header("Server", "Jetty(9.0.0.v20130308)")
+                        )
                         .withBody("somebody1"),
                 makeRequest(new HttpRequest().withPath("/somepath1")));
     }
@@ -83,20 +92,29 @@ public class ClientServerIntegrationTest {
         // then
         assertEquals(
                 new HttpResponse()
-                        .withStatusCode(HttpStatus.OK_200)
+                        .withStatusCode(HttpStatusCode.OK_200.code)
                         .withBody("somebody")
-                        .withHeaders(new Header("Content-Length", "" + "somebody".length()), new Header("Server", "Jetty(9.0.0.v20130308)")),
+                        .withHeaders(
+                                new Header("Transfer-Encoding", "chunked"),
+                                new Header("Server", "Jetty(9.0.0.v20130308)")
+                        ),
                 makeRequest(new HttpRequest().withPath("/somepath")));
         assertEquals(
                 new HttpResponse()
-                        .withStatusCode(HttpStatus.OK_200)
-                        .withHeaders(new Header("Content-Length", "" + "somebody".length()), new Header("Server", "Jetty(9.0.0.v20130308)"))
+                        .withStatusCode(HttpStatusCode.OK_200.code)
+                        .withHeaders(
+                                new Header("Transfer-Encoding", "chunked"),
+                                new Header("Server", "Jetty(9.0.0.v20130308)")
+                        )
                         .withBody("somebody"),
                 makeRequest(new HttpRequest().withPath("/somepath")));
         assertEquals(
                 new HttpResponse()
-                        .withStatusCode(HttpStatus.NOT_FOUND_404)
-                        .withHeaders(new Header("Content-Length", "0"), new Header("Server", "Jetty(9.0.0.v20130308)")),
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code)
+                        .withHeaders(
+                                new Header("Content-Length", "0"),
+                                new Header("Server", "Jetty(9.0.0.v20130308)")
+                        ),
                 makeRequest(new HttpRequest().withPath("/somepath")));
     }
 
@@ -107,40 +125,40 @@ public class ClientServerIntegrationTest {
                 .when(
                         new HttpRequest()
                                 .withMethod("GET")
-                                .withPath("/somepath")
-                                .withBody("somebody")
-                                .withHeaders(new Header("headerName", "headerValue"))
-                                .withCookies(new Cookie("cookieName", "cookieValue"))
-                                .withParameters(new Parameter("parameterName", "parameterValue"))
+                                .withPath("/somePathRequest")
+                                .withBody("someBodyRequest")
+                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
+                                .withParameters(new Parameter("parameterNameRequest", "parameterValueRequest"))
                 )
                 .respond(
                         new HttpResponse()
-                                .withStatusCode(HttpStatus.ACCEPTED_202)
-                                .withBody("somebody")
-                                .withHeaders(new Header("headerName", "headerValue"))
-                                .withCookies(new Cookie("cookieName", "cookieValue"))
+                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code)
+                                .withBody("someBodyResponse")
+                                .withHeaders(new Header("headerNameResponse", "headerValueResponse"))
+                                .withCookies(new Cookie("cookieNameResponse", "cookieValueResponse"))
                 );
 
         // then
         assertEquals(
                 new HttpResponse()
-                        .withStatusCode(HttpStatus.ACCEPTED_202)
-                        .withBody("somebody")
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code)
+                        .withBody("someBodyResponse")
                         .withHeaders(
-                                new Header("headerName", "headerValue"),
-                                new Header("Set-Cookie", "cookieName=cookieValue"),
+                                new Header("headerNameResponse", "headerValueResponse"),
+                                new Header("Set-Cookie", "cookieNameResponse=cookieValueResponse"),
                                 new Header("Expires", "Thu, 01 Jan 1970 00:00:00 GMT"),
-                                new Header("Content-Length", "" + "somebody".length()),
+                                new Header("Transfer-Encoding", "chunked"),
                                 new Header("Server", "Jetty(9.0.0.v20130308)")
                         ),
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
-                                .withPath("/somepath")
-                                .withBody("somebody")
-                                .withHeaders(new Header("headerName", "headerValue"))
-                                .withCookies(new Cookie("cookieName", "cookieValue"))
-                                .withParameters(new Parameter("parameterName", "parameterValue"))
+                                .withPath("/somePathRequest")
+                                .withBody("someBodyRequest")
+                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
+                                .withParameters(new Parameter("parameterNameRequest", "parameterValueRequest"))
                 )
         );
     }
@@ -153,29 +171,29 @@ public class ClientServerIntegrationTest {
                         new HttpRequest()
                                 .withMethod("POST")
                                 .withPath("/somepath")
-                                .withBody("bodypParameterName=bodyParameterValue")
+                                .withBody("bodyParameterName=bodyParameterValue")
                                 .withParameters(new Parameter("queryParameterName", "queryParameterValue"))
                 )
                 .respond(
                         new HttpResponse()
-                                .withStatusCode(HttpStatus.ACCEPTED_202)
+                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code)
                                 .withBody("somebody")
                 );
 
         // then
         assertEquals(
                 new HttpResponse()
-                        .withStatusCode(HttpStatus.ACCEPTED_202)
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code)
                         .withBody("somebody")
                         .withHeaders(
-                                new Header("Content-Length", "" + "somebody".length()),
+                                new Header("Transfer-Encoding", "chunked"),
                                 new Header("Server", "Jetty(9.0.0.v20130308)")
                         ),
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("POST")
                                 .withPath("/somepath")
-                                .withBody("bodypParameterName=bodyParameterValue")
+                                .withBody("bodyParameterName=bodyParameterValue")
                                 .withParameters(new Parameter("queryParameterName", "queryParameterValue"))
                 )
         );
@@ -196,7 +214,7 @@ public class ClientServerIntegrationTest {
                 )
                 .respond(
                         new HttpResponse()
-                                .withStatusCode(HttpStatus.ACCEPTED_202)
+                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code)
                                 .withBody("somebody")
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
@@ -205,7 +223,7 @@ public class ClientServerIntegrationTest {
         // then
         assertEquals(
                 new HttpResponse()
-                        .withStatusCode(HttpStatus.NOT_FOUND_404)
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code)
                         .withHeaders(new Header("Content-Length", "0"), new Header("Server", "Jetty(9.0.0.v20130308)")),
                 makeRequest(
                         new HttpRequest()

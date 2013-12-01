@@ -80,11 +80,10 @@ public class ExpectationSerializerTest {
     public void deserialize() throws IOException {
         // given
         byte[] requestBytes = "requestBytes".getBytes();
-        InputStream inputStream = new ByteArrayInputStream(requestBytes);
         when(objectMapper.readValue(eq(requestBytes), same(ExpectationDTO.class))).thenReturn(fullExpectationDTO);
 
         // when
-        Expectation expectation = expectationSerializer.deserialize(inputStream);
+        Expectation expectation = expectationSerializer.deserialize(requestBytes);
 
         // then
         assertEquals(fullExpectation, expectation);
@@ -97,7 +96,7 @@ public class ExpectationSerializerTest {
         when(objectMapper.readValue(eq(requestBytes), same(ExpectationDTO.class))).thenThrow(new IOException());
 
         // when
-        expectationSerializer.deserialize(new ByteArrayInputStream(requestBytes));
+        expectationSerializer.deserialize(requestBytes);
     }
 
     @Test
