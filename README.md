@@ -18,9 +18,26 @@ Responses can contain:
 
 MockServer has already been used on multiple large commercial projects to run large test suits that execute in parallel.
 
+# Versions
+
+MockServer can be run in multiple ways:
+* as a stand alone web server (using Embedded Jetty), 
+* as a deployable WAR (to run on any JEE web server),
+* as a Vert.X module,
+* as a NodeJS module (however this is currently been written and is not yet finished).
+
+MockServer also has a client written in Java to simplify setting up expectations from Java.  Details of how to do this from JavaScript are also provided below.
+
 # Maven Central
 
-MockServer is available on Maven Central at https://oss.sonatype.org/index.html#nexus-search;quick~mockserver
+Maven Central contains the following artifacts:
+* org.mock-server:mockserver-jetty - a stand alone web server (using Embedded Jetty)
+* org.mock-server:mockserver-war - a deployable WAR (to run on any JEE web server)
+* org.mock-server:mockserver-vertx - a Vert.X module
+* org.mock-server:mockserver-client - a Java client
+* org.mock-server:mockserver-core - core classes share by all versions
+
+MockServer can be found on Maven Central at https://oss.sonatype.org/index.html#nexus-search;quick~mockserver.
 
 # Why use MockServer
 
