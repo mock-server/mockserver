@@ -3,13 +3,13 @@
     <parent>
         <groupId>org.mock-server</groupId>
         <artifactId>mockserver</artifactId>
-        <version>1.2-SNAPSHOT</version>
+        <version>1.2</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>mockserver-jetty</artifactId>
-    <version>1.2-SNAPSHOT</version>
+    <version>1.2</version>
 
     <name>Mock Server Embedded Jetty</name>
     <description>A mock server that uses embedded Jetty to run</description>
