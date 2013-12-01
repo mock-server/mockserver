@@ -279,6 +279,13 @@ To run as Vert.X module run the following command:
 
     vertx install mockserver-vertx-1.2-SNAPSHOT.jar
     vertx runmod org.mock-server~mockserver-vertx~1.2-SNAPSHOT
+    
+Alternatively build from source and run the Vert.X module as a zip file:
+
+    git clone https://github.com/jamesdbloom/mockservice.git
+    cd mockserver
+    mvn clean package
+    vertx runzip mockserver-vertx/target/org.mock-server~mockserver-vertx~1.2-SNAPSHOT.zip
 
 **Web Archive (WAR)**
 
@@ -293,6 +300,7 @@ Instead a build script in maven and a build script in gradle has been provided s
 First clone the repository as follows:
 
     git clone https://github.com/jamesdbloom/mockservice.git
+    cd mockserver
     
 Next build and run the project using either maven or gradle.
 
@@ -366,7 +374,7 @@ To create an instance to Times use one of the static factor methods:
     Times.once();
     Times.exactly(int count);
     
-JavaScript**
+**JavaScript**
 
 In JavaScript a AJAX request can be used to send mock expectation to MockServer, as follows:
 
