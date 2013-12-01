@@ -30,7 +30,7 @@ MockServer can be run in multiple ways:
 
 MockServer also has two client versions:
 * one written in Java - org.mockserver.client.MockServerClient in mockserver-client 
-* and one written in JavaScript - src/main/javascript/mockServerClient.js in mockserver-client
+* and one written in JavaScript - mockServerClient.js in mockserver-client
 
 It is not necessary to use the provided clients because the proptocol for expectations is simple JSON.  However, the clients avoid the need to understand the underlying JSON protocol and provide a simple API.
 
