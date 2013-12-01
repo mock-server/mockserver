@@ -41,7 +41,7 @@ Maven Central contains the following artifacts:
 * org.mock-server:mockserver-war - a deployable WAR (to run on any JEE web server)
 * org.mock-server:mockserver-vertx - a Vert.X module
 * org.mock-server:mockserver-client - a Java client
-* org.mock-server:mockserver-core - core classes share by all versions
+* org.mock-server:mockserver-core - core classes shared by all versions
 
 MockServer can be found on Maven Central at https://oss.sonatype.org/index.html#nexus-search;quick~mockserver.
 
