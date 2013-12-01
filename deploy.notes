@@ -24,7 +24,7 @@ https://docs.sonatype.org/display/Repository/How+To+Generate+PGP+Signatures+With
 gpg --gen-key
 gpg --list-keys
 gpg --keyserver hkp://pool.sks-keyservers.net --send-keys A6BAB25C
-mvn clean install -> install SNAPSHOT
+mvn clean deploy -> deploy SNAPSHOT
 mvn release:clean
 mvn release:prepare
 mvn release:perform
