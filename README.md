@@ -435,4 +435,4 @@ For example the code above has a sessionId cookie in the request matcher.  If ea
 
 
 <br/>
-<a href="https://plus.google.com/110954472544793839756?rel=author">James D Bloom</a> - <a href="http://org.mock-server.com/">MockServer</a> - <a href="http://blog.jamesdbloom.com">Blog</a>
+<a href="https://plus.google.com/110954472544793839756?rel=author">James D Bloom</a> - <a href="http://www.mock-server.com/">MockServer</a> - <a href="http://blog.jamesdbloom.com">Blog</a>
