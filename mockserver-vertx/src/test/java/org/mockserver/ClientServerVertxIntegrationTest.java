@@ -62,7 +62,7 @@ public class ClientServerVertxIntegrationTest {
         // then
         assertEquals(
                 new HttpResponse()
-                        .withStatusCode(HttpStatusCode.OK_200.code)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
                         .withHeaders(
                                 new Header("Transfer-Encoding", "chunked")
                         )
@@ -79,7 +79,7 @@ public class ClientServerVertxIntegrationTest {
         // then
         assertEquals(
                 new HttpResponse()
-                        .withStatusCode(HttpStatusCode.OK_200.code)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
                         .withHeaders(
                                 new Header("Transfer-Encoding", "chunked")
                         )
@@ -87,7 +87,7 @@ public class ClientServerVertxIntegrationTest {
                 makeRequest(new HttpRequest().withPath("/somepath2")));
         assertEquals(
                 new HttpResponse()
-                        .withStatusCode(HttpStatusCode.OK_200.code)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
                         .withHeaders(
                                 new Header("Transfer-Encoding", "chunked")
                         )
@@ -103,7 +103,7 @@ public class ClientServerVertxIntegrationTest {
         // then
         assertEquals(
                 new HttpResponse()
-                        .withStatusCode(HttpStatusCode.OK_200.code)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
                         .withBody("somebody")
                         .withHeaders(
                                 new Header("Transfer-Encoding", "chunked")
@@ -111,7 +111,7 @@ public class ClientServerVertxIntegrationTest {
                 makeRequest(new HttpRequest().withPath("/somepath")));
         assertEquals(
                 new HttpResponse()
-                        .withStatusCode(HttpStatusCode.OK_200.code)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
                         .withHeaders(
                                 new Header("Transfer-Encoding", "chunked")
                         )
@@ -119,7 +119,7 @@ public class ClientServerVertxIntegrationTest {
                 makeRequest(new HttpRequest().withPath("/somepath")));
         assertEquals(
                 new HttpResponse()
-                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code)
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
                         .withHeaders(
                                 new Header("Content-Length", "0")
                         ),
@@ -141,7 +141,7 @@ public class ClientServerVertxIntegrationTest {
                 )
                 .respond(
                         new HttpResponse()
-                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code)
+                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
                                 .withBody("someBodyRequest")
                                 .withHeaders(new Header("headerNameResponse", "headerValueResponse"))
                                 .withCookies(new Cookie("cookieNameResponse", "cookieValueResponse"))
@@ -150,7 +150,7 @@ public class ClientServerVertxIntegrationTest {
         // then
         assertEquals(
                 new HttpResponse()
-                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code)
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
                         .withBody("someBodyRequest")
                         .withHeaders(
                                 new Header("headerNameResponse", "headerValueResponse"),
@@ -182,14 +182,14 @@ public class ClientServerVertxIntegrationTest {
                 )
                 .respond(
                         new HttpResponse()
-                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code)
+                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
                                 .withBody("somebody")
                 );
 
         // then
         assertEquals(
                 new HttpResponse()
-                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code)
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
                         .withBody("somebody")
                         .withHeaders(
                                 new Header("Transfer-Encoding", "chunked")
@@ -219,7 +219,7 @@ public class ClientServerVertxIntegrationTest {
                 )
                 .respond(
                         new HttpResponse()
-                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code)
+                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
                                 .withBody("somebody")
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
@@ -228,7 +228,7 @@ public class ClientServerVertxIntegrationTest {
         // then
         assertEquals(
                 new HttpResponse()
-                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code)
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
                         .withHeaders(
                                 new Header("Content-Length", "0")
                         ),

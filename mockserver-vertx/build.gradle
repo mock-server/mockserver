@@ -18,6 +18,7 @@ dependencies {
     // test
     testCompile "junit:junit:$junitVersion"
     testCompile "org.mockito:mockito-all:$mockitoAllVersion"
+    testCompule "org.vertx-test:vertx-test:$vertxTestVersion"
 
     // integration http
     testCompile "org.eclipse.jetty:jetty-http:$jettyVersion"

@@ -7,13 +7,11 @@ import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.Parameter;
 import org.vertx.java.core.http.CaseInsensitiveMultiMap;
-import org.vertx.java.core.http.HttpServerRequest;
+import org.vertxtest.http.MockHttpServerRequest;
 
 import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
  * @author jamesdbloom
@@ -23,25 +21,27 @@ public class HttpServerRequestMapperTest {
     @Test
     public void createHttpRequestFromHttpServerRequest() {
         // given
-        HttpServerRequest httpServerRequest = mock(HttpServerRequest.class);
-        when(httpServerRequest.path()).thenReturn("somepath");
-        when(httpServerRequest.params()).thenReturn(
-                new CaseInsensitiveMultiMap()
-                        .add("parameterName1", Arrays.asList("parameterValue1_2", "parameterValue1_1"))
-                        .add("parameterName2", "parameterValue2")
-        );
-        when(httpServerRequest.headers()).thenReturn(
-                new CaseInsensitiveMultiMap()
-                        .add("headerName1", Arrays.asList("headerValue1_1", "headerValue1_2"))
-                        .add("headerName2", "headerValue2")
-                        .add("Cookie", Arrays.asList("cookieName1=cookieValue1;", "cookieName2=cookieValue2;"))
-                        .add("Cookie", "cookieName3=cookieValue3;")
-        );
+        MockHttpServerRequest httpServerRequest =
+                new MockHttpServerRequest()
+                        .withMethod("method")
+                        .withPath("somepath")
+                        .withParams(
+                                new CaseInsensitiveMultiMap()
+                                        .add("parameterName1", Arrays.asList("parameterValue1_2", "parameterValue1_1"))
+                                        .add("parameterName2", "parameterValue2"))
+                        .withHeaders(
+                                new CaseInsensitiveMultiMap()
+                                        .add("headerName1", Arrays.asList("headerValue1_1", "headerValue1_2"))
+                                        .add("headerName2", "headerValue2")
+                                        .add("Cookie", Arrays.asList("cookieName1=cookieValue1;", "cookieName2=cookieValue2;"))
+                                        .add("Cookie", "cookieName3=cookieValue3;")
+                        );
 
         // when
         HttpRequest httpRequest = new HttpServerRequestMapper().createHttpRequest(httpServerRequest, "somebody".getBytes());
 
         // then
+        assertEquals("method", httpRequest.getMethod());
         assertEquals("somepath", httpRequest.getPath());
         assertEquals("somebody", httpRequest.getBody());
         assertEquals(

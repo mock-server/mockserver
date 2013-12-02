@@ -7,7 +7,6 @@ import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.http.HttpMethod;
-import org.eclipse.jetty.http.HttpStatus;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.*;
@@ -48,7 +47,7 @@ public class ClientServerEmbeddedJettyIntegrationTest {
         // then
         assertEquals(
                 new HttpResponse()
-                        .withStatusCode(HttpStatusCode.OK_200.code)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
                         .withHeaders(
                                 new Header("Transfer-Encoding", "chunked"),
                                 new Header("Server", "Jetty(9.0.0.v20130308)")
@@ -66,7 +65,7 @@ public class ClientServerEmbeddedJettyIntegrationTest {
         // then
         assertEquals(
                 new HttpResponse()
-                        .withStatusCode(HttpStatusCode.OK_200.code)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
                         .withHeaders(
                                 new Header("Transfer-Encoding", "chunked"),
                                 new Header("Server", "Jetty(9.0.0.v20130308)")
@@ -75,7 +74,7 @@ public class ClientServerEmbeddedJettyIntegrationTest {
                 makeRequest(new HttpRequest().withPath("/somepath2")));
         assertEquals(
                 new HttpResponse()
-                        .withStatusCode(HttpStatusCode.OK_200.code)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
                         .withHeaders(
                                 new Header("Transfer-Encoding", "chunked"),
                                 new Header("Server", "Jetty(9.0.0.v20130308)")
@@ -92,7 +91,7 @@ public class ClientServerEmbeddedJettyIntegrationTest {
         // then
         assertEquals(
                 new HttpResponse()
-                        .withStatusCode(HttpStatusCode.OK_200.code)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
                         .withBody("somebody")
                         .withHeaders(
                                 new Header("Transfer-Encoding", "chunked"),
@@ -101,7 +100,7 @@ public class ClientServerEmbeddedJettyIntegrationTest {
                 makeRequest(new HttpRequest().withPath("/somepath")));
         assertEquals(
                 new HttpResponse()
-                        .withStatusCode(HttpStatusCode.OK_200.code)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
                         .withHeaders(
                                 new Header("Transfer-Encoding", "chunked"),
                                 new Header("Server", "Jetty(9.0.0.v20130308)")
@@ -110,7 +109,7 @@ public class ClientServerEmbeddedJettyIntegrationTest {
                 makeRequest(new HttpRequest().withPath("/somepath")));
         assertEquals(
                 new HttpResponse()
-                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code)
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
                         .withHeaders(
                                 new Header("Content-Length", "0"),
                                 new Header("Server", "Jetty(9.0.0.v20130308)")
@@ -133,7 +132,7 @@ public class ClientServerEmbeddedJettyIntegrationTest {
                 )
                 .respond(
                         new HttpResponse()
-                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code)
+                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
                                 .withBody("someBodyResponse")
                                 .withHeaders(new Header("headerNameResponse", "headerValueResponse"))
                                 .withCookies(new Cookie("cookieNameResponse", "cookieValueResponse"))
@@ -142,7 +141,7 @@ public class ClientServerEmbeddedJettyIntegrationTest {
         // then
         assertEquals(
                 new HttpResponse()
-                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code)
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
                         .withBody("someBodyResponse")
                         .withHeaders(
                                 new Header("headerNameResponse", "headerValueResponse"),
@@ -176,14 +175,14 @@ public class ClientServerEmbeddedJettyIntegrationTest {
                 )
                 .respond(
                         new HttpResponse()
-                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code)
+                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
                                 .withBody("somebody")
                 );
 
         // then
         assertEquals(
                 new HttpResponse()
-                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code)
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
                         .withBody("somebody")
                         .withHeaders(
                                 new Header("Transfer-Encoding", "chunked"),
@@ -214,7 +213,7 @@ public class ClientServerEmbeddedJettyIntegrationTest {
                 )
                 .respond(
                         new HttpResponse()
-                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code)
+                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
                                 .withBody("somebody")
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
@@ -223,7 +222,7 @@ public class ClientServerEmbeddedJettyIntegrationTest {
         // then
         assertEquals(
                 new HttpResponse()
-                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code)
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
                         .withHeaders(new Header("Content-Length", "0"), new Header("Server", "Jetty(9.0.0.v20130308)")),
                 makeRequest(
                         new HttpRequest()

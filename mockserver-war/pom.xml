@@ -10,7 +10,6 @@
 
     <artifactId>mockserver-war</artifactId>
     <packaging>war</packaging>
-    <version>1.3-SNAPSHOT</version>
 
     <name>Mock Server Web Archive</name>
     <description>A mock server that can be deployed as a WAR to any JEE web server</description>
@@ -39,7 +38,7 @@
             <artifactId>jackson-mapper-asl</artifactId>
         </dependency>
 
-        <!-- apache commons -->
+        <!-- commons & guava -->
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
