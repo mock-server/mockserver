@@ -277,7 +277,7 @@ To run as Embedded Jetty run the following command:
 
 To run as Vert.X module run the following command:
 
-    vertx install mockserver-vertx-1.3-SNAPSHOT.jar
+    vertx install org.mock-server~mockserver-vertx~1.3-SNAPSHOT
     vertx runmod org.mock-server~mockserver-vertx~1.3-SNAPSHOT
     
 Alternatively build from source and run the Vert.X module as a zip file:
