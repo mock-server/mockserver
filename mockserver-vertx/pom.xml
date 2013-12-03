@@ -84,12 +84,14 @@
                 </configuration>
                 <executions>
                     <execution>
+                        <id>package</id>
                         <phase>package</phase>
                         <goals>
                             <goal>single</goal>
                         </goals>
                     </execution>
                     <execution>
+                        <id>deploy</id>
                         <phase>deploy</phase>
                         <goals>
                             <goal>single</goal>
