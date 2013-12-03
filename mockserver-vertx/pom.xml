@@ -79,7 +79,6 @@
                 <version>2.4</version>
                 <configuration>
                     <finalName>${project.groupId}~${artifactId}~${project.version}</finalName>
-                    <appendAssemblyId>false</appendAssemblyId>
                     <descriptor>src/main/assembly/dep.xml</descriptor>
                 </configuration>
                 <executions>
