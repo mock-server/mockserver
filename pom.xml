@@ -65,6 +65,7 @@
             <dependency>
                 <groupId>org.mock-server</groupId>
                 <artifactId>mockserver-war</artifactId>
+                <classifier>classes</classifier>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
