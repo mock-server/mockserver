@@ -89,6 +89,12 @@
                             <goal>single</goal>
                         </goals>
                     </execution>
+                    <execution>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
                 </executions>
             </plugin>
         </plugins>
