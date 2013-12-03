@@ -28,3 +28,8 @@ mvn clean deploy -> deploy SNAPSHOT
 mvn release:clean
 mvn release:prepare
 mvn release:perform
+
+Vert.X
+
+Other Maven
+http://oss.sonatype.org/content/groups/staging/
