@@ -1,5 +1,6 @@
 package org.mockserver.server;
 
+import ch.qos.logback.classic.Level;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletHandler;
 import org.slf4j.Logger;
@@ -33,6 +34,11 @@ public class EmbeddedJettyRunner {
             logger.error("Failed to start embedded jetty server", e);
             System.exit(1);
         }
+    }
+
+    public static void overrideLogLevel(String level) {
+        ch.qos.logback.classic.Logger rootLogger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
+        rootLogger.setLevel(Level.toLevel(level));
     }
 
     public EmbeddedJettyRunner stop() throws Exception {

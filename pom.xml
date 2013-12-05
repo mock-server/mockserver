@@ -46,6 +46,7 @@
         <module>mockserver-war</module>
         <module>mockserver-jetty</module>
         <module>mockserver-vertx</module>
+        <module>mockserver-maven-plugin</module>
     </modules>
 
     <properties>
@@ -66,6 +67,11 @@
                 <groupId>org.mock-server</groupId>
                 <artifactId>mockserver-war</artifactId>
                 <classifier>classes</classifier>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mock-server</groupId>
+                <artifactId>mockserver-jetty</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -148,7 +154,7 @@
                 <groupId>ch.qos.logback</groupId>
                 <artifactId>logback-classic</artifactId>
                 <version>1.0.13</version>
-                <scope>runtime</scope>
+                <!--<scope>runtime</scope>-->
             </dependency>
 
             <!-- test -->
