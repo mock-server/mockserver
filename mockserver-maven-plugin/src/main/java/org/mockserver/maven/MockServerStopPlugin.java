@@ -15,17 +15,10 @@ import org.apache.maven.plugins.annotations.Parameter;
         threadSafe = true)
 public class MockServerStopPlugin extends AbstractMojo {
 
-    private static final int TIMEOUT = -1;
     private static final int PORT = 9090;
 
     @Parameter(property = "mockserver.port", defaultValue = "" + PORT)
     private String port = "" + PORT;
-
-    @Parameter(property = "mockserver.timeout", defaultValue = "" + TIMEOUT)
-    private String timeout = "" + TIMEOUT;
-
-    @Parameter(property = "mockserver.logLevel", defaultValue = "WARN")
-    private String logLevel = "WARN";
 
     /**
      * Skip plugin execution completely.
