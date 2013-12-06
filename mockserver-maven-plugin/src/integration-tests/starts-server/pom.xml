@@ -10,11 +10,14 @@
 
     <name>Test</name>
     <description>
-        Test server:run
+        Test server:start
     </description>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <mockserver.port>8080</mockserver.port>
+        <mockserver.logLevel>DEBUG</mockserver.logLevel>
+        <mockserver.timeout>10</mockserver.timeout>
     </properties>
 
     <build>
@@ -22,9 +25,11 @@
             <plugin>
                 <groupId>org.mock-server</groupId>
                 <artifactId>mockserver-maven-plugin</artifactId>
+                <version>1.6-SNAPSHOT</version>
                 <configuration>
-                    <port>8080</port>
-                    <logLevel>DEBUG</logLevel>
+                    <port>${mockserver.port}</port>
+                    <logLevel>${mockserver.logLevel}</logLevel>
+                    <timeout>${mockserver.timeout}</timeout>
                 </configuration>
                 <executions>
                     <execution>
