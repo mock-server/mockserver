@@ -3,7 +3,7 @@
     <parent>
         <artifactId>mockserver</artifactId>
         <groupId>org.mock-server</groupId>
-        <version>1.8</version>
+        <version>1.9-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -22,7 +22,7 @@
         <dependency>
             <groupId>org.mock-server</groupId>
             <artifactId>mockserver-jetty</artifactId>
-            <version>1.8</version>
+            <version>1.9-SNAPSHOT</version>
         </dependency>
 
         <!-- logging -->
