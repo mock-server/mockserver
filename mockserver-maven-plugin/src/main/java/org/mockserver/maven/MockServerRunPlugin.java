@@ -10,16 +10,17 @@ import java.util.concurrent.TimeoutException;
 /**
  * @author jamesdbloom
  */
-@Mojo(name = "start",
-        defaultPhase = LifecyclePhase.INITIALIZE,
-        requiresProject = false,
-        threadSafe = false)
-public class MockServerStartPlugin extends AbstractMojo {
+@Mojo(name = "run", requiresProject = false, threadSafe = false)
+public class MockServerRunPlugin extends AbstractMojo {
 
+    private static final int TIMEOUT = -1;
     private static final int PORT = 9090;
 
     @Parameter(property = "mockserver.port", defaultValue = "" + PORT)
     private String port = "" + PORT;
+
+    @Parameter(property = "mockserver.timeout", defaultValue = "" + TIMEOUT)
+    private String timeout = "" + TIMEOUT;
 
     @Parameter(property = "mockserver.logLevel", defaultValue = "WARN")
     private String logLevel = "WARN";
@@ -31,7 +32,7 @@ public class MockServerStartPlugin extends AbstractMojo {
     private boolean skip = false;
 
     public static void main(String[] args) throws MojoExecutionException {
-        MockServerStartPlugin mockServerStartPlugin = new MockServerStartPlugin();
+        MockServerRunPlugin mockServerStartPlugin = new MockServerRunPlugin();
         mockServerStartPlugin.execute();
     }
 
@@ -39,6 +40,12 @@ public class MockServerStartPlugin extends AbstractMojo {
         if (skip) {
             getLog().info("Skipping plugin execution");
         } else {
+            int timeout = TIMEOUT;
+            try {
+                timeout = Integer.parseInt(this.timeout);
+            } catch (NumberFormatException nfe) {
+                getLog().error("Timeout specified [" + timeout + "] is not a valid number");
+            }
             int port = PORT;
             try {
                 port = Integer.parseInt(this.port);
@@ -47,7 +54,13 @@ public class MockServerStartPlugin extends AbstractMojo {
             }
             getLog().info("Starting Mock Server on port " + port);
             try {
-                new EmbeddedJettyHolder().start(port, logLevel);
+                if (timeout > 0) {
+                    new EmbeddedJettyHolder().start(port, logLevel).get(timeout, TimeUnit.SECONDS);
+                } else {
+                    new EmbeddedJettyHolder().start(port, logLevel).get();
+                }
+            } catch (TimeoutException te) {
+                getLog().info(timeout + "s timeout ended Mock Server will terminate");
             } catch (Exception e) {
                 getLog().error("Exception while running Mock Server", e);
             }
