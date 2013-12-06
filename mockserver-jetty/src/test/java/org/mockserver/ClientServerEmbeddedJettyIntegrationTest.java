@@ -30,7 +30,8 @@ public class ClientServerEmbeddedJettyIntegrationTest {
 
     @Before
     public void startServerAndCreateClient() {
-        embeddedJettyRunner = new EmbeddedJettyRunner(8090);
+        embeddedJettyRunner = new EmbeddedJettyRunner();
+        embeddedJettyRunner.start(8090);
         mockServerClient = new MockServerClient("localhost", 8090);
     }
 

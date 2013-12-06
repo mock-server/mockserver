@@ -49,6 +49,17 @@
             <artifactId>jetty-client</artifactId>
         </dependency>
 
+        <!-- commons & guava -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
+
+
         <!-- logging -->
         <dependency> <!-- will map to any underlying logging framework -->
             <groupId>org.slf4j</groupId>

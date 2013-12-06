@@ -12,6 +12,9 @@
     <artifactId>mockserver-maven-plugin</artifactId>
     <packaging>maven-plugin</packaging>
 
+    <name>Mock Server Maven Plugin</name>
+    <description>A maven plugin to start and stop the mock server.</description>
+
     <properties>
         <mavenPluginPluginVersion>3.2</mavenPluginPluginVersion>
     </properties>
@@ -24,6 +27,14 @@
             <version>1.6-SNAPSHOT</version>
         </dependency>
 
+        <!-- logging -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.0.13</version>
+            <scope>compile</scope>
+        </dependency>
+
         <!-- maven plugin -->
         <dependency>
             <groupId>org.apache.maven</groupId>
@@ -34,20 +45,6 @@
             <groupId>org.apache.maven.plugin-tools</groupId>
             <artifactId>maven-plugin-annotations</artifactId>
             <version>3.2</version>
-        </dependency>
-
-        <!-- maven project api -->
-        <dependency>
-            <groupId>org.apache.maven</groupId>
-            <artifactId>maven-artifact</artifactId>
-            <version>3.1.0</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.maven</groupId>
-            <artifactId>maven-project</artifactId>
-            <version>2.2.1</version>
-            <scope>compile</scope>
         </dependency>
     </dependencies>
 
@@ -74,19 +71,26 @@
                             <goal>helpmojo</goal>
                         </goals>
                     </execution>
+                    <execution>
+                        <id>default-descriptor</id>
+                        <goals>
+                            <goal>descriptor</goal>
+                        </goals>
+                        <phase>process-classes</phase>
+                    </execution>
+                    <execution>
+                        <id>help-descriptor</id>
+                        <goals>
+                            <goal>helpmojo</goal>
+                        </goals>
+                        <phase>process-classes</phase>
+                    </execution>
                 </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-site-plugin</artifactId>
-                <version>3.0</version>
-                <configuration>
-                    <skipDeploy>true</skipDeploy>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-invoker-plugin</artifactId>
+                <version>1.8</version>
                 <configuration>
                     <debug>true</debug>
                     <projectsDirectory>${basedir}/src/integration-tests/</projectsDirectory>
@@ -109,27 +113,11 @@
                         <goals>
                             <goal>install</goal>
                             <goal>integration-test</goal>
-                            <goal>verify</goal>
                         </goals>
                     </execution>
                 </executions>
             </plugin>
         </plugins>
     </build>
-
-    <!--<reporting>-->
-    <!--<plugins>-->
-    <!--<plugin>-->
-    <!--<groupId>org.apache.maven.plugins</groupId>-->
-    <!--<artifactId>maven-plugin-plugin</artifactId>-->
-    <!--<version>${mavenPluginPluginVersion}</version>-->
-    <!--</plugin>-->
-    <!--<plugin>-->
-    <!--<groupId>org.apache.maven.plugins</groupId>-->
-    <!--<artifactId>maven-project-info-reports-plugin</artifactId>-->
-    <!--<version>2.7</version>-->
-    <!--</plugin>-->
-    <!--</plugins>-->
-    <!--</reporting>-->
 
 </project>

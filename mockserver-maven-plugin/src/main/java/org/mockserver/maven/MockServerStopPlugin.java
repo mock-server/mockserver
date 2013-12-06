@@ -2,23 +2,36 @@ package org.mockserver.maven;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
 /**
  * @author jamesdbloom
  */
-@Mojo(name = "stop", requiresProject = false, threadSafe = true, aggregator = true)
+@Mojo(name = "stop",
+        defaultPhase = LifecyclePhase.VERIFY,
+        requiresProject = false,
+        threadSafe = true)
 public class MockServerStopPlugin extends AbstractMojo {
 
-    @Parameter(property = "mockserver.port", defaultValue = "9090")
-    private String port;
+    private static final int TIMEOUT = -1;
+    private static final int PORT = 9090;
+
+    @Parameter(property = "mockserver.port", defaultValue = "" + PORT)
+    private String port = "" + PORT;
+
+    @Parameter(property = "mockserver.timeout", defaultValue = "" + TIMEOUT)
+    private String timeout = "" + TIMEOUT;
+
+    @Parameter(property = "mockserver.logLevel", defaultValue = "WARN")
+    private String logLevel = "WARN";
 
     /**
      * Skip plugin execution completely.
      */
     @Parameter(property = "mockserver.skip", defaultValue = "false")
-    private boolean skip;
+    private boolean skip = false;
 
     public void execute() throws MojoExecutionException {
         if (skip) {

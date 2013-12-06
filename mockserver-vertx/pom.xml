@@ -35,6 +35,26 @@
             <artifactId>vertx-platform</artifactId>
         </dependency>
 
+        <!-- commons & guava -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
+
+        <!-- logging -->
+        <dependency> <!-- will map to any underlying logging framework -->
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+        </dependency>
+
         <!-- test -->
         <dependency>
             <groupId>junit</groupId>
@@ -79,7 +99,7 @@
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>2.4</version>
                 <configuration>
-                    <finalName>${project.groupId}~${artifactId}~${project.version}</finalName>
+                    <finalName>${project.groupId}~${project.artifactId}~${project.version}</finalName>
                     <descriptor>src/main/assembly/dep.xml</descriptor>
                 </configuration>
                 <executions>
