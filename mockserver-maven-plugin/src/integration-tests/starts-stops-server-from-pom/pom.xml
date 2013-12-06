@@ -25,7 +25,7 @@
             <plugin>
                 <groupId>org.mock-server</groupId>
                 <artifactId>mockserver-maven-plugin</artifactId>
-                <version>1.6-SNAPSHOT</version>
+                <version>1.7-SNAPSHOT</version>
                 <configuration>
                     <port>${mockserver.port}</port>
                     <logLevel>${mockserver.logLevel}</logLevel>
