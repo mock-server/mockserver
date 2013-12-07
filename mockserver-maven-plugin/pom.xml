@@ -111,38 +111,48 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-invoker-plugin</artifactId>
-                <version>1.8</version>
-                <configuration>
-                    <debug>true</debug>
-                    <projectsDirectory>${basedir}/src/integration-tests/</projectsDirectory>
-                    <cloneProjectsTo>${project.build.directory}/integration-tests/</cloneProjectsTo>
-                    <preBuildHookScript>setup</preBuildHookScript>
-                    <postBuildHookScript>verify</postBuildHookScript>
-                    <localRepositoryPath>${project.build.directory}/local-repo</localRepositoryPath>
-                    <settingsFile>src/integration-tests/settings.xml</settingsFile>
-                    <pomIncludes>
-                        <pomInclude>*/pom.xml</pomInclude>
-                    </pomIncludes>
-                    <goals>
-                        <goal>clean</goal>
-                        <goal>process-sources</goal>
-                    </goals>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>integration-test</id>
-                        <goals>
-                            <goal>install</goal>
-                            <goal>integration-test</goal>
-                            <goal>verify</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>integration-tests</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-invoker-plugin</artifactId>
+                        <version>1.8</version>
+                        <configuration>
+                            <debug>true</debug>
+                            <projectsDirectory>${basedir}/src/integration-tests/</projectsDirectory>
+                            <cloneProjectsTo>${project.build.directory}/integration-tests/</cloneProjectsTo>
+                            <preBuildHookScript>setup</preBuildHookScript>
+                            <postBuildHookScript>verify</postBuildHookScript>
+                            <localRepositoryPath>${project.build.directory}/local-repo</localRepositoryPath>
+                            <settingsFile>src/integration-tests/settings.xml</settingsFile>
+                            <pomIncludes>
+                                <pomInclude>*/pom.xml</pomInclude>
+                            </pomIncludes>
+                            <goals>
+                                <goal>clean</goal>
+                                <goal>process-sources</goal>
+                            </goals>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>integration-test</id>
+                                <goals>
+                                    <goal>install</goal>
+                                    <goal>integration-test</goal>
+                                    <goal>verify</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>
