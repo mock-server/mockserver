@@ -17,7 +17,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <mockserver.port>8080</mockserver.port>
         <mockserver.logLevel>DEBUG</mockserver.logLevel>
-        <mockserver.timeout>10</mockserver.timeout>
+        <mockserver.stopPort>8090</mockserver.stopPort>
+        <mockserver.stopKey>STOP</mockserver.stopKey>
     </properties>
 
     <dependencies>
@@ -39,21 +40,22 @@
                 <configuration>
                     <port>${mockserver.port}</port>
                     <logLevel>${mockserver.logLevel}</logLevel>
-                    <timeout>${mockserver.timeout}</timeout>
+                    <stopPort>${mockserver.stopPort}</stopPort>
+                    <stopKey>${mockserver.stopKey}</stopKey>
                 </configuration>
                 <executions>
                     <execution>
                         <id>initialize</id>
                         <phase>initialize</phase>
                         <goals>
-                            <goal>start</goal>
+                            <goal>runForked</goal>
                         </goals>
                     </execution>
                     <execution>
                         <id>verify</id>
                         <phase>verify</phase>
                         <goals>
-                            <goal>stop</goal>
+                            <goal>stopForked</goal>
                         </goals>
                     </execution>
                 </executions>

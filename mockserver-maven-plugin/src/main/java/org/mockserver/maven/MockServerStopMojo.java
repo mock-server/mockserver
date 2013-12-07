@@ -7,18 +7,12 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
 /**
+ * Stop the Mock Server in the verify phase of the build after any integration tests have completed
+ *
  * @author jamesdbloom
  */
-@Mojo(name = "stop",
-        defaultPhase = LifecyclePhase.VERIFY,
-        requiresProject = false,
-        threadSafe = true)
-public class MockServerStopPlugin extends AbstractMojo {
-
-    private static final int PORT = 9090;
-
-    @Parameter(property = "mockserver.port", defaultValue = "" + PORT)
-    private String port = "" + PORT;
+@Mojo(name = "stop", defaultPhase = LifecyclePhase.VERIFY)
+public class MockServerStopMojo extends AbstractMojo {
 
     /**
      * Skip plugin execution completely.
@@ -30,7 +24,7 @@ public class MockServerStopPlugin extends AbstractMojo {
         if (skip) {
             getLog().info("Skipping plugin execution");
         } else {
-            getLog().info("execute - Stopping on port " + port);
+            getLog().info("Stopping the Mock Server");
             try {
                 new EmbeddedJettyHolder().stop();
             } catch (Exception e) {

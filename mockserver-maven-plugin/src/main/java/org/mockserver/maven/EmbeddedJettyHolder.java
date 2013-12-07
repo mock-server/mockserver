@@ -20,7 +20,7 @@ public class EmbeddedJettyHolder {
         }
     }
 
-    public void stop() throws Exception {
+    public void stop() {
         if (embeddedJettyRunner.isRunning()) {
             embeddedJettyRunner.stop();
         } else {

@@ -24,6 +24,12 @@
             <artifactId>mockserver-jetty</artifactId>
             <version>1.9-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>org.mock-server</groupId>
+            <artifactId>mockserver-jetty</artifactId>
+            <classifier>jar-with-dependencies</classifier>
+            <version>1.9-SNAPSHOT</version>
+        </dependency>
 
         <!-- logging -->
         <dependency>
@@ -37,12 +43,22 @@
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-plugin-api</artifactId>
-            <version>3.1.0</version>
+            <version>3.1.1</version>
         </dependency>
         <dependency>
             <groupId>org.apache.maven.plugin-tools</groupId>
             <artifactId>maven-plugin-annotations</artifactId>
             <version>3.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-project</artifactId>
+            <version>3.0-alpha-2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-core</artifactId>
+            <version>3.1.1</version>
         </dependency>
     </dependencies>
 
@@ -57,6 +73,14 @@
                 </configuration>
                 <executions>
                     <execution>
+                        <id>exec-plugin-doc</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>xdoc</goal>
+                            <goal>helpmojo</goal>
+                        </goals>
+                    </execution>
+                    <execution>
                         <id>mojo-descriptor</id>
                         <phase>process-classes</phase>
                         <goals>
@@ -66,6 +90,7 @@
                     <execution>
                         <id>help-goal</id>
                         <goals>
+                            <goal>xdoc</goal>
                             <goal>helpmojo</goal>
                         </goals>
                     </execution>
@@ -79,6 +104,7 @@
                     <execution>
                         <id>help-descriptor</id>
                         <goals>
+                            <goal>xdoc</goal>
                             <goal>helpmojo</goal>
                         </goals>
                         <phase>process-classes</phase>
@@ -96,7 +122,7 @@
                     <preBuildHookScript>setup</preBuildHookScript>
                     <postBuildHookScript>verify</postBuildHookScript>
                     <localRepositoryPath>${project.build.directory}/local-repo</localRepositoryPath>
-                    <settingsFile>src/integration-tests/settings.xml</settingsFile>
+                    <!--<settingsFile>src/integration-tests/settings.xml</settingsFile>-->
                     <pomIncludes>
                         <pomInclude>*/pom.xml</pomInclude>
                     </pomIncludes>
@@ -111,6 +137,7 @@
                         <goals>
                             <goal>install</goal>
                             <goal>integration-test</goal>
+                            <goal>verify</goal>
                         </goals>
                     </execution>
                 </executions>
