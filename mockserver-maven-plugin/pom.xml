@@ -122,7 +122,7 @@
                     <preBuildHookScript>setup</preBuildHookScript>
                     <postBuildHookScript>verify</postBuildHookScript>
                     <localRepositoryPath>${project.build.directory}/local-repo</localRepositoryPath>
-                    <!--<settingsFile>src/integration-tests/settings.xml</settingsFile>-->
+                    <settingsFile>src/integration-tests/settings.xml</settingsFile>
                     <pomIncludes>
                         <pomInclude>*/pom.xml</pomInclude>
                     </pomIncludes>
