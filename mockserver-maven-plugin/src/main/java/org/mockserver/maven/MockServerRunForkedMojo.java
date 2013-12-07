@@ -89,12 +89,13 @@ public class MockServerRunForkedMojo extends AbstractMojo {
             getLog().info("Starting Mock Server on port " + port);
 
             Runtime.getRuntime().addShutdownHook(new ShutdownThread());
+            // TODO fix the hard coded path below!!!
             ProcessBuilder processBuilder = new ProcessBuilder(
                     getJavaBin(),
                     "-Dmockserver.logLevel=" + logLevel,
                     "-Dmockserver.stopPort=" + stopPort,
                     "-Dmockserver.stopKey=" + stopKey,
-                    "-jar", "/Users/jamesdbloom/git/mockservice/mockserver-jetty/target/mockserver-jetty-1.9-SNAPSHOT-jar-with-dependencies.jar", "" + port
+                    "-jar", "/Users/jamesdbloom/git/mockservice/mockserver-jetty/target/mockserver-jetty-1.10-SNAPSHOT-jar-with-dependencies.jar", "" + port
             );
             processBuilder.redirectErrorStream(true);
             processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
