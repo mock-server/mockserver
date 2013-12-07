@@ -47,11 +47,13 @@ public class MockServerVertical extends Verticle {
                             mockServer.clear(expectation.getHttpRequest());
                             request.response().setStatusCode(HttpStatusCode.ACCEPTED_202.code());
                             request.response().setStatusMessage(HttpStatusCode.ACCEPTED_202.reasonPhrase());
+                            request.response().end();
                         } else {
                             Expectation expectation = expectationSerializer.deserialize(body.getBytes());
                             mockServer.when(expectation.getHttpRequest(), expectation.getTimes()).respond(expectation.getHttpResponse());
                             request.response().setStatusCode(HttpStatusCode.CREATED_201.code());
                             request.response().setStatusMessage(HttpStatusCode.CREATED_201.reasonPhrase());
+                            request.response().end();
                         }
                     } else if (request.method().equals("GET") || request.method().equals("POST")) {
                         HttpRequest httpRequest = httpServerRequestMapper.createHttpRequest(request, body.getBytes());
@@ -62,8 +64,6 @@ public class MockServerVertical extends Verticle {
                             request.response().setStatusCode(HttpStatusCode.NOT_FOUND_404.code());
                             request.response().setStatusMessage(HttpStatusCode.NOT_FOUND_404.reasonPhrase());
                         }
-                    }
-                    if (!("" + request.path()).equals("/stop")) {
                         request.response().end();
                     }
                 }

@@ -3,6 +3,7 @@ include 'mockserver-client'
 include 'mockserver-war'
 include 'mockserver-jetty'
 include 'mockserver-vertx'
+include 'mockserver-integration-testing'
 
 rootProject.name='mockserver'
 

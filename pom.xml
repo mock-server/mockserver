@@ -47,6 +47,7 @@
         <module>mockserver-jetty</module>
         <module>mockserver-vertx</module>
         <module>mockserver-maven-plugin</module>
+        <module>mockserver-integration-testing</module>
     </modules>
 
     <properties>
@@ -78,6 +79,13 @@
                 <groupId>org.mock-server</groupId>
                 <artifactId>mockserver-client</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mock-server</groupId>
+                <artifactId>mockserver-integration-testing</artifactId>
+                <version>${project.version}</version>
+                <!-- TODO why is mockserver-client not transitively included for tests in intelliJ but works from mvn directly -->
+                <!--<scope>test</scope>-->
             </dependency>
 
             <!-- http -->

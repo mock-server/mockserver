@@ -25,6 +25,7 @@ public class ExpectationSerializer {
     }
 
     public Expectation deserialize(byte[] jsonExpectation) {
+        if (jsonExpectation.length == 0) throw new IllegalArgumentException("Expected an JSON expectation object but request body is empty");
         Expectation expectation = null;
         try {
             ExpectationDTO expectationDTO = objectMapper.readValue(jsonExpectation, ExpectationDTO.class);
@@ -32,8 +33,8 @@ public class ExpectationSerializer {
                 expectation = expectationDTO.buildObject();
             }
         } catch (IOException ioe) {
-            logger.error("Exception while parsing response for http response expectation", ioe);
-            throw new RuntimeException("Exception while parsing response for http response expectation", ioe);
+            logger.error("Exception while parsing response [" + new String(jsonExpectation) + "] for http response expectation", ioe);
+            throw new RuntimeException("Exception while parsing response [" + new String(jsonExpectation) + "] for http response expectation", ioe);
         }
         return expectation;
     }

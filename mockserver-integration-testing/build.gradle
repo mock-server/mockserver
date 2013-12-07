@@ -1,0 +1,5 @@
+dependencies {
+    // test
+    compile "junit:junit:$junitVersion"
+    compile "org.mockito:mockito-all:$mockitoAllVersion"
+}

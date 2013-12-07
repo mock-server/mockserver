@@ -1,4 +1,4 @@
-package org.mockserver;
+package org.mockserver.integration;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jetty.client.HttpClient;
@@ -7,13 +7,12 @@ import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.http.HttpMethod;
-import org.mockserver.client.MockServerClient;
-import org.mockserver.matchers.Times;
-import org.mockserver.model.*;
-import org.mockserver.server.EmbeddedJettyRunner;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockserver.client.MockServerClient;
+import org.mockserver.matchers.Times;
+import org.mockserver.model.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,22 +22,22 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author jamesdbloom
  */
-public class ClientServerEmbeddedJettyIntegrationTest {
+public abstract class AbstractClientServerIntegrationTest {
 
-    private EmbeddedJettyRunner embeddedJettyRunner;
-    private MockServerClient mockServerClient;
+    protected MockServerClient mockServerClient;
+
+    @Before
+    public abstract void startServer();
+
+    public abstract int getPort();
 
     @Before
     public void startServerAndCreateClient() {
-        embeddedJettyRunner = new EmbeddedJettyRunner();
-        embeddedJettyRunner.start(8090);
-        mockServerClient = new MockServerClient("localhost", 8090);
+        mockServerClient = new MockServerClient("localhost", getPort());
     }
 
     @After
-    public void stopServer() throws Exception {
-        embeddedJettyRunner.stop();
-    }
+    public abstract void stopServer();
 
     @Test
     public void clientCanCallServer() throws Exception {

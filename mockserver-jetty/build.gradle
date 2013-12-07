@@ -3,15 +3,9 @@ dependencies {
     compile "org.eclipse.jetty:jetty-http:$jettyVersion"
     compile "org.eclipse.jetty:jetty-server:$jettyVersion"
     compile "org.eclipse.jetty:jetty-servlet:$jettyVersion"
-    compile "org.eclipse.jetty:jetty-client:$jettyVersion"
-//    compile group: 'org.mock-server', name: 'mockserver-war', version: "$mockServerVersion", classifier: 'classes'
-
-    // json
-    compile "org.codehaus.jackson:jackson-mapper-asl:$jacksonMapperAslVersion"
 
     // commons & guava
     compile "org.apache.commons:commons-lang3:$commonsLang3Version"
-    compile "commons-io:commons-io:$commonsIoVersion"
     compile "com.google.guava:guava:$guavaVersion"
 
     // logging
@@ -31,4 +25,3 @@ task(run, dependsOn: 'classes', type: JavaExec) {
         args port
     }
 }
-

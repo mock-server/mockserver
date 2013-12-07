@@ -1,0 +1,9 @@
+import java.io.*;
+
+File logFile = new File( basedir, "mockserver.log" );
+
+if (logFile.exists()) {
+    return logFile.delete();
+} else {
+    return true;
+}

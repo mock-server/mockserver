@@ -31,7 +31,7 @@
             <artifactId>jetty-client</artifactId>
         </dependency>
 
-        <!-- commons & guava -->
+        <!-- guava -->
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>

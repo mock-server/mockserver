@@ -1,16 +1,9 @@
 dependencies {
     // http
     compile "org.eclipse.jetty:jetty-http:$jettyVersion"
-    compile "org.eclipse.jetty:jetty-server:$jettyVersion"
-    compile "org.eclipse.jetty:jetty-servlet:$jettyVersion"
     compile "org.eclipse.jetty:jetty-client:$jettyVersion"
 
-    // json
-    compile "org.codehaus.jackson:jackson-mapper-asl:$jacksonMapperAslVersion"
-
-    // commons & guava
-    compile "org.apache.commons:commons-lang3:$commonsLang3Version"
-    compile "commons-io:commons-io:$commonsIoVersion"
+    // guava
     compile "com.google.guava:guava:$guavaVersion"
 
     // logging

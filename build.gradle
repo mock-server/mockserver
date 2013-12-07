@@ -12,6 +12,12 @@ allprojects {
         mavenLocal()
         mavenCentral()
     }
+
+    gradle.projectsEvaluated {
+        tasks.withType(Compile) {
+            options.compilerArgs << "-Xlint:unchecked" <<  "-Xlint:deprecation"
+        }
+    }
 }
 
 project(':mockserver-client') {
@@ -26,10 +32,16 @@ project(':mockserver-war') {
     }
 }
 
+project(':mockserver-integration-testing') {
+    dependencies {
+        compile project(':mockserver-core'), project(':mockserver-client')
+    }
+}
+
 project(':mockserver-jetty') {
     dependencies {
         compile project(':mockserver-core'), project(':mockserver-war')
-        testCompile project(':mockserver-client')
+        testCompile project(':mockserver-client'), project(':mockserver-integration-testing')
     }
 }
 
@@ -128,4 +140,4 @@ def loadProperties(String sourceFileName) {
     }
 }
 
-loadProperties("$rootDir/gradle.properties")
+loadProperties("$rootDir/gradle.properties" as String)

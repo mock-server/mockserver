@@ -21,8 +21,7 @@
         </dependency>
         <dependency>
             <groupId>org.mock-server</groupId>
-            <artifactId>mockserver-client</artifactId>
-            <scope>test</scope>
+            <artifactId>mockserver-integration-testing</artifactId>
         </dependency>
 
         <!-- http -->

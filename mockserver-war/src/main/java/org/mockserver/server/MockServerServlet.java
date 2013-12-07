@@ -58,7 +58,6 @@ public class MockServerServlet extends HttpServlet {
             mockServer.when(expectation.getHttpRequest(), expectation.getTimes()).respond(expectation.getHttpResponse());
             httpServletResponse.setStatus(HttpServletResponse.SC_CREATED);
         }
-
     }
 
 }

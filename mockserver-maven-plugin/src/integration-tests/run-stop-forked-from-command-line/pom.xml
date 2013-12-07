@@ -17,18 +17,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <mockserver.port>8080</mockserver.port>
         <mockserver.logLevel>DEBUG</mockserver.logLevel>
-        <mockserver.timeout>10</mockserver.timeout>
     </properties>
-
-    <dependencies>
-        <!-- mock server -->
-        <dependency>
-            <groupId>org.mock-server</groupId>
-            <artifactId>mockserver-integration-testing</artifactId>
-            <version>1.9-SNAPSHOT</version>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
 
     <build>
         <plugins>
@@ -39,24 +28,7 @@
                 <configuration>
                     <port>${mockserver.port}</port>
                     <logLevel>${mockserver.logLevel}</logLevel>
-                    <timeout>${mockserver.timeout}</timeout>
                 </configuration>
-                <executions>
-                    <execution>
-                        <id>initialize</id>
-                        <phase>initialize</phase>
-                        <goals>
-                            <goal>start</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>verify</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>stop</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>

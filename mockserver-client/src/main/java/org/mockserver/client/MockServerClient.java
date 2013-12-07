@@ -17,10 +17,12 @@ public class MockServerClient {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final String mockServerURI;
+    private final int port;
 
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
 
     public MockServerClient(String host, int port) {
+        this.port = port;
         mockServerURI = "http://" + host + ":" + port + "/";
     }
 
@@ -32,18 +34,32 @@ public class MockServerClient {
         return new ForwardChainExpectation(this, new Expectation(httpRequest, times));
     }
 
-    public void sendExpectation(Expectation expectation) {
+    public void clear(HttpRequest httpRequest) {
+        sendExpectation(new Expectation(httpRequest, Times.unlimited()), "clear");
+    }
+
+    protected void sendExpectation(Expectation expectation) {
+        sendExpectation(expectation, "");
+    }
+
+    private void sendExpectation(Expectation expectation, String path) {
         HttpClient httpClient = new HttpClient();
         try {
             httpClient.start();
-            httpClient.newRequest(mockServerURI)
+            httpClient.newRequest(mockServerURI + path)
                     .method(HttpMethod.PUT)
                     .header("Content-Type", "application/json; charset=utf-8")
-                    .content(new StringContentProvider(expectationSerializer.serialize(expectation)))
+                    .content(new StringContentProvider((expectation != null ? expectationSerializer.serialize(expectation) : "")))
                     .send();
         } catch (Exception e) {
             logger.error(String.format("Exception sending expectation to MockServer as %s", expectation), e);
             throw new RuntimeException(String.format("Exception sending expectation to MockServer as %s", expectation), e);
         }
+    }
+
+    public void stopServer() {
+        int stopPort = Integer.parseInt(System.getProperty("mockserver.stopPort", "" + (port + 1)));
+        String stopKey = System.getProperty("mockserver.stopKey", "STOP_KEY");
+
     }
 }
