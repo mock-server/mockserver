@@ -26,18 +26,12 @@ public abstract class AbstractClientServerIntegrationTest {
 
     protected MockServerClient mockServerClient;
 
-    @Before
-    public abstract void startServer();
-
     public abstract int getPort();
 
     @Before
-    public void startServerAndCreateClient() {
+    public void createClient() {
         mockServerClient = new MockServerClient("localhost", getPort());
     }
-
-    @After
-    public abstract void stopServer();
 
     @Test
     public void clientCanCallServer() throws Exception {

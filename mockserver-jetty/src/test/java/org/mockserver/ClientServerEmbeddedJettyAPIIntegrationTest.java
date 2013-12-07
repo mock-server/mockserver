@@ -1,6 +1,9 @@
 package org.mockserver;
 
+import org.junit.After;
+import org.junit.Before;
 import org.mockserver.integration.AbstractClientServerIntegrationTest;
+import org.mockserver.model.HttpRequest;
 import org.mockserver.server.EmbeddedJettyRunner;
 
 /**
@@ -11,7 +14,7 @@ public class ClientServerEmbeddedJettyAPIIntegrationTest extends AbstractClientS
     private EmbeddedJettyRunner embeddedJettyRunner;
     private final int port = 8090;
 
-    @Override
+    @Before
     public void startServer() {
         embeddedJettyRunner = new EmbeddedJettyRunner();
         embeddedJettyRunner.start(port);
@@ -22,7 +25,7 @@ public class ClientServerEmbeddedJettyAPIIntegrationTest extends AbstractClientS
         return port;
     }
 
-    @Override
+    @After
     public void stopServer() {
         embeddedJettyRunner.stop();
     }

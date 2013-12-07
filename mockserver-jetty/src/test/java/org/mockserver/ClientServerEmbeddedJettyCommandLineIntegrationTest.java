@@ -1,23 +1,25 @@
 package org.mockserver;
 
-import org.junit.Ignore;
+import org.junit.*;
 import org.mockserver.integration.AbstractClientServerIntegrationTest;
+import org.mockserver.model.HttpRequest;
 import org.mockserver.server.EmbeddedJettyRunner;
-
-import java.io.File;
-import java.io.IOException;
 
 /**
  * @author jamesdbloom
  */
-@Ignore
 public class ClientServerEmbeddedJettyCommandLineIntegrationTest extends AbstractClientServerIntegrationTest {
 
-    private final int port = 8090;
+    private final static int port = 8090;
 
-    @Override
-    public void startServer() {
+    @BeforeClass
+    public static void startServer() {
         EmbeddedJettyRunner.main("" + port);
+    }
+
+    @Before
+    public void clearServer() {
+        mockServerClient.clear(new HttpRequest());
     }
 
     @Override
@@ -25,8 +27,9 @@ public class ClientServerEmbeddedJettyCommandLineIntegrationTest extends Abstrac
         return port;
     }
 
-    @Override
-    public void stopServer() {
-        mockServerClient.stopServer();
+    @AfterClass
+    public static void stopServer() {
+        EmbeddedJettyRunner.stopRemote("127.0.0.1", port + 1, "STOP_KEY", 500);
     }
+
 }

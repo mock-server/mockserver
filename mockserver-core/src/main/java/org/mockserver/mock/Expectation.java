@@ -26,7 +26,7 @@ public class Expectation extends ModelObject {
     }
 
     public HttpResponse getHttpResponse() {
-        return httpResponse.applyDelay();
+        return (httpResponse != null ? httpResponse.applyDelay() : null);
     }
 
     public Times getTimes() {

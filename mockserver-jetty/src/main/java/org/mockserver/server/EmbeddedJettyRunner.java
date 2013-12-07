@@ -135,7 +135,7 @@ public class EmbeddedJettyRunner {
      * @param ipAddress IP address as string of remote Mock Server (i.e. "127.0.0.1")
      * @param stopPort the stopPort for the Mock Server to stop (default is HTTP port + 1)
      * @param stopKey the stopKey for the Mock Server to step (default is "STOP_KEY")
-     * @param stopWait the period to wait for Mock Server to confirm it has stopped, in milliseconds.  A value of <= 0 means do not wait for confirmation Mock Server has stopped.
+     * @param stopWait the period to wait for Mock Server to confirm it has stopped, in seconds.  A value of <= 0 means do not wait for confirmation Mock Server has stopped.
      */
     public static void stopRemote(String ipAddress, int stopPort, String stopKey, int stopWait) {
         if (stopPort <= 0)

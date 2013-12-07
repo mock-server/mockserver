@@ -7,6 +7,7 @@ import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +36,7 @@ public class MockServerClient {
     }
 
     public void clear(HttpRequest httpRequest) {
-        sendExpectation(new Expectation(httpRequest, Times.unlimited()), "clear");
+        sendExpectation(new Expectation(httpRequest, Times.unlimited()).respond(new HttpResponse()), "clear");
     }
 
     protected void sendExpectation(Expectation expectation) {
@@ -55,11 +56,5 @@ public class MockServerClient {
             logger.error(String.format("Exception sending expectation to MockServer as %s", expectation), e);
             throw new RuntimeException(String.format("Exception sending expectation to MockServer as %s", expectation), e);
         }
-    }
-
-    public void stopServer() {
-        int stopPort = Integer.parseInt(System.getProperty("mockserver.stopPort", "" + (port + 1)));
-        String stopKey = System.getProperty("mockserver.stopKey", "STOP_KEY");
-
     }
 }
