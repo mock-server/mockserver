@@ -16,7 +16,7 @@ public class EmbeddedJettyHolder {
             EmbeddedJettyRunner.overrideLogLevel(logLevel);
             return embeddedJettyRunner.start(port);
         } else {
-            throw new IllegalStateException("Server is already running!");
+            throw new IllegalStateException("Mock Server is already running!");
         }
     }
 
@@ -24,7 +24,7 @@ public class EmbeddedJettyHolder {
         if (embeddedJettyRunner.isRunning()) {
             embeddedJettyRunner.stop();
         } else {
-            throw new IllegalStateException("Server is not running!");
+            throw new IllegalStateException("Mock Server is not running!");
         }
     }
 }

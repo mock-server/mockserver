@@ -1,5 +1,7 @@
 import java.io.*;
 
+Runtime.getRuntime().exec("pkill -INT -f jetty").waitFor();
+
 File logFile = new File( basedir, "mockserver.log" );
 
 if (logFile.exists()) {

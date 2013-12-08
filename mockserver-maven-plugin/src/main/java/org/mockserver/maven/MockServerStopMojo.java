@@ -2,6 +2,7 @@ package org.mockserver.maven;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -12,13 +13,14 @@ import org.apache.maven.plugins.annotations.Parameter;
  * @author jamesdbloom
  */
 @Mojo(name = "stop", defaultPhase = LifecyclePhase.VERIFY)
+//@Execute(goal = "stop", phase = LifecyclePhase.VERIFY)
 public class MockServerStopMojo extends AbstractMojo {
 
     /**
      * Skip plugin execution completely.
      */
     @Parameter(property = "mockserver.skip", defaultValue = "false")
-    private boolean skip = false;
+    private boolean skip;
 
     public void execute() throws MojoExecutionException {
         if (skip) {

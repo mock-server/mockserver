@@ -2,6 +2,7 @@ package org.mockserver.maven;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -12,13 +13,14 @@ import org.apache.maven.plugins.annotations.Parameter;
  * @author jamesdbloom
  */
 @Mojo(name = "start", defaultPhase = LifecyclePhase.INITIALIZE)
+//@Execute(goal = "start", phase = LifecyclePhase.INITIALIZE)
 public class MockServerStartMojo extends AbstractMojo {
 
 
     /**
      * The port to run Mock Server on
      */
-    @Parameter(property = "mockserver.port", defaultValue = "9090")
+    @Parameter(property = "mockserver.port", defaultValue = "8080")
     private int port;
 
     /**

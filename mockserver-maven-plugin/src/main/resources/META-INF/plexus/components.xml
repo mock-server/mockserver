@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--<component-set>-->
+    <!--<components>-->
+        <!--<component>-->
+            <!--<role>org.apache.maven.lifecycle.mapping.LifecycleMapping</role>-->
+            <!--<role-hint>mockserver</role-hint>-->
+            <!--<implementation>org.apache.maven.lifecycle.mapping.DefaultLifecycleMapping</implementation>-->
+            <!--<configuration>-->
+                <!--<phases>-->
+                    <!--<initialize>org.mockserver:mockserver-maven-plugin:start</initialize>-->
+                    <!--<verify>org.mockserver:mockserver-maven-plugin:stop</verify>-->
+                <!--</phases>-->
+            <!--</configuration>-->
+        <!--</component>-->
+    <!--</components>-->
+<!--</component-set>-->

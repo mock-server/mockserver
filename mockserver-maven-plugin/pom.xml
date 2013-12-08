@@ -60,6 +60,11 @@
             <artifactId>maven-core</artifactId>
             <version>3.1.1</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-artifact</artifactId>
+            <version>3.1.1</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -117,6 +122,12 @@
     <profiles>
         <profile>
             <id>integration-tests</id>
+            <activation>
+                <property>
+                    <name>maven.test.skip</name>
+                    <value>!true</value>
+                </property>
+            </activation>
             <build>
                 <plugins>
                     <plugin>
@@ -125,12 +136,20 @@
                         <version>1.8</version>
                         <configuration>
                             <debug>true</debug>
+                            <showErrors>true</showErrors>
                             <projectsDirectory>${basedir}/src/integration-tests/</projectsDirectory>
                             <cloneProjectsTo>${project.build.directory}/integration-tests/</cloneProjectsTo>
+                            <cloneClean>true</cloneClean>
+                            <!--<setupIncludes></setupIncludes>-->
                             <preBuildHookScript>setup</preBuildHookScript>
                             <postBuildHookScript>verify</postBuildHookScript>
                             <localRepositoryPath>${project.build.directory}/local-repo</localRepositoryPath>
+                            <extraArtifacts>
+                                <!-- groupId:artifactId:version:type:classifier -->
+                                <extraArtifact>org.mock-server:mockserver:1.9-SNAPSHOT:pom</extraArtifact>
+                            </extraArtifacts>
                             <settingsFile>src/integration-tests/settings.xml</settingsFile>
+                            <!--<mavenOpts>-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005</mavenOpts>-->
                             <pomIncludes>
                                 <pomInclude>*/pom.xml</pomInclude>
                             </pomIncludes>
