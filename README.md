@@ -336,21 +336,30 @@ This ensures that any tests you run during you build in either the normal *test*
          </executions>
      </plugin>
 
-These goals can be used from the command line as well to start and stop MockServer.
+These goals can be used from the command line as well to start and stop MockServer, as follows:
+
+* To run the MockServer synchronously and block
+
+     mvn mockserver:start
+     
+* To run the MockServer asynchronously as a forked JVM
 
      mvn mockserver:runForked
+     
+* To stop a forked instance of the MockServer running on the same machine
 
      mvn mockserver:stopForked
 
 The *stopForked* goal does assumes that the MockServer is running on the same physical machine as it uses 127.0.0.1 to communicate with the MockServer stop socket.
 
-Note: All configuration options provided are optional with default being used for any configuration not provided as follows:
+The Maven plugin can be configured as follows:
 
-* port - 9090
-* logLevel - WARN
-* stopPort - port + 1
-* stopKey - STOP_KEY
-* skip - false
+* *port* - The port to listen to incoming HTTP requests (required: false, default: 9090)
+* *timeout* - How long to block waiting for the MockServer, only used by *start* goal, a value of 0 means wait indefinitely (required: false, default: 0)
+* *logLevel* - The logging level (required: false, default: WARN)
+* *stopPort* - The port to listen to stop requests (required: false, default: port + 1)
+* *stopKey* - The key to use for stop requests (required: false, default: STOP_KEY)
+* *skip* - Prevent the plugin from running (required: false, default: false)
 
 **Embedded Jetty**
 
