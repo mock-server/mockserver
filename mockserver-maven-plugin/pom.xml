@@ -122,12 +122,12 @@
     <profiles>
         <profile>
             <id>integration-tests</id>
-            <activation>
-                <property>
-                    <name>maven.test.skip</name>
-                    <value>!true</value>
-                </property>
-            </activation>
+            <!--<activation>-->
+                <!--<property>-->
+                    <!--<name>maven.test.skip</name>-->
+                    <!--<value>!true</value>-->
+                <!--</property>-->
+            <!--</activation>-->
             <build>
                 <plugins>
                     <plugin>
