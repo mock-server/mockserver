@@ -1,3 +1,5 @@
+***This documentation is currently being rewritten to make it clearer and easily to understand, a new version will be publish by the end of December 2013***
+
 # What is MockServer
 
 MockServer is an API to enable the easy mocking of any system you integrate with via HTTP (i.e. services, web sites, etc) from either Java or JavaScript.
@@ -29,14 +31,15 @@ This is useful in the following scenarios:
  * easily setup mock responses independently for each test to ensure test data is encapsulated with each test.  Avoid sharing data between tests that is difficult to manage and maintain and risks test infecting each other.
 * de-coupling development
  * start working against a service API before the service is available.  If an API or service is not yet fully developed MockServer can mock the API allowing the teams who is using the service to start work without being delayed. 
- * isolate development teams particularly critical during the initial development phases when the APIs / services may be extremely unstable and volatile.  Using the mock server allows development work to continue even when an external service fails.
+ * isolate development teams particularly critical during the initial development phases when the APIs / services may be extremely unstable and volatile.  Using the MockServer allows development work to continue even when an external service fails.
 
 # Versions
 
 MockServer can be run in multiple ways:
-* as a stand alone web server (using Embedded Jetty), 
-* as a deployable WAR (to run on any JEE web server),
+* via a Maven plugin (as part of a maven build),
+* as a stand alone web server (using Embedded Jetty),
 * as a Vert.X module,
+* as a deployable WAR (to run on any JEE web server),
 * as a NodeJS module (however this is currently been written and is not yet finished).
 
 # Client
@@ -50,9 +53,10 @@ It is not necessary to use the provided clients because the proptocol for expect
 # Maven Central
 
 Maven Central contains the following artifacts:
+* org.mock-server:mockserver-maven-plugin - a set of maven plugins to start, stop and fork MockServer using maven
 * org.mock-server:mockserver-jetty - a stand alone web server (using Embedded Jetty)
-* org.mock-server:mockserver-war - a deployable WAR (to run on any JEE web server)
 * org.mock-server:mockserver-vertx - a Vert.X module
+* org.mock-server:mockserver-war - a deployable WAR (to run on any JEE web server)
 * org.mock-server:mockserver-client - a Java client
 * org.mock-server:mockserver-core - core classes shared by all versions
 
@@ -71,7 +75,7 @@ A system with service dependencies as follows:
 
 Could be tested with MockServer, mocking the service dependencies, as follows:
 
-![Mocking service dependencies with Mock Server](/SystemUnderTest.png)
+![Mocking service dependencies with MockServer](/SystemUnderTest.png)
 
 ### 1. create mock response
 
@@ -168,7 +172,7 @@ The same example as above would be:
 
 #### 2.1 Request matcher
 
-A mock expectation tells the mock server how to response when receiving a request.  To setup a mock expectation you need to provide the mock response (as described in 1. create mock response) and specify when and how often this response should be provided.  
+A mock expectation tells the MockServer how to response when receiving a request.  To setup a mock expectation you need to provide the mock response (as described in 1. create mock response) and specify when and how often this response should be provided.
 
 To specify when a response should be provided a request matcher must be provided.  When the MockServer then receives a request that matches a matching request it will respond with the response specified in the mock expectation.
 
@@ -258,14 +262,95 @@ The same example as above would be:
 Before any mock expectation can be sent to the MockServer it must be started.
 
 MockServer can be run in multiple ways:
-* as a stand alone web server (using Embedded Jetty), 
-* as a deployable WAR (to run on any JEE web server),
+* via a Maven plugin (as part of a maven build),
+* as a stand alone web server (using Embedded Jetty),
 * as a Vert.X module,
+* as a deployable WAR (to run on any JEE web server),
 * as a NodeJS module (however this is currently been written and is not yet finished).
 
 MockServer also has two client versions:
 * one written in Java - org.mockserver.client.MockServerClient in mockserver-client 
 * and one written in JavaScript - mockServerClient.js in mockserver-client
+
+**Maven Plugin**
+
+To run MockServer as part of your build add the following plugin to your pom.xml:
+
+    <plugin>
+        <groupId>org.mock-server</groupId>
+        <artifactId>mockserver-maven-plugin</artifactId>
+        <version>1.10-SNAPSHOT</version>
+        <configuration>
+            <port>9090</port>
+            <logLevel>DEBUG</logLevel>
+        </configuration>
+        <executions>
+            <execution>
+                <id>initialize</id>
+                <phase>initialize</phase>
+                <goals>
+                    <goal>start</goal>
+                </goals>
+            </execution>
+            <execution>
+                <id>verify</id>
+                <phase>verify</phase>
+                <goals>
+                    <goal>stop</goal>
+                </goals>
+            </execution>
+        </executions>
+    </plugin>
+
+This will start the MockServer during the *initialize* phase and will stop the MockServer during the *verify* phase.  For more details about Maven build phases see: http://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html.
+
+This ensures that any tests you run during you build in either the normal *test* phase or the *integration-test* phase can use the MockServer on the port specified.
+
+ It is also possible to run the MockServer as a forked JVM using the *runForked* and *stopForked* goals as follows:
+
+     <plugin>
+         <groupId>org.mock-server</groupId>
+         <artifactId>mockserver-maven-plugin</artifactId>
+         <version>1.10-SNAPSHOT</version>
+         <configuration>
+             <port>9090</port>
+             <logLevel>DEBUG</logLevel>
+             <stopPort>9091</stopPort>
+             <stopKey>STOP_KEY</stopKey>
+         </configuration>
+         <executions>
+             <execution>
+                 <id>initialize</id>
+                 <phase>initialize</phase>
+                 <goals>
+                     <goal>runForked</goal>
+                 </goals>
+             </execution>
+             <execution>
+                 <id>verify</id>
+                 <phase>verify</phase>
+                 <goals>
+                     <goal>stopForked</goal>
+                 </goals>
+             </execution>
+         </executions>
+     </plugin>
+
+These goals can be used from the command line as well to start and stop MockServer.
+
+     mvn mockserver:runForked
+
+     mvn mockserver:stopForked
+
+The *stopForked* goal does assumes that the MockServer is running on the same physical machine as it uses 127.0.0.1 to communicate with the MockServer stop socket.
+
+Note: All configuration options provided are optional with default being used for any configuration not provided as follows:
+
+* port - 9090
+* logLevel - WARN
+* stopPort - port + 1
+* stopKey - STOP_KEY
+* skip - false
 
 **Embedded Jetty**
 
