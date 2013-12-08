@@ -18,7 +18,7 @@
             <plugin>
                 <groupId>org.mock-server</groupId>
                 <artifactId>mockserver-maven-plugin</artifactId>
-                <version>1.10-SNAPSHOT</version>
+                <version>1.11-SNAPSHOT</version>
             </plugin>
         </plugins>
     </build>

@@ -18,7 +18,7 @@
         <dependency>
             <groupId>org.mock-server</groupId>
             <artifactId>mockserver-integration-testing</artifactId>
-            <version>1.10-SNAPSHOT</version>
+            <version>1.11-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -28,7 +28,7 @@
             <plugin>
                 <groupId>org.mock-server</groupId>
                 <artifactId>mockserver-maven-plugin</artifactId>
-                <version>1.10-SNAPSHOT</version>
+                <version>1.11-SNAPSHOT</version>
                 <executions>
                     <execution>
                         <id>initialize</id>
