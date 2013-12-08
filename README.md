@@ -279,7 +279,7 @@ To run MockServer as part of your build add the following plugin to your pom.xml
     <plugin>
         <groupId>org.mock-server</groupId>
         <artifactId>mockserver-maven-plugin</artifactId>
-        <version>1.10-SNAPSHOT</version>
+        <version>1.11-SNAPSHOT</version>
         <configuration>
             <port>9090</port>
             <logLevel>DEBUG</logLevel>
@@ -311,7 +311,7 @@ This ensures that any tests you run during you build in either the normal *test*
      <plugin>
          <groupId>org.mock-server</groupId>
          <artifactId>mockserver-maven-plugin</artifactId>
-         <version>1.10-SNAPSHOT</version>
+         <version>1.11-SNAPSHOT</version>
          <configuration>
              <port>9090</port>
              <logLevel>DEBUG</logLevel>
@@ -365,7 +365,7 @@ The Maven plugin can be configured as follows:
 
 To run as Embedded Jetty run the following command:
 
-    java -jar <path to mockserver-jetty-1.10-SNAPSHOT-jar-with-dependencies.jar> <port>
+    java -jar <path to mockserver-jetty-1.11-SNAPSHOT-jar-with-dependencies.jar> <port>
     
 **Vert.X**
 
@@ -373,21 +373,21 @@ First, you'll need to [install Vert.x](http://vertx.io/install.html).
 
 To run as Vert.X module run the following command:
 
-    vertx install org.mock-server~mockserver-vertx~1.10-SNAPSHOT
-    vertx runmod org.mock-server~mockserver-vertx~1.10-SNAPSHOT
+    vertx install org.mock-server~mockserver-vertx~1.11-SNAPSHOT
+    vertx runmod org.mock-server~mockserver-vertx~1.11-SNAPSHOT
     
 Alternatively build from source and run the Vert.X module as a zip file:
 
     git clone https://github.com/jamesdbloom/mockservice.git
     cd mockserver
     mvn clean package
-    vertx runzip mockserver-vertx/target/org.mock-server~mockserver-vertx~1.10-SNAPSHOT.zip
+    vertx runzip mockserver-vertx/target/org.mock-server~mockserver-vertx~1.11-SNAPSHOT.zip
 
 **Web Archive (WAR)**
 
 To run as a WAR deployed on any JEE web server:
 
-    deploy mockserver-war-1.10-SNAPSHOT.jar to web server
+    deploy mockserver-war-1.11-SNAPSHOT.jar to web server
     
 **Build From Source**
 
@@ -408,15 +408,15 @@ To build an executable jar containing all dependancies run the following command
 
 This will produce a jar file under the target directory called, as follows:
 
-    mockserver-jetty/target/mockserver-jetty-1.10-SNAPSHOT-jar-with-dependencies.jar
+    mockserver-jetty/target/mockserver-jetty-1.11-SNAPSHOT-jar-with-dependencies.jar
 
 Run the MockServer then using the executable jar as follows:
 
-    java -jar <path to mockserver-jetty-1.10-SNAPSHOT-jar-with-dependencies.jar> <port>
+    java -jar <path to mockserver-jetty-1.11-SNAPSHOT-jar-with-dependencies.jar> <port>
     
 For example to run the MockServer on port 9999:
 
-    java -jar mockserver-jetty/target/mockserver-jetty-1.10-SNAPSHOT-jar-with-dependencies.jar 9999
+    java -jar mockserver-jetty/target/mockserver-jetty-1.11-SNAPSHOT-jar-with-dependencies.jar 9999
     
 ***Gradle***
 
