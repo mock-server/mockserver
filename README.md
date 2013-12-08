@@ -338,15 +338,15 @@ This ensures that any tests you run during you build in either the normal *test*
 
 These goals can be used from the command line as well to start and stop MockServer, as follows:
 
-* To run the MockServer synchronously and block
+To run the MockServer synchronously and block
 
      mvn mockserver:start
      
-* To run the MockServer asynchronously as a forked JVM
+To run the MockServer asynchronously as a forked JVM
 
      mvn mockserver:runForked
      
-* To stop a forked instance of the MockServer running on the same machine
+To stop a forked instance of the MockServer running on the same machine
 
      mvn mockserver:stopForked
 
