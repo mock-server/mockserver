@@ -19,7 +19,7 @@ public class MockServerRunAndWaitMojo extends AbstractMojo {
     /**
      * The port to run Mock Server on
      */
-    @Parameter(property = "mockserver.port", defaultValue = "9090")
+    @Parameter(property = "mockserver.port", defaultValue = "8080")
     private int port;
 
     /**

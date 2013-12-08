@@ -1,17 +1,12 @@
 package org.mockserver.maven;
 
-import org.apache.maven.artifact.Artifact;
-import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.project.MavenProject;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Set;
 
 /**
  * @author jamesdbloom
@@ -22,7 +17,7 @@ public class MockServerRunForkedMojo extends AbstractMojo {
     /**
      * The port to run Mock Server on
      */
-    @Parameter(property = "mockserver.port", defaultValue = "9090")
+    @Parameter(property = "mockserver.port", defaultValue = "8080")
     private int port;
 
     /**
@@ -32,9 +27,15 @@ public class MockServerRunForkedMojo extends AbstractMojo {
     private String logLevel;
 
     /**
+     * Logging level
+     */
+    @Parameter(property = "mockserver.pipeLogToConsole", defaultValue = "false")
+    private boolean pipeLogToConsole;
+
+    /**
      * The port to stop Mock Server
      */
-    @Parameter(property = "mockserver.stopPort", defaultValue = "9091")
+    @Parameter(property = "mockserver.stopPort", defaultValue = "8081")
     private int stopPort;
 
     /**
@@ -49,60 +50,29 @@ public class MockServerRunForkedMojo extends AbstractMojo {
     @Parameter(property = "mockserver.skip", defaultValue = "false")
     private boolean skip;
 
-
-    /**
-     * The Maven project.
-     */
-    @Component
-    private MavenProject project;
-
-    /**
-     *
-     */
-    @Component
-    private MavenSession session;
-
-    /**
-     * The forked jetty instance
-     */
-    private Process forkedProcess;
-
-    /**
-     * ShutdownThread
-     */
-    public class ShutdownThread extends Thread {
-        public ShutdownThread() {
-            super("Shutdown Forked Mock Server");
-        }
-
-        public void run() {
-            if (forkedProcess != null) {
-                forkedProcess.destroy();
-            }
-        }
-    }
-
     public void execute() throws MojoExecutionException {
         if (skip) {
             getLog().info("Skipping plugin execution");
         } else {
             getLog().info("Starting Mock Server on port " + port);
 
-            Runtime.getRuntime().addShutdownHook(new ShutdownThread());
             // TODO fix the hard coded path below!!!
             ProcessBuilder processBuilder = new ProcessBuilder(
                     getJavaBin(),
                     "-Dmockserver.logLevel=" + logLevel,
                     "-Dmockserver.stopPort=" + stopPort,
                     "-Dmockserver.stopKey=" + stopKey,
+//                    "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5006",
                     "-jar", "/Users/jamesdbloom/git/mockservice/mockserver-jetty/target/mockserver-jetty-1.10-SNAPSHOT-jar-with-dependencies.jar", "" + port
             );
-            processBuilder.redirectErrorStream(true);
-            processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
+            if (pipeLogToConsole) {
+                processBuilder.redirectErrorStream(true);
+                processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
+            }
             try {
-                forkedProcess = processBuilder.start();
+                processBuilder.start();
             } catch (IOException e) {
-                e.printStackTrace();
+                getLog().error("Exception while starting MockServer", e);
             }
         }
 
@@ -132,21 +102,5 @@ public class MockServerRunForkedMojo extends AbstractMojo {
             }
         }
         return ret.toString();
-    }
-
-    private Set<Artifact> getExtraJars() throws Exception {
-
-//        String groupId;
-//        String artifactId;
-//        VersionRange versionRange;
-//        String scope;
-//        String type;
-//        String classifier;
-//        ArtifactHandler artifactHandler;
-//        Artifact artifact = new DefaultArtifact();
-        project.getPluginArtifactMap();
-//        mavenProject.getDistributionManagementArtifactRepository().find(artifact);
-
-        return null;
     }
 }

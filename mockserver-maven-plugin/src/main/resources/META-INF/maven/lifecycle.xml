@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--<lifecycles>-->
+    <!--<lifecycle>-->
+        <!--<id>mockserver_cycle</id>-->
+        <!--<phases>-->
+            <!--<phase>-->
+                <!--<id>initialize</id>-->
+                <!--<executions>-->
+                    <!--<execution>-->
+                        <!--<goals>-->
+                            <!--<goal>start</goal>-->
+                        <!--</goals>-->
+                    <!--</execution>-->
+                <!--</executions>-->
+            <!--</phase>-->
+            <!--<phase>-->
+                <!--<id>verify</id>-->
+                <!--<executions>-->
+                    <!--<execution>-->
+                        <!--<goals>-->
+                            <!--<goal>stop</goal>-->
+                        <!--</goals>-->
+                    <!--</execution>-->
+                <!--</executions>-->
+            <!--</phase>-->
+        <!--</phases>-->
+    <!--</lifecycle>-->
+<!--</lifecycles>-->

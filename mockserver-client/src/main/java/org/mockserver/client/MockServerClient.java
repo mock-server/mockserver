@@ -18,12 +18,10 @@ public class MockServerClient {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final String mockServerURI;
-    private final int port;
 
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
 
     public MockServerClient(String host, int port) {
-        this.port = port;
         mockServerURI = "http://" + host + ":" + port + "/";
     }
 

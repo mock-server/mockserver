@@ -9,31 +9,25 @@ import org.mockserver.model.HttpRequest;
 import org.vertx.java.platform.impl.cli.Starter;
 
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author jamesdbloom
  */
-@Ignore
 public class ClientServerVertxIntegrationTest extends AbstractClientServerIntegrationTest {
 
     public SettableFuture<String> settableFuture;
 
     private Thread vertxServer = new Thread(new Runnable() {
         public void run() {
-            settableFuture.set("running");
             Starter.main(new String[]{"run", "org.mockserver.server.MockServerVertical"});
         }
     });
 
     @Before
-    public void startServer() {
-        settableFuture = SettableFuture.create();
+    public void startServer() throws InterruptedException {
         vertxServer.start();
-        try {
-            settableFuture.get();
-        } catch (Exception e) {
-            throw new RuntimeException("Error while waiting for Vert.X server thread to start");
-        }
+        vertxServer.join(TimeUnit.SECONDS.toMillis(2));
     }
 
     @Override

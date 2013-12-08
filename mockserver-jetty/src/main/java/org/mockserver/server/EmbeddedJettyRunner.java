@@ -5,6 +5,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ShutdownMonitor;
 import org.eclipse.jetty.servlet.ServletHandler;
+import org.eclipse.jetty.util.thread.ShutdownThread;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,6 +67,7 @@ public class EmbeddedJettyRunner {
             @Override
             public void run() {
                 server = new Server(port);
+                ShutdownThread.register(server);
                 ServletHandler handler = new ServletHandler();
                 server.setHandler(handler);
                 handler.addServletWithMapping(MockServerServlet.class.getName(), "/");

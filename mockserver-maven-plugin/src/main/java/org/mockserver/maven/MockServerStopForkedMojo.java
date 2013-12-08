@@ -18,7 +18,7 @@ public class MockServerStopForkedMojo extends AbstractMojo {
     /**
      * The port to stop Mock Server
      */
-    @Parameter(property = "mockserver.stopPort", defaultValue = "9091")
+    @Parameter(property = "mockserver.stopPort", defaultValue = "8081")
     private int stopPort;
 
     /**

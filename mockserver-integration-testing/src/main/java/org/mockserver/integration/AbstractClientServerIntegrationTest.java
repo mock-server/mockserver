@@ -41,10 +41,7 @@ public abstract class AbstractClientServerIntegrationTest {
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withHeaders(
-                                new Header("Transfer-Encoding", "chunked"),
-                                new Header("Server", "Jetty(9.0.0.v20130308)")
-                        )
+                        .withHeaders(new Header("Transfer-Encoding", "chunked"))
                         .withBody("somebody"),
                 makeRequest(new HttpRequest()));
     }
@@ -59,19 +56,13 @@ public abstract class AbstractClientServerIntegrationTest {
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withHeaders(
-                                new Header("Transfer-Encoding", "chunked"),
-                                new Header("Server", "Jetty(9.0.0.v20130308)")
-                        )
+                        .withHeaders(new Header("Transfer-Encoding", "chunked"))
                         .withBody("somebody2"),
                 makeRequest(new HttpRequest().withPath("/somepath2")));
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withHeaders(
-                                new Header("Transfer-Encoding", "chunked"),
-                                new Header("Server", "Jetty(9.0.0.v20130308)")
-                        )
+                        .withHeaders(new Header("Transfer-Encoding", "chunked"))
                         .withBody("somebody1"),
                 makeRequest(new HttpRequest().withPath("/somepath1")));
     }
@@ -86,27 +77,18 @@ public abstract class AbstractClientServerIntegrationTest {
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withBody("somebody")
-                        .withHeaders(
-                                new Header("Transfer-Encoding", "chunked"),
-                                new Header("Server", "Jetty(9.0.0.v20130308)")
-                        ),
+                        .withHeaders(new Header("Transfer-Encoding", "chunked")),
                 makeRequest(new HttpRequest().withPath("/somepath")));
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withHeaders(
-                                new Header("Transfer-Encoding", "chunked"),
-                                new Header("Server", "Jetty(9.0.0.v20130308)")
-                        )
+                        .withHeaders(new Header("Transfer-Encoding", "chunked"))
                         .withBody("somebody"),
                 makeRequest(new HttpRequest().withPath("/somepath")));
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
-                        .withHeaders(
-                                new Header("Content-Length", "0"),
-                                new Header("Server", "Jetty(9.0.0.v20130308)")
-                        ),
+                        .withHeaders(new Header("Content-Length", "0")),
                 makeRequest(new HttpRequest().withPath("/somepath")));
     }
 
@@ -139,9 +121,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withHeaders(
                                 new Header("headerNameResponse", "headerValueResponse"),
                                 new Header("Set-Cookie", "cookieNameResponse=cookieValueResponse"),
-                                new Header("Expires", "Thu, 01 Jan 1970 00:00:00 GMT"),
-                                new Header("Transfer-Encoding", "chunked"),
-                                new Header("Server", "Jetty(9.0.0.v20130308)")
+                                new Header("Transfer-Encoding", "chunked")
                         ),
                 makeRequest(
                         new HttpRequest()
@@ -177,10 +157,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
                         .withBody("somebody")
-                        .withHeaders(
-                                new Header("Transfer-Encoding", "chunked"),
-                                new Header("Server", "Jetty(9.0.0.v20130308)")
-                        ),
+                        .withHeaders(new Header("Transfer-Encoding", "chunked")),
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("POST")
@@ -216,7 +193,7 @@ public abstract class AbstractClientServerIntegrationTest {
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
-                        .withHeaders(new Header("Content-Length", "0"), new Header("Server", "Jetty(9.0.0.v20130308)")),
+                        .withHeaders(new Header("Content-Length", "0")),
                 makeRequest(
                         new HttpRequest()
                                 .withPath("/somepath")
@@ -238,7 +215,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 queryString = '?' + queryString;
             }
 
-            Request request = httpClient.newRequest("http://localhost:8090" + (httpRequest.getPath().startsWith("/") ? "" : "/") + httpRequest.getPath() + queryString).method(HttpMethod.fromString(httpRequest.getMethod())).content(new StringContentProvider(httpRequest.getBody()));
+            Request request = httpClient.newRequest("http://localhost:" + getPort() + (httpRequest.getPath().startsWith("/") ? "" : "/") + httpRequest.getPath() + queryString).method(HttpMethod.fromString(httpRequest.getMethod())).content(new StringContentProvider(httpRequest.getBody()));
             for (Header header : httpRequest.getHeaders()) {
                 for (String value : header.getValues()) {
                     request.header(header.getName(), value);
@@ -259,7 +236,9 @@ public abstract class AbstractClientServerIntegrationTest {
             httpResponse.withStatusCode(contentResponse.getStatus());
             List<Header> headers = new ArrayList<Header>();
             for (HttpField httpField : contentResponse.getHeaders()) {
-                headers.add(new Header(httpField.getName(), httpField.getValue()));
+                if (!httpField.getName().equals("Server") && !httpField.getName().equals("Expires")) {
+                    headers.add(new Header(httpField.getName(), httpField.getValue()));
+                }
             }
             if (headers.size() > 0) {
                 httpResponse.withHeaders(headers);
