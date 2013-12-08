@@ -25,7 +25,7 @@ gpg --gen-key
 gpg --list-keys
 gpg --keyserver hkp://pool.sks-keyservers.net --send-keys A6BAB25C
 mvn clean deploy -> deploy SNAPSHOT
-mvn release:clean && mvn release:prepare && mvn release:perform
+mvn release:clean -Dmaven.test.skip=true && mvn release:prepare -Dmaven.test.skip=true && mvn release:perform -Dmaven.test.skip=true
 
 Vert.X
 
