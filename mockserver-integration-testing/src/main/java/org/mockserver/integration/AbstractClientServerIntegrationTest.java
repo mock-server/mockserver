@@ -7,7 +7,6 @@ import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.http.HttpMethod;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.client.MockServerClient;
@@ -34,7 +33,7 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanCallServer() throws Exception {
+    public void clientCanCallServer() {
         // when
         mockServerClient.when(new HttpRequest()).respond(new HttpResponse().withBody("somebody"));
 
@@ -51,7 +50,7 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanCallServerMatchPath() throws Exception {
+    public void clientCanCallServerMatchPath() {
         // when
         mockServerClient.when(new HttpRequest().withPath("/somepath1")).respond(new HttpResponse().withBody("somebody1"));
         mockServerClient.when(new HttpRequest().withPath("/somepath2")).respond(new HttpResponse().withBody("somebody2"));
@@ -78,7 +77,7 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanCallServerMatchPathXTimes() throws Exception {
+    public void clientCanCallServerMatchPathXTimes() {
         // when
         mockServerClient.when(new HttpRequest().withPath("/somepath"), Times.exactly(2)).respond(new HttpResponse().withBody("somebody"));
 
@@ -112,7 +111,7 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanCallServerPositionMatchEverythingForGET() throws Exception {
+    public void clientCanCallServerPositionMatchEverythingForGET() {
         // when
         mockServerClient
                 .when(
@@ -157,7 +156,7 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanCallServerPositionMatchParametersForPOST() throws Exception {
+    public void clientCanCallServerPositionMatchParametersForPOST() {
         // when
         mockServerClient
                 .when(
@@ -193,7 +192,7 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanCallServerNegativeMatchBodyOnly() throws Exception {
+    public void clientCanCallServerNegativeMatchBodyOnly() {
         // when
         mockServerClient
                 .when(
@@ -229,42 +228,46 @@ public abstract class AbstractClientServerIntegrationTest {
         );
     }
 
-    private HttpResponse makeRequest(HttpRequest httpRequest) throws Exception {
-        HttpResponse httpResponse;
-        HttpClient httpClient = new HttpClient();
-        httpClient.start();
-        String queryString = buildQueryString(httpRequest.getParameters());
-        if (queryString.length() > 0) {
-            queryString = '?' + queryString;
-        }
+    protected HttpResponse makeRequest(HttpRequest httpRequest) {
+        try {
+            HttpResponse httpResponse;
+            HttpClient httpClient = new HttpClient();
+            httpClient.start();
+            String queryString = buildQueryString(httpRequest.getParameters());
+            if (queryString.length() > 0) {
+                queryString = '?' + queryString;
+            }
 
-        Request request = httpClient.newRequest("http://localhost:8090" + (httpRequest.getPath().startsWith("/") ? "" : "/") + httpRequest.getPath() + queryString).method(HttpMethod.fromString(httpRequest.getMethod())).content(new StringContentProvider(httpRequest.getBody()));
-        for (Header header : httpRequest.getHeaders()) {
-            for (String value : header.getValues()) {
-                request.header(header.getName(), value);
+            Request request = httpClient.newRequest("http://localhost:8090" + (httpRequest.getPath().startsWith("/") ? "" : "/") + httpRequest.getPath() + queryString).method(HttpMethod.fromString(httpRequest.getMethod())).content(new StringContentProvider(httpRequest.getBody()));
+            for (Header header : httpRequest.getHeaders()) {
+                for (String value : header.getValues()) {
+                    request.header(header.getName(), value);
+                }
             }
-        }
-        StringBuilder stringBuilder = new StringBuilder();
-        for (Cookie cookie : httpRequest.getCookies()) {
-            for (String value : cookie.getValues()) {
-                stringBuilder.append(cookie.getName()).append("=").append(value).append("; ");
+            StringBuilder stringBuilder = new StringBuilder();
+            for (Cookie cookie : httpRequest.getCookies()) {
+                for (String value : cookie.getValues()) {
+                    stringBuilder.append(cookie.getName()).append("=").append(value).append("; ");
+                }
             }
+            if (stringBuilder.length() > 0) {
+                request.header("Cookie", stringBuilder.toString());
+            }
+            ContentResponse contentResponse = request.send();
+            httpResponse = new HttpResponse();
+            httpResponse.withBody(contentResponse.getContentAsString());
+            httpResponse.withStatusCode(contentResponse.getStatus());
+            List<Header> headers = new ArrayList<Header>();
+            for (HttpField httpField : contentResponse.getHeaders()) {
+                headers.add(new Header(httpField.getName(), httpField.getValue()));
+            }
+            if (headers.size() > 0) {
+                httpResponse.withHeaders(headers);
+            }
+            return httpResponse;
+        } catch (Exception e) {
+            throw new RuntimeException("Error making request", e);
         }
-        if (stringBuilder.length() > 0) {
-            request.header("Cookie", stringBuilder.toString());
-        }
-        ContentResponse contentResponse = request.send();
-        httpResponse = new HttpResponse();
-        httpResponse.withBody(contentResponse.getContentAsString());
-        httpResponse.withStatusCode(contentResponse.getStatus());
-        List<Header> headers = new ArrayList<Header>();
-        for (HttpField httpField : contentResponse.getHeaders()) {
-            headers.add(new Header(httpField.getName(), httpField.getValue()));
-        }
-        if (headers.size() > 0) {
-            httpResponse.withHeaders(headers);
-        }
-        return httpResponse;
     }
 
     private String buildQueryString(List<Parameter> parameters) {

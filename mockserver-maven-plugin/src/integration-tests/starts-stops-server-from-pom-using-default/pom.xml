@@ -41,22 +41,6 @@
                     <logLevel>${mockserver.logLevel}</logLevel>
                     <timeout>${mockserver.timeout}</timeout>
                 </configuration>
-                <executions>
-                    <execution>
-                        <id>initialize</id>
-                        <phase>initialize</phase>
-                        <goals>
-                            <goal>start</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>verify</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>stop</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>

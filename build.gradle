@@ -48,7 +48,7 @@ project(':mockserver-jetty') {
 project(':mockserver-vertx') {
     dependencies {
         compile project(':mockserver-core')
-        testCompile project(':mockserver-client')
+        testCompile project(':mockserver-client'), project(':mockserver-integration-testing')
     }
 }
 
