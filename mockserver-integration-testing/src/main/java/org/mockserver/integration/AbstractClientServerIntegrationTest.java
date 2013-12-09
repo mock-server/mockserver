@@ -8,6 +8,7 @@ import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.http.HttpMethod;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.matchers.Times;
@@ -15,6 +16,7 @@ import org.mockserver.model.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 
@@ -93,7 +95,236 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanCallServerPositionMatchEverythingForGET() {
+    public void clientCanCallServerMatchPathWithDelay() {
+        // when
+        mockServerClient.when(
+                new HttpRequest()
+                        .withPath("/somepath1")
+        ).respond(
+                new HttpResponse()
+                        .withBody("somebody1")
+                        .withDelay(new Delay(TimeUnit.MILLISECONDS, 100))
+        );
+        mockServerClient.when(
+                new HttpRequest()
+                        .withPath("/somepath2")
+        ).respond(
+                new HttpResponse()
+                        .withBody("somebody2")
+                        .withDelay(new Delay(TimeUnit.SECONDS, 1))
+        );
+
+        // then
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withHeaders(new Header("Transfer-Encoding", "chunked"))
+                        .withBody("somebody2"),
+                makeRequest(new HttpRequest().withPath("/somepath2")));
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withHeaders(new Header("Transfer-Encoding", "chunked"))
+                        .withBody("somebody1"),
+                makeRequest(new HttpRequest().withPath("/somepath1")));
+    }
+
+    @Test
+    public void clientCanCallServerPositiveMatchForGETAndMatchingPath() {
+        // when
+        mockServerClient
+                .when(
+                        new HttpRequest()
+                                .withMethod("GET")
+                                .withPath("/somePathRequest")
+                )
+                .respond(
+                        new HttpResponse()
+                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                                .withBody("someBodyResponse")
+                );
+
+        // then
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withBody("someBodyResponse")
+                        .withHeaders(
+                                new Header("Transfer-Encoding", "chunked")
+                        ),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("GET")
+                                .withPath("/somePathRequest")
+                                .withBody("someBodyRequest")
+                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
+                                .withParameters(new Parameter("parameterNameRequest", "parameterValueRequest"))
+                )
+        );
+    }
+
+    @Test
+    public void clientCanCallServerPositiveMatchForGETAndMatchingPathAndBody() {
+        // when
+        mockServerClient
+                .when(
+                        new HttpRequest()
+                                .withMethod("GET")
+                                .withPath("/somePathRequest")
+                                .withBody("someBodyRequest")
+                )
+                .respond(
+                        new HttpResponse()
+                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                                .withBody("someBodyResponse")
+                                .withHeaders(new Header("headerNameResponse", "headerValueResponse"))
+                );
+
+        // then
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withBody("someBodyResponse")
+                        .withHeaders(
+                                new Header("headerNameResponse", "headerValueResponse"),
+                                new Header("Transfer-Encoding", "chunked")
+                        ),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("GET")
+                                .withPath("/somePathRequest")
+                                .withBody("someBodyRequest")
+                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
+                                .withParameters(new Parameter("parameterNameRequest", "parameterValueRequest"))
+                )
+        );
+    }
+
+    @Test
+    public void clientCanCallServerPositiveMatchForGETAndMatchingPathAndParameters() {
+        // when
+        mockServerClient
+                .when(
+                        new HttpRequest()
+                                .withMethod("GET")
+                                .withPath("/somePathRequest")
+                                .withParameters(new Parameter("parameterNameRequest", "parameterValueRequest"))
+                )
+                .respond(
+                        new HttpResponse()
+                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                                .withBody("someBodyResponse")
+                                .withCookies(new Cookie("cookieNameResponse", "cookieValueResponse"))
+                );
+
+        // then
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withBody("someBodyResponse")
+                        .withHeaders(
+                                new Header("Set-Cookie", "cookieNameResponse=cookieValueResponse"),
+                                new Header("Transfer-Encoding", "chunked")
+                        ),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("GET")
+                                .withPath("/somePathRequest")
+                                .withBody("someBodyRequest")
+                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
+                                .withParameters(new Parameter("parameterNameRequest", "parameterValueRequest"))
+                )
+        );
+    }
+
+    @Test
+    public void clientCanCallServerPositiveMatchForGETAndMatchingPathBodyAndParameters() {
+        // when
+        mockServerClient
+                .when(
+                        new HttpRequest()
+                                .withMethod("GET")
+                                .withPath("/somePathRequest")
+                                .withBody("someBodyRequest")
+                                .withParameters(new Parameter("parameterNameRequest", "parameterValueRequest"))
+                )
+                .respond(
+                        new HttpResponse()
+                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                                .withBody("someBodyResponse")
+                                .withHeaders(new Header("headerNameResponse", "headerValueResponse"))
+                                .withCookies(new Cookie("cookieNameResponse", "cookieValueResponse"))
+                );
+
+        // then
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withBody("someBodyResponse")
+                        .withHeaders(
+                                new Header("headerNameResponse", "headerValueResponse"),
+                                new Header("Set-Cookie", "cookieNameResponse=cookieValueResponse"),
+                                new Header("Transfer-Encoding", "chunked")
+                        ),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("GET")
+                                .withPath("/somePathRequest")
+                                .withBody("someBodyRequest")
+                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
+                                .withParameters(new Parameter("parameterNameRequest", "parameterValueRequest"))
+                )
+        );
+    }
+
+    @Test
+    public void clientCanCallServerPositiveMatchForGETAndMatchingPathBodyHeadersAndParameters() {
+        // when
+        mockServerClient
+                .when(
+                        new HttpRequest()
+                                .withMethod("GET")
+                                .withPath("/somePathRequest")
+                                .withBody("someBodyRequest")
+                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
+                                .withParameters(new Parameter("parameterNameRequest", "parameterValueRequest"))
+                )
+                .respond(
+                        new HttpResponse()
+                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                                .withBody("someBodyResponse")
+                                .withHeaders(new Header("headerNameResponse", "headerValueResponse"))
+                                .withCookies(new Cookie("cookieNameResponse", "cookieValueResponse"))
+                );
+
+        // then
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withBody("someBodyResponse")
+                        .withHeaders(
+                                new Header("headerNameResponse", "headerValueResponse"),
+                                new Header("Set-Cookie", "cookieNameResponse=cookieValueResponse"),
+                                new Header("Transfer-Encoding", "chunked")
+                        ),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("GET")
+                                .withPath("/somePathRequest")
+                                .withBody("someBodyRequest")
+                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
+                                .withParameters(new Parameter("parameterNameRequest", "parameterValueRequest"))
+                )
+        );
+    }
+
+    @Test
+    public void clientCanCallServerPositiveMatchForGETAndMatchingPathBodyHeadersCookiesAndParameters() {
         // when
         mockServerClient
                 .when(
@@ -136,7 +367,7 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanCallServerPositionMatchParametersForPOST() {
+    public void clientCanCallServerPositiveMatchForPOSTAndMatchingPathBodyAndParameters() {
         // when
         mockServerClient
                 .when(
@@ -144,6 +375,38 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withMethod("POST")
                                 .withPath("/somepath")
                                 .withBody("bodyParameterName=bodyParameterValue")
+                                .withParameters(new Parameter("queryParameterName", "queryParameterValue"))
+                )
+                .respond(
+                        new HttpResponse()
+                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                                .withBody("somebody")
+                );
+
+        // then
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withBody("somebody")
+                        .withHeaders(new Header("Transfer-Encoding", "chunked")),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("POST")
+                                .withPath("/somepath")
+                                .withBody("bodyParameterName=bodyParameterValue")
+                                .withParameters(new Parameter("queryParameterName", "queryParameterValue"))
+                )
+        );
+    }
+
+    @Test
+    public void clientCanCallServerPositiveMatchForPOSTAndMatchingPathAndParameters() {
+        // when
+        mockServerClient
+                .when(
+                        new HttpRequest()
+                                .withMethod("POST")
+                                .withPath("/somepath")
                                 .withParameters(new Parameter("queryParameterName", "queryParameterValue"))
                 )
                 .respond(
@@ -199,6 +462,265 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withPath("/somepath")
                                 .withBody("someotherbody")
                                 .withHeaders(new Header("headerName", "headerValue"))
+                                .withCookies(new Cookie("cookieName", "cookieValue"))
+                                .withParameters(new Parameter("parameterName", "parameterValue"))
+                )
+        );
+    }
+
+    @Test
+    public void clientCanCallServerNegativeMatchPathOnly() {
+        // when
+        mockServerClient
+                .when(
+                        new HttpRequest()
+                                .withMethod("GET")
+                                .withPath("/somepath")
+                                .withBody("somebody")
+                                .withHeaders(new Header("headerName", "headerValue"))
+                                .withCookies(new Cookie("cookieName", "cookieValue"))
+                                .withParameters(new Parameter("parameterName", "parameterValue"))
+                )
+                .respond(
+                        new HttpResponse()
+                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                                .withBody("somebody")
+                                .withHeaders(new Header("headerName", "headerValue"))
+                                .withCookies(new Cookie("cookieName", "cookieValue"))
+                );
+
+        // then
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
+                        .withHeaders(new Header("Content-Length", "0")),
+                makeRequest(
+                        new HttpRequest()
+                                .withPath("/someotherpath")
+                                .withBody("somebody")
+                                .withHeaders(new Header("headerName", "headerValue"))
+                                .withCookies(new Cookie("cookieName", "cookieValue"))
+                                .withParameters(new Parameter("parameterName", "parameterValue"))
+                )
+        );
+    }
+
+    @Test
+    public void clientCanCallServerNegativeMatchParameterNameOnly() {
+        // when
+        mockServerClient
+                .when(
+                        new HttpRequest()
+                                .withMethod("GET")
+                                .withPath("/somepath")
+                                .withBody("somebody")
+                                .withHeaders(new Header("headerName", "headerValue"))
+                                .withCookies(new Cookie("cookieName", "cookieValue"))
+                                .withParameters(new Parameter("parameterName", "parameterValue"))
+                )
+                .respond(
+                        new HttpResponse()
+                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                                .withBody("somebody")
+                                .withHeaders(new Header("headerName", "headerValue"))
+                                .withCookies(new Cookie("cookieName", "cookieValue"))
+                );
+
+        // then
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
+                        .withHeaders(new Header("Content-Length", "0")),
+                makeRequest(
+                        new HttpRequest()
+                                .withPath("/somepath")
+                                .withBody("somebody")
+                                .withHeaders(new Header("headerName", "headerValue"))
+                                .withCookies(new Cookie("cookieName", "cookieValue"))
+                                .withParameters(new Parameter("parameterOtherName", "parameterValue"))
+                )
+        );
+    }
+
+    @Test
+    public void clientCanCallServerNegativeMatchParameterValueOnly() {
+        // when
+        mockServerClient
+                .when(
+                        new HttpRequest()
+                                .withMethod("GET")
+                                .withPath("/somepath")
+                                .withBody("somebody")
+                                .withHeaders(new Header("headerName", "headerValue"))
+                                .withCookies(new Cookie("cookieName", "cookieValue"))
+                                .withParameters(new Parameter("parameterName", "parameterValue"))
+                )
+                .respond(
+                        new HttpResponse()
+                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                                .withBody("somebody")
+                                .withHeaders(new Header("headerName", "headerValue"))
+                                .withCookies(new Cookie("cookieName", "cookieValue"))
+                );
+
+        // then
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
+                        .withHeaders(new Header("Content-Length", "0")),
+                makeRequest(
+                        new HttpRequest()
+                                .withPath("/somepath")
+                                .withBody("somebody")
+                                .withHeaders(new Header("headerName", "headerValue"))
+                                .withCookies(new Cookie("cookieName", "cookieValue"))
+                                .withParameters(new Parameter("parameterName", "parameterOtherValue"))
+                )
+        );
+    }
+
+    @Test
+    public void clientCanCallServerNegativeMatchCookieNameOnly() {
+        // when
+        mockServerClient
+                .when(
+                        new HttpRequest()
+                                .withMethod("GET")
+                                .withPath("/somepath")
+                                .withBody("somebody")
+                                .withHeaders(new Header("headerName", "headerValue"))
+                                .withCookies(new Cookie("cookieName", "cookieValue"))
+                                .withParameters(new Parameter("parameterName", "parameterValue"))
+                )
+                .respond(
+                        new HttpResponse()
+                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                                .withBody("somebody")
+                                .withHeaders(new Header("headerName", "headerValue"))
+                                .withCookies(new Cookie("cookieName", "cookieValue"))
+                );
+
+        // then
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
+                        .withHeaders(new Header("Content-Length", "0")),
+                makeRequest(
+                        new HttpRequest()
+                                .withPath("/somepath")
+                                .withBody("somebody")
+                                .withHeaders(new Header("headerName", "headerValue"))
+                                .withCookies(new Cookie("cookieOtherName", "cookieValue"))
+                                .withParameters(new Parameter("parameterName", "parameterValue"))
+                )
+        );
+    }
+
+    @Test
+    public void clientCanCallServerNegativeMatchCookieValueOnly() {
+        // when
+        mockServerClient
+                .when(
+                        new HttpRequest()
+                                .withMethod("GET")
+                                .withPath("/somepath")
+                                .withBody("somebody")
+                                .withHeaders(new Header("headerName", "headerValue"))
+                                .withCookies(new Cookie("cookieName", "cookieValue"))
+                                .withParameters(new Parameter("parameterName", "parameterValue"))
+                )
+                .respond(
+                        new HttpResponse()
+                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                                .withBody("somebody")
+                                .withHeaders(new Header("headerName", "headerValue"))
+                                .withCookies(new Cookie("cookieName", "cookieValue"))
+                );
+
+        // then
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
+                        .withHeaders(new Header("Content-Length", "0")),
+                makeRequest(
+                        new HttpRequest()
+                                .withPath("/somepath")
+                                .withBody("somebody")
+                                .withHeaders(new Header("headerName", "headerValue"))
+                                .withCookies(new Cookie("cookieName", "cookieOtherValue"))
+                                .withParameters(new Parameter("parameterName", "parameterValue"))
+                )
+        );
+    }
+
+    @Test
+    public void clientCanCallServerNegativeMatchHeaderNameOnly() {
+        // when
+        mockServerClient
+                .when(
+                        new HttpRequest()
+                                .withMethod("GET")
+                                .withPath("/somepath")
+                                .withBody("somebody")
+                                .withHeaders(new Header("headerName", "headerValue"))
+                                .withCookies(new Cookie("cookieName", "cookieValue"))
+                                .withParameters(new Parameter("parameterName", "parameterValue"))
+                )
+                .respond(
+                        new HttpResponse()
+                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                                .withBody("somebody")
+                                .withHeaders(new Header("headerName", "headerValue"))
+                                .withCookies(new Cookie("cookieName", "cookieValue"))
+                );
+
+        // then
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
+                        .withHeaders(new Header("Content-Length", "0")),
+                makeRequest(
+                        new HttpRequest()
+                                .withPath("/somepath")
+                                .withBody("somebody")
+                                .withHeaders(new Header("headerOtherName", "headerValue"))
+                                .withCookies(new Cookie("cookieName", "cookieValue"))
+                                .withParameters(new Parameter("parameterName", "parameterValue"))
+                )
+        );
+    }
+
+    @Test
+    public void clientCanCallServerNegativeMatchHeaderValueOnly() {
+        // when
+        mockServerClient
+                .when(
+                        new HttpRequest()
+                                .withMethod("GET")
+                                .withPath("/somepath")
+                                .withBody("somebody")
+                                .withHeaders(new Header("headerName", "headerValue"))
+                                .withCookies(new Cookie("cookieName", "cookieValue"))
+                                .withParameters(new Parameter("parameterName", "parameterValue"))
+                )
+                .respond(
+                        new HttpResponse()
+                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                                .withBody("somebody")
+                                .withHeaders(new Header("headerName", "headerValue"))
+                                .withCookies(new Cookie("cookieName", "cookieValue"))
+                );
+
+        // then
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
+                        .withHeaders(new Header("Content-Length", "0")),
+                makeRequest(
+                        new HttpRequest()
+                                .withPath("/somepath")
+                                .withBody("somebody")
+                                .withHeaders(new Header("headerName", "headerOtherValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
                                 .withParameters(new Parameter("parameterName", "parameterValue"))
                 )

@@ -1,9 +1,12 @@
 package org.mockserver;
 
-import org.junit.*;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
 import org.mockserver.integration.AbstractClientServerIntegrationTest;
-import org.mockserver.model.HttpRequest;
 import org.mockserver.server.EmbeddedJettyRunner;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author jamesdbloom
@@ -13,13 +16,15 @@ public class ClientServerEmbeddedJettyCommandLineIntegrationTest extends Abstrac
     private final static int port = 8090;
 
     @BeforeClass
-    public static void startServer() {
+    public static void startServer() throws InterruptedException {
         EmbeddedJettyRunner.main("" + port);
+        // wait for server to start up
+        Thread.sleep(TimeUnit.SECONDS.toMillis(2));
     }
 
     @Before
-    public void clearServer() {
-        mockServerClient.clear(new HttpRequest());
+    public void clearServer() throws InterruptedException {
+        mockServerClient.reset();
     }
 
     @Override

@@ -18,7 +18,7 @@ public class ClientServerVertxIntegrationTest extends AbstractClientServerIntegr
 
     public SettableFuture<String> settableFuture;
 
-    private Thread vertxServer = new Thread(new Runnable() {
+    private final Thread vertxServer = new Thread(new Runnable() {
         public void run() {
             Starter.main(new String[]{"run", "org.mockserver.server.MockServerVertical"});
         }
@@ -27,7 +27,7 @@ public class ClientServerVertxIntegrationTest extends AbstractClientServerIntegr
     @Before
     public void startServer() throws InterruptedException {
         vertxServer.start();
-        vertxServer.join(TimeUnit.SECONDS.toMillis(2));
+        vertxServer.join(TimeUnit.SECONDS.toMillis(1));
     }
 
     @Override

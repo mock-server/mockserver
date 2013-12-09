@@ -37,22 +37,35 @@ public class MockServerClient {
         sendExpectation(new Expectation(httpRequest, Times.unlimited()).respond(new HttpResponse()), "clear");
     }
 
+    public void reset() {
+        try {
+            sendRequest("", "reset");
+        } catch (Exception e) {
+            logger.error("Exception sending reset request to MockServer", e);
+            throw new RuntimeException("Exception sending reset request to MockServer", e);
+        }
+    }
+
     protected void sendExpectation(Expectation expectation) {
         sendExpectation(expectation, "");
     }
 
     private void sendExpectation(Expectation expectation, String path) {
-        HttpClient httpClient = new HttpClient();
         try {
-            httpClient.start();
-            httpClient.newRequest(mockServerURI + path)
-                    .method(HttpMethod.PUT)
-                    .header("Content-Type", "application/json; charset=utf-8")
-                    .content(new StringContentProvider((expectation != null ? expectationSerializer.serialize(expectation) : "")))
-                    .send();
+            sendRequest(expectation != null ? expectationSerializer.serialize(expectation) : "", path);
         } catch (Exception e) {
             logger.error(String.format("Exception sending expectation to MockServer as %s", expectation), e);
             throw new RuntimeException(String.format("Exception sending expectation to MockServer as %s", expectation), e);
         }
+    }
+
+    private void sendRequest(String body, String path) throws Exception {
+        HttpClient httpClient = new HttpClient();
+        httpClient.start();
+        httpClient.newRequest(mockServerURI + path)
+                .method(HttpMethod.PUT)
+                .header("Content-Type", "application/json; charset=utf-8")
+                .content(new StringContentProvider(body))
+                .send();
     }
 }

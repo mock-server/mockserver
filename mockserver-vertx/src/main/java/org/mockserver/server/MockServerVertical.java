@@ -42,6 +42,11 @@ public class MockServerVertical extends Verticle {
                             request.response().setStatusMessage(HttpStatusCode.ACCEPTED_202.reasonPhrase());
                             request.response().end();
                             vertx.stop();
+                        } else if (request.path().equals("/reset")) {
+                            mockServer.reset();
+                            request.response().setStatusCode(HttpStatusCode.ACCEPTED_202.code());
+                            request.response().setStatusMessage(HttpStatusCode.ACCEPTED_202.reasonPhrase());
+                            request.response().end();
                         } else if (request.path().equals("/clear")) {
                             Expectation expectation = expectationSerializer.deserialize(body.getBytes());
                             mockServer.clear(expectation.getHttpRequest());

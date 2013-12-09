@@ -49,14 +49,19 @@ public class MockServerServlet extends HttpServlet {
     }
 
     public void doPut(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws IOException {
-        byte[] jsonExpectation = IOUtils.toByteArray(new InputStreamReader(httpServletRequest.getInputStream()), Charset.forName(CharEncoding.UTF_8));
-        Expectation expectation = expectationSerializer.deserialize(jsonExpectation);
-        if (httpServletRequest.getRequestURI().equals("/clear")) {
-            mockServer.clear(expectation.getHttpRequest());
-            httpServletResponse.setStatus(HttpServletResponse.SC_OK);
+        if (httpServletRequest.getRequestURI().equals("/reset")) {
+            mockServer.reset();
+            httpServletResponse.setStatus(HttpServletResponse.SC_ACCEPTED);
         } else {
-            mockServer.when(expectation.getHttpRequest(), expectation.getTimes()).respond(expectation.getHttpResponse());
-            httpServletResponse.setStatus(HttpServletResponse.SC_CREATED);
+            byte[] jsonExpectation = IOUtils.toByteArray(new InputStreamReader(httpServletRequest.getInputStream()), Charset.forName(CharEncoding.UTF_8));
+            Expectation expectation = expectationSerializer.deserialize(jsonExpectation);
+            if (httpServletRequest.getRequestURI().equals("/clear")) {
+                mockServer.clear(expectation.getHttpRequest());
+                httpServletResponse.setStatus(HttpServletResponse.SC_ACCEPTED);
+            } else {
+                mockServer.when(expectation.getHttpRequest(), expectation.getTimes()).respond(expectation.getHttpResponse());
+                httpServletResponse.setStatus(HttpServletResponse.SC_CREATED);
+            }
         }
     }
 
