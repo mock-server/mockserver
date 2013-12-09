@@ -2,7 +2,6 @@ package org.mockserver;
 
 import org.junit.Before;
 import org.mockserver.integration.AbstractClientServerIntegrationTest;
-import org.mockserver.model.HttpRequest;
 
 /**
  * @author jamesdbloom
@@ -13,7 +12,7 @@ public class ClientServerMavenPluginIntegrationTest extends AbstractClientServer
 
     @Before
     public void clearServer() {
-        mockServerClient.clear(new HttpRequest());
+        mockServerClient.reset();
     }
 
     @Override

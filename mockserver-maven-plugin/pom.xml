@@ -121,7 +121,7 @@
 
     <profiles>
         <profile>
-            <id>integration-tests</id>
+            <id>it</id>
             <!--<activation>-->
                 <!--<property>-->
                     <!--<name>maven.test.skip</name>-->

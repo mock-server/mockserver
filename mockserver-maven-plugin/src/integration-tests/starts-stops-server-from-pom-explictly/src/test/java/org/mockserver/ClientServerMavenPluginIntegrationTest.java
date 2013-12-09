@@ -13,7 +13,7 @@ public class ClientServerMavenPluginIntegrationTest extends AbstractClientServer
 
     @Before
     public void clearServer() {
-        mockServerClient.clear(new HttpRequest());
+        mockServerClient.reset();
     }
 
     @Override
