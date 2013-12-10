@@ -1,6 +1,6 @@
 def assertFileExists(file) {
     if (!file.exists() || file.isDirectory()) {
-        println("Mock Server log file [" + file.getAbsolutePath() + "] was not create")
+        println("MockServer log file [" + file.getAbsolutePath() + "] was not create")
         return false
     } else {
         file.delete();

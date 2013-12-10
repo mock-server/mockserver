@@ -8,7 +8,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
 /**
- * Stop the Mock Server in the verify phase of the build after any integration tests have completed
+ * Stop the MockServer in the verify phase of the build after any integration tests have completed
  *
  * @author jamesdbloom
  */
@@ -26,7 +26,7 @@ public class MockServerStopMojo extends AbstractMojo {
         if (skip) {
             getLog().info("Skipping plugin execution");
         } else {
-            getLog().info("Stopping the Mock Server");
+            getLog().info("Stopping the MockServer");
             try {
                 new EmbeddedJettyHolder().stop();
             } catch (Exception e) {

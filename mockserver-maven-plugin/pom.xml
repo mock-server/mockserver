@@ -10,8 +10,8 @@
     <artifactId>mockserver-maven-plugin</artifactId>
     <packaging>maven-plugin</packaging>
 
-    <name>Mock Server Maven Plugin</name>
-    <description>A maven plugin to start and stop the mock server.</description>
+    <name>MockServer Maven Plugin</name>
+    <description>A maven plugin to start and stop the MockServer.</description>
 
     <properties>
         <mavenPluginPluginVersion>3.2</mavenPluginPluginVersion>
@@ -22,24 +22,17 @@
         <dependency>
             <groupId>org.mock-server</groupId>
             <artifactId>mockserver-jetty</artifactId>
-            <version>1.11-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.mock-server</groupId>
-            <artifactId>mockserver-jetty</artifactId>
             <classifier>jar-with-dependencies</classifier>
             <version>1.11-SNAPSHOT</version>
-        </dependency>
-
-        <!-- logging -->
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>1.0.13</version>
             <scope>compile</scope>
         </dependency>
 
         <!-- maven plugin -->
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-compat</artifactId>
+            <version>3.1.1</version>
+        </dependency>
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-plugin-api</artifactId>
@@ -49,11 +42,6 @@
             <groupId>org.apache.maven.plugin-tools</groupId>
             <artifactId>maven-plugin-annotations</artifactId>
             <version>3.2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.maven</groupId>
-            <artifactId>maven-project</artifactId>
-            <version>3.0-alpha-2</version>
         </dependency>
         <dependency>
             <groupId>org.apache.maven</groupId>

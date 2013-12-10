@@ -14,7 +14,7 @@
     </description>
 
     <dependencies>
-        <!-- mock server -->
+        <!-- MockServer -->
         <dependency>
             <groupId>org.mock-server</groupId>
             <artifactId>mockserver-integration-testing</artifactId>

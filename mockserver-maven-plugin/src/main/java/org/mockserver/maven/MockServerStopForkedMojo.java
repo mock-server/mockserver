@@ -8,7 +8,7 @@ import org.mockserver.server.EmbeddedJettyRunner;
 
 
 /**
- * Stop the a forked instance of the Mock Server
+ * Stop the a forked instance of the MockServer
  *
  * @author jamesdbloom
  */
@@ -16,25 +16,32 @@ import org.mockserver.server.EmbeddedJettyRunner;
 public class MockServerStopForkedMojo extends AbstractMojo {
 
     /**
-     * The port to stop Mock Server
+     * Logging level
+     */
+    @Parameter(property = "mockserver.logLevel", defaultValue = "WARN")
+    private String logLevel;
+
+    /**
+     * The port to stop MockServer
      */
     @Parameter(property = "mockserver.stopPort", defaultValue = "8081")
     private int stopPort;
 
     /**
-     * Key to provide when stopping Mock Server
+     * Key to provide when stopping MockServer
      */
     @Parameter(property = "mockserver.stopKey", defaultValue = "STOP_KEY")
     protected String stopKey;
 
     /**
-     * Max time in seconds to wait for the Mock Server to stop
+     * Max time in seconds to wait for the MockServer to stop
      */
     @Parameter(property = "mockserver.stopWait")
     protected int stopWait;
 
 
     public void execute() throws MojoExecutionException {
+        EmbeddedJettyRunner.overrideLogLevel(logLevel);
         EmbeddedJettyRunner.stopRemote("127.0.0.1", stopPort, stopKey, stopWait);
     }
 }
