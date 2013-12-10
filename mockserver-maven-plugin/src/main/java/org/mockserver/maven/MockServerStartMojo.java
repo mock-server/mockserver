@@ -8,7 +8,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
 /**
- * Start the Mock Server in the initialize phase of the build and continue build so that tests can run that rely on the Mock Server
+ * Start the MockServer in the initialize phase of the build and continue build so that tests can run that rely on the MockServer
  *
  * @author jamesdbloom
  */
@@ -18,13 +18,13 @@ public class MockServerStartMojo extends AbstractMojo {
 
 
     /**
-     * The port to run Mock Server on
+     * The port to run MockServer on
      */
     @Parameter(property = "mockserver.port", defaultValue = "8080")
     private int port;
 
     /**
-     * Timeout to wait before stopping Mock Server, to run Mock Server indefinitely do not set a value
+     * Timeout to wait before stopping MockServer, to run MockServer indefinitely do not set a value
      */
     @Parameter(property = "mockserver.timeout")
     private int timeout;
@@ -45,11 +45,11 @@ public class MockServerStartMojo extends AbstractMojo {
         if (skip) {
             getLog().info("Skipping plugin execution");
         } else {
-            getLog().info("Starting Mock Server on port " + port);
+            getLog().info("Starting MockServer on port " + port);
             try {
                 new EmbeddedJettyHolder().start(port, logLevel);
             } catch (Exception e) {
-                getLog().error("Exception while running Mock Server", e);
+                getLog().error("Exception while running MockServer", e);
             }
         }
 

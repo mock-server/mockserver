@@ -8,7 +8,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>mockserver-proxy</artifactId>
-    <name>Mock Server Proxy</name>
+    <name>MockServer Proxy</name>
     <description>A proxy that allows specified outbound requests to be altered, recorded and queried</description>
 
     <dependencies>

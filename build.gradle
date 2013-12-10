@@ -94,7 +94,7 @@ tasks.withType(Upload) {
 modifyPom {
     project {
         name rootProject.name
-        description 'mock-server - A simple server to support mocking responses from any server / service that uses HTTP. The expectations that configure how the mock server will respond and to incoming requests can be setup using any language that can create JSON. In simple client is provided to make this easy in Java.'
+        description 'mock-server - A simple server to support mocking responses from any server / service that uses HTTP. The expectations that configure how the MockServer will respond and to incoming requests can be setup using any language that can create JSON. In simple client is provided to make this easy in Java.'
         groupId rootProject.group
         inceptionYear '2013'
         packaging 'jar'

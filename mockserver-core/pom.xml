@@ -10,8 +10,8 @@
 
     <artifactId>mockserver-core</artifactId>
 
-    <name>Mock Server Core</name>
-    <description>Functionality used by all mock server modules for matching and expectations</description>
+    <name>MockServer Core</name>
+    <description>Functionality used by all MockServer modules for matching and expectations</description>
     <url>http://www.mock-server.com</url>
 
     <dependencies>

@@ -100,14 +100,14 @@ public class MockServerVerticalTest {
         HttpRequest httpRequest = new HttpRequest();
         Expectation expectation = spy(new Expectation(httpRequest, times).respond(new HttpResponse()));
         when(expectationSerializer.deserialize(httpServerRequest.body())).thenReturn(expectation);
-        // - an mock server that returns the deserialized expectation
+        // - an MockServer that returns the deserialized expectation
         when(mockServer.when(same(httpRequest), same(times))).thenReturn(expectation);
 
         // when - receive an expectation request
         mockServerVertical.getRequestHandler().handle(httpServerRequest);
 
         // then
-        // - expectation is added to mock server
+        // - expectation is added to MockServer
         verify(mockServer).when(same(httpRequest), same(times));
         verify(expectation).respond(expectation.getHttpResponse());
         // - and response code is set

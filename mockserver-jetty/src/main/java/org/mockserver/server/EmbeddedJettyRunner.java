@@ -27,7 +27,7 @@ public class EmbeddedJettyRunner {
     private Server server;
 
     /**
-     * Run the Mock Server directly providing the port as the only input parameter (if not provided the port defaults to 8080).
+     * Run the MockServer directly providing the port as the only input parameter (if not provided the port defaults to 8080).
      *
      * @param args the first entry args[0] is used to specify the port if not provided this defaults to 8080
      */
@@ -37,8 +37,8 @@ public class EmbeddedJettyRunner {
 
         new EmbeddedJettyRunner().start(port);
 
-        logger.info("Started mock server listening on " + port);
-        System.out.println("Started mock server listening on " + port);
+        logger.info("Started MockServer listening on " + port);
+        System.out.println("Started MockServer listening on " + port);
     }
 
     /**
@@ -52,12 +52,12 @@ public class EmbeddedJettyRunner {
     }
 
     /**
-     * Start the Mock Server instance in the port provided using -Dmockserver.stopPort and -Dmockserver.stopKey for the stopPort and stopKey respectively.
+     * Start the MockServer instance in the port provided using -Dmockserver.stopPort and -Dmockserver.stopKey for the stopPort and stopKey respectively.
      * If -Dmockserver.stopPort is not provided the default value used will be the port parameter + 1.
      * If -Dmockserver.stopKey is not provided the default value used will be "STOP_KEY"
      *
      * @param port the port the listens to incoming HTTP requests
-     * @return A Future that returns the state of the Mock Server once it is stopped, this Future can be used to block execution until the Mock Server is stopped.
+     * @return A Future that returns the state of the MockServer once it is stopped, this Future can be used to block execution until the MockServer is stopped.
      */
     public Future start(final int port) {
         if (isRunning()) throw new IllegalStateException("Server already running");
@@ -118,7 +118,7 @@ public class EmbeddedJettyRunner {
     }
 
     /**
-     * Stop this Mock Server instance
+     * Stop this MockServer instance
      */
     public EmbeddedJettyRunner stop() {
         if (!isRunning()) throw new IllegalStateException("Server is not running");
@@ -132,12 +132,12 @@ public class EmbeddedJettyRunner {
     }
 
     /**
-     * Stop a forked or remote Mock Server instance
+     * Stop a forked or remote MockServer instance
      *
-     * @param ipAddress IP address as string of remote Mock Server (i.e. "127.0.0.1")
-     * @param stopPort the stopPort for the Mock Server to stop (default is HTTP port + 1)
-     * @param stopKey the stopKey for the Mock Server to step (default is "STOP_KEY")
-     * @param stopWait the period to wait for Mock Server to confirm it has stopped, in seconds.  A value of <= 0 means do not wait for confirmation Mock Server has stopped.
+     * @param ipAddress IP address as string of remote MockServer (i.e. "127.0.0.1")
+     * @param stopPort the stopPort for the MockServer to stop (default is HTTP port + 1)
+     * @param stopKey the stopKey for the MockServer to step (default is "STOP_KEY")
+     * @param stopWait the period to wait for MockServer to confirm it has stopped, in seconds.  A value of <= 0 means do not wait for confirmation MockServer has stopped.
      */
     public static void stopRemote(String ipAddress, int stopPort, String stopKey, int stopWait) {
         if (stopPort <= 0)
@@ -157,22 +157,22 @@ public class EmbeddedJettyRunner {
                 s.setSoTimeout(stopWait * 1000);
                 s.getInputStream();
 
-                System.err.printf("Waiting %d seconds for Mock Server to stop%n", stopWait);
+                System.err.printf("Waiting %d seconds for MockServer to stop%n", stopWait);
                 LineNumberReader lin = new LineNumberReader(new InputStreamReader(s.getInputStream()));
                 String response;
                 boolean stopped = false;
                 while (!stopped && ((response = lin.readLine()) != null)) {
                     if ("Stopped".equals(response)) {
                         stopped = true;
-                        System.err.println("Mock Server has stopped");
+                        System.err.println("MockServer has stopped");
                     }
                 }
             }
             s.close();
         } catch (ConnectException e) {
-            logger.info("Mock Server is not running");
+            logger.info("MockServer is not running");
         } catch (Exception e) {
-            logger.error("Exception stopping Mock Server", e);
+            logger.error("Exception stopping MockServer", e);
         }
     }
 }

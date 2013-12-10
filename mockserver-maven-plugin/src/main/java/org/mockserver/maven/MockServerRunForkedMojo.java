@@ -1,12 +1,19 @@
 package org.mockserver.maven;
 
+import org.apache.maven.artifact.Artifact;
+import org.apache.maven.artifact.factory.ArtifactFactory;
+import org.apache.maven.artifact.repository.ArtifactRepository;
+import org.apache.maven.artifact.resolver.ArtifactResolutionRequest;
+import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 /**
  * @author jamesdbloom
@@ -15,7 +22,7 @@ import java.io.IOException;
 public class MockServerRunForkedMojo extends AbstractMojo {
 
     /**
-     * The port to run Mock Server on
+     * The port to run MockServer on
      */
     @Parameter(property = "mockserver.port", defaultValue = "8080")
     private int port;
@@ -33,13 +40,13 @@ public class MockServerRunForkedMojo extends AbstractMojo {
     private boolean pipeLogToConsole;
 
     /**
-     * The port to stop Mock Server
+     * The port to stop MockServer
      */
     @Parameter(property = "mockserver.stopPort", defaultValue = "8081")
     private int stopPort;
 
     /**
-     * Key to provide when stopping Mock Server
+     * Key to provide when stopping MockServer
      */
     @Parameter(property = "mockserver.stopKey", defaultValue = "STOP_KEY")
     private String stopKey;
@@ -50,20 +57,50 @@ public class MockServerRunForkedMojo extends AbstractMojo {
     @Parameter(property = "mockserver.skip", defaultValue = "false")
     private boolean skip;
 
+    /**
+     * Get a list of artifacts used by this plugin
+     */
+    @Parameter(defaultValue = "${plugin.artifacts}", required = true, readonly = true)
+    protected List<Artifact> pluginArtifacts;
+
+    /**
+     * Used to look up Artifacts in the remote repository.
+     */
+//    @Parameter(defaultValue = "${component.org.apache.maven.artifact.factory.ArtifactFactory}", required = true, readonly = true)
+    @Component
+    protected ArtifactFactory factory;
+
+    /**
+     * Used to look up Artifacts in the remote repository.
+     */
+//    @Parameter(defaultValue = "${component.org.apache.maven.artifact.resolver.ArtifactResolver}", required = true, readonly = true)
+    @Component
+    protected ArtifactResolver artifactResolver;
+
+    /**
+     * List of Remote Repositories used by the resolver
+     */
+    @Parameter(defaultValue = "${project.remoteArtifactRepositories}", required = true, readonly = true)
+    protected List<ArtifactRepository> remoteRepositories;
+
+    /**
+     * Location of the local repository.
+     */
+    @Parameter(defaultValue = "${localRepository}", required = true, readonly = true)
+    protected ArtifactRepository localRepository;
+
     public void execute() throws MojoExecutionException {
         if (skip) {
             getLog().info("Skipping plugin execution");
         } else {
-            getLog().info("Starting Mock Server on port " + port);
-
-            // TODO fix the hard coded path below!!!
+            getLog().info("Starting MockServer on port " + port);
             ProcessBuilder processBuilder = new ProcessBuilder(
                     getJavaBin(),
                     "-Dmockserver.logLevel=" + logLevel,
                     "-Dmockserver.stopPort=" + stopPort,
                     "-Dmockserver.stopKey=" + stopKey,
 //                    "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5006",
-                    "-jar", "~/.m2/repository/org/mock-server/mockserver-jetty/1.11-SNAPSHOT/mockserver-jetty-1.11-SNAPSHOT-jar-with-dependencies.jar", "" + port
+                    "-jar", jarWithDependencies(), "" + port
             );
             if (pipeLogToConsole) {
                 processBuilder.redirectErrorStream(true);
@@ -102,5 +139,12 @@ public class MockServerRunForkedMojo extends AbstractMojo {
             }
         }
         return ret.toString();
+    }
+
+    protected String jarWithDependencies() {
+        Artifact jarWithDependencies = factory.createArtifactWithClassifier("org.mock-server", "mockserver-jetty", "1.11-SNAPSHOT", "jar", "jar-with-dependencies");
+        artifactResolver.resolve(new ArtifactResolutionRequest().setArtifact(jarWithDependencies));
+        getLog().debug("Running MockServer using " + jarWithDependencies.getFile().getAbsolutePath());
+        return jarWithDependencies.getFile().getAbsolutePath();
     }
 }

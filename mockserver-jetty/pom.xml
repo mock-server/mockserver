@@ -10,8 +10,8 @@
 
     <artifactId>mockserver-jetty</artifactId>
 
-    <name>Mock Server Embedded Jetty</name>
-    <description>A mock server that uses embedded Jetty to run</description>
+    <name>MockServer Embedded Jetty</name>
+    <description>A MockServer that uses embedded Jetty to run</description>
 
     <dependencies>
         <!-- mockserver -->

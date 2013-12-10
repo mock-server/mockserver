@@ -8,11 +8,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>mockserver-integration-testing</artifactId>
-    <name>Mock Server Integration Test</name>
-    <description>A module used to simplify integration testing of all Mock Server versions by sharing commons integration testing components.</description>
+    <name>MockServer Integration Test</name>
+    <description>A module used to simplify integration testing of all MockServer versions by sharing commons integration testing components.</description>
 
     <dependencies>
-        <!-- mock server -->
+        <!-- MockServer -->
         <dependency>
             <groupId>org.mock-server</groupId>
             <artifactId>mockserver-client</artifactId>

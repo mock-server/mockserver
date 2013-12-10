@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**
- * Run the Mock Server and wait for a specified timeout (or indefinitely)
+ * Run the MockServer and wait for a specified timeout (or indefinitely)
  *
  * @author jamesdbloom
  */
@@ -17,13 +17,13 @@ import java.util.concurrent.TimeoutException;
 public class MockServerRunAndWaitMojo extends AbstractMojo {
 
     /**
-     * The port to run Mock Server on
+     * The port to run MockServer on
      */
     @Parameter(property = "mockserver.port", defaultValue = "8080")
     private int port;
 
     /**
-     * Timeout to wait before stopping Mock Server, to run Mock Server indefinitely do not set a value
+     * Timeout to wait before stopping MockServer, to run MockServer indefinitely do not set a value
      */
     @Parameter(property = "mockserver.timeout")
     private int timeout;
@@ -44,7 +44,7 @@ public class MockServerRunAndWaitMojo extends AbstractMojo {
         if (skip) {
             getLog().info("Skipping plugin execution");
         } else {
-            getLog().info("Starting Mock Server on port " + port);
+            getLog().info("Starting MockServer on port " + port);
             try {
                 if (timeout > 0) {
                     new EmbeddedJettyHolder().start(port, logLevel).get(timeout, TimeUnit.SECONDS);
@@ -52,9 +52,9 @@ public class MockServerRunAndWaitMojo extends AbstractMojo {
                     new EmbeddedJettyHolder().start(port, logLevel).get();
                 }
             } catch (TimeoutException te) {
-                getLog().info(timeout + "s timeout ended Mock Server will terminate");
+                getLog().info(timeout + "s timeout ended MockServer will terminate");
             } catch (Exception e) {
-                getLog().error("Exception while running Mock Server", e);
+                getLog().error("Exception while running MockServer", e);
             }
         }
 

@@ -13,8 +13,8 @@
     <version>1.11-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <name>Mock Server</name>
-    <description>A simple server to support mocking responses from any server / service that uses HTTP. The expectations that configure how the mock server will respond and to incoming requests can be setup using any language that can create JSON. In simple client is provided to make this easy in Java.</description>
+    <name>MockServer</name>
+    <description>A simple server to support mocking responses from any server / service that uses HTTP. The expectations that configure how the MockServer will respond and to incoming requests can be setup using any language that can create JSON. In simple client is provided to make this easy in Java.</description>
     <url>http://www.mock-server.org</url>
 
     <licenses>
@@ -74,6 +74,12 @@
             <dependency>
                 <groupId>org.mock-server</groupId>
                 <artifactId>mockserver-jetty</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mock-server</groupId>
+                <artifactId>mockserver-jetty</artifactId>
+                <classifier>jar-with-dependencies</classifier>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

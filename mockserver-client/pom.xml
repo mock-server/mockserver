@@ -10,8 +10,8 @@
 
     <artifactId>mockserver-client</artifactId>
 
-    <name>Mock Server Client</name>
-    <description>A java client for the mock server</description>
+    <name>MockServer Client</name>
+    <description>A java client for the MockServer</description>
     <url>http://www.mock-server.com</url>
 
     <dependencies>

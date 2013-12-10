@@ -10,8 +10,8 @@
 
     <artifactId>mockserver-vertx</artifactId>
 
-    <name>Mock Server Vert.X</name>
-    <description>A mock server that uses Vert.X to run</description>
+    <name>MockServer Vert.X</name>
+    <description>A MockServer that uses Vert.X to run</description>
 
     <dependencies>
         <!-- core -->
