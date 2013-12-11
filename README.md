@@ -302,11 +302,11 @@ To run MockServer as part of your build add the following plugin to your pom.xml
         </executions>
     </plugin>
 
-This will start the MockServer during the *initialize* phase and will stop the MockServer during the *verify* phase.  For more details about Maven build phases see: http://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html.
+This will start the MockServer during the **initialize** phase and will stop the MockServer during the **verify** phase.  For more details about Maven build phases see: http://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html.
 
-This ensures that any tests you run during you build in either the normal *test* phase or the *integration-test* phase can use the MockServer on the port specified.
+This ensures that any tests you run during you build in either the normal **test** phase or the **integration-test** phase can use the MockServer on the port specified.
 
- It is also possible to run the MockServer as a forked JVM using the *runForked* and *stopForked* goals as follows:
+ It is also possible to run the MockServer as a forked JVM using the **runForked** and **stopForked** goals as follows:
 
      <plugin>
          <groupId>org.mock-server</groupId>
@@ -350,16 +350,16 @@ To stop a forked instance of the MockServer running on the same machine:
 
      mvn mockserver:stopForked
 
-The *stopForked* goal does assumes that the MockServer is running on the same physical machine as it uses 127.0.0.1 to communicate with the MockServer stop socket.
+The **stopForked** goal does assumes that the MockServer is running on the same physical machine as it uses 127.0.0.1 to communicate with the MockServer stop socket.
 
 The Maven plugin can be configured as follows:
 
-* *port* - The port to listen to incoming HTTP requests (required: false, default: 9090)
-* *timeout* - How long to block waiting for the MockServer, only used by *start* goal, a value of 0 means wait indefinitely (required: false, default: 0)
-* *logLevel* - The logging level (required: false, default: WARN)
-* *stopPort* - The port to listen to stop requests (required: false, default: port + 1)
-* *stopKey* - The key to use for stop requests (required: false, default: STOP_KEY)
-* *skip* - Prevent the plugin from running (required: false, default: false)
+* **port** - The port to listen to incoming HTTP requests (required: false, default: 9090)
+* **timeout** - How long to block waiting for MockServer, used by **start** goal, 0 means wait indefinitely (required: false, default: 0)
+* **logLevel** - The logging level (required: false, default: WARN)
+* **stopPort** - The port to listen to stop requests (required: false, default: port + 1)
+* **stopKey** - The key to use for stop requests (required: false, default: STOP_KEY)
+* **skip** - Prevent the plugin from running (required: false, default: false)
 
 **Embedded Jetty**
 
@@ -383,7 +383,7 @@ Alternatively build from source and run the Vert.X module as a zip file:
     mvn clean package
     vertx runzip mockserver-vertx/target/org.mock-server~mockserver-vertx~1.12-SNAPSHOT.zip
     
-The default port for the Vert.X MockServer module is *8080*.  To run the MockServer on another port set / add an *VERTX_OPTS* environment specifing *-Dport=<port>* for example:
+The default port for the Vert.X MockServer module is **8080**.  To run the MockServer on another port set / add an **VERTX_OPTS** environment specifing **-Dport=\<port\>** for example:
 
     export VERTX_OPTS="-Dport=9090"
 
@@ -528,13 +528,13 @@ For example the code above has a sessionId cookie in the request matcher.  If ea
 
 ## Clear & Reset
 
-To clear *ALL expectations* from the MockServer (without restarting it) use the /reset endpoint, as follows:
+To clear **ALL expectations** from the MockServer (without restarting it) use the /reset endpoint, as follows:
 
     var xmlHttpRequest = new XMLHttpRequest();
     xmlHttpRequest.open("PUT", "http://localhost:9999/reset", false);
     xmlHttpRequest.send();
 
-To clear *only specific* expectations from the MockServer use the /clear endpoint, as follows:
+To clear **only specific** expectations from the MockServer use the /clear endpoint, as follows:
 
     var xmlHttpRequest = new XMLHttpRequest();
     xmlHttpRequest.open("PUT", "http://localhost:9999/clear", false);
@@ -547,7 +547,7 @@ To clear *only specific* expectations from the MockServer use the /clear endpoin
         }
     }));
     
-The example above clears all expectations that will match incoming requests on the path */login*.
+The example above clears all expectations that will match incoming requests on the path **/login**.
 
 ## Debugging Issues
 
