@@ -475,11 +475,8 @@ To create an instance to Times use one of the static factor methods:
 In JavaScript a AJAX request can be used to send mock expectation to MockServer, as follows:
 
     var xmlHttpRequest = new XMLHttpRequest();
-    
     xmlHttpRequest.open("PUT", "http://localhost:9999", false);
-    
     xmlHttpRequest.setRequestHeader("Content-Type", "application/json; charset=utf-8");
-    
     xmlHttpRequest.send(JSON.stringify({
         "httpRequest": {
             "method": "POST",
@@ -525,9 +522,42 @@ To ensure all tests can run in parallel with completely isolated independent dat
 
 For example the code above has a sessionId cookie in the request matcher.  If each test generates a different value (i.e. a UUID) for the sessionId cookie then each test can receive completely independent response.  Instead of a cookie value a query parameter or header (such as the Referer header) can also be used to ensure mock responses are unique to each test.
 
+## Clear & Reset
+
+To clear *ALL expectations* from the MockServer (without restarting it) use the /reset endpoint, as follows:
+
+    var xmlHttpRequest = new XMLHttpRequest();
+    xmlHttpRequest.open("PUT", "http://localhost:9999/reset", false);
+    xmlHttpRequest.send();
+
+To clear *only specific* expectations from the MockServer use the /clear endpoint, as follows:
+
+    var xmlHttpRequest = new XMLHttpRequest();
+    xmlHttpRequest.open("PUT", "http://localhost:9999/clear", false);
+    xmlHttpRequest.setRequestHeader("Content-Type", "application/json; charset=utf-8");
+    xmlHttpRequest.send(JSON.stringify({
+        "httpRequest": {
+            "method": "POST",
+            "path": "/login",
+            "cookies": [ ]
+        }
+    }));
+    
+The example above clears all expectations that will match incoming requests on the path */login*.
+
+## Debugging Issues
+
+To simplfy debugging the MockServer will dump all expectations as JSON to the log (as WARN level) when a request is made to the /dump endpoint, as follows:
+
+    var xmlHttpRequest = new XMLHttpRequest();
+    xmlHttpRequest.open("PUT", "http://localhost:9999/dumpToLog", false);
+    xmlHttpRequest.send();
+    
+This will dump all expectations to the log using pretty-printed JSON.
+
 ## Requirements
 
-* Java 7 - because this API uses Jetty 9 to increase reliability, simplicity and flexibility which in turn requires Java 7 (http://webtide.intalio.com/2012/09/jetty-9-features/)
+* Java 7 - because MockServer uses Jetty 9 to increase reliability, simplicity and flexibility which in turn requires Java 7 (http://webtide.intalio.com/2012/09/jetty-9-features/)
 
 
 <br/>
