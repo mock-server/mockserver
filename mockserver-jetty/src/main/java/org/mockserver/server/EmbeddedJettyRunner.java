@@ -157,16 +157,18 @@ public class EmbeddedJettyRunner {
                 s.setSoTimeout(stopWait * 1000);
                 s.getInputStream();
 
-                System.err.printf("Waiting %d seconds for MockServer to stop%n", stopWait);
+                logger.info("Waiting %d seconds for MockServer to stop%n", stopWait);
                 LineNumberReader lin = new LineNumberReader(new InputStreamReader(s.getInputStream()));
                 String response;
                 boolean stopped = false;
                 while (!stopped && ((response = lin.readLine()) != null)) {
                     if ("Stopped".equals(response)) {
                         stopped = true;
-                        System.err.println("MockServer has stopped");
+                        logger.info("MockServer has stopped");
                     }
                 }
+            } else {
+                logger.info("MockServer stop request has been sent");
             }
             s.close();
         } catch (ConnectException e) {

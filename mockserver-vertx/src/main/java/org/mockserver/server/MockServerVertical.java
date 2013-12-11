@@ -38,27 +38,22 @@ public class MockServerVertical extends Verticle {
                 public void handle() {
                     if (request.method().equals("PUT")) {
                         if (request.path().equals("/stop")) {
-                            request.response().setStatusCode(HttpStatusCode.ACCEPTED_202.code());
-                            request.response().setStatusMessage(HttpStatusCode.ACCEPTED_202.reasonPhrase());
-                            request.response().end();
+                            setStatusAndEnd(request, HttpStatusCode.ACCEPTED_202);
                             vertx.stop();
+                        } else if (request.path().equals("/dumpToLog")) {
+                            mockServer.dumpToLog();
+                            setStatusAndEnd(request, HttpStatusCode.ACCEPTED_202);
                         } else if (request.path().equals("/reset")) {
                             mockServer.reset();
-                            request.response().setStatusCode(HttpStatusCode.ACCEPTED_202.code());
-                            request.response().setStatusMessage(HttpStatusCode.ACCEPTED_202.reasonPhrase());
-                            request.response().end();
+                            setStatusAndEnd(request, HttpStatusCode.ACCEPTED_202);
                         } else if (request.path().equals("/clear")) {
                             Expectation expectation = expectationSerializer.deserialize(body.getBytes());
                             mockServer.clear(expectation.getHttpRequest());
-                            request.response().setStatusCode(HttpStatusCode.ACCEPTED_202.code());
-                            request.response().setStatusMessage(HttpStatusCode.ACCEPTED_202.reasonPhrase());
-                            request.response().end();
+                            setStatusAndEnd(request, HttpStatusCode.ACCEPTED_202);
                         } else {
                             Expectation expectation = expectationSerializer.deserialize(body.getBytes());
                             mockServer.when(expectation.getHttpRequest(), expectation.getTimes()).respond(expectation.getHttpResponse());
-                            request.response().setStatusCode(HttpStatusCode.CREATED_201.code());
-                            request.response().setStatusMessage(HttpStatusCode.CREATED_201.reasonPhrase());
-                            request.response().end();
+                            setStatusAndEnd(request, HttpStatusCode.CREATED_201);
                         }
                     } else if (request.method().equals("GET") || request.method().equals("POST")) {
                         HttpRequest httpRequest = httpServerRequestMapper.createHttpRequest(request, body.getBytes());
@@ -75,6 +70,13 @@ public class MockServerVertical extends Verticle {
             });
         }
     };
+
+    private void setStatusAndEnd(HttpServerRequest request, HttpStatusCode httpStatusCode) {
+        request.response().setStatusCode(httpStatusCode.code());
+        request.response().setStatusMessage(httpStatusCode.reasonPhrase());
+        request.response().end();
+    }
+
     private MockServer mockServer = new MockServer();
     private HttpServerRequestMapper httpServerRequestMapper = new HttpServerRequestMapper();
     private HttpServerResponseMapper httpServerResponseMapper = new HttpServerResponseMapper();

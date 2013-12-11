@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+Mappings to default lifecycle, specific for each packaging.
+
+-->
+
 <component-set>
     <components>
+        <!--
+         | MAVEN PLUGIN
+         |-->
         <component>
             <role>org.apache.maven.lifecycle.mapping.LifecycleMapping</role>
             <role-hint>mockserver</role-hint>
@@ -9,10 +18,12 @@
                 <lifecycles>
                     <lifecycle>
                         <id>default</id>
+                        <!-- START SNIPPET: maven-plugin-lifecycle -->
                         <phases>
                             <initialize>org.mockserver:mockserver-maven-plugin:start</initialize>
                             <verify>org.mockserver:mockserver-maven-plugin:stop</verify>
                         </phases>
+                        <!-- END SNIPPET: maven-plugin-lifecycle -->
                     </lifecycle>
                 </lifecycles>
             </configuration>

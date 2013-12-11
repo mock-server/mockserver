@@ -2,6 +2,7 @@ package org.mockserver.mock;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
+import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -67,5 +68,12 @@ public class MockServer extends ModelObject {
 
     public void reset() {
         expectations.clear();
+    }
+
+    public void dumpToLog() {
+        ExpectationSerializer expectationSerializer = new ExpectationSerializer();
+        for (Expectation expectation : new ArrayList<Expectation>(expectations)) {
+            logger.warn(expectationSerializer.serialize(expectation));
+        }
     }
 }

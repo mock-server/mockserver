@@ -13,7 +13,7 @@ import org.apache.maven.plugins.annotations.Parameter;
  * @author jamesdbloom
  */
 @Mojo(name = "stop", defaultPhase = LifecyclePhase.VERIFY)
-//@Execute(goal = "stop", phase = LifecyclePhase.VERIFY)
+@Execute(goal = "stop", phase = LifecyclePhase.VERIFY, lifecycle = "mockserver_cycle")
 public class MockServerStopMojo extends AbstractMojo {
 
     /**

@@ -1,6 +1,7 @@
 package org.mockserver.client.serialization;
 
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.ObjectWriter;
 import org.mockserver.client.serialization.model.*;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
@@ -66,6 +67,8 @@ public class ExpectationSerializerTest {
             .setTimes(new TimesDTO(Times.once()));
     @Mock
     private ObjectMapper objectMapper;
+    @Mock
+    private ObjectWriter objectWriter;
     @InjectMocks
     private ExpectationSerializer expectationSerializer;
 
@@ -101,11 +104,15 @@ public class ExpectationSerializerTest {
 
     @Test
     public void serialize() throws IOException {
+        // given
+        when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
+
         // when
         expectationSerializer.serialize(fullExpectation);
 
         // then
-        verify(objectMapper).writeValueAsString(fullExpectationDTO);
+        verify(objectMapper).writerWithDefaultPrettyPrinter();
+        verify(objectWriter).writeValueAsString(fullExpectationDTO);
     }
 
     @Test(expected = RuntimeException.class)

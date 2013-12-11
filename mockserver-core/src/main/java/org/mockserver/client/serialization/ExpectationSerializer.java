@@ -17,7 +17,7 @@ public class ExpectationSerializer {
 
     public String serialize(Expectation expectation) {
         try {
-            return objectMapper.writeValueAsString(new ExpectationDTO(expectation));
+            return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(new ExpectationDTO(expectation));
         } catch (IOException ioe) {
             logger.error(String.format("Exception while serializing expectation to JSON with value %s", expectation), ioe);
             throw new RuntimeException(String.format("Exception while serializing expectation to JSON with value %s", expectation), ioe);

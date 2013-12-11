@@ -32,7 +32,7 @@ public class ExpectationDTO extends ModelObject {
 
     public Expectation buildObject() {
         HttpRequest httpRequest;
-        HttpResponse httpResponse;
+        HttpResponse httpResponse = null;
         Times times;
         if (this.httpRequest != null) {
             httpRequest = this.httpRequest.buildObject();
@@ -42,9 +42,6 @@ public class ExpectationDTO extends ModelObject {
         }
         if (this.httpResponse != null) {
             httpResponse = this.httpResponse.buildObject();
-        } else {
-            logger.warn("HttpResponse must be specified to create an Expectation");
-            throw new IllegalArgumentException("HttpResponse must be specified to create an Expectation");
         }
         if (this.times != null) {
             times = this.times.buildObject();

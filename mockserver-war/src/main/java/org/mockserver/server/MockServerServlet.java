@@ -49,7 +49,10 @@ public class MockServerServlet extends HttpServlet {
     }
 
     public void doPut(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws IOException {
-        if (httpServletRequest.getRequestURI().equals("/reset")) {
+        if (httpServletRequest.getRequestURI().equals("/dumpToLog")) {
+            mockServer.dumpToLog();
+            httpServletResponse.setStatus(HttpServletResponse.SC_ACCEPTED);
+        } else if (httpServletRequest.getRequestURI().equals("/reset")) {
             mockServer.reset();
             httpServletResponse.setStatus(HttpServletResponse.SC_ACCEPTED);
         } else {

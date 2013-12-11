@@ -1,28 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--<lifecycles>-->
-    <!--<lifecycle>-->
-        <!--<id>mockserver_cycle</id>-->
-        <!--<phases>-->
-            <!--<phase>-->
-                <!--<id>initialize</id>-->
-                <!--<executions>-->
-                    <!--<execution>-->
-                        <!--<goals>-->
-                            <!--<goal>start</goal>-->
-                        <!--</goals>-->
-                    <!--</execution>-->
-                <!--</executions>-->
-            <!--</phase>-->
-            <!--<phase>-->
-                <!--<id>verify</id>-->
-                <!--<executions>-->
-                    <!--<execution>-->
-                        <!--<goals>-->
-                            <!--<goal>stop</goal>-->
-                        <!--</goals>-->
-                    <!--</execution>-->
-                <!--</executions>-->
-            <!--</phase>-->
-        <!--</phases>-->
-    <!--</lifecycle>-->
-<!--</lifecycles>-->
+<lifecycles>
+    <lifecycle>
+        <id>mockserver_cycle</id>
+        <phases>
+            <phase>
+                <id>initialize</id>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>start</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </phase>
+            <phase>
+                <id>verify</id>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>stop</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </phase>
+        </phases>
+        <!--<default-phases>-->
+            <!--<initialize>org.mockserver:mockserver-maven-plugin:start</initialize>-->
+            <!--<verify>org.mockserver:mockserver-maven-plugin:stop</verify>-->
+        <!--</default-phases>-->
+    </lifecycle>
+</lifecycles>

@@ -12,7 +12,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author jamesdbloom
  */
-public class MockServerCleanUpTest {
+public class MockServerCleanResetTest {
 
     private MockServer mockServer;
 
@@ -45,6 +45,20 @@ public class MockServerCleanUpTest {
 
         // when
         mockServer.clear(new HttpRequest().withPath("somepath"));
+
+        // then
+        assertArrayEquals(new Expectation[]{}, mockServer.expectations.toArray());
+    }
+
+    @Test
+    public void shouldResetAllExpectations() {
+        // given
+        HttpResponse httpResponse = new HttpResponse().withBody("somebody");
+        mockServer.when(new HttpRequest().withPath("somepath"), Times.unlimited()).respond(httpResponse);
+        mockServer.when(new HttpRequest().withPath("somepath"), Times.unlimited()).respond(httpResponse);
+
+        // when
+        mockServer.reset();
 
         // then
         assertArrayEquals(new Expectation[]{}, mockServer.expectations.toArray());
