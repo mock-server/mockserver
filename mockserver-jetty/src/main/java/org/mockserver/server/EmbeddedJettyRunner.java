@@ -97,6 +97,8 @@ public class EmbeddedJettyRunner {
             try {
                 int stopPort = Integer.parseInt(System.getProperty("mockserver.stopPort", "" + defaultStopPort));
                 String stopKey = System.getProperty("mockserver.stopKey", defaultStopKey);
+                logger.info("MockServer stopPort listening on " + stopPort + " with stopKey [" + stopKey + "]");
+                System.out.println("MockServer stopPort listening on " + stopPort + " with stopKey [" + stopKey + "]");
 
                 shutdownMonitor.setPort(stopPort);
                 shutdownMonitor.setKey(stopKey);
