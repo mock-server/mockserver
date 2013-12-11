@@ -23,7 +23,7 @@
             <plugin>
                 <groupId>org.mock-server</groupId>
                 <artifactId>mockserver-maven-plugin</artifactId>
-                <version>1.11-SNAPSHOT</version>
+                <version>1.12-SNAPSHOT</version>
                 <configuration>
                     <port>8080</port>
                     <logLevel>DEBUG</logLevel>
