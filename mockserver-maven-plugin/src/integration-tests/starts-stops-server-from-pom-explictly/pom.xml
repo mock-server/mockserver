@@ -29,7 +29,7 @@
                 <groupId>org.mock-server</groupId>
                 <artifactId>mockserver-maven-plugin</artifactId>
                 <version>1.11-SNAPSHOT</version>
-                <!--<extensions>true</extensions>-->
+                <extensions>true</extensions>
                 <executions>
                     <execution>
                         <id>initialize</id>
