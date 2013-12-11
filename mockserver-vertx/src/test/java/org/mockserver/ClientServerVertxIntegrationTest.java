@@ -3,12 +3,10 @@ package org.mockserver;
 import com.google.common.util.concurrent.SettableFuture;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.mockserver.integration.AbstractClientServerIntegrationTest;
 import org.mockserver.model.HttpRequest;
 import org.vertx.java.platform.impl.cli.Starter;
 
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -20,6 +18,7 @@ public class ClientServerVertxIntegrationTest extends AbstractClientServerIntegr
 
     private final Thread vertxServer = new Thread(new Runnable() {
         public void run() {
+            System.setProperty("port", "" + getPort());
             Starter.main(new String[]{"run", "org.mockserver.server.MockServerVertical"});
         }
     });
@@ -32,7 +31,7 @@ public class ClientServerVertxIntegrationTest extends AbstractClientServerIntegr
 
     @Override
     public int getPort() {
-        return 8080;
+        return 8085;
     }
 
     @After

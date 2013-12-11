@@ -22,6 +22,8 @@ import org.vertx.java.platform.Verticle;
  */
 public class MockServerVertical extends Verticle {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    public final int port = Integer.parseInt(System.getProperty("port", "8080"));
+
     private final Handler<HttpServerRequest> requestHandler = new Handler<HttpServerRequest>() {
         public void handle(final HttpServerRequest request) {
             final Buffer body = new Buffer(0);
@@ -83,7 +85,7 @@ public class MockServerVertical extends Verticle {
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
 
     public void start() {
-        vertx.createHttpServer().requestHandler(requestHandler).listen(8080, "localhost");
+        vertx.createHttpServer().requestHandler(requestHandler).listen(port, "localhost");
     }
 
     @VisibleForTesting
