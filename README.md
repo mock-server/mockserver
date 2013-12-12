@@ -383,9 +383,11 @@ Alternatively build from source and run the Vert.X module as a zip file:
     mvn clean package
     vertx runzip mockserver-vertx/target/org.mock-server~mockserver-vertx~1.12-SNAPSHOT.zip
     
-The default port for the Vert.X MockServer module is **8080**.  To run the MockServer on another port set / add an **VERTX_OPTS** environment variable specifying **-Dport=\<port\>** for example:
+The default port for the Vert.X MockServer module is **8080**.  To run the MockServer on another port set / add an **VERTX_OPTS** environment variable specifying the system property **mockserver.port** as follows **-Dmockserver.port=\<port\>** for example:
 
-    export VERTX_OPTS="-Dport=9090"
+    export VERTX_OPTS="-Dmockserver.port=9090 -Dmockserver.logLevel=DEBUG"
+    
+It is also possible to update the default logging level by setting the system properties **mockserver.logLevel** as above.
 
 **Web Archive (WAR)**
 
