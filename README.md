@@ -282,7 +282,7 @@ To run MockServer as part of your build add the following plugin to your pom.xml
         <version>1.12-SNAPSHOT</version>
         <configuration>
             <port>9090</port>
-            <logLevel>DEBUG</logLevel>
+            <logLevel>TRACE</logLevel>
         </configuration>
         <executions>
             <execution>
@@ -314,7 +314,7 @@ This ensures that any tests you run during you build in either the normal **test
          <version>1.12-SNAPSHOT</version>
          <configuration>
              <port>9090</port>
-             <logLevel>DEBUG</logLevel>
+             <logLevel>TRACE</logLevel>
              <stopPort>9091</stopPort>
              <stopKey>STOP_KEY</stopKey>
          </configuration>
@@ -385,7 +385,7 @@ Alternatively build from source and run the Vert.X module as a zip file:
     
 The default port for the Vert.X MockServer module is **8080**.  To run the MockServer on another port set / add an **VERTX_OPTS** environment variable specifying the system property **mockserver.port** as follows **-Dmockserver.port=\<port\>** for example:
 
-    export VERTX_OPTS="-Dmockserver.port=9090 -Dmockserver.logLevel=DEBUG"
+    export VERTX_OPTS="-Dmockserver.port=9090 -Dmockserver.logLevel=TRACE"
     
 It is also possible to update the default logging level by setting the system properties **mockserver.logLevel** as above.
 

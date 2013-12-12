@@ -47,7 +47,7 @@ public class EmbeddedJettyRunner {
      * @param level the log level, which can be ALL, DEBUG, INFO, WARN, ERROR, OFF
      */
     public static void overrideLogLevel(String level) {
-        ch.qos.logback.classic.Logger rootLogger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
+        ch.qos.logback.classic.Logger rootLogger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger("org.mockserver");
         rootLogger.setLevel(Level.toLevel(level));
     }
 
