@@ -18,7 +18,7 @@ public class ClientServerVertxIntegrationTest extends AbstractClientServerIntegr
 
     private final Thread vertxServer = new Thread(new Runnable() {
         public void run() {
-            System.setProperty("port", "" + getPort());
+            System.setProperty("mockserver.port", "" + getPort());
             Starter.main(new String[]{"run", "org.mockserver.server.MockServerVertical"});
         }
     });
