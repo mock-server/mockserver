@@ -2,7 +2,6 @@ package org.mockserver;
 
 import org.junit.Before;
 import org.mockserver.integration.AbstractClientServerIntegrationTest;
-import org.mockserver.model.HttpRequest;
 
 /**
  * @author jamesdbloom
