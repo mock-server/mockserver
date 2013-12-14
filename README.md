@@ -279,7 +279,7 @@ To run MockServer as part of your build add the following plugin to your pom.xml
     <plugin>
         <groupId>org.mock-server</groupId>
         <artifactId>mockserver-maven-plugin</artifactId>
-        <version>1.12-SNAPSHOT</version>
+        <version>2.0-SNAPSHOT</version>
         <configuration>
             <port>9090</port>
             <logLevel>TRACE</logLevel>
@@ -311,7 +311,7 @@ This ensures that any tests you run during you build in either the normal **test
      <plugin>
          <groupId>org.mock-server</groupId>
          <artifactId>mockserver-maven-plugin</artifactId>
-         <version>1.12-SNAPSHOT</version>
+         <version>2.0-SNAPSHOT</version>
          <configuration>
              <port>9090</port>
              <logLevel>TRACE</logLevel>
@@ -365,7 +365,7 @@ The Maven plugin can be configured as follows:
 
 To run as Embedded Jetty run the following command:
 
-    java -jar <path to mockserver-jetty-1.12-SNAPSHOT-jar-with-dependencies.jar> <port>
+    java -jar <path to mockserver-jetty-2.0-SNAPSHOT-jar-with-dependencies.jar> <port>
     
 **Vert.X**
 
@@ -373,15 +373,15 @@ First, you'll need to [install Vert.x](http://vertx.io/install.html).
 
 To run as Vert.X module run the following command:
 
-    vertx install org.mock-server~mockserver-vertx~1.12-SNAPSHOT
-    vertx runmod org.mock-server~mockserver-vertx~1.12-SNAPSHOT
+    vertx install org.mock-server~mockserver-vertx~2.0-SNAPSHOT
+    vertx runmod org.mock-server~mockserver-vertx~2.0-SNAPSHOT
     
 Alternatively build from source and run the Vert.X module as a zip file:
 
     git clone https://github.com/jamesdbloom/mockservice.git
     cd mockserver
     mvn clean package
-    vertx runzip mockserver-vertx/target/org.mock-server~mockserver-vertx~1.12-SNAPSHOT.zip
+    vertx runzip mockserver-vertx/target/org.mock-server~mockserver-vertx~2.0-SNAPSHOT.zip
     
 The default port for the Vert.X MockServer module is **8080**.  To run the MockServer on another port set / add an **VERTX_OPTS** environment variable specifying the system property **mockserver.port** as follows **-Dmockserver.port=\<port\>** for example:
 
@@ -393,7 +393,7 @@ It is also possible to update the default logging level by setting the system pr
 
 To run as a WAR deployed on any JEE web server:
 
-    deploy mockserver-war-1.12-SNAPSHOT.jar to web server
+    deploy mockserver-war-2.0-SNAPSHOT.jar to web server
     
 **Build From Source**
 
@@ -414,15 +414,15 @@ To build an executable jar containing all dependancies run the following command
 
 This will produce a jar file under the target directory called, as follows:
 
-    mockserver-jetty/target/mockserver-jetty-1.12-SNAPSHOT-jar-with-dependencies.jar
+    mockserver-jetty/target/mockserver-jetty-2.0-SNAPSHOT-jar-with-dependencies.jar
 
 Run the MockServer then using the executable jar as follows:
 
-    java -jar <path to mockserver-jetty-1.12-SNAPSHOT-jar-with-dependencies.jar> <port>
+    java -jar <path to mockserver-jetty-2.0-SNAPSHOT-jar-with-dependencies.jar> <port>
     
 For example to run the MockServer on port 9999:
 
-    java -jar mockserver-jetty/target/mockserver-jetty-1.12-SNAPSHOT-jar-with-dependencies.jar 9999
+    java -jar mockserver-jetty/target/mockserver-jetty-2.0-SNAPSHOT-jar-with-dependencies.jar 9999
     
 ***Gradle***
 
