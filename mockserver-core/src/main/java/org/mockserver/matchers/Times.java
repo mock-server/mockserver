@@ -36,7 +36,7 @@ public class Times extends ModelObject {
     }
 
     public boolean greaterThenZero() {
-        if(unlimited || remainingTimes > 0) {
+        if (unlimited || remainingTimes > 0) {
             return true;
         } else {
             logger.trace("Remaining count is 0");

@@ -5,5 +5,5 @@ include 'mockserver-jetty'
 include 'mockserver-vertx'
 include 'mockserver-integration-testing'
 
-rootProject.name='mockserver'
+rootProject.name = 'mockserver'
 

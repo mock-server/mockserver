@@ -1,5 +1,9 @@
 package org.mockserver.server;
 
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.mappers.HttpServletRequestMapper;
 import org.mockserver.mappers.HttpServletResponseMapper;
@@ -9,10 +13,6 @@ import org.mockserver.mock.MockServer;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -85,7 +85,7 @@ public class MockServerServletTest {
         verify(mockServer).when(same(httpRequest), same(times));
         assertEquals(HttpServletResponse.SC_CREATED, httpServletResponse.getStatus());
     }
-    
+
     @Test
     public void setupExpectationFromJSONWithAllDefault() throws IOException {
         // given
@@ -123,7 +123,7 @@ public class MockServerServletTest {
         // then
         assertEquals(httpServletResponse.getStatus(), HttpServletResponse.SC_CREATED);
     }
-    
+
     @Test
     public void setupExpectationFromJSONWithAllEmpty() throws IOException {
         // given
@@ -142,7 +142,7 @@ public class MockServerServletTest {
         // then
         assertEquals(httpServletResponse.getStatus(), HttpServletResponse.SC_CREATED);
     }
-    
+
     @Test
     public void setupExpectationFromJSONWithPartiallyEmptyFields() throws IOException {
         // given

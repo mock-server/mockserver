@@ -2,18 +2,16 @@ package org.mockserver.client.serialization;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.ObjectWriter;
-import org.mockserver.client.serialization.model.*;
-import org.mockserver.matchers.Times;
-import org.mockserver.mock.Expectation;
-import org.mockserver.model.*;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockserver.client.serialization.model.*;
+import org.mockserver.matchers.Times;
+import org.mockserver.mock.Expectation;
+import org.mockserver.model.*;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;

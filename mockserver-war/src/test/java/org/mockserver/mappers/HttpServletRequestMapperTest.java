@@ -1,11 +1,11 @@
 package org.mockserver.mappers;
 
 import com.google.common.collect.Lists;
+import org.junit.Test;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.Parameter;
-import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 import static org.junit.Assert.assertEquals;

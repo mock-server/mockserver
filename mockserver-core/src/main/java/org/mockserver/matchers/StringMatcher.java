@@ -27,7 +27,7 @@ public class StringMatcher extends ModelObject implements Matcher<String> {
                     result = true;
                 }
             } catch (PatternSyntaxException pse) {
-                logger.error("Error while matching regex [" +  this.path + "] for string [" + path + "] " + pse.getMessage());
+                logger.error("Error while matching regex [" + this.path + "] for string [" + path + "] " + pse.getMessage());
             }
             try {
                 if (this.path.matches(path)) {

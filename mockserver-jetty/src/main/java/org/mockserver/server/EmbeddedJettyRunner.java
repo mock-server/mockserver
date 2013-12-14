@@ -137,9 +137,9 @@ public class EmbeddedJettyRunner {
      * Stop a forked or remote MockServer instance
      *
      * @param ipAddress IP address as string of remote MockServer (i.e. "127.0.0.1")
-     * @param stopPort the stopPort for the MockServer to stop (default is HTTP port + 1)
-     * @param stopKey the stopKey for the MockServer to step (default is "STOP_KEY")
-     * @param stopWait the period to wait for MockServer to confirm it has stopped, in seconds.  A value of <= 0 means do not wait for confirmation MockServer has stopped.
+     * @param stopPort  the stopPort for the MockServer to stop (default is HTTP port + 1)
+     * @param stopKey   the stopKey for the MockServer to step (default is "STOP_KEY")
+     * @param stopWait  the period to wait for MockServer to confirm it has stopped, in seconds.  A value of <= 0 means do not wait for confirmation MockServer has stopped.
      */
     public static void stopRemote(String ipAddress, int stopPort, String stopKey, int stopWait) {
         if (stopPort <= 0)

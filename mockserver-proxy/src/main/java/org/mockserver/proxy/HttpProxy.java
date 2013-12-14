@@ -9,7 +9,6 @@ import org.littleshoot.proxy.HttpResponseFilters;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

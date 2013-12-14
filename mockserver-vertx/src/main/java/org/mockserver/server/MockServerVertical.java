@@ -23,7 +23,6 @@ import org.vertx.java.platform.Verticle;
  */
 public class MockServerVertical extends Verticle {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-
     private final Handler<HttpServerRequest> requestHandler = new Handler<HttpServerRequest>() {
         public void handle(final HttpServerRequest request) {
             final Buffer body = new Buffer(0);
@@ -72,21 +71,24 @@ public class MockServerVertical extends Verticle {
             });
         }
     };
-
-    private void setStatusAndEnd(HttpServerRequest request, HttpStatusCode httpStatusCode) {
-        request.response().setStatusCode(httpStatusCode.code());
-        request.response().setStatusMessage(httpStatusCode.reasonPhrase());
-        request.response().end();
-    }
-
     private MockServer mockServer = new MockServer();
     private HttpServerRequestMapper httpServerRequestMapper = new HttpServerRequestMapper();
     private HttpServerResponseMapper httpServerResponseMapper = new HttpServerResponseMapper();
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
 
     /**
-     * Starts the MockServer verticle using system properties to override default port and logging level
+     * Override the debug WARN logging level
      *
+     * @param level the log level, which can be ALL, DEBUG, INFO, WARN, ERROR, OFF
+     */
+    public static void overrideLogLevel(String level) {
+        ch.qos.logback.classic.Logger rootLogger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger("org.mockserver");
+        rootLogger.setLevel(Level.toLevel(level));
+    }
+
+    /**
+     * Starts the MockServer verticle using system properties to override default port and logging level
+     * <p/>
      * -Dmockserver.port=<port> - override the default port (default: 8080)
      * -Dmockserver.logLevel=<level> - override the default logging level (default: WARN)
      */
@@ -100,14 +102,10 @@ public class MockServerVertical extends Verticle {
         vertx.createHttpServer().requestHandler(requestHandler).listen(port, "localhost");
     }
 
-    /**
-     * Override the debug WARN logging level
-     *
-     * @param level the log level, which can be ALL, DEBUG, INFO, WARN, ERROR, OFF
-     */
-    public static void overrideLogLevel(String level) {
-        ch.qos.logback.classic.Logger rootLogger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger("org.mockserver");
-        rootLogger.setLevel(Level.toLevel(level));
+    private void setStatusAndEnd(HttpServerRequest request, HttpStatusCode httpStatusCode) {
+        request.response().setStatusCode(httpStatusCode.code());
+        request.response().setStatusMessage(httpStatusCode.reasonPhrase());
+        request.response().end();
     }
 
     @VisibleForTesting

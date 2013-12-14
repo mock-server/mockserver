@@ -1,10 +1,10 @@
 package org.mockserver.mock;
 
+import org.junit.Before;
+import org.junit.Test;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
-import org.junit.Before;
-import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;

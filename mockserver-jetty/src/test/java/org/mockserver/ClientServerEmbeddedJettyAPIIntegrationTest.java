@@ -3,7 +3,6 @@ package org.mockserver;
 import org.junit.After;
 import org.junit.Before;
 import org.mockserver.integration.AbstractClientServerIntegrationTest;
-import org.mockserver.model.HttpRequest;
 import org.mockserver.server.EmbeddedJettyRunner;
 
 /**

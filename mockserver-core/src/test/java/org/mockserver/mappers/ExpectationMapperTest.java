@@ -1,11 +1,11 @@
 package org.mockserver.mappers;
 
+import org.junit.Test;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.Parameter;
-import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;
 

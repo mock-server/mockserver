@@ -1,12 +1,12 @@
 package org.mockserver.mock;
 
-import org.mockserver.matchers.HttpRequestMatcher;
-import org.mockserver.model.*;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockserver.matchers.HttpRequestMatcher;
+import org.mockserver.model.*;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 /**
  * @author jamesdbloom

@@ -2,9 +2,9 @@ package org.mockserver.matchers;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import org.mockserver.model.KeyToMultiValue;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockserver.model.KeyToMultiValue;
 
 import java.util.ArrayList;
 import java.util.List;

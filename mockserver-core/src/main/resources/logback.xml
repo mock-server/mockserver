@@ -39,7 +39,7 @@
     </appender>
 
     <logger name="org.mockserver" level="DEBUG"/>
-    <logger name="org.eclipse.jetty.util.thread.ShutdownThread" level="DEBUG" />
+    <logger name="org.eclipse.jetty.util.thread.ShutdownThread" level="DEBUG"/>
 
     <root level="WARN">
         <appender-ref ref="FILE"/>

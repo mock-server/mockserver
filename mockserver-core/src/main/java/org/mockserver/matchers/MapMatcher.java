@@ -42,7 +42,7 @@ public class MapMatcher extends ModelObject implements Matcher<List<KeyToMultiVa
                                 regexMatches = true;
                             }
                         } catch (PatternSyntaxException pse) {
-                            logger.error("Error while matching regex [" +  value + "] for string [" + supersetValue + "] " + pse.getMessage());
+                            logger.error("Error while matching regex [" + value + "] for string [" + supersetValue + "] " + pse.getMessage());
                         }
                     }
                     if (!regexMatches) {

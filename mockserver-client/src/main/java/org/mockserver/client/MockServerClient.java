@@ -28,8 +28,8 @@ public class MockServerClient {
     /**
      * Start the client communicating to a MockServer at the specified host and port
      * for example:
-     *
-     *   MockServerClient mockServerClient = new MockServerClient("localhost", 8080);
+     * <p/>
+     * MockServerClient mockServerClient = new MockServerClient("localhost", 8080);
      *
      * @param host the host for the MockServer to communicate with
      * @param port the port for the MockServer to communicate with
@@ -60,20 +60,20 @@ public class MockServerClient {
     /**
      * Specify an unlimited expectation that will respond regardless of the number of matching request
      * for example:
-     *
-     *   mockServerClient
-     *           .when(
-     *                   new HttpRequest()
-     *                           .withPath("/some_path")
-     *                           .withBody("some_request_body")
-     *           )
-     *           .respond(
-     *                   new HttpResponse()
-     *                           .withBody("some_response_body")
-     *                           .withHeaders(
-     *                                   new Header("responseName", "responseValue")
-     *                           )
-     *           );
+     * <p/>
+     * mockServerClient
+     * .when(
+     * new HttpRequest()
+     * .withPath("/some_path")
+     * .withBody("some_request_body")
+     * )
+     * .respond(
+     * new HttpResponse()
+     * .withBody("some_response_body")
+     * .withHeaders(
+     * new Header("responseName", "responseValue")
+     * )
+     * );
      *
      * @param httpRequest the request that must be matched for this expectation to respond
      * @return an Expectation object that can be used to specify the response
@@ -85,24 +85,24 @@ public class MockServerClient {
     /**
      * Specify an limited expectation that will respond a specified number of times when the request is matched
      * for example:
-     *
-     *   mockServerClient
-     *           .when(
-     *                   new HttpRequest()
-     *                           .withPath("/some_path")
-     *                           .withBody("some_request_body"),
-     Times.exactly(5)
-     *           )
-     *           .respond(
-     *                   new HttpResponse()
-     *                           .withBody("some_response_body")
-     *                           .withHeaders(
-     *                                   new Header("responseName", "responseValue")
-     *                           )
-     *           );
+     * <p/>
+     * mockServerClient
+     * .when(
+     * new HttpRequest()
+     * .withPath("/some_path")
+     * .withBody("some_request_body"),
+     * Times.exactly(5)
+     * )
+     * .respond(
+     * new HttpResponse()
+     * .withBody("some_response_body")
+     * .withHeaders(
+     * new Header("responseName", "responseValue")
+     * )
+     * );
      *
      * @param httpRequest the request that must be matched for this expectation to respond
-     * @param times the number of times to respond when this request is matched
+     * @param times       the number of times to respond when this request is matched
      * @return an Expectation object that can be used to specify the response
      */
     public ForwardChainExpectation when(HttpRequest httpRequest, Times times) {
