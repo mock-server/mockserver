@@ -3,7 +3,7 @@
     <parent>
         <artifactId>mockserver</artifactId>
         <groupId>org.mock-server</groupId>
-        <version>1.12-SNAPSHOT</version>
+        <version>1.12</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -23,7 +23,7 @@
             <groupId>org.mock-server</groupId>
             <artifactId>mockserver-jetty</artifactId>
             <classifier>jar-with-dependencies</classifier>
-            <version>1.12-SNAPSHOT</version>
+            <version>1.12</version>
             <scope>compile</scope>
         </dependency>
 
