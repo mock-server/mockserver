@@ -48,6 +48,9 @@ public class Main {
     private static Map<String, Integer> parseArguments(String... arguments) {
         Map<String, Integer> parsedArguments = new HashMap<>();
         Iterator<String> argumentsIterator = Arrays.asList(arguments).iterator();
+        for (int i = 0; i < arguments.length; i++) {
+            System.out.println("arguments[" + i + "] = " + arguments[i]);
+        }
         while (argumentsIterator.hasNext()) {
             String argumentName = argumentsIterator.next();
             if (argumentsIterator.hasNext()) {

@@ -2,6 +2,7 @@ package org.mockserver.client.serialization;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.ObjectWriter;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -86,12 +87,18 @@ public class HttpRequestSerializerTest {
     @Test
     public void serialize() throws IOException {
         // given
+        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT)).thenReturn(objectMapper);
+        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL)).thenReturn(objectMapper);
+        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_EMPTY)).thenReturn(objectMapper);
         when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
 
         // when
         httpRequestSerializer.serialize(fullHttpRequest);
 
         // then
+        verify(objectMapper).setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT);
+        verify(objectMapper).setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL);
+        verify(objectMapper).setSerializationInclusion(JsonSerialize.Inclusion.NON_EMPTY);
         verify(objectMapper).writerWithDefaultPrettyPrinter();
         verify(objectWriter).writeValueAsString(fullHttpRequestDTO);
     }

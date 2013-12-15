@@ -1,7 +1,5 @@
 package org.mockserver.proxy;
 
-import com.google.common.util.concurrent.SettableFuture;
-import org.eclipse.jetty.client.api.ContentResponse;
 import org.mockserver.client.http.HttpRequestClient;
 import org.mockserver.mappers.HttpClientResponseMapper;
 import org.mockserver.mappers.HttpServletRequestMapper;
@@ -24,7 +22,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author jamesdbloom
@@ -109,33 +106,16 @@ public class ProxyServlet extends HttpServlet {
 
     private void sendRequest(HttpRequestMatcher httpRequestMatcher, final HttpRequest httpRequest, final HttpServletResponse httpServletResponse) {
         System.out.println(httpRequest.getMethod() + "=>" + httpRequest.getURL());
-        final SettableFuture<ContentResponse> responseFuture = SettableFuture.create();
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    responseFuture.set(httpRequestClient.sendRequest(httpRequest));
-                } catch (Exception e) {
-                    responseFuture.setException(e);
+        HttpResponse httpResponse = httpRequestClient.sendRequest(httpRequest, maxTimeout);
+
+        for (HttpRequest filterRequest : filters.keySet()) {
+            if (httpRequestMatcher.matches(httpRequest)) {
+                for (ProxyFilter proxyFilter : filters.get(filterRequest)) {
+                    proxyFilter.onResponse(httpRequest, httpResponse);
                 }
             }
-        }).start();
-        try {
-            ContentResponse contentResponse = responseFuture.get(maxTimeout, TimeUnit.SECONDS);
-            HttpResponse httpResponse = httpClientResponseMapper.buildHttpResponse(contentResponse);
-
-            for (HttpRequest filterRequest : filters.keySet()) {
-                if (httpRequestMatcher.matches(httpRequest)) {
-                    for (ProxyFilter proxyFilter : filters.get(filterRequest)) {
-                        proxyFilter.onResponse(httpRequest, httpResponse);
-                    }
-                }
-            }
-
-            httpServletResponseMapper.mapHttpServletResponse(httpResponse, httpServletResponse);
-        } catch (Exception e) {
-            logger.warn("Exception while proxying request to [" + httpRequest.getURL() + "]", e);
         }
 
+        httpServletResponseMapper.mapHttpServletResponse(httpResponse, httpServletResponse);
     }
 }

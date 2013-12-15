@@ -279,7 +279,7 @@ To run MockServer as part of your build add the following plugin to your pom.xml
     <plugin>
         <groupId>org.mock-server</groupId>
         <artifactId>mockserver-maven-plugin</artifactId>
-        <version>2.0-SNAPSHOT</version>
+        <version>1.12</version>
         <configuration>
             <port>9090</port>
             <logLevel>TRACE</logLevel>
@@ -311,7 +311,7 @@ This ensures that any tests you run during you build in either the normal **test
      <plugin>
          <groupId>org.mock-server</groupId>
          <artifactId>mockserver-maven-plugin</artifactId>
-         <version>2.0-SNAPSHOT</version>
+         <version>1.12</version>
          <configuration>
              <port>9090</port>
              <logLevel>TRACE</logLevel>
@@ -340,7 +340,7 @@ These goals can be used from the command line as well to start and stop MockServ
 
 To run the MockServer synchronously and block:
 
-     mvn mockserver:start
+     mvn mockserver:run
      
 To run the MockServer asynchronously as a forked JVM:
 
@@ -351,6 +351,14 @@ To stop a forked instance of the MockServer running on the same machine:
      mvn mockserver:stopForked
 
 The **stopForked** goal does assumes that the MockServer is running on the same physical machine as it uses 127.0.0.1 to communicate with the MockServer stop socket.
+
+The Maven plugin has the following goals:
+
+* **start** - start MockServer, do not block, but stop when build ends
+* **stop** - stop a MockServer started earlier as part of the current build
+* **run** - run MockServer and block waiting for requests (timeout config if provided limits how long to block for)
+* **runForked** - run MockServer as separate forked JVM, do not block, stay alive when build ends
+* **stopForked** - stop a forked MockServer, previously started by a runForked goal
 
 The Maven plugin can be configured as follows:
 
@@ -365,7 +373,8 @@ The Maven plugin can be configured as follows:
 
 To run as Embedded Jetty run the following command:
 
-    java -jar <path to mockserver-jetty-2.0-SNAPSHOT-jar-with-dependencies.jar> <port>
+    download [mockserver-jetty-1.12-jar-with-dependencies.jar](http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-jetty/1.12/mockserver-jetty-1.12-jar-with-dependencies.jar) from Maven Central
+    java -jar <path to mockserver-jetty-1.12-jar-with-dependencies.jar> <port>
     
 **Vert.X**
 
@@ -373,14 +382,16 @@ First, you'll need to [install Vert.x](http://vertx.io/install.html).
 
 To run as Vert.X module run the following command:
 
-    vertx install org.mock-server~mockserver-vertx~2.0-SNAPSHOT
-    vertx runmod org.mock-server~mockserver-vertx~2.0-SNAPSHOT
+    vertx install org.mock-server~mockserver-vertx~1.12
+    export VERTX_OPTS="-Dmockserver.port=9090 -Dmockserver.logLevel=TRACE"
+    vertx runmod org.mock-server~mockserver-vertx~1.12
     
 Alternatively build from source and run the Vert.X module as a zip file:
 
     git clone https://github.com/jamesdbloom/mockservice.git
     cd mockserver
     mvn clean package
+    export VERTX_OPTS="-Dmockserver.port=9090 -Dmockserver.logLevel=TRACE"
     vertx runzip mockserver-vertx/target/org.mock-server~mockserver-vertx~2.0-SNAPSHOT.zip
     
 The default port for the Vert.X MockServer module is **8080**.  To run the MockServer on another port set / add an **VERTX_OPTS** environment variable specifying the system property **mockserver.port** as follows **-Dmockserver.port=\<port\>** for example:
@@ -393,7 +404,8 @@ It is also possible to update the default logging level by setting the system pr
 
 To run as a WAR deployed on any JEE web server:
 
-    deploy mockserver-war-2.0-SNAPSHOT.jar to web server
+    download [mockserver-war-1.12.war](http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-war/1.12/mockserver-war-1.12.war) from Maven Central
+    deploy mockserver-war-1.12.war to web server
     
 **Build From Source**
 
@@ -418,11 +430,11 @@ This will produce a jar file under the target directory called, as follows:
 
 Run the MockServer then using the executable jar as follows:
 
-    java -jar <path to mockserver-jetty-2.0-SNAPSHOT-jar-with-dependencies.jar> <port>
+    java -jar <path to mockserver-jetty-2.0-SNAPSHOT-jar-with-dependencies.jar> -serverPort <port>
     
 For example to run the MockServer on port 9999:
 
-    java -jar mockserver-jetty/target/mockserver-jetty-2.0-SNAPSHOT-jar-with-dependencies.jar 9999
+    java -jar mockserver-jetty/target/mockserver-jetty-2.0-SNAPSHOT-jar-with-dependencies.jar -serverPort 9999
     
 ***Gradle***
 

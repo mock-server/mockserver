@@ -13,6 +13,8 @@ import org.slf4j.LoggerFactory;
 
 import java.net.HttpCookie;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -21,12 +23,12 @@ import java.util.List;
 public class HttpClientResponseMapper {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public HttpResponse buildHttpResponse(ContentResponse clientResponse) {
+    public HttpResponse buildHttpResponse(Response clientResponse, byte[] content) {
         HttpResponse httpResponse = new HttpResponse();
         setStatusCode(httpResponse, clientResponse);
         setHeaders(httpResponse, clientResponse);
         setCookies(httpResponse);
-        setBody(httpResponse, clientResponse);
+        setBody(httpResponse, content);
         return httpResponse;
     }
 
@@ -34,8 +36,8 @@ public class HttpClientResponseMapper {
         httpResponse.withStatusCode(clientResponse.getStatus());
     }
 
-    private void setBody(HttpResponse httpResponse, ContentResponse contentResponse) {
-        httpResponse.withBody(contentResponse.getContent());
+    private void setBody(HttpResponse httpResponse, byte[] content) {
+        httpResponse.withBody(content);
     }
 
     private void setHeaders(HttpResponse httpResponse, Response clientResponse) {
@@ -46,6 +48,12 @@ public class HttpClientResponseMapper {
         List<Header> headers = new ArrayList<>();
         for (String header : headerMap.keys()) {
             headers.add(new Header(header, headerMap.get(header)));
+        }
+        List<String> headersToRemove = Arrays.asList("Content-Encoding", "Content-Length", "Transfer-Encoding");
+        for (Header header : new ArrayList<>(headers)) {
+            if(headersToRemove.contains(header.getName())) {
+                headers.remove(header);
+            }
         }
         httpResponse.withHeaders(headers);
     }

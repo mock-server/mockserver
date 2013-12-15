@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
  */
 public abstract class AbstractClientServerIntegrationTest {
 
-    private final HttpClientResponseMapper httpClientResponseMapper = new HttpClientResponseMapper();
     private final HttpRequestClient httpRequestClient;
     protected MockServerClient mockServerClient;
 
@@ -44,7 +43,6 @@ public abstract class AbstractClientServerIntegrationTest {
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withHeaders(new Header("Content-Length", "9"))
                         .withBody("some_body"),
                 makeRequest(new HttpRequest()));
     }
@@ -75,13 +73,11 @@ public abstract class AbstractClientServerIntegrationTest {
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withHeaders(new Header("Content-Length", "10"))
                         .withBody("some_body2"),
                 makeRequest(new HttpRequest().withPath("/some_path2")));
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withHeaders(new Header("Content-Length", "10"))
                         .withBody("some_body1"),
                 makeRequest(new HttpRequest().withPath("/some_path1")));
     }
@@ -95,21 +91,16 @@ public abstract class AbstractClientServerIntegrationTest {
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withBody("some_body")
-                        .withHeaders(new Header("Content-Length", "9")),
-                makeRequest(new HttpRequest().withPath("/some_path")));
-        assertEquals(
-                new HttpResponse()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withHeaders(new Header("Content-Length", "9"))
                         .withBody("some_body"),
                 makeRequest(new HttpRequest().withPath("/some_path")));
         assertEquals(
                 new HttpResponse()
-                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
-                        .withHeaders(
-                                new Header("Content-Length", "0")
-                        ),
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(new HttpRequest().withPath("/some_path")));
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(new HttpRequest().withPath("/some_path")));
     }
 
@@ -137,13 +128,11 @@ public abstract class AbstractClientServerIntegrationTest {
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withHeaders(new Header("Content-Length", "10"))
                         .withBody("some_body2"),
                 makeRequest(new HttpRequest().withPath("/some_path2")));
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withHeaders(new Header("Content-Length", "10"))
                         .withBody("some_body1"),
                 makeRequest(new HttpRequest().withPath("/some_path1")));
     }
@@ -167,10 +156,7 @@ public abstract class AbstractClientServerIntegrationTest {
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                        .withBody("some_bodyResponse")
-                        .withHeaders(
-                                new Header("Content-Length", "17")
-                        ),
+                        .withBody("some_bodyResponse"),
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
@@ -206,8 +192,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
                         .withBody("some_bodyResponse")
                         .withHeaders(
-                                new Header("headerNameResponse", "headerValueResponse"),
-                                new Header("Content-Length", "17")
+                                new Header("headerNameResponse", "headerValueResponse")
                         ),
                 makeRequest(
                         new HttpRequest()
@@ -245,8 +230,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_bodyResponse")
                         .withCookies(new Cookie("cookieNameResponse", "cookieValueResponse"))
                         .withHeaders(
-                                new Header("Set-Cookie", "cookieNameResponse=cookieValueResponse"),
-                                new Header("Content-Length", "17")
+                                new Header("Set-Cookie", "cookieNameResponse=cookieValueResponse")
                         ),
                 makeRequest(
                         new HttpRequest()
@@ -287,8 +271,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withCookies(new Cookie("cookieNameResponse", "cookieValueResponse"))
                         .withHeaders(
                                 new Header("headerNameResponse", "headerValueResponse"),
-                                new Header("Set-Cookie", "cookieNameResponse=cookieValueResponse"),
-                                new Header("Content-Length", "17")
+                                new Header("Set-Cookie", "cookieNameResponse=cookieValueResponse")
                         ),
                 makeRequest(
                         new HttpRequest()
@@ -330,8 +313,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withCookies(new Cookie("cookieNameResponse", "cookieValueResponse"))
                         .withHeaders(
                                 new Header("headerNameResponse", "headerValueResponse"),
-                                new Header("Set-Cookie", "cookieNameResponse=cookieValueResponse"),
-                                new Header("Content-Length", "17")
+                                new Header("Set-Cookie", "cookieNameResponse=cookieValueResponse")
                         ),
                 makeRequest(
                         new HttpRequest()
@@ -374,8 +356,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withCookies(new Cookie("cookieNameResponse", "cookieValueResponse"))
                         .withHeaders(
                                 new Header("headerNameResponse", "headerValueResponse"),
-                                new Header("Set-Cookie", "cookieNameResponse=cookieValueResponse"),
-                                new Header("Content-Length", "17")
+                                new Header("Set-Cookie", "cookieNameResponse=cookieValueResponse")
                         ),
                 makeRequest(
                         new HttpRequest()
@@ -410,8 +391,7 @@ public abstract class AbstractClientServerIntegrationTest {
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                        .withBody("some_body")
-                        .withHeaders(new Header("Content-Length", "9")),
+                        .withBody("some_body"),
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("POST")
@@ -442,8 +422,7 @@ public abstract class AbstractClientServerIntegrationTest {
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                        .withBody("some_body")
-                        .withHeaders(new Header("Content-Length", "9")),
+                        .withBody("some_body"),
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("POST")
@@ -478,10 +457,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // then
         assertEquals(
                 new HttpResponse()
-                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
-                        .withHeaders(
-                                new Header("Content-Length", "0")
-                        ),
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         new HttpRequest()
                                 .withPath("/some_path")
@@ -517,10 +493,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // then
         assertEquals(
                 new HttpResponse()
-                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
-                        .withHeaders(
-                                new Header("Content-Length", "0")
-                        ),
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         new HttpRequest()
                                 .withPath("/someotherpath")
@@ -556,10 +529,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // then
         assertEquals(
                 new HttpResponse()
-                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
-                        .withHeaders(
-                                new Header("Content-Length", "0")
-                        ),
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         new HttpRequest()
                                 .withPath("/some_path")
@@ -595,10 +565,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // then
         assertEquals(
                 new HttpResponse()
-                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
-                        .withHeaders(
-                                new Header("Content-Length", "0")
-                        ),
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         new HttpRequest()
                                 .withPath("/some_path")
@@ -634,10 +601,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // then
         assertEquals(
                 new HttpResponse()
-                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
-                        .withHeaders(
-                                new Header("Content-Length", "0")
-                        ),
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         new HttpRequest()
                                 .withPath("/some_path")
@@ -673,10 +637,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // then
         assertEquals(
                 new HttpResponse()
-                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
-                        .withHeaders(
-                                new Header("Content-Length", "0")
-                        ),
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
@@ -713,10 +674,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // then
         assertEquals(
                 new HttpResponse()
-                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
-                        .withHeaders(
-                                new Header("Content-Length", "0")
-                        ),
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         new HttpRequest()
                                 .withPath("/some_path")
@@ -752,10 +710,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // then
         assertEquals(
                 new HttpResponse()
-                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
-                        .withHeaders(
-                                new Header("Content-Length", "0")
-                        ),
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         new HttpRequest()
                                 .withPath("/some_path")
@@ -800,15 +755,11 @@ public abstract class AbstractClientServerIntegrationTest {
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withHeaders(new Header("Content-Length", "10"))
                         .withBody("some_body2"),
                 makeRequest(new HttpRequest().withPath("/some_path2")));
         assertEquals(
                 new HttpResponse()
-                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
-                        .withHeaders(
-                                new Header("Content-Length", "0")
-                        ),
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(new HttpRequest().withPath("/some_path1")));
     }
 
@@ -840,23 +791,17 @@ public abstract class AbstractClientServerIntegrationTest {
         // then
         assertEquals(
                 new HttpResponse()
-                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
-                        .withHeaders(
-                                new Header("Content-Length", "0")
-                        ),
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(new HttpRequest().withPath("/some_path1")));
         assertEquals(
                 new HttpResponse()
-                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
-                        .withHeaders(
-                                new Header("Content-Length", "0")
-                        ),
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(new HttpRequest().withPath("/some_path2")));
     }
 
     protected HttpResponse makeRequest(HttpRequest httpRequest) {
         try {
-            HttpResponse httpResponse = httpClientResponseMapper.buildHttpResponse(httpRequestClient.sendRequest(httpRequest));
+            HttpResponse httpResponse = httpRequestClient.sendRequest(httpRequest, 20);
             for(Header header : new ArrayList<>(httpResponse.getHeaders())) {
                 if(header.getName().equals("Server") || header.getName().equals("Expires")) {
                 httpResponse.getHeaders().remove(header);

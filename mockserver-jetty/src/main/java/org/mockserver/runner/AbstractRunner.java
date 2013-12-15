@@ -53,6 +53,7 @@ public abstract class AbstractRunner {
             @Override
             public void run() {
                 server = new Server(port);
+                addCertificates(server);
                 ShutdownThread.register(server);
                 ServletHandler handler = new ServletHandler();
                 server.setHandler(handler);
@@ -78,6 +79,10 @@ public abstract class AbstractRunner {
     }
 
     protected abstract String getServletName();
+
+    protected void addCertificates(Server server) {
+
+    }
 
     private void runStopThread(final int defaultStopPort, final String defaultStopKey) {
         ShutdownMonitor shutdownMonitor = ShutdownMonitor.getInstance();

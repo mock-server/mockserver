@@ -1,6 +1,7 @@
 package org.mockserver.client.serialization;
 
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.mockserver.client.serialization.model.HttpRequestDTO;
 import org.mockserver.model.HttpRequest;
 import org.slf4j.Logger;
@@ -17,7 +18,12 @@ public class HttpRequestSerializer {
 
     public String serialize(HttpRequest httpRequest) {
         try {
-            return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(new HttpRequestDTO(httpRequest));
+            return objectMapper
+                    .setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT)
+                    .setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL)
+                    .setSerializationInclusion(JsonSerialize.Inclusion.NON_EMPTY)
+                    .writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(new HttpRequestDTO(httpRequest));
         } catch (IOException ioe) {
             logger.error(String.format("Exception while serializing httpRequest to JSON with value %s", httpRequest), ioe);
             throw new RuntimeException(String.format("Exception while serializing httpRequest to JSON with value %s", httpRequest), ioe);

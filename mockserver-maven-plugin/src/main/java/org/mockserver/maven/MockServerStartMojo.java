@@ -24,12 +24,6 @@ public class MockServerStartMojo extends AbstractMojo {
     private int port;
 
     /**
-     * Timeout to wait before stopping MockServer, to run MockServer indefinitely do not set a value
-     */
-    @Parameter(property = "mockserver.timeout")
-    private int timeout;
-
-    /**
      * Logging level
      */
     @Parameter(property = "mockserver.logLevel", defaultValue = "WARN")

@@ -57,13 +57,8 @@ public class ProxyClientTest {
 
         // then
         verify(mockHttpClient).sendRequest("{\n" +
-                "  \"method\" : \"\",\n" +
-                "  \"url\" : \"\",\n" +
                 "  \"path\" : \"/some_path\",\n" +
-                "  \"queryString\" : \"\",\n" +
-                "  \"body\" : \"some_request_body\",\n" +
-                "  \"cookies\" : [ ],\n" +
-                "  \"headers\" : [ ]\n" +
+                "  \"body\" : \"some_request_body\"\n" +
                 "}", "/clear");
     }
 }

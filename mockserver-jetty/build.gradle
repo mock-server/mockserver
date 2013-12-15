@@ -18,10 +18,11 @@ dependencies {
     testCompile "org.springframework:spring-test:$springTestVersion"
 }
 
-task(run, dependsOn: 'classes', type: JavaExec) {
-    main = 'org.mockserver.server.MockServerRunner'
+task run(type: JavaExec, dependsOn: [classes]) {
+    main = 'org.mockserver.cli.Main'
     classpath = sourceSets.main.runtimeClasspath
     if (project.hasProperty("port")) {
+        args '-serverPort'
         args port
     }
 }
