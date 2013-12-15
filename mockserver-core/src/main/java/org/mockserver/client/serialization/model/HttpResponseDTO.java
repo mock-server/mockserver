@@ -18,11 +18,11 @@ public class HttpResponseDTO extends ModelObject {
     private String body;
     private List<CookieDTO> cookies = new ArrayList<CookieDTO>();
     private List<HeaderDTO> headers = new ArrayList<HeaderDTO>();
-    private DelayDTO delay = new DelayDTO();
+    private DelayDTO delay;
 
     public HttpResponseDTO(HttpResponse httpResponse) {
         statusCode = httpResponse.getStatusCode();
-        body = httpResponse.getBody();
+        body = httpResponse.getBodyAsString();
         headers = Lists.transform(httpResponse.getHeaders(), new Function<Header, HeaderDTO>() {
             public HeaderDTO apply(Header header) {
                 return new HeaderDTO(header);
@@ -33,7 +33,7 @@ public class HttpResponseDTO extends ModelObject {
                 return new CookieDTO(cookie);
             }
         });
-        delay = new DelayDTO(httpResponse.getDelay());
+        delay = (httpResponse.getDelay() != null ? new DelayDTO(httpResponse.getDelay()) : null);
     }
 
     public HttpResponseDTO() {
@@ -53,7 +53,7 @@ public class HttpResponseDTO extends ModelObject {
                         return cookie.buildObject();
                     }
                 }))
-                .withDelay(delay.buildObject());
+                .withDelay((delay != null ? delay.buildObject() : null));
     }
 
     public Integer getStatusCode() {

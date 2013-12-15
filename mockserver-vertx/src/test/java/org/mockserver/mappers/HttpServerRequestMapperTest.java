@@ -5,7 +5,6 @@ import org.junit.Test;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
-import org.mockserver.model.Parameter;
 import org.vertx.java.core.http.CaseInsensitiveMultiMap;
 import org.vertxtest.http.MockHttpServerRequest;
 
@@ -23,8 +22,10 @@ public class HttpServerRequestMapperTest {
         // given
         MockHttpServerRequest httpServerRequest =
                 new MockHttpServerRequest()
+                        .withUri("uri")
                         .withMethod("method")
                         .withPath("somepath")
+                        .withQuery("name=value")
                         .withParams(
                                 new CaseInsensitiveMultiMap()
                                         .add("parameterName1", Arrays.asList("parameterValue1_2", "parameterValue1_1"))
@@ -42,13 +43,10 @@ public class HttpServerRequestMapperTest {
 
         // then
         assertEquals("method", httpRequest.getMethod());
+        assertEquals("uri", httpRequest.getURL());
         assertEquals("somepath", httpRequest.getPath());
         assertEquals("somebody", httpRequest.getBody());
-        assertEquals(
-                Lists.newArrayList(
-                        new Parameter("parameterName1", "parameterValue1_2", "parameterValue1_1"),
-                        new Parameter("parameterName2", "parameterValue2")
-                ), httpRequest.getParameters()
+        assertEquals("name=value", httpRequest.getQueryString()
         );
         assertEquals(
                 Lists.newArrayList(

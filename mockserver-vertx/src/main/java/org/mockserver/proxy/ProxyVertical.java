@@ -15,9 +15,7 @@ import org.vertx.java.core.http.HttpClientResponse;
 import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.platform.Verticle;
 
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 /**
  * @author jamesdbloom
@@ -39,7 +37,7 @@ public class ProxyVertical extends Verticle {
             request.endHandler(new VoidHandler() {
                 public void handle() {
                     HttpRequest httpRequest = httpServerRequestMapper.createHttpRequest(request, body.getBytes());
-                    System.out.println("STARTING request = " + httpRequest);
+                    System.out.println("STARTING http = " + httpRequest);
                     final HttpClient httpClient = vertx.createHttpClient();
                     final SettableFuture<String> future = SettableFuture.create();
                     new Thread(new Runnable() {
@@ -74,10 +72,10 @@ public class ProxyVertical extends Verticle {
                     try {
                         future.get(30, TimeUnit.SECONDS);
                     } catch (Exception e) {
-                        logger.error("Exception while waiting for request from proxy to final destination to return", e);
+                        logger.error("Exception while waiting for http from proxy to final destination to return", e);
                     }
-                    System.out.println("ENDING request = " + httpRequest);
-                    // request.response().end();
+                    System.out.println("ENDING http = " + httpRequest);
+                    // http.response().end();
                 }
             });
         }

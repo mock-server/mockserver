@@ -52,6 +52,8 @@
     </modules>
 
     <properties>
+        <maven.compiler.source>1.7</maven.compiler.source>
+        <maven.compiler.target>1.7</maven.compiler.target>
         <project.build.sourceEncoding>UTF8</project.build.sourceEncoding>
         <jetty.version>9.0.0.v20130308</jetty.version>
         <vertx.version>2.1M2</vertx.version>

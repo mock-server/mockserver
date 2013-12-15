@@ -3,7 +3,7 @@ package org.mockserver;
 import com.google.common.util.concurrent.SettableFuture;
 import org.junit.After;
 import org.junit.Before;
-import org.mockserver.integration.AbstractClientServerIntegrationTest;
+import org.mockserver.integration.server.AbstractClientServerIntegrationTest;
 import org.mockserver.model.HttpRequest;
 import org.vertx.java.platform.impl.cli.Starter;
 

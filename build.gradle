@@ -28,7 +28,7 @@ project(':mockserver-client') {
 
 project(':mockserver-war') {
     dependencies {
-        compile project(':mockserver-core')
+        compile project(':mockserver-core'), project(':mockserver-client')
     }
 }
 

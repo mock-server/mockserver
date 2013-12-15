@@ -5,7 +5,6 @@ import org.apache.commons.lang3.CharEncoding;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
-import org.mockserver.model.Parameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,11 +23,12 @@ public class HttpServletRequestMapper {
     public HttpRequest createHttpRequest(HttpServletRequest httpServletRequest) {
         HttpRequest httpRequest = new HttpRequest();
         setMethod(httpRequest, httpServletRequest);
+        setUrl(httpRequest, httpServletRequest);
         setPath(httpRequest, httpServletRequest);
+        setQueryString(httpRequest, httpServletRequest);
         setBody(httpRequest, httpServletRequest);
         setHeaders(httpRequest, httpServletRequest);
         setCookies(httpRequest, httpServletRequest);
-        setParameters(httpRequest, httpServletRequest);
         return httpRequest;
     }
 
@@ -36,8 +36,22 @@ public class HttpServletRequestMapper {
         httpRequest.withMethod(httpServletRequest.getMethod());
     }
 
+    private void setUrl(HttpRequest httpRequest, HttpServletRequest httpServletRequest) {
+        StringBuilder url = new StringBuilder(httpServletRequest.getRequestURL());
+        String queryString = httpServletRequest.getQueryString();
+        if (queryString != null) {
+            url.append('?');
+            url.append(queryString);
+        }
+        httpRequest.withURL(url.toString());
+    }
+
     private void setPath(HttpRequest httpRequest, HttpServletRequest httpServletRequest) {
         httpRequest.withPath(httpServletRequest.getRequestURI());
+    }
+
+    private void setQueryString(HttpRequest httpRequest, HttpServletRequest httpServletRequest) {
+        httpRequest.withQueryString(httpServletRequest.getQueryString());
     }
 
     private void setBody(HttpRequest httpRequest, HttpServletRequest httpServletRequest) {
@@ -73,14 +87,5 @@ public class HttpServletRequestMapper {
             }
         }
         httpRequest.withCookies(mappedCookies);
-    }
-
-    private void setParameters(HttpRequest httpRequest, HttpServletRequest httpServletRequest) {
-        Map<String, String[]> parameters = httpServletRequest.getParameterMap();
-        List<Parameter> mappedParameters = new ArrayList<Parameter>();
-        for (String parameterName : parameters.keySet()) {
-            mappedParameters.add(new Parameter(parameterName, Arrays.asList(parameters.get(parameterName))));
-        }
-        httpRequest.withParameters(mappedParameters);
     }
 }

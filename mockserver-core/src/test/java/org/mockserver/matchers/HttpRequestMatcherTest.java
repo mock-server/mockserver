@@ -4,7 +4,6 @@ import org.junit.Test;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
-import org.mockserver.model.Parameter;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -82,21 +81,6 @@ public class HttpRequestMatcherTest {
     @Test
     public void doesNotMatchIncorrectCookieValue() {
         assertFalse(new HttpRequestMatcher().withCookies(new Cookie("name", "value")).matches(new HttpRequest().withCookies(new Cookie("name", "value1"))));
-    }
-
-    @Test
-    public void matchesMatchingParameters() {
-        assertTrue(new HttpRequestMatcher().withParameters(new Parameter("name", "value")).matches(new HttpRequest().withParameters(new Parameter("name", "value"))));
-    }
-
-    @Test
-    public void doesNotMatchIncorrectParameterName() {
-        assertFalse(new HttpRequestMatcher().withParameters(new Parameter("name", "value")).matches(new HttpRequest().withParameters(new Parameter("name1", "value"))));
-    }
-
-    @Test
-    public void doesNotMatchIncorrectParameterValue() {
-        assertFalse(new HttpRequestMatcher().withParameters(new Parameter("name", "value")).matches(new HttpRequest().withParameters(new Parameter("name", "value1"))));
     }
 
 }

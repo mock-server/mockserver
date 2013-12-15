@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 
@@ -32,19 +33,6 @@ public class HttpServletResponseMapper {
         }
     }
 
-    private void setBody(HttpResponse httpResponse, HttpServletResponse httpServletResponse) {
-        if (httpResponse.getBody() != null) {
-            try {
-                OutputStreamWriter outputStreamWriter = new OutputStreamWriter(httpServletResponse.getOutputStream());
-                IOUtils.write(httpResponse.getBody().getBytes(Charset.forName(CharEncoding.UTF_8)), outputStreamWriter, Charset.forName(CharEncoding.UTF_8));
-                outputStreamWriter.flush();
-            } catch (IOException ioe) {
-                logger.error(String.format("IOException while writing %s to HttpServletResponse output stream", httpResponse.getBody()), ioe);
-                throw new RuntimeException(String.format("IOException while writing %s to HttpServletResponse output stream", httpResponse.getBody()), ioe);
-            }
-        }
-    }
-
     private void setHeaders(HttpResponse httpResponse, HttpServletResponse httpServletResponse) {
         if (httpResponse.getHeaders() != null) {
             for (Header header : httpResponse.getHeaders()) {
@@ -61,6 +49,19 @@ public class HttpServletResponseMapper {
                 for (String value : cookie.getValues()) {
                     httpServletResponse.addCookie(new javax.servlet.http.Cookie(cookie.getName(), value));
                 }
+            }
+        }
+    }
+
+    private void setBody(HttpResponse httpResponse, HttpServletResponse httpServletResponse) {
+        if (httpResponse.getBody() != null) {
+            try {
+                OutputStream output = httpServletResponse.getOutputStream();
+                output.write(httpResponse.getBody());
+                output.close();
+            } catch (IOException ioe) {
+                logger.error(String.format("IOException while writing %s to HttpServletResponse output stream", httpResponse.getBodyAsString()), ioe);
+                throw new RuntimeException(String.format("IOException while writing %s to HttpServletResponse output stream", httpResponse.getBodyAsString()), ioe);
             }
         }
     }

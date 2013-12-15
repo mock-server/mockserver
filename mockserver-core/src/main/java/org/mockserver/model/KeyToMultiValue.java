@@ -5,6 +5,7 @@ import com.google.common.collect.Multimap;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -18,12 +19,12 @@ public class KeyToMultiValue extends ModelObject {
         this(name, Arrays.asList(values));
     }
 
-    public KeyToMultiValue(String name, List<String> values) {
+    public KeyToMultiValue(String name, Collection<String> values) {
         this.name = name;
         if (values != null) {
-            this.values = values;
+            this.values = new ArrayList<>(values);
         } else {
-            this.values = new ArrayList<String>();
+            this.values = new ArrayList<>();
         }
     }
 

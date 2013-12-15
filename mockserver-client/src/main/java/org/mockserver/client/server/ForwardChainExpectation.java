@@ -1,4 +1,4 @@
-package org.mockserver.client;
+package org.mockserver.client.server;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.mockserver.mock.Expectation;

@@ -12,15 +12,18 @@ import java.util.List;
  */
 public class HttpRequestDTO extends ModelObject {
     private String method;
+    private String url;
     private String path;
+    private String queryString;
     private String body;
     private List<CookieDTO> cookies = new ArrayList<CookieDTO>();
     private List<HeaderDTO> headers = new ArrayList<HeaderDTO>();
-    private List<ParameterDTO> parameters = new ArrayList<ParameterDTO>();
 
     public HttpRequestDTO(HttpRequest httpRequest) {
         method = httpRequest.getMethod();
+        url = httpRequest.getURL();
         path = httpRequest.getPath();
+        queryString = httpRequest.getQueryString();
         body = httpRequest.getBody();
         headers = Lists.transform(httpRequest.getHeaders(), new Function<Header, HeaderDTO>() {
             public HeaderDTO apply(Header header) {
@@ -32,11 +35,6 @@ public class HttpRequestDTO extends ModelObject {
                 return new CookieDTO(cookie);
             }
         });
-        parameters = Lists.transform(httpRequest.getParameters(), new Function<Parameter, ParameterDTO>() {
-            public ParameterDTO apply(Parameter parameter) {
-                return new ParameterDTO(parameter);
-            }
-        });
     }
 
     public HttpRequestDTO() {
@@ -45,7 +43,9 @@ public class HttpRequestDTO extends ModelObject {
     public HttpRequest buildObject() {
         return new HttpRequest()
                 .withMethod(method)
+                .withURL(url)
                 .withPath(path)
+                .withQueryString(queryString)
                 .withBody(body)
                 .withHeaders(Lists.transform(headers, new Function<HeaderDTO, Header>() {
                     public Header apply(HeaderDTO header) {
@@ -55,11 +55,6 @@ public class HttpRequestDTO extends ModelObject {
                 .withCookies(Lists.transform(cookies, new Function<CookieDTO, Cookie>() {
                     public Cookie apply(CookieDTO cookie) {
                         return cookie.buildObject();
-                    }
-                }))
-                .withParameters(Lists.transform(parameters, new Function<ParameterDTO, Parameter>() {
-                    public Parameter apply(ParameterDTO parameter) {
-                        return parameter.buildObject();
                     }
                 }));
     }
@@ -73,12 +68,30 @@ public class HttpRequestDTO extends ModelObject {
         return this;
     }
 
+    public String getURL() {
+        return url;
+    }
+
+    public HttpRequestDTO setURL(String url) {
+        this.url = url;
+        return this;
+    }
+
     public String getPath() {
         return path;
     }
 
     public HttpRequestDTO setPath(String path) {
         this.path = path;
+        return this;
+    }
+
+    public String getQueryString() {
+        return queryString;
+    }
+
+    public HttpRequestDTO setQueryString(String queryString) {
+        this.queryString = queryString;
         return this;
     }
 
@@ -97,15 +110,6 @@ public class HttpRequestDTO extends ModelObject {
 
     public HttpRequestDTO setHeaders(List<HeaderDTO> headers) {
         this.headers = headers;
-        return this;
-    }
-
-    public List<ParameterDTO> getParameters() {
-        return parameters;
-    }
-
-    public HttpRequestDTO setParameters(List<ParameterDTO> parameters) {
-        this.parameters = parameters;
         return this;
     }
 

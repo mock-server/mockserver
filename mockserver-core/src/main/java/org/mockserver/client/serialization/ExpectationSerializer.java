@@ -1,6 +1,7 @@
 package org.mockserver.client.serialization;
 
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.mockserver.client.serialization.model.ExpectationDTO;
 import org.mockserver.mock.Expectation;
 import org.slf4j.Logger;
@@ -17,7 +18,12 @@ public class ExpectationSerializer {
 
     public String serialize(Expectation expectation) {
         try {
-            return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(new ExpectationDTO(expectation));
+            return objectMapper
+                    .setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT)
+                    .setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL)
+                    .setSerializationInclusion(JsonSerialize.Inclusion.NON_EMPTY)
+                    .writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(new ExpectationDTO(expectation));
         } catch (IOException ioe) {
             logger.error(String.format("Exception while serializing expectation to JSON with value %s", expectation), ioe);
             throw new RuntimeException(String.format("Exception while serializing expectation to JSON with value %s", expectation), ioe);
@@ -25,7 +31,7 @@ public class ExpectationSerializer {
     }
 
     public Expectation deserialize(byte[] jsonExpectation) {
-        if (jsonExpectation.length == 0) throw new IllegalArgumentException("Expected an JSON expectation object but request body is empty");
+        if (jsonExpectation.length == 0) throw new IllegalArgumentException("Expected an JSON expectation object but http body is empty");
         Expectation expectation = null;
         try {
             ExpectationDTO expectationDTO = objectMapper.readValue(jsonExpectation, ExpectationDTO.class);

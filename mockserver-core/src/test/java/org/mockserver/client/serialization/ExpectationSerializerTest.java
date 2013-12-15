@@ -2,6 +2,7 @@ package org.mockserver.client.serialization;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.ObjectWriter;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -30,11 +31,12 @@ public class ExpectationSerializerTest {
     private final Expectation fullExpectation = new Expectation(
             new HttpRequest()
                     .withMethod("GET")
+                    .withURL("url")
                     .withPath("somepath")
+                    .withQueryString("queryString")
                     .withBody("somebody")
                     .withHeaders(new Header("headerName", "headerValue"))
-                    .withCookies(new Cookie("cookieName", "cookieValue"))
-                    .withParameters(new Parameter("parameterName", "parameterValue")),
+                    .withCookies(new Cookie("cookieName", "cookieValue")),
             Times.once()
     ).respond(new HttpResponse()
             .withStatusCode(304)
@@ -46,11 +48,12 @@ public class ExpectationSerializerTest {
             .setHttpRequest(
                     new HttpRequestDTO()
                             .setMethod("GET")
+                            .setURL("url")
                             .setPath("somepath")
+                            .setQueryString("queryString")
                             .setBody("somebody")
                             .setHeaders(Arrays.<HeaderDTO>asList((HeaderDTO) new HeaderDTO(new Header("headerName", Arrays.asList("headerValue")))))
                             .setCookies(Arrays.<CookieDTO>asList((CookieDTO) new CookieDTO(new Cookie("cookieName", Arrays.asList("cookieValue")))))
-                            .setParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("parameterName", Arrays.asList("parameterValue")))))
             )
             .setHttpResponse(
                     new HttpResponseDTO()
@@ -103,12 +106,19 @@ public class ExpectationSerializerTest {
     @Test
     public void serialize() throws IOException {
         // given
+        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT)).thenReturn(objectMapper);
+        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL)).thenReturn(objectMapper);
+        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_EMPTY)).thenReturn(objectMapper);
         when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
+
 
         // when
         expectationSerializer.serialize(fullExpectation);
 
         // then
+        verify(objectMapper).setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT);
+        verify(objectMapper).setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL);
+        verify(objectMapper).setSerializationInclusion(JsonSerialize.Inclusion.NON_EMPTY);
         verify(objectMapper).writerWithDefaultPrettyPrinter();
         verify(objectWriter).writeValueAsString(fullExpectationDTO);
     }

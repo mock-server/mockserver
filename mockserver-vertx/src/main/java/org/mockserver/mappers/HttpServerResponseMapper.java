@@ -1,11 +1,11 @@
 package org.mockserver.mappers;
 
-import org.apache.commons.lang3.CharEncoding;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.http.HttpServerResponse;
 
 /**
@@ -29,8 +29,10 @@ public class HttpServerResponseMapper {
 
     private void setBody(HttpResponse httpResponse, HttpServerResponse httpServerResponse) {
         if (httpResponse.getBody() != null) {
-            httpServerResponse.setChunked(true);
-            httpServerResponse.write(httpResponse.getBody(), CharEncoding.UTF_8);
+            httpServerResponse.setChunked(false);
+            Buffer body = new Buffer(httpResponse.getBody());
+            httpServerResponse.putHeader("Content-Length", "" + body.length());
+            httpServerResponse.write(body);
         }
     }
 

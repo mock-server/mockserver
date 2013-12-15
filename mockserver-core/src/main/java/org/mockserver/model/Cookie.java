@@ -1,5 +1,6 @@
 package org.mockserver.model;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -11,7 +12,7 @@ public class Cookie extends KeyToMultiValue {
         super(name, value);
     }
 
-    public Cookie(String name, List<String> value) {
+    public Cookie(String name, Collection<String> value) {
         super(name, value);
     }
 }

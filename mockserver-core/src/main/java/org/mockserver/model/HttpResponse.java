@@ -1,19 +1,21 @@
 package org.mockserver.model;
 
+import org.apache.commons.lang3.CharEncoding;
+
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author jamesdbloom
  */
 public class HttpResponse extends ModelObject {
     private Integer statusCode = 200;
-    private String body = "";
+    private byte[] body = new byte[0];
     private List<Cookie> cookies = new ArrayList<Cookie>();
     private List<Header> headers = new ArrayList<Header>();
-    private Delay delay = new Delay(TimeUnit.MICROSECONDS, 0);
+    private Delay delay;
 
     public HttpResponse() {
     }
@@ -28,12 +30,29 @@ public class HttpResponse extends ModelObject {
     }
 
     public HttpResponse withBody(String body) {
+        if (body != null) {
+            this.body = body.getBytes();
+        } else {
+            this.body = new byte[0];
+        }
+        return this;
+    }
+
+    public HttpResponse withBody(byte[] body) {
         this.body = body;
         return this;
     }
 
-    public String getBody() {
+    public byte[] getBody() {
         return body;
+    }
+
+    public String getBodyAsString() {
+        try {
+            return new String(body, CharEncoding.UTF_8);
+        } catch (UnsupportedEncodingException uee) {
+            throw new RuntimeException("UnsupportedEncodingException while converting response body to String from byte[]", uee);
+        }
     }
 
     public HttpResponse withCookies(List<Cookie> cookies) {

@@ -53,49 +53,27 @@ public class MockServerDumpTest {
         // then
         verify(logger).warn("{\n" +
                 "  \"httpRequest\" : {\n" +
-                "    \"method\" : \"\",\n" +
-                "    \"path\" : \"some_path\",\n" +
-                "    \"body\" : \"\",\n" +
-                "    \"cookies\" : [ ],\n" +
-                "    \"headers\" : [ ],\n" +
-                "    \"parameters\" : [ ]\n" +
+                "    \"path\" : \"some_path\"\n" +
                 "  },\n" +
                 "  \"httpResponse\" : {\n" +
                 "    \"statusCode\" : 200,\n" +
-                "    \"body\" : \"some_response_body\",\n" +
-                "    \"cookies\" : [ ],\n" +
-                "    \"headers\" : [ ],\n" +
-                "    \"delay\" : {\n" +
-                "      \"timeUnit\" : \"MICROSECONDS\",\n" +
-                "      \"value\" : 0\n" +
-                "    }\n" +
+                "    \"body\" : \"some_response_body\"\n" +
                 "  },\n" +
                 "  \"times\" : {\n" +
-                "    \"remainingTimes\" : 1,\n" +
+                "    \"remainingTimes\" : 0,\n" +
                 "    \"unlimited\" : true\n" +
                 "  }\n" +
                 "}");
         verify(logger).warn("{\n" +
                 "  \"httpRequest\" : {\n" +
-                "    \"method\" : \"\",\n" +
-                "    \"path\" : \"some_other_path\",\n" +
-                "    \"body\" : \"\",\n" +
-                "    \"cookies\" : [ ],\n" +
-                "    \"headers\" : [ ],\n" +
-                "    \"parameters\" : [ ]\n" +
+                "    \"path\" : \"some_other_path\"\n" +
                 "  },\n" +
                 "  \"httpResponse\" : {\n" +
                 "    \"statusCode\" : 200,\n" +
-                "    \"body\" : \"some_other_response_body\",\n" +
-                "    \"cookies\" : [ ],\n" +
-                "    \"headers\" : [ ],\n" +
-                "    \"delay\" : {\n" +
-                "      \"timeUnit\" : \"MICROSECONDS\",\n" +
-                "      \"value\" : 0\n" +
-                "    }\n" +
+                "    \"body\" : \"some_other_response_body\"\n" +
                 "  },\n" +
                 "  \"times\" : {\n" +
-                "    \"remainingTimes\" : 1,\n" +
+                "    \"remainingTimes\" : 0,\n" +
                 "    \"unlimited\" : true\n" +
                 "  }\n" +
                 "}");

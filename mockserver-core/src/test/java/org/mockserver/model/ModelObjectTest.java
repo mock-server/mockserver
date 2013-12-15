@@ -14,26 +14,26 @@ public class ModelObjectTest {
 
     @Test
     public void hashCodeIdentical() {
-        assertEquals(new Parameter("name", "value").hashCode(), new Parameter("name", "value").hashCode());
+        assertEquals(new Header("name", "value").hashCode(), new Header("name", "value").hashCode());
     }
 
     @Test
     public void hashCodeDifferent() {
-        assertNotEquals(new Parameter("name", "value").hashCode(), new Parameter("foo", "bar").hashCode());
+        assertNotEquals(new Header("name", "value").hashCode(), new Header("foo", "bar").hashCode());
     }
 
     @Test
     public void equalsIdentical() {
-        assertTrue(new Parameter("name", "value").equals(new Parameter("name", "value")));
+        assertTrue(new Header("name", "value").equals(new Header("name", "value")));
     }
 
     @Test
     public void notEqualsDifferent() {
-        assertFalse(new Parameter("name", "value").equals(new Parameter("foo", "bar")));
+        assertFalse(new Header("name", "value").equals(new Header("foo", "bar")));
     }
 
     @Test
     public void toStringReturnStrings() {
-        assertThat(new Parameter("name", "value").toString(), instanceOf(String.class));
+        assertThat(new Header("name", "value").toString(), instanceOf(String.class));
     }
 }

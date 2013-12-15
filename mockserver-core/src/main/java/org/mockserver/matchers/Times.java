@@ -15,16 +15,8 @@ public class Times extends ModelObject {
         this.unlimited = unlimited;
     }
 
-    public int getRemainingTimes() {
-        return remainingTimes;
-    }
-
-    public boolean isUnlimited() {
-        return unlimited;
-    }
-
     public static Times unlimited() {
-        return new Times(1, true);
+        return new Times(0, true);
     }
 
     public static Times once() {
@@ -33,6 +25,14 @@ public class Times extends ModelObject {
 
     public static Times exactly(int count) {
         return new Times(count, false);
+    }
+
+    public int getRemainingTimes() {
+        return remainingTimes;
+    }
+
+    public boolean isUnlimited() {
+        return unlimited;
     }
 
     public boolean greaterThenZero() {
@@ -51,6 +51,9 @@ public class Times extends ModelObject {
     }
 
     public void setNotUnlimitedResponses() {
-        unlimited = false;
+        if (unlimited) {
+            remainingTimes = 1;
+            unlimited = false;
+        }
     }
 }

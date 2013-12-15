@@ -11,7 +11,9 @@ import java.util.List;
 public class HttpRequestMatcher extends ModelObject implements Matcher<HttpRequest> {
 
     private StringMatcher methodMatcher = null;
+    private StringMatcher urlMatcher = null;
     private StringMatcher pathMatcher = null;
+    private StringMatcher queryStringMatcher = null;
     private StringMatcher bodyMatcher = null;
     private MapMatcher headerMatcher = null;
     private MapMatcher parameterMatcher = null;
@@ -22,8 +24,18 @@ public class HttpRequestMatcher extends ModelObject implements Matcher<HttpReque
         return this;
     }
 
+    public HttpRequestMatcher withURL(String url) {
+        this.urlMatcher = new StringMatcher(url);
+        return this;
+    }
+
     public HttpRequestMatcher withPath(String path) {
         this.pathMatcher = new StringMatcher(path);
+        return this;
+    }
+
+    public HttpRequestMatcher withQueryString(String queryString) {
+        this.queryStringMatcher = new StringMatcher(queryString);
         return this;
     }
 
@@ -42,16 +54,6 @@ public class HttpRequestMatcher extends ModelObject implements Matcher<HttpReque
         return this;
     }
 
-    public HttpRequestMatcher withParameters(Parameter... parameters) {
-        this.parameterMatcher = new MapMatcher(KeyToMultiValue.toMultiMap(parameters));
-        return this;
-    }
-
-    public HttpRequestMatcher withParameters(List<Parameter> parameters) {
-        this.parameterMatcher = new MapMatcher(KeyToMultiValue.toMultiMap(parameters));
-        return this;
-    }
-
     public HttpRequestMatcher withCookies(Cookie... cookies) {
         this.cookieMatcher = new MapMatcher(KeyToMultiValue.toMultiMap(cookies));
         return this;
@@ -64,12 +66,13 @@ public class HttpRequestMatcher extends ModelObject implements Matcher<HttpReque
 
     public boolean matches(HttpRequest httpRequest) {
         boolean methodMatches = matches(methodMatcher, httpRequest.getMethod());
+        boolean urlMatches = matches(urlMatcher, httpRequest.getURL());
         boolean pathMatches = matches(pathMatcher, httpRequest.getPath());
+        boolean queryStringMatches = matches(queryStringMatcher, httpRequest.getQueryString());
         boolean bodyMatches = matches(bodyMatcher, httpRequest.getBody());
         boolean headersMatch = matches(headerMatcher, (httpRequest.getHeaders() != null ? new ArrayList<KeyToMultiValue>(httpRequest.getHeaders()) : null));
-        boolean parametersMatch = matches(parameterMatcher, (httpRequest.getParameters() != null ? new ArrayList<KeyToMultiValue>(httpRequest.getParameters()) : null));
         boolean cookiesMatch = matches(cookieMatcher, (httpRequest.getCookies() != null ? new ArrayList<KeyToMultiValue>(httpRequest.getCookies()) : null));
-        return methodMatches && pathMatches && bodyMatches && headersMatch && parametersMatch && cookiesMatch;
+        return methodMatches && urlMatches && pathMatches && queryStringMatches && bodyMatches && headersMatch && cookiesMatch;
     }
 
     private <T> boolean matches(Matcher<T> matcher, T t) {

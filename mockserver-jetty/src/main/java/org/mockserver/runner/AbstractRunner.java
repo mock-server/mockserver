@@ -1,4 +1,4 @@
-package org.mockserver.server;
+package org.mockserver.runner;
 
 import ch.qos.logback.classic.Level;
 import com.google.common.util.concurrent.SettableFuture;
@@ -6,6 +6,7 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ShutdownMonitor;
 import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.util.thread.ShutdownThread;
+import org.mockserver.proxy.ProxyRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,26 +21,11 @@ import java.util.concurrent.Future;
 /**
  * @author jamesdbloom
  */
-public class EmbeddedJettyRunner {
-    private static final Logger logger = LoggerFactory.getLogger(EmbeddedJettyRunner.class);
+public abstract class AbstractRunner {
+    private static final Logger logger = LoggerFactory.getLogger(ProxyRunner.class);
     private static final String STOP_KEY = "STOP_KEY";
 
     private Server server;
-
-    /**
-     * Run the MockServer directly providing the port as the only input parameter (if not provided the port defaults to 8080).
-     *
-     * @param args the first entry args[0] is used to specify the port if not provided this defaults to 8080
-     */
-    public static void main(String... args) {
-        int port = args.length >= 1 ? Integer.parseInt(args[0]) : 8080;
-        EmbeddedJettyRunner.overrideLogLevel(System.getProperty("mockserver.logLevel"));
-
-        new EmbeddedJettyRunner().start(port);
-
-        logger.info("Started MockServer listening on " + port);
-        System.out.println("Started MockServer listening on " + port);
-    }
 
     /**
      * Override the debug WARN logging level
@@ -70,7 +56,7 @@ public class EmbeddedJettyRunner {
                 ShutdownThread.register(server);
                 ServletHandler handler = new ServletHandler();
                 server.setHandler(handler);
-                handler.addServletWithMapping(MockServerServlet.class.getName(), "/");
+                handler.addServletWithMapping(getServletName(), "/");
 
                 try {
                     server.start();
@@ -91,14 +77,16 @@ public class EmbeddedJettyRunner {
         return future;
     }
 
+    protected abstract String getServletName();
+
     private void runStopThread(final int defaultStopPort, final String defaultStopKey) {
         ShutdownMonitor shutdownMonitor = ShutdownMonitor.getInstance();
         if (!shutdownMonitor.isAlive()) {
             try {
                 int stopPort = Integer.parseInt(System.getProperty("mockserver.stopPort", "" + defaultStopPort));
                 String stopKey = System.getProperty("mockserver.stopKey", defaultStopKey);
-                logger.info("MockServer stopPort listening on " + stopPort + " with stopKey [" + stopKey + "]");
-                System.out.println("MockServer stopPort listening on " + stopPort + " with stopKey [" + stopKey + "]");
+                logger.info("Listening on stopPort " + stopPort + " for stop requests with stopKey [" + stopKey + "]");
+                System.out.println("Listening on stopPort " + stopPort + " for stop requests with stopKey [" + stopKey + "]");
 
                 shutdownMonitor.setPort(stopPort);
                 shutdownMonitor.setKey(stopKey);
@@ -122,7 +110,7 @@ public class EmbeddedJettyRunner {
     /**
      * Stop this MockServer instance
      */
-    public EmbeddedJettyRunner stop() {
+    public AbstractRunner stop() {
         if (!isRunning()) throw new IllegalStateException("Server is not running");
         try {
             server.stop();
@@ -170,7 +158,7 @@ public class EmbeddedJettyRunner {
                     }
                 }
             } else {
-                logger.info("MockServer stop request has been sent");
+                logger.info("MockServer stop http has been sent");
             }
             s.close();
         } catch (ConnectException e) {

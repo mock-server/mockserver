@@ -9,10 +9,11 @@ import java.util.List;
  */
 public class HttpRequest extends ModelObject {
     private String method = "";
+    private String url = "";
     private String path = "";
+    private String queryString = "";
     private String body = "";
     private List<Header> headers = new ArrayList<Header>();
-    private List<Parameter> parameters = new ArrayList<Parameter>();
     private List<Cookie> cookies = new ArrayList<Cookie>();
 
     public HttpRequest() {
@@ -27,12 +28,30 @@ public class HttpRequest extends ModelObject {
         return method;
     }
 
+    public String getURL() {
+        return url;
+    }
+
+    public HttpRequest withURL(String url) {
+        this.url = url;
+        return this;
+    }
+
     public String getPath() {
         return path;
     }
 
     public HttpRequest withPath(String path) {
         this.path = path;
+        return this;
+    }
+
+    public String getQueryString() {
+        return queryString;
+    }
+
+    public HttpRequest withQueryString(String queryString) {
+        this.queryString = queryString;
         return this;
     }
 
@@ -71,19 +90,5 @@ public class HttpRequest extends ModelObject {
 
     public List<Cookie> getCookies() {
         return cookies;
-    }
-
-    public HttpRequest withParameters(List<Parameter> parameters) {
-        this.parameters = parameters;
-        return this;
-    }
-
-    public HttpRequest withParameters(Parameter... parameters) {
-        this.parameters = Arrays.asList(parameters);
-        return this;
-    }
-
-    public List<Parameter> getParameters() {
-        return parameters;
     }
 }

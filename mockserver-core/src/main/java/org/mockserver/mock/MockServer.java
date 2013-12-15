@@ -47,10 +47,11 @@ public class MockServer extends ModelObject {
     }
 
     public HttpResponse handle(HttpRequest httpRequest) {
-        for (Expectation expectation : new ArrayList<Expectation>(expectations)) {
+        ArrayList<Expectation> expectations = new ArrayList<>(this.expectations);
+        for (Expectation expectation : expectations) {
             if (expectation.matches(httpRequest)) {
                 if (!expectation.getTimes().greaterThenZero()) {
-                    expectations.remove(expectation);
+                    this.expectations.remove(expectation);
                 }
                 return expectation.getHttpResponse();
             }
@@ -59,7 +60,7 @@ public class MockServer extends ModelObject {
     }
 
     public void clear(HttpRequest httpRequest) {
-        for (Expectation expectation : new ArrayList<Expectation>(expectations)) {
+        for (Expectation expectation : new ArrayList<>(expectations)) {
             if (expectation.matches(httpRequest)) {
                 expectations.remove(expectation);
             }

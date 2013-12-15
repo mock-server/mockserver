@@ -1,15 +1,11 @@
-package org.mockserver.integration;
+package org.mockserver.integration.server;
 
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.api.ContentResponse;
-import org.eclipse.jetty.client.api.Request;
-import org.eclipse.jetty.client.util.StringContentProvider;
-import org.eclipse.jetty.http.HttpField;
-import org.eclipse.jetty.http.HttpMethod;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockserver.client.MockServerClient;
+import org.mockserver.client.http.HttpRequestClient;
+import org.mockserver.client.server.MockServerClient;
+import org.mockserver.mappers.HttpClientResponseMapper;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.*;
 
@@ -24,7 +20,13 @@ import static org.junit.Assert.assertEquals;
  */
 public abstract class AbstractClientServerIntegrationTest {
 
+    private final HttpClientResponseMapper httpClientResponseMapper = new HttpClientResponseMapper();
+    private final HttpRequestClient httpRequestClient;
     protected MockServerClient mockServerClient;
+
+    public AbstractClientServerIntegrationTest() {
+        httpRequestClient = new HttpRequestClient("http://127.0.0.1:" + getPort());
+    }
 
     public abstract int getPort();
 
@@ -42,7 +44,7 @@ public abstract class AbstractClientServerIntegrationTest {
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withHeaders(new Header("Transfer-Encoding", "chunked"))
+                        .withHeaders(new Header("Content-Length", "9"))
                         .withBody("some_body"),
                 makeRequest(new HttpRequest()));
     }
@@ -73,13 +75,13 @@ public abstract class AbstractClientServerIntegrationTest {
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withHeaders(new Header("Transfer-Encoding", "chunked"))
+                        .withHeaders(new Header("Content-Length", "10"))
                         .withBody("some_body2"),
                 makeRequest(new HttpRequest().withPath("/some_path2")));
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withHeaders(new Header("Transfer-Encoding", "chunked"))
+                        .withHeaders(new Header("Content-Length", "10"))
                         .withBody("some_body1"),
                 makeRequest(new HttpRequest().withPath("/some_path1")));
     }
@@ -94,12 +96,12 @@ public abstract class AbstractClientServerIntegrationTest {
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withBody("some_body")
-                        .withHeaders(new Header("Transfer-Encoding", "chunked")),
+                        .withHeaders(new Header("Content-Length", "9")),
                 makeRequest(new HttpRequest().withPath("/some_path")));
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withHeaders(new Header("Transfer-Encoding", "chunked"))
+                        .withHeaders(new Header("Content-Length", "9"))
                         .withBody("some_body"),
                 makeRequest(new HttpRequest().withPath("/some_path")));
         assertEquals(
@@ -135,13 +137,13 @@ public abstract class AbstractClientServerIntegrationTest {
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withHeaders(new Header("Transfer-Encoding", "chunked"))
+                        .withHeaders(new Header("Content-Length", "10"))
                         .withBody("some_body2"),
                 makeRequest(new HttpRequest().withPath("/some_path2")));
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withHeaders(new Header("Transfer-Encoding", "chunked"))
+                        .withHeaders(new Header("Content-Length", "10"))
                         .withBody("some_body1"),
                 makeRequest(new HttpRequest().withPath("/some_path1")));
     }
@@ -167,16 +169,16 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
                         .withBody("some_bodyResponse")
                         .withHeaders(
-                                new Header("Transfer-Encoding", "chunked")
+                                new Header("Content-Length", "17")
                         ),
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
                                 .withPath("/some_pathRequest")
+                                .withQueryString("parameterName=parameterValue")
                                 .withBody("some_bodyRequest")
                                 .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
                                 .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
-                                .withParameters(new Parameter("parameterNameRequest", "parameterValueRequest"))
                 )
         );
     }
@@ -205,16 +207,16 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_bodyResponse")
                         .withHeaders(
                                 new Header("headerNameResponse", "headerValueResponse"),
-                                new Header("Transfer-Encoding", "chunked")
+                                new Header("Content-Length", "17")
                         ),
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
                                 .withPath("/some_pathRequest")
+                                .withQueryString("parameterName=parameterValue")
                                 .withBody("some_bodyRequest")
                                 .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
                                 .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
-                                .withParameters(new Parameter("parameterNameRequest", "parameterValueRequest"))
                 )
         );
     }
@@ -227,7 +229,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withMethod("GET")
                                 .withPath("/some_pathRequest")
-                                .withParameters(new Parameter("parameterNameRequest", "parameterValueRequest"))
+                                .withQueryString("parameterName=parameterValue")
                 )
                 .respond(
                         new HttpResponse()
@@ -241,18 +243,19 @@ public abstract class AbstractClientServerIntegrationTest {
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
                         .withBody("some_bodyResponse")
+                        .withCookies(new Cookie("cookieNameResponse", "cookieValueResponse"))
                         .withHeaders(
                                 new Header("Set-Cookie", "cookieNameResponse=cookieValueResponse"),
-                                new Header("Transfer-Encoding", "chunked")
+                                new Header("Content-Length", "17")
                         ),
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
                                 .withPath("/some_pathRequest")
+                                .withQueryString("parameterName=parameterValue")
                                 .withBody("some_bodyRequest")
                                 .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
                                 .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
-                                .withParameters(new Parameter("parameterNameRequest", "parameterValueRequest"))
                 )
         );
     }
@@ -265,8 +268,8 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withMethod("GET")
                                 .withPath("/some_pathRequest")
+                                .withQueryString("parameterName=parameterValue")
                                 .withBody("some_bodyRequest")
-                                .withParameters(new Parameter("parameterNameRequest", "parameterValueRequest"))
                 )
                 .respond(
                         new HttpResponse()
@@ -281,19 +284,20 @@ public abstract class AbstractClientServerIntegrationTest {
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
                         .withBody("some_bodyResponse")
+                        .withCookies(new Cookie("cookieNameResponse", "cookieValueResponse"))
                         .withHeaders(
                                 new Header("headerNameResponse", "headerValueResponse"),
                                 new Header("Set-Cookie", "cookieNameResponse=cookieValueResponse"),
-                                new Header("Transfer-Encoding", "chunked")
+                                new Header("Content-Length", "17")
                         ),
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
                                 .withPath("/some_pathRequest")
+                                .withQueryString("parameterName=parameterValue")
                                 .withBody("some_bodyRequest")
                                 .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
                                 .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
-                                .withParameters(new Parameter("parameterNameRequest", "parameterValueRequest"))
                 )
         );
     }
@@ -306,9 +310,9 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withMethod("GET")
                                 .withPath("/some_pathRequest")
+                                .withQueryString("parameterName=parameterValue")
                                 .withBody("some_bodyRequest")
                                 .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
-                                .withParameters(new Parameter("parameterNameRequest", "parameterValueRequest"))
                 )
                 .respond(
                         new HttpResponse()
@@ -323,19 +327,20 @@ public abstract class AbstractClientServerIntegrationTest {
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
                         .withBody("some_bodyResponse")
+                        .withCookies(new Cookie("cookieNameResponse", "cookieValueResponse"))
                         .withHeaders(
                                 new Header("headerNameResponse", "headerValueResponse"),
                                 new Header("Set-Cookie", "cookieNameResponse=cookieValueResponse"),
-                                new Header("Transfer-Encoding", "chunked")
+                                new Header("Content-Length", "17")
                         ),
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
                                 .withPath("/some_pathRequest")
+                                .withQueryString("parameterName=parameterValue")
                                 .withBody("some_bodyRequest")
                                 .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
                                 .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
-                                .withParameters(new Parameter("parameterNameRequest", "parameterValueRequest"))
                 )
         );
     }
@@ -348,10 +353,10 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withMethod("GET")
                                 .withPath("/some_pathRequest")
+                                .withQueryString("parameterName=parameterValue")
                                 .withBody("some_bodyRequest")
                                 .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
                                 .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
-                                .withParameters(new Parameter("parameterNameRequest", "parameterValueRequest"))
                 )
                 .respond(
                         new HttpResponse()
@@ -366,19 +371,20 @@ public abstract class AbstractClientServerIntegrationTest {
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
                         .withBody("some_bodyResponse")
+                        .withCookies(new Cookie("cookieNameResponse", "cookieValueResponse"))
                         .withHeaders(
                                 new Header("headerNameResponse", "headerValueResponse"),
                                 new Header("Set-Cookie", "cookieNameResponse=cookieValueResponse"),
-                                new Header("Transfer-Encoding", "chunked")
+                                new Header("Content-Length", "17")
                         ),
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
                                 .withPath("/some_pathRequest")
+                                .withQueryString("parameterName=parameterValue")
                                 .withBody("some_bodyRequest")
                                 .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
                                 .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
-                                .withParameters(new Parameter("parameterNameRequest", "parameterValueRequest"))
                 )
         );
     }
@@ -391,8 +397,8 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withMethod("POST")
                                 .withPath("/some_path")
+                                .withQueryString("parameterName=parameterValue")
                                 .withBody("bodyParameterName=bodyParameterValue")
-                                .withParameters(new Parameter("queryParameterName", "queryParameterValue"))
                 )
                 .respond(
                         new HttpResponse()
@@ -405,13 +411,13 @@ public abstract class AbstractClientServerIntegrationTest {
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
                         .withBody("some_body")
-                        .withHeaders(new Header("Transfer-Encoding", "chunked")),
+                        .withHeaders(new Header("Content-Length", "9")),
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("POST")
                                 .withPath("/some_path")
+                                .withQueryString("parameterName=parameterValue")
                                 .withBody("bodyParameterName=bodyParameterValue")
-                                .withParameters(new Parameter("queryParameterName", "queryParameterValue"))
                 )
         );
     }
@@ -424,7 +430,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withMethod("POST")
                                 .withPath("/some_path")
-                                .withParameters(new Parameter("queryParameterName", "queryParameterValue"))
+                                .withQueryString("parameterName=parameterValue")
                 )
                 .respond(
                         new HttpResponse()
@@ -437,13 +443,13 @@ public abstract class AbstractClientServerIntegrationTest {
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
                         .withBody("some_body")
-                        .withHeaders(new Header("Transfer-Encoding", "chunked")),
+                        .withHeaders(new Header("Content-Length", "9")),
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("POST")
                                 .withPath("/some_path")
                                 .withBody("bodyParameterName=bodyParameterValue")
-                                .withParameters(new Parameter("queryParameterName", "queryParameterValue"))
+                                .withQueryString("parameterName=parameterValue")
                 )
         );
     }
@@ -456,10 +462,10 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withMethod("GET")
                                 .withPath("/some_path")
+                                .withQueryString("parameterName=parameterValue")
                                 .withBody("some_body")
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
-                                .withParameters(new Parameter("parameterName", "parameterValue"))
                 )
                 .respond(
                         new HttpResponse()
@@ -479,10 +485,10 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withPath("/some_path")
+                                .withQueryString("parameterName=parameterValue")
                                 .withBody("someotherbody")
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
-                                .withParameters(new Parameter("parameterName", "parameterValue"))
                 )
         );
     }
@@ -495,10 +501,10 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withMethod("GET")
                                 .withPath("/some_path")
+                                .withQueryString("parameterName=parameterValue")
                                 .withBody("some_body")
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
-                                .withParameters(new Parameter("parameterName", "parameterValue"))
                 )
                 .respond(
                         new HttpResponse()
@@ -518,10 +524,10 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withPath("/someotherpath")
+                                .withQueryString("parameterName=parameterValue")
                                 .withBody("some_body")
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
-                                .withParameters(new Parameter("parameterName", "parameterValue"))
                 )
         );
     }
@@ -534,10 +540,10 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withMethod("GET")
                                 .withPath("/some_path")
+                                .withQueryString("parameterName=parameterValue")
                                 .withBody("some_body")
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
-                                .withParameters(new Parameter("parameterName", "parameterValue"))
                 )
                 .respond(
                         new HttpResponse()
@@ -557,10 +563,10 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withPath("/some_path")
+                                .withQueryString("parameterOtherName=parameterValue")
                                 .withBody("some_body")
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
-                                .withParameters(new Parameter("parameterOtherName", "parameterValue"))
                 )
         );
     }
@@ -573,10 +579,10 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withMethod("GET")
                                 .withPath("/some_path")
+                                .withQueryString("parameterName=parameterValue")
                                 .withBody("some_body")
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
-                                .withParameters(new Parameter("parameterName", "parameterValue"))
                 )
                 .respond(
                         new HttpResponse()
@@ -596,10 +602,10 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withPath("/some_path")
+                                .withQueryString("parameterName=parameterOtherValue")
                                 .withBody("some_body")
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
-                                .withParameters(new Parameter("parameterName", "parameterOtherValue"))
                 )
         );
     }
@@ -612,10 +618,10 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withMethod("GET")
                                 .withPath("/some_path")
+                                .withQueryString("parameterName=parameterValue")
                                 .withBody("some_body")
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
-                                .withParameters(new Parameter("parameterName", "parameterValue"))
                 )
                 .respond(
                         new HttpResponse()
@@ -635,10 +641,10 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withPath("/some_path")
+                                .withQueryString("parameterName=parameterValue")
                                 .withBody("some_body")
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieOtherName", "cookieValue"))
-                                .withParameters(new Parameter("parameterName", "parameterValue"))
                 )
         );
     }
@@ -651,10 +657,10 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withMethod("GET")
                                 .withPath("/some_path")
+                                .withQueryString("parameterName=parameterValue")
                                 .withBody("some_body")
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
-                                .withParameters(new Parameter("parameterName", "parameterValue"))
                 )
                 .respond(
                         new HttpResponse()
@@ -673,11 +679,12 @@ public abstract class AbstractClientServerIntegrationTest {
                         ),
                 makeRequest(
                         new HttpRequest()
+                                .withMethod("GET")
                                 .withPath("/some_path")
+                                .withQueryString("parameterName=parameterValue")
                                 .withBody("some_body")
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieOtherValue"))
-                                .withParameters(new Parameter("parameterName", "parameterValue"))
                 )
         );
     }
@@ -690,10 +697,10 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withMethod("GET")
                                 .withPath("/some_path")
+                                .withQueryString("parameterName=parameterValue")
                                 .withBody("some_body")
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
-                                .withParameters(new Parameter("parameterName", "parameterValue"))
                 )
                 .respond(
                         new HttpResponse()
@@ -713,10 +720,10 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withPath("/some_path")
+                                .withQueryString("parameterName=parameterValue")
                                 .withBody("some_body")
                                 .withHeaders(new Header("headerOtherName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
-                                .withParameters(new Parameter("parameterName", "parameterValue"))
                 )
         );
     }
@@ -729,10 +736,10 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withMethod("GET")
                                 .withPath("/some_path")
+                                .withQueryString("parameterName=parameterValue")
                                 .withBody("some_body")
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
-                                .withParameters(new Parameter("parameterName", "parameterValue"))
                 )
                 .respond(
                         new HttpResponse()
@@ -752,10 +759,10 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withPath("/some_path")
+                                .withQueryString("parameterName=parameterValue")
                                 .withBody("some_body")
                                 .withHeaders(new Header("headerName", "headerOtherValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
-                                .withParameters(new Parameter("parameterName", "parameterValue"))
                 )
         );
     }
@@ -793,7 +800,7 @@ public abstract class AbstractClientServerIntegrationTest {
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withHeaders(new Header("Transfer-Encoding", "chunked"))
+                        .withHeaders(new Header("Content-Length", "10"))
                         .withBody("some_body2"),
                 makeRequest(new HttpRequest().withPath("/some_path2")));
         assertEquals(
@@ -849,55 +856,15 @@ public abstract class AbstractClientServerIntegrationTest {
 
     protected HttpResponse makeRequest(HttpRequest httpRequest) {
         try {
-            HttpResponse httpResponse;
-            HttpClient httpClient = new HttpClient();
-            httpClient.start();
-            String queryString = buildQueryString(httpRequest.getParameters());
-            if (queryString.length() > 0) {
-                queryString = '?' + queryString;
-            }
-
-            Request request = httpClient.newRequest("http://localhost:" + getPort() + (httpRequest.getPath().startsWith("/") ? "" : "/") + httpRequest.getPath() + queryString).method(HttpMethod.fromString(httpRequest.getMethod())).content(new StringContentProvider(httpRequest.getBody()));
-            for (Header header : httpRequest.getHeaders()) {
-                for (String value : header.getValues()) {
-                    request.header(header.getName(), value);
+            HttpResponse httpResponse = httpClientResponseMapper.buildHttpResponse(httpRequestClient.sendRequest(httpRequest));
+            for(Header header : new ArrayList<>(httpResponse.getHeaders())) {
+                if(header.getName().equals("Server") || header.getName().equals("Expires")) {
+                httpResponse.getHeaders().remove(header);
                 }
-            }
-            StringBuilder stringBuilder = new StringBuilder();
-            for (Cookie cookie : httpRequest.getCookies()) {
-                for (String value : cookie.getValues()) {
-                    stringBuilder.append(cookie.getName()).append("=").append(value).append("; ");
-                }
-            }
-            if (stringBuilder.length() > 0) {
-                request.header("Cookie", stringBuilder.toString());
-            }
-            ContentResponse contentResponse = request.send();
-            httpResponse = new HttpResponse();
-            httpResponse.withBody(contentResponse.getContentAsString());
-            httpResponse.withStatusCode(contentResponse.getStatus());
-            List<Header> headers = new ArrayList<Header>();
-            for (HttpField httpField : contentResponse.getHeaders()) {
-                if (!httpField.getName().equals("Server") && !httpField.getName().equals("Expires")) {
-                    headers.add(new Header(httpField.getName(), httpField.getValue()));
-                }
-            }
-            if (headers.size() > 0) {
-                httpResponse.withHeaders(headers);
             }
             return httpResponse;
         } catch (Exception e) {
-            throw new RuntimeException("Error making request", e);
+            throw new RuntimeException("Error making http request", e);
         }
-    }
-
-    private String buildQueryString(List<Parameter> parameters) {
-        String queryString = "";
-        for (Parameter parameter : parameters) {
-            for (String parameterValue : parameter.getValues()) {
-                queryString += parameter.getName() + '=' + parameterValue + '&';
-            }
-        }
-        return StringUtils.removeEnd(queryString, "&");
     }
 }

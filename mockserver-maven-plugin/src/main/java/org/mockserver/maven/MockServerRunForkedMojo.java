@@ -100,7 +100,7 @@ public class MockServerRunForkedMojo extends AbstractMojo {
                     "-Dmockserver.stopPort=" + stopPort,
                     "-Dmockserver.stopKey=" + stopKey,
 //                    "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5006",
-                    "-jar", jarWithDependencies(), "" + port
+                    "-jar", jarWithDependencies(), "-serverPort", "" + port
             );
             if (pipeLogToConsole) {
                 processBuilder.redirectErrorStream(true);

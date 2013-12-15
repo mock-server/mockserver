@@ -4,7 +4,6 @@ import org.apache.commons.lang3.CharEncoding;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
-import org.mockserver.model.Parameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.MultiMap;
@@ -24,11 +23,12 @@ public class HttpServerRequestMapper {
     public HttpRequest createHttpRequest(HttpServerRequest httpServerRequest, byte[] bodyBytes) {
         HttpRequest httpRequest = new HttpRequest();
         setMethod(httpRequest, httpServerRequest);
+        setURL(httpRequest, httpServerRequest);
         setPath(httpRequest, httpServerRequest);
+        setQueryString(httpRequest, httpServerRequest);
         setBody(httpRequest, bodyBytes);
         setHeaders(httpRequest, httpServerRequest);
         setCookies(httpRequest, httpServerRequest);
-        setParameters(httpRequest, httpServerRequest);
         return httpRequest;
     }
 
@@ -36,8 +36,16 @@ public class HttpServerRequestMapper {
         httpRequest.withMethod(httpServletRequest.method());
     }
 
+    private void setURL(HttpRequest httpRequest, HttpServerRequest httpServerRequest) {
+        httpRequest.withURL(httpServerRequest.uri());
+    }
+
     private void setPath(HttpRequest httpRequest, HttpServerRequest httpServerRequest) {
         httpRequest.withPath(httpServerRequest.path());
+    }
+
+    private void setQueryString(HttpRequest httpRequest, HttpServerRequest httpServerRequest) {
+        httpRequest.withQueryString(httpServerRequest.query());
     }
 
     private void setBody(HttpRequest httpRequest, byte[] bodyBytes) {
@@ -66,15 +74,5 @@ public class HttpServerRequestMapper {
             }
         }
         httpRequest.withCookies(mappedCookies);
-    }
-
-    private void setParameters(HttpRequest httpRequest, HttpServerRequest httpServerRequest) {
-        MultiMap parameters = httpServerRequest.params();
-        List<Parameter> mappedParameters = new ArrayList<Parameter>();
-        for (String parameterName : parameters.names()) {
-            mappedParameters.add(new Parameter(parameterName, parameters.getAll(parameterName)));
-        }
-        httpRequest.withParameters(mappedParameters);
-        httpRequest.withParameters(mappedParameters);
     }
 }

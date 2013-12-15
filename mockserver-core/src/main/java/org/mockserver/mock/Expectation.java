@@ -1,6 +1,6 @@
 package org.mockserver.mock;
 
-import org.mockserver.mappers.ExpectationMapper;
+import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -11,7 +11,6 @@ import org.mockserver.model.ModelObject;
  */
 public class Expectation extends ModelObject {
 
-    public static final ExpectationMapper EXPECTATION_MAPPER = new ExpectationMapper();
     private final HttpRequest httpRequest;
     private final Times times;
     private HttpResponse httpResponse;
@@ -26,7 +25,11 @@ public class Expectation extends ModelObject {
     }
 
     public HttpResponse getHttpResponse() {
-        return (httpResponse != null ? httpResponse.applyDelay() : null);
+        if (httpResponse != null && httpResponse.applyDelay() != null) {
+            return httpResponse.applyDelay();
+        } else {
+            return httpResponse;
+        }
     }
 
     public Times getTimes() {
@@ -39,9 +42,9 @@ public class Expectation extends ModelObject {
     }
 
     public boolean matches(HttpRequest httpRequest) {
-        logger.trace("\nMatching expectation: \n{} \nwith incoming request: \n{}\n", this.httpRequest, httpRequest);
-        boolean matches = times.greaterThenZero() && EXPECTATION_MAPPER.transformsToMatcher(this.httpRequest).matches(httpRequest);
-        if (matches) {
+        logger.trace("\nMatching expectation: \n{} \nwith incoming http: \n{}\n", this.httpRequest, httpRequest);
+        boolean matches = (times == null || times.greaterThenZero()) && MatcherBuilder.transformsToMatcher(this.httpRequest).matches(httpRequest);
+        if (matches && times != null) {
             times.decrement();
         }
         return matches;

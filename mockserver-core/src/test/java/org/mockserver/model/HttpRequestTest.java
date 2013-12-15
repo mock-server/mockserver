@@ -31,7 +31,7 @@ public class HttpRequestTest {
 
     @Test
     public void returnsParameters() {
-        assertEquals(new Parameter("name", "value"), new HttpRequest().withParameters(new Parameter("name", "value")).getParameters().get(0));
+        assertEquals("name=value", new HttpRequest().withQueryString("name=value").getQueryString());
     }
 
 }

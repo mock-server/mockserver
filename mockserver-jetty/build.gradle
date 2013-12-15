@@ -19,7 +19,7 @@ dependencies {
 }
 
 task(run, dependsOn: 'classes', type: JavaExec) {
-    main = 'org.mockserver.server.EmbeddedJettyRunner'
+    main = 'org.mockserver.server.MockServerRunner'
     classpath = sourceSets.main.runtimeClasspath
     if (project.hasProperty("port")) {
         args port

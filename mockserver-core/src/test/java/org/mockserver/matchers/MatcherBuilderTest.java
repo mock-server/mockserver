@@ -1,18 +1,16 @@
-package org.mockserver.mappers;
+package org.mockserver.matchers;
 
 import org.junit.Test;
-import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
-import org.mockserver.model.Parameter;
 
 import static org.junit.Assert.assertTrue;
 
 /**
  * @author jamesdbloom
  */
-public class ExpectationMapperTest {
+public class MatcherBuilderTest {
 
     @Test
     public void transformsHttpRequestToHttpRequestMatcher() {
@@ -21,11 +19,10 @@ public class ExpectationMapperTest {
                 .withPath("somepath")
                 .withBody("somebody")
                 .withHeaders(new Header("name", "value"))
-                .withCookies(new Cookie("name", "value"))
-                .withParameters(new Parameter("parameterName", "parameterValue"));
+                .withCookies(new Cookie("name", "value"));
 
         // when
-        HttpRequestMatcher httpRequestMapper = new ExpectationMapper().transformsToMatcher(httpRequest);
+        HttpRequestMatcher httpRequestMapper = MatcherBuilder.transformsToMatcher(httpRequest);
 
         // then
         assertTrue(httpRequestMapper.matches(httpRequest));

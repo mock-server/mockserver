@@ -50,7 +50,7 @@ public class MockServerVerticalTest {
     @Test
     public void shouldMapRespondWhenRequestMatches() throws IOException {
         // given
-        // - an http request mapping
+        // - an http http mapping
         HttpRequest httpRequest = new HttpRequest();
         MockHttpServerRequest httpServerRequest =
                 new MockHttpServerRequest()
@@ -60,7 +60,7 @@ public class MockServerVerticalTest {
         HttpResponse httpResponse = new HttpResponse();
         when(mockServer.handle(httpRequest)).thenReturn(httpResponse);
 
-        // when - receive http request
+        // when - receive http http
         mockServerVertical.getRequestHandler().handle(httpServerRequest);
 
         // then - response mapping should be called
@@ -70,7 +70,7 @@ public class MockServerVerticalTest {
     @Test
     public void shouldNotMapRespondWhenRequestDoesNotMatch() throws IOException {
         // given
-        // - an http request mapping
+        // - an http http mapping
         HttpRequest httpRequest = new HttpRequest();
         MockHttpServerRequest httpServerRequest =
                 new MockHttpServerRequest()
@@ -79,7 +79,7 @@ public class MockServerVerticalTest {
         // - an expectation that does not match
         when(mockServer.handle(httpRequest)).thenReturn(null);
 
-        // when - receive http request
+        // when - receive http http
         mockServerVertical.getRequestHandler().handle(httpServerRequest);
 
         // then - response mapping should be called
@@ -89,7 +89,7 @@ public class MockServerVerticalTest {
     @Test
     public void setupExpectation() throws IOException {
         // given
-        // - a request
+        // - a http
         MockHttpServerRequest httpServerRequest =
                 new MockHttpServerRequest()
                         .withMethod("PUT")
@@ -102,7 +102,7 @@ public class MockServerVerticalTest {
         // - an MockServer that returns the deserialized expectation
         when(mockServer.when(same(httpRequest), same(times))).thenReturn(expectation);
 
-        // when - receive an expectation request
+        // when - receive an expectation http
         mockServerVertical.getRequestHandler().handle(httpServerRequest);
 
         // then
@@ -146,8 +146,7 @@ public class MockServerVerticalTest {
                 "        \"path\": \"\", " +
                 "        \"body\": \"\", " +
                 "        \"headers\": [ ], " +
-                "        \"cookies\": [ ], " +
-                "        \"parameters\": [ ]" +
+                "        \"cookies\": [ ]" +
                 "    }, " +
                 "    \"httpResponse\": {" +
                 "        \"statusCode\": 200, " +

@@ -1,5 +1,6 @@
 package org.mockserver.model;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -11,7 +12,7 @@ public class Header extends KeyToMultiValue {
         super(name, value);
     }
 
-    public Header(String name, List<String> value) {
+    public Header(String name, Collection<String> value) {
         super(name, value);
     }
 }

@@ -19,7 +19,7 @@ public class HttpResponseTest {
 
     @Test
     public void returnsBody() {
-        assertEquals("somebody", new HttpResponse().withBody("somebody").getBody());
+        assertEquals("somebody", new HttpResponse().withBody("somebody").getBodyAsString());
     }
 
     @Test

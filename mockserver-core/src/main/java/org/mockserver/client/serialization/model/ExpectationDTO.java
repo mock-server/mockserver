@@ -33,7 +33,7 @@ public class ExpectationDTO extends ModelObject {
     public Expectation buildObject() {
         HttpRequest httpRequest;
         HttpResponse httpResponse = null;
-        Times times;
+        Times times = null;
         if (this.httpRequest != null) {
             httpRequest = this.httpRequest.buildObject();
         } else {
@@ -46,7 +46,7 @@ public class ExpectationDTO extends ModelObject {
         if (this.times != null) {
             times = this.times.buildObject();
         } else {
-            times = Times.unlimited();
+            times = Times.once();
         }
         return new Expectation(httpRequest, times).respond(httpResponse);
     }

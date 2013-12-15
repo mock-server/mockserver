@@ -97,8 +97,7 @@ public class MockServerServletTest {
                 "        \"path\": \"\", " +
                 "        \"body\": \"\", " +
                 "        \"headers\": [ ], " +
-                "        \"cookies\": [ ], " +
-                "        \"parameters\": [ ]" +
+                "        \"cookies\": [ ] " +
                 "    }, " +
                 "    \"httpResponse\": {" +
                 "        \"statusCode\": 200, " +

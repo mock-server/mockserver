@@ -10,12 +10,14 @@ import java.util.concurrent.TimeUnit;
  */
 public class DelayDTO extends ModelObject {
 
-    private TimeUnit timeUnit = TimeUnit.SECONDS;
-    private long value = 0;
+    private TimeUnit timeUnit;
+    private long value;
 
     public DelayDTO(Delay delay) {
-        timeUnit = delay.getTimeUnit();
-        value = delay.getValue();
+        if (delay != null) {
+            timeUnit = delay.getTimeUnit();
+            value = delay.getValue();
+        }
     }
 
     public DelayDTO() {

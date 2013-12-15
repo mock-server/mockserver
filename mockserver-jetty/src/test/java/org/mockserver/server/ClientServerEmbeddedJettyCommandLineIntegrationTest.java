@@ -1,10 +1,10 @@
-package org.mockserver;
+package org.mockserver.server;
 
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.mockserver.integration.AbstractClientServerIntegrationTest;
-import org.mockserver.server.EmbeddedJettyRunner;
+import org.mockserver.cli.Main;
+import org.mockserver.integration.server.AbstractClientServerIntegrationTest;
 
 import java.util.concurrent.TimeUnit;
 
@@ -13,13 +13,18 @@ import java.util.concurrent.TimeUnit;
  */
 public class ClientServerEmbeddedJettyCommandLineIntegrationTest extends AbstractClientServerIntegrationTest {
 
-    private final static int port = 8090;
+    private final static int serverPort = 8090;
 
     @BeforeClass
     public static void startServer() throws InterruptedException {
-        EmbeddedJettyRunner.main("" + port);
+        Main.main("-serverPort", "" + serverPort);
         // wait for server to start up
         Thread.sleep(TimeUnit.SECONDS.toMillis(2));
+    }
+
+    @AfterClass
+    public static void stopServer() {
+        MockServerRunner.stopRemote("127.0.0.1", serverPort + 1, "STOP_KEY", 500);
     }
 
     @Before
@@ -29,12 +34,7 @@ public class ClientServerEmbeddedJettyCommandLineIntegrationTest extends Abstrac
 
     @Override
     public int getPort() {
-        return port;
-    }
-
-    @AfterClass
-    public static void stopServer() {
-        EmbeddedJettyRunner.stopRemote("127.0.0.1", port + 1, "STOP_KEY", 500);
+        return serverPort;
     }
 
 }

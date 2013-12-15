@@ -94,7 +94,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>org.mockserver.server.EmbeddedJettyRunner</mainClass>
+                            <mainClass>org.mockserver.cli.Main</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
