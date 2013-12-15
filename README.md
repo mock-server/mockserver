@@ -363,7 +363,7 @@ The Maven plugin has the following goals:
 The Maven plugin can be configured as follows:
 
 * **port** - The port to listen to incoming HTTP requests (required: false, default: 9090)
-* **timeout** - How long to block waiting for MockServer, used by **start** goal, 0 means wait indefinitely (required: false, default: 0)
+* **timeout** - How long to block waiting for MockServer, used by **run** goal, 0 means wait indefinitely (required: false, default: 0)
 * **logLevel** - The logging level (required: false, default: WARN)
 * **stopPort** - The port to listen to stop requests (required: false, default: port + 1)
 * **stopKey** - The key to use for stop requests (required: false, default: STOP_KEY)
