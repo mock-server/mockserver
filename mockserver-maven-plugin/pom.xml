@@ -134,10 +134,10 @@
         <profile>
             <id>it</id>
             <!--<activation>-->
-                <!--<property>-->
-                    <!--<name>maven.test.skip</name>-->
-                    <!--<value>!true</value>-->
-                <!--</property>-->
+            <!--<property>-->
+            <!--<name>maven.test.skip</name>-->
+            <!--<value>!true</value>-->
+            <!--</property>-->
             <!--</activation>-->
             <build>
                 <plugins>
@@ -157,7 +157,7 @@
                             <localRepositoryPath>${project.build.directory}/local-repo</localRepositoryPath>
                             <extraArtifacts>
                                 <!-- groupId:artifactId:version:type:classifier -->
-                                <extraArtifact>org.mock-server:mockserver:1.9-SNAPSHOT:pom</extraArtifact>
+                                <extraArtifact>org.mock-server:mockserver:2.0-SNAPSHOT:pom</extraArtifact>
                             </extraArtifacts>
                             <settingsFile>src/integration-tests/settings.xml</settingsFile>
                             <!--<mavenOpts>-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005</mavenOpts>-->

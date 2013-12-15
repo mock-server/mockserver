@@ -1,6 +1,6 @@
 package org.mockserver.maven;
 
-import org.mockserver.server.EmbeddedJettyRunner;
+import org.mockserver.server.MockServerRunner;
 
 import java.util.concurrent.Future;
 
@@ -9,20 +9,20 @@ import java.util.concurrent.Future;
  */
 public class EmbeddedJettyHolder {
 
-    private static final EmbeddedJettyRunner embeddedJettyRunner = new EmbeddedJettyRunner();
+    private static final MockServerRunner MOCK_SERVER_RUNNER = new MockServerRunner();
 
     public Future start(final int port, final String logLevel) {
-        if (!embeddedJettyRunner.isRunning()) {
-            EmbeddedJettyRunner.overrideLogLevel(logLevel);
-            return embeddedJettyRunner.start(port);
+        if (!MOCK_SERVER_RUNNER.isRunning()) {
+            MockServerRunner.overrideLogLevel(logLevel);
+            return MOCK_SERVER_RUNNER.start(port);
         } else {
             throw new IllegalStateException("MockServer is already running!");
         }
     }
 
     public void stop() {
-        if (embeddedJettyRunner.isRunning()) {
-            embeddedJettyRunner.stop();
+        if (MOCK_SERVER_RUNNER.isRunning()) {
+            MOCK_SERVER_RUNNER.stop();
         } else {
             throw new IllegalStateException("MockServer is not running!");
         }
