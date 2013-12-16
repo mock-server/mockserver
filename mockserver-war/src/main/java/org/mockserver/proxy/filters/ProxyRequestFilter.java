@@ -6,9 +6,8 @@ import org.mockserver.model.HttpResponse;
 /**
  * @author jamesdbloom
  */
-public interface ProxyFilter {
+public interface ProxyRequestFilter {
 
     public HttpRequest onRequest(HttpRequest httpRequest);
 
-    public HttpResponse onResponse(HttpRequest httpRequest, HttpResponse httpResponse);
 }

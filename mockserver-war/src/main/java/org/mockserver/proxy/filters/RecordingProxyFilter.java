@@ -6,7 +6,7 @@ import org.mockserver.model.HttpResponse;
 /**
  * @author jamesdbloom
  */
-public class RecordingProxyFilter extends AbstractProxyFilter {
+public class RecordingProxyFilter implements ProxyResponseFilter, ProxyRequestFilter {
 
     public HttpRequest onRequest(HttpRequest httpRequest) {
         return httpRequest;
