@@ -41,6 +41,7 @@ public class MockServerStopForkedMojo extends AbstractMojo {
 
 
     public void execute() throws MojoExecutionException {
+        getLog().info("Stopping MockServer using stopPort " + stopPort);
         MockServerRunner.overrideLogLevel(logLevel);
         MockServerRunner.stopRemote("127.0.0.1", stopPort, stopKey, stopWait);
     }
