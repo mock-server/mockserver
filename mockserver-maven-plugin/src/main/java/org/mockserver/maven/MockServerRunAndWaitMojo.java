@@ -23,6 +23,12 @@ public class MockServerRunAndWaitMojo extends AbstractMojo {
     private int port;
 
     /**
+     * The secure port to run MockServer on
+     */
+    @Parameter(property = "mockserver.securePort", defaultValue = "1080")
+    private int securePort;
+
+    /**
      * Timeout to wait before stopping MockServer, to run MockServer indefinitely do not set a value
      */
     @Parameter(property = "mockserver.timeout")
@@ -47,9 +53,9 @@ public class MockServerRunAndWaitMojo extends AbstractMojo {
             getLog().info("Starting MockServer on port " + port);
             try {
                 if (timeout > 0) {
-                    new EmbeddedJettyHolder().start(port, logLevel).get(timeout, TimeUnit.SECONDS);
+                    new EmbeddedJettyHolder().start(port, securePort, logLevel).get(timeout, TimeUnit.SECONDS);
                 } else {
-                    new EmbeddedJettyHolder().start(port, logLevel).get();
+                    new EmbeddedJettyHolder().start(port, securePort, logLevel).get();
                 }
             } catch (TimeoutException te) {
                 getLog().info(timeout + "s timeout ended MockServer will terminate");

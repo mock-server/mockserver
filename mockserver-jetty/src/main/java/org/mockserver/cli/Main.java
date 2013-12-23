@@ -16,7 +16,9 @@ import java.util.Map;
  */
 public class Main {
     public static final String PROXY_PORT_KEY = "proxyPort";
+    public static final String PROXY_SECURE_PORT_KEY = "proxySecurePort";
     public static final String SERVER_PORT_KEY = "serverPort";
+    public static final String SERVER_SECURE_PORT_KEY = "serverSecurePort";
     private static final Logger logger = LoggerFactory.getLogger(MockServerRunner.class);
 
     /**
@@ -30,32 +32,26 @@ public class Main {
         Map<String, Integer> parseArguments = parseArguments(arguments);
         AbstractRunner.overrideLogLevel(System.getProperty("mockserver.logLevel"));
 
-        if (parseArguments.containsKey(PROXY_PORT_KEY)) {
-            int proxyPort = parseArguments.get(PROXY_PORT_KEY);
-            new ProxyRunner().start(proxyPort);
-            logger.info("Started proxy listening on " + proxyPort);
-            System.out.println("Started proxy listening on " + proxyPort);
+        if (parseArguments.containsKey(PROXY_PORT_KEY) || parseArguments.containsKey(PROXY_SECURE_PORT_KEY)) {
+            new ProxyRunner().start(parseArguments.get(PROXY_PORT_KEY), parseArguments.get(PROXY_SECURE_PORT_KEY));
         }
 
-        if (parseArguments.containsKey(SERVER_PORT_KEY)) {
-            int mockServerPort = parseArguments.get(SERVER_PORT_KEY);
-            new MockServerRunner().start(mockServerPort);
-            logger.info("Started MockServer listening on " + mockServerPort);
-            System.out.println("Started MockServer listening on " + mockServerPort);
+        if (parseArguments.containsKey(SERVER_PORT_KEY) || parseArguments.containsKey(SERVER_SECURE_PORT_KEY)) {
+            new MockServerRunner().start(parseArguments.get(SERVER_PORT_KEY), parseArguments.get(SERVER_SECURE_PORT_KEY));
         }
     }
 
     private static Map<String, Integer> parseArguments(String... arguments) {
         Map<String, Integer> parsedArguments = new HashMap<>();
         Iterator<String> argumentsIterator = Arrays.asList(arguments).iterator();
-        for (int i = 0; i < arguments.length; i++) {
-            System.out.println("arguments[" + i + "] = " + arguments[i]);
-        }
         while (argumentsIterator.hasNext()) {
             String argumentName = argumentsIterator.next();
             if (argumentsIterator.hasNext()) {
                 String argumentValue = argumentsIterator.next();
-                if (!parsePort(parsedArguments, SERVER_PORT_KEY, argumentName, argumentValue) && !parsePort(parsedArguments, PROXY_PORT_KEY, argumentName, argumentValue)) {
+                if (!parsePort(parsedArguments, SERVER_PORT_KEY, argumentName, argumentValue)
+                        && !parsePort(parsedArguments, PROXY_SECURE_PORT_KEY, argumentName, argumentValue)
+                        && !parsePort(parsedArguments, PROXY_PORT_KEY, argumentName, argumentValue)
+                        && !parsePort(parsedArguments, SERVER_SECURE_PORT_KEY, argumentName, argumentValue)) {
                     showUsage();
                 }
             } else {
@@ -83,11 +79,16 @@ public class Main {
                 "   java -jar <path to mockserver-jetty-2.0-SNAPSHOT-jar-with-dependencies.jar> [-serverPort <port>] [-proxyPort <port>]\n" +
                 "   \n" +
                 "     valid options are:\n" +
-                "        -serverPort <port>     specifies the port for the MockServer           \n" +
-                "                               if not provide the MockServer is not started    \n" +
-                "        -proxyPort <path>      specifies the port for the proxy                \n" +
-                "                               if not provide the proxy is not started         \n";
+                "        -serverPort <port>         specifies the port for the MockServer           \n" +
+                "                                   if not provide the MockServer is not started    \n" +
+                "        -serverSecurePort <port>   specifies the port for the MockServer           \n" +
+                "                                   if not provide the MockServer is not started    \n" +
+                "        -proxyPort <path>          specifies the port for the proxy                \n" +
+                "                                   if not provide the proxy is not started         \n" +
+                "        -proxySecurePort <path>    specifies the port for the proxy                \n" +
+                "                                   if not provide the proxy is not started         \n";
         System.out.println(usage);
+        System.exit(1);
     }
 
 }

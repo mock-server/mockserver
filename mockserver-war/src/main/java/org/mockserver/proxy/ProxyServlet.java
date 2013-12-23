@@ -44,7 +44,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author jamesdbloom
  */
-public class ProxyServlet extends HttpServlet {
+public class    ProxyServlet extends HttpServlet {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final int maxTimeout;
     private final HttpServletRequestMapper httpServletRequestMapper = new HttpServletRequestMapper();

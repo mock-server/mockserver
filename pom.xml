@@ -133,6 +133,12 @@
                 <artifactId>vertx-core</artifactId>
                 <version>${vertx.version}</version>
                 <scope>provided</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>log4j</groupId>
+                        <artifactId>log4j</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>io.vertx</groupId>

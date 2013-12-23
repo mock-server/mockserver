@@ -9,13 +9,13 @@ import org.mockserver.integration.proxy.AbstractClientProxyIntegrationTest;
  */
 public class ClientProxyEmbeddedJettyAPIIntegrationTest extends AbstractClientProxyIntegrationTest {
 
-    private ProxyRunner proxyRunner;
     private final int proxyPort = 1080;
+    private ProxyRunner proxyRunner;
 
     @Before
     public void startProxy() {
         proxyRunner = new ProxyRunner();
-        proxyRunner.start(proxyPort);
+        proxyRunner.start(proxyPort, proxyPort - 1);
     }
 
     @Override

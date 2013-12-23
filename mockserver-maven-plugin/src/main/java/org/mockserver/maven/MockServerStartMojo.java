@@ -24,6 +24,12 @@ public class MockServerStartMojo extends AbstractMojo {
     private int port;
 
     /**
+     * The secure port to run MockServer on
+     */
+    @Parameter(property = "mockserver.securePort", defaultValue = "1080")
+    private int securePort;
+
+    /**
      * Logging level
      */
     @Parameter(property = "mockserver.logLevel", defaultValue = "WARN")
@@ -41,7 +47,7 @@ public class MockServerStartMojo extends AbstractMojo {
         } else {
             getLog().info("Starting MockServer on port " + port);
             try {
-                new EmbeddedJettyHolder().start(port, logLevel);
+                new EmbeddedJettyHolder().start(port, securePort, logLevel);
             } catch (Exception e) {
                 getLog().error("Exception while running MockServer", e);
             }
