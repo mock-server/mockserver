@@ -1,5 +1,7 @@
 package org.mockserver.proxy;
 
+import org.eclipse.jetty.server.ForwardedRequestCustomizer;
+import org.eclipse.jetty.server.HttpConfiguration;
 import org.mockserver.runner.AbstractRunner;
 
 /**
@@ -8,5 +10,10 @@ import org.mockserver.runner.AbstractRunner;
 public class ProxyRunner extends AbstractRunner {
     protected String getServletName() {
         return ProxyServlet.class.getName();
+    }
+
+    @Override
+    protected void updateHTTPConfig(HttpConfiguration https_config) {
+        https_config.addCustomizer(new ForwardedRequestCustomizer());
     }
 }

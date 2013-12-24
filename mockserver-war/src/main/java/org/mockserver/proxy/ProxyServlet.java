@@ -1,25 +1,11 @@
 package org.mockserver.proxy;
 
-import com.google.common.base.Strings;
-import com.google.common.util.concurrent.SettableFuture;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.eclipse.jetty.client.api.Request;
-import org.eclipse.jetty.client.api.Response;
-import org.eclipse.jetty.client.api.Result;
-import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpHeader;
-import org.eclipse.jetty.http.HttpMethod;
-import org.eclipse.jetty.http.MimeTypes;
 import org.mockserver.client.http.HttpRequestClient;
-import org.mockserver.client.serialization.HttpRequestSerializer;
-import org.mockserver.mappers.HttpClientResponseMapper;
 import org.mockserver.mappers.HttpServletRequestMapper;
 import org.mockserver.mappers.HttpServletResponseMapper;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatcherBuilder;
-import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -33,20 +19,14 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author jamesdbloom
  */
-public class    ProxyServlet extends HttpServlet {
+public class ProxyServlet extends HttpServlet {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private final int maxTimeout;
     private final HttpServletRequestMapper httpServletRequestMapper = new HttpServletRequestMapper();
     private final HttpServletResponseMapper httpServletResponseMapper = new HttpServletResponseMapper();
     private HttpRequestClient httpRequestClient;
@@ -54,12 +34,7 @@ public class    ProxyServlet extends HttpServlet {
     private Map<HttpRequest, List<ProxyRequestFilter>> requestFilters = new ConcurrentHashMap<>();
 
     public ProxyServlet() {
-        try {
-            maxTimeout = Integer.parseInt(System.getProperty("proxy.maxTimeout", "60"));
-        } catch (NumberFormatException nfe) {
-            logger.error("NumberFormatException converting proxy.maxTimeout with value [" + System.getProperty("proxy.maxTimeout") + "]", nfe);
-            throw new RuntimeException("NumberFormatException converting proxy.maxTimeout with value [" + System.getProperty("proxy.maxTimeout") + "]", nfe);
-        }
+
         httpRequestClient = new HttpRequestClient("");
     }
 
@@ -134,9 +109,28 @@ public class    ProxyServlet extends HttpServlet {
     }
 
     private void sendRequest(HttpRequestMatcher httpRequestMatcher, final HttpRequest httpRequest, final HttpServletResponse httpServletResponse) {
-        System.out.println(httpRequest.getMethod() + "=>" + httpRequest.getURL());
         // TODO add logic to stream response (chunk) back to client if no matching filter, this will allow for proxying larger payloads
-        HttpResponse httpResponse = httpRequestClient.sendRequest(httpRequest, maxTimeout);
+        List<String> headersToRemove = Arrays.asList(
+                "proxy-connection",
+                "connection",
+                "keep-alive",
+                "transfer-encoding",
+                "te",
+                "trailer",
+                "proxy-authorization",
+                "proxy-authenticate",
+                "upgrade"
+        );
+        List<Header> filteredHeaders = new ArrayList<>();
+        for (Header header : httpRequest.getHeaders()) {
+            if (!headersToRemove.contains(header.getName().toLowerCase(Locale.ENGLISH))) {
+                filteredHeaders.add(header);
+            }
+        }
+
+        httpRequest.withHeaders(filteredHeaders);
+
+        HttpResponse httpResponse = httpRequestClient.sendRequest(httpRequest);
 
         for (HttpRequest filterRequest : responseFilters.keySet()) {
             if (httpRequestMatcher.matches(httpRequest)) {
@@ -151,7 +145,7 @@ public class    ProxyServlet extends HttpServlet {
 
 //    private void sendRequest(final HttpRequest httpRequest, final int maxTimeout, final HttpServletResponse httpServletResponse) {
 //        final SettableFuture<Response> responseFuture = SettableFuture.create();
-//        final ByteBuffer contentBuffer = ByteBuffer.allocate(1024 * 1500);
+//        final ByteBuffer contentBuffer = ByteBuffer.allocate(1024 * 500);
 //        new Thread(new Runnable() {
 //            @Override
 //            public void run() {

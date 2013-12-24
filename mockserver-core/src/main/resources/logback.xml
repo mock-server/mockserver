@@ -17,17 +17,6 @@
         </rollingPolicy>
     </appender>
 
-    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-        <file>mockserver.log</file>
-
-        <encoder>
-            <pattern>%date %level [%thread] %logger{35} [%file:%line] %msg%n</pattern>
-        </encoder>
-        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <level>TRACE</level>
-        </filter>
-    </appender>
-
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <target>System.err</target>
         <encoder>
@@ -38,10 +27,10 @@
         </filter>
     </appender>
 
-    <logger name="org.mockserver" level="DEBUG"/>
-    <logger name="org.eclipse.jetty.util.thread.ShutdownThread" level="DEBUG"/>
+    <logger name="org.mockserver" level="TRACE"/>
+    <logger name="org.eclipse.jetty.util.thread.ShutdownThread" level="TRACE"/>
 
-    <root level="WARN">
+    <root level="TRACE">
         <appender-ref ref="FILE"/>
         <appender-ref ref="STDOUT"/>
     </root>

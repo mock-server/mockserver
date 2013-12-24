@@ -8,14 +8,16 @@
     </appender>
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <target>System.out</target>
         <encoder>
-            <pattern>%date %level [%thread] %logger{35} %msg%n</pattern>
+            <pattern>%date %level %logger{20} %msg%n</pattern>
         </encoder>
     </appender>
 
     <logger name="org.mockserver" level="TRACE"/>
+    <logger name="org.eclipse.jetty.util.thread.ShutdownThread" level="TRACE"/>
 
-    <root level="warn">
+    <root level="WARN">
         <appender-ref ref="FILE"/>
         <appender-ref ref="STDOUT"/>
     </root>

@@ -3,9 +3,12 @@ package org.mockserver.runner;
 import ch.qos.logback.classic.Level;
 import com.google.common.util.concurrent.SettableFuture;
 import org.eclipse.jetty.server.*;
+import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.ShutdownThread;
+import org.mockserver.proxy.CertificateBuilder;
+import org.mockserver.proxy.ConnectHandler;
 import org.mockserver.proxy.ProxyRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,16 +17,16 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.io.OutputStream;
+import java.lang.reflect.Method;
 import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.security.GeneralSecurityException;
 import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author jamesdbloom
@@ -31,7 +34,17 @@ import java.util.concurrent.Future;
 public abstract class AbstractRunner {
     private static final Logger logger = LoggerFactory.getLogger(ProxyRunner.class);
     private static final String STOP_KEY = "STOP_KEY";
+    private final long maxTimeout;
     private Server server;
+
+    protected AbstractRunner() {
+        try {
+            maxTimeout = TimeUnit.SECONDS.toMillis(Integer.parseInt(System.getProperty("proxy.maxTimeout", "120")));
+        } catch (NumberFormatException nfe) {
+            logger.error("NumberFormatException converting proxy.maxTimeout with value [" + System.getProperty("proxy.maxTimeout") + "]", nfe);
+            throw new RuntimeException("NumberFormatException converting proxy.maxTimeout with value [" + System.getProperty("proxy.maxTimeout") + "]", nfe);
+        }
+    }
 
     /**
      * Override the debug WARN logging level
@@ -120,15 +133,21 @@ public abstract class AbstractRunner {
                     if (securePort != null) {
                         serverConnectors.add(createHTTPSConnector(server, securePort));
                     }
-                } catch (KeyStoreException | CertificateException | NoSuchAlgorithmException | IOException e) {
+                } catch (GeneralSecurityException | IOException e) {
                     logger.error("Exception while loading SSL certificate", e);
                 }
                 server.setConnectors(serverConnectors.toArray(new Connector[serverConnectors.size()]));
 
                 // add handler
+                HandlerCollection handlers = new HandlerCollection();
+                server.setHandler(handlers);
+
                 ServletHandler handler = new ServletHandler();
                 handler.addServletWithMapping(getServletName(), "/");
-                server.setHandler(handler);
+                handlers.addHandler(handler);
+
+                ConnectHandler connectHandler = new ConnectHandler();
+                handlers.addHandler(connectHandler);
 
                 // start server
                 try {
@@ -160,57 +179,78 @@ public abstract class AbstractRunner {
 
     protected abstract String getServletName();
 
+    protected void updateHTTPConfig(HttpConfiguration https_config) {
+        // allow subclasses to extend http configuration
+    }
+
     private ServerConnector createHTTPConnector(Server server, Integer port, Integer securePort) {
         // HTTP Configuration
         HttpConfiguration http_config = new HttpConfiguration();
         if (securePort != null) {
             http_config.setSecurePort(securePort);
         }
-        http_config.setSecureScheme("https");
-        http_config.setOutputBufferSize(32768);
+        http_config.setOutputBufferSize(1024 * 500);
+        http_config.setRequestHeaderSize(1024 * 500);
+        http_config.setResponseHeaderSize(1024 * 500);
+        updateHTTPConfig(http_config);
 
         // HTTP connector
         ServerConnector http = new ServerConnector(server, new HttpConnectionFactory(http_config));
         http.setPort(port);
-        http.setIdleTimeout(30000);
+        http.setIdleTimeout(maxTimeout);
         return http;
     }
 
-    private ServerConnector createHTTPSConnector(Server server, Integer securePort) throws KeyStoreException, IOException, NoSuchAlgorithmException, CertificateException {
-        // keytool -genkey -keyalg RSA -alias selfsigned -keystore keystore.jks -storepass changeit -validity 360 -keysize 2048
-
-        // SSL Context Factory for HTTPS and SPDY
+    private ServerConnector createHTTPSConnector(Server server, Integer securePort) throws GeneralSecurityException, IOException {
+        // SSL Context Factory for HTTPS
+        KeyStore keystore = CertificateBuilder.generateCertificate(
+                "certAlias",
+                "changeit".toCharArray(),
+                CertificateBuilder.KeyAlgorithmName.RSA,
+                "CN=www.mockserver.com, O=MockServer, L=London, S=England, C=UK"
+        );
         SslContextFactory sslContextFactory = new SslContextFactory();
-        KeyStore keystore = KeyStore.getInstance("JKS");
-        keystore.load(this.getClass().getClassLoader().getResourceAsStream("keystore.jks"), "changeit".toCharArray());
-        sslContextFactory.setKeyStorePassword("changeit");
-        sslContextFactory.setKeyManagerPassword("changeit");
         sslContextFactory.setKeyStore(keystore);
+        sslContextFactory.setKeyStorePassword("changeit");
+        sslContextFactory.checkKeyStore();
 
         // HTTPS Configuration
         HttpConfiguration https_config = new HttpConfiguration();
         https_config.setSecurePort(securePort);
-        https_config.setSecureScheme("https");
-        https_config.setOutputBufferSize(32768);
+        https_config.setOutputBufferSize(1024 * 500);
+        https_config.setRequestHeaderSize(1024 * 500);
+        https_config.setResponseHeaderSize(1024 * 500);
         https_config.addCustomizer(new SecureRequestCustomizer());
+        updateHTTPConfig(https_config);
 
         // HTTPS connector
         ServerConnector https = new ServerConnector(server, new SslConnectionFactory(sslContextFactory, "http/1.1"), new HttpConnectionFactory(https_config));
         https.setPort(securePort);
-        https.setIdleTimeout(500000);
+        https.setIdleTimeout(maxTimeout);
         return https;
     }
 
     private void runStopThread(final int stopPort, final String stopKey) {
-        ShutdownMonitor shutdownMonitor = ShutdownMonitor.getInstance();
-        if (!shutdownMonitor.isAlive()) {
-            logger.info("Listening on stopPort " + stopPort + " for stop requests with stopKey [" + stopKey + "]");
-            System.out.println("Listening on stopPort " + stopPort + " for stop requests with stopKey [" + stopKey + "]");
+        // ensure only single stop thread start for both proxy and server
+        synchronized (STOP_KEY) {
+            try {
+                ShutdownMonitor shutdownMonitor = ShutdownMonitor.getInstance();
+                Method isAliveMethod = ShutdownMonitor.class.getDeclaredMethod("isAlive");
+                isAliveMethod.setAccessible(true);
+                if (!(Boolean) isAliveMethod.invoke(shutdownMonitor)) {
+                    logger.info("Listening on stopPort " + stopPort + " for stop requests with stopKey [" + stopKey + "]");
+                    System.out.println("Listening on stopPort " + stopPort + " for stop requests with stopKey [" + stopKey + "]");
 
-            shutdownMonitor.setPort(stopPort);
-            shutdownMonitor.setKey(stopKey);
-            shutdownMonitor.setExitVm(false);
-            shutdownMonitor.start();
+                    shutdownMonitor.setPort(stopPort);
+                    shutdownMonitor.setKey(stopKey);
+                    shutdownMonitor.setExitVm(false);
+                    Method startMethod = ShutdownMonitor.class.getDeclaredMethod("start");
+                    startMethod.setAccessible(true);
+                    startMethod.invoke(shutdownMonitor);
+                }
+            } catch (Exception e) {
+                logger.warn("Exception while using reflection to call protected methods on ShutdownMonitor", e);
+            }
         }
     }
 

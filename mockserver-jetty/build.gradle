@@ -3,6 +3,7 @@ dependencies {
     compile "org.eclipse.jetty:jetty-http:$jettyVersion"
     compile "org.eclipse.jetty:jetty-server:$jettyVersion"
     compile "org.eclipse.jetty:jetty-servlet:$jettyVersion"
+    compile "org.eclipse.jetty:jetty-proxy:$jettyVersion"
 
     // commons & guava
     compile "org.apache.commons:commons-lang3:$commonsLang3Version"

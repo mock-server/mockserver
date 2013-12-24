@@ -1,16 +1,13 @@
 package org.mockserver.integration.server;
 
-import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.client.http.HttpRequestClient;
 import org.mockserver.client.server.MockServerClient;
-import org.mockserver.mappers.HttpClientResponseMapper;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.*;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
@@ -801,10 +798,10 @@ public abstract class AbstractClientServerIntegrationTest {
 
     protected HttpResponse makeRequest(HttpRequest httpRequest) {
         try {
-            HttpResponse httpResponse = httpRequestClient.sendRequest(httpRequest, 20);
-            for(Header header : new ArrayList<>(httpResponse.getHeaders())) {
-                if(header.getName().equals("Server") || header.getName().equals("Expires")) {
-                httpResponse.getHeaders().remove(header);
+            HttpResponse httpResponse = httpRequestClient.sendRequest(httpRequest);
+            for (Header header : new ArrayList<>(httpResponse.getHeaders())) {
+                if (header.getName().equals("Server") || header.getName().equals("Expires")) {
+                    httpResponse.getHeaders().remove(header);
                 }
             }
             return httpResponse;
