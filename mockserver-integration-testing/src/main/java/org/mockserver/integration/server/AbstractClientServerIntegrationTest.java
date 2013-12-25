@@ -4,6 +4,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.client.http.HttpRequestClient;
 import org.mockserver.client.server.MockServerClient;
+import org.mockserver.configuration.SystemProperties;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.*;
 
@@ -11,6 +12,8 @@ import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockserver.configuration.SystemProperties.bufferSize;
+import static org.mockserver.configuration.SystemProperties.maxTimeout;
 
 /**
  * @author jamesdbloom
@@ -21,6 +24,8 @@ public abstract class AbstractClientServerIntegrationTest {
     protected MockServerClient mockServerClient;
 
     public AbstractClientServerIntegrationTest() {
+        bufferSize(1024);
+        maxTimeout(TimeUnit.SECONDS.toMillis(10));
         httpRequestClient = new HttpRequestClient("http://127.0.0.1:" + getPort());
     }
 

@@ -2,7 +2,6 @@ package org.mockserver.mappers;
 
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
-import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Response;
 import org.eclipse.jetty.http.HttpField;
 import org.mockserver.model.Cookie;
@@ -14,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import java.net.HttpCookie;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -51,7 +49,7 @@ public class HttpClientResponseMapper {
         }
         List<String> headersToRemove = Arrays.asList("Content-Encoding", "Content-Length", "Transfer-Encoding");
         for (Header header : new ArrayList<>(headers)) {
-            if(headersToRemove.contains(header.getName())) {
+            if (headersToRemove.contains(header.getName())) {
                 headers.remove(header);
             }
         }
@@ -63,8 +61,12 @@ public class HttpClientResponseMapper {
         for (Header header : httpResponse.getHeaders()) {
             if (header.getName().equals("Cookie") || header.getName().equals("Set-Cookie")) {
                 for (String cookieHeader : header.getValues()) {
-                    for (HttpCookie httpCookie : HttpCookie.parse(cookieHeader)) {
-                        mappedCookies.add(new Cookie(httpCookie.getName(), httpCookie.getValue()));
+                    try {
+                        for (HttpCookie httpCookie : HttpCookie.parse(cookieHeader)) {
+                            mappedCookies.add(new Cookie(httpCookie.getName(), httpCookie.getValue()));
+                        }
+                    } catch (IllegalArgumentException iae) {
+                        logger.warn("Exception while parsing cookie header [" + cookieHeader + "]", iae);
                     }
                 }
             }

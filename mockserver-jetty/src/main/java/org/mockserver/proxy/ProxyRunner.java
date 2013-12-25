@@ -13,7 +13,7 @@ public class ProxyRunner extends AbstractRunner {
     }
 
     @Override
-    protected void updateHTTPConfig(HttpConfiguration https_config) {
+    protected void extendHTTPConfig(HttpConfiguration https_config) {
         https_config.addCustomizer(new ForwardedRequestCustomizer());
     }
 }

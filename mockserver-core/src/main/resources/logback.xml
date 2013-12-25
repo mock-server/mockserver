@@ -11,7 +11,7 @@
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>mockserver.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
             <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-                <maxFileSize>50MB</maxFileSize>
+                <maxFileSize>500MB</maxFileSize>
             </timeBasedFileNamingAndTriggeringPolicy>
             <maxHistory>2</maxHistory>
         </rollingPolicy>
@@ -30,7 +30,7 @@
     <logger name="org.mockserver" level="TRACE"/>
     <logger name="org.eclipse.jetty.util.thread.ShutdownThread" level="TRACE"/>
 
-    <root level="TRACE">
+    <root level="WARN">
         <appender-ref ref="FILE"/>
         <appender-ref ref="STDOUT"/>
     </root>

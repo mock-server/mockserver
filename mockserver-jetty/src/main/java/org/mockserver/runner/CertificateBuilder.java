@@ -1,4 +1,4 @@
-package org.mockserver.proxy;
+package org.mockserver.runner;
 
 import sun.security.x509.*;
 

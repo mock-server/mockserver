@@ -7,7 +7,6 @@ import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.ShutdownThread;
-import org.mockserver.proxy.CertificateBuilder;
 import org.mockserver.proxy.ConnectHandler;
 import org.mockserver.proxy.ProxyRunner;
 import org.slf4j.Logger;
@@ -26,25 +25,15 @@ import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+
+import static org.mockserver.configuration.SystemProperties.*;
 
 /**
  * @author jamesdbloom
  */
 public abstract class AbstractRunner {
     private static final Logger logger = LoggerFactory.getLogger(ProxyRunner.class);
-    private static final String STOP_KEY = "STOP_KEY";
-    private final long maxTimeout;
     private Server server;
-
-    protected AbstractRunner() {
-        try {
-            maxTimeout = TimeUnit.SECONDS.toMillis(Integer.parseInt(System.getProperty("proxy.maxTimeout", "120")));
-        } catch (NumberFormatException nfe) {
-            logger.error("NumberFormatException converting proxy.maxTimeout with value [" + System.getProperty("proxy.maxTimeout") + "]", nfe);
-            throw new RuntimeException("NumberFormatException converting proxy.maxTimeout with value [" + System.getProperty("proxy.maxTimeout") + "]", nfe);
-        }
-    }
 
     /**
      * Override the debug WARN logging level
@@ -151,10 +140,7 @@ public abstract class AbstractRunner {
 
                 // start server
                 try {
-                    runStopThread(
-                            Integer.parseInt(System.getProperty("mockserver.stopPort", "" + (Math.max((port != null ? port : 0), (securePort != null ? securePort : 0)) + 1))),
-                            System.getProperty("mockserver.stopKey", STOP_KEY)
-                    );
+                    runStopThread(stopPort(port, securePort), stopKey());
                     ShutdownThread.register(server);
                     server.start();
                 } catch (Exception e) {
@@ -179,7 +165,7 @@ public abstract class AbstractRunner {
 
     protected abstract String getServletName();
 
-    protected void updateHTTPConfig(HttpConfiguration https_config) {
+    protected void extendHTTPConfig(HttpConfiguration https_config) {
         // allow subclasses to extend http configuration
     }
 
@@ -189,15 +175,15 @@ public abstract class AbstractRunner {
         if (securePort != null) {
             http_config.setSecurePort(securePort);
         }
-        http_config.setOutputBufferSize(1024 * 500);
-        http_config.setRequestHeaderSize(1024 * 500);
-        http_config.setResponseHeaderSize(1024 * 500);
-        updateHTTPConfig(http_config);
+        http_config.setOutputBufferSize(bufferSize());
+        http_config.setRequestHeaderSize(bufferSize());
+        http_config.setResponseHeaderSize(bufferSize());
+        extendHTTPConfig(http_config);
 
         // HTTP connector
         ServerConnector http = new ServerConnector(server, new HttpConnectionFactory(http_config));
         http.setPort(port);
-        http.setIdleTimeout(maxTimeout);
+        http.setIdleTimeout(maxTimeout());
         return http;
     }
 
@@ -217,22 +203,22 @@ public abstract class AbstractRunner {
         // HTTPS Configuration
         HttpConfiguration https_config = new HttpConfiguration();
         https_config.setSecurePort(securePort);
-        https_config.setOutputBufferSize(1024 * 500);
-        https_config.setRequestHeaderSize(1024 * 500);
-        https_config.setResponseHeaderSize(1024 * 500);
+        https_config.setOutputBufferSize(bufferSize());
+        https_config.setRequestHeaderSize(bufferSize());
+        https_config.setResponseHeaderSize(bufferSize());
         https_config.addCustomizer(new SecureRequestCustomizer());
-        updateHTTPConfig(https_config);
+        extendHTTPConfig(https_config);
 
         // HTTPS connector
         ServerConnector https = new ServerConnector(server, new SslConnectionFactory(sslContextFactory, "http/1.1"), new HttpConnectionFactory(https_config));
         https.setPort(securePort);
-        https.setIdleTimeout(maxTimeout);
+        https.setIdleTimeout(maxTimeout());
         return https;
     }
 
     private void runStopThread(final int stopPort, final String stopKey) {
         // ensure only single stop thread start for both proxy and server
-        synchronized (STOP_KEY) {
+        synchronized (AbstractRunner.class) {
             try {
                 ShutdownMonitor shutdownMonitor = ShutdownMonitor.getInstance();
                 Method isAliveMethod = ShutdownMonitor.class.getDeclaredMethod("isAlive");

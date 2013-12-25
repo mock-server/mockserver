@@ -32,6 +32,9 @@ import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
+import static org.mockserver.configuration.SystemProperties.bufferSize;
+import static org.mockserver.configuration.SystemProperties.maxTimeout;
+
 /**
  * @author jamesdbloom
  */
@@ -42,11 +45,10 @@ public class HttpRequestClient {
         Arrays.sort(urlAllowedCharacters);
     }
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private static final Logger logger = LoggerFactory.getLogger(HttpRequestClient.class);
     private final HttpClientResponseMapper httpClientResponseMapper = new HttpClientResponseMapper();
     private final HttpClient httpClient;
     private String baseUri;
-    private long maxTimeout;
 
     public HttpRequestClient(final String baseUri) {
         httpClient = new HttpClient(new SslContextFactory(true));
@@ -85,13 +87,6 @@ public class HttpRequestClient {
         // base uri
         if (baseUri.endsWith("/")) throw new IllegalArgumentException("Base URL [" + baseUri + "] should not have a trailing slash");
         this.baseUri = baseUri;
-        // timeout
-        try {
-            maxTimeout = TimeUnit.SECONDS.toMillis(Integer.parseInt(System.getProperty("proxy.maxTimeout", "120")));
-        } catch (NumberFormatException nfe) {
-            logger.error("NumberFormatException converting proxy.maxTimeout with value [" + System.getProperty("proxy.maxTimeout") + "]", nfe);
-            throw new RuntimeException("NumberFormatException converting proxy.maxTimeout with value [" + System.getProperty("proxy.maxTimeout") + "]", nfe);
-        }
         // http client
         try {
             httpClient.setFollowRedirects(false);
@@ -99,10 +94,10 @@ public class HttpRequestClient {
             httpClient.setCookieStore(new HttpCookieStore.Empty());
             // ensure we can proxy enough connections to same server
             httpClient.setMaxConnectionsPerDestination(1024);
-            httpClient.setRequestBufferSize(1024 * 500);
-            httpClient.setResponseBufferSize(1024 * 500);
-            httpClient.setIdleTimeout(maxTimeout);
-            httpClient.setConnectTimeout(maxTimeout);
+            httpClient.setRequestBufferSize(bufferSize());
+            httpClient.setResponseBufferSize(bufferSize());
+            httpClient.setIdleTimeout(maxTimeout());
+            httpClient.setConnectTimeout(maxTimeout());
             httpClient.start();
         } catch (Exception e) {
             logger.error("Exception starting HttpClient", e);
@@ -124,8 +119,7 @@ public class HttpRequestClient {
 
     public HttpResponse sendRequest(final HttpRequest httpRequest) {
         final SettableFuture<Response> responseFuture = SettableFuture.create();
-        // todo is this large enough? - it should be configurable
-        final ByteBuffer contentBuffer = ByteBuffer.allocate(1024 * 500);
+        final ByteBuffer contentBuffer = ByteBuffer.allocate(bufferSize());
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -137,7 +131,11 @@ public class HttpRequestClient {
                     if (Strings.isNullOrEmpty(url)) {
                         url = baseUri + httpRequest.getPath() + (Strings.isNullOrEmpty(httpRequest.getQueryString()) ? "" : '?' + httpRequest.getQueryString());
                     }
-                    url = encodeURL(URLDecoder.decode(url, "UTF-8"));
+                    try {
+                        url = encodeURL(URLDecoder.decode(url, "UTF-8"));
+                    } catch (Exception e) {
+                        logger.trace("Exception while decoding or encoding url [" + url + "]", e);
+                    }
 
                     if (logger.isTraceEnabled()) {
                         System.out.println(HttpMethod.fromString(httpRequest.getMethod()) + "=>" + url);
@@ -198,7 +196,7 @@ public class HttpRequestClient {
             }
         }).start();
         try {
-            Response proxiedResponse = responseFuture.get(maxTimeout, TimeUnit.SECONDS);
+            Response proxiedResponse = responseFuture.get(maxTimeout(), TimeUnit.SECONDS);
             byte[] content = new byte[contentBuffer.position()];
             contentBuffer.flip();
             contentBuffer.get(content);
