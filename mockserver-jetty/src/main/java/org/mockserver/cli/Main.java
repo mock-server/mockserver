@@ -1,11 +1,13 @@
 package org.mockserver.cli;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.mockserver.proxy.ProxyRunner;
 import org.mockserver.runner.AbstractRunner;
 import org.mockserver.server.MockServerRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -19,7 +21,27 @@ public class Main {
     public static final String PROXY_SECURE_PORT_KEY = "proxySecurePort";
     public static final String SERVER_PORT_KEY = "serverPort";
     public static final String SERVER_SECURE_PORT_KEY = "serverSecurePort";
+    public static final String USAGE = "" +
+            "   java -jar <path to mockserver-jetty-2.0-SNAPSHOT-jar-with-dependencies.jar> [-serverPort <port>] [-proxyPort <port>]\n" +
+            "   \n" +
+            "     valid options are:\n" +
+            "        -serverPort <port>         specifies the port for the MockServer           \n" +
+            "                                   if not provide the MockServer is not started    \n" +
+            "        -serverSecurePort <port>   specifies the port for the MockServer           \n" +
+            "                                   if not provide the MockServer is not started    \n" +
+            "        -proxyPort <path>          specifies the port for the proxy                \n" +
+            "                                   if not provide the proxy is not started         \n" +
+            "        -proxySecurePort <path>    specifies the port for the proxy                \n" +
+            "                                   if not provide the proxy is not started         \n";
     private static final Logger logger = LoggerFactory.getLogger(MockServerRunner.class);
+    @VisibleForTesting
+    static ProxyRunner proxyRunner = new ProxyRunner();
+    @VisibleForTesting
+    static MockServerRunner mockServerRunner = new MockServerRunner();
+    @VisibleForTesting
+    static PrintStream outputPrintStream = System.out;
+    @VisibleForTesting
+    static boolean shutdownOnUsage = true;
 
     /**
      * Run the MockServer directly providing the parseArguments for the server and proxy as the only input parameters (if not provided the server port defaults to 8080 and the proxy is not started).
@@ -32,13 +54,24 @@ public class Main {
         Map<String, Integer> parseArguments = parseArguments(arguments);
         AbstractRunner.overrideLogLevel(System.getProperty("mockserver.logLevel"));
 
-        if (parseArguments.containsKey(PROXY_PORT_KEY) || parseArguments.containsKey(PROXY_SECURE_PORT_KEY)) {
-            new ProxyRunner().start(parseArguments.get(PROXY_PORT_KEY), parseArguments.get(PROXY_SECURE_PORT_KEY));
-        }
+        if (parseArguments.size() > 0) {
+            if (parseArguments.containsKey(PROXY_PORT_KEY) || parseArguments.containsKey(PROXY_SECURE_PORT_KEY)) {
+                proxyRunner.start(parseArguments.get(PROXY_PORT_KEY), parseArguments.get(PROXY_SECURE_PORT_KEY));
+            }
 
-        if (parseArguments.containsKey(SERVER_PORT_KEY) || parseArguments.containsKey(SERVER_SECURE_PORT_KEY)) {
-            new MockServerRunner().start(parseArguments.get(SERVER_PORT_KEY), parseArguments.get(SERVER_SECURE_PORT_KEY));
+            if (parseArguments.containsKey(SERVER_PORT_KEY) || parseArguments.containsKey(SERVER_SECURE_PORT_KEY)) {
+                mockServerRunner.start(parseArguments.get(SERVER_PORT_KEY), parseArguments.get(SERVER_SECURE_PORT_KEY));
+            }
+        } else {
+            showUsage();
         }
+    }
+
+    // todo - refactor to remove this method by introducing protected builder methods that can be spied on
+    @VisibleForTesting
+    public static void reset() {
+        proxyRunner = new ProxyRunner();
+        mockServerRunner = new MockServerRunner();
     }
 
     private static Map<String, Integer> parseArguments(String... arguments) {
@@ -75,20 +108,8 @@ public class Main {
     }
 
     private static void showUsage() {
-        String usage = "" +
-                "   java -jar <path to mockserver-jetty-2.0-SNAPSHOT-jar-with-dependencies.jar> [-serverPort <port>] [-proxyPort <port>]\n" +
-                "   \n" +
-                "     valid options are:\n" +
-                "        -serverPort <port>         specifies the port for the MockServer           \n" +
-                "                                   if not provide the MockServer is not started    \n" +
-                "        -serverSecurePort <port>   specifies the port for the MockServer           \n" +
-                "                                   if not provide the MockServer is not started    \n" +
-                "        -proxyPort <path>          specifies the port for the proxy                \n" +
-                "                                   if not provide the proxy is not started         \n" +
-                "        -proxySecurePort <path>    specifies the port for the proxy                \n" +
-                "                                   if not provide the proxy is not started         \n";
-        System.out.println(usage);
-        System.exit(1);
+        outputPrintStream.println(USAGE);
+        if (shutdownOnUsage) System.exit(1);
     }
 
 }

@@ -188,4 +188,41 @@ public class MockServerServletTest {
         verifyNoMoreInteractions(httpServletRequestMapper);
     }
 
+    @Test
+    public void shouldResetMockServer() throws IOException {
+        // given
+        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
+        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/reset");
+        Expectation expectation = new Expectation(new HttpRequest(), Times.unlimited()).respond(new HttpResponse());
+
+        byte[] requestBytes = "requestBytes".getBytes();
+        httpServletRequest.setContent(requestBytes);
+        when(expectationSerializer.deserialize(requestBytes)).thenReturn(expectation);
+
+        // when
+        mockServerServlet.doPut(httpServletRequest, httpServletResponse);
+
+        // then
+        verify(mockServer).reset();
+        verifyNoMoreInteractions(httpServletRequestMapper);
+    }
+
+    @Test
+    public void shouldDumpAllExpectationsToLog() throws IOException {
+        // given
+        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
+        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/dumpToLog");
+        Expectation expectation = new Expectation(new HttpRequest(), Times.unlimited()).respond(new HttpResponse());
+
+        byte[] requestBytes = "requestBytes".getBytes();
+        httpServletRequest.setContent(requestBytes);
+        when(expectationSerializer.deserialize(requestBytes)).thenReturn(expectation);
+
+        // when
+        mockServerServlet.doPut(httpServletRequest, httpServletResponse);
+
+        // then
+        verify(mockServer).dumpToLog();
+        verifyNoMoreInteractions(httpServletRequestMapper);
+    }
 }

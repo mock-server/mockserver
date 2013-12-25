@@ -17,6 +17,7 @@ public class ClientServerEmbeddedJettyCommandLineIntegrationTest extends Abstrac
 
     @BeforeClass
     public static void startServer() throws InterruptedException {
+        Main.reset();
         Main.main("-serverPort", "" + serverPort);
         // wait for server to start up
         Thread.sleep(TimeUnit.SECONDS.toMillis(2));

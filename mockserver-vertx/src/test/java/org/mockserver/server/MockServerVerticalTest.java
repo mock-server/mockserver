@@ -114,30 +114,6 @@ public class MockServerVerticalTest {
     }
 
     @Test
-    public void shouldClearExpectations() throws IOException {
-        // given
-        MockHttpServerResponse httpServerResponse = new MockHttpServerResponse();
-        MockHttpServerRequest httpServerRequest =
-                new MockHttpServerRequest()
-                        .withMethod("PUT")
-                        .withPath("/clear")
-                        .withResponse(httpServerResponse);
-        HttpRequest httpRequest = new HttpRequest();
-        Expectation expectation = new Expectation(httpRequest, Times.unlimited()).respond(new HttpResponse());
-
-        byte[] requestBytes = "requestBytes".getBytes();
-        httpServerRequest.withBody(requestBytes);
-        when(expectationSerializer.deserialize(requestBytes)).thenReturn(expectation);
-
-        // when
-        mockServerVertical.getRequestHandler().handle(httpServerRequest);
-
-        // then
-        verify(mockServer).clear(httpRequest);
-        verifyNoMoreInteractions(httpServerRequestMapper);
-    }
-
-    @Test
     public void setupExpectationFromJSONWithAllDefault() throws IOException {
         // given
         String jsonExpectation = "{" +
@@ -225,4 +201,74 @@ public class MockServerVerticalTest {
         assertEquals(HttpStatusCode.CREATED_201.code(), httpServerRequest.response().getStatusCode());
     }
 
+
+    @Test
+    public void shouldClearExpectations() throws IOException {
+        // given
+        MockHttpServerResponse httpServerResponse = new MockHttpServerResponse();
+        MockHttpServerRequest httpServerRequest =
+                new MockHttpServerRequest()
+                        .withMethod("PUT")
+                        .withPath("/clear")
+                        .withResponse(httpServerResponse);
+        HttpRequest httpRequest = new HttpRequest();
+        Expectation expectation = new Expectation(httpRequest, Times.unlimited()).respond(new HttpResponse());
+
+        byte[] requestBytes = "requestBytes".getBytes();
+        httpServerRequest.withBody(requestBytes);
+        when(expectationSerializer.deserialize(requestBytes)).thenReturn(expectation);
+
+        // when
+        mockServerVertical.getRequestHandler().handle(httpServerRequest);
+
+        // then
+        verify(mockServer).clear(httpRequest);
+        verifyNoMoreInteractions(httpServerRequestMapper);
+    }
+
+    @Test
+    public void shouldResetMockServer() throws IOException {
+        // given
+        MockHttpServerResponse httpServerResponse = new MockHttpServerResponse();
+        MockHttpServerRequest httpServerRequest =
+                new MockHttpServerRequest()
+                        .withMethod("PUT")
+                        .withPath("/reset")
+                        .withResponse(httpServerResponse);
+        Expectation expectation = new Expectation(new HttpRequest(), Times.unlimited()).respond(new HttpResponse());
+
+        byte[] requestBytes = "requestBytes".getBytes();
+        httpServerRequest.withBody(requestBytes);
+        when(expectationSerializer.deserialize(requestBytes)).thenReturn(expectation);
+
+        // when
+        mockServerVertical.getRequestHandler().handle(httpServerRequest);
+
+        // then
+        verify(mockServer).reset();
+        verifyNoMoreInteractions(httpServerRequestMapper);
+    }
+
+    @Test
+    public void shouldDumpAllExpectationsToLog() throws IOException {
+        // given
+        MockHttpServerResponse httpServerResponse = new MockHttpServerResponse();
+        MockHttpServerRequest httpServerRequest =
+                new MockHttpServerRequest()
+                        .withMethod("PUT")
+                        .withPath("/dumpToLog")
+                        .withResponse(httpServerResponse);
+        Expectation expectation = new Expectation(new HttpRequest(), Times.unlimited()).respond(new HttpResponse());
+
+        byte[] requestBytes = "requestBytes".getBytes();
+        httpServerRequest.withBody(requestBytes);
+        when(expectationSerializer.deserialize(requestBytes)).thenReturn(expectation);
+
+        // when
+        mockServerVertical.getRequestHandler().handle(httpServerRequest);
+
+        // then
+        verify(mockServer).dumpToLog();
+        verifyNoMoreInteractions(httpServerRequestMapper);
+    }
 }
