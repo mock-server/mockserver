@@ -3,11 +3,10 @@ package org.mockserver.runner;
 import ch.qos.logback.classic.Level;
 import com.google.common.util.concurrent.SettableFuture;
 import org.eclipse.jetty.server.*;
-import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.ShutdownThread;
-import org.mockserver.proxy.ConnectHandler;
+import org.mockserver.proxy.connect.ConnectHandler;
 import org.mockserver.proxy.ProxyRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -128,15 +127,9 @@ public abstract class AbstractRunner {
                 server.setConnectors(serverConnectors.toArray(new Connector[serverConnectors.size()]));
 
                 // add handler
-                HandlerCollection handlers = new HandlerCollection();
-                server.setHandler(handlers);
-
-                ServletHandler handler = new ServletHandler();
-                handler.addServletWithMapping(getServletName(), "/");
-                handlers.addHandler(handler);
-
-                ConnectHandler connectHandler = new ConnectHandler();
-                handlers.addHandler(connectHandler);
+                ServletHandler servletHandler = new ServletHandler();
+                servletHandler.addServletWithMapping(getServletName(), "/");
+                server.setHandler(new ConnectHandler(servletHandler));
 
                 // start server
                 try {
