@@ -48,7 +48,6 @@
         <module>mockserver-vertx</module>
         <module>mockserver-maven-plugin</module>
         <module>mockserver-integration-testing</module>
-        <module>mockserver-proxy</module>
     </modules>
 
     <properties>
