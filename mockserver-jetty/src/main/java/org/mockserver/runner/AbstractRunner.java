@@ -134,7 +134,11 @@ public abstract class AbstractRunner {
                 // add handler
                 ServletHandler servletHandler = new ServletHandler();
                 servletHandler.addServletWithMapping(getServletName(), "/");
-                server.setHandler(new ConnectHandler(servletHandler));
+                if (securePort != null) {
+                    server.setHandler(new ConnectHandler(servletHandler, securePort));
+                } else {
+                    server.setHandler(servletHandler);
+                }
 
                 // start server
                 try {

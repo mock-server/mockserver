@@ -20,7 +20,7 @@ public class ClientProxyEmbeddedJettyCommandLineIntegrationTest extends Abstract
     public static void startProxy() throws InterruptedException {
         Main.main("-proxyPort", "" + proxyPort);
         // wait for server to start up
-        Thread.sleep(TimeUnit.SECONDS.toMillis(2));
+        Thread.sleep(TimeUnit.SECONDS.toMillis(1));
     }
 
     @AfterClass

@@ -13,7 +13,7 @@ public class Assert {
     /**
      * Asserts that string contains specified substring.
      */
-    public static void assertContains(String substring, String string) {
+    public static void assertContains(String string, String substring) {
         assertNotNull("string should not be null", string);
         assertNotNull("substring should not be null", substring);
 
@@ -25,7 +25,7 @@ public class Assert {
     /**
      * Asserts that string contains specified substring.
      */
-    public static void assertDoesNotContain(String substring, String string) {
+    public static void assertDoesNotContain(String string, String substring) {
         assertNotNull("string should not be null", string);
         assertNotNull("substring should not be null", substring);
 

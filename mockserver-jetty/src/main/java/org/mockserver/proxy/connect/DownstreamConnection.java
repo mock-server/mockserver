@@ -11,7 +11,7 @@ import static org.mockserver.configuration.SystemProperties.bufferSize;
 /**
  * @author jamesdbloom
  */
-public class DownstreamConnection extends ConnectionConnection {
+public class DownstreamConnection extends ConnectConnection {
 
     public DownstreamConnection(EndPoint endPoint, Executor executor, ByteBufferPool bufferPool, Connection upstreamConnection) {
         super(endPoint, executor, bufferPool);

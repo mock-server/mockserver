@@ -7,7 +7,6 @@ import org.eclipse.jetty.server.HttpConnection;
 import javax.servlet.AsyncContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.util.concurrent.Executor;
 
 import static org.mockserver.configuration.SystemProperties.bufferSize;
@@ -15,7 +14,7 @@ import static org.mockserver.configuration.SystemProperties.bufferSize;
 /**
  * @author jamesdbloom
  */
-public class UpstreamConnection extends ConnectionConnection {
+public class UpstreamConnection extends ConnectConnection {
     private Executor executor;
     private ByteBufferPool bufferPool;
     private HttpServletResponse response;
@@ -42,17 +41,12 @@ public class UpstreamConnection extends ConnectionConnection {
         this.connection = downstreamConnection;
 
         response.setStatus(HttpServletResponse.SC_OK);
-        try {
-            response.getOutputStream().close();
-        } catch (IOException ioe) {
-            logger.trace("Exception while closing connection", ioe);
-        }
-        logger.debug("Connection completed: {}<->{}", this, downstreamConnection);
+        logger.debug("Connected {} to {}", this, downstreamConnection);
 
         // Set new connection as request attribute and change status to 101 to tell Jetty to upgrade the connection
         request.setAttribute(HttpConnection.UPGRADE_CONNECTION_ATTRIBUTE, downstreamConnection);
         response.setStatus(HttpServletResponse.SC_SWITCHING_PROTOCOLS);
-        logger.debug("Upgraded connection to {}", downstreamConnection);
+        logger.debug("Requested connection upgrade for {}", downstreamConnection);
 
         asyncContext.complete();
 

@@ -5,7 +5,6 @@ import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.io.Connection;
 import org.eclipse.jetty.io.EndPoint;
 import org.eclipse.jetty.util.Callback;
-import org.mockserver.proxy.ProxyRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,12 +12,12 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.Executor;
 
-public abstract class ConnectionConnection extends AbstractConnection {
-    protected static final Logger logger = LoggerFactory.getLogger(ProxyRunner.class);
+public abstract class ConnectConnection extends AbstractConnection {
+    protected static final Logger logger = LoggerFactory.getLogger(ConnectConnection.class);
     private final ByteBufferPool bufferPool;
     protected Connection connection;
 
-    protected ConnectionConnection(EndPoint endPoint, Executor executor, ByteBufferPool bufferPool) {
+    protected ConnectConnection(EndPoint endPoint, Executor executor, ByteBufferPool bufferPool) {
         super(endPoint, executor);
         this.bufferPool = bufferPool;
     }
@@ -74,9 +73,9 @@ public abstract class ConnectionConnection extends AbstractConnection {
 
     @Override
     public String toString() {
-        return String.format("%s[l:%d<=>r:%d]",
+        return String.format("%s from: %s to: %s",
                 super.toString(),
-                getEndPoint().getLocalAddress().getPort(),
-                getEndPoint().getRemoteAddress().getPort());
+                getEndPoint().getLocalAddress().getHostString(),
+                getEndPoint().getRemoteAddress().getHostString());
     }
 }

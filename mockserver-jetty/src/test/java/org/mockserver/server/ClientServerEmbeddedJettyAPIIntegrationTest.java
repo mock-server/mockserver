@@ -20,7 +20,7 @@ public class ClientServerEmbeddedJettyAPIIntegrationTest extends AbstractClientS
     public void startServer() throws InterruptedException, ExecutionException {
         mockServerRunner = new MockServerRunner();
         try {
-            mockServerRunner.start(serverPort, null).get(2, TimeUnit.SECONDS);
+            mockServerRunner.start(serverPort, null).get(1, TimeUnit.SECONDS);
         } catch (TimeoutException e) {
             // do nothing
         }

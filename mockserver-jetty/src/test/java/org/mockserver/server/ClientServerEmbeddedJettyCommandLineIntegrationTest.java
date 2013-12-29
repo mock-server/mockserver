@@ -20,7 +20,7 @@ public class ClientServerEmbeddedJettyCommandLineIntegrationTest extends Abstrac
         Main.reset();
         Main.main("-serverPort", "" + serverPort);
         // wait for server to start up
-        Thread.sleep(TimeUnit.SECONDS.toMillis(2));
+        Thread.sleep(TimeUnit.SECONDS.toMillis(1));
     }
 
     @AfterClass

@@ -43,7 +43,6 @@ public class AbstractRunnerTest {
             }
 
             // then
-            assertNotNull(runner.server.getBean(ConnectHandler.class));
             assertEquals("http://" + InetAddress.getLocalHost().getHostAddress() + ":9090/", runner.server.getURI().toString());
         } finally {
             runner.stop();

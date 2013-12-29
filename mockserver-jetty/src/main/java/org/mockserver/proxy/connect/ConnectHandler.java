@@ -10,6 +10,7 @@ import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.HandlerWrapper;
 import org.eclipse.jetty.util.thread.ScheduledExecutorScheduler;
 import org.eclipse.jetty.util.thread.Scheduler;
+import org.mockserver.model.HttpStatusCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,9 +37,11 @@ public class ConnectHandler extends HandlerWrapper {
     private Scheduler scheduler;
     private ByteBufferPool bufferPool;
     private SelectorManager selector;
+    private final int securePort;
 
-    public ConnectHandler(Handler handler) {
+    public ConnectHandler(Handler handler, int securePort) {
         setHandler(handler);
+        this.securePort = securePort;
     }
 
     @Override
@@ -69,9 +72,7 @@ public class ConnectHandler extends HandlerWrapper {
                 SocketChannel channel = SocketChannel.open();
                 channel.socket().setTcpNoDelay(true);
                 channel.configureBlocking(false);
-
-                // todo fix hard coded proxy port
-                channel.connect(new InetSocketAddress("127.0.0.1", 2082));
+                channel.connect(new InetSocketAddress("127.0.0.1", securePort));
 
                 AsyncContext asyncContext = request.startAsync();
                 asyncContext.setTimeout(0);
@@ -87,13 +88,7 @@ public class ConnectHandler extends HandlerWrapper {
     }
 
     protected void onConnectFailure(HttpServletResponse response, AsyncContext asyncContext, Throwable failure) {
-        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-        response.setHeader(HttpHeader.CONNECTION.asString(), HttpHeaderValue.CLOSE.asString());
-        try {
-            response.getOutputStream().close();
-        } catch (IOException ioe) {
-            logger.trace("Exception while closing connection", ioe);
-        }
+        response.setStatus(HttpStatusCode.GATEWAY_TIMEOUT_504.code());
         if (asyncContext != null) {
             asyncContext.complete();
         }
