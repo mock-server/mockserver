@@ -1,7 +1,6 @@
 package org.mockserver.proxy.connect;
 
 import org.eclipse.jetty.io.AbstractConnection;
-import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.io.Connection;
 import org.eclipse.jetty.io.EndPoint;
 import org.eclipse.jetty.util.Callback;
@@ -12,20 +11,26 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.Executor;
 
-public abstract class ConnectConnection extends AbstractConnection {
-    protected static final Logger logger = LoggerFactory.getLogger(ConnectConnection.class);
-    private final ByteBufferPool bufferPool;
-    protected Connection connection;
+import static org.mockserver.configuration.SystemProperties.bufferSize;
+import static org.mockserver.proxy.connect.ConnectHandler.BUFFER_POOL;
 
-    protected ConnectConnection(EndPoint endPoint, Executor executor, ByteBufferPool bufferPool) {
+public class ConnectConnection extends AbstractConnection {
+    protected static final Logger logger = LoggerFactory.getLogger(ConnectConnection.class);
+    protected final Executor executor;
+    protected Connection connection;
+    protected ConnectContext connectContext;
+
+    protected ConnectConnection(EndPoint endPoint, Executor executor, ConnectContext connectContext) {
         super(endPoint, executor);
-        this.bufferPool = bufferPool;
+        this.executor = executor;
+        this.connectContext = connectContext;
+        setInputBufferSize(bufferSize());
     }
 
     @Override
     public void onFillable() {
         // Get a buffer
-        final ByteBuffer requestBuffer = bufferPool.acquire(getInputBufferSize(), false);
+        final ByteBuffer requestBuffer = BUFFER_POOL.acquire(getInputBufferSize(), false);
 
         try {
             // can we read data?
@@ -67,8 +72,17 @@ public abstract class ConnectConnection extends AbstractConnection {
             close();
             connection.close();
         } finally {
-            bufferPool.release(requestBuffer);
+            BUFFER_POOL.release(requestBuffer);
         }
+    }
+
+    @Override
+    public void onOpen() {
+        super.onOpen();
+        if (connectContext != null) {
+            connectContext.onUpstreamOpen(this, executor);
+        }
+        fillInterested();
     }
 
     @Override
