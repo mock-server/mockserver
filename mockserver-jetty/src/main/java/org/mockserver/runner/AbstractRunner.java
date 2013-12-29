@@ -6,8 +6,8 @@ import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.ShutdownThread;
-import org.mockserver.proxy.connect.ConnectHandler;
 import org.mockserver.proxy.ProxyRunner;
+import org.mockserver.proxy.connect.ConnectHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +32,7 @@ import static org.mockserver.configuration.SystemProperties.*;
  */
 public abstract class AbstractRunner {
     private static final Logger logger = LoggerFactory.getLogger(ProxyRunner.class);
-    private Server server;
+    Server server;
 
     /**
      * Override the debug WARN logging level
@@ -54,7 +54,7 @@ public abstract class AbstractRunner {
      * @param stopKey   the stopKey for the MockServer to step (default is "STOP_KEY")
      * @param stopWait  the period to wait for MockServer to confirm it has stopped, in seconds.  A value of <= 0 means do not wait for confirmation MockServer has stopped.
      */
-    public static void stopRemote(String ipAddress, int stopPort, String stopKey, int stopWait) {
+    public static boolean stopRemote(String ipAddress, int stopPort, String stopKey, int stopWait) {
         if (stopPort <= 0)
             throw new IllegalArgumentException("Please specify a valid stopPort");
         if (stopKey == null)
@@ -68,14 +68,16 @@ public abstract class AbstractRunner {
             out.write((stopKey + "\r\nstop\r\n").getBytes());
             out.flush();
 
+            boolean stopped = true;
             if (stopWait > 0) {
+                stopped = false;
                 s.setSoTimeout(stopWait * 1000);
                 s.getInputStream();
 
                 logger.info("Waiting %d seconds for MockServer to stop%n", stopWait);
                 LineNumberReader lin = new LineNumberReader(new InputStreamReader(s.getInputStream()));
                 String response;
-                boolean stopped = false;
+
                 while (!stopped && ((response = lin.readLine()) != null)) {
                     if ("Stopped".equals(response)) {
                         stopped = true;
@@ -86,10 +88,13 @@ public abstract class AbstractRunner {
                 logger.info("MockServer stop http has been sent");
             }
             s.close();
+            return stopped;
         } catch (ConnectException e) {
             logger.info("MockServer is not running");
+            return false;
         } catch (Exception e) {
             logger.error("Exception stopping MockServer", e);
+            return false;
         }
     }
 
@@ -188,6 +193,8 @@ public abstract class AbstractRunner {
                 CertificateBuilder.KeyAlgorithmName.RSA,
                 "CN=www.mockserver.com, O=MockServer, L=London, S=England, C=UK"
         );
+//        KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
+//        keystore.load(this.getClass().getClassLoader().getResourceAsStream("keystore.jks"), "changeit".toCharArray());
         SslContextFactory sslContextFactory = new SslContextFactory();
         sslContextFactory.setKeyStore(keystore);
         sslContextFactory.setKeyStorePassword("changeit");

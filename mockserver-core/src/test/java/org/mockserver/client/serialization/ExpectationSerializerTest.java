@@ -103,6 +103,12 @@ public class ExpectationSerializerTest {
         expectationSerializer.deserialize(requestBytes);
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void shouldValidateInput() throws IOException {
+        // when
+        expectationSerializer.deserialize(new byte[0]);
+    }
+
     @Test
     public void serialize() throws IOException {
         // given
@@ -126,10 +132,13 @@ public class ExpectationSerializerTest {
     @Test(expected = RuntimeException.class)
     public void serializeHandlesException() throws IOException {
         // given
-        Expectation expectation = mock(Expectation.class);
-        when(objectMapper.writeValueAsString(any(Map.class))).thenThrow(new IOException());
+        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT)).thenReturn(objectMapper);
+        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL)).thenReturn(objectMapper);
+        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_EMPTY)).thenReturn(objectMapper);
+        when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
+        when(objectWriter.writeValueAsString(any(ExpectationDTO.class))).thenThrow(new IOException());
 
         // when
-        expectationSerializer.serialize(expectation);
+        expectationSerializer.serialize(mock(Expectation.class));
     }
 }

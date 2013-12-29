@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class ClientServerEmbeddedJettyCommandLineIntegrationTest extends AbstractClientServerIntegrationTest {
 
-    private final static int serverPort = 8090;
+    private final static int serverPort = 9090;
 
     @BeforeClass
     public static void startServer() throws InterruptedException {

@@ -10,21 +10,21 @@ import java.util.concurrent.TimeUnit;
  */
 public class SystemProperties {
 
-    private static final long DEFAULT_MAX_TIMEOUT = 120;
-    private static final int DEFAULT_REQUEST_BUFFER_SIZE = 1024 * 1500;
-    private static final String DEFAULT_STOP_KEY = "STOP_KEY";
+    static final long DEFAULT_MAX_TIMEOUT = 120;
+    static final int DEFAULT_BUFFER_SIZE = 1024 * 1500;
+    static final String DEFAULT_STOP_KEY = "STOP_KEY";
     private static final Logger logger = LoggerFactory.getLogger(SystemProperties.class);
 
     public static long maxTimeout() {
-        return SystemProperties.readLongProperty("proxy.maxTimeout", TimeUnit.SECONDS.toMillis(SystemProperties.DEFAULT_MAX_TIMEOUT));
+        return SystemProperties.readLongProperty("mockserver.maxTimeout", TimeUnit.SECONDS.toMillis(SystemProperties.DEFAULT_MAX_TIMEOUT));
     }
 
     public static void maxTimeout(long timeout) {
-        System.setProperty("proxy.maxTimeout", "" + timeout);
+        System.setProperty("mockserver.maxTimeout", "" + timeout);
     }
 
     public static int bufferSize() {
-        return SystemProperties.readIntegerProperty("mockserver.requestBufferSize", SystemProperties.DEFAULT_REQUEST_BUFFER_SIZE);
+        return SystemProperties.readIntegerProperty("mockserver.requestBufferSize", SystemProperties.DEFAULT_BUFFER_SIZE);
     }
 
     public static void bufferSize(int size) {

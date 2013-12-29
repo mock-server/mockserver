@@ -25,10 +25,7 @@ import org.mockserver.model.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
-import java.net.URLDecoder;
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
@@ -39,11 +36,6 @@ import static org.mockserver.configuration.SystemProperties.maxTimeout;
  * @author jamesdbloom
  */
 public class HttpRequestClient {
-    private static final int[] urlAllowedCharacters = new int[]{'-', '.', '_', '~', '!', '$', '&', '\'', '(', ')', '*', '+', ',', ';', '=', ':', '@', '/', '?'};
-
-    static {
-        Arrays.sort(urlAllowedCharacters);
-    }
 
     private static final Logger logger = LoggerFactory.getLogger(HttpRequestClient.class);
     private final HttpClientResponseMapper httpClientResponseMapper = new HttpClientResponseMapper();
@@ -59,28 +51,6 @@ public class HttpRequestClient {
     HttpRequestClient(final String baseUri, final HttpClient httpClient) {
         this.httpClient = httpClient;
         configureHttpClient(baseUri);
-    }
-
-    private static String encodeURL(String input) {
-        byte[] sourceBytes = input.getBytes(Charset.forName("UTF-8"));
-        ByteArrayOutputStream bos = new ByteArrayOutputStream(sourceBytes.length);
-        for (byte aSource : sourceBytes) {
-            int b = aSource;
-            if (b < 0) {
-                b += 256;
-            }
-
-            if (b >= 'a' && b <= 'z' || b >= 'A' && b <= 'Z' || b >= '0' && b <= '9' || Arrays.binarySearch(urlAllowedCharacters, b) >= 0) {
-                bos.write(b);
-            } else {
-                bos.write('%');
-                char hex1 = Character.toUpperCase(Character.forDigit((b >> 4) & 0xF, 16));
-                char hex2 = Character.toUpperCase(Character.forDigit(b & 0xF, 16));
-                bos.write(hex1);
-                bos.write(hex2);
-            }
-        }
-        return new String(bos.toByteArray(), Charset.forName("UTF-8"));
     }
 
     private void configureHttpClient(String baseUri) {
@@ -131,11 +101,7 @@ public class HttpRequestClient {
                     if (Strings.isNullOrEmpty(url)) {
                         url = baseUri + httpRequest.getPath() + (Strings.isNullOrEmpty(httpRequest.getQueryString()) ? "" : '?' + httpRequest.getQueryString());
                     }
-                    try {
-                        url = encodeURL(URLDecoder.decode(url, "UTF-8"));
-                    } catch (Exception e) {
-                        logger.trace("Exception while decoding or encoding url [" + url + "]", e);
-                    }
+                    url = URLEncoder.encodeURL(url);
 
                     if (logger.isTraceEnabled()) {
                         System.out.println(HttpMethod.fromString(httpRequest.getMethod()) + "=>" + url);

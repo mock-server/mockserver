@@ -84,6 +84,12 @@ public class HttpRequestSerializerTest {
         httpRequestSerializer.deserialize(requestBytes);
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void shouldValidateInput() throws IOException {
+        // when
+        httpRequestSerializer.deserialize(new byte[0]);
+    }
+
     @Test
     public void serialize() throws IOException {
         // given
@@ -107,7 +113,11 @@ public class HttpRequestSerializerTest {
     public void serializeHandlesException() throws IOException {
         // given
         HttpRequest httpRequest = mock(HttpRequest.class);
-        when(objectMapper.writeValueAsString(any(Map.class))).thenThrow(new IOException());
+        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT)).thenReturn(objectMapper);
+        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL)).thenReturn(objectMapper);
+        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_EMPTY)).thenReturn(objectMapper);
+        when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
+        when(objectWriter.writeValueAsString(any(HttpRequestDTO.class))).thenThrow(new IOException());
 
         // when
         httpRequestSerializer.serialize(httpRequest);

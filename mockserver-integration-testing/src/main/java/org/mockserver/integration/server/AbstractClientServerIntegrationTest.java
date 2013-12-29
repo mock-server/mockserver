@@ -115,7 +115,7 @@ public abstract class AbstractClientServerIntegrationTest {
         ).respond(
                 new HttpResponse()
                         .withBody("some_body1")
-                        .withDelay(new Delay(TimeUnit.MILLISECONDS, 100))
+                        .withDelay(new Delay(TimeUnit.MILLISECONDS, 10))
         );
         mockServerClient.when(
                 new HttpRequest()
@@ -123,7 +123,7 @@ public abstract class AbstractClientServerIntegrationTest {
         ).respond(
                 new HttpResponse()
                         .withBody("some_body2")
-                        .withDelay(new Delay(TimeUnit.SECONDS, 1))
+                        .withDelay(new Delay(TimeUnit.MILLISECONDS, 20))
         );
 
         // then

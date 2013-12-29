@@ -25,10 +25,10 @@ public class Expectation extends ModelObject {
     }
 
     public HttpResponse getHttpResponse() {
-        if (httpResponse != null && httpResponse.applyDelay() != null) {
+        if (httpResponse != null) {
             return httpResponse.applyDelay();
         } else {
-            return httpResponse;
+            return null;
         }
     }
 
@@ -43,7 +43,11 @@ public class Expectation extends ModelObject {
 
     public boolean matches(HttpRequest httpRequest) {
         logger.trace("\nMatching expectation: \n{} \nwith incoming http: \n{}\n", this.httpRequest, httpRequest);
-        boolean matches = (times == null || times.greaterThenZero()) && MatcherBuilder.transformsToMatcher(this.httpRequest).matches(httpRequest);
+        boolean matches =
+                (times == null || times.greaterThenZero()) &&
+                        (
+                                (httpRequest == null && this.httpRequest == null) || (httpRequest != null && this.httpRequest != null && MatcherBuilder.transformsToMatcher(this.httpRequest).matches(httpRequest))
+                        );
         if (matches && times != null) {
             times.decrement();
         }
@@ -51,7 +55,9 @@ public class Expectation extends ModelObject {
     }
 
     public void setNotUnlimitedResponses() {
-        times.setNotUnlimitedResponses();
+        if (times != null) {
+            times.setNotUnlimitedResponses();
+        }
     }
 
     public boolean contains(HttpRequest httpRequest) {

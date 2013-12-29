@@ -2,7 +2,7 @@ package org.mockserver.model;
 
 import org.apache.commons.lang3.CharEncoding;
 
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -48,11 +48,7 @@ public class HttpResponse extends ModelObject {
     }
 
     public String getBodyAsString() {
-        try {
-            return new String(body, CharEncoding.UTF_8);
-        } catch (UnsupportedEncodingException uee) {
-            throw new RuntimeException("UnsupportedEncodingException while converting response body to String from byte[]", uee);
-        }
+        return new String(body, Charset.forName(CharEncoding.UTF_8));
     }
 
     public HttpResponse withCookies(List<Cookie> cookies) {

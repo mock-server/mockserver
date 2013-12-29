@@ -21,8 +21,7 @@ public enum HttpStatusCode {
     // Redirection
     MULTIPLE_CHOICES_300(300, "Multiple Choices"),
     MOVED_PERMANENTLY_301(301, "Moved Permanently"),
-    MOVED_TEMPORARILY_302(302, "Moved Temporarily"),
-    FOUND_302(302, "Found"),
+    FOUND_302(302, "Moved Temporarily"),
     SEE_OTHER_303(303, "See Other"),
     NOT_MODIFIED_304(304, "Not Modified"),
     USE_PROXY_305(305, "Use Proxy"),

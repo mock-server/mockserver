@@ -13,7 +13,7 @@ import java.util.concurrent.TimeoutException;
  */
 public class ClientServerEmbeddedJettyAPIIntegrationTest extends AbstractClientServerIntegrationTest {
 
-    private final int serverPort = 8090;
+    private final int serverPort = 9090;
     private MockServerRunner mockServerRunner;
 
     @Before

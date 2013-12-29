@@ -16,7 +16,6 @@ public class HttpRequestMatcher extends ModelObject implements Matcher<HttpReque
     private StringMatcher queryStringMatcher = null;
     private StringMatcher bodyMatcher = null;
     private MapMatcher headerMatcher = null;
-    private MapMatcher parameterMatcher = null;
     private MapMatcher cookieMatcher = null;
 
     public HttpRequestMatcher withMethod(String method) {

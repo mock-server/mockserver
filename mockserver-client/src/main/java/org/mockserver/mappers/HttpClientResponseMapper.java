@@ -44,7 +44,7 @@ public class HttpClientResponseMapper {
             headerMap.put(httpField.getName(), httpField.getValue());
         }
         List<Header> headers = new ArrayList<>();
-        for (String header : headerMap.keys()) {
+        for (String header : headerMap.keySet()) {
             headers.add(new Header(header, headerMap.get(header)));
         }
         List<String> headersToRemove = Arrays.asList("Content-Encoding", "Content-Length", "Transfer-Encoding");

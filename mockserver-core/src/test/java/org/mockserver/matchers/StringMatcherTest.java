@@ -11,32 +11,57 @@ import static org.junit.Assert.assertTrue;
 public class StringMatcherTest {
 
     @Test
-    public void matchesMatchingString() {
-        assertTrue(new StringMatcher("somepath").matches("somepath"));
+    public void shouldMatchMatchingString() {
+        assertTrue(new StringMatcher("some_value").matches("some_value"));
     }
 
     @Test
-    public void matchesMatchingRegex() {
-        assertTrue(new StringMatcher("some[a-z]{4}").matches("somepath"));
+    public void shouldMatchMatchingRegex() {
+        assertTrue(new StringMatcher("some_[a-z]{5}").matches("some_value"));
     }
 
     @Test
-    public void matchesNullExpectation() {
-        assertTrue(new StringMatcher(null).matches("somepath"));
+    public void shouldMatchNullExpectation() {
+        assertTrue(new StringMatcher(null).matches("some_value"));
     }
 
     @Test
-    public void doesNotMatchIncorrectString() {
-        assertFalse(new StringMatcher("somepath").matches("pathsome"));
+    public void shouldMatchEmptyExpectation() {
+        assertTrue(new StringMatcher("").matches("some_value"));
     }
 
     @Test
-    public void doesNotMatchIncorrectRegex() {
-        assertFalse(new StringMatcher("some[a-z]{3}").matches("pathsome"));
+    public void shouldNotMatchIncorrectString() {
+        assertFalse(new StringMatcher("some_value").matches("not_matching"));
     }
 
     @Test
-    public void doesNotMatchesNullTest() {
-        assertFalse(new StringMatcher("somepath").matches(null));
+    public void shouldNotMatchIncorrectRegex() {
+        assertFalse(new StringMatcher("some_[a-z]{4}").matches("some_value"));
+    }
+
+    @Test
+    public void shouldNotMatchNullTest() {
+        assertFalse(new StringMatcher("some_value").matches(null));
+    }
+
+    @Test
+    public void shouldNotMatchEmptyTest() {
+        assertFalse(new StringMatcher("some_value").matches(""));
+    }
+
+    @Test
+    public void shouldHandleIllegalRegexPatternForExpectationAndTest() {
+        assertFalse(new StringMatcher("/{}").matches("/{}"));
+    }
+
+    @Test
+    public void shouldHandleIllegalRegexPatternForExpectation() {
+        assertFalse(new StringMatcher("/{}").matches("some_value"));
+    }
+
+    @Test
+    public void shouldHandleIllegalRegexPatternForTest() {
+        assertFalse(new StringMatcher("some_value").matches("/{}"));
     }
 }

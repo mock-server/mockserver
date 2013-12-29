@@ -49,4 +49,13 @@ public class HttpRequestClientTest {
         verify(mockRequest).content(new ComparableStringContentProvider("body", "UTF-8"));
         verify(mockRequest).send();
     }
+
+    @Test(expected = RuntimeException.class)
+    public void shouldHandleExceptionWhenHttpClientStarted() throws Exception {
+        // given
+        doThrow(new Exception()).when(mockHttpClient).start();
+
+        // when
+        new HttpRequestClient("baseUri", mockHttpClient).sendRequest("body", "/path");
+    }
 }

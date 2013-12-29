@@ -1,6 +1,5 @@
 package org.mockserver.proxy;
 
-import org.eclipse.jetty.http.HttpHeader;
 import org.mockserver.client.http.HttpRequestClient;
 import org.mockserver.mappers.HttpServletRequestMapper;
 import org.mockserver.mappers.HttpServletResponseMapper;
@@ -27,16 +26,11 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class ProxyServlet extends HttpServlet {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private final HttpServletRequestMapper httpServletRequestMapper = new HttpServletRequestMapper();
-    private final HttpServletResponseMapper httpServletResponseMapper = new HttpServletResponseMapper();
-    private HttpRequestClient httpRequestClient;
+    private HttpServletRequestMapper httpServletRequestMapper = new HttpServletRequestMapper();
+    private HttpServletResponseMapper httpServletResponseMapper = new HttpServletResponseMapper();
+    private HttpRequestClient httpRequestClient = new HttpRequestClient("");
     private Map<HttpRequest, List<ProxyResponseFilter>> responseFilters = new ConcurrentHashMap<>();
     private Map<HttpRequest, List<ProxyRequestFilter>> requestFilters = new ConcurrentHashMap<>();
-
-    public ProxyServlet() {
-
-        httpRequestClient = new HttpRequestClient("");
-    }
 
     public ProxyServlet withFilter(HttpRequest httpRequest, ProxyRequestFilter filter) {
         if (requestFilters.containsKey(httpRequest)) {
@@ -62,44 +56,44 @@ public class ProxyServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        handleRequest(request, response);
+        forwardRequest(request, response);
     }
 
     @Override
     protected void doHead(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        handleRequest(request, response);
+        forwardRequest(request, response);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        handleRequest(request, response);
+        forwardRequest(request, response);
     }
 
     @Override
     protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        handleRequest(request, response);
+        forwardRequest(request, response);
     }
 
     @Override
     protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        handleRequest(request, response);
+        forwardRequest(request, response);
     }
 
     @Override
     protected void doOptions(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        handleRequest(request, response);
+        forwardRequest(request, response);
     }
 
     @Override
     protected void doTrace(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        handleRequest(request, response);
+        forwardRequest(request, response);
     }
 
-    private void handleRequest(HttpServletRequest request, HttpServletResponse response) {
+    private void forwardRequest(HttpServletRequest request, HttpServletResponse response) {
         HttpRequest httpRequest = httpServletRequestMapper.createHttpRequest(request);
         HttpRequestMatcher httpRequestMatcher = MatcherBuilder.transformsToMatcher(httpRequest);
         for (HttpRequest filterRequest : requestFilters.keySet()) {
-            if (httpRequestMatcher.matches(httpRequest)) {
+            if (httpRequestMatcher.matches(filterRequest)) {
                 for (ProxyRequestFilter proxyRequestFilter : requestFilters.get(filterRequest)) {
                     proxyRequestFilter.onRequest(httpRequest);
                 }
@@ -133,7 +127,7 @@ public class ProxyServlet extends HttpServlet {
         HttpResponse httpResponse = httpRequestClient.sendRequest(httpRequest);
 
         for (HttpRequest filterRequest : responseFilters.keySet()) {
-            if (httpRequestMatcher.matches(httpRequest)) {
+            if (httpRequestMatcher.matches(filterRequest)) {
                 for (ProxyResponseFilter proxyFilter : responseFilters.get(filterRequest)) {
                     proxyFilter.onResponse(httpRequest, httpResponse);
                 }

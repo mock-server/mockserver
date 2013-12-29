@@ -8,7 +8,6 @@ import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpStatusCode;
 import org.vertxtest.http.MockHttpServerResponse;
 
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 
@@ -20,7 +19,7 @@ import static org.junit.Assert.assertEquals;
 public class HttpServerResponseMapperTest {
 
     @Test
-    public void mapHttpServerResponseFromHttpResponse() throws UnsupportedEncodingException {
+    public void mapHttpServerResponseFromHttpResponse() {
         // given
         MockHttpServerResponse httpServerResponse = new MockHttpServerResponse();
         HttpResponse httpResponse = new HttpResponse();

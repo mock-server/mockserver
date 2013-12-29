@@ -123,4 +123,16 @@ public class MapMatcherTest {
         // then
         assertFalse(mapMatcher.matches(keyToMultiValues));
     }
+
+    @Test
+    public void shouldHandleIllegalRegexPattern() {
+        // given
+        multimap.put("foo", "/{}");
+
+        // when
+        keyToMultiValues.add(new KeyToMultiValue("foo", "/{}"));
+
+        // then
+        assertFalse(mapMatcher.matches(keyToMultiValues));
+    }
 }

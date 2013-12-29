@@ -10,36 +10,36 @@ import java.util.regex.PatternSyntaxException;
  */
 public class StringMatcher extends ModelObject implements Matcher<String> {
 
-    private final String path;
+    private final String matcher;
 
-    public StringMatcher(String path) {
-        this.path = path;
+    public StringMatcher(String matcher) {
+        this.matcher = matcher;
     }
 
-    public boolean matches(String path) {
+    public boolean matches(String matched) {
         boolean result = false;
 
-        if (Strings.isNullOrEmpty(this.path)) {
+        if (Strings.isNullOrEmpty(this.matcher)) {
             result = true;
-        } else if (path != null) {
+        } else if (matched != null) {
             try {
-                if (path.matches(this.path)) {
+                if (matched.matches(this.matcher)) {
                     result = true;
                 }
             } catch (PatternSyntaxException pse) {
-                logger.error("Error while matching regex [" + this.path + "] for string [" + path + "] " + pse.getMessage());
+                logger.error("Error while matching regex [" + this.matcher + "] for string [" + matched + "] " + pse.getMessage());
             }
             try {
-                if (this.path.matches(path)) {
+                if (this.matcher.matches(matched)) {
                     result = true;
                 }
             } catch (PatternSyntaxException pse) {
-                logger.error("Error while matching regex [" + path + "] for string [" + this.path + "] " + pse.getMessage());
+                logger.error("Error while matching regex [" + matched + "] for string [" + this.matcher + "] " + pse.getMessage());
             }
         }
 
         if (!result) {
-            logger.trace("Failed to match [{}] with [{}]", path, this.path);
+            logger.trace("Failed to match [{}] with [{}]", matched, this.matcher);
         }
         return result;
     }
