@@ -1,86 +1,80 @@
 package org.mockserver.proxy;
 
 import ch.qos.logback.classic.Level;
-import com.google.common.util.concurrent.SettableFuture;
+import org.apache.commons.lang3.StringUtils;
+import org.mockserver.mappers.vertx.HttpClientRequestMapper;
+import org.mockserver.mappers.vertx.HttpClientResponseMapper;
 import org.mockserver.mappers.HttpServerRequestMapper;
+import org.mockserver.mappers.HttpServerResponseMapper;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.VoidHandler;
 import org.vertx.java.core.buffer.Buffer;
-import org.vertx.java.core.http.HttpClient;
 import org.vertx.java.core.http.HttpClientRequest;
 import org.vertx.java.core.http.HttpClientResponse;
 import org.vertx.java.core.http.HttpServerRequest;
+import org.vertx.java.core.http.HttpServerResponse;
 import org.vertx.java.platform.Verticle;
-
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author jamesdbloom
  */
 public class ProxyVertical extends Verticle {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private final Handler<HttpServerRequest> requestHandler = new Handler<HttpServerRequest>() {
+    private HttpClientRequestMapper httpClientRequestMapper = new HttpClientRequestMapper();
+    private HttpClientResponseMapper httpClientResponseMapper = new HttpClientResponseMapper();
+    private Handler<HttpServerRequest> requestHandler = new Handler<HttpServerRequest>() {
         public void handle(final HttpServerRequest request) {
-            final Buffer body = new Buffer(0);
+            System.out.println("Proxying request: " + request.uri());
+            final HttpServerResponse response = request.response();
 
-            // The receive body
+            final Buffer requestBody = new Buffer();
             request.dataHandler(new Handler<Buffer>() {
-                public void handle(Buffer buffer) {
-                    body.appendBuffer(buffer);
+                public void handle(Buffer data) {
+                    requestBody.appendBuffer(data);
+                    System.out.println("Proxying request body:" + data);
                 }
             });
 
             // The entire body has now been received
             request.endHandler(new VoidHandler() {
                 public void handle() {
-                    HttpRequest httpRequest = httpServerRequestMapper.createHttpRequest(request, body.getBytes());
-                    System.out.println("STARTING http = " + httpRequest);
-                    final HttpClient httpClient = vertx.createHttpClient();
-                    final SettableFuture<String> future = SettableFuture.create();
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Handler<HttpClientResponse> responseHandler = new Handler<HttpClientResponse>() {
-                                @Override
-                                public void handle(final HttpClientResponse response) {
-                                    final Buffer body = new Buffer(0);
+                    HttpRequest httpRequest = new HttpServerRequestMapper().createHttpRequest(request, requestBody.getBytes());
+                    // filter in here
+                    HttpClientRequest clientRequest = vertx
+                            .createHttpClient()
+                            .setHost(StringUtils.substringBefore(request.headers().get("Host"), ":"))
+                            .setPort(httpRequest.getPort())
+                            .request(request.method(), request.uri(), new Handler<HttpClientResponse>() {
+                                public void handle(final HttpClientResponse clientResponse) {
+                                    System.out.println("Proxying response: " + clientResponse.statusCode());
 
-                                    // The receive body
-                                    response.dataHandler(new Handler<Buffer>() {
-                                        public void handle(Buffer buffer) {
-                                            body.appendBuffer(buffer);
+                                    final Buffer responseBody = new Buffer();
+                                    clientResponse.dataHandler(new Handler<Buffer>() {
+                                        public void handle(Buffer data) {
+                                            responseBody.appendBuffer(data);
+                                            System.out.println("Proxying response body:" + data);
                                         }
                                     });
-
-                                    // The entire body has now been received
-                                    response.endHandler(new VoidHandler() {
+                                    clientResponse.endHandler(new VoidHandler() {
                                         public void handle() {
-                                            request.response().headers().add(response.headers());
-                                            request.response().end(body);
-                                            future.set(response.statusMessage());
+                                            HttpResponse httpResponse = httpClientResponseMapper.mapHttpServerResponse(clientResponse, responseBody.getBytes());
+                                            // filter in here
+                                            new HttpServerResponseMapper().mapHttpServerResponse(httpResponse, response);
+                                            System.out.println("end of the response");
                                         }
                                     });
                                 }
-                            };
-                            HttpClientRequest httpClientRequest = httpClient.request(request.method(), request.uri(), responseHandler);
-                            httpClientRequest.end(body);
-                        }
-                    }).start();
-                    try {
-                        future.get(30, TimeUnit.SECONDS);
-                    } catch (Exception e) {
-                        logger.error("Exception while waiting for http from proxy to final destination to return", e);
-                    }
-                    System.out.println("ENDING http = " + httpRequest);
-                    // http.response().end();
+                            });
+                    httpClientRequestMapper.createHttpRequest(httpRequest, clientRequest);
+                    System.out.println("end of the request");
                 }
             });
         }
     };
-    private HttpServerRequestMapper httpServerRequestMapper = new HttpServerRequestMapper();
 
     /**
      * Override the debug WARN logging level

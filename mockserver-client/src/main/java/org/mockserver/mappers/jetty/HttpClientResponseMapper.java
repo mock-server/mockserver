@@ -1,4 +1,4 @@
-package org.mockserver.mappers;
+package org.mockserver.mappers.jetty;
 
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;

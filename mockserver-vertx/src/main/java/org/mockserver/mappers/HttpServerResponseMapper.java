@@ -27,15 +27,6 @@ public class HttpServerResponseMapper {
         }
     }
 
-    private void setBody(HttpResponse httpResponse, HttpServerResponse httpServerResponse) {
-        if (httpResponse.getBody() != null) {
-            httpServerResponse.setChunked(false);
-            Buffer body = new Buffer(httpResponse.getBody());
-            httpServerResponse.putHeader("Content-Length", "" + body.length());
-            httpServerResponse.write(body);
-        }
-    }
-
     private void setHeaders(HttpResponse httpResponse, HttpServerResponse httpServletResponse) {
         if (httpResponse.getHeaders() != null) {
             for (Header header : httpResponse.getHeaders()) {
@@ -54,5 +45,15 @@ public class HttpServerResponseMapper {
                 }
             }
         }
+    }
+
+    private void setBody(HttpResponse httpResponse, HttpServerResponse httpServerResponse) {
+        if (httpResponse.getBody() != null) {
+            httpServerResponse.setChunked(false);
+            Buffer body = new Buffer(httpResponse.getBody());
+            httpServerResponse.putHeader("Content-Length", "" + body.length());
+            httpServerResponse.write(body);
+        }
+        httpServerResponse.end();
     }
 }

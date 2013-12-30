@@ -64,8 +64,8 @@ public class MockServerVertical extends Verticle {
                         } else {
                             request.response().setStatusCode(HttpStatusCode.NOT_FOUND_404.code());
                             request.response().setStatusMessage(HttpStatusCode.NOT_FOUND_404.reasonPhrase());
+                            request.response().end();
                         }
-                        request.response().end();
                     }
                 }
             });

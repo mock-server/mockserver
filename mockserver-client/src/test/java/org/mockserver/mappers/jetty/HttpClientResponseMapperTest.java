@@ -1,9 +1,10 @@
-package org.mockserver.mappers;
+package org.mockserver.mappers.jetty;
 
 import org.apache.commons.lang3.CharEncoding;
 import org.eclipse.jetty.client.api.Response;
 import org.eclipse.jetty.http.HttpFields;
 import org.junit.Test;
+import org.mockserver.mappers.jetty.HttpClientResponseMapper;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpResponse;

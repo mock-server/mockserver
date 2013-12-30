@@ -17,7 +17,7 @@ import org.eclipse.jetty.http.MimeTypes;
 import org.eclipse.jetty.util.HttpCookieStore;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.mockserver.client.serialization.HttpRequestSerializer;
-import org.mockserver.mappers.HttpClientResponseMapper;
+import org.mockserver.mappers.jetty.HttpClientResponseMapper;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
@@ -26,7 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 import static org.mockserver.configuration.SystemProperties.bufferSize;

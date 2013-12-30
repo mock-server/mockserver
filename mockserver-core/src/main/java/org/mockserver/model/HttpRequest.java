@@ -1,5 +1,7 @@
 package org.mockserver.model;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -90,5 +92,23 @@ public class HttpRequest extends ModelObject {
 
     public List<Cookie> getCookies() {
         return cookies;
+    }
+
+    public int getPort() {
+        URL url = null;
+        try {
+            url = new URL(this.url);
+        } catch (MalformedURLException murle) {
+            logger.debug("MalformedURLException parsing uri [" + this.url + "]", murle);
+        }
+        if (url != null && url.getPort() != -1) {
+            return url.getPort();
+        } else {
+            if (this.url.startsWith("https")) {
+                return 443;
+            } else {
+                return 80;
+            }
+        }
     }
 }

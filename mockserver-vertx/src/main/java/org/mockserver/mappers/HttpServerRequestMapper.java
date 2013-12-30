@@ -26,9 +26,9 @@ public class HttpServerRequestMapper {
         setURL(httpRequest, httpServerRequest);
         setPath(httpRequest, httpServerRequest);
         setQueryString(httpRequest, httpServerRequest);
-        setBody(httpRequest, bodyBytes);
         setHeaders(httpRequest, httpServerRequest);
         setCookies(httpRequest, httpServerRequest);
+        setBody(httpRequest, bodyBytes);
         return httpRequest;
     }
 
@@ -48,21 +48,17 @@ public class HttpServerRequestMapper {
         httpRequest.withQueryString(httpServerRequest.query());
     }
 
-    private void setBody(HttpRequest httpRequest, byte[] bodyBytes) {
-        httpRequest.withBody(new String(bodyBytes, Charset.forName(CharEncoding.UTF_8)));
-    }
-
     private void setHeaders(HttpRequest httpRequest, HttpServerRequest httpServerRequest) {
-        List<Header> mappedHeaders = new ArrayList<Header>();
+        List<Header> mappedHeaders = new ArrayList<>();
         MultiMap headers = httpServerRequest.headers();
         for (String headerName : headers.names()) {
-            mappedHeaders.add(new Header(headerName, new ArrayList<String>(headers.getAll(headerName))));
+            mappedHeaders.add(new Header(headerName, new ArrayList<>(headers.getAll(headerName))));
         }
         httpRequest.withHeaders(mappedHeaders);
     }
 
     private void setCookies(HttpRequest httpRequest, HttpServerRequest httpServerRequest) {
-        List<Cookie> mappedCookies = new ArrayList<Cookie>();
+        List<Cookie> mappedCookies = new ArrayList<>();
         MultiMap headers = httpServerRequest.headers();
         for (String headerName : headers.names()) {
             if (headerName.equals("Cookie") || headerName.equals("Set-Cookie")) {
@@ -74,5 +70,9 @@ public class HttpServerRequestMapper {
             }
         }
         httpRequest.withCookies(mappedCookies);
+    }
+
+    private void setBody(HttpRequest httpRequest, byte[] bodyBytes) {
+        httpRequest.withBody(new String(bodyBytes, Charset.forName(CharEncoding.UTF_8)));
     }
 }
