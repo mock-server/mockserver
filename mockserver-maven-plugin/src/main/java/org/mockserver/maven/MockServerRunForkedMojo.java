@@ -1,9 +1,9 @@
 package org.mockserver.maven;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.resolver.ArtifactResolutionRequest;
 import org.apache.maven.artifact.resolver.ArtifactResolver;
-import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -12,13 +12,15 @@ import org.apache.maven.repository.RepositorySystem;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
  * @author jamesdbloom
  */
 @Mojo(name = "runForked", requiresProject = false, threadSafe = false)
-public class MockServerRunForkedMojo extends AbstractMojo {
+public class MockServerRunForkedMojo extends MockServerAbstractMojo {
 
     /**
      * Get a list of artifacts used by this plugin
@@ -35,36 +37,6 @@ public class MockServerRunForkedMojo extends AbstractMojo {
      */
     @Component
     protected ArtifactResolver artifactResolver;
-    /**
-     * The port to run MockServer on
-     */
-    @Parameter(property = "mockserver.port", defaultValue = "8080")
-    private int port;
-    /**
-     * Logging level
-     */
-    @Parameter(property = "mockserver.logLevel", defaultValue = "WARN")
-    private String logLevel;
-    /**
-     * Logging level
-     */
-    @Parameter(property = "mockserver.pipeLogToConsole", defaultValue = "false")
-    private boolean pipeLogToConsole;
-    /**
-     * The port to stop MockServer
-     */
-    @Parameter(property = "mockserver.stopPort", defaultValue = "8081")
-    private int stopPort;
-    /**
-     * Key to provide when stopping MockServer
-     */
-    @Parameter(property = "mockserver.stopKey", defaultValue = "STOP_KEY")
-    private String stopKey;
-    /**
-     * Skip plugin execution completely.
-     */
-    @Parameter(property = "mockserver.skip", defaultValue = "false")
-    private boolean skip;
 
     public static String fileSeparators(String path) {
         StringBuilder ret = new StringBuilder();
@@ -83,17 +55,23 @@ public class MockServerRunForkedMojo extends AbstractMojo {
             getLog().info("Skipping plugin execution");
         } else {
             getLog().info("Starting MockServer on port " + port);
-            ProcessBuilder processBuilder = new ProcessBuilder(
-                    getJavaBin(),
+            List<String> arguments = new ArrayList<>(Arrays.asList(getJavaBin(),
                     "-Dmockserver.logLevel=" + logLevel,
                     "-Dmockserver.stopPort=" + stopPort,
                     "-Dmockserver.stopKey=" + stopKey,
 //                    "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5006",
-                    "-jar", jarWithDependencies(), "-serverPort", "" + port
-            );
+                    "-jar", jarWithDependencies()));
+            if (port != -1) {
+                arguments.add("-serverPort");
+                arguments.add("" + port);
+            }
+            if (securePort != -1) {
+                arguments.add("-serverSecurePort");
+                arguments.add("" + securePort);
+            }
+            ProcessBuilder processBuilder = newProcessBuilder(arguments);
             if (pipeLogToConsole) {
-                processBuilder.redirectErrorStream(true);
-                processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
+                processBuilder.inheritIO();
             }
             try {
                 processBuilder.start();
@@ -104,7 +82,13 @@ public class MockServerRunForkedMojo extends AbstractMojo {
 
     }
 
-    private String getJavaBin() {
+    @VisibleForTesting
+    ProcessBuilder newProcessBuilder(List<String> arguments) {
+        return new ProcessBuilder(arguments);
+    }
+
+    @VisibleForTesting
+    String getJavaBin() {
         String javaexes[] = new String[]{"java", "java.exe"};
 
         File javaHomeDir = new File(System.getProperty("java.home"));
@@ -118,7 +102,8 @@ public class MockServerRunForkedMojo extends AbstractMojo {
         return "java";
     }
 
-    protected String jarWithDependencies() {
+    @VisibleForTesting
+    String jarWithDependencies() {
         Artifact jarWithDependencies = repositorySystem.createArtifactWithClassifier("org.mock-server", "mockserver-jetty", "2.0-SNAPSHOT", "jar", "jar-with-dependencies");
         artifactResolver.resolve(new ArtifactResolutionRequest().setArtifact(jarWithDependencies));
         getLog().debug("Running MockServer using " + jarWithDependencies.getFile().getAbsolutePath());
