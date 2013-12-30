@@ -6,7 +6,6 @@ import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.ShutdownThread;
-import org.mockserver.proxy.ProxyRunner;
 import org.mockserver.proxy.connect.ConnectHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,62 +38,10 @@ public abstract class AbstractRunner {
      *
      * @param level the log level, which can be ALL, DEBUG, INFO, WARN, ERROR, OFF
      */
-    public static void overrideLogLevel(String level) {
+    public void overrideLogLevel(String level) {
         Logger rootLogger = LoggerFactory.getLogger("org.mockserver");
         if (rootLogger instanceof ch.qos.logback.classic.Logger) {
             ((ch.qos.logback.classic.Logger) rootLogger).setLevel(Level.toLevel(level));
-        }
-    }
-
-    /**
-     * Stop a forked or remote MockServer instance
-     *
-     * @param ipAddress IP address as string of remote MockServer (i.e. "127.0.0.1")
-     * @param stopPort  the stopPort for the MockServer to stop (default is HTTP port + 1)
-     * @param stopKey   the stopKey for the MockServer to step (default is "STOP_KEY")
-     * @param stopWait  the period to wait for MockServer to confirm it has stopped, in seconds.  A value of <= 0 means do not wait for confirmation MockServer has stopped.
-     */
-    public static boolean stopRemote(String ipAddress, int stopPort, String stopKey, int stopWait) {
-        if (stopPort <= 0)
-            throw new IllegalArgumentException("Please specify a valid stopPort");
-        if (stopKey == null)
-            throw new IllegalArgumentException("Please specify a valid stopKey");
-
-        try {
-            Socket s = new Socket(InetAddress.getByName(ipAddress), stopPort);
-            s.setSoLinger(false, 0);
-
-            OutputStream out = s.getOutputStream();
-            out.write((stopKey + "\r\nstop\r\n").getBytes());
-            out.flush();
-
-            boolean stopped = true;
-            if (stopWait > 0) {
-                stopped = false;
-                s.setSoTimeout(stopWait * 1000);
-                s.getInputStream();
-
-                logger.info("Waiting %d seconds for MockServer to stop%n", stopWait);
-                LineNumberReader lin = new LineNumberReader(new InputStreamReader(s.getInputStream()));
-                String response;
-
-                while (!stopped && ((response = lin.readLine()) != null)) {
-                    if ("Stopped".equals(response)) {
-                        stopped = true;
-                        logger.info("MockServer has stopped");
-                    }
-                }
-            } else {
-                logger.info("MockServer stop http has been sent");
-            }
-            s.close();
-            return stopped;
-        } catch (ConnectException e) {
-            logger.info("MockServer is not running");
-            return false;
-        } catch (Exception e) {
-            logger.error("Exception stopping MockServer", e);
-            return false;
         }
     }
 
@@ -263,5 +210,57 @@ public abstract class AbstractRunner {
             System.exit(1);
         }
         return this;
+    }
+
+    /**
+     * Stop a forked or remote MockServer instance
+     *
+     * @param ipAddress IP address as string of remote MockServer (i.e. "127.0.0.1")
+     * @param stopPort  the stopPort for the MockServer to stop (default is HTTP port + 1)
+     * @param stopKey   the stopKey for the MockServer to step (default is "STOP_KEY")
+     * @param stopWait  the period to wait for MockServer to confirm it has stopped, in seconds.  A value of <= 0 means do not wait for confirmation MockServer has stopped.
+     */
+    public boolean stop(String ipAddress, int stopPort, String stopKey, int stopWait) {
+        if (stopPort <= 0)
+            throw new IllegalArgumentException("Please specify a valid stopPort");
+        if (stopKey == null)
+            throw new IllegalArgumentException("Please specify a valid stopKey");
+
+        try {
+            Socket s = new Socket(InetAddress.getByName(ipAddress), stopPort);
+            s.setSoLinger(false, 0);
+
+            OutputStream out = s.getOutputStream();
+            out.write((stopKey + "\r\nstop\r\n").getBytes());
+            out.flush();
+
+            boolean stopped = true;
+            if (stopWait > 0) {
+                stopped = false;
+                s.setSoTimeout(stopWait * 1000);
+                s.getInputStream();
+
+                logger.info("Waiting %d seconds for MockServer to stop%n", stopWait);
+                LineNumberReader lin = new LineNumberReader(new InputStreamReader(s.getInputStream()));
+                String response;
+
+                while (!stopped && ((response = lin.readLine()) != null)) {
+                    if ("Stopped".equals(response)) {
+                        stopped = true;
+                        logger.info("MockServer has stopped");
+                    }
+                }
+            } else {
+                logger.info("MockServer stop http has been sent");
+            }
+            s.close();
+            return stopped;
+        } catch (ConnectException e) {
+            logger.info("MockServer is not running");
+            return false;
+        } catch (Exception e) {
+            logger.error("Exception stopping MockServer", e);
+            return false;
+        }
     }
 }

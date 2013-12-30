@@ -15,8 +15,6 @@ import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.contains;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -25,6 +23,11 @@ import static org.mockito.MockitoAnnotations.initMocks;
  */
 public class MockServerRunForkedMojoTest {
 
+    public final String level = "LEVEL";
+    public final int stopPort = 3;
+    public final String stopKey = "stopKey";
+    private final String jarWithDependenciesPath = "/foo";
+    private final String javaBinaryPath = "java";
     @Mock
     protected RepositorySystem mockRepositorySystem;
     @Mock
@@ -43,27 +46,28 @@ public class MockServerRunForkedMojoTest {
         processBuilder = new ProcessBuilder("echo", "$JAVA_HOME");
         mockServerRunForkedMojo = new MockServerRunForkedMojo();
         initMocks(this);
+
+        when(mockServerRunForkedMojo.getJavaBin()).thenReturn(javaBinaryPath);
+        when(mockRepositorySystem.createArtifactWithClassifier("org.mock-server", "mockserver-jetty", "2.0-SNAPSHOT", "jar", "jar-with-dependencies")).thenReturn(mockArtifact);
+        when(mockArtifact.getFile()).thenReturn(new File(jarWithDependenciesPath));
+        mockServerRunForkedMojo.logLevel = level;
+        mockServerRunForkedMojo.stopPort = stopPort;
+        mockServerRunForkedMojo.stopKey = stopKey;
     }
 
     @Test
-    public void shouldRunMockServerForked() throws MojoExecutionException, ExecutionException, InterruptedException {
+    public void shouldRunMockServerForkedBothPortsSpecified() throws MojoExecutionException, ExecutionException, InterruptedException {
         // given
-        mockServerRunForkedMojo.logLevel = "LEVEL";
-        mockServerRunForkedMojo.stopPort = 3;
-        mockServerRunForkedMojo.stopKey = "stopKey";
         mockServerRunForkedMojo.port = 1;
         mockServerRunForkedMojo.securePort = 2;
         mockServerRunForkedMojo.pipeLogToConsole = true;
         when(mockServerRunForkedMojo.newProcessBuilder(Arrays.asList(
-                "java",
-                "-Dmockserver.logLevel=LEVEL",
-                "-Dmockserver.stopPort=3",
-                "-Dmockserver.stopKey=stopKey",
-                "-jar", "/foo", "-serverPort", "1", "-serverSecurePort", "2"
+                javaBinaryPath,
+                "-Dmockserver.logLevel=" + level,
+                "-Dmockserver.stopPort=" + stopPort,
+                "-Dmockserver.stopKey=" + stopKey,
+                "-jar", jarWithDependenciesPath, "-serverPort", "1", "-serverSecurePort", "2"
         ))).thenReturn(processBuilder);
-        when(mockServerRunForkedMojo.getJavaBin()).thenReturn("java");
-        when(mockRepositorySystem.createArtifactWithClassifier("org.mock-server", "mockserver-jetty", "2.0-SNAPSHOT", "jar", "jar-with-dependencies")).thenReturn(mockArtifact);
-        when(mockArtifact.getFile()).thenReturn(new File("/foo"));
 
 
         // when
@@ -71,20 +75,109 @@ public class MockServerRunForkedMojoTest {
 
         // then
         verify(mockServerRunForkedMojo).newProcessBuilder(Arrays.asList(
-                "java",
-                "-Dmockserver.logLevel=LEVEL",
-                "-Dmockserver.stopPort=3",
-                "-Dmockserver.stopKey=stopKey",
-                "-jar", "/foo", "-serverPort", "1", "-serverSecurePort", "2"
+                javaBinaryPath,
+                "-Dmockserver.logLevel=" + level,
+                "-Dmockserver.stopPort=" + stopPort,
+                "-Dmockserver.stopKey=" + stopKey,
+                "-jar", jarWithDependenciesPath, "-serverPort", "1", "-serverSecurePort", "2"
         ));
         assertEquals(ProcessBuilder.Redirect.INHERIT, processBuilder.redirectInput());
         assertEquals(ProcessBuilder.Redirect.INHERIT, processBuilder.redirectOutput());
         assertEquals(ProcessBuilder.Redirect.INHERIT, processBuilder.redirectError());
     }
 
-    // todo complete other scenarios
-    // todo complete other scenarios
-    // todo complete other scenarios
-    // todo complete other scenarios
-    // todo complete other scenarios
+    @Test
+    public void shouldRunMockServerForkedOnlyNonSecurePort() throws MojoExecutionException, ExecutionException, InterruptedException {
+        // given
+        mockServerRunForkedMojo.port = 1;
+        mockServerRunForkedMojo.securePort = -1;
+        mockServerRunForkedMojo.pipeLogToConsole = true;
+        when(mockServerRunForkedMojo.newProcessBuilder(Arrays.asList(
+                javaBinaryPath,
+                "-Dmockserver.logLevel=" + level,
+                "-Dmockserver.stopPort=" + stopPort,
+                "-Dmockserver.stopKey=" + stopKey,
+                "-jar", jarWithDependenciesPath, "-serverPort", "1"
+        ))).thenReturn(processBuilder);
+
+
+        // when
+        mockServerRunForkedMojo.execute();
+
+        // then
+        verify(mockServerRunForkedMojo).newProcessBuilder(Arrays.asList(
+                javaBinaryPath,
+                "-Dmockserver.logLevel=" + level,
+                "-Dmockserver.stopPort=" + stopPort,
+                "-Dmockserver.stopKey=" + stopKey,
+                "-jar", jarWithDependenciesPath, "-serverPort", "1"
+        ));
+        assertEquals(ProcessBuilder.Redirect.INHERIT, processBuilder.redirectInput());
+        assertEquals(ProcessBuilder.Redirect.INHERIT, processBuilder.redirectOutput());
+        assertEquals(ProcessBuilder.Redirect.INHERIT, processBuilder.redirectError());
+    }
+
+    @Test
+    public void shouldRunMockServerForkedOnlySecurePort() throws MojoExecutionException, ExecutionException, InterruptedException {
+        // given
+        mockServerRunForkedMojo.port = -1;
+        mockServerRunForkedMojo.securePort = 2;
+        mockServerRunForkedMojo.pipeLogToConsole = true;
+        when(mockServerRunForkedMojo.newProcessBuilder(Arrays.asList(
+                javaBinaryPath,
+                "-Dmockserver.logLevel=" + level,
+                "-Dmockserver.stopPort=" + stopPort,
+                "-Dmockserver.stopKey=" + stopKey,
+                "-jar", jarWithDependenciesPath, "-serverSecurePort", "2"
+        ))).thenReturn(processBuilder);
+
+
+        // when
+        mockServerRunForkedMojo.execute();
+
+        // then
+        verify(mockServerRunForkedMojo).newProcessBuilder(Arrays.asList(
+                javaBinaryPath,
+                "-Dmockserver.logLevel=" + level,
+                "-Dmockserver.stopPort=" + stopPort,
+                "-Dmockserver.stopKey=" + stopKey,
+                "-jar", jarWithDependenciesPath, "-serverSecurePort", "2"
+        ));
+        assertEquals(ProcessBuilder.Redirect.INHERIT, processBuilder.redirectInput());
+        assertEquals(ProcessBuilder.Redirect.INHERIT, processBuilder.redirectOutput());
+        assertEquals(ProcessBuilder.Redirect.INHERIT, processBuilder.redirectError());
+    }
+
+    @Test
+    public void shouldRunMockServerForkedAndNotPipeToConsole() throws MojoExecutionException, ExecutionException, InterruptedException {
+        // given
+        mockServerRunForkedMojo.pipeLogToConsole = false;
+        when(mockServerRunForkedMojo.newProcessBuilder(Arrays.asList(
+                javaBinaryPath,
+                "-Dmockserver.logLevel=" + level,
+                "-Dmockserver.stopPort=" + stopPort,
+                "-Dmockserver.stopKey=" + stopKey,
+                "-jar", jarWithDependenciesPath, "-serverPort", "0", "-serverSecurePort", "0"
+        ))).thenReturn(processBuilder);
+
+        // when
+        mockServerRunForkedMojo.execute();
+
+        // then
+        assertEquals(ProcessBuilder.Redirect.PIPE, processBuilder.redirectInput());
+        assertEquals(ProcessBuilder.Redirect.PIPE, processBuilder.redirectOutput());
+        assertEquals(ProcessBuilder.Redirect.PIPE, processBuilder.redirectError());
+    }
+
+    @Test
+    public void shouldSkipStoppingMockServer() throws MojoExecutionException {
+        // given
+        mockServerRunForkedMojo.skip = true;
+
+        // when
+        mockServerRunForkedMojo.execute();
+
+        // then
+        verify(mockServerRunForkedMojo, times(0)).newProcessBuilder(anyListOf(String.class));
+    }
 }

@@ -93,10 +93,9 @@
                         <goals>
                             <goal>descriptor</goal>
                             <goal>report</goal>
-                            <!--<goal>updateRegistry</goal>-->
                             <goal>xdoc</goal>
                             <goal>addPluginArtifactMetadata</goal>
-                            <goal>helpmojo</goal>
+                            <!--<goal>helpmojo</goal>-->
                         </goals>
                     </execution>
                 </executions>

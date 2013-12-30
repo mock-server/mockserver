@@ -52,14 +52,15 @@ public class Main {
      */
     public static void main(String... arguments) {
         Map<String, Integer> parseArguments = parseArguments(arguments);
-        AbstractRunner.overrideLogLevel(System.getProperty("mockserver.logLevel"));
 
         if (parseArguments.size() > 0) {
             if (parseArguments.containsKey(PROXY_PORT_KEY) || parseArguments.containsKey(PROXY_SECURE_PORT_KEY)) {
+                proxyRunner.overrideLogLevel(System.getProperty("mockserver.logLevel"));
                 proxyRunner.start(parseArguments.get(PROXY_PORT_KEY), parseArguments.get(PROXY_SECURE_PORT_KEY));
             }
 
             if (parseArguments.containsKey(SERVER_PORT_KEY) || parseArguments.containsKey(SERVER_SECURE_PORT_KEY)) {
+                mockServerRunner.overrideLogLevel(System.getProperty("mockserver.logLevel"));
                 mockServerRunner.start(parseArguments.get(SERVER_PORT_KEY), parseArguments.get(SERVER_SECURE_PORT_KEY));
             }
         } else {

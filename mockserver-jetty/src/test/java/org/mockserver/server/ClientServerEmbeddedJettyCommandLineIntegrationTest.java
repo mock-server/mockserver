@@ -25,7 +25,7 @@ public class ClientServerEmbeddedJettyCommandLineIntegrationTest extends Abstrac
 
     @AfterClass
     public static void stopServer() {
-        MockServerRunner.stopRemote("127.0.0.1", serverPort + 1, "STOP_KEY", 500);
+        new MockServerRunner().stop("127.0.0.1", serverPort + 1, "STOP_KEY", 500);
     }
 
     @Before

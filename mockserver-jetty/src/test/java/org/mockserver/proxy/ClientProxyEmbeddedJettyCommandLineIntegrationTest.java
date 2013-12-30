@@ -25,7 +25,7 @@ public class ClientProxyEmbeddedJettyCommandLineIntegrationTest extends Abstract
 
     @AfterClass
     public static void stopProxy() {
-        MockServerRunner.stopRemote("127.0.0.1", proxyPort + 1, "STOP_KEY", 500);
+        new MockServerRunner().stop("127.0.0.1", proxyPort + 1, "STOP_KEY", 500);
     }
 
     @Before

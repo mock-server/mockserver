@@ -4,6 +4,7 @@ import org.eclipse.jetty.servlet.DefaultServlet;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.proxy.connect.ConnectHandler;
+import org.mockserver.server.MockServerRunner;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -122,7 +123,7 @@ public class AbstractRunnerTest {
         }
 
         // then
-        assertTrue(AbstractRunner.stopRemote("127.0.0.1", 9090 + 1, "STOP_KEY", 2));
+        assertTrue(new MockServerRunner().stop("127.0.0.1", 9090 + 1, "STOP_KEY", 2));
     }
 
     @Test
@@ -133,19 +134,19 @@ public class AbstractRunnerTest {
         } catch (TimeoutException te) {
             // ignore as expected
         }
-        AbstractRunner.stopRemote("127.0.0.1", 9090 + 1, "STOP_KEY", 2);
+        new MockServerRunner().stop("127.0.0.1", 9090 + 1, "STOP_KEY", 2);
 
         // then
-        assertFalse(AbstractRunner.stopRemote("127.0.0.1", 9090 + 1, "STOP_KEY", 2));
+        assertFalse(new MockServerRunner().stop("127.0.0.1", 9090 + 1, "STOP_KEY", 2));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void shouldValidatePortArgument() {
-        AbstractRunner.stopRemote("127.0.0.1", -1, "STOP_KEY", 2);
+        new MockServerRunner().stop("127.0.0.1", -1, "STOP_KEY", 2);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void shouldValidateStopKeyArgument() {
-        AbstractRunner.stopRemote("127.0.0.1", 9090, null, 2);
+        new MockServerRunner().stop("127.0.0.1", 9090, null, 2);
     }
 }
