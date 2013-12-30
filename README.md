@@ -392,7 +392,7 @@ Alternatively build from source and run the Vert.X module as a zip file:
     cd mockserver
     mvn clean package
     export VERTX_OPTS="-Dmockserver.port=9090 -Dmockserver.logLevel=TRACE"
-    vertx runzip mockserver-vertx/target/org.mock-server~mockserver-vertx~2.0.1-SNAPSHOT.zip
+    vertx runzip mockserver-vertx/target/org.mock-server~mockserver-vertx~2.0-SNAPSHOT.zip
     
 The default port for the Vert.X MockServer module is **8080**.  To run the MockServer on another port set / add an **VERTX_OPTS** environment variable specifying the system property **mockserver.port** as follows **-Dmockserver.port=\<port\>** for example:
 
@@ -426,15 +426,15 @@ To build an executable jar containing all dependancies run the following command
 
 This will produce a jar file under the target directory called, as follows:
 
-    mockserver-jetty/target/mockserver-jetty-2.0.1-SNAPSHOT-jar-with-dependencies.jar
+    mockserver-jetty/target/mockserver-jetty-2.0-SNAPSHOT-jar-with-dependencies.jar
 
 Run the MockServer then using the executable jar as follows:
 
-    java -jar <path to mockserver-jetty-2.0.1-SNAPSHOT-jar-with-dependencies.jar> -serverPort <port>
+    java -jar <path to mockserver-jetty-2.0-SNAPSHOT-jar-with-dependencies.jar> -serverPort <port>
     
 For example to run the MockServer on port 9999:
 
-    java -jar mockserver-jetty/target/mockserver-jetty-2.0.1-SNAPSHOT-jar-with-dependencies.jar -serverPort 9999
+    java -jar mockserver-jetty/target/mockserver-jetty-2.0-SNAPSHOT-jar-with-dependencies.jar -serverPort 9999
     
 ***Gradle***
 
