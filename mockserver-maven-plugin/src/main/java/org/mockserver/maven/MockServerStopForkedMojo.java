@@ -1,9 +1,7 @@
 package org.mockserver.maven;
 
-import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
 import org.mockserver.server.MockServerRunner;
 
 
@@ -13,32 +11,7 @@ import org.mockserver.server.MockServerRunner;
  * @author jamesdbloom
  */
 @Mojo(name = "stopForked", requiresProject = false, threadSafe = false)
-public class MockServerStopForkedMojo extends AbstractMojo {
-
-    /**
-     * Logging level
-     */
-    @Parameter(property = "mockserver.logLevel", defaultValue = "WARN")
-    private String logLevel;
-
-    /**
-     * The port to stop MockServer
-     */
-    @Parameter(property = "mockserver.stopPort", defaultValue = "8081")
-    private int stopPort;
-
-    /**
-     * Key to provide when stopping MockServer
-     */
-    @Parameter(property = "mockserver.stopKey", defaultValue = "STOP_KEY")
-    protected String stopKey;
-
-    /**
-     * Max time in seconds to wait for the MockServer to stop
-     */
-    @Parameter(property = "mockserver.stopWait")
-    protected int stopWait;
-
+public class MockServerStopForkedMojo extends MockServerAbstractMojo {
 
     public void execute() throws MojoExecutionException {
         getLog().info("Stopping MockServer using stopPort " + stopPort);

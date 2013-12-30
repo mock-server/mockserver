@@ -16,7 +16,7 @@ import java.util.concurrent.Executor;
  * @author jamesdbloom
  */
 class ConnectContext {
-    private static final Logger logger = LoggerFactory.getLogger(ConnectContext.class);
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     public final HttpServletRequest request;
     public final HttpServletResponse response;
     public final AsyncContext asyncContext;

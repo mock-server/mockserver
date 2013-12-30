@@ -37,7 +37,7 @@ import static org.mockserver.configuration.SystemProperties.maxTimeout;
  */
 public class HttpRequestClient {
 
-    private static final Logger logger = LoggerFactory.getLogger(HttpRequestClient.class);
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final HttpClientResponseMapper httpClientResponseMapper = new HttpClientResponseMapper();
     private final HttpClient httpClient;
     private String baseUri;

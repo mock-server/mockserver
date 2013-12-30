@@ -14,7 +14,7 @@ public class EmbeddedJettyHolder {
     public Future start(final int port, final int securePort, final String logLevel) {
         if (!MOCK_SERVER_RUNNER.isRunning()) {
             MockServerRunner.overrideLogLevel(logLevel);
-            return MOCK_SERVER_RUNNER.start(port, securePort);
+            return MOCK_SERVER_RUNNER.start((port != -1 ? port : null), (securePort != -1 ? securePort : null));
         } else {
             throw new IllegalStateException("MockServer is already running!");
         }

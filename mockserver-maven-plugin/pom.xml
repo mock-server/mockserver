@@ -15,6 +15,7 @@
 
     <properties>
         <mavenPluginPluginVersion>3.2</mavenPluginPluginVersion>
+        <maven-version>3.1.1</maven-version>
     </properties>
 
     <dependencies>
@@ -31,27 +32,27 @@
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-compat</artifactId>
-            <version>3.1.1</version>
+            <version>${maven-version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-plugin-api</artifactId>
-            <version>3.1.1</version>
+            <version>${maven-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-core</artifactId>
+            <version>${maven-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-artifact</artifactId>
+            <version>${maven-version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.maven.plugin-tools</groupId>
             <artifactId>maven-plugin-annotations</artifactId>
             <version>3.2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.maven</groupId>
-            <artifactId>maven-core</artifactId>
-            <version>3.1.1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.maven</groupId>
-            <artifactId>maven-artifact</artifactId>
-            <version>3.1.1</version>
         </dependency>
     </dependencies>
 
@@ -89,41 +90,14 @@
                 </configuration>
                 <executions>
                     <execution>
-                        <id>exec-plugin-doc</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>xdoc</goal>
-                            <goal>helpmojo</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>mojo-descriptor</id>
-                        <phase>process-classes</phase>
                         <goals>
                             <goal>descriptor</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>help-goal</id>
-                        <goals>
+                            <goal>report</goal>
+                            <!--<goal>updateRegistry</goal>-->
                             <goal>xdoc</goal>
+                            <goal>addPluginArtifactMetadata</goal>
                             <goal>helpmojo</goal>
                         </goals>
-                    </execution>
-                    <execution>
-                        <id>default-descriptor</id>
-                        <goals>
-                            <goal>descriptor</goal>
-                        </goals>
-                        <phase>process-classes</phase>
-                    </execution>
-                    <execution>
-                        <id>help-descriptor</id>
-                        <goals>
-                            <goal>xdoc</goal>
-                            <goal>helpmojo</goal>
-                        </goals>
-                        <phase>process-classes</phase>
                     </execution>
                 </executions>
             </plugin>

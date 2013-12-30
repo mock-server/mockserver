@@ -23,7 +23,7 @@ import java.util.List;
  * @author jamesdbloom
  */
 public class HttpServletRequestMapper {
-    private static final Logger logger = LoggerFactory.getLogger(HttpServletRequestMapper.class);
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public HttpRequest createHttpRequest(HttpServletRequest httpServletRequest) {
         HttpRequest httpRequest = new HttpRequest();

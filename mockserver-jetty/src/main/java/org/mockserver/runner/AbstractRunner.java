@@ -31,7 +31,7 @@ import static org.mockserver.configuration.SystemProperties.*;
  * @author jamesdbloom
  */
 public abstract class AbstractRunner {
-    private static final Logger logger = LoggerFactory.getLogger(ProxyRunner.class);
+    private static final Logger logger = LoggerFactory.getLogger(AbstractRunner.class);
     Server server;
 
     /**

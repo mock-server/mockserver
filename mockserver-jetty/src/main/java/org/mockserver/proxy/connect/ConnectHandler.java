@@ -29,7 +29,7 @@ import static org.mockserver.configuration.SystemProperties.maxTimeout;
  */
 public class ConnectHandler extends HandlerWrapper {
     public static final ByteBufferPool BUFFER_POOL = new MappedByteBufferPool();
-    private static final Logger logger = LoggerFactory.getLogger(ConnectHandler.class);
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final int securePort;
     private Executor executor;
     private Scheduler scheduler;
