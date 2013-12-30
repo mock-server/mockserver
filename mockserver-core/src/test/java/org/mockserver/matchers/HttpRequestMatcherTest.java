@@ -1,5 +1,6 @@
 package org.mockserver.matchers;
 
+import com.google.common.collect.ImmutableMap;
 import org.junit.Test;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
@@ -81,6 +82,18 @@ public class HttpRequestMatcherTest {
     @Test
     public void doesNotMatchIncorrectCookieValue() {
         assertFalse(new HttpRequestMatcher().withCookies(new Cookie("name", "value")).matches(new HttpRequest().withCookies(new Cookie("name", "value1"))));
+    }
+
+    @Test
+    public void doesNotMatchIncorrectXpathValue() {
+        assertFalse(new HttpRequestMatcher().withXpathBody(ImmutableMap.<String,String>builder().put("/element/key", "EXPECTED_VALUE").build())
+                .matches(new HttpRequest().withBody("<element><key>UNEXPECTED_VALUE</key></element>")));
+    }
+
+    @Test
+    public void matchXpathValue() {
+        assertTrue(new HttpRequestMatcher().withXpathBody(ImmutableMap.<String,String>builder().put("/element/key", "EXPECTED_VALUE").build())
+                .matches(new HttpRequest().withBody("<element><key>EXPECTED_VALUE</key></element>")));
     }
 
 }

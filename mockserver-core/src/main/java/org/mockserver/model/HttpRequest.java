@@ -1,8 +1,6 @@
 package org.mockserver.model;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author jamesdbloom
@@ -15,6 +13,7 @@ public class HttpRequest extends ModelObject {
     private String body = "";
     private List<Header> headers = new ArrayList<Header>();
     private List<Cookie> cookies = new ArrayList<Cookie>();
+    private Map<String, String> bodyXpath = new HashMap<>();
 
     public HttpRequest() {
     }
@@ -90,5 +89,14 @@ public class HttpRequest extends ModelObject {
 
     public List<Cookie> getCookies() {
         return cookies;
+    }
+
+    public Map<String, String> getBodyXpath() {
+        return bodyXpath;
+    }
+
+    public HttpRequest withBodyXpath(Map<String, String> bodyXpath) {
+        this.bodyXpath = bodyXpath;
+        return this;
     }
 }

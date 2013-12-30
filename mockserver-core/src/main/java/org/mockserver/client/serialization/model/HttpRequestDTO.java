@@ -5,7 +5,9 @@ import com.google.common.collect.Lists;
 import org.mockserver.model.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author jamesdbloom
@@ -18,6 +20,7 @@ public class HttpRequestDTO extends ModelObject {
     private String body;
     private List<CookieDTO> cookies = new ArrayList<CookieDTO>();
     private List<HeaderDTO> headers = new ArrayList<HeaderDTO>();
+    private Map<String, String> bodyXpath = new HashMap<>();
 
     public HttpRequestDTO(HttpRequest httpRequest) {
         method = httpRequest.getMethod();
@@ -35,6 +38,8 @@ public class HttpRequestDTO extends ModelObject {
                 return new CookieDTO(cookie);
             }
         });
+        bodyXpath.putAll(httpRequest.getBodyXpath());
+
     }
 
     public HttpRequestDTO() {
@@ -56,7 +61,7 @@ public class HttpRequestDTO extends ModelObject {
                     public Cookie apply(CookieDTO cookie) {
                         return cookie.buildObject();
                     }
-                }));
+                })).withBodyXpath(bodyXpath);
     }
 
     public String getMethod() {
@@ -119,6 +124,13 @@ public class HttpRequestDTO extends ModelObject {
 
     public HttpRequestDTO setCookies(List<CookieDTO> cookies) {
         this.cookies = cookies;
+        return this;
+    }
+
+    public Map<String, String> getBodyXpath() {return bodyXpath;}
+
+    public HttpRequestDTO setBodyXpath(Map<String, String> bodyXpath) {
+        this.bodyXpath = bodyXpath;
         return this;
     }
 }

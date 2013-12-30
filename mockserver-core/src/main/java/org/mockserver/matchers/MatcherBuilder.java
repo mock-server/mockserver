@@ -1,6 +1,5 @@
 package org.mockserver.matchers;
 
-import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.model.HttpRequest;
 
 /**
@@ -16,7 +15,8 @@ public class MatcherBuilder {
                 .withQueryString(httpRequest.getQueryString())
                 .withBody(httpRequest.getBody())
                 .withHeaders(httpRequest.getHeaders())
-                .withCookies(httpRequest.getCookies());
+                .withCookies(httpRequest.getCookies())
+                .withXpathBody(httpRequest.getBodyXpath());
     }
 
 }

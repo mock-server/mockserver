@@ -2,8 +2,12 @@ package org.mockserver.matchers;
 
 import org.mockserver.model.*;
 
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPathFactory;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author jamesdbloom
@@ -16,8 +20,8 @@ public class HttpRequestMatcher extends ModelObject implements Matcher<HttpReque
     private StringMatcher queryStringMatcher = null;
     private StringMatcher bodyMatcher = null;
     private MapMatcher headerMatcher = null;
-    private MapMatcher parameterMatcher = null;
     private MapMatcher cookieMatcher = null;
+    private XpathBodyMatcher xpathBodyMatcher = null;
 
     public HttpRequestMatcher withMethod(String method) {
         this.methodMatcher = new StringMatcher(method);
@@ -64,6 +68,16 @@ public class HttpRequestMatcher extends ModelObject implements Matcher<HttpReque
         return this;
     }
 
+    public HttpRequestMatcher withXpathBody(Map<String, String> xpathToValueMap) {
+        try {
+            this.xpathBodyMatcher = new XpathBodyMatcher(xpathToValueMap, XPathFactory.newInstance().newXPath(), DocumentBuilderFactory.newInstance().newDocumentBuilder());
+        } catch (ParserConfigurationException e) {
+            logger.error(e.getMessage(), e);
+            throw new RuntimeException(e);
+        }
+        return this;
+    }
+
     public boolean matches(HttpRequest httpRequest) {
         boolean methodMatches = matches(methodMatcher, httpRequest.getMethod());
         boolean urlMatches = matches(urlMatcher, httpRequest.getURL());
@@ -72,7 +86,8 @@ public class HttpRequestMatcher extends ModelObject implements Matcher<HttpReque
         boolean bodyMatches = matches(bodyMatcher, httpRequest.getBody());
         boolean headersMatch = matches(headerMatcher, (httpRequest.getHeaders() != null ? new ArrayList<KeyToMultiValue>(httpRequest.getHeaders()) : null));
         boolean cookiesMatch = matches(cookieMatcher, (httpRequest.getCookies() != null ? new ArrayList<KeyToMultiValue>(httpRequest.getCookies()) : null));
-        return methodMatches && urlMatches && pathMatches && queryStringMatches && bodyMatches && headersMatch && cookiesMatch;
+        boolean xpathMatch = matches(xpathBodyMatcher, httpRequest.getBody());
+        return methodMatches && urlMatches && pathMatches && queryStringMatches && bodyMatches && headersMatch && cookiesMatch && xpathMatch;
     }
 
     private <T> boolean matches(Matcher<T> matcher, T t) {
