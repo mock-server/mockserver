@@ -2,14 +2,14 @@ package org.mockserver.mock;
 
 import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.matchers.Times;
+import org.mockserver.model.EqualsHashCodeToString;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
-import org.mockserver.model.ModelObject;
 
 /**
  * @author jamesdbloom
  */
-public class Expectation extends ModelObject {
+public class Expectation extends EqualsHashCodeToString {
 
     private final HttpRequest httpRequest;
     private final Times times;

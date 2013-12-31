@@ -2,7 +2,6 @@ package org.mockserver.cli;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.mockserver.proxy.ProxyRunner;
-import org.mockserver.runner.AbstractRunner;
 import org.mockserver.server.MockServerRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

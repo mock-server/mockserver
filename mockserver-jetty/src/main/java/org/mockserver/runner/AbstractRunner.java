@@ -4,12 +4,14 @@ import ch.qos.logback.classic.Level;
 import com.google.common.util.concurrent.SettableFuture;
 import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.servlet.ServletHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.ShutdownThread;
 import org.mockserver.proxy.connect.ConnectHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.http.HttpServlet;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
@@ -80,7 +82,7 @@ public abstract class AbstractRunner {
 
                 // add handler
                 ServletHandler servletHandler = new ServletHandler();
-                servletHandler.addServletWithMapping(getServletName(), "/");
+                servletHandler.addServletWithMapping(new ServletHolder(getServlet()), "/");
                 if (securePort != null) {
                     server.setHandler(new ConnectHandler(servletHandler, securePort));
                 } else {
@@ -112,7 +114,7 @@ public abstract class AbstractRunner {
         return future;
     }
 
-    protected abstract String getServletName();
+    protected abstract HttpServlet getServlet();
 
     protected void extendHTTPConfig(HttpConfiguration https_config) {
         // allow subclasses to extend http configuration

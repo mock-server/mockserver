@@ -4,7 +4,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.client.http.HttpRequestClient;
 import org.mockserver.client.server.MockServerClient;
-import org.mockserver.configuration.SystemProperties;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.*;
 

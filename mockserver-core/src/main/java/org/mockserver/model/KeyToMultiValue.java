@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * @author jamesdbloom
  */
-public class KeyToMultiValue extends ModelObject {
+public class KeyToMultiValue extends EqualsHashCodeToString {
     private final String name;
     private final List<String> values;
 

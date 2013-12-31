@@ -57,10 +57,10 @@ public class MockServerVertical extends Verticle {
                             setStatusAndEnd(request, HttpStatusCode.CREATED_201);
                         }
                     } else if (request.method().equals("GET") || request.method().equals("POST")) {
-                        HttpRequest httpRequest = httpServerRequestMapper.createHttpRequest(request, body.getBytes());
+                        HttpRequest httpRequest = httpServerRequestMapper.mapHttpServerRequestToHttpRequest(request, body.getBytes());
                         HttpResponse httpResponse = mockServer.handle(httpRequest);
                         if (httpResponse != null) {
-                            httpServerResponseMapper.mapHttpServerResponse(httpResponse, request.response());
+                            httpServerResponseMapper.mapHttpResponseToHttpServerResponse(httpResponse, request.response());
                         } else {
                             request.response().setStatusCode(HttpStatusCode.NOT_FOUND_404.code());
                             request.response().setStatusMessage(HttpStatusCode.NOT_FOUND_404.reasonPhrase());

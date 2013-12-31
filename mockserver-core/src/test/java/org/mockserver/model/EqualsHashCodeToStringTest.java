@@ -10,7 +10,7 @@ import static org.junit.Assert.*;
  *
  * @author jamesdbloom
  */
-public class ModelObjectTest {
+public class EqualsHashCodeToStringTest {
 
     @Test
     public void hashCodeIdentical() {

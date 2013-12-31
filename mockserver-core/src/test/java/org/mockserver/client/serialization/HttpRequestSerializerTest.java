@@ -16,7 +16,6 @@ import org.mockserver.model.HttpRequest;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;

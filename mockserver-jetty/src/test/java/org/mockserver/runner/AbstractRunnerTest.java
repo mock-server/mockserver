@@ -1,21 +1,19 @@
 package org.mockserver.runner;
 
-import org.eclipse.jetty.servlet.DefaultServlet;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.proxy.connect.ConnectHandler;
 import org.mockserver.server.MockServerRunner;
+import org.mockserver.server.MockServerServlet;
 
+import javax.servlet.http.HttpServlet;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 /**
  * @author jamesdbloom
@@ -27,8 +25,8 @@ public class AbstractRunnerTest {
     @Before
     public void createRunner() {
         runner = new AbstractRunner() {
-            protected String getServletName() {
-                return DefaultServlet.class.getName();
+            protected HttpServlet getServlet() {
+                return new MockServerServlet();
             }
         };
     }

@@ -1,14 +1,14 @@
 package org.mockserver.client.serialization.model;
 
 import org.mockserver.model.Delay;
-import org.mockserver.model.ModelObject;
+import org.mockserver.model.EqualsHashCodeToString;
 
 import java.util.concurrent.TimeUnit;
 
 /**
  * @author jamesdbloom
  */
-public class DelayDTO extends ModelObject {
+public class DelayDTO extends EqualsHashCodeToString {
 
     private TimeUnit timeUnit;
     private long value;

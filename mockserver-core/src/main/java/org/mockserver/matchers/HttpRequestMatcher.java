@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * @author jamesdbloom
  */
-public class HttpRequestMatcher extends ModelObject implements Matcher<HttpRequest> {
+public class HttpRequestMatcher extends EqualsHashCodeToString implements Matcher<HttpRequest> {
 
     private StringMatcher methodMatcher = null;
     private StringMatcher urlMatcher = null;
@@ -64,14 +64,18 @@ public class HttpRequestMatcher extends ModelObject implements Matcher<HttpReque
     }
 
     public boolean matches(HttpRequest httpRequest) {
-        boolean methodMatches = matches(methodMatcher, httpRequest.getMethod());
-        boolean urlMatches = matches(urlMatcher, httpRequest.getURL());
-        boolean pathMatches = matches(pathMatcher, httpRequest.getPath());
-        boolean queryStringMatches = matches(queryStringMatcher, httpRequest.getQueryString());
-        boolean bodyMatches = matches(bodyMatcher, httpRequest.getBody());
-        boolean headersMatch = matches(headerMatcher, (httpRequest.getHeaders() != null ? new ArrayList<KeyToMultiValue>(httpRequest.getHeaders()) : null));
-        boolean cookiesMatch = matches(cookieMatcher, (httpRequest.getCookies() != null ? new ArrayList<KeyToMultiValue>(httpRequest.getCookies()) : null));
-        return methodMatches && urlMatches && pathMatches && queryStringMatches && bodyMatches && headersMatch && cookiesMatch;
+        if (httpRequest != null) {
+            boolean methodMatches = matches(methodMatcher, httpRequest.getMethod());
+            boolean urlMatches = matches(urlMatcher, httpRequest.getURL());
+            boolean pathMatches = matches(pathMatcher, httpRequest.getPath());
+            boolean queryStringMatches = matches(queryStringMatcher, httpRequest.getQueryString());
+            boolean bodyMatches = matches(bodyMatcher, httpRequest.getBody());
+            boolean headersMatch = matches(headerMatcher, (httpRequest.getHeaders() != null ? new ArrayList<KeyToMultiValue>(httpRequest.getHeaders()) : null));
+            boolean cookiesMatch = matches(cookieMatcher, (httpRequest.getCookies() != null ? new ArrayList<KeyToMultiValue>(httpRequest.getCookies()) : null));
+            return methodMatches && urlMatches && pathMatches && queryStringMatches && bodyMatches && headersMatch && cookiesMatch;
+        } else {
+            return false;
+        }
     }
 
     private <T> boolean matches(Matcher<T> matcher, T t) {

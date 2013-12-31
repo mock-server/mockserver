@@ -14,7 +14,7 @@ import org.vertx.java.core.http.HttpServerResponse;
 public class HttpServerResponseMapper {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public void mapHttpServerResponse(HttpResponse httpResponse, HttpServerResponse httpServerResponse) {
+    public void mapHttpResponseToHttpServerResponse(HttpResponse httpResponse, HttpServerResponse httpServerResponse) {
         setStatusCode(httpResponse, httpServerResponse);
         setHeaders(httpResponse, httpServerResponse);
         setCookies(httpResponse, httpServerResponse);

@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * @author jamesdbloom
  */
-public class HttpRequest extends ModelObject {
+public class HttpRequest extends EqualsHashCodeToString {
     private String method = "";
     private String url = "";
     private String path = "";

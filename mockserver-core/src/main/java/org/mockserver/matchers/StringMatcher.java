@@ -5,7 +5,7 @@ import com.sun.org.apache.xerces.internal.impl.Constants;
 import com.sun.org.apache.xerces.internal.impl.XMLErrorReporter;
 import com.sun.org.apache.xerces.internal.util.DefaultErrorHandler;
 import org.apache.commons.lang3.StringUtils;
-import org.mockserver.model.ModelObject;
+import org.mockserver.model.EqualsHashCodeToString;
 import org.xml.sax.InputSource;
 
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -21,7 +21,7 @@ import java.util.regex.PatternSyntaxException;
 /**
  * @author jamesdbloom
  */
-public class StringMatcher extends ModelObject implements Matcher<String> {
+public class StringMatcher extends EqualsHashCodeToString implements Matcher<String> {
 
     private final String matcher;
     XPathExpression xpathExpression = null;

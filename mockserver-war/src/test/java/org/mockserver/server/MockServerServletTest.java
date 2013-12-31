@@ -55,13 +55,13 @@ public class MockServerServletTest {
         MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("GET", "somepath");
 
         when(mockServer.handle(httpRequest)).thenReturn(httpResponse);
-        when(httpServletRequestMapper.createHttpRequest(httpServletRequest)).thenReturn(httpRequest);
+        when(httpServletRequestMapper.mapHttpServletRequestToHttpRequest(httpServletRequest)).thenReturn(httpRequest);
 
         // when
         mockServerServlet.doGet(httpServletRequest, httpServletResponse);
 
         // then
-        verify(httpServletResponseMapper).mapHttpServletResponse(httpResponse, httpServletResponse);
+        verify(httpServletResponseMapper).mapHttpResponseToHttpServletResponse(httpResponse, httpServletResponse);
     }
 
     @Test

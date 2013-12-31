@@ -1,6 +1,5 @@
 package org.mockserver.proxy.connect;
 
-import org.apache.commons.io.IOUtils;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.HttpProxy;
 import org.eclipse.jetty.client.api.ContentResponse;
@@ -107,8 +106,8 @@ public class ConnectHandlerTest {
             if (line.length() == 0) {
                 if (contentLength != null) {
                     result.append('\n');
-                    for (int position = 0 ; position < contentLength ; position++) {
-                        result.append((char)input.read());
+                    for (int position = 0; position < contentLength; position++) {
+                        result.append((char) input.read());
                     }
                 }
                 break;

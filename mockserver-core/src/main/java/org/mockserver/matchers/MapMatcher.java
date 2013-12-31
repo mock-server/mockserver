@@ -1,8 +1,8 @@
 package org.mockserver.matchers;
 
 import com.google.common.collect.Multimap;
+import org.mockserver.model.EqualsHashCodeToString;
 import org.mockserver.model.KeyToMultiValue;
-import org.mockserver.model.ModelObject;
 
 import java.util.List;
 import java.util.regex.PatternSyntaxException;
@@ -10,7 +10,7 @@ import java.util.regex.PatternSyntaxException;
 /**
  * @author jamesdbloom
  */
-public class MapMatcher extends ModelObject implements Matcher<List<KeyToMultiValue>> {
+public class MapMatcher extends EqualsHashCodeToString implements Matcher<List<KeyToMultiValue>> {
     private final Multimap<String, String> multimap;
 
     public MapMatcher(Multimap<String, String> multimap) {

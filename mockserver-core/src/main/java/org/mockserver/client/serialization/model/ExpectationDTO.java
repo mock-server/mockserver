@@ -2,14 +2,14 @@ package org.mockserver.client.serialization.model;
 
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
+import org.mockserver.model.EqualsHashCodeToString;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
-import org.mockserver.model.ModelObject;
 
 /**
  * @author jamesdbloom
  */
-public class ExpectationDTO extends ModelObject {
+public class ExpectationDTO extends EqualsHashCodeToString {
 
     private HttpRequestDTO httpRequest;
     private HttpResponseDTO httpResponse;

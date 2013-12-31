@@ -20,7 +20,7 @@ import java.util.List;
 public class HttpClientResponseMapper {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public HttpResponse mapHttpServerResponse(HttpClientResponse httpClientResponse, byte[] bodyBytes) {
+    public HttpResponse mapHttpServerResponseToHttpResponse(HttpClientResponse httpClientResponse, byte[] bodyBytes) {
         HttpResponse httpResponse = new HttpResponse();
         setStatusCode(httpResponse, httpClientResponse);
         setHeaders(httpResponse, httpClientResponse);
@@ -41,13 +41,13 @@ public class HttpClientResponseMapper {
         List<Header> mappedHeaders = new ArrayList<Header>();
         MultiMap headers = httpServletResponse.headers();
         for (String headerName : headers.names()) {
-            mappedHeaders.add(new Header(headerName, new ArrayList<String>(headers.getAll(headerName))));
+            mappedHeaders.add(new Header(headerName, new ArrayList<>(headers.getAll(headerName))));
         }
         httpResponse.withHeaders(mappedHeaders);
     }
 
     private void setCookies(HttpResponse httpResponse, HttpClientResponse httpServletResponse) {
-        List<Cookie> mappedCookies = new ArrayList<Cookie>();
+        List<Cookie> mappedCookies = new ArrayList<>();
         MultiMap headers = httpServletResponse.headers();
         for (String headerName : headers.names()) {
             if (headerName.equals("Cookie") || headerName.equals("Set-Cookie")) {

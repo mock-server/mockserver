@@ -55,7 +55,7 @@ public class MockServerVerticalTest {
         MockHttpServerRequest httpServerRequest =
                 new MockHttpServerRequest()
                         .withMethod("GET");
-        when(httpServerRequestMapper.createHttpRequest(httpServerRequest, "".getBytes())).thenReturn(httpRequest);
+        when(httpServerRequestMapper.mapHttpServerRequestToHttpRequest(httpServerRequest, "".getBytes())).thenReturn(httpRequest);
         // - an expectation that does match
         HttpResponse httpResponse = new HttpResponse();
         when(mockServer.handle(httpRequest)).thenReturn(httpResponse);
@@ -64,7 +64,7 @@ public class MockServerVerticalTest {
         mockServerVertical.getRequestHandler().handle(httpServerRequest);
 
         // then - response mapping should be called
-        verify(httpServerResponseMapper).mapHttpServerResponse(same(httpResponse), same(httpServerRequest.response()));
+        verify(httpServerResponseMapper).mapHttpResponseToHttpServerResponse(same(httpResponse), same(httpServerRequest.response()));
     }
 
     @Test
@@ -75,7 +75,7 @@ public class MockServerVerticalTest {
         MockHttpServerRequest httpServerRequest =
                 new MockHttpServerRequest()
                         .withMethod("GET");
-        when(httpServerRequestMapper.createHttpRequest(httpServerRequest, "".getBytes())).thenReturn(httpRequest);
+        when(httpServerRequestMapper.mapHttpServerRequestToHttpRequest(httpServerRequest, "".getBytes())).thenReturn(httpRequest);
         // - an expectation that does not match
         when(mockServer.handle(httpRequest)).thenReturn(null);
 
@@ -83,7 +83,7 @@ public class MockServerVerticalTest {
         mockServerVertical.getRequestHandler().handle(httpServerRequest);
 
         // then - response mapping should be called
-        verify(httpServerResponseMapper, never()).mapHttpServerResponse(any(HttpResponse.class), same(httpServerRequest.response()));
+        verify(httpServerResponseMapper, never()).mapHttpResponseToHttpServerResponse(any(HttpResponse.class), same(httpServerRequest.response()));
     }
 
     @Test

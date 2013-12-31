@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * @author jamesdbloom
  */
-public class HttpResponse extends ModelObject {
+public class HttpResponse extends EqualsHashCodeToString {
     private Integer statusCode = 200;
     private byte[] body = new byte[0];
     private List<Cookie> cookies = new ArrayList<Cookie>();

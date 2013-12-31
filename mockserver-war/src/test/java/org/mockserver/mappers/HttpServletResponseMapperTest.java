@@ -7,11 +7,9 @@ import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpStatusCode;
 import org.springframework.mock.web.MockHttpServletResponse;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.Enumeration;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -23,7 +21,7 @@ import static org.mockito.Mockito.when;
 public class HttpServletResponseMapperTest {
 
     @Test
-    public void mapHttpServletResponseFromHttpResponse() throws UnsupportedEncodingException {
+    public void shouldMapHttpResponseToHttpServletResponse() throws UnsupportedEncodingException {
         // given
         // - an HttpResponse
         HttpResponse httpResponse = new HttpResponse();
@@ -35,7 +33,7 @@ public class HttpServletResponseMapperTest {
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
 
         // when
-        new HttpServletResponseMapper().mapHttpServletResponse(httpResponse, httpServletResponse);
+        new HttpServletResponseMapper().mapHttpResponseToHttpServletResponse(httpResponse, httpServletResponse);
 
         // then
         assertEquals(HttpStatusCode.OK_200.code(), httpServletResponse.getStatus());
@@ -60,6 +58,6 @@ public class HttpServletResponseMapperTest {
         when(httpServletResponse.getOutputStream()).thenThrow(new IOException());
 
         // when
-        new HttpServletResponseMapper().mapHttpServletResponse(httpResponse, httpServletResponse);
+        new HttpServletResponseMapper().mapHttpResponseToHttpServletResponse(httpResponse, httpServletResponse);
     }
 }

@@ -12,7 +12,7 @@ public class MockServerRunnerTest {
 
     @Test
     public void shouldReturnClassName() {
-        assertEquals(new MockServerRunner().getServletName(), MockServerServlet.class.getName());
+        assertEquals(new MockServerRunner().getServlet().getClass(), MockServerServlet.class);
     }
 
 }

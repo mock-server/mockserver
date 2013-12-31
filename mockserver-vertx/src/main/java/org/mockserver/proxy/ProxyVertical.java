@@ -1,13 +1,15 @@
 package org.mockserver.proxy;
 
 import ch.qos.logback.classic.Level;
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.lang3.StringUtils;
-import org.mockserver.mappers.vertx.HttpClientRequestMapper;
-import org.mockserver.mappers.vertx.HttpClientResponseMapper;
 import org.mockserver.mappers.HttpServerRequestMapper;
 import org.mockserver.mappers.HttpServerResponseMapper;
+import org.mockserver.mappers.vertx.HttpClientRequestMapper;
+import org.mockserver.mappers.vertx.HttpClientResponseMapper;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.proxy.filters.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;
@@ -26,6 +28,7 @@ public class ProxyVertical extends Verticle {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private HttpClientRequestMapper httpClientRequestMapper = new HttpClientRequestMapper();
     private HttpClientResponseMapper httpClientResponseMapper = new HttpClientResponseMapper();
+    private Filters filters = new Filters();
     private Handler<HttpServerRequest> requestHandler = new Handler<HttpServerRequest>() {
         public void handle(final HttpServerRequest request) {
             System.out.println("Proxying request: " + request.uri());
@@ -42,8 +45,8 @@ public class ProxyVertical extends Verticle {
             // The entire body has now been received
             request.endHandler(new VoidHandler() {
                 public void handle() {
-                    HttpRequest httpRequest = new HttpServerRequestMapper().createHttpRequest(request, requestBody.getBytes());
-                    // filter in here
+                    final HttpRequest httpRequest = new HttpServerRequestMapper().mapHttpServerRequestToHttpRequest(request, requestBody.getBytes());
+                    filters.applyFilters(httpRequest);
                     HttpClientRequest clientRequest = vertx
                             .createHttpClient()
                             .setHost(StringUtils.substringBefore(request.headers().get("Host"), ":"))
@@ -61,20 +64,25 @@ public class ProxyVertical extends Verticle {
                                     });
                                     clientResponse.endHandler(new VoidHandler() {
                                         public void handle() {
-                                            HttpResponse httpResponse = httpClientResponseMapper.mapHttpServerResponse(clientResponse, responseBody.getBytes());
-                                            // filter in here
-                                            new HttpServerResponseMapper().mapHttpServerResponse(httpResponse, response);
+                                            HttpResponse httpResponse = httpClientResponseMapper.mapHttpServerResponseToHttpResponse(clientResponse, responseBody.getBytes());
+                                            filters.applyFilters(httpRequest, httpResponse);
+                                            new HttpServerResponseMapper().mapHttpResponseToHttpServerResponse(httpResponse, response);
                                             System.out.println("end of the response");
                                         }
                                     });
                                 }
                             });
-                    httpClientRequestMapper.createHttpRequest(httpRequest, clientRequest);
+                    httpClientRequestMapper.mapHttpRequestToHttpClientRequest(httpRequest, clientRequest);
                     System.out.println("end of the request");
                 }
             });
         }
     };
+
+    public ProxyVertical() {
+        withFilter(new HttpRequest(), new HopByHopHeaderFilter());
+        withFilter(new HttpRequest(), new LogFilter());
+    }
 
     /**
      * Override the debug WARN logging level
@@ -84,6 +92,28 @@ public class ProxyVertical extends Verticle {
     public static void overrideLogLevel(String level) {
         ch.qos.logback.classic.Logger rootLogger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger("org.mockserver");
         rootLogger.setLevel(Level.toLevel(level));
+    }
+
+    /**
+     * Add filter for HTTP requests, each filter get called before each request is proxied, if the filter return null then the request is not proxied
+     *
+     * @param httpRequest the request to match against for this filter
+     * @param filter the filter to execute for this request, if the filter returns null the request will not be proxied
+     */
+    public ProxyVertical withFilter(HttpRequest httpRequest, ProxyRequestFilter filter) {
+        filters.withFilter(httpRequest, filter);
+        return this;
+    }
+
+    /**
+     * Add filter for HTTP response, each filter get called after each request has been proxied
+     *
+     * @param httpRequest the request to match against for this filter
+     * @param filter the filter that is executed after this request has been proxied
+     */
+    public ProxyVertical withFilter(HttpRequest httpRequest, ProxyResponseFilter filter) {
+        filters.withFilter(httpRequest, filter);
+        return this;
     }
 
     /**
@@ -100,6 +130,11 @@ public class ProxyVertical extends Verticle {
         System.out.println("Starting MockServer proxy listening on " + port);
 
         vertx.createHttpServer().requestHandler(requestHandler).listen(port, "localhost");
+    }
+
+    @VisibleForTesting
+    public Handler<HttpServerRequest> getRequestHandler() {
+        return requestHandler;
     }
 
 }

@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 /**
  * @author jamesdbloom
  */
-public abstract class ModelObject {
+public abstract class EqualsHashCodeToString {
     protected Logger logger = LoggerFactory.getLogger(this.getClass());
 
     static {

@@ -4,7 +4,10 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mockserver.matchers.HttpRequestMatcher;
-import org.mockserver.model.*;
+import org.mockserver.model.Cookie;
+import org.mockserver.model.Header;
+import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpResponse;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;

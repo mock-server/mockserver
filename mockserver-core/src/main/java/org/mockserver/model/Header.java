@@ -1,7 +1,6 @@
 package org.mockserver.model;
 
 import java.util.Collection;
-import java.util.List;
 
 /**
  * @author jamesdbloom

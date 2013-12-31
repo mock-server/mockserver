@@ -19,7 +19,7 @@ import static org.junit.Assert.assertEquals;
 public class HttpServerResponseMapperTest {
 
     @Test
-    public void mapHttpServerResponseFromHttpResponse() {
+    public void shouldMapHttpResponseToHttpServerResponse() {
         // given
         MockHttpServerResponse httpServerResponse = new MockHttpServerResponse();
         HttpResponse httpResponse = new HttpResponse();
@@ -29,7 +29,7 @@ public class HttpServerResponseMapperTest {
         httpResponse.withCookies(new Cookie("cookieName1", "cookieValue1"), new Cookie("cookieName2", "cookieValue2"));
 
         // when
-        new HttpServerResponseMapper().mapHttpServerResponse(httpResponse, httpServerResponse);
+        new HttpServerResponseMapper().mapHttpResponseToHttpServerResponse(httpResponse, httpServerResponse);
 
         // then
         assertEquals(httpServerResponse.getStatusCode(), HttpStatusCode.OK_200.code());

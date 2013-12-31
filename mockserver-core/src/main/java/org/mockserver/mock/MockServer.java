@@ -4,9 +4,9 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.matchers.Times;
+import org.mockserver.model.EqualsHashCodeToString;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
-import org.mockserver.model.ModelObject;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -15,7 +15,7 @@ import java.util.List;
 /**
  * @author jamesdbloom
  */
-public class MockServer extends ModelObject {
+public class MockServer extends EqualsHashCodeToString {
 
     protected final List<Expectation> expectations = new ArrayList<Expectation>();
 

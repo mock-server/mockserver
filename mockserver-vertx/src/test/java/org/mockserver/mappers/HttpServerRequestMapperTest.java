@@ -18,7 +18,7 @@ import static org.junit.Assert.assertEquals;
 public class HttpServerRequestMapperTest {
 
     @Test
-    public void createHttpRequestFromHttpServerRequest() {
+    public void shouldMapHttpServerRequestToHttpRequest() {
         // given
         MockHttpServerRequest httpServerRequest =
                 new MockHttpServerRequest()
@@ -39,7 +39,7 @@ public class HttpServerRequestMapperTest {
                         );
 
         // when
-        HttpRequest httpRequest = new HttpServerRequestMapper().createHttpRequest(httpServerRequest, "somebody".getBytes());
+        HttpRequest httpRequest = new HttpServerRequestMapper().mapHttpServerRequestToHttpRequest(httpServerRequest, "somebody".getBytes());
 
         // then
         assertEquals("method", httpRequest.getMethod());

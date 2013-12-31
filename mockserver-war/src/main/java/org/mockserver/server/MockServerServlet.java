@@ -39,10 +39,10 @@ public class MockServerServlet extends HttpServlet {
     }
 
     private void handlePOSTorGET(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws IOException {
-        HttpRequest httpRequest = httpServletRequestMapper.createHttpRequest(httpServletRequest);
+        HttpRequest httpRequest = httpServletRequestMapper.mapHttpServletRequestToHttpRequest(httpServletRequest);
         HttpResponse httpResponse = mockServer.handle(httpRequest);
         if (httpResponse != null) {
-            httpServletResponseMapper.mapHttpServletResponse(httpResponse, httpServletResponse);
+            httpServletResponseMapper.mapHttpResponseToHttpServletResponse(httpResponse, httpServletResponse);
         } else {
             httpServletResponse.setStatus(HttpServletResponse.SC_NOT_FOUND);
         }

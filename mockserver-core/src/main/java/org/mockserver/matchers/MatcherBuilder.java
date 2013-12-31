@@ -1,6 +1,5 @@
 package org.mockserver.matchers;
 
-import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.model.HttpRequest;
 
 /**

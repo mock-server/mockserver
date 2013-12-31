@@ -19,7 +19,8 @@ public class MatcherBuilderTest {
             .withURL("url")
             .withBody("some_body")
             .withHeaders(new Header("name", "value"))
-            .withCookies(new Cookie("name", "value"));;
+            .withCookies(new Cookie("name", "value"));
+    ;
 
     @Test
     public void shouldCreateMatcherThatMatchesAllFields() {

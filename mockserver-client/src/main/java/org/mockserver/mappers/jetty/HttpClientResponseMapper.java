@@ -57,7 +57,7 @@ public class HttpClientResponseMapper {
     }
 
     private void setCookies(HttpResponse httpResponse) {
-        List<Cookie> mappedCookies = new ArrayList<Cookie>();
+        List<Cookie> mappedCookies = new ArrayList<>();
         for (Header header : httpResponse.getHeaders()) {
             if (header.getName().equals("Cookie") || header.getName().equals("Set-Cookie")) {
                 for (String cookieHeader : header.getValues()) {

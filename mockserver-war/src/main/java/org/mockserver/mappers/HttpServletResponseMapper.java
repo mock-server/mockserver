@@ -1,7 +1,5 @@
 package org.mockserver.mappers;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.CharEncoding;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpResponse;
@@ -11,8 +9,6 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.nio.charset.Charset;
 
 /**
  * @author jamesdbloom
@@ -20,7 +16,7 @@ import java.nio.charset.Charset;
 public class HttpServletResponseMapper {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public void mapHttpServletResponse(HttpResponse httpResponse, HttpServletResponse httpServletResponse) {
+    public void mapHttpResponseToHttpServletResponse(HttpResponse httpResponse, HttpServletResponse httpServletResponse) {
         setStatusCode(httpResponse, httpServletResponse);
         setHeaders(httpResponse, httpServletResponse);
         setCookies(httpResponse, httpServletResponse);

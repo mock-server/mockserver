@@ -1,12 +1,12 @@
 package org.mockserver.client.serialization.model;
 
 import org.mockserver.matchers.Times;
-import org.mockserver.model.ModelObject;
+import org.mockserver.model.EqualsHashCodeToString;
 
 /**
  * @author jamesdbloom
  */
-public class TimesDTO extends ModelObject {
+public class TimesDTO extends EqualsHashCodeToString {
 
     private int remainingTimes;
     private boolean unlimited;

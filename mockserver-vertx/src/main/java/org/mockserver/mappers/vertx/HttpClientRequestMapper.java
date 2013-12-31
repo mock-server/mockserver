@@ -14,7 +14,7 @@ import org.vertx.java.core.http.HttpClientRequest;
 public class HttpClientRequestMapper {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public void createHttpRequest(HttpRequest httpRequest, HttpClientRequest httpClientRequest) {
+    public void mapHttpRequestToHttpClientRequest(HttpRequest httpRequest, HttpClientRequest httpClientRequest) {
         setBody(httpRequest, httpClientRequest);
         setHeaders(httpRequest, httpClientRequest);
         setCookies(httpRequest, httpClientRequest);

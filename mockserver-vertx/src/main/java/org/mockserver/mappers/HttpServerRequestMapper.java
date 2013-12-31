@@ -20,7 +20,7 @@ import java.util.List;
 public class HttpServerRequestMapper {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public HttpRequest createHttpRequest(HttpServerRequest httpServerRequest, byte[] bodyBytes) {
+    public HttpRequest mapHttpServerRequestToHttpRequest(HttpServerRequest httpServerRequest, byte[] bodyBytes) {
         HttpRequest httpRequest = new HttpRequest();
         setMethod(httpRequest, httpServerRequest);
         setURL(httpRequest, httpServerRequest);

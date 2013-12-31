@@ -1,8 +1,6 @@
 package org.mockserver.proxy.filters;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.LinkedListMultimap;
-import com.google.common.collect.Multimap;
+import org.mockserver.collections.CircularMultiMap;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.model.HttpRequest;
@@ -16,7 +14,7 @@ import java.util.List;
  */
 public class LogFilter implements ProxyResponseFilter {
 
-    public Multimap<HttpRequest, HttpResponse> requestResponseLog = LinkedListMultimap.create();
+    public CircularMultiMap<HttpRequest, HttpResponse> requestResponseLog = new CircularMultiMap<>(100, 100);
 
     public HttpResponse onResponse(HttpRequest httpRequest, HttpResponse httpResponse) {
         requestResponseLog.put(httpRequest, httpResponse);
@@ -28,7 +26,7 @@ public class LogFilter implements ProxyResponseFilter {
         HttpRequestMatcher httpRequestMatcher = MatcherBuilder.transformsToMatcher(httpRequest);
         for (HttpRequest loggedHttpRequest : requestResponseLog.keySet()) {
             if (httpRequestMatcher.matches(loggedHttpRequest)) {
-                httpResponses.addAll(requestResponseLog.get(loggedHttpRequest));
+                httpResponses.addAll(requestResponseLog.getAll(loggedHttpRequest));
             }
         }
         return httpResponses;

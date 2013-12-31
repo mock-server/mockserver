@@ -44,12 +44,14 @@ public class ProxyServletTest {
         proxyServlet = new ProxyServlet();
         initMocks(this);
 
-        // setup expectations
+        // additional mock objects
         mockHttpServletRequest = new MockHttpServletRequest();
         mockHttpServletResponse = new MockHttpServletResponse();
         httpRequest = new HttpRequest().withPath("some_path");
         httpResponse = new HttpResponse();
-        when(httpServletRequestMapper.createHttpRequest(any(MockHttpServletRequest.class))).thenReturn(httpRequest);
+
+        // mappers
+        when(httpServletRequestMapper.mapHttpServletRequestToHttpRequest(any(MockHttpServletRequest.class))).thenReturn(httpRequest);
         httpRequestArgumentCaptor = ArgumentCaptor.forClass(HttpRequest.class);
         when(httpRequestClient.sendRequest(httpRequestArgumentCaptor.capture())).thenReturn(httpResponse);
     }
@@ -60,8 +62,8 @@ public class ProxyServletTest {
         proxyServlet.doGet(mockHttpServletRequest, mockHttpServletResponse);
 
         // then
-        verify(httpServletRequestMapper).createHttpRequest(same(mockHttpServletRequest));
-        verify(httpServletResponseMapper).mapHttpServletResponse(same(httpResponse), same(mockHttpServletResponse));
+        verify(httpServletRequestMapper).mapHttpServletRequestToHttpRequest(same(mockHttpServletRequest));
+        verify(httpServletResponseMapper).mapHttpResponseToHttpServletResponse(same(httpResponse), same(mockHttpServletResponse));
         verify(httpRequestClient).sendRequest(same(httpRequest));
     }
 
@@ -71,8 +73,8 @@ public class ProxyServletTest {
         proxyServlet.doHead(mockHttpServletRequest, mockHttpServletResponse);
 
         // then
-        verify(httpServletRequestMapper).createHttpRequest(same(mockHttpServletRequest));
-        verify(httpServletResponseMapper).mapHttpServletResponse(same(httpResponse), same(mockHttpServletResponse));
+        verify(httpServletRequestMapper).mapHttpServletRequestToHttpRequest(same(mockHttpServletRequest));
+        verify(httpServletResponseMapper).mapHttpResponseToHttpServletResponse(same(httpResponse), same(mockHttpServletResponse));
         verify(httpRequestClient).sendRequest(same(httpRequest));
     }
 
@@ -82,8 +84,8 @@ public class ProxyServletTest {
         proxyServlet.doPost(mockHttpServletRequest, mockHttpServletResponse);
 
         // then
-        verify(httpServletRequestMapper).createHttpRequest(same(mockHttpServletRequest));
-        verify(httpServletResponseMapper).mapHttpServletResponse(same(httpResponse), same(mockHttpServletResponse));
+        verify(httpServletRequestMapper).mapHttpServletRequestToHttpRequest(same(mockHttpServletRequest));
+        verify(httpServletResponseMapper).mapHttpResponseToHttpServletResponse(same(httpResponse), same(mockHttpServletResponse));
         verify(httpRequestClient).sendRequest(same(httpRequest));
     }
 
@@ -93,8 +95,8 @@ public class ProxyServletTest {
         proxyServlet.doPut(mockHttpServletRequest, mockHttpServletResponse);
 
         // then
-        verify(httpServletRequestMapper).createHttpRequest(same(mockHttpServletRequest));
-        verify(httpServletResponseMapper).mapHttpServletResponse(same(httpResponse), same(mockHttpServletResponse));
+        verify(httpServletRequestMapper).mapHttpServletRequestToHttpRequest(same(mockHttpServletRequest));
+        verify(httpServletResponseMapper).mapHttpResponseToHttpServletResponse(same(httpResponse), same(mockHttpServletResponse));
         verify(httpRequestClient).sendRequest(same(httpRequest));
     }
 
@@ -104,8 +106,8 @@ public class ProxyServletTest {
         proxyServlet.doDelete(mockHttpServletRequest, mockHttpServletResponse);
 
         // then
-        verify(httpServletRequestMapper).createHttpRequest(same(mockHttpServletRequest));
-        verify(httpServletResponseMapper).mapHttpServletResponse(same(httpResponse), same(mockHttpServletResponse));
+        verify(httpServletRequestMapper).mapHttpServletRequestToHttpRequest(same(mockHttpServletRequest));
+        verify(httpServletResponseMapper).mapHttpResponseToHttpServletResponse(same(httpResponse), same(mockHttpServletResponse));
         verify(httpRequestClient).sendRequest(same(httpRequest));
     }
 
@@ -115,8 +117,8 @@ public class ProxyServletTest {
         proxyServlet.doOptions(mockHttpServletRequest, mockHttpServletResponse);
 
         // then
-        verify(httpServletRequestMapper).createHttpRequest(same(mockHttpServletRequest));
-        verify(httpServletResponseMapper).mapHttpServletResponse(same(httpResponse), same(mockHttpServletResponse));
+        verify(httpServletRequestMapper).mapHttpServletRequestToHttpRequest(same(mockHttpServletRequest));
+        verify(httpServletResponseMapper).mapHttpResponseToHttpServletResponse(same(httpResponse), same(mockHttpServletResponse));
         verify(httpRequestClient).sendRequest(same(httpRequest));
     }
 
@@ -126,18 +128,21 @@ public class ProxyServletTest {
         proxyServlet.doTrace(mockHttpServletRequest, mockHttpServletResponse);
 
         // then
-        verify(httpServletRequestMapper).createHttpRequest(same(mockHttpServletRequest));
-        verify(httpServletResponseMapper).mapHttpServletResponse(same(httpResponse), same(mockHttpServletResponse));
+        verify(httpServletRequestMapper).mapHttpServletRequestToHttpRequest(same(mockHttpServletRequest));
+        verify(httpServletResponseMapper).mapHttpResponseToHttpServletResponse(same(httpResponse), same(mockHttpServletResponse));
         verify(httpRequestClient).sendRequest(same(httpRequest));
     }
 
     @Test
     public void shouldCallMatchingFiltersBeforeForwardingRequest() throws Exception {
         // given
+        // - add first filter
         ProxyRequestFilter filter = mock(ProxyRequestFilter.class);
         proxyServlet.withFilter(httpRequest, filter);
+        // - add first filter with other request
         HttpRequest someOtherRequest = new HttpRequest().withPath("some_other_path");
         proxyServlet.withFilter(someOtherRequest, filter);
+        // - add second filter
         ProxyRequestFilter someOtherFilter = mock(ProxyRequestFilter.class);
         proxyServlet.withFilter(someOtherRequest, someOtherFilter);
 
@@ -151,12 +156,16 @@ public class ProxyServletTest {
     }
 
     @Test
-    public void shouldCallMatchingFiltersAfterForwardingRequest() throws Exception {
+    public void shouldApplyFiltersBeforeAndAfterRequest() throws Exception {
         // given
+        // - add first filter
         ProxyResponseFilter filter = mock(ProxyResponseFilter.class);
+        when(filter.onResponse(any(HttpRequest.class), any(HttpResponse.class))).thenReturn(new HttpResponse());
         proxyServlet.withFilter(httpRequest, filter);
+        // - add first filter with other request
         HttpRequest someOtherRequest = new HttpRequest().withPath("some_other_path");
         proxyServlet.withFilter(someOtherRequest, filter);
+        // - add second filter
         ProxyResponseFilter someOtherFilter = mock(ProxyResponseFilter.class);
         proxyServlet.withFilter(someOtherRequest, someOtherFilter);
 

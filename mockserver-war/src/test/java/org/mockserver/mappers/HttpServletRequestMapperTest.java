@@ -8,7 +8,6 @@ import org.mockserver.model.HttpRequest;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 import javax.servlet.http.HttpServletRequest;
-
 import java.io.IOException;
 import java.util.Enumeration;
 
@@ -22,7 +21,7 @@ import static org.mockito.Mockito.when;
 public class HttpServletRequestMapperTest {
 
     @Test
-    public void createHttpRequestFromHttpServletRequest() {
+    public void shouldMapHttpServletRequestToHttpRequest() {
         // given
         MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("GET", "requestURI");
         httpServletRequest.setQueryString("parameterName=parameterValue");
@@ -33,7 +32,7 @@ public class HttpServletRequestMapperTest {
         httpServletRequest.setContent("somebody".getBytes());
 
         // when
-        HttpRequest httpRequest = new HttpServletRequestMapper().createHttpRequest(httpServletRequest);
+        HttpRequest httpRequest = new HttpServletRequestMapper().mapHttpServletRequestToHttpRequest(httpServletRequest);
 
         // then
         assertEquals("http://localhost:80requestURI?parameterName=parameterValue", httpRequest.getURL());
@@ -57,6 +56,6 @@ public class HttpServletRequestMapperTest {
         when(httpServletRequest.getInputStream()).thenThrow(new IOException());
 
         // when
-        new HttpServletRequestMapper().createHttpRequest(httpServletRequest);
+        new HttpServletRequestMapper().mapHttpServletRequestToHttpRequest(httpServletRequest);
     }
 }

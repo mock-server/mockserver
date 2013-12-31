@@ -9,13 +9,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
 
@@ -25,7 +22,7 @@ import java.util.List;
 public class HttpServletRequestMapper {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public HttpRequest createHttpRequest(HttpServletRequest httpServletRequest) {
+    public HttpRequest mapHttpServletRequestToHttpRequest(HttpServletRequest httpServletRequest) {
         HttpRequest httpRequest = new HttpRequest();
         setMethod(httpRequest, httpServletRequest);
         setUrl(httpRequest, httpServletRequest);
@@ -70,11 +67,11 @@ public class HttpServletRequestMapper {
     }
 
     private void setHeaders(HttpRequest httpRequest, HttpServletRequest httpServletRequest) {
-        List<Header> mappedheaders = new ArrayList<Header>();
+        List<Header> mappedheaders = new ArrayList<>();
         Enumeration headerNames = httpServletRequest.getHeaderNames();
         while (headerNames.hasMoreElements()) {
             String headerName = (String) headerNames.nextElement();
-            List<String> mappedHeaderValues = new ArrayList<String>();
+            List<String> mappedHeaderValues = new ArrayList<>();
             Enumeration headerValues = httpServletRequest.getHeaders(headerName);
             while (headerValues.hasMoreElements()) {
                 mappedHeaderValues.add((String) headerValues.nextElement());
@@ -85,7 +82,7 @@ public class HttpServletRequestMapper {
     }
 
     private void setCookies(HttpRequest httpRequest, HttpServletRequest httpServletRequest) {
-        List<Cookie> mappedCookies = new ArrayList<Cookie>();
+        List<Cookie> mappedCookies = new ArrayList<>();
         if (httpServletRequest.getCookies() != null) {
             for (javax.servlet.http.Cookie cookie : httpServletRequest.getCookies()) {
                 mappedCookies.add(new Cookie(cookie.getName(), cookie.getValue()));
