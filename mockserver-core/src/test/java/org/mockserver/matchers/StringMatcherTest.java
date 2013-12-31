@@ -21,6 +21,19 @@ public class StringMatcherTest {
     }
 
     @Test
+    public void shouldMatchMatchingXPath() {
+        String matched = "" +
+                "<element>" +
+                "   <key>some_key</key>" +
+                "   <value>some_value</value>" +
+                "</element>";
+        assertTrue(new StringMatcher("/element[key = 'some_key' and value = 'some_value']").matches(matched));
+        assertTrue(new StringMatcher("/element[key = 'some_key']").matches(matched));
+        assertTrue(new StringMatcher("/element/key").matches(matched));
+        assertTrue(new StringMatcher("/element[key and value]").matches(matched));
+    }
+
+    @Test
     public void shouldMatchNullExpectation() {
         assertTrue(new StringMatcher(null).matches("some_value"));
     }
@@ -38,6 +51,19 @@ public class StringMatcherTest {
     @Test
     public void shouldNotMatchIncorrectRegex() {
         assertFalse(new StringMatcher("some_[a-z]{4}").matches("some_value"));
+    }
+
+    @Test
+    public void shouldNotMatchMatchingXPath() {
+        String matched = "" +
+                "<element>" +
+                "   <key>some_key</key>" +
+                "   <value>some_value</value>" +
+                "</element>";
+        assertFalse(new StringMatcher("/element[key = 'some_key' and value = 'some_other_value']").matches(matched));
+        assertFalse(new StringMatcher("/element[key = 'some_other_key']").matches(matched));
+        assertFalse(new StringMatcher("/element/not_key").matches(matched));
+        assertFalse(new StringMatcher("/element[key and not_value]").matches(matched));
     }
 
     @Test
