@@ -18,9 +18,11 @@ import org.mockserver.proxy.filters.ProxyResponseFilter;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.Vertx;
 import org.vertx.java.core.http.HttpClient;
-import org.vertx.java.core.http.HttpClientRequest;
+import org.vertx.java.core.http.HttpClientResponse;
+import org.vertx.java.core.http.HttpServerResponse;
+import org.vertxtest.http.MockHttpClientRequest;
+import org.vertxtest.http.MockHttpClientResponse;
 import org.vertxtest.http.MockHttpServerRequest;
-import org.vertxtest.http.MockHttpServerResponse;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
@@ -31,31 +33,33 @@ import static org.mockito.MockitoAnnotations.initMocks;
 /**
  * @author jamesdbloom
  */
-@Ignore
 public class ProxyVerticalTest {
 
+    // mappers
     @Mock
     private HttpServerRequestMapper httpServerRequestMapper;
     @Mock
+    private HttpClientRequestMapper httpClientRequestMapper;
+    @Mock
     private HttpServerResponseMapper httpServerResponseMapper;
     @Mock
-    private HttpClientRequestMapper httpClientRequestMapper = new HttpClientRequestMapper();
+    private HttpClientResponseMapper httpClientResponseMapper;
+    // request & response
     @Mock
-    private HttpClientResponseMapper httpClientResponseMapper = new HttpClientResponseMapper();
-    @Mock
-    private HttpClientRequest httpClientRequest;
+    private MockHttpClientRequest mockHttpClientRequest;
+    private MockHttpServerRequest mockHttpServerRequest;
+    private MockHttpClientResponse mockHttpClientResponse;
+    private HttpRequest httpRequest;
+    private HttpResponse httpResponse;
+    // vertx
     @Mock
     private Vertx vertx;
     @Mock
     private HttpClient httpClient;
+    // under test
     @InjectMocks
     private ProxyVertical proxyVertical;
-    private MockHttpServerRequest mockHttpServerRequest;
-    private MockHttpServerResponse mockHttpServerResponse;
-    private HttpRequest httpRequest;
-    private HttpResponse httpResponse;
-    private ArgumentCaptor<HttpRequest> httpRequestArgumentCaptor;
-    private ArgumentCaptor<Handler> handlerArgumentCaptor;
+    private ArgumentCaptor<Handler> clientHandlerArgumentCaptor;
 
     @Before
     public void setupMocks() throws Exception {
@@ -64,22 +68,41 @@ public class ProxyVerticalTest {
         initMocks(this);
 
         // additional mock objects
+        mockHttpClientRequest = new MockHttpClientRequest();
+        mockHttpClientResponse = new MockHttpClientResponse();
         mockHttpServerRequest = new MockHttpServerRequest();
-        mockHttpServerResponse = new MockHttpServerResponse();
         httpRequest = new HttpRequest().withPath("some_path");
         httpResponse = new HttpResponse();
 
         // mappers
         when(httpServerRequestMapper.mapHttpServerRequestToHttpRequest(any(MockHttpServerRequest.class), (byte[]) any())).thenReturn(httpRequest);
-        httpRequestArgumentCaptor = ArgumentCaptor.forClass(HttpRequest.class);
-        doNothing().when(httpClientRequestMapper).mapHttpRequestToHttpClientRequest(httpRequestArgumentCaptor.capture(), same(httpClientRequest));
+        when(httpClientResponseMapper.mapHttpClientResponseToHttpResponse(any(HttpClientResponse.class), (byte[]) any())).thenReturn(httpResponse);
 
         // vertx
+        clientHandlerArgumentCaptor = ArgumentCaptor.forClass(Handler.class);
         when(vertx.createHttpClient()).thenReturn(httpClient);
         when(httpClient.setHost(any(String.class))).thenReturn(httpClient);
         when(httpClient.setPort(anyInt())).thenReturn(httpClient);
-        handlerArgumentCaptor = ArgumentCaptor.forClass(Handler.class);
-        when(httpClient.request(any(String.class), any(String.class), handlerArgumentCaptor.capture())).thenReturn(httpClientRequest);
+        when(httpClient.request(any(String.class), any(String.class), clientHandlerArgumentCaptor.capture())).thenReturn(mockHttpClientRequest);
+    }
+
+    @Test
+    public void shouldProxyRequest() {
+        // given
+        ArgumentCaptor<HttpRequest> httpRequestArgumentCaptor = ArgumentCaptor.forClass(HttpRequest.class);
+        ArgumentCaptor<HttpServerResponse> httpServerResponseArgumentCaptor = ArgumentCaptor.forClass(HttpServerResponse.class);
+
+        // when
+        mockHttpServerRequest.withBody("server_request_body".getBytes());
+        mockHttpClientResponse.withBody("client_response_body".getBytes());
+        proxyVertical.getRequestHandler().handle(mockHttpServerRequest);
+        clientHandlerArgumentCaptor.getValue().handle(mockHttpClientResponse);
+
+        // then
+        verify(httpServerResponseMapper).mapHttpResponseToHttpServerResponse(any(HttpResponse.class), httpServerResponseArgumentCaptor.capture());
+        assertEquals(mockHttpServerRequest.response(), httpServerResponseArgumentCaptor.getValue());
+        verify(httpClientRequestMapper).mapHttpRequestToHttpClientRequest(httpRequestArgumentCaptor.capture(), same(mockHttpClientRequest));
+        assertEquals(httpRequest, httpRequestArgumentCaptor.getValue());
     }
 
     @Test
@@ -88,11 +111,13 @@ public class ProxyVerticalTest {
         // - add first filter
         ProxyRequestFilter filter = mock(ProxyRequestFilter.class);
         proxyVertical.withFilter(httpRequest, filter);
+        when(filter.onRequest(httpRequest)).thenReturn(httpRequest);
         // - add first filter with other request
         HttpRequest someOtherRequest = new HttpRequest().withPath("some_other_path");
         proxyVertical.withFilter(someOtherRequest, filter);
         // - add second filter
         ProxyRequestFilter someOtherFilter = mock(ProxyRequestFilter.class);
+        when(someOtherFilter.onRequest(httpRequest)).thenReturn(httpRequest);
         proxyVertical.withFilter(someOtherRequest, someOtherFilter);
 
         // when
@@ -120,6 +145,7 @@ public class ProxyVerticalTest {
 
         // when
         proxyVertical.getRequestHandler().handle(mockHttpServerRequest);
+        clientHandlerArgumentCaptor.getValue().handle(mockHttpClientResponse);
 
         // then
         verify(filter, times(1)).onResponse(same(httpRequest), same(httpResponse));
@@ -142,11 +168,13 @@ public class ProxyVerticalTest {
                 new Header("proxy-authenticate"),
                 new Header("upgrade")
         );
+        ArgumentCaptor<HttpRequest> httpRequestArgumentCaptor = ArgumentCaptor.forClass(HttpRequest.class);
 
         // when
         proxyVertical.getRequestHandler().handle(mockHttpServerRequest);
 
         // then
+        verify(httpClientRequestMapper).mapHttpRequestToHttpClientRequest(httpRequestArgumentCaptor.capture(), same(mockHttpClientRequest));
         HttpRequest actual = httpRequestArgumentCaptor.getValue();
         assertEquals(1, actual.getHeaders().size());
     }

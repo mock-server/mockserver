@@ -22,9 +22,9 @@ public class EmbeddedJettyHolder {
         }
     }
 
-    public boolean stop(final int stopPort, final String stopKey, final int stopWait, final String logLevel) {
+    public boolean stop(final int stopPort, final int stopWait, final String logLevel) {
         MOCK_SERVER_RUNNER.overrideLogLevel(logLevel);
-        return MOCK_SERVER_RUNNER.stop("127.0.0.1", stopPort, stopKey, stopWait);
+        return MOCK_SERVER_RUNNER.stop("127.0.0.1", stopPort, stopWait);
     }
 
     public void stop() {

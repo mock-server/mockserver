@@ -62,10 +62,10 @@ public class EmbeddedJettyHolderTest {
     @Test
     public void shouldStopMockServerRemotely() {
         // when
-        new EmbeddedJettyHolder().stop(1, "stopKey", 2, "LEVEL");
+        new EmbeddedJettyHolder().stop(1, 2, "LEVEL");
 
         // then
         verify(mockMockServerRunner).overrideLogLevel("LEVEL");
-        verify(mockMockServerRunner).stop("127.0.0.1", 1, "stopKey", 2);
+        verify(mockMockServerRunner).stop("127.0.0.1", 1, 2);
     }
 }

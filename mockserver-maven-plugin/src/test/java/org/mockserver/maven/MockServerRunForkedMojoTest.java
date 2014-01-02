@@ -25,7 +25,6 @@ public class MockServerRunForkedMojoTest {
 
     public final String level = "LEVEL";
     public final int stopPort = 3;
-    public final String stopKey = "stopKey";
     private final String jarWithDependenciesPath = "/foo";
     private final String javaBinaryPath = "java";
     @Mock
@@ -43,7 +42,7 @@ public class MockServerRunForkedMojoTest {
 
     @Before
     public void setupMocks() {
-        processBuilder = new ProcessBuilder("echo", "$JAVA_HOME");
+        processBuilder = new ProcessBuilder("echo", "");
         mockServerRunForkedMojo = new MockServerRunForkedMojo();
         initMocks(this);
 
@@ -52,7 +51,6 @@ public class MockServerRunForkedMojoTest {
         when(mockArtifact.getFile()).thenReturn(new File(jarWithDependenciesPath));
         mockServerRunForkedMojo.logLevel = level;
         mockServerRunForkedMojo.stopPort = stopPort;
-        mockServerRunForkedMojo.stopKey = stopKey;
     }
 
     @Test
@@ -65,7 +63,6 @@ public class MockServerRunForkedMojoTest {
                 javaBinaryPath,
                 "-Dmockserver.logLevel=" + level,
                 "-Dmockserver.stopPort=" + stopPort,
-                "-Dmockserver.stopKey=" + stopKey,
                 "-jar", jarWithDependenciesPath, "-serverPort", "1", "-serverSecurePort", "2"
         ))).thenReturn(processBuilder);
 
@@ -78,7 +75,6 @@ public class MockServerRunForkedMojoTest {
                 javaBinaryPath,
                 "-Dmockserver.logLevel=" + level,
                 "-Dmockserver.stopPort=" + stopPort,
-                "-Dmockserver.stopKey=" + stopKey,
                 "-jar", jarWithDependenciesPath, "-serverPort", "1", "-serverSecurePort", "2"
         ));
         assertEquals(ProcessBuilder.Redirect.INHERIT, processBuilder.redirectInput());
@@ -96,7 +92,6 @@ public class MockServerRunForkedMojoTest {
                 javaBinaryPath,
                 "-Dmockserver.logLevel=" + level,
                 "-Dmockserver.stopPort=" + stopPort,
-                "-Dmockserver.stopKey=" + stopKey,
                 "-jar", jarWithDependenciesPath, "-serverPort", "1"
         ))).thenReturn(processBuilder);
 
@@ -109,7 +104,6 @@ public class MockServerRunForkedMojoTest {
                 javaBinaryPath,
                 "-Dmockserver.logLevel=" + level,
                 "-Dmockserver.stopPort=" + stopPort,
-                "-Dmockserver.stopKey=" + stopKey,
                 "-jar", jarWithDependenciesPath, "-serverPort", "1"
         ));
         assertEquals(ProcessBuilder.Redirect.INHERIT, processBuilder.redirectInput());
@@ -127,7 +121,6 @@ public class MockServerRunForkedMojoTest {
                 javaBinaryPath,
                 "-Dmockserver.logLevel=" + level,
                 "-Dmockserver.stopPort=" + stopPort,
-                "-Dmockserver.stopKey=" + stopKey,
                 "-jar", jarWithDependenciesPath, "-serverSecurePort", "2"
         ))).thenReturn(processBuilder);
 
@@ -140,7 +133,6 @@ public class MockServerRunForkedMojoTest {
                 javaBinaryPath,
                 "-Dmockserver.logLevel=" + level,
                 "-Dmockserver.stopPort=" + stopPort,
-                "-Dmockserver.stopKey=" + stopKey,
                 "-jar", jarWithDependenciesPath, "-serverSecurePort", "2"
         ));
         assertEquals(ProcessBuilder.Redirect.INHERIT, processBuilder.redirectInput());
@@ -156,7 +148,6 @@ public class MockServerRunForkedMojoTest {
                 javaBinaryPath,
                 "-Dmockserver.logLevel=" + level,
                 "-Dmockserver.stopPort=" + stopPort,
-                "-Dmockserver.stopKey=" + stopKey,
                 "-jar", jarWithDependenciesPath, "-serverPort", "0", "-serverSecurePort", "0"
         ))).thenReturn(processBuilder);
 

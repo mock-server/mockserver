@@ -3,6 +3,7 @@ package org.mockserver.server;
 import ch.qos.logback.classic.Level;
 import com.google.common.annotations.VisibleForTesting;
 import org.mockserver.client.serialization.ExpectationSerializer;
+import org.mockserver.integration.proxy.SSLFactory;
 import org.mockserver.mappers.HttpServerRequestMapper;
 import org.mockserver.mappers.HttpServerResponseMapper;
 import org.mockserver.mock.Expectation;
@@ -93,13 +94,23 @@ public class MockServerVertical extends Verticle {
      * -Dmockserver.logLevel=<level> - override the default logging level (default: WARN)
      */
     public void start() {
-        int port = Integer.parseInt(System.getProperty("mockserver.port", "8080"));
+        int port = Integer.parseInt(System.getProperty("mockserver.port", "-1"));
+        int securePort = Integer.parseInt(System.getProperty("mockserver.securePort", "-1"));
         MockServerVertical.overrideLogLevel(System.getProperty("mockserver.logLevel"));
 
-        logger.info("Starting MockServer listening on " + port);
-        System.out.println("Starting MockServer listening on " + port);
+        String startedMessage = "Started " + this.getClass().getSimpleName().replace("Vertical", "") + " listening on:";
+        if (port != -1) {
+            startedMessage += " standard port " + port;
+            vertx.createHttpServer().requestHandler(requestHandler).listen(port, "localhost");
+        }
+        if (securePort != -1) {
+            startedMessage += " secure port " + securePort;
+            SSLFactory.buildKeyStore();
+            vertx.createHttpServer().requestHandler(requestHandler).setSSL(true).setKeyStorePath(SSLFactory.KEY_STORE_FILENAME).setKeyStorePassword(SSLFactory.KEY_STORE_PASSWORD).listen(securePort, "localhost");
+        }
 
-        vertx.createHttpServer().requestHandler(requestHandler).listen(port, "localhost");
+        logger.info(startedMessage);
+        System.out.println(startedMessage);
     }
 
     private void setStatusAndEnd(HttpServerRequest request, HttpStatusCode httpStatusCode) {

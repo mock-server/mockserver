@@ -41,7 +41,7 @@ public class HttpRequestClientTest {
     @Test
     public void shouldSendExpectationRequest() throws Exception {
         // when
-        new HttpRequestClient("baseUri", mockHttpClient).sendRequest("body", "/path");
+        new HttpRequestClient(mockHttpClient).sendRequest("baseUri", "body", "/path");
         // then
         verify(mockHttpClient).newRequest("baseUri/path");
         verify(mockRequest).method(HttpMethod.PUT);
@@ -56,6 +56,6 @@ public class HttpRequestClientTest {
         doThrow(new Exception()).when(mockHttpClient).start();
 
         // when
-        new HttpRequestClient("baseUri", mockHttpClient).sendRequest("body", "/path");
+        new HttpRequestClient(mockHttpClient).sendRequest("baseUri", "body", "/path");
     }
 }

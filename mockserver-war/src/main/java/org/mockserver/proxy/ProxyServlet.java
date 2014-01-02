@@ -22,13 +22,11 @@ public class ProxyServlet extends HttpServlet {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private HttpServletRequestMapper httpServletRequestMapper = new HttpServletRequestMapper();
     private HttpServletResponseMapper httpServletResponseMapper = new HttpServletResponseMapper();
-    private HttpRequestClient httpRequestClient = new HttpRequestClient("");
-    private Filters filters = new Filters();
-
-    public ProxyServlet() {
+    private HttpRequestClient httpRequestClient = new HttpRequestClient();
+    private Filters filters = new Filters() {{
         withFilter(new HttpRequest(), new HopByHopHeaderFilter());
         withFilter(new HttpRequest(), new LogFilter());
-    }
+    }};
 
     /**
      * Add filter for HTTP requests, each filter get called before each request is proxied, if the filter return null then the request is not proxied

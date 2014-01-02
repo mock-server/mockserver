@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
  * @author jamesdbloom
  */
 public class MockServerClient {
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final String uri;
     private HttpRequestClient httpClient;
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
 
@@ -27,7 +27,8 @@ public class MockServerClient {
      * @param port the port for the MockServer to communicate with
      */
     public MockServerClient(String host, int port) {
-        httpClient = new HttpRequestClient("http://" + host + ":" + port);
+        uri = "http://" + host + ":" + port;
+        httpClient = new HttpRequestClient();
     }
 
     /**
@@ -87,14 +88,14 @@ public class MockServerClient {
      * WARN level to ensure they appear even if the default logging level has not been altered
      */
     public void dumpToLog() {
-        httpClient.sendRequest("", "/dumpToLog");
+        httpClient.sendRequest(uri, "", "/dumpToLog");
     }
 
     /**
      * Reset MockServer by clearing all expectations
      */
     public void reset() {
-        httpClient.sendRequest("", "/reset");
+        httpClient.sendRequest(uri, "", "/reset");
     }
 
     /**
@@ -111,7 +112,7 @@ public class MockServerClient {
     }
 
     private void sendExpectation(Expectation expectation, String path) {
-        httpClient.sendRequest(expectation != null ? expectationSerializer.serialize(expectation) : "", path);
+        httpClient.sendRequest(uri, expectation != null ? expectationSerializer.serialize(expectation) : "", path);
     }
 
 }

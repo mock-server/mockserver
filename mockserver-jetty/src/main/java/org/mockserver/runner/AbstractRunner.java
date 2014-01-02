@@ -5,26 +5,25 @@ import com.google.common.util.concurrent.SettableFuture;
 import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.eclipse.jetty.util.ssl.SslContextFactory;
-import org.eclipse.jetty.util.thread.ShutdownThread;
+import org.mockserver.integration.proxy.SSLContextFactory;
 import org.mockserver.proxy.connect.ConnectHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServlet;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.LineNumberReader;
 import java.io.OutputStream;
-import java.lang.reflect.Method;
-import java.net.ConnectException;
 import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
-import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import static org.mockserver.configuration.SystemProperties.*;
 
@@ -32,8 +31,14 @@ import static org.mockserver.configuration.SystemProperties.*;
  * @author jamesdbloom
  */
 public abstract class AbstractRunner {
+    static {
+        System.setProperty("java.net.preferIPv4Stack", "true");
+        System.setProperty("java.net.preferIPv6Addresses", "false");
+    }
+
     private static final Logger logger = LoggerFactory.getLogger(AbstractRunner.class);
     Server server;
+    ShutdownThread shutdownThread;
 
     /**
      * Override the debug WARN logging level
@@ -48,9 +53,8 @@ public abstract class AbstractRunner {
     }
 
     /**
-     * Start the MockServer instance in the port provided using -Dmockserver.stopPort and -Dmockserver.stopKey for the stopPort and stopKey respectively.
+     * Start the MockServer instance in the port provided using -Dmockserver.stopPort for the stopPort.
      * If -Dmockserver.stopPort is not provided the default value used will be the port parameter + 1.
-     * If -Dmockserver.stopKey is not provided the default value used will be "STOP_KEY"
      *
      * @param port the port the listens to incoming HTTP requests
      * @return A Future that returns the state of the MockServer once it is stopped, this Future can be used to block execution until the MockServer is stopped.
@@ -91,12 +95,11 @@ public abstract class AbstractRunner {
 
                 // start server
                 try {
-                    runStopThread(stopPort(port, securePort), stopKey());
-                    ShutdownThread.register(server);
+                    shutdownThread = new ShutdownThread(stopPort(port, securePort));
                     server.start();
+                    shutdownThread.start();
                 } catch (Exception e) {
                     logger.error("Failed to start embedded jetty server", e);
-                    System.exit(1);
                 }
 
                 logger.info(startedMessage);
@@ -139,20 +142,6 @@ public abstract class AbstractRunner {
     }
 
     private ServerConnector createHTTPSConnector(Server server, Integer securePort) throws GeneralSecurityException, IOException {
-        // SSL Context Factory for HTTPS
-        KeyStore keystore = CertificateBuilder.generateCertificate(
-                "certAlias",
-                "changeit".toCharArray(),
-                CertificateBuilder.KeyAlgorithmName.RSA,
-                "CN=www.mockserver.com, O=MockServer, L=London, S=England, C=UK"
-        );
-//        KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
-//        keystore.load(this.getClass().getClassLoader().getResourceAsStream("keystore.jks"), "changeit".toCharArray());
-        SslContextFactory sslContextFactory = new SslContextFactory();
-        sslContextFactory.setKeyStore(keystore);
-        sslContextFactory.setKeyStorePassword("changeit");
-        sslContextFactory.checkKeyStore();
-
         // HTTPS Configuration
         HttpConfiguration https_config = new HttpConfiguration();
         https_config.setSecurePort(securePort);
@@ -163,34 +152,10 @@ public abstract class AbstractRunner {
         extendHTTPConfig(https_config);
 
         // HTTPS connector
-        ServerConnector https = new ServerConnector(server, new SslConnectionFactory(sslContextFactory, "http/1.1"), new HttpConnectionFactory(https_config));
+        ServerConnector https = new ServerConnector(server, new SslConnectionFactory(SSLContextFactory.createSSLContextFactory(), "http/1.1"), new HttpConnectionFactory(https_config));
         https.setPort(securePort);
         https.setIdleTimeout(maxTimeout());
         return https;
-    }
-
-    private void runStopThread(final int stopPort, final String stopKey) {
-        // ensure only single stop thread start for both proxy and server
-        synchronized (AbstractRunner.class) {
-            try {
-                ShutdownMonitor shutdownMonitor = ShutdownMonitor.getInstance();
-                Method isAliveMethod = ShutdownMonitor.class.getDeclaredMethod("isAlive");
-                isAliveMethod.setAccessible(true);
-                if (!(Boolean) isAliveMethod.invoke(shutdownMonitor)) {
-                    logger.info("Listening on stopPort " + stopPort + " for stop requests with stopKey [" + stopKey + "]");
-                    System.out.println("Listening on stopPort " + stopPort + " for stop requests with stopKey [" + stopKey + "]");
-
-                    shutdownMonitor.setPort(stopPort);
-                    shutdownMonitor.setKey(stopKey);
-                    shutdownMonitor.setExitVm(false);
-                    Method startMethod = ShutdownMonitor.class.getDeclaredMethod("start");
-                    startMethod.setAccessible(true);
-                    startMethod.invoke(shutdownMonitor);
-                }
-            } catch (Exception e) {
-                logger.warn("Exception while using reflection to call protected methods on ShutdownMonitor", e);
-            }
-        }
     }
 
     /**
@@ -206,10 +171,11 @@ public abstract class AbstractRunner {
     public AbstractRunner stop() {
         if (!isRunning()) throw new IllegalStateException("Server is not running");
         try {
+            shutdownThread.stopListening();
             server.stop();
+            server.join();
         } catch (Exception e) {
-            logger.error("Failed to stop embedded jetty server gracefully, stopping JVM", e);
-            System.exit(1);
+            throw new RuntimeException("Failed to stop embedded jetty server gracefully, stopping JVM", e);
         }
         return this;
     }
@@ -219,50 +185,89 @@ public abstract class AbstractRunner {
      *
      * @param ipAddress IP address as string of remote MockServer (i.e. "127.0.0.1")
      * @param stopPort  the stopPort for the MockServer to stop (default is HTTP port + 1)
-     * @param stopKey   the stopKey for the MockServer to step (default is "STOP_KEY")
      * @param stopWait  the period to wait for MockServer to confirm it has stopped, in seconds.  A value of <= 0 means do not wait for confirmation MockServer has stopped.
      */
-    public boolean stop(String ipAddress, int stopPort, String stopKey, int stopWait) {
+    public boolean stop(String ipAddress, int stopPort, int stopWait) {
         if (stopPort <= 0)
             throw new IllegalArgumentException("Please specify a valid stopPort");
-        if (stopKey == null)
-            throw new IllegalArgumentException("Please specify a valid stopKey");
 
+        boolean stopped = false;
         try {
-            Socket s = new Socket(InetAddress.getByName(ipAddress), stopPort);
-            s.setSoLinger(false, 0);
+            try (Socket socket = new Socket(InetAddress.getByName(ipAddress), stopPort)) {
+                if (socket.isConnected() && socket.isBound()) {
+                    OutputStream out = socket.getOutputStream();
+                    out.write("stop".getBytes(StandardCharsets.UTF_8));
+                    socket.shutdownOutput();
 
-            OutputStream out = s.getOutputStream();
-            out.write((stopKey + "\r\nstop\r\n").getBytes());
-            out.flush();
+                    if (stopWait > 0) {
+                        socket.setSoTimeout(stopWait * 1000);
 
-            boolean stopped = true;
-            if (stopWait > 0) {
-                stopped = false;
-                s.setSoTimeout(stopWait * 1000);
-                s.getInputStream();
+                        logger.info("Waiting " + stopWait + " seconds for MockServer to stop");
 
-                logger.info("Waiting %d seconds for MockServer to stop%n", stopWait);
-                LineNumberReader lin = new LineNumberReader(new InputStreamReader(s.getInputStream()));
-                String response;
-
-                while (!stopped && ((response = lin.readLine()) != null)) {
-                    if ("Stopped".equals(response)) {
+                        if (new BufferedReader(new InputStreamReader(socket.getInputStream())).readLine().contains("stopped")) {
+                            logger.info("MockServer has stopped");
+                            stopped = true;
+                        }
+                    } else {
                         stopped = true;
-                        logger.info("MockServer has stopped");
                     }
                 }
-            } else {
-                logger.info("MockServer stop http has been sent");
             }
-            s.close();
-            return stopped;
-        } catch (ConnectException e) {
-            logger.info("MockServer is not running");
-            return false;
-        } catch (Exception e) {
-            logger.error("Exception stopping MockServer", e);
-            return false;
+            TimeUnit.MILLISECONDS.sleep(100);
+        } catch (Throwable t) {
+            logger.error("Exception stopping MockServer", t);
+            stopped = false;
         }
+        return stopped;
+    }
+
+    private class ShutdownThread extends Thread {
+        private final int port;
+        private ServerSocket serverSocket;
+
+        public ShutdownThread(int port) {
+            this.port = port;
+            setDaemon(true);
+            setName("ShutdownThread");
+        }
+
+        @Override
+        public void run() {
+            try {
+                try {
+
+                    serverSocket = new ServerSocket(port);
+                    logger.info("Waiting to receive MockServer stop request on port [" + port + "]");
+
+                    while (serverSocket.isBound() && !serverSocket.isClosed()) {
+                        try (Socket socket = serverSocket.accept()) {
+                            if (new BufferedReader(new InputStreamReader(socket.getInputStream())).readLine().contains("stop")) {
+                                // shutdown server
+                                AbstractRunner.this.stop();
+
+                                // inform client
+                                OutputStream out = socket.getOutputStream();
+                                out.write("stopped".getBytes(StandardCharsets.UTF_8));
+                            }
+                        }
+                    }
+                } finally {
+                    serverSocket.close();
+                }
+            } catch (Exception e) {
+                logger.trace("Exception in shutdown thread", e);
+            }
+        }
+
+        public void stopListening() {
+            if (serverSocket != null) {
+                try {
+                    serverSocket.close();
+                } catch (IOException ioe) {
+                    logger.error("Exception in shutdown thread", ioe);
+                }
+            }
+        }
+
     }
 }

@@ -13,11 +13,11 @@ allprojects {
         mavenCentral()
     }
 
-    gradle.projectsEvaluated {
-        tasks.withType(Compile) {
-            options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
-        }
-    }
+//    gradle.projectsEvaluated {
+//        tasks.withType(Compile) {
+//            options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+//        }
+//    }
 }
 
 project(':mockserver-client') {

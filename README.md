@@ -316,7 +316,6 @@ This ensures that any tests you run during you build in either the normal **test
              <port>9090</port>
              <logLevel>TRACE</logLevel>
              <stopPort>9091</stopPort>
-             <stopKey>STOP_KEY</stopKey>
          </configuration>
          <executions>
              <execution>
@@ -366,7 +365,6 @@ The Maven plugin can be configured as follows:
 * **timeout** - How long to block waiting for MockServer, used by **run** goal, 0 means wait indefinitely (required: false, default: 0)
 * **logLevel** - The logging level (required: false, default: WARN)
 * **stopPort** - The port to listen to stop requests (required: false, default: port + 1)
-* **stopKey** - The key to use for stop requests (required: false, default: STOP_KEY)
 * **skip** - Prevent the plugin from running (required: false, default: false)
 
 **Embedded Jetty**

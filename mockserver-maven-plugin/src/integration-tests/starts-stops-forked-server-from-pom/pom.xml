@@ -31,6 +31,7 @@
                 <version>2.0-SNAPSHOT</version>
                 <configuration>
                     <port>8080</port>
+                    <securePort>8082</securePort>
                 </configuration>
                 <executions>
                     <execution>

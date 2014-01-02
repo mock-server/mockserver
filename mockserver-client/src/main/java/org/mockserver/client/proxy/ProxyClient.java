@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
  * @author jamesdbloom
  */
 public class ProxyClient {
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final String uri;
     private HttpRequestClient httpClient;
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
 
@@ -23,7 +23,8 @@ public class ProxyClient {
      * @param port the port for the proxy to communicate with
      */
     public ProxyClient(String host, int port) {
-        httpClient = new HttpRequestClient("http://" + host + ":" + port);
+        uri = "http://" + host + ":" + port;
+        httpClient = new HttpRequestClient();
     }
 
     /**
@@ -31,14 +32,14 @@ public class ProxyClient {
      * WARN level to ensure they appear even if the default logging level has not been altered
      */
     public void dumpToLog() {
-        httpClient.sendRequest("", "/dumpToLog");
+        httpClient.sendRequest(uri, "", "/dumpToLog");
     }
 
     /**
      * Reset the proxy by clearing recorded requests
      */
     public void reset() {
-        httpClient.sendRequest("", "/reset");
+        httpClient.sendRequest(uri, "", "/reset");
     }
 
     /**
@@ -47,6 +48,6 @@ public class ProxyClient {
      * @param httpRequest the http that is matched against when deciding whether to clear recorded requests
      */
     public void clear(HttpRequest httpRequest) {
-        httpClient.sendRequest((httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : ""), "/clear");
+        httpClient.sendRequest(uri, (httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : ""), "/clear");
     }
 }

@@ -25,10 +25,12 @@ public abstract class AbstractClientServerIntegrationTest {
     public AbstractClientServerIntegrationTest() {
         bufferSize(1024);
         maxTimeout(TimeUnit.SECONDS.toMillis(10));
-        httpRequestClient = new HttpRequestClient("http://127.0.0.1:" + getPort());
+        httpRequestClient = new HttpRequestClient();
     }
 
     public abstract int getPort();
+
+    public abstract int getSecurePort();
 
     @Before
     public void createClient() {
@@ -41,11 +43,24 @@ public abstract class AbstractClientServerIntegrationTest {
         mockServerClient.when(new HttpRequest()).respond(new HttpResponse().withBody("some_body"));
 
         // then
+        // - in http
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withBody("some_body"),
-                makeRequest(new HttpRequest()));
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("http://localhost:" + getPort())
+                ));
+        // - in https
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("https://localhost:" + getSecurePort())
+                ));
     }
 
     @Test
@@ -71,16 +86,44 @@ public abstract class AbstractClientServerIntegrationTest {
                 );
 
         // then
+        // - in http
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withBody("some_body2"),
-                makeRequest(new HttpRequest().withPath("/some_path2")));
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("http://localhost:" + getPort() + "/some_path2")
+                                .withPath("/some_path2")
+                ));
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withBody("some_body1"),
-                makeRequest(new HttpRequest().withPath("/some_path1")));
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("http://localhost:" + getPort() + "/some_path1")
+                                .withPath("/some_path1")
+                ));
+        // - in https
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body2"),
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("https://localhost:" + getSecurePort() + "/some_path2")
+                                .withPath("/some_path2")
+                ));
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body1"),
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("https://localhost:" + getSecurePort() + "/some_path1")
+                                .withPath("/some_path1")
+                ));
     }
 
     @Test
@@ -89,20 +132,44 @@ public abstract class AbstractClientServerIntegrationTest {
         mockServerClient.when(new HttpRequest().withPath("/some_path"), Times.exactly(2)).respond(new HttpResponse().withBody("some_body"));
 
         // then
+        // - in http
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withBody("some_body"),
-                makeRequest(new HttpRequest().withPath("/some_path")));
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("http://localhost:" + getPort() + "/some_path")
+                                .withPath("/some_path")
+                ));
+        // - in https
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withBody("some_body"),
-                makeRequest(new HttpRequest().withPath("/some_path")));
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("https://localhost:" + getSecurePort() + "/some_path")
+                                .withPath("/some_path")
+                ));
+        // - in http
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
-                makeRequest(new HttpRequest().withPath("/some_path")));
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("http://localhost:" + getPort() + "/some_path")
+                                .withPath("/some_path")
+                ));
+        // - in https
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("https://localhost:" + getSecurePort() + "/some_path")
+                                .withPath("/some_path")
+                ));
     }
 
     @Test
@@ -126,16 +193,44 @@ public abstract class AbstractClientServerIntegrationTest {
         );
 
         // then
+        // - in http
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withBody("some_body2"),
-                makeRequest(new HttpRequest().withPath("/some_path2")));
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("http://localhost:" + getPort() + "/some_path2")
+                                .withPath("/some_path2")
+                ));
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withBody("some_body1"),
-                makeRequest(new HttpRequest().withPath("/some_path1")));
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("http://localhost:" + getPort() + "/some_path1")
+                                .withPath("/some_path1")
+                ));
+        // - in https
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body2"),
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("https://localhost:" + getSecurePort() + "/some_path2")
+                                .withPath("/some_path2")
+                ));
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body1"),
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("https://localhost:" + getSecurePort() + "/some_path1")
+                                .withPath("/some_path1")
+                ));
     }
 
     @Test
@@ -154,6 +249,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 );
 
         // then
+        // - in http
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
@@ -161,6 +257,23 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
+                                .withURL("http://localhost:" + getPort() + "/some_pathRequest?parameterName=parameterValue")
+                                .withPath("/some_pathRequest")
+                                .withQueryString("parameterName=parameterValue")
+                                .withBody("some_bodyRequest")
+                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
+                )
+        );
+        // - in https
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withBody("some_bodyResponse"),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("GET")
+                                .withURL("https://localhost:" + getSecurePort() + "/some_pathRequest?parameterName=parameterValue")
                                 .withPath("/some_pathRequest")
                                 .withQueryString("parameterName=parameterValue")
                                 .withBody("some_bodyRequest")
@@ -188,6 +301,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 );
 
         // then
+        // - in http
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
@@ -198,6 +312,26 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
+                                .withURL("http://localhost:" + getPort() + "/some_pathRequest?parameterName=parameterValue")
+                                .withPath("/some_pathRequest")
+                                .withQueryString("parameterName=parameterValue")
+                                .withBody("some_bodyRequest")
+                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
+                )
+        );
+        // - in https
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withBody("some_bodyResponse")
+                        .withHeaders(
+                                new Header("headerNameResponse", "headerValueResponse")
+                        ),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("GET")
+                                .withURL("https://localhost:" + getSecurePort() + "/some_pathRequest?parameterName=parameterValue")
                                 .withPath("/some_pathRequest")
                                 .withQueryString("parameterName=parameterValue")
                                 .withBody("some_bodyRequest")
@@ -225,6 +359,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 );
 
         // then
+        // - in http
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
@@ -236,6 +371,27 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
+                                .withURL("http://localhost:" + getPort() + "/some_pathRequest?parameterName=parameterValue")
+                                .withPath("/some_pathRequest")
+                                .withQueryString("parameterName=parameterValue")
+                                .withBody("some_bodyRequest")
+                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
+                )
+        );
+        // - in https
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withBody("some_bodyResponse")
+                        .withCookies(new Cookie("cookieNameResponse", "cookieValueResponse"))
+                        .withHeaders(
+                                new Header("Set-Cookie", "cookieNameResponse=cookieValueResponse")
+                        ),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("GET")
+                                .withURL("https://localhost:" + getSecurePort() + "/some_pathRequest?parameterName=parameterValue")
                                 .withPath("/some_pathRequest")
                                 .withQueryString("parameterName=parameterValue")
                                 .withBody("some_bodyRequest")
@@ -265,6 +421,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 );
 
         // then
+        // - in http
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
@@ -277,6 +434,28 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
+                                .withURL("http://localhost:" + getPort() + "/some_pathRequest?parameterName=parameterValue")
+                                .withPath("/some_pathRequest")
+                                .withQueryString("parameterName=parameterValue")
+                                .withBody("some_bodyRequest")
+                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
+                )
+        );
+        // - in https
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withBody("some_bodyResponse")
+                        .withCookies(new Cookie("cookieNameResponse", "cookieValueResponse"))
+                        .withHeaders(
+                                new Header("headerNameResponse", "headerValueResponse"),
+                                new Header("Set-Cookie", "cookieNameResponse=cookieValueResponse")
+                        ),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("GET")
+                                .withURL("https://localhost:" + getSecurePort() + "/some_pathRequest?parameterName=parameterValue")
                                 .withPath("/some_pathRequest")
                                 .withQueryString("parameterName=parameterValue")
                                 .withBody("some_bodyRequest")
@@ -307,6 +486,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 );
 
         // then
+        // - in http
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
@@ -319,6 +499,28 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
+                                .withURL("http://localhost:" + getPort() + "/some_pathRequest?parameterName=parameterValue")
+                                .withPath("/some_pathRequest")
+                                .withQueryString("parameterName=parameterValue")
+                                .withBody("some_bodyRequest")
+                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
+                )
+        );
+        // - in https
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withBody("some_bodyResponse")
+                        .withCookies(new Cookie("cookieNameResponse", "cookieValueResponse"))
+                        .withHeaders(
+                                new Header("headerNameResponse", "headerValueResponse"),
+                                new Header("Set-Cookie", "cookieNameResponse=cookieValueResponse")
+                        ),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("GET")
+                                .withURL("https://localhost:" + getSecurePort() + "/some_pathRequest?parameterName=parameterValue")
                                 .withPath("/some_pathRequest")
                                 .withQueryString("parameterName=parameterValue")
                                 .withBody("some_bodyRequest")
@@ -350,6 +552,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 );
 
         // then
+        // - in http
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
@@ -362,6 +565,28 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
+                                .withURL("http://localhost:" + getPort() + "/some_pathRequest?parameterName=parameterValue")
+                                .withPath("/some_pathRequest")
+                                .withQueryString("parameterName=parameterValue")
+                                .withBody("some_bodyRequest")
+                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
+                )
+        );
+        // - in https
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withBody("some_bodyResponse")
+                        .withCookies(new Cookie("cookieNameResponse", "cookieValueResponse"))
+                        .withHeaders(
+                                new Header("headerNameResponse", "headerValueResponse"),
+                                new Header("Set-Cookie", "cookieNameResponse=cookieValueResponse")
+                        ),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("GET")
+                                .withURL("https://localhost:" + getSecurePort() + "/some_pathRequest?parameterName=parameterValue")
                                 .withPath("/some_pathRequest")
                                 .withQueryString("parameterName=parameterValue")
                                 .withBody("some_bodyRequest")
@@ -389,6 +614,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 );
 
         // then
+        // - in http
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
@@ -396,6 +622,21 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("POST")
+                                .withURL("http://localhost:" + getPort() + "/some_path?parameterName=parameterValue")
+                                .withPath("/some_path")
+                                .withQueryString("parameterName=parameterValue")
+                                .withBody("bodyParameterName=bodyParameterValue")
+                )
+        );
+        // - in https
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("POST")
+                                .withURL("https://localhost:" + getSecurePort() + "/some_path?parameterName=parameterValue")
                                 .withPath("/some_path")
                                 .withQueryString("parameterName=parameterValue")
                                 .withBody("bodyParameterName=bodyParameterValue")
@@ -420,6 +661,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 );
 
         // then
+        // - in http
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
@@ -427,9 +669,24 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("POST")
+                                .withURL("http://localhost:" + getPort() + "/some_path?parameterName=parameterValue")
                                 .withPath("/some_path")
-                                .withBody("bodyParameterName=bodyParameterValue")
                                 .withQueryString("parameterName=parameterValue")
+                                .withBody("bodyParameterName=bodyParameterValue")
+                )
+        );
+        // - in https
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("POST")
+                                .withURL("https://localhost:" + getSecurePort() + "/some_path?parameterName=parameterValue")
+                                .withPath("/some_path")
+                                .withQueryString("parameterName=parameterValue")
+                                .withBody("bodyParameterName=bodyParameterValue")
                 )
         );
     }
@@ -456,14 +713,32 @@ public abstract class AbstractClientServerIntegrationTest {
                 );
 
         // then
+        // - in http
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         new HttpRequest()
+                                .withMethod("GET")
+                                .withURL("http://localhost:" + getPort() + "/some_path?parameterName=parameterValue")
                                 .withPath("/some_path")
                                 .withQueryString("parameterName=parameterValue")
-                                .withBody("someotherbody")
+                                .withBody("some_other_body")
+                                .withHeaders(new Header("headerName", "headerValue"))
+                                .withCookies(new Cookie("cookieName", "cookieValue"))
+                )
+        );
+        // - in https
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("GET")
+                                .withURL("https://localhost:" + getSecurePort() + "/some_path?parameterName=parameterValue")
+                                .withPath("/some_path")
+                                .withQueryString("parameterName=parameterValue")
+                                .withBody("some_other_body")
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
                 )
@@ -492,12 +767,30 @@ public abstract class AbstractClientServerIntegrationTest {
                 );
 
         // then
+        // - in http
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         new HttpRequest()
-                                .withPath("/someotherpath")
+                                .withMethod("GET")
+                                .withURL("http://localhost:" + getPort() + "/some_other_path?parameterName=parameterValue")
+                                .withPath("/some_other_path")
+                                .withQueryString("parameterName=parameterValue")
+                                .withBody("some_body")
+                                .withHeaders(new Header("headerName", "headerValue"))
+                                .withCookies(new Cookie("cookieName", "cookieValue"))
+                )
+        );
+        // - in https
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("GET")
+                                .withURL("https://localhost:" + getSecurePort() + "/some_other_path?parameterName=parameterValue")
+                                .withPath("/some_other_path")
                                 .withQueryString("parameterName=parameterValue")
                                 .withBody("some_body")
                                 .withHeaders(new Header("headerName", "headerValue"))
@@ -528,11 +821,29 @@ public abstract class AbstractClientServerIntegrationTest {
                 );
 
         // then
+        // - in http
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         new HttpRequest()
+                                .withMethod("GET")
+                                .withURL("http://localhost:" + getPort() + "/some_path?parameterOtherName=parameterValue")
+                                .withPath("/some_path")
+                                .withQueryString("parameterOtherName=parameterValue")
+                                .withBody("some_body")
+                                .withHeaders(new Header("headerName", "headerValue"))
+                                .withCookies(new Cookie("cookieName", "cookieValue"))
+                )
+        );
+        // - in https
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("GET")
+                                .withURL("https://localhost:" + getSecurePort() + "/some_path?parameterOtherName=parameterValue")
                                 .withPath("/some_path")
                                 .withQueryString("parameterOtherName=parameterValue")
                                 .withBody("some_body")
@@ -564,11 +875,29 @@ public abstract class AbstractClientServerIntegrationTest {
                 );
 
         // then
+        // - in http
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         new HttpRequest()
+                                .withMethod("GET")
+                                .withURL("http://localhost:" + getPort() + "/some_path?parameterName=parameterOtherValue")
+                                .withPath("/some_path")
+                                .withQueryString("parameterName=parameterOtherValue")
+                                .withBody("some_body")
+                                .withHeaders(new Header("headerName", "headerValue"))
+                                .withCookies(new Cookie("cookieName", "cookieValue"))
+                )
+        );
+        // - in https
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("GET")
+                                .withURL("https://localhost:" + getSecurePort() + "/some_path?parameterName=parameterOtherValue")
                                 .withPath("/some_path")
                                 .withQueryString("parameterName=parameterOtherValue")
                                 .withBody("some_body")
@@ -600,11 +929,29 @@ public abstract class AbstractClientServerIntegrationTest {
                 );
 
         // then
+        // - in http
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         new HttpRequest()
+                                .withMethod("GET")
+                                .withURL("http://localhost:" + getPort() + "/some_path?parameterName=parameterValue")
+                                .withPath("/some_path")
+                                .withQueryString("parameterName=parameterValue")
+                                .withBody("some_body")
+                                .withHeaders(new Header("headerName", "headerValue"))
+                                .withCookies(new Cookie("cookieOtherName", "cookieValue"))
+                )
+        );
+        // - in https
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("GET")
+                                .withURL("https://localhost:" + getSecurePort() + "/some_path?parameterName=parameterValue")
                                 .withPath("/some_path")
                                 .withQueryString("parameterName=parameterValue")
                                 .withBody("some_body")
@@ -636,12 +983,29 @@ public abstract class AbstractClientServerIntegrationTest {
                 );
 
         // then
+        // - in http
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
+                                .withURL("http://localhost:" + getPort() + "/some_path?parameterName=parameterValue")
+                                .withPath("/some_path")
+                                .withQueryString("parameterName=parameterValue")
+                                .withBody("some_body")
+                                .withHeaders(new Header("headerName", "headerValue"))
+                                .withCookies(new Cookie("cookieName", "cookieOtherValue"))
+                )
+        );
+        // - in https
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("GET")
+                                .withURL("https://localhost:" + getSecurePort() + "/some_path?parameterName=parameterValue")
                                 .withPath("/some_path")
                                 .withQueryString("parameterName=parameterValue")
                                 .withBody("some_body")
@@ -673,11 +1037,29 @@ public abstract class AbstractClientServerIntegrationTest {
                 );
 
         // then
+        // - in http
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         new HttpRequest()
+                                .withMethod("GET")
+                                .withURL("http://localhost:" + getPort() + "/some_path?parameterName=parameterValue")
+                                .withPath("/some_path")
+                                .withQueryString("parameterName=parameterValue")
+                                .withBody("some_body")
+                                .withHeaders(new Header("headerOtherName", "headerValue"))
+                                .withCookies(new Cookie("cookieName", "cookieValue"))
+                )
+        );
+        // - in https
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("GET")
+                                .withURL("https://localhost:" + getSecurePort() + "/some_path?parameterName=parameterValue")
                                 .withPath("/some_path")
                                 .withQueryString("parameterName=parameterValue")
                                 .withBody("some_body")
@@ -709,11 +1091,29 @@ public abstract class AbstractClientServerIntegrationTest {
                 );
 
         // then
+        // - in http
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         new HttpRequest()
+                                .withMethod("GET")
+                                .withURL("http://localhost:" + getPort() + "/some_path?parameterName=parameterValue")
+                                .withPath("/some_path")
+                                .withQueryString("parameterName=parameterValue")
+                                .withBody("some_body")
+                                .withHeaders(new Header("headerName", "headerOtherValue"))
+                                .withCookies(new Cookie("cookieName", "cookieValue"))
+                )
+        );
+        // - in https
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("GET")
+                                .withURL("https://localhost:" + getSecurePort() + "/some_path?parameterName=parameterValue")
                                 .withPath("/some_path")
                                 .withQueryString("parameterName=parameterValue")
                                 .withBody("some_body")
@@ -753,15 +1153,42 @@ public abstract class AbstractClientServerIntegrationTest {
                 );
 
         // then
+        // - in http
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withBody("some_body2"),
-                makeRequest(new HttpRequest().withPath("/some_path2")));
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("http://localhost:" + getPort() + "/some_path2")
+                                .withPath("/some_path2")
+                ));
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
-                makeRequest(new HttpRequest().withPath("/some_path1")));
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("http://localhost:" + getPort() + "/some_path1")
+                                .withPath("/some_path1")
+                ));
+        // - in https
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body2"),
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("https://localhost:" + getSecurePort() + "/some_path2")
+                                .withPath("/some_path2")
+                ));
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("https://localhost:" + getSecurePort() + "/some_path1")
+                                .withPath("/some_path1")
+                ));
     }
 
     @Test
@@ -790,14 +1217,40 @@ public abstract class AbstractClientServerIntegrationTest {
         mockServerClient.reset();
 
         // then
+        // - in http
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
-                makeRequest(new HttpRequest().withPath("/some_path1")));
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("http://localhost:" + getPort() + "/some_path1")
+                                .withPath("/some_path1")
+                ));
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
-                makeRequest(new HttpRequest().withPath("/some_path2")));
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("http://localhost:" + getPort() + "/some_path2")
+                                .withPath("/some_path2")
+                ));
+        // - in https
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("https://localhost:" + getSecurePort() + "/some_path1")
+                                .withPath("/some_path1")
+                ));
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("https://localhost:" + getSecurePort() + "/some_path2")
+                                .withPath("/some_path2")
+                ));
     }
 
     protected HttpResponse makeRequest(HttpRequest httpRequest) {

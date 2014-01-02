@@ -1,7 +1,6 @@
 package org.mockserver.client.http;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Strings;
 import com.google.common.util.concurrent.SettableFuture;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
@@ -17,6 +16,7 @@ import org.eclipse.jetty.http.MimeTypes;
 import org.eclipse.jetty.util.HttpCookieStore;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.mockserver.client.serialization.HttpRequestSerializer;
+import org.mockserver.integration.proxy.SSLFactory;
 import org.mockserver.mappers.jetty.HttpClientResponseMapper;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
@@ -39,23 +39,29 @@ public class HttpRequestClient {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final HttpClientResponseMapper httpClientResponseMapper = new HttpClientResponseMapper();
     private final HttpClient httpClient;
-    private String baseUri;
 
-    public HttpRequestClient(final String baseUri) {
-        httpClient = new HttpClient(new SslContextFactory(true));
-        configureHttpClient(baseUri);
+    public HttpRequestClient() {
+        httpClient = new HttpClient(createSSLContextFactory());
+        configureHttpClient();
     }
 
     @VisibleForTesting
-    HttpRequestClient(final String baseUri, final HttpClient httpClient) {
+    HttpRequestClient(final HttpClient httpClient) {
         this.httpClient = httpClient;
-        configureHttpClient(baseUri);
+        configureHttpClient();
     }
 
-    private void configureHttpClient(String baseUri) {
-        // base uri
-        if (baseUri.endsWith("/")) throw new IllegalArgumentException("Base URL [" + baseUri + "] should not have a trailing slash");
-        this.baseUri = baseUri;
+    public static SslContextFactory createSSLContextFactory() {
+        SslContextFactory sslContextFactory = new SslContextFactory();
+        sslContextFactory.setKeyStore(SSLFactory.buildKeyStore());
+        sslContextFactory.setKeyStorePassword(SSLFactory.KEY_STORE_PASSWORD);
+        sslContextFactory.setKeyManagerPassword(SSLFactory.KEY_STORE_PASSWORD);
+        sslContextFactory.checkKeyStore();
+        sslContextFactory.setTrustStore(SSLFactory.buildKeyStore());
+        return sslContextFactory;
+    }
+
+    private void configureHttpClient() {
         // http client
         try {
             httpClient.setFollowRedirects(false);
@@ -74,7 +80,7 @@ public class HttpRequestClient {
         }
     }
 
-    public void sendRequest(final String body, final String path) {
+    public void sendRequest(String baseUri, final String body, final String path) {
         try {
             httpClient.newRequest(baseUri + path)
                     .method(HttpMethod.PUT)
@@ -96,11 +102,7 @@ public class HttpRequestClient {
                     if (logger.isTraceEnabled()) {
                         logger.trace("Received request:\n" + new HttpRequestSerializer().serialize(httpRequest));
                     }
-                    String url = httpRequest.getURL();
-                    if (Strings.isNullOrEmpty(url)) {
-                        url = baseUri + httpRequest.getPath() + (Strings.isNullOrEmpty(httpRequest.getQueryString()) ? "" : '?' + httpRequest.getQueryString());
-                    }
-                    url = URLEncoder.encodeURL(url);
+                    String url = URLEncoder.encodeURL(httpRequest.getURL());
 
                     if (logger.isTraceEnabled()) {
                         System.out.println(HttpMethod.fromString(httpRequest.getMethod()) + "=>" + url);
@@ -138,23 +140,23 @@ public class HttpRequestClient {
                                 .writerWithDefaultPrettyPrinter()
                                 .writeValueAsString(request));
                     }
-                    request
-                            .onResponseContent(new Response.ContentListener() {
-                                @Override
-                                public void onContent(Response response, ByteBuffer chunk) {
-                                    contentBuffer.put(chunk);
-                                }
-                            })
-                            .send(new Response.CompleteListener() {
-                                @Override
-                                public void onComplete(Result result) {
-                                    if (result.isFailed()) {
-                                        responseFuture.setException(result.getFailure());
-                                    } else {
-                                        responseFuture.set(result.getResponse());
-                                    }
-                                }
-                            });
+                    request.onResponseContent(new Response.ContentListener() {
+                        @Override
+                        public void onContent(Response response, ByteBuffer chunk) {
+                            contentBuffer.put(chunk);
+                        }
+                    });
+                    Response.CompleteListener listener = new Response.CompleteListener() {
+                        @Override
+                        public void onComplete(Result result) {
+                            if (result.isFailed()) {
+                                responseFuture.setException(result.getFailure());
+                            } else {
+                                responseFuture.set(result.getResponse());
+                            }
+                        }
+                    };
+                    request.send(listener);
                 } catch (Exception e) {
                     responseFuture.setException(e);
                 }

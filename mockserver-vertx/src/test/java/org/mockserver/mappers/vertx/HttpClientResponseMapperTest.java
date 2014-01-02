@@ -49,6 +49,6 @@ public class HttpClientResponseMapperTest {
                                 new Cookie("some_cookie_name_one", "some_cookie_value_one_two"),
                                 new Cookie("some_cookie_name_two", "some_cookie_value_two")
                         ),
-                httpClientResponseMapper.mapHttpServerResponseToHttpResponse(httpClientResponse, "some_body".getBytes()));
+                httpClientResponseMapper.mapHttpClientResponseToHttpResponse(httpClientResponse, "some_body".getBytes()));
     }
 }

@@ -20,7 +20,7 @@ import java.util.List;
 public class HttpClientResponseMapper {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public HttpResponse mapHttpServerResponseToHttpResponse(HttpClientResponse httpClientResponse, byte[] bodyBytes) {
+    public HttpResponse mapHttpClientResponseToHttpResponse(HttpClientResponse httpClientResponse, byte[] bodyBytes) {
         HttpResponse httpResponse = new HttpResponse();
         setStatusCode(httpResponse, httpClientResponse);
         setHeaders(httpResponse, httpClientResponse);

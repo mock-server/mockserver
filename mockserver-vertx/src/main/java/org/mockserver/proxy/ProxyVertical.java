@@ -18,7 +18,6 @@ import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.http.HttpClientRequest;
 import org.vertx.java.core.http.HttpClientResponse;
 import org.vertx.java.core.http.HttpServerRequest;
-import org.vertx.java.core.http.HttpServerResponse;
 import org.vertx.java.platform.Verticle;
 
 /**
@@ -26,63 +25,61 @@ import org.vertx.java.platform.Verticle;
  */
 public class ProxyVertical extends Verticle {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    // mappers
+    private HttpServerRequestMapper httpServerRequestMapper = new HttpServerRequestMapper();
     private HttpClientRequestMapper httpClientRequestMapper = new HttpClientRequestMapper();
+    private HttpServerResponseMapper httpServerResponseMapper = new HttpServerResponseMapper();
     private HttpClientResponseMapper httpClientResponseMapper = new HttpClientResponseMapper();
-    private Filters filters = new Filters();
+    // filters
+    private Filters filters = new Filters() {{
+        withFilter(new HttpRequest(), new HopByHopHeaderFilter());
+        withFilter(new HttpRequest(), new LogFilter());
+    }};
+    // handler
     private Handler<HttpServerRequest> requestHandler = new Handler<HttpServerRequest>() {
-        public void handle(final HttpServerRequest request) {
-            System.out.println("Proxying request: " + request.uri());
-            final HttpServerResponse response = request.response();
+        public void handle(final HttpServerRequest httpServerRequest) {
 
+            // request data handler
             final Buffer requestBody = new Buffer();
-            request.dataHandler(new Handler<Buffer>() {
+            httpServerRequest.dataHandler(new Handler<Buffer>() {
                 public void handle(Buffer data) {
                     requestBody.appendBuffer(data);
-                    System.out.println("Proxying request body:" + data);
                 }
             });
 
-            // The entire body has now been received
-            request.endHandler(new VoidHandler() {
+            // request end handler
+            httpServerRequest.endHandler(new VoidHandler() {
                 public void handle() {
-                    final HttpRequest httpRequest = new HttpServerRequestMapper().mapHttpServerRequestToHttpRequest(request, requestBody.getBytes());
-                    filters.applyFilters(httpRequest);
+                    final HttpRequest httpRequest = filters.applyFilters(httpServerRequestMapper.mapHttpServerRequestToHttpRequest(httpServerRequest, requestBody.getBytes()));
                     HttpClientRequest clientRequest = vertx
                             .createHttpClient()
-                            .setHost(StringUtils.substringBefore(request.headers().get("Host"), ":"))
+                            .setHost(StringUtils.substringBefore(httpServerRequest.headers().get("Host"), ":"))
                             .setPort(httpRequest.getPort())
-                            .request(request.method(), request.uri(), new Handler<HttpClientResponse>() {
+                            .request(httpServerRequest.method(), httpServerRequest.uri(), new Handler<HttpClientResponse>() {
                                 public void handle(final HttpClientResponse clientResponse) {
-                                    System.out.println("Proxying response: " + clientResponse.statusCode());
 
+                                    // client response data handler
                                     final Buffer responseBody = new Buffer();
                                     clientResponse.dataHandler(new Handler<Buffer>() {
                                         public void handle(Buffer data) {
                                             responseBody.appendBuffer(data);
-                                            System.out.println("Proxying response body:" + data);
                                         }
                                     });
+
+                                    // client response end handler
                                     clientResponse.endHandler(new VoidHandler() {
                                         public void handle() {
-                                            HttpResponse httpResponse = httpClientResponseMapper.mapHttpServerResponseToHttpResponse(clientResponse, responseBody.getBytes());
-                                            filters.applyFilters(httpRequest, httpResponse);
-                                            new HttpServerResponseMapper().mapHttpResponseToHttpServerResponse(httpResponse, response);
-                                            System.out.println("end of the response");
+                                            HttpResponse httpResponse = httpClientResponseMapper.mapHttpClientResponseToHttpResponse(clientResponse, responseBody.getBytes());
+                                            httpServerResponseMapper.mapHttpResponseToHttpServerResponse(filters.applyFilters(httpRequest, httpResponse), httpServerRequest.response());
                                         }
                                     });
                                 }
                             });
                     httpClientRequestMapper.mapHttpRequestToHttpClientRequest(httpRequest, clientRequest);
-                    System.out.println("end of the request");
                 }
             });
         }
     };
-
-    public ProxyVertical() {
-        withFilter(new HttpRequest(), new HopByHopHeaderFilter());
-        withFilter(new HttpRequest(), new LogFilter());
-    }
 
     /**
      * Override the debug WARN logging level

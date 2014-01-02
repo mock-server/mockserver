@@ -58,7 +58,6 @@ public class MockServerRunForkedMojo extends MockServerAbstractMojo {
             List<String> arguments = new ArrayList<>(Arrays.asList(getJavaBin(),
                     "-Dmockserver.logLevel=" + logLevel,
                     "-Dmockserver.stopPort=" + stopPort,
-                    "-Dmockserver.stopKey=" + stopKey,
 //                    "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5006",
                     "-jar", jarWithDependencies()));
             if (port != -1) {

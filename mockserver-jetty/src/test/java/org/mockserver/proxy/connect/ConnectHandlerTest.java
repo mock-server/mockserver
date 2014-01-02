@@ -14,21 +14,18 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockserver.integration.proxy.BufferReaderUtils;
+import org.mockserver.integration.proxy.SSLContextFactory;
+import org.mockserver.integration.proxy.SSLFactory;
 
-import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
-import java.security.KeyStore;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.test.Assert.assertContains;
@@ -41,7 +38,7 @@ public class ConnectHandlerTest {
     private final int HTTP_PORT = 8090;
     private final int HTTPS_PORT = 8091;
     private Server server;
-    private SslContextFactory sslContextFactory;
+    private SslContextFactory sslContextFactory = SSLContextFactory.createSSLContextFactory();
 
     @After
     public void stopServers() throws Exception {
@@ -74,47 +71,10 @@ public class ConnectHandlerTest {
     private void addServerConnector(Server server, int port, boolean isSecure) throws Exception {
         ServerConnector serverConnector = new ServerConnector(server);
         if (isSecure) {
-            KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
-            keystore.load(this.getClass().getClassLoader().getResourceAsStream("keystore.jks"), "changeit".toCharArray());
-            sslContextFactory = new SslContextFactory();
-            sslContextFactory.setKeyStore(keystore);
-            sslContextFactory.setKeyStorePassword("changeit");
-            sslContextFactory.checkKeyStore();
             serverConnector = new ServerConnector(server, sslContextFactory);
         }
         serverConnector.setPort(port);
         server.addConnector(serverConnector);
-    }
-
-    private SSLSocket wrapSocket(Socket socket) throws Exception {
-        SSLContext sslContext = sslContextFactory.getSslContext();
-        SSLSocketFactory socketFactory = sslContext.getSocketFactory();
-        SSLSocket sslSocket = (SSLSocket) socketFactory.createSocket(socket, socket.getInetAddress().getHostAddress(), socket.getPort(), true);
-        sslSocket.setUseClientMode(true);
-        sslSocket.startHandshake();
-        return sslSocket;
-    }
-
-    private String readerToString(BufferedReader input) throws IOException {
-        StringBuilder result = new StringBuilder();
-        String line;
-        Integer contentLength = null;
-        while ((line = input.readLine()) != null) {
-            if (line.startsWith("Content-Length")) {
-                contentLength = Integer.parseInt(line.split(":")[1].trim());
-            }
-            if (line.length() == 0) {
-                if (contentLength != null) {
-                    result.append('\n');
-                    for (int position = 0; position < contentLength; position++) {
-                        result.append((char) input.read());
-                    }
-                }
-                break;
-            }
-            result.append(line).append('\n');
-        }
-        return result.toString();
     }
 
     @Test
@@ -122,7 +82,6 @@ public class ConnectHandlerTest {
         try (Socket socket = new Socket("localhost", HTTP_PORT)) {
             // given
             OutputStream output = socket.getOutputStream();
-            BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
             // when
             output.write(("" +
@@ -133,7 +92,7 @@ public class ConnectHandlerTest {
             output.flush();
 
             // then
-            assertContains(readerToString(input), "HTTP/1.1 200 OK");
+            assertContains(BufferReaderUtils.readerToString(socket.getInputStream()), "HTTP/1.1 200 OK");
         }
     }
 
@@ -148,7 +107,6 @@ public class ConnectHandlerTest {
             try (Socket socket = new Socket("localhost", 1090)) {
                 // given
                 OutputStream output = socket.getOutputStream();
-                BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
                 // when
                 output.write(("" +
@@ -159,7 +117,7 @@ public class ConnectHandlerTest {
                 output.flush();
 
                 // then
-                assertContains(readerToString(input), "HTTP/1.1 504 Gateway Timeout");
+                assertContains(BufferReaderUtils.readerToString(socket.getInputStream()), "HTTP/1.1 504 Gateway Timeout");
             }
         } finally {
             server.stop();
@@ -171,10 +129,8 @@ public class ConnectHandlerTest {
         try (Socket socket = new Socket("localhost", HTTP_PORT)) {
             // given
             OutputStream output = socket.getOutputStream();
-            BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
             // when
-
             // - send CONNECT request
             output.write(("" +
                     "CONNECT localhost:666 HTTP/1.1\r\n" +
@@ -184,12 +140,11 @@ public class ConnectHandlerTest {
             output.flush();
 
             // - flush CONNECT response
-            assertContains(readerToString(input), "HTTP/1.1 200 OK");
+            assertContains(BufferReaderUtils.readerToString(socket.getInputStream()), "HTTP/1.1 200 OK");
 
             // Upgrade the socket to SSL
-            try (SSLSocket sslSocket = wrapSocket(socket)) {
+            try (SSLSocket sslSocket = SSLFactory.wrapSocket(socket, sslContextFactory.getSslContext())) {
                 output = sslSocket.getOutputStream();
-                input = new BufferedReader(new InputStreamReader(sslSocket.getInputStream()));
 
                 // - send GET request for headers only
                 output.write(("" +
@@ -200,7 +155,7 @@ public class ConnectHandlerTest {
                 output.flush();
 
                 // then
-                assertContains(readerToString(input), "X-Test: test_headers_only");
+                assertContains(BufferReaderUtils.readerToString(sslSocket.getInputStream()), "X-Test: test_headers_only");
 
                 // - send GET request for headers and body
                 output.write(("" +
@@ -211,7 +166,7 @@ public class ConnectHandlerTest {
                 output.flush();
 
                 // then
-                String response = readerToString(input);
+                String response = BufferReaderUtils.readerToString(sslSocket.getInputStream());
                 assertContains(response, "X-Test: test_headers_and_body");
                 assertContains(response, "an_example_body");
             }
@@ -246,10 +201,8 @@ public class ConnectHandlerTest {
         try (Socket socket = new Socket("localhost", HTTP_PORT)) {
             // given
             OutputStream output = socket.getOutputStream();
-            BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
             // when
-
             // - send CONNECT request
             output.write(("" +
                     "CONNECT localhost:666 HTTP/1.1\r\n" +
@@ -259,10 +212,10 @@ public class ConnectHandlerTest {
             output.flush();
 
             // - flush CONNECT response
-            assertContains(readerToString(input), "HTTP/1.1 200 OK");
+            assertContains(BufferReaderUtils.readerToString(socket.getInputStream()), "HTTP/1.1 200 OK");
 
             // Upgrade the socket to SSL
-            try (SSLSocket sslSocket = wrapSocket(socket)) {
+            try (SSLSocket sslSocket = SSLFactory.wrapSocket(socket, sslContextFactory.getSslContext())) {
                 // - send GET request
                 output = sslSocket.getOutputStream();
                 output.write(("" +
@@ -273,18 +226,8 @@ public class ConnectHandlerTest {
                 output.flush();
 
                 // then
-                assertContains(readerToString(new BufferedReader(new InputStreamReader(sslSocket.getInputStream()))), "HTTP/1.1 404 Not Found");
+                assertContains(BufferReaderUtils.readerToString(sslSocket.getInputStream()), "HTTP/1.1 404 Not Found");
             }
-        }
-    }
-
-    public static class TestServlet extends HttpServlet {
-
-        @Override
-        protected void doGet(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws ServletException, IOException {
-            httpServletResponse.setStatus(304);
-            httpServletResponse.setHeader("X-Test", "request-received");
-            httpServletResponse.flushBuffer();
         }
     }
 }

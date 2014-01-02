@@ -75,7 +75,7 @@ public class MockServerClientTest {
                 );
 
         // then
-        verify(mockHttpClient).sendRequest("{\n" +
+        verify(mockHttpClient).sendRequest("http://localhost:8080", "{\n" +
                 "  \"httpRequest\" : {\n" +
                 "    \"path\" : \"/some_path\",\n" +
                 "    \"body\" : \"some_request_body\"\n" +
@@ -101,7 +101,7 @@ public class MockServerClientTest {
         mockServerClient.reset();
 
         // then
-        verify(mockHttpClient).sendRequest("", "/reset");
+        verify(mockHttpClient).sendRequest("http://localhost:8080", "", "/reset");
     }
 
     @Test
@@ -110,7 +110,7 @@ public class MockServerClientTest {
         mockServerClient.dumpToLog();
 
         // then
-        verify(mockHttpClient).sendRequest("", "/dumpToLog");
+        verify(mockHttpClient).sendRequest("http://localhost:8080", "", "/dumpToLog");
     }
 
     @Test
@@ -124,7 +124,7 @@ public class MockServerClientTest {
                 );
 
         // then
-        verify(mockHttpClient).sendRequest("{\n" +
+        verify(mockHttpClient).sendRequest("http://localhost:8080", "{\n" +
                 "  \"httpRequest\" : {\n" +
                 "    \"path\" : \"/some_path\",\n" +
                 "    \"body\" : \"some_request_body\"\n" +

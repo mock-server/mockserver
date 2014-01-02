@@ -79,19 +79,6 @@ public class SystemPropertiesTest {
         assertEquals(3, SystemProperties.stopPort(null, 2));
     }
 
-    @Test
-    public void shouldSetAndReadStopKey() {
-        // given
-        System.clearProperty("mockserver.stopPort");
-        assertEquals(SystemProperties.DEFAULT_STOP_KEY, SystemProperties.stopKey());
-
-        // when
-        SystemProperties.stopKey("TEST");
-
-        // then
-        assertEquals("TEST", SystemProperties.stopKey());
-    }
-
     @Test(expected = RuntimeException.class)
     public void shouldThrowRuntimeExceptionForInvalidMaxTimeout() {
         // given

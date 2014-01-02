@@ -39,14 +39,6 @@ public class SystemProperties {
         System.setProperty("mockserver.stopPort", "" + port);
     }
 
-    public static String stopKey() {
-        return System.getProperty("mockserver.stopKey", DEFAULT_STOP_KEY);
-    }
-
-    public static void stopKey(String key) {
-        System.setProperty("mockserver.stopKey", key);
-    }
-
     private static Integer readIntegerProperty(String key, int defaultValue) {
         try {
             return Integer.parseInt(System.getProperty(key, "" + defaultValue));
