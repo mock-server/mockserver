@@ -16,8 +16,8 @@ public class MockServerStopForkedMojo extends MockServerAbstractMojo {
         if (skip) {
             getLog().info("Skipping plugin execution");
         } else {
-            if (getEmbeddedJettyHolder().stop(stopPort, stopKey, stopWait, logLevel)) {
-                getLog().info("Stopped MockServer using stopPort " + stopPort + " and stopKey " + stopKey);
+            if (getEmbeddedJettyHolder().stop(stopPort, stopWait, logLevel)) {
+                getLog().info("Stopped MockServer using stopPort " + stopPort);
             } else {
                 getLog().info("Failed to stop MockServer");
             }

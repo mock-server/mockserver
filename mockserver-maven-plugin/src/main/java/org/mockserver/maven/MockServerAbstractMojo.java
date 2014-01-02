@@ -44,11 +44,6 @@ public abstract class MockServerAbstractMojo extends AbstractMojo {
     @Parameter(property = "mockserver.stopPort", defaultValue = "8081")
     protected int stopPort;
     /**
-     * Key to provide when stopping MockServer
-     */
-    @Parameter(property = "mockserver.stopKey", defaultValue = "STOP_KEY")
-    protected String stopKey;
-    /**
      * Max time in seconds to wait for the MockServer to stop
      */
     @Parameter(property = "mockserver.stopWait")
