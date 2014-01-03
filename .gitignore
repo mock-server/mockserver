@@ -29,7 +29,7 @@ mods
 
 # Runtime artifacts #
 #####################
-# keystore.jks
+keystore.jks
 
 # OS generated files #
 ######################

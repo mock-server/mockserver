@@ -15,16 +15,16 @@
     <url>http://www.mock-server.com</url>
 
     <dependencies>
-        <!-- json (object serialisation) -->
-        <dependency>
-            <groupId>org.codehaus.jackson</groupId>
-            <artifactId>jackson-mapper-asl</artifactId>
-        </dependency>
-
         <!-- http -->
         <dependency>
             <groupId>org.eclipse.jetty.orbit</groupId>
             <artifactId>javax.servlet</artifactId>
+        </dependency>
+
+        <!-- json (object serialisation) -->
+        <dependency>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-mapper-asl</artifactId>
         </dependency>
 
         <!-- commons & guava -->

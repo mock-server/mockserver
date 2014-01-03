@@ -1,5 +1,9 @@
 dependencies {
+    // http
+    compile "org.eclipse.jetty:jetty-http:$jettyVersion"
+    compile "org.eclipse.jetty:jetty-client:$jettyVersion"
+    compile "org.eclipse.jetty:jetty-util:$jettyVersion"
+
     // test
     compile "junit:junit:$junitVersion"
-    compile "org.mockito:mockito-all:$mockitoAllVersion"
 }

@@ -11,7 +11,7 @@ import org.mockserver.model.HttpRequest;
  * @author jamesdbloom
  */
 public class MockServerClient {
-    private final String uri;
+    private final String uriBase;
     private HttpRequestClient httpClient;
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
@@ -26,7 +26,22 @@ public class MockServerClient {
      * @param port the port for the MockServer to communicate with
      */
     public MockServerClient(String host, int port) {
-        uri = "http://" + host + ":" + port;
+        uriBase = "http://" + host + ":" + port;
+        httpClient = new HttpRequestClient();
+    }
+
+    /**
+     * Start the client communicating to a MockServer at the specified host and port
+     * for example:
+     *
+     *   MockServerClient mockServerClient = new MockServerClient("localhost", 8080);
+     *
+     * @param host the host for the MockServer to communicate with
+     * @param port the port for the MockServer to communicate with
+     * @param contextPath the context path that the MockServer war is deployed to
+     */
+    public MockServerClient(String host, int port, String contextPath) {
+        uriBase = "http://" + host + ":" + port + "/" + contextPath;
         httpClient = new HttpRequestClient();
     }
 
@@ -87,14 +102,14 @@ public class MockServerClient {
      * WARN level to ensure they appear even if the default logging level has not been altered
      */
     public void dumpToLog() {
-        httpClient.sendPUTRequest(uri, "", "/dumpToLog");
+        httpClient.sendPUTRequest(uriBase, "", "/dumpToLog");
     }
 
     /**
      * Reset MockServer by clearing all expectations
      */
     public void reset() {
-        httpClient.sendPUTRequest(uri, "", "/reset");
+        httpClient.sendPUTRequest(uriBase, "", "/reset");
     }
 
     /**
@@ -103,11 +118,11 @@ public class MockServerClient {
      * @param httpRequest the http that is matched against when deciding whether to clear each expectation
      */
     public void clear(HttpRequest httpRequest) {
-        httpClient.sendPUTRequest(uri, httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", "/clear");
+        httpClient.sendPUTRequest(uriBase, httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", "/clear");
     }
 
     protected void sendExpectation(Expectation expectation) {
-        httpClient.sendPUTRequest(uri, expectation != null ? expectationSerializer.serialize(expectation) : "", "");
+        httpClient.sendPUTRequest(uriBase, expectation != null ? expectationSerializer.serialize(expectation) : "", "");
     }
 
 }

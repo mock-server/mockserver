@@ -2,10 +2,9 @@ apply plugin: 'war'
 
 dependencies {
     // http
-    providedCompile "javax.servlet:javax.servlet-api:$servletVersion"
+    providedCompile "org.eclipse.jetty.orbit:javax.servlet:$orbitServletVersion"
 
     // commons & guava
-    compile "commons-io:commons-io:$commonsIoVersion"
     compile "com.google.guava:guava:$guavaVersion"
 
     // logging
