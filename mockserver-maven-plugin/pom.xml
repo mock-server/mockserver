@@ -54,6 +54,16 @@
             <artifactId>maven-plugin-annotations</artifactId>
             <version>3.2</version>
         </dependency>
+
+        <!-- test -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
