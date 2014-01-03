@@ -5,6 +5,7 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.serialization.ExpectationSerializer;
+import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.mappers.HttpServerRequestMapper;
 import org.mockserver.mappers.HttpServerResponseMapper;
 import org.mockserver.matchers.Times;
@@ -37,6 +38,8 @@ public class MockServerVerticalTest {
     private HttpServerResponseMapper httpServerResponseMapper;
     @Mock
     private ExpectationSerializer expectationSerializer;
+    @Mock
+    private HttpRequestSerializer httpRequestSerializer;
     @InjectMocks
     private MockServerVertical mockServerVertical;
 
@@ -97,7 +100,7 @@ public class MockServerVerticalTest {
         // - that deserializes to an expectation
         Times times = Times.unlimited();
         HttpRequest httpRequest = new HttpRequest();
-        Expectation expectation = spy(new Expectation(httpRequest, times).respond(new HttpResponse()));
+        Expectation expectation = spy(new Expectation(httpRequest, times).thenRespond(new HttpResponse()));
         when(expectationSerializer.deserialize(httpServerRequest.body())).thenReturn(expectation);
         // - an MockServer that returns the deserialized expectation
         when(mockServer.when(same(httpRequest), same(times))).thenReturn(expectation);
@@ -108,7 +111,7 @@ public class MockServerVerticalTest {
         // then
         // - expectation is added to MockServer
         verify(mockServer).when(same(httpRequest), same(times));
-        verify(expectation).respond(expectation.getHttpResponse());
+        verify(expectation).thenRespond(expectation.getHttpResponse());
         // - and response code is set
         assertEquals(HttpStatusCode.CREATED_201.code(), httpServerRequest.response().getStatusCode());
     }
@@ -212,11 +215,10 @@ public class MockServerVerticalTest {
                         .withPath("/clear")
                         .withResponse(httpServerResponse);
         HttpRequest httpRequest = new HttpRequest();
-        Expectation expectation = new Expectation(httpRequest, Times.unlimited()).respond(new HttpResponse());
 
         byte[] requestBytes = "requestBytes".getBytes();
         httpServerRequest.withBody(requestBytes);
-        when(expectationSerializer.deserialize(requestBytes)).thenReturn(expectation);
+        when(httpRequestSerializer.deserialize(requestBytes)).thenReturn(httpRequest);
 
         // when
         mockServerVertical.getRequestHandler().handle(httpServerRequest);
@@ -235,7 +237,7 @@ public class MockServerVerticalTest {
                         .withMethod("PUT")
                         .withPath("/reset")
                         .withResponse(httpServerResponse);
-        Expectation expectation = new Expectation(new HttpRequest(), Times.unlimited()).respond(new HttpResponse());
+        Expectation expectation = new Expectation(new HttpRequest(), Times.unlimited()).thenRespond(new HttpResponse());
 
         byte[] requestBytes = "requestBytes".getBytes();
         httpServerRequest.withBody(requestBytes);
@@ -258,7 +260,7 @@ public class MockServerVerticalTest {
                         .withMethod("PUT")
                         .withPath("/dumpToLog")
                         .withResponse(httpServerResponse);
-        Expectation expectation = new Expectation(new HttpRequest(), Times.unlimited()).respond(new HttpResponse());
+        Expectation expectation = new Expectation(new HttpRequest(), Times.unlimited()).thenRespond(new HttpResponse());
 
         byte[] requestBytes = "requestBytes".getBytes();
         httpServerRequest.withBody(requestBytes);
@@ -268,7 +270,7 @@ public class MockServerVerticalTest {
         mockServerVertical.getRequestHandler().handle(httpServerRequest);
 
         // then
-        verify(mockServer).dumpToLog();
+        verify(mockServer).dumpToLog(null);
         verifyNoMoreInteractions(httpServerRequestMapper);
     }
 }

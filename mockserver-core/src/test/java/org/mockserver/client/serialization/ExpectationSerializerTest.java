@@ -37,7 +37,7 @@ public class ExpectationSerializerTest {
                     .withHeaders(new Header("headerName", "headerValue"))
                     .withCookies(new Cookie("cookieName", "cookieValue")),
             Times.once()
-    ).respond(new HttpResponse()
+    ).thenRespond(new HttpResponse()
             .withStatusCode(304)
             .withBody("somebody")
             .withHeaders(new Header("headerName", "headerValue"))
@@ -51,15 +51,15 @@ public class ExpectationSerializerTest {
                             .setPath("somepath")
                             .setQueryString("queryString")
                             .setBody("somebody")
-                            .setHeaders(Arrays.<HeaderDTO>asList((HeaderDTO) new HeaderDTO(new Header("headerName", Arrays.asList("headerValue")))))
-                            .setCookies(Arrays.<CookieDTO>asList((CookieDTO) new CookieDTO(new Cookie("cookieName", Arrays.asList("cookieValue")))))
+                            .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("headerName", Arrays.asList("headerValue")))))
+                            .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("cookieName", Arrays.asList("cookieValue")))))
             )
             .setHttpResponse(
                     new HttpResponseDTO()
                             .setStatusCode(304)
                             .setBody("somebody")
-                            .setHeaders(Arrays.<HeaderDTO>asList((HeaderDTO) new HeaderDTO(new Header("headerName", Arrays.asList("headerValue")))))
-                            .setCookies(Arrays.<CookieDTO>asList((CookieDTO) new CookieDTO(new Cookie("cookieName", Arrays.asList("cookieValue")))))
+                            .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("headerName", Arrays.asList("headerValue")))))
+                            .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("cookieName", Arrays.asList("cookieValue")))))
                             .setDelay(
                                     new DelayDTO()
                                             .setTimeUnit(TimeUnit.MICROSECONDS)

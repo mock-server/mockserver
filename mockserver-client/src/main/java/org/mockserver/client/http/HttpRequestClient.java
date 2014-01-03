@@ -6,6 +6,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 import org.eclipse.jetty.client.api.Result;
@@ -16,7 +17,7 @@ import org.eclipse.jetty.http.MimeTypes;
 import org.eclipse.jetty.util.HttpCookieStore;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.mockserver.client.serialization.HttpRequestSerializer;
-import org.mockserver.integration.proxy.SSLFactory;
+import org.mockserver.socket.SSLFactory;
 import org.mockserver.mappers.jetty.HttpClientResponseMapper;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
@@ -38,16 +39,10 @@ public class HttpRequestClient {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final HttpClientResponseMapper httpClientResponseMapper = new HttpClientResponseMapper();
-    private final HttpClient httpClient;
+    private HttpClient httpClient;
 
     public HttpRequestClient() {
         httpClient = new HttpClient(createSSLContextFactory());
-        configureHttpClient();
-    }
-
-    @VisibleForTesting
-    HttpRequestClient(final HttpClient httpClient) {
-        this.httpClient = httpClient;
         configureHttpClient();
     }
 
@@ -80,15 +75,16 @@ public class HttpRequestClient {
         }
     }
 
-    public void sendRequest(String baseUri, final String body, final String path) {
+    public ContentResponse sendPUTRequest(String baseUri, final String body, final String path) {
         try {
-            httpClient.newRequest(baseUri + path)
+            return httpClient.newRequest(baseUri + path)
                     .method(HttpMethod.PUT)
                     .header("Content-Type", "application/json; charset=utf-8")
                     .content(new ComparableStringContentProvider(body, "UTF-8"))
                     .send();
         } catch (Exception e) {
             logger.error("Exception sending request to [" + path + "] with body [" + body + "]", e);
+            throw new RuntimeException("Exception sending request to [" + path + "] with body [" + body + "]", e);
         }
     }
 
@@ -167,7 +163,7 @@ public class HttpRequestClient {
             byte[] content = new byte[contentBuffer.position()];
             contentBuffer.flip();
             contentBuffer.get(content);
-            return httpClientResponseMapper.buildHttpResponse(proxiedResponse, content);
+            return httpClientResponseMapper.mapHttpClientResponseToHttpResponse(proxiedResponse, content);
         } catch (Exception e) {
             throw new RuntimeException("Exception sending request to [" + httpRequest.getURL() + "] with body [" + httpRequest.getBody() + "]", e);
         }

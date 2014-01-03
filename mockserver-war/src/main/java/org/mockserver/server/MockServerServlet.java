@@ -1,70 +1,67 @@
 package org.mockserver.server;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.CharEncoding;
 import org.mockserver.client.serialization.ExpectationSerializer;
+import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.mappers.HttpServletRequestMapper;
 import org.mockserver.mappers.HttpServletResponseMapper;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.MockServer;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.mockserver.model.HttpStatusCode;
+import org.mockserver.streams.IOStreamUtils;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.Charset;
 
 /**
  * @author jamesdbloom
  */
 public class MockServerServlet extends HttpServlet {
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
-
+    private static final long serialVersionUID = 5058943788293770703L;
     private MockServer mockServer = new MockServer();
     private HttpServletRequestMapper httpServletRequestMapper = new HttpServletRequestMapper();
     private HttpServletResponseMapper httpServletResponseMapper = new HttpServletResponseMapper();
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
+    private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
 
-    public void doGet(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws IOException {
+    public void doGet(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
         handlePOSTorGET(httpServletRequest, httpServletResponse);
     }
 
-    public void doPost(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws IOException {
+    public void doPost(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
         handlePOSTorGET(httpServletRequest, httpServletResponse);
     }
 
-    private void handlePOSTorGET(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws IOException {
+    private void handlePOSTorGET(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
         HttpRequest httpRequest = httpServletRequestMapper.mapHttpServletRequestToHttpRequest(httpServletRequest);
         HttpResponse httpResponse = mockServer.handle(httpRequest);
         if (httpResponse != null) {
             httpServletResponseMapper.mapHttpResponseToHttpServletResponse(httpResponse, httpServletResponse);
         } else {
-            httpServletResponse.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            httpServletResponse.setStatus(HttpStatusCode.NOT_FOUND_404.code());
         }
     }
 
-    public void doPut(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws IOException {
-        if (httpServletRequest.getRequestURI().equals("/dumpToLog")) {
-            mockServer.dumpToLog();
-            httpServletResponse.setStatus(HttpServletResponse.SC_ACCEPTED);
-        } else if (httpServletRequest.getRequestURI().equals("/reset")) {
-            mockServer.reset();
-            httpServletResponse.setStatus(HttpServletResponse.SC_ACCEPTED);
-        } else {
-            byte[] jsonExpectation = IOUtils.toByteArray(new InputStreamReader(httpServletRequest.getInputStream()), Charset.forName(CharEncoding.UTF_8));
-            Expectation expectation = expectationSerializer.deserialize(jsonExpectation);
-            if (httpServletRequest.getRequestURI().equals("/clear")) {
-                mockServer.clear(expectation.getHttpRequest());
-                httpServletResponse.setStatus(HttpServletResponse.SC_ACCEPTED);
-            } else {
-                mockServer.when(expectation.getHttpRequest(), expectation.getTimes()).respond(expectation.getHttpResponse());
-                httpServletResponse.setStatus(HttpServletResponse.SC_CREATED);
-            }
+    public void doPut(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
+        switch (httpServletRequest.getRequestURI()) {
+            case "/dumpToLog":
+                mockServer.dumpToLog(null);
+                httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
+                break;
+            case "/reset":
+                mockServer.reset();
+                httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
+                break;
+            case "/clear":
+                mockServer.clear(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToByteArray(httpServletRequest)));
+                httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
+                break;
+            default:
+                Expectation expectation = expectationSerializer.deserialize(IOStreamUtils.readInputStreamToByteArray(httpServletRequest));
+                mockServer.when(expectation.getHttpRequest(), expectation.getTimes()).thenRespond(expectation.getHttpResponse());
+                httpServletResponse.setStatus(HttpStatusCode.CREATED_201.code());
         }
     }
 

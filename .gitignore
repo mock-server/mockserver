@@ -27,6 +27,10 @@ mods
 *.sql
 *.sqlite
 
+# Runtime artifacts #
+#####################
+# keystore.jks
+
 # OS generated files #
 ######################
 .DS_Store

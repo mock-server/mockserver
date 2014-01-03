@@ -31,8 +31,8 @@ public class MockServerOverlappingRequestsTest {
     @Test
     public void respondWhenPathMatchesAlwaysReturnFirstMatching() {
         // when
-        mockServer.when(new HttpRequest().withPath("somepath").withCookies(new Cookie("name", "value"))).respond(httpResponse[0].withBody("somebody1"));
-        mockServer.when(new HttpRequest().withPath("somepath")).respond(httpResponse[1].withBody("somebody2"));
+        mockServer.when(new HttpRequest().withPath("somepath").withCookies(new Cookie("name", "value"))).thenRespond(httpResponse[0].withBody("somebody1"));
+        mockServer.when(new HttpRequest().withPath("somepath")).thenRespond(httpResponse[1].withBody("somebody2"));
 
         // then
         assertEquals(httpResponse[1], mockServer.handle(new HttpRequest().withPath("somepath")));
@@ -42,8 +42,8 @@ public class MockServerOverlappingRequestsTest {
     @Test
     public void respondWhenPathMatchesReturnFirstMatchingWithRemainingTimes() {
         // when
-        mockServer.when(new HttpRequest().withPath("somepath").withCookies(new Cookie("name", "value")), Times.once()).respond(httpResponse[0].withBody("somebody1"));
-        mockServer.when(new HttpRequest().withPath("somepath")).respond(httpResponse[1].withBody("somebody2"));
+        mockServer.when(new HttpRequest().withPath("somepath").withCookies(new Cookie("name", "value")), Times.once()).thenRespond(httpResponse[0].withBody("somebody1"));
+        mockServer.when(new HttpRequest().withPath("somepath")).thenRespond(httpResponse[1].withBody("somebody2"));
 
         // then
         assertEquals(httpResponse[0], mockServer.handle(new HttpRequest().withPath("somepath").withCookies(new Cookie("name", "value"))));

@@ -27,7 +27,7 @@ public class MockServerCleanResetTest {
         HttpResponse httpResponse = new HttpResponse().withBody("somebody");
 
         // when
-        mockServer.when(new HttpRequest().withPath("somepath"), Times.exactly(2)).respond(httpResponse);
+        mockServer.when(new HttpRequest().withPath("somepath"), Times.exactly(2)).thenRespond(httpResponse);
 
         // then
         assertEquals(httpResponse, mockServer.handle(new HttpRequest().withPath("somepath")));
@@ -40,8 +40,8 @@ public class MockServerCleanResetTest {
     public void shouldClearAllExpectations() {
         // given
         HttpResponse httpResponse = new HttpResponse().withBody("somebody");
-        mockServer.when(new HttpRequest().withPath("somepath"), Times.unlimited()).respond(httpResponse);
-        mockServer.when(new HttpRequest().withPath("somepath"), Times.unlimited()).respond(httpResponse);
+        mockServer.when(new HttpRequest().withPath("somepath"), Times.unlimited()).thenRespond(httpResponse);
+        mockServer.when(new HttpRequest().withPath("somepath"), Times.unlimited()).thenRespond(httpResponse);
 
         // when
         mockServer.clear(new HttpRequest().withPath("somepath"));
@@ -54,8 +54,8 @@ public class MockServerCleanResetTest {
     public void shouldResetAllExpectations() {
         // given
         HttpResponse httpResponse = new HttpResponse().withBody("somebody");
-        mockServer.when(new HttpRequest().withPath("somepath"), Times.unlimited()).respond(httpResponse);
-        mockServer.when(new HttpRequest().withPath("somepath"), Times.unlimited()).respond(httpResponse);
+        mockServer.when(new HttpRequest().withPath("somepath"), Times.unlimited()).thenRespond(httpResponse);
+        mockServer.when(new HttpRequest().withPath("somepath"), Times.unlimited()).thenRespond(httpResponse);
 
         // when
         mockServer.reset();
@@ -68,8 +68,8 @@ public class MockServerCleanResetTest {
     public void shouldClearOnlyMatchingExpectations() {
         // given
         HttpResponse httpResponse = new HttpResponse().withBody("somebody");
-        mockServer.when(new HttpRequest().withPath("abc"), Times.unlimited()).respond(httpResponse);
-        Expectation expectation = mockServer.when(new HttpRequest().withPath("def"), Times.unlimited()).respond(httpResponse);
+        mockServer.when(new HttpRequest().withPath("abc"), Times.unlimited()).thenRespond(httpResponse);
+        Expectation expectation = mockServer.when(new HttpRequest().withPath("def"), Times.unlimited()).thenRespond(httpResponse);
 
         // when
         mockServer.clear(new HttpRequest().withPath("abc"));
@@ -83,8 +83,8 @@ public class MockServerCleanResetTest {
         // given
         HttpResponse httpResponse = new HttpResponse().withBody("somebody");
         Expectation[] expectations = new Expectation[]{
-                mockServer.when(new HttpRequest().withPath("somepath"), Times.unlimited()).respond(httpResponse),
-                mockServer.when(new HttpRequest().withPath("somepath"), Times.unlimited()).respond(httpResponse)
+                mockServer.when(new HttpRequest().withPath("somepath"), Times.unlimited()).thenRespond(httpResponse),
+                mockServer.when(new HttpRequest().withPath("somepath"), Times.unlimited()).thenRespond(httpResponse)
         };
 
         // when

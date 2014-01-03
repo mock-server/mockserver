@@ -31,9 +31,9 @@ public class MockServerSequentialResponsesTest {
     @Test
     public void respondWhenPathMatchesMultipleSequentialExpectation() {
         // when
-        mockServer.when(new HttpRequest().withPath("somepath")).respond(httpResponse[0].withBody("somebody1"));
-        mockServer.when(new HttpRequest().withPath("somepath")).respond(httpResponse[1].withBody("somebody2"));
-        mockServer.when(new HttpRequest().withPath("somepath")).respond(httpResponse[2].withBody("somebody3"));
+        mockServer.when(new HttpRequest().withPath("somepath")).thenRespond(httpResponse[0].withBody("somebody1"));
+        mockServer.when(new HttpRequest().withPath("somepath")).thenRespond(httpResponse[1].withBody("somebody2"));
+        mockServer.when(new HttpRequest().withPath("somepath")).thenRespond(httpResponse[2].withBody("somebody3"));
 
         // then
         assertEquals(httpResponse[0], mockServer.handle(new HttpRequest().withPath("somepath")));
@@ -44,9 +44,9 @@ public class MockServerSequentialResponsesTest {
     @Test
     public void respondWhenPathMatchesExpectationWithMultipleResponses() {
         // when
-        mockServer.when(new HttpRequest().withPath("somepath"), Times.exactly(2)).respond(httpResponse[0].withBody("somebody1"));
-        mockServer.when(new HttpRequest().withPath("somepath"), Times.exactly(1)).respond(httpResponse[1].withBody("somebody2"));
-        mockServer.when(new HttpRequest().withPath("somepath")).respond(httpResponse[2].withBody("somebody3"));
+        mockServer.when(new HttpRequest().withPath("somepath"), Times.exactly(2)).thenRespond(httpResponse[0].withBody("somebody1"));
+        mockServer.when(new HttpRequest().withPath("somepath"), Times.exactly(1)).thenRespond(httpResponse[1].withBody("somebody2"));
+        mockServer.when(new HttpRequest().withPath("somepath")).thenRespond(httpResponse[2].withBody("somebody3"));
 
         // then
         assertEquals(httpResponse[0], mockServer.handle(new HttpRequest().withPath("somepath")));
@@ -58,8 +58,8 @@ public class MockServerSequentialResponsesTest {
     @Test
     public void respondWhenPathMatchesMultipleDifferentResponses() {
         // when
-        mockServer.when(new HttpRequest().withPath("somepath1")).respond(httpResponse[0].withBody("somebody1"));
-        mockServer.when(new HttpRequest().withPath("somepath2")).respond(httpResponse[1].withBody("somebody2"));
+        mockServer.when(new HttpRequest().withPath("somepath1")).thenRespond(httpResponse[0].withBody("somebody1"));
+        mockServer.when(new HttpRequest().withPath("somepath2")).thenRespond(httpResponse[1].withBody("somebody2"));
 
         // then
         assertEquals(httpResponse[0], mockServer.handle(new HttpRequest().withPath("somepath1")));
@@ -73,7 +73,7 @@ public class MockServerSequentialResponsesTest {
     @Test
     public void doesNotRespondAfterMatchesFinishedExpectedTimes() {
         // when
-        mockServer.when(new HttpRequest().withPath("somepath"), Times.exactly(2)).respond(httpResponse[0].withBody("somebody"));
+        mockServer.when(new HttpRequest().withPath("somepath"), Times.exactly(2)).thenRespond(httpResponse[0].withBody("somebody"));
 
         // then
         assertEquals(httpResponse[0], mockServer.handle(new HttpRequest().withPath("somepath")));

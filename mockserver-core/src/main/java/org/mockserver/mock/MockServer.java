@@ -60,10 +60,14 @@ public class MockServer extends EqualsHashCodeToString {
     }
 
     public void clear(HttpRequest httpRequest) {
-        for (Expectation expectation : new ArrayList<>(expectations)) {
-            if (expectation.matches(httpRequest)) {
-                expectations.remove(expectation);
+        if (httpRequest != null) {
+            for (Expectation expectation : new ArrayList<>(expectations)) {
+                if (expectation.matches(httpRequest)) {
+                    expectations.remove(expectation);
+                }
             }
+        } else {
+            reset();
         }
     }
 
@@ -71,10 +75,19 @@ public class MockServer extends EqualsHashCodeToString {
         expectations.clear();
     }
 
-    public void dumpToLog() {
-        ExpectationSerializer expectationSerializer = new ExpectationSerializer();
-        for (Expectation expectation : new ArrayList<Expectation>(expectations)) {
-            logger.warn(expectationSerializer.serialize(expectation));
+    public void dumpToLog(HttpRequest httpRequest) {
+        if (httpRequest != null) {
+            ExpectationSerializer expectationSerializer = new ExpectationSerializer();
+            for (Expectation expectation : new ArrayList<>(expectations)) {
+                if (expectation.matches(httpRequest)) {
+                    logger.warn(expectationSerializer.serialize(expectation));
+                }
+            }
+        } else {
+            ExpectationSerializer expectationSerializer = new ExpectationSerializer();
+            for (Expectation expectation : new ArrayList<>(expectations)) {
+                logger.warn(expectationSerializer.serialize(expectation));
+            }
         }
     }
 }

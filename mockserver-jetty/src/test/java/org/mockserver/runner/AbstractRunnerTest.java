@@ -5,6 +5,7 @@ import org.junit.Test;
 import org.mockserver.proxy.connect.ConnectHandler;
 import org.mockserver.server.MockServerRunner;
 import org.mockserver.server.MockServerServlet;
+import org.mockserver.socket.PortFactory;
 
 import javax.servlet.http.HttpServlet;
 import java.net.InetAddress;
@@ -21,6 +22,7 @@ import static org.mockserver.configuration.SystemProperties.stopPort;
  */
 public class AbstractRunnerTest {
 
+    private final int port = PortFactory.findFreePort();
     private AbstractRunner runner;
 
     @Before
@@ -37,13 +39,13 @@ public class AbstractRunnerTest {
         try {
             // when
             try {
-                runner.start(2020, null).get(1, TimeUnit.SECONDS);
+                runner.start(port, null).get(3, TimeUnit.SECONDS);
             } catch (TimeoutException te) {
                 // ignore as expected
             }
 
             // then
-            assertEquals("http://" + InetAddress.getLocalHost().getHostAddress() + ":2020/", runner.server.getURI().toString());
+            assertEquals("http://" + InetAddress.getLocalHost().getHostAddress() + ":" + port + "/", runner.server.getURI().toString());
         } finally {
             runner.stop();
         }
@@ -54,14 +56,14 @@ public class AbstractRunnerTest {
         try {
             // when
             try {
-                runner.start(null, 2020).get(1, TimeUnit.SECONDS);
+                runner.start(null, port).get(3, TimeUnit.SECONDS);
             } catch (TimeoutException te) {
                 // ignore as expected
             }
 
             // then
             assertNotNull(runner.server.getBean(ConnectHandler.class));
-            assertEquals("https://" + InetAddress.getLocalHost().getHostAddress() + ":2020/", runner.server.getURI().toString());
+            assertEquals("https://" + InetAddress.getLocalHost().getHostAddress() + ":" + port + "/", runner.server.getURI().toString());
         } finally {
             runner.stop();
         }
@@ -78,12 +80,12 @@ public class AbstractRunnerTest {
         try {
             // when
             try {
-                runner.start(2020, null).get(1, TimeUnit.SECONDS);
+                runner.start(port, null).get(3, TimeUnit.SECONDS);
             } catch (TimeoutException te) {
                 // ignore as expected
             }
             try {
-                runner.start(2021, null).get(1, TimeUnit.SECONDS);
+                runner.start(port + 1, null).get(3, TimeUnit.SECONDS);
             } catch (TimeoutException te) {
                 // ignore as expected
             }
@@ -102,7 +104,7 @@ public class AbstractRunnerTest {
         try {
             // when
             try {
-                runner.start(2020, null).get(1, TimeUnit.SECONDS);
+                runner.start(port, null).get(3, TimeUnit.SECONDS);
             } catch (TimeoutException te) {
                 // ignore as expected
             }
@@ -117,13 +119,13 @@ public class AbstractRunnerTest {
         try {
             // when
             try {
-                runner.start(2020, null).get(1, TimeUnit.SECONDS);
+                runner.start(port, null).get(3, TimeUnit.SECONDS);
             } catch (TimeoutException te) {
                 // ignore as expected
             }
 
             // then
-            assertTrue(new MockServerRunner().stop("127.0.0.1", stopPort(2020, null), 30));
+            assertTrue(new MockServerRunner().stop("127.0.0.1", stopPort(port, null), 30));
         } finally {
             try {
                 runner.stop();
@@ -137,14 +139,14 @@ public class AbstractRunnerTest {
     public void shouldIndicateIfCanNotStopRemoteServer() throws InterruptedException, ExecutionException, UnknownHostException {
         // when
         try {
-            runner.start(2020, null).get(1, TimeUnit.SECONDS);
+            runner.start(port, null).get(3, TimeUnit.SECONDS);
         } catch (TimeoutException te) {
             // ignore as expected
         }
-        new MockServerRunner().stop("127.0.0.1", stopPort(2020, null), 5);
+        new MockServerRunner().stop("127.0.0.1", stopPort(port, null), 5);
 
         // then
-        assertFalse(new MockServerRunner().stop("127.0.0.1", stopPort(2020, null), 3));
+        assertFalse(new MockServerRunner().stop("127.0.0.1", stopPort(port, null), 3));
     }
 
     @Test(expected = IllegalArgumentException.class)

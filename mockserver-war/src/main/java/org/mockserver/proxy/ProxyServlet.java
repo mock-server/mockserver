@@ -1,11 +1,16 @@
 package org.mockserver.proxy;
 
 import org.mockserver.client.http.HttpRequestClient;
+import org.mockserver.client.serialization.ExpectationSerializer;
+import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.mappers.HttpServletRequestMapper;
 import org.mockserver.mappers.HttpServletResponseMapper;
+import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.model.HttpStatusCode;
 import org.mockserver.proxy.filters.*;
+import org.mockserver.streams.IOStreamUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,14 +24,18 @@ import java.io.IOException;
  * @author jamesdbloom
  */
 public class ProxyServlet extends HttpServlet {
+    private static final long serialVersionUID = 8490389904399790169L;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private HttpServletRequestMapper httpServletRequestMapper = new HttpServletRequestMapper();
     private HttpServletResponseMapper httpServletResponseMapper = new HttpServletResponseMapper();
+    private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
     private HttpRequestClient httpRequestClient = new HttpRequestClient();
+    private LogFilter filter = new LogFilter();
     private Filters filters = new Filters() {{
         withFilter(new HttpRequest(), new HopByHopHeaderFilter());
-        withFilter(new HttpRequest(), new LogFilter());
+        withFilter(new HttpRequest(), filter);
     }};
+    private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
 
     /**
      * Add filter for HTTP requests, each filter get called before each request is proxied, if the filter return null then the request is not proxied
@@ -66,8 +75,28 @@ public class ProxyServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        forwardRequest(request, response);
+    protected void doPut(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws ServletException, IOException {
+        switch (httpServletRequest.getRequestURI()) {
+            case "/dumpToLog":
+                filter.dumpToLog(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToByteArray(httpServletRequest)));
+                httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
+                break;
+            case "/retrieve":
+                Expectation[] expectations = filter.retrieve(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToByteArray(httpServletRequest)));
+                IOStreamUtils.writeToOutputStream(expectationSerializer.serialize(expectations).getBytes(), httpServletResponse);
+                httpServletResponse.setStatus(HttpStatusCode.OK_200.code());
+                break;
+            case "/reset":
+                filter.reset();
+                httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
+                break;
+            case "/clear":
+                filter.clear(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToByteArray(httpServletRequest)));
+                httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
+                break;
+            default:
+                forwardRequest(httpServletRequest, httpServletResponse);
+        }
     }
 
     @Override

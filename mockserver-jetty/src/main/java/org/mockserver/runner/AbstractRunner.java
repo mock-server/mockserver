@@ -59,7 +59,7 @@ public abstract class AbstractRunner {
      * @param port the port the listens to incoming HTTP requests
      * @return A Future that returns the state of the MockServer once it is stopped, this Future can be used to block execution until the MockServer is stopped.
      */
-    public Future start(final Integer port, final Integer securePort) {
+    public Future<String> start(final Integer port, final Integer securePort) {
         if (port == null && securePort == null) throw new IllegalStateException("You must specify a port or a secure port");
         if (isRunning()) throw new IllegalStateException("Server already running");
         final String startedMessage = "Started " + this.getClass().getSimpleName().replace("Runner", "") + " listening on:" + (port != null ? " standard port " + port : "") + (securePort != null ? " secure port " + securePort : "");

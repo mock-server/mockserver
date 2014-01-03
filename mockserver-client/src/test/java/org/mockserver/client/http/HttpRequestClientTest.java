@@ -6,6 +6,7 @@ import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpMethod;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
@@ -21,10 +22,13 @@ public class HttpRequestClientTest {
     private HttpClient mockHttpClient;
     @Mock
     private Request mockRequest = mock(Request.class);
+    @InjectMocks
+    private HttpRequestClient httpRequestClient;
 
     @Before
     public void setupTestFixture() throws Exception {
         mockHttpClient = new HttpClient();
+        httpRequestClient = new HttpRequestClient();
 
         initMocks(this);
 
@@ -41,7 +45,7 @@ public class HttpRequestClientTest {
     @Test
     public void shouldSendExpectationRequest() throws Exception {
         // when
-        new HttpRequestClient(mockHttpClient).sendRequest("baseUri", "body", "/path");
+        httpRequestClient.sendPUTRequest("baseUri", "body", "/path");
         // then
         verify(mockHttpClient).newRequest("baseUri/path");
         verify(mockRequest).method(HttpMethod.PUT);
@@ -56,6 +60,6 @@ public class HttpRequestClientTest {
         doThrow(new Exception()).when(mockHttpClient).start();
 
         // when
-        new HttpRequestClient(mockHttpClient).sendRequest("baseUri", "body", "/path");
+        httpRequestClient.sendPUTRequest("baseUri", "body", "/path");
     }
 }

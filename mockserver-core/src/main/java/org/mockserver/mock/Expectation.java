@@ -36,7 +36,7 @@ public class Expectation extends EqualsHashCodeToString {
         return times;
     }
 
-    public Expectation respond(HttpResponse httpResponse) {
+    public Expectation thenRespond(HttpResponse httpResponse) {
         this.httpResponse = httpResponse;
         return this;
     }

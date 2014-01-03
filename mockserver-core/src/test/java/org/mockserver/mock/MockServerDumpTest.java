@@ -34,7 +34,7 @@ public class MockServerDumpTest {
                 .when(
                         new HttpRequest()
                                 .withPath("some_path"))
-                .respond(
+                .thenRespond(
                         new HttpResponse()
                                 .withBody("some_response_body")
                 );
@@ -42,13 +42,13 @@ public class MockServerDumpTest {
                 .when(
                         new HttpRequest()
                                 .withPath("some_other_path"))
-                .respond(
+                .thenRespond(
                         new HttpResponse()
                                 .withBody("some_other_response_body")
                 );
 
         // when
-        mockServer.dumpToLog();
+        mockServer.dumpToLog(null);
 
         // then
         verify(logger).warn("{\n" +

@@ -1,6 +1,7 @@
 package org.mockserver.integration.proxy;
 
 import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.mockserver.socket.SSLFactory;
 
 /**
  * @author jamesdbloom

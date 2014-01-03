@@ -33,6 +33,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 /**
  * @author jamesdbloom
  */
+@SuppressWarnings("unchecked")
 public class ProxyVerticalTest {
 
     // mappers

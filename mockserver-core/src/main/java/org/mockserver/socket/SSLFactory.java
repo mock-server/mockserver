@@ -1,4 +1,4 @@
-package org.mockserver.integration.proxy;
+package org.mockserver.socket;
 
 import sun.security.x509.*;
 

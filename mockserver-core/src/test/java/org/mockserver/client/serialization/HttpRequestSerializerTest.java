@@ -44,8 +44,8 @@ public class HttpRequestSerializerTest {
                     .setPath("somepath")
                     .setQueryString("queryString")
                     .setBody("somebody")
-                    .setHeaders(Arrays.<HeaderDTO>asList((HeaderDTO) new HeaderDTO(new Header("headerName", Arrays.asList("headerValue")))))
-                    .setCookies(Arrays.<CookieDTO>asList((CookieDTO) new CookieDTO(new Cookie("cookieName", Arrays.asList("cookieValue")))));
+                    .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("headerName", Arrays.asList("headerValue")))))
+                    .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("cookieName", Arrays.asList("cookieValue")))));
     @Mock
     private ObjectMapper objectMapper;
     @Mock
@@ -71,22 +71,6 @@ public class HttpRequestSerializerTest {
 
         // then
         assertEquals(fullHttpRequest, httpRequest);
-    }
-
-    @Test(expected = RuntimeException.class)
-    public void deserializeHandlesException() throws IOException {
-        // given
-        byte[] requestBytes = "requestBytes".getBytes();
-        when(objectMapper.readValue(eq(requestBytes), same(HttpRequestDTO.class))).thenThrow(new IOException());
-
-        // when
-        httpRequestSerializer.deserialize(requestBytes);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void shouldValidateInput() throws IOException {
-        // when
-        httpRequestSerializer.deserialize(new byte[0]);
     }
 
     @Test

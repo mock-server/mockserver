@@ -3,6 +3,7 @@ package org.mockserver.server;
 import org.junit.After;
 import org.junit.Before;
 import org.mockserver.integration.server.AbstractClientServerIntegrationTest;
+import org.mockserver.socket.PortFactory;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -13,8 +14,8 @@ import java.util.concurrent.TimeoutException;
  */
 public class ClientServerEmbeddedJettyAPIIntegrationTest extends AbstractClientServerIntegrationTest {
 
-    private final int serverPort = 9090;
-    private final int serverSecurePort = 9091;
+    private final int serverPort = PortFactory.findFreePort();
+    private final int serverSecurePort = PortFactory.findFreePort();
     private MockServerRunner mockServerRunner;
 
     @Before

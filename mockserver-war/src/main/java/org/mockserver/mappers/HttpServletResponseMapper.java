@@ -3,12 +3,11 @@ package org.mockserver.mappers;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.streams.IOStreamUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.OutputStream;
 
 /**
  * @author jamesdbloom
@@ -51,14 +50,7 @@ public class HttpServletResponseMapper {
 
     private void setBody(HttpResponse httpResponse, HttpServletResponse httpServletResponse) {
         if (httpResponse.getBody() != null) {
-            try {
-                OutputStream output = httpServletResponse.getOutputStream();
-                output.write(httpResponse.getBody());
-                output.close();
-            } catch (IOException ioe) {
-                logger.error(String.format("IOException while writing %s to HttpServletResponse output stream", httpResponse.getBodyAsString()), ioe);
-                throw new RuntimeException(String.format("IOException while writing %s to HttpServletResponse output stream", httpResponse.getBodyAsString()), ioe);
-            }
+            IOStreamUtils.writeToOutputStream(httpResponse.getBody(), httpServletResponse);
         }
     }
 }

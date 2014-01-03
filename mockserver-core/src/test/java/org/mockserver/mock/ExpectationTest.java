@@ -20,7 +20,7 @@ public class ExpectationTest {
         Times times = Times.exactly(3);
 
         // when
-        Expectation expectation = new Expectation(httpRequest, times).respond(httpResponse);
+        Expectation expectation = new Expectation(httpRequest, times).thenRespond(httpResponse);
 
         // then
         assertEquals(httpRequest, expectation.getHttpRequest());
@@ -31,7 +31,7 @@ public class ExpectationTest {
     @Test
     public void shouldAllowForNulls() {
         // when
-        Expectation expectation = new Expectation(null, null).respond(null);
+        Expectation expectation = new Expectation(null, null).thenRespond(null);
 
         // then
         expectation.setNotUnlimitedResponses();

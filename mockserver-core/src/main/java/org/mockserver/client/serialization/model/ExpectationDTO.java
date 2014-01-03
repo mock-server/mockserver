@@ -45,7 +45,7 @@ public class ExpectationDTO extends EqualsHashCodeToString {
         } else {
             times = Times.once();
         }
-        return new Expectation(httpRequest, times).respond(httpResponse);
+        return new Expectation(httpRequest, times).thenRespond(httpResponse);
     }
 
     public HttpRequestDTO getHttpRequest() {

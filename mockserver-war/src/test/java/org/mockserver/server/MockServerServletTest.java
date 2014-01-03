@@ -5,6 +5,7 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.serialization.ExpectationSerializer;
+import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.mappers.HttpServletRequestMapper;
 import org.mockserver.mappers.HttpServletResponseMapper;
 import org.mockserver.matchers.Times;
@@ -36,6 +37,8 @@ public class MockServerServletTest {
     private HttpServletResponseMapper httpServletResponseMapper;
     @Mock
     private ExpectationSerializer expectationSerializer;
+    @Mock
+    private HttpRequestSerializer httpRequestSerializer;
     @InjectMocks
     private MockServerServlet mockServerServlet;
 
@@ -71,7 +74,7 @@ public class MockServerServletTest {
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
         HttpRequest httpRequest = mock(HttpRequest.class);
         Times times = mock(Times.class);
-        Expectation expectation = new Expectation(httpRequest, times).respond(new HttpResponse());
+        Expectation expectation = new Expectation(httpRequest, times).thenRespond(new HttpResponse());
 
         byte[] requestBytes = "requestBytes".getBytes();
         httpServletRequest.setContent(requestBytes);
@@ -174,11 +177,10 @@ public class MockServerServletTest {
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
         MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/clear");
         HttpRequest httpRequest = new HttpRequest();
-        Expectation expectation = new Expectation(httpRequest, Times.unlimited()).respond(new HttpResponse());
 
         byte[] requestBytes = "requestBytes".getBytes();
         httpServletRequest.setContent(requestBytes);
-        when(expectationSerializer.deserialize(requestBytes)).thenReturn(expectation);
+        when(httpRequestSerializer.deserialize(requestBytes)).thenReturn(httpRequest);
 
         // when
         mockServerServlet.doPut(httpServletRequest, httpServletResponse);
@@ -193,7 +195,7 @@ public class MockServerServletTest {
         // given
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
         MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/reset");
-        Expectation expectation = new Expectation(new HttpRequest(), Times.unlimited()).respond(new HttpResponse());
+        Expectation expectation = new Expectation(new HttpRequest(), Times.unlimited()).thenRespond(new HttpResponse());
 
         byte[] requestBytes = "requestBytes".getBytes();
         httpServletRequest.setContent(requestBytes);
@@ -212,7 +214,7 @@ public class MockServerServletTest {
         // given
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
         MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/dumpToLog");
-        Expectation expectation = new Expectation(new HttpRequest(), Times.unlimited()).respond(new HttpResponse());
+        Expectation expectation = new Expectation(new HttpRequest(), Times.unlimited()).thenRespond(new HttpResponse());
 
         byte[] requestBytes = "requestBytes".getBytes();
         httpServletRequest.setContent(requestBytes);
@@ -222,7 +224,7 @@ public class MockServerServletTest {
         mockServerServlet.doPut(httpServletRequest, httpServletResponse);
 
         // then
-        verify(mockServer).dumpToLog();
+        verify(mockServer).dumpToLog(null);
         verifyNoMoreInteractions(httpServletRequestMapper);
     }
 }

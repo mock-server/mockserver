@@ -6,6 +6,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.mockserver.cli.Main;
 import org.mockserver.integration.server.AbstractClientServerIntegrationTest;
+import org.mockserver.socket.PortFactory;
 
 import java.util.concurrent.TimeUnit;
 
@@ -16,8 +17,8 @@ import static org.mockserver.configuration.SystemProperties.stopPort;
  */
 public class ClientServerEmbeddedJettyCommandLineIntegrationTest extends AbstractClientServerIntegrationTest {
 
-    private final static int serverPort = 9090;
-    private final static int serverSecurePort = 9091;
+    private final static int serverPort = PortFactory.findFreePort();
+    private final static int serverSecurePort = PortFactory.findFreePort();
 
     @BeforeClass
     public static void startServer() throws InterruptedException {

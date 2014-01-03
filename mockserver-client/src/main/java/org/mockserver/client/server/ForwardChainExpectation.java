@@ -18,7 +18,7 @@ public class ForwardChainExpectation {
     }
 
     public void respond(HttpResponse httpResponse) {
-        expectation.respond(httpResponse);
+        expectation.thenRespond(httpResponse);
         mockServerClient.sendExpectation(expectation);
     }
 

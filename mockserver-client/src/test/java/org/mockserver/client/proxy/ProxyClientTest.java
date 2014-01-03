@@ -33,7 +33,7 @@ public class ProxyClientTest {
         proxyClient.reset();
 
         // then
-        verify(mockHttpClient).sendRequest("http://localhost:8080", "", "/reset");
+        verify(mockHttpClient).sendPUTRequest("http://localhost:8080", "", "/reset");
     }
 
     @Test
@@ -42,7 +42,7 @@ public class ProxyClientTest {
         proxyClient.dumpToLog();
 
         // then
-        verify(mockHttpClient).sendRequest("http://localhost:8080", "", "/dumpToLog");
+        verify(mockHttpClient).sendPUTRequest("http://localhost:8080", "", "/dumpToLog");
     }
 
     @Test
@@ -56,7 +56,7 @@ public class ProxyClientTest {
                 );
 
         // then
-        verify(mockHttpClient).sendRequest("http://localhost:8080", "{\n" +
+        verify(mockHttpClient).sendPUTRequest("http://localhost:8080", "{\n" +
                 "  \"path\" : \"/some_path\",\n" +
                 "  \"body\" : \"some_request_body\"\n" +
                 "}", "/clear");

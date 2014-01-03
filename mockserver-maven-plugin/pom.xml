@@ -66,15 +66,25 @@
                     <verbose>true</verbose>
                     <filesets>
                         <fileset>
-                            <directory>src/integration-tests</directory>
-                            <includes>
-                                <include>**/target/**</include>
-                            </includes>
+                            <directory>src/integration-tests/run-from-command-line/target</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>src/integration-tests/run-stop-forked-from-command-line/target</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>src/integration-tests/skip/target</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>src/integration-tests/starts-stops-forked-server-from-pom/target</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>src/integration-tests/starts-stops-server-from-pom-explicitly/target</directory>
                         </fileset>
                         <fileset>
                             <directory>${basedir}</directory>
                             <includes>
                                 <include>**/*.log</include>
+                                <include>**/keystore.jks</include>
                             </includes>
                         </fileset>
                     </filesets>
@@ -95,7 +105,7 @@
                             <goal>report</goal>
                             <goal>xdoc</goal>
                             <goal>addPluginArtifactMetadata</goal>
-                            <!--<goal>helpmojo</goal>-->
+                            <goal>helpmojo</goal>
                         </goals>
                     </execution>
                 </executions>

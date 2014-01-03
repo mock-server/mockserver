@@ -3,7 +3,8 @@ package org.mockserver.server;
 import ch.qos.logback.classic.Level;
 import com.google.common.annotations.VisibleForTesting;
 import org.mockserver.client.serialization.ExpectationSerializer;
-import org.mockserver.integration.proxy.SSLFactory;
+import org.mockserver.client.serialization.HttpRequestSerializer;
+import org.mockserver.socket.SSLFactory;
 import org.mockserver.mappers.HttpServerRequestMapper;
 import org.mockserver.mappers.HttpServerResponseMapper;
 import org.mockserver.mock.Expectation;
@@ -43,18 +44,17 @@ public class MockServerVertical extends Verticle {
                             setStatusAndEnd(request, HttpStatusCode.ACCEPTED_202);
                             vertx.stop();
                         } else if (request.path().equals("/dumpToLog")) {
-                            mockServer.dumpToLog();
+                            mockServer.dumpToLog(httpRequestSerializer.deserialize(body.getBytes()));
                             setStatusAndEnd(request, HttpStatusCode.ACCEPTED_202);
                         } else if (request.path().equals("/reset")) {
                             mockServer.reset();
                             setStatusAndEnd(request, HttpStatusCode.ACCEPTED_202);
                         } else if (request.path().equals("/clear")) {
-                            Expectation expectation = expectationSerializer.deserialize(body.getBytes());
-                            mockServer.clear(expectation.getHttpRequest());
+                            mockServer.clear(httpRequestSerializer.deserialize(body.getBytes()));
                             setStatusAndEnd(request, HttpStatusCode.ACCEPTED_202);
                         } else {
                             Expectation expectation = expectationSerializer.deserialize(body.getBytes());
-                            mockServer.when(expectation.getHttpRequest(), expectation.getTimes()).respond(expectation.getHttpResponse());
+                            mockServer.when(expectation.getHttpRequest(), expectation.getTimes()).thenRespond(expectation.getHttpResponse());
                             setStatusAndEnd(request, HttpStatusCode.CREATED_201);
                         }
                     } else if (request.method().equals("GET") || request.method().equals("POST")) {
@@ -76,6 +76,7 @@ public class MockServerVertical extends Verticle {
     private HttpServerRequestMapper httpServerRequestMapper = new HttpServerRequestMapper();
     private HttpServerResponseMapper httpServerResponseMapper = new HttpServerResponseMapper();
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
+    private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
 
     /**
      * Override the debug WARN logging level

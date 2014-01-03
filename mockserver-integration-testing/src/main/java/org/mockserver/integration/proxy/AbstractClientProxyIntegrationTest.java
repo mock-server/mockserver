@@ -8,11 +8,10 @@ import org.eclipse.jetty.http.HttpScheme;
 import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.junit.Test;
-import org.mockserver.client.proxy.ProxyClient;
+import org.mockserver.socket.SSLFactory;
+import org.mockserver.streams.IOStreamUtils;
 
 import javax.net.ssl.SSLSocket;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
@@ -59,7 +58,7 @@ public abstract class AbstractClientProxyIntegrationTest {
             output.flush();
 
             // then
-            assertContains(BufferReaderUtils.readerToString(socket.getInputStream()), "X-Test: test_headers_only");
+            assertContains(IOStreamUtils.readInputStreamToString(socket), "X-Test: test_headers_only");
 
             // - send GET request for headers and body
             output.write(("" +
@@ -70,7 +69,7 @@ public abstract class AbstractClientProxyIntegrationTest {
             output.flush();
 
             // then
-            String response = BufferReaderUtils.readerToString(socket.getInputStream());
+            String response = IOStreamUtils.readInputStreamToString(socket);
             assertContains(response, "X-Test: test_headers_and_body");
             assertContains(response, "an_example_body");
         }
@@ -115,7 +114,7 @@ public abstract class AbstractClientProxyIntegrationTest {
             output.flush();
 
             // then
-            assertContains(BufferReaderUtils.readerToString(socket.getInputStream()), "HTTP/1.1 404 Not Found");
+            assertContains(IOStreamUtils.readInputStreamToString(socket), "HTTP/1.1 404 Not Found");
         }
     }
 
@@ -134,7 +133,7 @@ public abstract class AbstractClientProxyIntegrationTest {
             output.flush();
 
             // then
-            assertContains(BufferReaderUtils.readerToString(socket.getInputStream()), "HTTP/1.1 200 OK");
+            assertContains(IOStreamUtils.readInputStreamToString(socket), "HTTP/1.1 200 OK");
         }
     }
 
@@ -154,7 +153,7 @@ public abstract class AbstractClientProxyIntegrationTest {
             output.flush();
 
             // - flush CONNECT response
-            assertContains(BufferReaderUtils.readerToString(socket.getInputStream()), "HTTP/1.1 200 OK");
+            assertContains(IOStreamUtils.readInputStreamToString(socket), "HTTP/1.1 200 OK");
 
             // Upgrade the socket to SSL
             try (SSLSocket sslSocket = SSLFactory.wrapSocket(socket, sslContextFactory.getSslContext())) {
@@ -169,7 +168,7 @@ public abstract class AbstractClientProxyIntegrationTest {
                 output.flush();
 
                 // then
-                assertContains(BufferReaderUtils.readerToString(sslSocket.getInputStream()), "X-Test: test_headers_only");
+                assertContains(IOStreamUtils.readInputStreamToString(sslSocket), "X-Test: test_headers_only");
 
                 // - send GET request for headers and body
                 output.write(("" +
@@ -180,7 +179,7 @@ public abstract class AbstractClientProxyIntegrationTest {
                 output.flush();
 
                 // then
-                String response = BufferReaderUtils.readerToString(sslSocket.getInputStream());
+                String response = IOStreamUtils.readInputStreamToString(sslSocket);
                 assertContains(response, "X-Test: test_headers_and_body");
                 assertContains(response, "an_example_body");
             }
@@ -226,7 +225,7 @@ public abstract class AbstractClientProxyIntegrationTest {
             output.flush();
 
             // - flush CONNECT response
-            assertContains(BufferReaderUtils.readerToString(socket.getInputStream()), "HTTP/1.1 200 OK");
+            assertContains(IOStreamUtils.readInputStreamToString(socket), "HTTP/1.1 200 OK");
 
             // Upgrade the socket to SSL
             try (SSLSocket sslSocket = SSLFactory.wrapSocket(socket, sslContextFactory.getSslContext())) {
@@ -240,7 +239,7 @@ public abstract class AbstractClientProxyIntegrationTest {
                 output.flush();
 
                 // then
-                assertContains(BufferReaderUtils.readerToString(sslSocket.getInputStream()), "HTTP/1.1 404 Not Found");
+                assertContains(IOStreamUtils.readInputStreamToString(sslSocket), "HTTP/1.1 404 Not Found");
             }
         }
     }

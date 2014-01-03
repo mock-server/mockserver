@@ -31,7 +31,7 @@ public class HttpClientResponseMapperTest {
         when(httpClientResponse.getHeaders()).thenReturn(headers);
 
         // when
-        HttpResponse httpResponse = new HttpClientResponseMapper().buildHttpResponse(httpClientResponse, "somebody".getBytes());
+        HttpResponse httpResponse = new HttpClientResponseMapper().mapHttpClientResponseToHttpResponse(httpClientResponse, "somebody".getBytes());
 
         // then
         assertEquals(httpResponse.getStatusCode(), new Integer(500));
@@ -58,7 +58,7 @@ public class HttpClientResponseMapperTest {
         when(httpClientResponse.getHeaders()).thenReturn(headers);
 
         // when
-        HttpResponse httpResponse = new HttpClientResponseMapper().buildHttpResponse(httpClientResponse, "".getBytes());
+        HttpResponse httpResponse = new HttpClientResponseMapper().mapHttpClientResponseToHttpResponse(httpClientResponse, "".getBytes());
 
         // then
         assertEquals(httpResponse.getHeaders(), Arrays.asList(
@@ -78,7 +78,7 @@ public class HttpClientResponseMapperTest {
         when(httpClientResponse.getHeaders()).thenReturn(headers);
 
         // when
-        HttpResponse httpResponse = new HttpClientResponseMapper().buildHttpResponse(httpClientResponse, "".getBytes());
+        HttpResponse httpResponse = new HttpClientResponseMapper().mapHttpClientResponseToHttpResponse(httpClientResponse, "".getBytes());
 
         // then
         assertEquals(httpResponse.getCookies(), Arrays.asList(

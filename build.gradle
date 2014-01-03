@@ -13,11 +13,33 @@ allprojects {
         mavenCentral()
     }
 
-//    gradle.projectsEvaluated {
-//        tasks.withType(Compile) {
-//            options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
-//        }
-//    }
+    compileJava {
+        // I only managed to get this working when I forked and passed 'javac' as an executable
+        if (project.hasProperty("showAllWarnings")) {
+            options.compilerArgs << "-Xlint:all"
+        } else {
+            options.compilerArgs << "-Xlint:all" << "-XDignore.symbol.file"
+        }
+        options.fork = true
+        options.forkOptions.executable = 'javac'
+    }
+
+    compileTestJava {
+        // I only managed to get this working when I forked and passed 'javac' as an executable
+        if (project.hasProperty("showAllWarnings")) {
+            options.compilerArgs << "-Xlint:all"
+        } else {
+            options.compilerArgs << "-XDignore.symbol.file"
+        }
+        options.fork = true
+        options.forkOptions.executable = 'javac'
+    }
+
+
+    test {
+        forkEvery 10
+        maxParallelForks 2
+    }
 }
 
 project(':mockserver-client') {

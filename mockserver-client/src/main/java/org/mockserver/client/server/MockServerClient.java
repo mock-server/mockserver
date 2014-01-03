@@ -2,12 +2,10 @@ package org.mockserver.client.server;
 
 import org.mockserver.client.http.HttpRequestClient;
 import org.mockserver.client.serialization.ExpectationSerializer;
+import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author jamesdbloom
@@ -15,6 +13,7 @@ import org.slf4j.LoggerFactory;
 public class MockServerClient {
     private final String uri;
     private HttpRequestClient httpClient;
+    private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
 
     /**
@@ -88,14 +87,14 @@ public class MockServerClient {
      * WARN level to ensure they appear even if the default logging level has not been altered
      */
     public void dumpToLog() {
-        httpClient.sendRequest(uri, "", "/dumpToLog");
+        httpClient.sendPUTRequest(uri, "", "/dumpToLog");
     }
 
     /**
      * Reset MockServer by clearing all expectations
      */
     public void reset() {
-        httpClient.sendRequest(uri, "", "/reset");
+        httpClient.sendPUTRequest(uri, "", "/reset");
     }
 
     /**
@@ -104,15 +103,11 @@ public class MockServerClient {
      * @param httpRequest the http that is matched against when deciding whether to clear each expectation
      */
     public void clear(HttpRequest httpRequest) {
-        sendExpectation(new Expectation(httpRequest, Times.unlimited()).respond(new HttpResponse()), "/clear");
+        httpClient.sendPUTRequest(uri, httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", "/clear");
     }
 
     protected void sendExpectation(Expectation expectation) {
-        sendExpectation(expectation, "");
-    }
-
-    private void sendExpectation(Expectation expectation, String path) {
-        httpClient.sendRequest(uri, expectation != null ? expectationSerializer.serialize(expectation) : "", path);
+        httpClient.sendPUTRequest(uri, expectation != null ? expectationSerializer.serialize(expectation) : "", "");
     }
 
 }

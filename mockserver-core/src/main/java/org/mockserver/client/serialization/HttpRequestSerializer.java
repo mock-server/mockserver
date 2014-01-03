@@ -31,7 +31,6 @@ public class HttpRequestSerializer {
     }
 
     public HttpRequest deserialize(byte[] jsonHttpRequest) {
-        if (jsonHttpRequest.length == 0) throw new IllegalArgumentException("Expected an JSON httpRequest object but http body is empty");
         HttpRequest httpRequest = null;
         try {
             HttpRequestDTO httpRequestDTO = objectMapper.readValue(jsonHttpRequest, HttpRequestDTO.class);
@@ -39,8 +38,7 @@ public class HttpRequestSerializer {
                 httpRequest = httpRequestDTO.buildObject();
             }
         } catch (IOException ioe) {
-            logger.error("Exception while parsing response [" + new String(jsonHttpRequest) + "] for http response httpRequest", ioe);
-            throw new RuntimeException("Exception while parsing response [" + new String(jsonHttpRequest) + "] for http response httpRequest", ioe);
+            logger.info("Exception while parsing response [" + new String(jsonHttpRequest) + "] for http response httpRequest", ioe);
         }
         return httpRequest;
     }

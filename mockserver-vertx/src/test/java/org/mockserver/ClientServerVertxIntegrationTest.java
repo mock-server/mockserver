@@ -1,11 +1,10 @@
 package org.mockserver;
 
-import com.google.common.util.concurrent.SettableFuture;
 import org.junit.After;
 import org.junit.Before;
-import org.mockserver.configuration.SystemProperties;
 import org.mockserver.integration.server.AbstractClientServerIntegrationTest;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.socket.PortFactory;
 import org.vertx.java.platform.impl.cli.Starter;
 
 import java.util.concurrent.TimeUnit;
@@ -15,6 +14,8 @@ import java.util.concurrent.TimeUnit;
  */
 public class ClientServerVertxIntegrationTest extends AbstractClientServerIntegrationTest {
 
+    private final int port = PortFactory.findFreePort();
+    private final int securePort = PortFactory.findFreePort();
     private final Thread vertxServer = new Thread(new Runnable() {
         public void run() {
             System.setProperty("mockserver.port", "" + getPort());
@@ -31,12 +32,12 @@ public class ClientServerVertxIntegrationTest extends AbstractClientServerIntegr
 
     @Override
     public int getPort() {
-        return 8085;
+        return port;
     }
 
     @Override
     public int getSecurePort() {
-        return 8087;
+        return securePort;
     }
 
     @After

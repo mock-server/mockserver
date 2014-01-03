@@ -18,6 +18,7 @@ import static org.mockito.Mockito.when;
 /**
  * @author jamesdbloom
  */
+@SuppressWarnings("unchecked")
 public class HttpServletRequestMapperTest {
 
     @Test

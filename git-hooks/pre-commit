@@ -1,4 +1,3 @@
 #!/usr/bin/env bash
 
-# can't run full test suite currently with gradle as it crashes the JVM possible due to FD_SETSIZE (see more: http://stackoverflow.com/questions/16191236/tomcat-startup-fails-due-to-java-net-socketexception-invalid-argument-on-mac-o)
-gradle clean compileTestJava && mvn clean install -Pit
+gradle clean test && mvn clean install -Pit

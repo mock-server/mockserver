@@ -89,10 +89,14 @@ public class CircularMultiMapTest {
 
         // when
         circularMultiMap.put("1", "1_1");
-        circularMultiMap.putAll(new HashMap<String, String>() {{
-            put("1", "1_2");
-            put("2", "2");
-        }});
+        circularMultiMap.putAll(new HashMap<String, String>() {
+            private static final long serialVersionUID = -580164440676146851L;
+
+            {
+                put("1", "1_2");
+                put("2", "2");
+            }
+        });
         circularMultiMap.put("1", "1_3");
 
         // then
@@ -101,11 +105,13 @@ public class CircularMultiMapTest {
     }
 
     @Test
+
     public void shouldIndicateWhenEmpty() {
         assertTrue(new CircularMultiMap<>(3, 3).isEmpty());
     }
 
     @Test
+
     public void shouldSupportBeingCleared() {
         // given
         CircularMultiMap<String, String> circularMultiMap = new CircularMultiMap<>(3, 3);
@@ -126,6 +132,7 @@ public class CircularMultiMapTest {
     }
 
     @Test
+
     public void shouldReturnEntrySet() {
         // given
         CircularMultiMap<String, String> circularMultiMap = new CircularMultiMap<>(3, 3);
@@ -138,14 +145,16 @@ public class CircularMultiMapTest {
 
         // then
         assertEquals(Sets.newHashSet(
-                circularMultiMap.new ImmutableEntry("1", "1_1"),
-                circularMultiMap.new ImmutableEntry("1", "1_2"),
-                circularMultiMap.new ImmutableEntry("1", "1_3"),
-                circularMultiMap.new ImmutableEntry("2", "2")
-        ), circularMultiMap.entrySet());
+                new CircularMultiMap.ImmutableEntry[]{
+                        circularMultiMap.new ImmutableEntry("1", "1_1"),
+                        circularMultiMap.new ImmutableEntry("1", "1_2"),
+                        circularMultiMap.new ImmutableEntry("1", "1_3"),
+                        circularMultiMap.new ImmutableEntry("2", "2")
+                }), circularMultiMap.entrySet());
     }
 
     @Test
+
     public void shouldCorrectlyConstructAndGetEntryValue() {
         // when
         CircularMultiMap.ImmutableEntry immutableEntry = new CircularMultiMap<>(3, 3).new ImmutableEntry("key", "value");
@@ -161,6 +170,7 @@ public class CircularMultiMapTest {
     }
 
     @Test
+
     public void shouldSupportRemovingAllValues() {
         // given
         CircularMultiMap<String, String> circularMultiMap = new CircularMultiMap<>(3, 3);
@@ -192,6 +202,7 @@ public class CircularMultiMapTest {
     }
 
     @Test
+
     public void shouldSupportRemovingAValue() {
         // given
         CircularMultiMap<String, String> circularMultiMap = new CircularMultiMap<>(3, 3);

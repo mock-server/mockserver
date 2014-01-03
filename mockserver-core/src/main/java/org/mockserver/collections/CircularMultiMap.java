@@ -109,7 +109,7 @@ public class CircularMultiMap<K, V> implements Map<K, V> {
 
     @Override
     public synchronized Set<Entry<K, V>> entrySet() {
-        Set<Entry<K, V>> entrySet = new HashSet<>();
+        Set<Entry<K, V>> entrySet = new LinkedHashSet<>();
         for (Entry<K, List<V>> entry : backingMap.entrySet()) {
             for (V value : entry.getValue()) {
                 entrySet.add(new ImmutableEntry(entry.getKey(), value));
