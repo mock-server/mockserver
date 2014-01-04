@@ -1,13 +1,10 @@
 package org.mockserver.server;
 
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.server.SslConnectionFactory;
+import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.mockserver.integration.proxy.SSLContextFactory;
 import org.mockserver.integration.server.AbstractClientServerIntegrationTest;
 import org.mockserver.socket.PortFactory;
@@ -17,7 +14,6 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author jamesdbloom
  */
-@Ignore
 public class ClientServerWarIntegrationTest extends AbstractClientServerIntegrationTest {
 
     private final int serverPort = PortFactory.findFreePort();
@@ -30,8 +26,11 @@ public class ClientServerWarIntegrationTest extends AbstractClientServerIntegrat
         ServerConnector http = new ServerConnector(server);
         http.setPort(serverPort);
         server.addConnector(http);
+
         // add https connector
-        ServerConnector https = new ServerConnector(server, new SslConnectionFactory(SSLContextFactory.createSSLContextFactory(), "http/1.1"));
+        HttpConfiguration https_config = new HttpConfiguration();
+        https_config.addCustomizer(new SecureRequestCustomizer());
+        ServerConnector https = new ServerConnector(server, new SslConnectionFactory(SSLContextFactory.createSSLContextFactory(), "http/1.1"), new HttpConnectionFactory(https_config));
         https.setPort(serverSecurePort);
         server.addConnector(https);
 

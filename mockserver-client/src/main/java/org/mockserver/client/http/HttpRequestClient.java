@@ -77,7 +77,6 @@ public class HttpRequestClient {
 
     public ContentResponse sendPUTRequest(String baseUri, String body, String path) {
         try {
-            System.out.println("baseUri + path = " + baseUri + path);
             if (baseUri.endsWith("/") && path.startsWith("/")) {
                 path = StringUtils.substringAfter(path, "/");
             }

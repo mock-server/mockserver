@@ -37,9 +37,7 @@ public class MockServerServlet extends HttpServlet {
     private void handlePOSTorGET(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
         HttpRequest httpRequest = httpServletRequestMapper.mapHttpServletRequestToHttpRequest(httpServletRequest);
         HttpResponse httpResponse = mockServer.handle(httpRequest);
-        System.out.println("httpRequest = " + httpRequest);
         if (httpResponse != null) {
-            System.out.println("httpResponse = " + httpResponse);
             httpServletResponseMapper.mapHttpResponseToHttpServletResponse(httpResponse, httpServletResponse);
         } else {
             httpServletResponse.setStatus(HttpStatusCode.NOT_FOUND_404.code());
