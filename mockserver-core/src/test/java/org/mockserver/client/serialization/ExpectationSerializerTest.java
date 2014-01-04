@@ -81,6 +81,221 @@ public class ExpectationSerializerTest {
     }
 
     @Test
+    public void shouldSerializeObject() throws IOException {
+        // given
+        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT)).thenReturn(objectMapper);
+        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL)).thenReturn(objectMapper);
+        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_EMPTY)).thenReturn(objectMapper);
+        when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
+
+
+        // when
+        expectationSerializer.serialize(fullExpectation);
+
+        // then
+        verify(objectMapper).setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT);
+        verify(objectMapper).setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL);
+        verify(objectMapper).setSerializationInclusion(JsonSerialize.Inclusion.NON_EMPTY);
+        verify(objectMapper).writerWithDefaultPrettyPrinter();
+        verify(objectWriter).writeValueAsString(fullExpectationDTO);
+    }
+
+    @Test
+    public void shouldSerializeFullObjectAsJava() throws IOException {
+        // when
+        assertEquals("\n" +
+                "new MockServerClient()\n" +
+                "        .when(\n" +
+                "                new HttpRequest()\n" +
+                "                        .withMethod(\"GET\")\n" +
+                "                        .withURL(\"url\")\n" +
+                "                        .withPath(\"somepath\")\n" +
+                "                        .withQueryString(\"queryString\")\n" +
+                "                        .withHeaders(\n" +
+                "                                new Header(\"headerNameOne\", \"headerValueOneOne\", \"headerValueOneTwo\")\n" +
+                "                                new Header(\"headerNameTwo\", \"headerValueTwo\")\n" +
+                "                        )\n" +
+                "                        .withCookies(\n" +
+                "                                new Cookie(\"cookieNameOne\", \"cookieValueOneOne\", \"cookieValueOneTwo\")\n" +
+                "                                new Cookie(\"cookieNameTwo\", \"cookieValueTwo\")\n" +
+                "                        )\n" +
+                "                        .withBody(\"somebody\"),\n" +
+                "                Times.once()\n" +
+                "        )" +
+                "        .thenRespond(\n" +
+                "                new HttpResponse()\n" +
+                "                .withStatusCode(304)\n" +
+                "                        .withHeaders(\n" +
+                "                                new Header(\"headerNameOne\", \"headerValueOneOne\", \"headerValueOneTwo\")\n" +
+                "                                new Header(\"headerNameTwo\", \"headerValueTwo\")\n" +
+                "                        )\n" +
+                "                        .withCookies(\n" +
+                "                                new Cookie(\"cookieNameOne\", \"cookieValueOneOne\", \"cookieValueOneTwo\")\n" +
+                "                                new Cookie(\"cookieNameTwo\", \"cookieValueTwo\")\n" +
+                "                        )\n" +
+                "                .withBody(\"somebody\")\n" +
+                "        );",
+                expectationSerializer.serializeAsJava(
+                        new Expectation(
+                                new HttpRequest()
+                                        .withMethod("GET")
+                                        .withURL("url")
+                                        .withPath("somepath")
+                                        .withQueryString("queryString")
+                                        .withHeaders(
+                                                new Header("headerNameOne", "headerValueOneOne", "headerValueOneTwo"),
+                                                new Header("headerNameTwo", "headerValueTwo")
+                                        )
+                                        .withCookies(
+                                                new Cookie("cookieNameOne", "cookieValueOneOne", "cookieValueOneTwo"),
+                                                new Cookie("cookieNameTwo", "cookieValueTwo")
+                                        )
+                                        .withBody("somebody"),
+                                Times.once()
+                        ).thenRespond(
+                                new HttpResponse()
+                                        .withStatusCode(304)
+                                        .withHeaders(
+                                                new Header("headerNameOne", "headerValueOneOne", "headerValueOneTwo"),
+                                                new Header("headerNameTwo", "headerValueTwo")
+                                        )
+                                        .withCookies(
+                                                new Cookie("cookieNameOne", "cookieValueOneOne", "cookieValueOneTwo"),
+                                                new Cookie("cookieNameTwo", "cookieValueTwo")
+                                        )
+                                        .withBody("somebody")
+                        )
+                )
+        );
+    }
+
+    @Test
+    public void shouldSerializeMinimalObjectAsJava() throws IOException {
+        // when
+        assertEquals("\n" +
+                "new MockServerClient()\n" +
+                "        .when(\n" +
+                "                new HttpRequest()\n" +
+                "                        .withPath(\"somepath\")\n" +
+                "                        .withBody(\"somebody\"),\n" +
+                "                Times.once()\n" +
+                "        )" +
+                "        .thenRespond(\n" +
+                "                new HttpResponse()\n" +
+                "                .withStatusCode(304)\n" +
+                "        );",
+                expectationSerializer.serializeAsJava(
+                        new Expectation(
+                                new HttpRequest()
+                                        .withPath("somepath")
+                                        .withBody("somebody"),
+                                Times.once()
+                        ).thenRespond(
+                                new HttpResponse()
+                                        .withStatusCode(304)
+                        )
+                )
+        );
+        assertEquals("\n" +
+                "new MockServerClient()\n" +
+                "        .when(\n" +
+                "                new HttpRequest()\n" +
+                "                        .withMethod(\"GET\")\n" +
+                "                        .withURL(\"url\")\n" +
+                "                        .withQueryString(\"queryString\")\n" +
+                "                        .withCookies(\n" +
+                "                                new Cookie(\"cookieNameOne\", \"cookieValueOneOne\", \"cookieValueOneTwo\")\n" +
+                "                                new Cookie(\"cookieNameTwo\", \"cookieValueTwo\")\n" +
+                "                        ),\n" +
+                "                Times.once()\n" +
+                "        )" +
+                "        .thenRespond(\n" +
+                "                new HttpResponse()\n" +
+                "                .withStatusCode(200)\n" +
+                "                        .withCookies(\n" +
+                "                                new Cookie(\"cookieNameOne\", \"cookieValueOneOne\", \"cookieValueOneTwo\")\n" +
+                "                                new Cookie(\"cookieNameTwo\", \"cookieValueTwo\")\n" +
+                "                        )\n" +
+                "                .withBody(\"somebody\")\n" +
+                "        );",
+                expectationSerializer.serializeAsJava(
+                        new Expectation(
+                                new HttpRequest()
+                                        .withMethod("GET")
+                                        .withURL("url")
+                                        .withQueryString("queryString")
+                                        .withCookies(
+                                                new Cookie("cookieNameOne", "cookieValueOneOne", "cookieValueOneTwo"),
+                                                new Cookie("cookieNameTwo", "cookieValueTwo")
+                                        ),
+                                Times.once()
+                        ).thenRespond(
+                                new HttpResponse()
+                                        .withHeaders()
+                                        .withCookies(
+                                                new Cookie("cookieNameOne", "cookieValueOneOne", "cookieValueOneTwo"),
+                                                new Cookie("cookieNameTwo", "cookieValueTwo")
+                                        )
+                                        .withBody("somebody")
+                        )
+                )
+        );
+    }
+
+    @Test
+    public void shouldSerializeArray() throws IOException {
+        // given
+        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT)).thenReturn(objectMapper);
+        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL)).thenReturn(objectMapper);
+        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_EMPTY)).thenReturn(objectMapper);
+        when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
+
+
+        // when
+        expectationSerializer.serialize(new Expectation[]{fullExpectation, fullExpectation});
+
+        // then
+        verify(objectMapper).setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT);
+        verify(objectMapper).setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL);
+        verify(objectMapper).setSerializationInclusion(JsonSerialize.Inclusion.NON_EMPTY);
+        verify(objectMapper).writerWithDefaultPrettyPrinter();
+        verify(objectWriter).writeValueAsString(new ExpectationDTO[]{fullExpectationDTO, fullExpectationDTO});
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void shouldHandleExceptionWhileSerializingObject() throws IOException {
+        // given
+        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT)).thenReturn(objectMapper);
+        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL)).thenReturn(objectMapper);
+        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_EMPTY)).thenReturn(objectMapper);
+        when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
+        when(objectWriter.writeValueAsString(any(ExpectationDTO.class))).thenThrow(new IOException());
+
+        // when
+        expectationSerializer.serialize(mock(Expectation.class));
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void shouldHandleExceptionWhileSerializingArray() throws IOException {
+        // given
+        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT)).thenReturn(objectMapper);
+        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL)).thenReturn(objectMapper);
+        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_EMPTY)).thenReturn(objectMapper);
+        when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
+        when(objectWriter.writeValueAsString(any(ExpectationDTO[].class))).thenThrow(new IOException());
+
+        // when
+        expectationSerializer.serialize(new Expectation[]{mock(Expectation.class), mock(Expectation.class)});
+    }
+
+    @Test
+    public void shouldHandleNullAndEmptyWhileSerializingArray() throws IOException {
+        // when
+        assertEquals("", expectationSerializer.serialize(new Expectation[]{}));
+        assertEquals("", expectationSerializer.serialize((Expectation[]) null));
+    }
+
+    @Test
     public void shouldDeserializeObject() throws IOException {
         // given
         byte[] requestBytes = "requestBytes".getBytes();
@@ -136,78 +351,5 @@ public class ExpectationSerializerTest {
     public void shouldValidateInputForArray() throws IOException {
         // when
         expectationSerializer.deserializeArray(new byte[0]);
-    }
-
-    @Test
-    public void shouldSerializeObject() throws IOException {
-        // given
-        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT)).thenReturn(objectMapper);
-        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL)).thenReturn(objectMapper);
-        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_EMPTY)).thenReturn(objectMapper);
-        when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
-
-
-        // when
-        expectationSerializer.serialize(fullExpectation);
-
-        // then
-        verify(objectMapper).setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT);
-        verify(objectMapper).setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL);
-        verify(objectMapper).setSerializationInclusion(JsonSerialize.Inclusion.NON_EMPTY);
-        verify(objectMapper).writerWithDefaultPrettyPrinter();
-        verify(objectWriter).writeValueAsString(fullExpectationDTO);
-    }
-
-    @Test
-    public void shouldSerializeArray() throws IOException {
-        // given
-        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT)).thenReturn(objectMapper);
-        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL)).thenReturn(objectMapper);
-        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_EMPTY)).thenReturn(objectMapper);
-        when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
-
-
-        // when
-        expectationSerializer.serialize(new Expectation[]{fullExpectation, fullExpectation});
-
-        // then
-        verify(objectMapper).setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT);
-        verify(objectMapper).setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL);
-        verify(objectMapper).setSerializationInclusion(JsonSerialize.Inclusion.NON_EMPTY);
-        verify(objectMapper).writerWithDefaultPrettyPrinter();
-        verify(objectWriter).writeValueAsString(new ExpectationDTO[]{fullExpectationDTO, fullExpectationDTO});
-    }
-
-    @Test(expected = RuntimeException.class)
-    public void shouldHandleExceptionWhileSerializingObject() throws IOException {
-        // given
-        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT)).thenReturn(objectMapper);
-        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL)).thenReturn(objectMapper);
-        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_EMPTY)).thenReturn(objectMapper);
-        when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
-        when(objectWriter.writeValueAsString(any(ExpectationDTO.class))).thenThrow(new IOException());
-
-        // when
-        expectationSerializer.serialize(mock(Expectation.class));
-    }
-
-    @Test(expected = RuntimeException.class)
-    public void shouldHandleExceptionWhileSerializingArray() throws IOException {
-        // given
-        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT)).thenReturn(objectMapper);
-        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL)).thenReturn(objectMapper);
-        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_EMPTY)).thenReturn(objectMapper);
-        when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
-        when(objectWriter.writeValueAsString(any(ExpectationDTO[].class))).thenThrow(new IOException());
-
-        // when
-        expectationSerializer.serialize(new Expectation[]{mock(Expectation.class), mock(Expectation.class)});
-    }
-
-    @Test
-    public void shouldHandleNullAndEmptyWhileSerializingArray() throws IOException {
-        // when
-        assertEquals("", expectationSerializer.serialize(new Expectation[]{}));
-        assertEquals("", expectationSerializer.serialize((Expectation[])null));
     }
 }

@@ -80,7 +80,7 @@ public class ProxyServlet extends HttpServlet {
     protected void doPut(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws ServletException, IOException {
         switch (httpServletRequest.getPathInfo() != null && httpServletRequest.getContextPath() != null ? httpServletRequest.getPathInfo() : httpServletRequest.getRequestURI()) {
             case "/dumpToLog":
-                logFilter.dumpToLog(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToByteArray(httpServletRequest)));
+                logFilter.dumpToLog(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToByteArray(httpServletRequest)), "java".equals(httpServletRequest.getParameter("type")));
                 httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
                 break;
             case "/retrieve":

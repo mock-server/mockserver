@@ -69,18 +69,26 @@ public class LogFilter implements ProxyResponseFilter {
         }
     }
 
-    public void dumpToLog(HttpRequest httpRequest) {
+    public void dumpToLog(HttpRequest httpRequest, boolean asJava) {
         ExpectationSerializer expectationSerializer = new ExpectationSerializer();
         if (httpRequest != null) {
             HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
             for (Map.Entry<HttpRequest, HttpResponse> entry : requestResponseLog.entrySet()) {
                 if (httpRequestMatcher.matches(entry.getKey())) {
-                    logger.warn(expectationSerializer.serialize(new Expectation(entry.getKey(), Times.once()).thenRespond(entry.getValue())));
+                    if (asJava) {
+                        logger.warn(expectationSerializer.serializeAsJava(new Expectation(entry.getKey(), Times.once()).thenRespond(entry.getValue())));
+                    } else {
+                        logger.warn(expectationSerializer.serialize(new Expectation(entry.getKey(), Times.once()).thenRespond(entry.getValue())));
+                    }
                 }
             }
         } else {
             for (Map.Entry<HttpRequest, HttpResponse> entry : requestResponseLog.entrySet()) {
-                logger.warn(expectationSerializer.serialize(new Expectation(entry.getKey(), Times.once()).thenRespond(entry.getValue())));
+                if (asJava) {
+                    logger.warn(expectationSerializer.serializeAsJava(new Expectation(entry.getKey(), Times.once()).thenRespond(entry.getValue())));
+                } else {
+                    logger.warn(expectationSerializer.serialize(new Expectation(entry.getKey(), Times.once()).thenRespond(entry.getValue())));
+                }
             }
         }
     }

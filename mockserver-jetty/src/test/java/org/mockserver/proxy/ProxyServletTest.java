@@ -215,12 +215,8 @@ public class ProxyServletTest {
         assertEquals(actual.getHeaders().size(), 1);
     }
 
-    /*
-    httpServletRequest.getPathInfo() != null && httpServletRequest.getContextPath() != null ? httpServletRequest.getPathInfo() : httpServletRequest.getRequestURI()
-     */
-
     @Test
-    public void shouldDumpToLog() throws Exception {
+    public void shouldDumpToLogAsJSON() throws Exception {
         // given
         mockHttpServletRequest.setRequestURI("/dumpToLog");
         mockHttpServletRequest.setContent("body".getBytes());
@@ -230,7 +226,23 @@ public class ProxyServletTest {
         proxyServlet.doPut(mockHttpServletRequest, mockHttpServletResponse);
 
         // then
-        verify(logFilter).dumpToLog(httpRequest);
+        verify(logFilter).dumpToLog(httpRequest, false);
+        assertEquals(HttpStatusCode.ACCEPTED_202.code(), mockHttpServletResponse.getStatus());
+    }
+
+    @Test
+    public void shouldDumpToLogAsJava() throws Exception {
+        // given
+        mockHttpServletRequest.setRequestURI("/dumpToLog");
+        mockHttpServletRequest.setContent("body".getBytes());
+        mockHttpServletRequest.addParameter("type", "java");
+        when(httpRequestSerializer.deserialize("body".getBytes())).thenReturn(httpRequest);
+
+        // when
+        proxyServlet.doPut(mockHttpServletRequest, mockHttpServletResponse);
+
+        // then
+        verify(logFilter).dumpToLog(httpRequest, true);
         assertEquals(HttpStatusCode.ACCEPTED_202.code(), mockHttpServletResponse.getStatus());
     }
 
@@ -269,6 +281,40 @@ public class ProxyServletTest {
     @Test
     public void shouldClear() throws Exception {
         // given
+        mockHttpServletRequest.setRequestURI("/clear");
+        mockHttpServletRequest.setContent("body".getBytes());
+        when(httpRequestSerializer.deserialize("body".getBytes())).thenReturn(httpRequest);
+
+        // when
+        proxyServlet.doPut(mockHttpServletRequest, mockHttpServletResponse);
+
+        // then
+        verify(logFilter).clear(httpRequest);
+        assertEquals(HttpStatusCode.ACCEPTED_202.code(), mockHttpServletResponse.getStatus());
+    }
+
+    @Test
+    public void shouldMapPathWhenContextSet() throws Exception {
+        // given
+        mockHttpServletRequest.setPathInfo("/clear");
+        mockHttpServletRequest.setContextPath("/mockserver");
+        mockHttpServletRequest.setRequestURI("/mockserver/clear");
+        mockHttpServletRequest.setContent("body".getBytes());
+        when(httpRequestSerializer.deserialize("body".getBytes())).thenReturn(httpRequest);
+
+        // when
+        proxyServlet.doPut(mockHttpServletRequest, mockHttpServletResponse);
+
+        // then
+        verify(logFilter).clear(httpRequest);
+        assertEquals(HttpStatusCode.ACCEPTED_202.code(), mockHttpServletResponse.getStatus());
+    }
+
+    @Test
+    public void shouldMapPathWhenContextSetButPathNull() throws Exception {
+        // given
+        mockHttpServletRequest.setPathInfo(null);
+        mockHttpServletRequest.setContextPath("/mockserver");
         mockHttpServletRequest.setRequestURI("/clear");
         mockHttpServletRequest.setContent("body".getBytes());
         when(httpRequestSerializer.deserialize("body".getBytes())).thenReturn(httpRequest);

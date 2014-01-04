@@ -43,9 +43,34 @@ public class LogFilterDumpToLogTest {
     }
 
     @Test
-    public void shouldDumpAllToLogForNull() {
+    public void shouldDumpAllToLogAsJSONForNull() {
         // when
-        logFilter.dumpToLog(null);
+        logFilter.dumpToLog(null, false);
+
+        // then
+        verify(logger).warn(new ExpectationSerializer().serialize(new Expectation(httpRequest, Times.once()).thenRespond(httpResponseOne)));
+        verify(logger).warn(new ExpectationSerializer().serialize(new Expectation(httpRequest, Times.once()).thenRespond(httpResponseThree)));
+        verify(logger).warn(new ExpectationSerializer().serialize(new Expectation(otherHttpRequest, Times.once()).thenRespond(httpResponseTwo)));
+        verifyNoMoreInteractions(logger);
+    }
+
+
+    @Test
+    public void shouldDumpAllToLogAsJavaForNull() {
+        // when
+        logFilter.dumpToLog(null, true);
+
+        // then
+        verify(logger).warn(new ExpectationSerializer().serializeAsJava(new Expectation(httpRequest, Times.once()).thenRespond(httpResponseOne)));
+        verify(logger).warn(new ExpectationSerializer().serializeAsJava(new Expectation(httpRequest, Times.once()).thenRespond(httpResponseThree)));
+        verify(logger).warn(new ExpectationSerializer().serializeAsJava(new Expectation(otherHttpRequest, Times.once()).thenRespond(httpResponseTwo)));
+        verifyNoMoreInteractions(logger);
+    }
+
+    @Test
+    public void shouldDumpAllToLogAsJSONIfMatchAll() {
+        // when
+        logFilter.dumpToLog(new HttpRequest(), false);
 
         // then
         verify(logger).warn(new ExpectationSerializer().serialize(new Expectation(httpRequest, Times.once()).thenRespond(httpResponseOne)));
@@ -55,32 +80,50 @@ public class LogFilterDumpToLogTest {
     }
 
     @Test
-    public void shouldDumpAllToLogIfMatchAll() {
+    public void shouldDumpAllToLogAsJavaIfMatchAll() {
         // when
-        logFilter.dumpToLog(new HttpRequest());
+        logFilter.dumpToLog(new HttpRequest(), true);
+
+        // then
+        verify(logger).warn(new ExpectationSerializer().serializeAsJava(new Expectation(httpRequest, Times.once()).thenRespond(httpResponseOne)));
+        verify(logger).warn(new ExpectationSerializer().serializeAsJava(new Expectation(httpRequest, Times.once()).thenRespond(httpResponseThree)));
+        verify(logger).warn(new ExpectationSerializer().serializeAsJava(new Expectation(otherHttpRequest, Times.once()).thenRespond(httpResponseTwo)));
+        verifyNoMoreInteractions(logger);
+    }
+
+    @Test
+    public void shouldDumpOnlyMatchingToLogAsJSON() {
+        // when
+        logFilter.dumpToLog(new HttpRequest().withPath("some_path"), false);
 
         // then
         verify(logger).warn(new ExpectationSerializer().serialize(new Expectation(httpRequest, Times.once()).thenRespond(httpResponseOne)));
         verify(logger).warn(new ExpectationSerializer().serialize(new Expectation(httpRequest, Times.once()).thenRespond(httpResponseThree)));
+        verifyNoMoreInteractions(logger);
+
+        // when
+        logFilter.dumpToLog(new HttpRequest().withPath("some_other_path"), false);
+
+        // then
         verify(logger).warn(new ExpectationSerializer().serialize(new Expectation(otherHttpRequest, Times.once()).thenRespond(httpResponseTwo)));
         verifyNoMoreInteractions(logger);
     }
 
     @Test
-    public void shouldDumpOnlyMatchingToLog() {
+    public void shouldDumpOnlyMatchingToLogAsJava() {
         // when
-        logFilter.dumpToLog(new HttpRequest().withPath("some_path"));
+        logFilter.dumpToLog(new HttpRequest().withPath("some_path"), true);
 
         // then
-        verify(logger).warn(new ExpectationSerializer().serialize(new Expectation(httpRequest, Times.once()).thenRespond(httpResponseOne)));
-        verify(logger).warn(new ExpectationSerializer().serialize(new Expectation(httpRequest, Times.once()).thenRespond(httpResponseThree)));
+        verify(logger).warn(new ExpectationSerializer().serializeAsJava(new Expectation(httpRequest, Times.once()).thenRespond(httpResponseOne)));
+        verify(logger).warn(new ExpectationSerializer().serializeAsJava(new Expectation(httpRequest, Times.once()).thenRespond(httpResponseThree)));
         verifyNoMoreInteractions(logger);
 
         // when
-        logFilter.dumpToLog(new HttpRequest().withPath("some_other_path"));
+        logFilter.dumpToLog(new HttpRequest().withPath("some_other_path"), true);
 
         // then
-        verify(logger).warn(new ExpectationSerializer().serialize(new Expectation(otherHttpRequest, Times.once()).thenRespond(httpResponseTwo)));
+        verify(logger).warn(new ExpectationSerializer().serializeAsJava(new Expectation(otherHttpRequest, Times.once()).thenRespond(httpResponseTwo)));
         verifyNoMoreInteractions(logger);
     }
 }
