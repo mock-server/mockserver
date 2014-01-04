@@ -9,14 +9,14 @@ import static org.mockserver.test.Assert.*;
 /**
  * @author jamesdbloom
  */
-public class AssetTest {
+public class AssertTest {
 
     @Test
     public void shouldNotFailWhenStringDoesContainSubstring() {
         assertContains("string", "s");
         assertContains("string", "g");
-        assertContains("string", "in");
-        assertContains("string", "string");
+        Assert.assertContains("string", "in");
+        new Assert().assertContains("string", "string");
     }
 
     @Test(expected = AssertionError.class)

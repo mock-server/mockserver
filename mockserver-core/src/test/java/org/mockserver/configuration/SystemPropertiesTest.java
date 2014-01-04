@@ -39,7 +39,7 @@ public class SystemPropertiesTest {
         System.clearProperty("mockserver.maxTimeout");
 
         // when
-        assertEquals(TimeUnit.SECONDS.toMillis(SystemProperties.DEFAULT_MAX_TIMEOUT), SystemProperties.maxTimeout());
+        assertEquals(TimeUnit.SECONDS.toMillis(SystemProperties.DEFAULT_MAX_TIMEOUT), new SystemProperties().maxTimeout());
         SystemProperties.maxTimeout(100);
 
         // then

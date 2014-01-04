@@ -79,4 +79,9 @@ public class StringMatcher extends EqualsHashCodeToString implements Matcher<Str
         }
         return result;
     }
+
+    @Override
+    public String[] fieldsExcludedFromEqualsAndHashCode() {
+        return new String[]{"logger", "xpathExpression"};
+    }
 }

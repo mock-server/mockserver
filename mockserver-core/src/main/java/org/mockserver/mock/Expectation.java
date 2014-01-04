@@ -1,5 +1,6 @@
 package org.mockserver.mock;
 
+import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.EqualsHashCodeToString;
@@ -13,11 +14,13 @@ public class Expectation extends EqualsHashCodeToString {
 
     private final HttpRequest httpRequest;
     private final Times times;
+    private final HttpRequestMatcher httpRequestMatcher;
     private HttpResponse httpResponse;
 
     public Expectation(HttpRequest httpRequest, Times times) {
         this.httpRequest = httpRequest;
         this.times = times;
+        this.httpRequestMatcher = new MatcherBuilder().transformsToMatcher(this.httpRequest);
     }
 
     public HttpRequest getHttpRequest() {
@@ -46,7 +49,7 @@ public class Expectation extends EqualsHashCodeToString {
         boolean matches =
                 (times == null || times.greaterThenZero()) &&
                         (
-                                (httpRequest == null && this.httpRequest == null) || (httpRequest != null && this.httpRequest != null && MatcherBuilder.transformsToMatcher(this.httpRequest).matches(httpRequest))
+                                (httpRequest == null && this.httpRequest == null) || this.httpRequestMatcher.matches(httpRequest)
                         );
         if (matches && times != null) {
             times.decrement();

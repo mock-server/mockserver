@@ -80,7 +80,7 @@ public class ExpectationSerializerTest {
     }
 
     @Test
-    public void deserialize() throws IOException {
+    public void shouldDeserializeObject() throws IOException {
         // given
         byte[] requestBytes = "requestBytes".getBytes();
         when(objectMapper.readValue(eq(requestBytes), same(ExpectationDTO.class))).thenReturn(fullExpectationDTO);
@@ -92,8 +92,21 @@ public class ExpectationSerializerTest {
         assertEquals(fullExpectation, expectation);
     }
 
+    @Test
+    public void shouldDeserializeArray() throws IOException {
+        // given
+        byte[] requestBytes = "requestBytes".getBytes();
+        when(objectMapper.readValue(eq(requestBytes), same(ExpectationDTO[].class))).thenReturn(new ExpectationDTO[]{fullExpectationDTO, fullExpectationDTO});
+
+        // when
+        Expectation[] expectations = expectationSerializer.deserializeArray(requestBytes);
+
+        // then
+        assertEquals(new Expectation[]{fullExpectation, fullExpectation}, expectations);
+    }
+
     @Test(expected = RuntimeException.class)
-    public void deserializeHandlesException() throws IOException {
+    public void shouldHandleExceptionWhileDeserializingObject() throws IOException {
         // given
         byte[] requestBytes = "requestBytes".getBytes();
         when(objectMapper.readValue(eq(requestBytes), same(ExpectationDTO.class))).thenThrow(new IOException());
@@ -102,14 +115,30 @@ public class ExpectationSerializerTest {
         expectationSerializer.deserialize(requestBytes);
     }
 
+    @Test(expected = RuntimeException.class)
+    public void shouldHandleExceptionWhileDeserializingArray() throws IOException {
+        // given
+        byte[] requestBytes = "requestBytes".getBytes();
+        when(objectMapper.readValue(eq(requestBytes), same(ExpectationDTO[].class))).thenThrow(new IOException());
+
+        // when
+        expectationSerializer.deserializeArray(requestBytes);
+    }
+
     @Test(expected = IllegalArgumentException.class)
-    public void shouldValidateInput() throws IOException {
+    public void shouldValidateInputForObject() throws IOException {
         // when
         expectationSerializer.deserialize(new byte[0]);
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void shouldValidateInputForArray() throws IOException {
+        // when
+        expectationSerializer.deserializeArray(new byte[0]);
+    }
+
     @Test
-    public void serialize() throws IOException {
+    public void shouldSerializeObject() throws IOException {
         // given
         when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT)).thenReturn(objectMapper);
         when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL)).thenReturn(objectMapper);
@@ -128,8 +157,28 @@ public class ExpectationSerializerTest {
         verify(objectWriter).writeValueAsString(fullExpectationDTO);
     }
 
+    @Test
+    public void shouldSerializeArray() throws IOException {
+        // given
+        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT)).thenReturn(objectMapper);
+        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL)).thenReturn(objectMapper);
+        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_EMPTY)).thenReturn(objectMapper);
+        when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
+
+
+        // when
+        expectationSerializer.serialize(new Expectation[]{fullExpectation, fullExpectation});
+
+        // then
+        verify(objectMapper).setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT);
+        verify(objectMapper).setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL);
+        verify(objectMapper).setSerializationInclusion(JsonSerialize.Inclusion.NON_EMPTY);
+        verify(objectMapper).writerWithDefaultPrettyPrinter();
+        verify(objectWriter).writeValueAsString(new ExpectationDTO[]{fullExpectationDTO, fullExpectationDTO});
+    }
+
     @Test(expected = RuntimeException.class)
-    public void serializeHandlesException() throws IOException {
+    public void shouldHandleExceptionWhileSerializingObject() throws IOException {
         // given
         when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT)).thenReturn(objectMapper);
         when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL)).thenReturn(objectMapper);
@@ -139,5 +188,25 @@ public class ExpectationSerializerTest {
 
         // when
         expectationSerializer.serialize(mock(Expectation.class));
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void shouldHandleExceptionWhileSerializingArray() throws IOException {
+        // given
+        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT)).thenReturn(objectMapper);
+        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL)).thenReturn(objectMapper);
+        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_EMPTY)).thenReturn(objectMapper);
+        when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
+        when(objectWriter.writeValueAsString(any(ExpectationDTO[].class))).thenThrow(new IOException());
+
+        // when
+        expectationSerializer.serialize(new Expectation[]{mock(Expectation.class), mock(Expectation.class)});
+    }
+
+    @Test
+    public void shouldHandleNullAndEmptyWhileSerializingArray() throws IOException {
+        // when
+        assertEquals("", expectationSerializer.serialize(new Expectation[]{}));
+        assertEquals("", expectationSerializer.serialize((Expectation[])null));
     }
 }

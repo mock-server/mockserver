@@ -13,14 +13,15 @@ public class Filters {
 
     private final CircularMultiMap<HttpRequestMatcher, ProxyResponseFilter> responseFilters = new CircularMultiMap<>(100, 100);
     private final CircularMultiMap<HttpRequestMatcher, ProxyRequestFilter> requestFilters = new CircularMultiMap<>(100, 100);
+    private final MatcherBuilder matcherBuilder = new MatcherBuilder();
 
     public Filters withFilter(HttpRequest httpRequest, ProxyRequestFilter filter) {
-        requestFilters.put(MatcherBuilder.transformsToMatcher(httpRequest), filter);
+        requestFilters.put(matcherBuilder.transformsToMatcher(httpRequest), filter);
         return this;
     }
 
     public Filters withFilter(HttpRequest httpRequest, ProxyResponseFilter filter) {
-        responseFilters.put(MatcherBuilder.transformsToMatcher(httpRequest), filter);
+        responseFilters.put(matcherBuilder.transformsToMatcher(httpRequest), filter);
         return this;
     }
 

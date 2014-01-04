@@ -7,6 +7,7 @@ import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
 
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 /**
  * @author jamesdbloom
@@ -39,6 +40,22 @@ public class ProxyClient {
     }
 
     /**
+     * Reset the proxy by clearing recorded requests
+     */
+    public void reset() {
+        httpClient.sendPUTRequest(uri, "", "/reset");
+    }
+
+    /**
+     * Clear all recorded requests that match the httpRequest parameter
+     *
+     * @param httpRequest the http that is matched against when deciding whether to clear recorded requests
+     */
+    public void clear(HttpRequest httpRequest) {
+        httpClient.sendPUTRequest(uri, (httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : ""), "/clear");
+    }
+
+    /**
      * Retrieve the recorded requests that match the httpRequest parameter as expectations, use null for the parameter to retrieve all requests
      *
      * @param httpRequest the http that is matched against when deciding whether to return each expectation, , use null for the parameter to retrieve all requests
@@ -55,22 +72,6 @@ public class ProxyClient {
      * @return a JSON array of all expectations that have been recorded by the proxy
      */
     public String retrieveExpectationsAsJSON(HttpRequest httpRequest) {
-        return new String(httpClient.sendPUTRequest(uri, (httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : ""), "/retrieve").getContent(), Charset.forName("UTF-8"));
-    }
-
-    /**
-     * Reset the proxy by clearing recorded requests
-     */
-    public void reset() {
-        httpClient.sendPUTRequest(uri, "", "/reset");
-    }
-
-    /**
-     * Clear all recorded requests that match the httpRequest parameter
-     *
-     * @param httpRequest the http that is matched against when deciding whether to clear recorded requests
-     */
-    public void clear(HttpRequest httpRequest) {
-        httpClient.sendPUTRequest(uri, (httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : ""), "/clear");
+        return new String(httpClient.sendPUTRequest(uri, (httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : ""), "/retrieve").getContent(), StandardCharsets.UTF_8);
     }
 }

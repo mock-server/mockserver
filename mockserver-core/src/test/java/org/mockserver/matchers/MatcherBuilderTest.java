@@ -25,7 +25,7 @@ public class MatcherBuilderTest {
     @Test
     public void shouldCreateMatcherThatMatchesAllFields() {
         // when
-        HttpRequestMatcher httpRequestMapper = MatcherBuilder.transformsToMatcher(httpRequest);
+        HttpRequestMatcher httpRequestMapper = new MatcherBuilder().transformsToMatcher(httpRequest);
 
         // then
         assertTrue(httpRequestMapper.matches(httpRequest));
@@ -34,7 +34,7 @@ public class MatcherBuilderTest {
     @Test
     public void shouldCreateMatcherThatIgnoresMethod() {
         // when
-        HttpRequestMatcher httpRequestMapper = MatcherBuilder.transformsToMatcher(
+        HttpRequestMatcher httpRequestMapper = new MatcherBuilder().transformsToMatcher(
                 new HttpRequest()
                         .withMethod("")
                         .withPath("some_path")
@@ -52,7 +52,7 @@ public class MatcherBuilderTest {
     @Test
     public void shouldCreateMatcherThatIgnoresPath() {
         // when
-        HttpRequestMatcher httpRequestMapper = MatcherBuilder.transformsToMatcher(
+        HttpRequestMatcher httpRequestMapper = new MatcherBuilder().transformsToMatcher(
                 new HttpRequest()
                         .withMethod("GET")
                         .withPath("")
@@ -70,7 +70,7 @@ public class MatcherBuilderTest {
     @Test
     public void shouldCreateMatcherThatIgnoresQueryString() {
         // when
-        HttpRequestMatcher httpRequestMapper = MatcherBuilder.transformsToMatcher(
+        HttpRequestMatcher httpRequestMapper = new MatcherBuilder().transformsToMatcher(
                 new HttpRequest()
                         .withMethod("GET")
                         .withPath("some_path")
@@ -88,7 +88,7 @@ public class MatcherBuilderTest {
     @Test
     public void shouldCreateMatcherThatIgnoresURL() {
         // when
-        HttpRequestMatcher httpRequestMapper = MatcherBuilder.transformsToMatcher(
+        HttpRequestMatcher httpRequestMapper = new MatcherBuilder().transformsToMatcher(
                 new HttpRequest()
                         .withMethod("GET")
                         .withPath("some_path")
@@ -106,7 +106,7 @@ public class MatcherBuilderTest {
     @Test
     public void shouldCreateMatcherThatIgnoresBody() {
         // when
-        HttpRequestMatcher httpRequestMapper = MatcherBuilder.transformsToMatcher(
+        HttpRequestMatcher httpRequestMapper = new MatcherBuilder().transformsToMatcher(
                 new HttpRequest()
                         .withMethod("GET")
                         .withPath("some_path")
@@ -124,7 +124,7 @@ public class MatcherBuilderTest {
     @Test
     public void shouldCreateMatcherThatIgnoresHeaders() {
         // when
-        HttpRequestMatcher httpRequestMapper = MatcherBuilder.transformsToMatcher(
+        HttpRequestMatcher httpRequestMapper = new MatcherBuilder().transformsToMatcher(
                 new HttpRequest()
                         .withMethod("GET")
                         .withPath("some_path")
@@ -142,7 +142,7 @@ public class MatcherBuilderTest {
     @Test
     public void shouldCreateMatcherThatIgnoresCookies() {
         // when
-        HttpRequestMatcher httpRequestMapper = MatcherBuilder.transformsToMatcher(
+        HttpRequestMatcher httpRequestMapper = new MatcherBuilder().transformsToMatcher(
                 new HttpRequest()
                         .withMethod("GET")
                         .withPath("some_path")

@@ -1258,16 +1258,12 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     protected HttpResponse makeRequest(HttpRequest httpRequest) {
-        try {
-            HttpResponse httpResponse = httpRequestClient.sendRequest(httpRequest);
-            for (Header header : new ArrayList<>(httpResponse.getHeaders())) {
-                if (header.getName().equals("Server") || header.getName().equals("Expires")) {
-                    httpResponse.getHeaders().remove(header);
-                }
+        HttpResponse httpResponse = httpRequestClient.sendRequest(httpRequest);
+        for (Header header : new ArrayList<>(httpResponse.getHeaders())) {
+            if (header.getName().equals("Server") || header.getName().equals("Expires")) {
+                httpResponse.getHeaders().remove(header);
             }
-            return httpResponse;
-        } catch (Exception e) {
-            throw new RuntimeException("Error making http request", e);
         }
+        return httpResponse;
     }
 }

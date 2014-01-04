@@ -17,18 +17,22 @@ public abstract class EqualsHashCodeToString {
         ReflectionToStringBuilder.setDefaultStyle(ToStringStyle.SHORT_PREFIX_STYLE);
     }
 
+    protected String[] fieldsExcludedFromEqualsAndHashCode() {
+        return new String[]{"logger"};
+    }
+
     @Override
     public String toString() {
-        return ReflectionToStringBuilder.toStringExclude(this, "logger");
+        return ReflectionToStringBuilder.toStringExclude(this, fieldsExcludedFromEqualsAndHashCode());
     }
 
     @Override
     public boolean equals(Object other) {
-        return EqualsBuilder.reflectionEquals(this, other);
+        return EqualsBuilder.reflectionEquals(this, other, fieldsExcludedFromEqualsAndHashCode());
     }
 
     @Override
     public int hashCode() {
-        return HashCodeBuilder.reflectionHashCode(this);
+        return HashCodeBuilder.reflectionHashCode(this, fieldsExcludedFromEqualsAndHashCode());
     }
 }

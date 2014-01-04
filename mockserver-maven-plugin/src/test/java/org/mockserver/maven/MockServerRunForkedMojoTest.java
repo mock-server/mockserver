@@ -11,10 +11,12 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -80,6 +82,25 @@ public class MockServerRunForkedMojoTest {
         assertEquals(ProcessBuilder.Redirect.INHERIT, processBuilder.redirectInput());
         assertEquals(ProcessBuilder.Redirect.INHERIT, processBuilder.redirectOutput());
         assertEquals(ProcessBuilder.Redirect.INHERIT, processBuilder.redirectError());
+    }
+
+    @Test
+    public void shouldHandleProcessException() throws IOException {
+        // given
+        when(mockServerRunForkedMojo.newProcessBuilder(Arrays.asList(
+                javaBinaryPath,
+                "-Dmockserver.logLevel=" + level,
+                "-Dmockserver.stopPort=" + stopPort,
+                "-jar", jarWithDependenciesPath, "-serverPort", "0", "-serverSecurePort", "0"
+        ))).thenReturn(new ProcessBuilder("fail"));
+
+        // when
+        try {
+            mockServerRunForkedMojo.execute();
+        } catch (Throwable t) {
+            // then
+            fail();
+        }
     }
 
     @Test

@@ -12,7 +12,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 /**
  * @author jamesdbloom
@@ -45,7 +47,7 @@ public class IOStreamUtils {
 
     public static String readInputStreamToString(ServletRequest request) {
         try {
-            return IOUtils.toString(request.getInputStream(), Charset.forName(CharEncoding.UTF_8));
+            return IOUtils.toString(request.getInputStream(), StandardCharsets.UTF_8);
         } catch (IOException ioe) {
             logger.error("IOException while reading HttpServletRequest input stream", ioe);
             throw new RuntimeException("IOException while reading HttpServletRequest input stream", ioe);
@@ -54,7 +56,7 @@ public class IOStreamUtils {
 
     public static byte[] readInputStreamToByteArray(ServletRequest request) {
         try {
-            return IOUtils.toByteArray(new InputStreamReader(request.getInputStream()), Charset.forName(CharEncoding.UTF_8));
+            return IOUtils.toByteArray(new InputStreamReader(request.getInputStream()), StandardCharsets.UTF_8);
         } catch (IOException ioe) {
             logger.error("IOException while reading HttpServletRequest input stream", ioe);
             throw new RuntimeException("IOException while reading HttpServletRequest input stream", ioe);
@@ -70,5 +72,11 @@ public class IOStreamUtils {
             logger.error(String.format("IOException while writing [%s] to HttpServletResponse output stream", new String(data)), ioe);
             throw new RuntimeException(String.format("IOException while writing [%s] to HttpServletResponse output stream", new String(data)), ioe);
         }
+    }
+
+    public static ByteBuffer createBasicByteBuffer(String input) {
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(input.length()).put(input.getBytes());
+        byteBuffer.flip();
+        return byteBuffer;
     }
 }

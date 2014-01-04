@@ -11,6 +11,7 @@ import org.vertx.java.core.http.HttpClientResponse;
 
 import java.net.HttpCookie;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,7 +35,7 @@ public class HttpClientResponseMapper {
     }
 
     private void setBody(HttpResponse httpResponse, byte[] bodyBytes) {
-        httpResponse.withBody(new String(bodyBytes, Charset.forName(CharEncoding.UTF_8)));
+        httpResponse.withBody(new String(bodyBytes, StandardCharsets.UTF_8));
     }
 
     private void setHeaders(HttpResponse httpResponse, HttpClientResponse httpServletResponse) {

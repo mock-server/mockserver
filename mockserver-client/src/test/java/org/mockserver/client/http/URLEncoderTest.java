@@ -11,7 +11,7 @@ public class URLEncoderTest {
 
     @Test
     public void shouldEncodeCharacters() {
-        assertEquals("%7B%7D%5B%5D%5E%C2%A3%5C%7C", URLEncoder.encodeURL("{}[]^£\\|"));
+        assertEquals("%7B%7D%5B%5D%5E%C2%A3%5C%7C", new URLEncoder().encodeURL("{}[]^£\\|"));
     }
 
     @Test

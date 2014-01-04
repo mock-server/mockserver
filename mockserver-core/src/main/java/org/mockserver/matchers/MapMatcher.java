@@ -29,29 +29,29 @@ public class MapMatcher extends EqualsHashCodeToString implements Matcher<List<K
         return result;
     }
 
-    private boolean containsAll(Multimap<String, String> superset, Multimap<String, String> subset) {
-        for (String key : subset.keySet()) {
-            for (String value : subset.get(key)) {
-                boolean regexMatches = false;
-                if (!superset.containsKey(key)) {
-                    return false;
-                } else { // key does exist
-                    for (String supersetValue : superset.get(key)) {
-                        try {
-                            if (supersetValue.matches(value)) {
-                                regexMatches = true;
+    private boolean containsAll(Multimap<String, String> superSet, Multimap<String, String> subSet) {
+        for (String key : subSet.keySet()) {
+            for (String subSetValue : subSet.get(key)) {
+                if (!superSet.containsEntry(key, subSetValue)) {
+                    if (!superSet.containsKey(key)) { // check if sub-set key exists in super-set
+                        return false;
+                    } else { // check if sub-set value matches at least one super-set values using regex
+                        boolean atLeastOneRegexMatches = false;
+                        for (String superSetValue : superSet.get(key)) {
+                            try {
+                                if (superSetValue.matches(subSetValue)) {
+                                    atLeastOneRegexMatches = true;
+                                }
+                            } catch (PatternSyntaxException pse) {
+                                logger.error("Error while matching regex [" + subSetValue + "] for string [" + superSetValue + "] " + pse.getMessage());
                             }
-                        } catch (PatternSyntaxException pse) {
-                            logger.error("Error while matching regex [" + value + "] for string [" + supersetValue + "] " + pse.getMessage());
+                        }
+                        if (!atLeastOneRegexMatches) {
+                            return false;
                         }
                     }
-                    if (!regexMatches) {
-                        return false;
-                    }
                 }
-                if (!regexMatches && !superset.containsEntry(key, value)) {
-                    return false;
-                }
+
             }
         }
         return true;

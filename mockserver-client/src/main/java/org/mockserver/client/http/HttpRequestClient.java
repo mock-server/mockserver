@@ -10,7 +10,6 @@ import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 import org.eclipse.jetty.client.api.Result;
-import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.MimeTypes;
@@ -27,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
 import static org.mockserver.configuration.SystemProperties.bufferSize;
@@ -38,7 +38,7 @@ import static org.mockserver.configuration.SystemProperties.maxTimeout;
 public class HttpRequestClient {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private final HttpClientResponseMapper httpClientResponseMapper = new HttpClientResponseMapper();
+    private HttpClientResponseMapper httpClientResponseMapper = new HttpClientResponseMapper();
     private HttpClient httpClient;
 
     public HttpRequestClient() {
@@ -77,13 +77,14 @@ public class HttpRequestClient {
 
     public ContentResponse sendPUTRequest(String baseUri, String body, String path) {
         try {
+
             if (baseUri.endsWith("/") && path.startsWith("/")) {
                 path = StringUtils.substringAfter(path, "/");
             }
             return httpClient.newRequest(baseUri + path)
                     .method(HttpMethod.PUT)
                     .header("Content-Type", "application/json; charset=utf-8")
-                    .content(new ComparableStringContentProvider(body, "UTF-8"))
+                    .content(new ComparableStringContentProvider(body, StandardCharsets.UTF_8))
                     .send();
         } catch (Exception e) {
             logger.error("Exception sending request to [" + path + "] with body [" + body + "]", e);
@@ -110,7 +111,7 @@ public class HttpRequestClient {
                     Request request = httpClient
                             .newRequest(url)
                             .method((method == null ? HttpMethod.GET : method));
-                    request.content(new StringContentProvider(httpRequest.getBody()));
+                    request.content(new ComparableStringContentProvider(httpRequest.getBody(), StandardCharsets.UTF_8));
                     for (Header header : httpRequest.getHeaders()) {
                         for (String value : header.getValues()) {
                             request.header(header.getName(), value);
@@ -131,13 +132,17 @@ public class HttpRequestClient {
                         request.header("Cookie", stringBuilder.toString());
                     }
                     if (logger.isTraceEnabled()) {
-                        logger.trace("Proxy sending request:\n" + new ObjectMapper()
-                                .setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT)
-                                .setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL)
-                                .setSerializationInclusion(JsonSerialize.Inclusion.NON_EMPTY)
-                                .configure(SerializationConfig.Feature.FAIL_ON_EMPTY_BEANS, false)
-                                .writerWithDefaultPrettyPrinter()
-                                .writeValueAsString(request));
+                        try {
+                            logger.trace("Proxy sending request:\n" + new ObjectMapper()
+                                    .setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT)
+                                    .setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL)
+                                    .setSerializationInclusion(JsonSerialize.Inclusion.NON_EMPTY)
+                                    .configure(SerializationConfig.Feature.FAIL_ON_EMPTY_BEANS, false)
+                                    .writerWithDefaultPrettyPrinter()
+                                    .writeValueAsString(httpRequest));
+                        } catch (Throwable t) {
+                            logger.warn("Exception while trying to log requests being forward by proxy for url [" + url + "]", t);
+                        }
                     }
                     request.onResponseContent(new Response.ContentListener() {
                         @Override
@@ -145,7 +150,7 @@ public class HttpRequestClient {
                             contentBuffer.put(chunk);
                         }
                     });
-                    Response.CompleteListener listener = new Response.CompleteListener() {
+                    request.onComplete(new Response.CompleteListener() {
                         @Override
                         public void onComplete(Result result) {
                             if (result.isFailed()) {
@@ -154,8 +159,8 @@ public class HttpRequestClient {
                                 responseFuture.set(result.getResponse());
                             }
                         }
-                    };
-                    request.send(listener);
+                    });
+                    request.send();
                 } catch (Exception e) {
                     responseFuture.setException(e);
                 }

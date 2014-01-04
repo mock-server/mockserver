@@ -130,7 +130,7 @@ public class MapMatcherTest {
         multimap.put("foo", "/{}");
 
         // when
-        keyToMultiValues.add(new KeyToMultiValue("foo", "/{}"));
+        keyToMultiValues.add(new KeyToMultiValue("foo", "/{}/"));
 
         // then
         assertFalse(mapMatcher.matches(keyToMultiValues));

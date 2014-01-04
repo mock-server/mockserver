@@ -7,15 +7,19 @@ import org.mockserver.model.HttpRequest;
  */
 public class MatcherBuilder {
 
-    public static HttpRequestMatcher transformsToMatcher(HttpRequest httpRequest) {
-        return new HttpRequestMatcher()
-                .withMethod(httpRequest.getMethod())
-                .withURL(httpRequest.getURL())
-                .withPath(httpRequest.getPath())
-                .withQueryString(httpRequest.getQueryString())
-                .withBody(httpRequest.getBody())
-                .withHeaders(httpRequest.getHeaders())
-                .withCookies(httpRequest.getCookies());
+    public HttpRequestMatcher transformsToMatcher(HttpRequest httpRequest) {
+        if (httpRequest != null) {
+            return new HttpRequestMatcher()
+                    .withMethod(httpRequest.getMethod())
+                    .withURL(httpRequest.getURL())
+                    .withPath(httpRequest.getPath())
+                    .withQueryString(httpRequest.getQueryString())
+                    .withBody(httpRequest.getBody())
+                    .withHeaders(httpRequest.getHeaders())
+                    .withCookies(httpRequest.getCookies());
+        } else {
+            return new HttpRequestMatcher();
+        }
     }
 
 }

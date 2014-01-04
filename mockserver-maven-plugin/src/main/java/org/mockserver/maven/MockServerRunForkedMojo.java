@@ -88,17 +88,18 @@ public class MockServerRunForkedMojo extends MockServerAbstractMojo {
 
     @VisibleForTesting
     String getJavaBin() {
-        String javaexes[] = new String[]{"java", "java.exe"};
+        String javaBinary = "java";
 
-        File javaHomeDir = new File(System.getProperty("java.home"));
-        for (String javaexe : javaexes) {
-            File javabin = new File(javaHomeDir, fileSeparators("bin/" + javaexe));
-            if (javabin.exists() && javabin.isFile()) {
-                return javabin.getAbsolutePath();
+        File javaHomeDirectory = new File(System.getProperty("java.home"));
+        for (String javaExecutable : new String[]{"java", "java.exe"}) {
+            File javaExeLocation = new File(javaHomeDirectory, fileSeparators("bin/" + javaExecutable));
+            if (javaExeLocation.exists() && javaExeLocation.isFile()) {
+                javaBinary = javaExeLocation.getAbsolutePath();
+                break;
             }
         }
 
-        return "java";
+        return javaBinary;
     }
 
     @VisibleForTesting

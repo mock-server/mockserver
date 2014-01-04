@@ -3,6 +3,7 @@ package org.mockserver.model;
 import org.apache.commons.lang3.CharEncoding;
 
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -48,7 +49,7 @@ public class HttpResponse extends EqualsHashCodeToString {
     }
 
     public String getBodyAsString() {
-        return new String(body, Charset.forName(CharEncoding.UTF_8));
+        return new String(body, StandardCharsets.UTF_8);
     }
 
     public HttpResponse withCookies(List<Cookie> cookies) {

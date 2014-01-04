@@ -9,6 +9,7 @@ import org.mockserver.model.Header;
 import org.mockserver.model.HttpResponse;
 
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
@@ -42,7 +43,7 @@ public class HttpClientResponseMapperTest {
         assertEquals(httpResponse.getCookies(), Arrays.asList(
                 new Cookie("cookie_name", "cookie_value")
         ));
-        assertEquals(new String(httpResponse.getBody(), Charset.forName(CharEncoding.UTF_8)), "somebody");
+        assertEquals(new String(httpResponse.getBody(), StandardCharsets.UTF_8), "somebody");
         assertEquals(httpResponse.getBodyAsString(), "somebody");
     }
 

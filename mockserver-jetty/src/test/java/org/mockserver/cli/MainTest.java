@@ -104,7 +104,8 @@ public class MainTest {
 
     @Test
     public void shouldPrintOutUsageForNoArguments() {
-        Main.main();
+        // using non static reference and constructor for coverage
+        new Main().main();
 
         verify(mockPrintStream).println(Main.USAGE);
         verifyZeroInteractions(mockMockServerRunner);

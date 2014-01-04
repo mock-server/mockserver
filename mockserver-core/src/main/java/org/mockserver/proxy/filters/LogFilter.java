@@ -21,7 +21,8 @@ import java.util.Map;
 public class LogFilter implements ProxyResponseFilter {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    public CircularMultiMap<HttpRequest, HttpResponse> requestResponseLog = new CircularMultiMap<>(100, 100);
+    private final CircularMultiMap<HttpRequest, HttpResponse> requestResponseLog = new CircularMultiMap<>(100, 100);
+    private final MatcherBuilder matcherBuilder = new MatcherBuilder();
 
     public HttpResponse onResponse(HttpRequest httpRequest, HttpResponse httpResponse) {
         requestResponseLog.put(httpRequest, httpResponse);
@@ -30,7 +31,7 @@ public class LogFilter implements ProxyResponseFilter {
 
     public List<HttpResponse> httpResponses(HttpRequest httpRequest) {
         List<HttpResponse> httpResponses = new ArrayList<>();
-        HttpRequestMatcher httpRequestMatcher = MatcherBuilder.transformsToMatcher(httpRequest);
+        HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
         for (HttpRequest loggedHttpRequest : requestResponseLog.keySet()) {
             if (httpRequestMatcher.matches(loggedHttpRequest)) {
                 httpResponses.addAll(requestResponseLog.getAll(loggedHttpRequest));
@@ -41,7 +42,7 @@ public class LogFilter implements ProxyResponseFilter {
 
     public List<HttpRequest> httpRequests(HttpRequest httpRequest) {
         List<HttpRequest> httpRequests = new ArrayList<>();
-        HttpRequestMatcher httpRequestMatcher = MatcherBuilder.transformsToMatcher(httpRequest);
+        HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
         for (HttpRequest loggedHttpRequest : requestResponseLog.keySet()) {
             if (httpRequestMatcher.matches(loggedHttpRequest)) {
                 httpRequests.add(loggedHttpRequest);
@@ -53,7 +54,7 @@ public class LogFilter implements ProxyResponseFilter {
     public Expectation[] retrieve(HttpRequest httpRequest) {
         List<Expectation> expectations = new ArrayList<>();
         if (httpRequest != null) {
-            HttpRequestMatcher httpRequestMatcher = MatcherBuilder.transformsToMatcher(httpRequest);
+            HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
             for (Map.Entry<HttpRequest, HttpResponse> entry : requestResponseLog.entrySet()) {
                 if (httpRequestMatcher.matches(entry.getKey())) {
                     expectations.add(new Expectation(entry.getKey(), Times.once()).thenRespond(entry.getValue()));
@@ -73,7 +74,7 @@ public class LogFilter implements ProxyResponseFilter {
 
     public void clear(HttpRequest httpRequest) {
         if (httpRequest != null) {
-            HttpRequestMatcher httpRequestMatcher = MatcherBuilder.transformsToMatcher(httpRequest);
+            HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
             for (HttpRequest key : requestResponseLog.keySet()) {
                 if (httpRequestMatcher.matches(key)) {
                     requestResponseLog.remove(key);
@@ -87,7 +88,7 @@ public class LogFilter implements ProxyResponseFilter {
     public void dumpToLog(HttpRequest httpRequest) {
         ExpectationSerializer expectationSerializer = new ExpectationSerializer();
         if (httpRequest != null) {
-            HttpRequestMatcher httpRequestMatcher = MatcherBuilder.transformsToMatcher(httpRequest);
+            HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
             for (Map.Entry<HttpRequest, HttpResponse> entry : requestResponseLog.entrySet()) {
                 if (httpRequestMatcher.matches(entry.getKey())) {
                     logger.warn(expectationSerializer.serialize(new Expectation(entry.getKey(), Times.once()).thenRespond(entry.getValue())));

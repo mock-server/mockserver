@@ -39,7 +39,7 @@ public class AbstractRunnerTest {
         try {
             // when
             try {
-                runner.start(port, null).get(3, TimeUnit.SECONDS);
+                runner.start(port, null).get(1, TimeUnit.SECONDS);
             } catch (TimeoutException te) {
                 // ignore as expected
             }
@@ -56,7 +56,7 @@ public class AbstractRunnerTest {
         try {
             // when
             try {
-                runner.start(null, port).get(3, TimeUnit.SECONDS);
+                runner.start(null, port).get(1, TimeUnit.SECONDS);
             } catch (TimeoutException te) {
                 // ignore as expected
             }
@@ -80,12 +80,12 @@ public class AbstractRunnerTest {
         try {
             // when
             try {
-                runner.start(port, null).get(3, TimeUnit.SECONDS);
+                runner.start(port, null).get(1, TimeUnit.SECONDS);
             } catch (TimeoutException te) {
                 // ignore as expected
             }
             try {
-                runner.start(port + 1, null).get(3, TimeUnit.SECONDS);
+                runner.start(port + 1, null).get(1, TimeUnit.SECONDS);
             } catch (TimeoutException te) {
                 // ignore as expected
             }
@@ -104,7 +104,7 @@ public class AbstractRunnerTest {
         try {
             // when
             try {
-                runner.start(port, null).get(3, TimeUnit.SECONDS);
+                runner.start(port, null).get(1, TimeUnit.SECONDS);
             } catch (TimeoutException te) {
                 // ignore as expected
             }
@@ -119,7 +119,7 @@ public class AbstractRunnerTest {
         try {
             // when
             try {
-                runner.start(port, null).get(3, TimeUnit.SECONDS);
+                runner.start(port, null).get(1, TimeUnit.SECONDS);
             } catch (TimeoutException te) {
                 // ignore as expected
             }
@@ -139,7 +139,7 @@ public class AbstractRunnerTest {
     public void shouldIndicateIfCanNotStopRemoteServer() throws InterruptedException, ExecutionException, UnknownHostException {
         // when
         try {
-            runner.start(port, null).get(3, TimeUnit.SECONDS);
+            runner.start(port, null).get(1, TimeUnit.SECONDS);
         } catch (TimeoutException te) {
             // ignore as expected
         }

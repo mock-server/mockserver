@@ -11,6 +11,7 @@ import org.vertx.java.core.http.HttpServerRequest;
 
 import java.net.HttpCookie;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -73,6 +74,6 @@ public class HttpServerRequestMapper {
     }
 
     private void setBody(HttpRequest httpRequest, byte[] bodyBytes) {
-        httpRequest.withBody(new String(bodyBytes, Charset.forName(CharEncoding.UTF_8)));
+        httpRequest.withBody(new String(bodyBytes, StandardCharsets.UTF_8));
     }
 }

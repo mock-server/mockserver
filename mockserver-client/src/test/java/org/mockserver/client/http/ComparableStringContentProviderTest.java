@@ -2,6 +2,8 @@ package org.mockserver.client.http;
 
 import org.junit.Test;
 
+import java.nio.charset.StandardCharsets;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
@@ -12,13 +14,25 @@ public class ComparableStringContentProviderTest {
 
     @Test
     public void shouldEqualOtherProviderWithSameContent() {
-        assertEquals(new ComparableStringContentProvider("identical", "UTF-8"), new ComparableStringContentProvider("identical", "UTF-8"));
-        assertNotEquals(new ComparableStringContentProvider("identical", "UTF-8"), new ComparableStringContentProvider("not_identical", "UTF-8"));
+        assertEquals(
+                new ComparableStringContentProvider("identical", StandardCharsets.UTF_8),
+                new ComparableStringContentProvider("identical", StandardCharsets.UTF_8)
+        );
+        assertNotEquals(
+                new ComparableStringContentProvider("identical", StandardCharsets.UTF_8),
+                new ComparableStringContentProvider("not_identical", StandardCharsets.UTF_8)
+        );
     }
 
     @Test
     public void shouldHaveIdenticalHashCodeToOtherProviderWithSameContent() {
-        assertEquals(new ComparableStringContentProvider("identical", "UTF-8").hashCode(), new ComparableStringContentProvider("identical", "UTF-8").hashCode());
-        assertNotEquals(new ComparableStringContentProvider("identical", "UTF-8").hashCode(), new ComparableStringContentProvider("not_identical", "UTF-8").hashCode());
+        assertEquals(
+                new ComparableStringContentProvider("identical", StandardCharsets.UTF_8).hashCode(),
+                new ComparableStringContentProvider("identical", StandardCharsets.UTF_8).hashCode()
+        );
+        assertNotEquals(
+                new ComparableStringContentProvider("identical", StandardCharsets.UTF_8).hashCode(),
+                new ComparableStringContentProvider("not_identical", StandardCharsets.UTF_8).hashCode()
+        );
     }
 }

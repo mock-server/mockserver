@@ -18,10 +18,12 @@ public class ClientServerWarIntegrationTest extends AbstractClientServerIntegrat
 
     private final int serverPort = PortFactory.findFreePort();
     private final int serverSecurePort = PortFactory.findFreePort();
-    private Server server = new Server();
+    private Server server;
 
     @Before
     public void startServer() throws Exception {
+        server = new Server();
+
         // add http connector
         ServerConnector http = new ServerConnector(server);
         http.setPort(serverPort);
@@ -43,7 +45,7 @@ public class ClientServerWarIntegrationTest extends AbstractClientServerIntegrat
         // start server
         server.start();
 
-        TimeUnit.SECONDS.sleep(2);
+        TimeUnit.SECONDS.sleep(1);
     }
 
     public String getServletContext() {
@@ -63,5 +65,6 @@ public class ClientServerWarIntegrationTest extends AbstractClientServerIntegrat
     @After
     public void stopServer() throws Exception {
         server.stop();
+        server.join();
     }
 }

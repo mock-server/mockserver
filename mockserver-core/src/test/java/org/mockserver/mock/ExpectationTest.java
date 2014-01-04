@@ -36,7 +36,7 @@ public class ExpectationTest {
         // then
         expectation.setNotUnlimitedResponses();
         assertTrue(expectation.matches(null));
-        assertFalse(expectation.matches(new HttpRequest()));
+        assertTrue(expectation.matches(new HttpRequest()));
         assertFalse(expectation.contains(null));
         assertNull(expectation.getHttpRequest());
         assertNull(expectation.getHttpResponse());

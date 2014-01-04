@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.*;
@@ -71,6 +72,20 @@ public class HttpRequestSerializerTest {
 
         // then
         assertEquals(fullHttpRequest, httpRequest);
+    }
+
+    @Test
+    public void deserializeHandleException() throws IOException {
+        // given
+        byte[] requestBytes = "requestBytes".getBytes();
+        when(objectMapper.readValue(eq(requestBytes), same(HttpRequestDTO.class))).thenThrow(new IOException());
+
+        try {
+            // when
+            httpRequestSerializer.deserialize(requestBytes);
+        } catch (Throwable t) {
+            fail();
+        }
     }
 
     @Test
