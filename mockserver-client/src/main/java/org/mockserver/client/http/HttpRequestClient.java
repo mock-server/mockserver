@@ -1,5 +1,6 @@
 package org.mockserver.client.http;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.SettableFuture;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -41,11 +42,6 @@ public class HttpRequestClient {
     private HttpClientResponseMapper httpClientResponseMapper = new HttpClientResponseMapper();
     private HttpClient httpClient;
 
-    public HttpRequestClient() {
-        httpClient = new HttpClient(createSSLContextFactory());
-        configureHttpClient();
-    }
-
     public static SslContextFactory createSSLContextFactory() {
         SslContextFactory sslContextFactory = new SslContextFactory();
         sslContextFactory.setKeyStore(SSLFactory.buildKeyStore());
@@ -56,32 +52,43 @@ public class HttpRequestClient {
         return sslContextFactory;
     }
 
-    private void configureHttpClient() {
-        // http client
-        try {
-            httpClient.setFollowRedirects(false);
-            // do not share cookies between connections
-            httpClient.setCookieStore(new HttpCookieStore.Empty());
-            // ensure we can proxy enough connections to same server
-            httpClient.setMaxConnectionsPerDestination(1024);
-            httpClient.setRequestBufferSize(bufferSize());
-            httpClient.setResponseBufferSize(bufferSize());
-            httpClient.setIdleTimeout(maxTimeout());
-            httpClient.setConnectTimeout(maxTimeout());
-            httpClient.start();
-        } catch (Exception e) {
-            logger.error("Exception starting HttpClient", e);
-            throw new RuntimeException("Exception starting HttpClient", e);
+    private HttpClient configureHttpClient() {
+        if (httpClient == null) {
+            try {
+                httpClient = newHttpClient();
+                // http client
+                httpClient.setFollowRedirects(false);
+                // do not share cookies between connections
+                httpClient.setCookieStore(new HttpCookieStore.Empty());
+                // ensure we can proxy enough connections to same server
+                httpClient.setMaxConnectionsPerDestination(1024);
+                httpClient.setRequestBufferSize(bufferSize());
+                httpClient.setResponseBufferSize(bufferSize());
+                httpClient.setIdleTimeout(maxTimeout());
+                httpClient.setConnectTimeout(maxTimeout());
+                httpClient.start();
+            } catch (Exception e) {
+                logger.error("Exception starting HttpClient", e);
+                throw new RuntimeException("Exception starting HttpClient", e);
+            }
         }
+        return httpClient;
     }
 
-    public ContentResponse sendPUTRequest(String baseUri, String body, String path) {
-        try {
+    @VisibleForTesting
+    HttpClient newHttpClient() {
+        return new HttpClient(createSSLContextFactory());
+    }
 
+    public ContentResponse sendPUTRequest(String baseUri, String path, String body) {
+        try {
             if (baseUri.endsWith("/") && path.startsWith("/")) {
                 path = StringUtils.substringAfter(path, "/");
+            } else if (!baseUri.endsWith("/") && !path.startsWith("/")) {
+                baseUri += "/";
             }
-            return httpClient.newRequest(baseUri + path)
+            return configureHttpClient()
+                    .newRequest(baseUri + path)
                     .method(HttpMethod.PUT)
                     .header("Content-Type", "application/json; charset=utf-8")
                     .content(new ComparableStringContentProvider(body, StandardCharsets.UTF_8))
@@ -108,7 +115,7 @@ public class HttpRequestClient {
                         System.out.println(HttpMethod.fromString(httpRequest.getMethod()) + "=>" + url);
                     }
                     HttpMethod method = HttpMethod.fromString(httpRequest.getMethod());
-                    Request request = httpClient
+                    Request request = configureHttpClient()
                             .newRequest(url)
                             .method((method == null ? HttpMethod.GET : method));
                     request.content(new ComparableStringContentProvider(httpRequest.getBody(), StandardCharsets.UTF_8));
@@ -132,17 +139,13 @@ public class HttpRequestClient {
                         request.header("Cookie", stringBuilder.toString());
                     }
                     if (logger.isTraceEnabled()) {
-                        try {
-                            logger.trace("Proxy sending request:\n" + new ObjectMapper()
-                                    .setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT)
-                                    .setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL)
-                                    .setSerializationInclusion(JsonSerialize.Inclusion.NON_EMPTY)
-                                    .configure(SerializationConfig.Feature.FAIL_ON_EMPTY_BEANS, false)
-                                    .writerWithDefaultPrettyPrinter()
-                                    .writeValueAsString(httpRequest));
-                        } catch (Throwable t) {
-                            logger.warn("Exception while trying to log requests being forward by proxy for url [" + url + "]", t);
-                        }
+                        logger.trace("Proxy sending request:\n" + new ObjectMapper()
+                                .setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT)
+                                .setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL)
+                                .setSerializationInclusion(JsonSerialize.Inclusion.NON_EMPTY)
+                                .configure(SerializationConfig.Feature.FAIL_ON_EMPTY_BEANS, false)
+                                .writerWithDefaultPrettyPrinter()
+                                .writeValueAsString(httpRequest));
                     }
                     request.onResponseContent(new Response.ContentListener() {
                         @Override

@@ -10,7 +10,6 @@ import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
@@ -23,14 +22,15 @@ import org.mockserver.model.HttpResponse;
 import org.mockserver.streams.IOStreamUtils;
 
 import java.io.EOFException;
-import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static org.mockito.AdditionalMatchers.aryEq;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockserver.configuration.SystemProperties.maxTimeout;
 
 /**
  * @author jamesdbloom
@@ -48,9 +48,7 @@ public class HttpRequestClientTest {
 
     @Before
     public void setupTestFixture() throws Exception {
-//        mockHttpClient = new HttpClient();
         httpRequestClient = new HttpRequestClient();
-
         initMocks(this);
 
         // - an http client that can create a request
@@ -64,13 +62,29 @@ public class HttpRequestClientTest {
     @Test
     public void shouldSendPUTRequest() throws Exception {
         // when
-        httpRequestClient.sendPUTRequest("baseUri", "body", "/path");
+        httpRequestClient.sendPUTRequest("baseUri", "/path", "body");
         // then
         verify(mockHttpClient).newRequest("baseUri/path");
         verify(mockRequest).method(HttpMethod.PUT);
         verify(mockRequest).header("Content-Type", "application/json; charset=utf-8");
         verify(mockRequest).content(new ComparableStringContentProvider("body", StandardCharsets.UTF_8));
         verify(mockRequest).send();
+    }
+
+    @Test
+    public void shouldRemoveExtraSlashesFromURL() throws Exception {
+        // when
+        httpRequestClient.sendPUTRequest("baseUri/", "/path", "");
+        // then
+        verify(mockHttpClient).newRequest("baseUri/path");
+    }
+
+    @Test
+    public void shouldAddMissingSlashesToURL() throws Exception {
+        // when
+        httpRequestClient.sendPUTRequest("baseUri", "path", "");
+        // then
+        verify(mockHttpClient).newRequest("baseUri/path");
     }
 
     @Test
@@ -127,35 +141,6 @@ public class HttpRequestClientTest {
     }
 
     @Test(expected = ExecutionException.class)
-    public void shouldHandleExceptionWhenSendingHttpRequest() throws Exception {
-        // given
-        when(mockRequest.send()).thenThrow(new RuntimeException());
-
-        // when
-        final SettableFuture<HttpResponse> responseFuture = SettableFuture.create();
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    responseFuture.set(httpRequestClient.sendRequest(
-                            new HttpRequest()
-                                    .withURL("url")
-                                    .withMethod("GET")
-                    ));
-                } catch (Throwable t) {
-                    responseFuture.setException(t);
-                }
-            }
-        });
-        thread.start();
-        thread.join(TimeUnit.SECONDS.toMillis(1));
-
-        // then
-        responseFuture.get(1, TimeUnit.SECONDS);
-    }
-
-
-    @Test(expected = ExecutionException.class)
     public void shouldHandleExceptionResponseWhenSendingHttpRequest() throws Exception {
         // given
         ArgumentCaptor<Response.CompleteListener> completeListenerArgumentCaptor = ArgumentCaptor.forClass(Response.CompleteListener.class);
@@ -189,11 +174,39 @@ public class HttpRequestClientTest {
     }
 
     @Test(expected = RuntimeException.class)
-    public void shouldHandleExceptionWhenSendingExpectationRequest() throws Exception {
+    public void shouldHandleExceptionResponseWhenStartingHttpClient() throws Exception {
         // given
-        when(mockRequest.send()).thenThrow(new Exception());
+        HttpRequestClient httpRequestClient = spy(new HttpRequestClient());
+        when(httpRequestClient.newHttpClient()).thenReturn(mockHttpClient);
+        doThrow(new RuntimeException()).when(mockHttpClient).setConnectTimeout(maxTimeout());
 
         // when
-        httpRequestClient.sendPUTRequest("baseUri", "body", "/path");
+        httpRequestClient.sendRequest(
+                new HttpRequest()
+                        .withURL("url")
+                        .withMethod("GET")
+        );
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void shouldHandleExceptionWhenSendingHttpRequest() throws Exception {
+        // given
+        when(mockRequest.send()).thenThrow(new TimeoutException());
+
+        // when
+        httpRequestClient.sendRequest(
+                new HttpRequest()
+                        .withURL("url")
+                        .withMethod("GET")
+        );
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void shouldHandleExceptionWhenSendingExpectationRequest() throws Exception {
+        // given
+        when(mockRequest.send()).thenThrow(new TimeoutException());
+
+        // when
+        httpRequestClient.sendPUTRequest("baseUri", "/path", "body");
     }
 }

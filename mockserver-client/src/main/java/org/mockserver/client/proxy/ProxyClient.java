@@ -6,7 +6,6 @@ import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
 
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -36,14 +35,14 @@ public class ProxyClient {
      * WARN level to ensure they appear even if the default logging level has not been altered
      */
     public void dumpToLog() {
-        httpClient.sendPUTRequest(uri, "", "/dumpToLog");
+        httpClient.sendPUTRequest(uri, "/dumpToLog", "");
     }
 
     /**
      * Reset the proxy by clearing recorded requests
      */
     public void reset() {
-        httpClient.sendPUTRequest(uri, "", "/reset");
+        httpClient.sendPUTRequest(uri, "/reset", "");
     }
 
     /**
@@ -52,7 +51,7 @@ public class ProxyClient {
      * @param httpRequest the http that is matched against when deciding whether to clear recorded requests
      */
     public void clear(HttpRequest httpRequest) {
-        httpClient.sendPUTRequest(uri, (httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : ""), "/clear");
+        httpClient.sendPUTRequest(uri, "/clear", (httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : ""));
     }
 
     /**
@@ -62,7 +61,7 @@ public class ProxyClient {
      * @return an array of all expectations that have been recorded by the proxy
      */
     public Expectation[] retrieveExpectationsAsObjects(HttpRequest httpRequest) {
-        return expectationSerializer.deserializeArray(httpClient.sendPUTRequest(uri, (httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : ""), "/retrieve").getContent());
+        return expectationSerializer.deserializeArray(httpClient.sendPUTRequest(uri, "/retrieve", (httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "")).getContent());
     }
 
     /**
@@ -72,6 +71,6 @@ public class ProxyClient {
      * @return a JSON array of all expectations that have been recorded by the proxy
      */
     public String retrieveExpectationsAsJSON(HttpRequest httpRequest) {
-        return new String(httpClient.sendPUTRequest(uri, (httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : ""), "/retrieve").getContent(), StandardCharsets.UTF_8);
+        return new String(httpClient.sendPUTRequest(uri, "/retrieve", (httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "")).getContent(), StandardCharsets.UTF_8);
     }
 }

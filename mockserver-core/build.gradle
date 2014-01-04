@@ -2,7 +2,7 @@ apply plugin: 'war'
 
 dependencies {
     // http
-    providedCompile "org.eclipse.jetty.orbit:javax.servlet:$orbitServletVersion"
+    providedCompile "javax.servlet:javax.servlet-api:$servletVersion"
 
     // json
     compile "org.codehaus.jackson:jackson-mapper-asl:$jacksonMapperAslVersion"
@@ -20,5 +20,6 @@ dependencies {
     testCompile "junit:junit:$junitVersion"
     testCompile "org.mockito:mockito-all:$mockitoAllVersion"
     testCompile "org.hamcrest:hamcrest-core:$hamcrestCore"
+    testCompile "org.eclipse.jetty:jetty-util:$jettyVersion"
 }
 

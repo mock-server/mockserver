@@ -26,17 +26,18 @@ import java.io.IOException;
  */
 public class ProxyServlet extends HttpServlet {
     private static final long serialVersionUID = 8490389904399790169L;
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private HttpServletRequestMapper httpServletRequestMapper = new HttpServletRequestMapper();
     private HttpServletResponseMapper httpServletResponseMapper = new HttpServletResponseMapper();
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
-    private HttpRequestClient httpRequestClient = new HttpRequestClient();
-    private LogFilter filter = new LogFilter();
-    private Filters filters = new Filters() {{
-        withFilter(new HttpRequest(), new HopByHopHeaderFilter());
-        withFilter(new HttpRequest(), filter);
-    }};
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
+    private HttpRequestClient httpRequestClient = new HttpRequestClient();
+    private LogFilter logFilter = new LogFilter();
+    private Filters filters = new Filters();
+
+    public ProxyServlet() {
+        filters.withFilter(new HttpRequest(), new HopByHopHeaderFilter());
+        filters.withFilter(new HttpRequest(), logFilter);
+    }
 
     /**
      * Add filter for HTTP requests, each filter get called before each request is proxied, if the filter return null then the request is not proxied
@@ -77,22 +78,22 @@ public class ProxyServlet extends HttpServlet {
 
     @Override
     protected void doPut(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws ServletException, IOException {
-        switch (StringUtils.substringAfter(httpServletRequest.getRequestURI(), httpServletRequest.getContextPath())) {
+        switch (httpServletRequest.getPathInfo() != null && httpServletRequest.getContextPath() != null ? httpServletRequest.getPathInfo() : httpServletRequest.getRequestURI()) {
             case "/dumpToLog":
-                filter.dumpToLog(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToByteArray(httpServletRequest)));
+                logFilter.dumpToLog(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToByteArray(httpServletRequest)));
                 httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
                 break;
             case "/retrieve":
-                Expectation[] expectations = filter.retrieve(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToByteArray(httpServletRequest)));
+                Expectation[] expectations = logFilter.retrieve(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToByteArray(httpServletRequest)));
                 IOStreamUtils.writeToOutputStream(expectationSerializer.serialize(expectations).getBytes(), httpServletResponse);
                 httpServletResponse.setStatus(HttpStatusCode.OK_200.code());
                 break;
             case "/reset":
-                filter.reset();
+                logFilter.reset();
                 httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
                 break;
             case "/clear":
-                filter.clear(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToByteArray(httpServletRequest)));
+                logFilter.clear(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToByteArray(httpServletRequest)));
                 httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
                 break;
             default:

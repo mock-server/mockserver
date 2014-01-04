@@ -7,14 +7,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.http.HttpRequestClient;
 import org.mockserver.client.serialization.ExpectationSerializer;
-import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.mockito.AdditionalMatchers.aryEq;
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -47,7 +45,7 @@ public class ProxyClientTest {
         proxyClient.dumpToLog();
 
         // then
-        verify(mockHttpClient).sendPUTRequest("http://localhost:8080", "", "/dumpToLog");
+        verify(mockHttpClient).sendPUTRequest("http://localhost:8080", "/dumpToLog", "");
     }
 
     @Test
@@ -56,7 +54,7 @@ public class ProxyClientTest {
         proxyClient.reset();
 
         // then
-        verify(mockHttpClient).sendPUTRequest("http://localhost:8080", "", "/reset");
+        verify(mockHttpClient).sendPUTRequest("http://localhost:8080", "/reset", "");
     }
 
     @Test
@@ -70,10 +68,11 @@ public class ProxyClientTest {
                 );
 
         // then
-        verify(mockHttpClient).sendPUTRequest("http://localhost:8080", "{\n" +
+        verify(mockHttpClient).sendPUTRequest("http://localhost:8080", "/clear", "" +
+                "{\n" +
                 "  \"path\" : \"/some_path\",\n" +
                 "  \"body\" : \"some_request_body\"\n" +
-                "}", "/clear");
+                "}");
     }
 
     @Test
@@ -93,10 +92,11 @@ public class ProxyClientTest {
                 ));
 
         // then
-        verify(mockHttpClient).sendPUTRequest("http://localhost:8080", "{\n" +
+        verify(mockHttpClient).sendPUTRequest("http://localhost:8080", "/retrieve", "" +
+                "{\n" +
                 "  \"path\" : \"/some_path\",\n" +
                 "  \"body\" : \"some_request_body\"\n" +
-                "}", "/retrieve");
+                "}");
         verify(expectationSerializer).deserializeArray("body".getBytes());
     }
 
@@ -112,7 +112,7 @@ public class ProxyClientTest {
         assertSame(expectations, proxyClient.retrieveExpectationsAsObjects(null));
 
         // then
-        verify(mockHttpClient).sendPUTRequest("http://localhost:8080", "", "/retrieve");
+        verify(mockHttpClient).sendPUTRequest("http://localhost:8080", "/retrieve", "");
         verify(expectationSerializer).deserializeArray("body".getBytes());
     }
 
@@ -132,12 +132,12 @@ public class ProxyClientTest {
                 ));
 
         // then
-        verify(mockHttpClient).sendPUTRequest("http://localhost:8080", "{\n" +
+        verify(mockHttpClient).sendPUTRequest("http://localhost:8080", "/retrieve", "" +
+                "{\n" +
                 "  \"path\" : \"/some_path\",\n" +
                 "  \"body\" : \"some_request_body\"\n" +
-                "}", "/retrieve");
+                "}");
     }
-
 
     @Test
     public void shouldReceiveExpectationsAsJSONWithNullRequest() {
@@ -150,6 +150,6 @@ public class ProxyClientTest {
         assertEquals(expectations, proxyClient.retrieveExpectationsAsJSON(null));
 
         // then
-        verify(mockHttpClient).sendPUTRequest("http://localhost:8080", "", "/retrieve");
+        verify(mockHttpClient).sendPUTRequest("http://localhost:8080", "/retrieve", "");
     }
 }

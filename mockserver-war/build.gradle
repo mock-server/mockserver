@@ -2,7 +2,7 @@ apply plugin: 'war'
 
 dependencies {
     // http
-    providedCompile "org.eclipse.jetty.orbit:javax.servlet:$orbitServletVersion"
+    providedCompile "javax.servlet:javax.servlet-api:$servletVersion"
 
     // commons & guava
     compile "com.google.guava:guava:$guavaVersion"

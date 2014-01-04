@@ -104,14 +104,14 @@ public class MockServerClient {
      * WARN level to ensure they appear even if the default logging level has not been altered
      */
     public void dumpToLog() {
-        httpClient.sendPUTRequest(uriBase, "", "/dumpToLog");
+        httpClient.sendPUTRequest(uriBase, "/dumpToLog", "");
     }
 
     /**
      * Reset MockServer by clearing all expectations
      */
     public void reset() {
-        httpClient.sendPUTRequest(uriBase, "", "/reset");
+        httpClient.sendPUTRequest(uriBase, "/reset", "");
     }
 
     /**
@@ -120,11 +120,11 @@ public class MockServerClient {
      * @param httpRequest the http that is matched against when deciding whether to clear each expectation
      */
     public void clear(HttpRequest httpRequest) {
-        httpClient.sendPUTRequest(uriBase, httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", "/clear");
+        httpClient.sendPUTRequest(uriBase, "/clear", httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "");
     }
 
     protected void sendExpectation(Expectation expectation) {
-        httpClient.sendPUTRequest(uriBase, expectation != null ? expectationSerializer.serialize(expectation) : "", "/");
+        httpClient.sendPUTRequest(uriBase, "/", expectation != null ? expectationSerializer.serialize(expectation) : "");
     }
 
 }

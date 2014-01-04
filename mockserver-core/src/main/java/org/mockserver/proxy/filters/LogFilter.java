@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -20,9 +21,9 @@ import java.util.Map;
  */
 public class LogFilter implements ProxyResponseFilter {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final CircularMultiMap<HttpRequest, HttpResponse> requestResponseLog = new CircularMultiMap<>(100, 100);
     private final MatcherBuilder matcherBuilder = new MatcherBuilder();
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public HttpResponse onResponse(HttpRequest httpRequest, HttpResponse httpResponse) {
         requestResponseLog.put(httpRequest, httpResponse);
@@ -51,23 +52,6 @@ public class LogFilter implements ProxyResponseFilter {
         return httpRequests;
     }
 
-    public Expectation[] retrieve(HttpRequest httpRequest) {
-        List<Expectation> expectations = new ArrayList<>();
-        if (httpRequest != null) {
-            HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
-            for (Map.Entry<HttpRequest, HttpResponse> entry : requestResponseLog.entrySet()) {
-                if (httpRequestMatcher.matches(entry.getKey())) {
-                    expectations.add(new Expectation(entry.getKey(), Times.once()).thenRespond(entry.getValue()));
-                }
-            }
-        } else {
-            for (Map.Entry<HttpRequest, HttpResponse> entry : requestResponseLog.entrySet()) {
-                expectations.add(new Expectation(entry.getKey(), Times.once()).thenRespond(entry.getValue()));
-            }
-        }
-        return expectations.toArray(new Expectation[expectations.size()]);
-    }
-
     public void reset() {
         requestResponseLog.clear();
     }
@@ -75,9 +59,9 @@ public class LogFilter implements ProxyResponseFilter {
     public void clear(HttpRequest httpRequest) {
         if (httpRequest != null) {
             HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
-            for (HttpRequest key : requestResponseLog.keySet()) {
+            for (HttpRequest key : new LinkedHashSet<>(requestResponseLog.keySet())) {
                 if (httpRequestMatcher.matches(key)) {
-                    requestResponseLog.remove(key);
+                    requestResponseLog.removeAll(key);
                 }
             }
         } else {
@@ -99,5 +83,22 @@ public class LogFilter implements ProxyResponseFilter {
                 logger.warn(expectationSerializer.serialize(new Expectation(entry.getKey(), Times.once()).thenRespond(entry.getValue())));
             }
         }
+    }
+
+    public Expectation[] retrieve(HttpRequest httpRequest) {
+        List<Expectation> expectations = new ArrayList<>();
+        if (httpRequest != null) {
+            HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
+            for (Map.Entry<HttpRequest, HttpResponse> entry : requestResponseLog.entrySet()) {
+                if (httpRequestMatcher.matches(entry.getKey())) {
+                    expectations.add(new Expectation(entry.getKey(), Times.once()).thenRespond(entry.getValue()));
+                }
+            }
+        } else {
+            for (Map.Entry<HttpRequest, HttpResponse> entry : requestResponseLog.entrySet()) {
+                expectations.add(new Expectation(entry.getKey(), Times.once()).thenRespond(entry.getValue()));
+            }
+        }
+        return expectations.toArray(new Expectation[expectations.size()]);
     }
 }

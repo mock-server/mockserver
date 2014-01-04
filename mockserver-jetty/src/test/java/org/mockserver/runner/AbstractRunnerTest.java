@@ -115,7 +115,7 @@ public class AbstractRunnerTest {
     }
 
     @Test
-    public void shouldStopRemoteServer() throws InterruptedException, ExecutionException, UnknownHostException {
+    public void shouldStopRemoteServerAndWaitForResponse() throws InterruptedException, ExecutionException, UnknownHostException {
         try {
             // when
             try {
@@ -126,6 +126,27 @@ public class AbstractRunnerTest {
 
             // then
             assertTrue(new MockServerRunner().stop("127.0.0.1", stopPort(port, null), 30));
+        } finally {
+            try {
+                runner.stop();
+            } catch (RuntimeException re) {
+                // do nothing only here in case stop above fails
+            }
+        }
+    }
+
+    @Test
+    public void shouldStopRemoteServerAndNotWaitForResponse() throws InterruptedException, ExecutionException, UnknownHostException {
+        try {
+            // when
+            try {
+                runner.start(port, null).get(1, TimeUnit.SECONDS);
+            } catch (TimeoutException te) {
+                // ignore as expected
+            }
+
+            // then
+            assertTrue(new MockServerRunner().stop("127.0.0.1", stopPort(port, null), 0));
         } finally {
             try {
                 runner.stop();

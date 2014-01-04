@@ -68,47 +68,40 @@ public abstract class AbstractRunner {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                server = new Server();
-
-                // add connectors
-                List<ServerConnector> serverConnectors = new ArrayList<>();
-                if (port != null) {
-                    serverConnectors.add(createHTTPConnector(server, port, securePort));
-                }
                 try {
-                    if (securePort != null) {
-                        serverConnectors.add(createHTTPSConnector(server, securePort));
+                    server = new Server();
+
+                    // add connectors
+                    if (port != null) {
+                        server.addConnector(createHTTPConnector(server, port, securePort));
                     }
-                } catch (GeneralSecurityException | IOException e) {
-                    logger.error("Exception while loading SSL certificate", e);
-                }
-                server.setConnectors(serverConnectors.toArray(new Connector[serverConnectors.size()]));
+                    if (securePort != null) {
+                        server.addConnector(createHTTPSConnector(server, securePort));
+                    }
 
-                // add handler
-                ServletHandler servletHandler = new ServletHandler();
-                servletHandler.addServletWithMapping(new ServletHolder(getServlet()), "/");
-                if (securePort != null) {
-                    server.setHandler(new ConnectHandler(servletHandler, securePort));
-                } else {
-                    server.setHandler(servletHandler);
-                }
+                    // add handler
+                    ServletHandler servletHandler = new ServletHandler();
+                    servletHandler.addServletWithMapping(new ServletHolder(getServlet()), "/");
+                    if (securePort != null) {
+                        server.setHandler(new ConnectHandler(servletHandler, securePort));
+                    } else {
+                        server.setHandler(servletHandler);
+                    }
 
-                // start server
-                try {
-                    shutdownThread = new ShutdownThread(stopPort(port, securePort));
+                    // start server
                     server.start();
+
+                    // create and start shutdown thread
+                    shutdownThread = new ShutdownThread(stopPort(port, securePort));
                     shutdownThread.start();
-                } catch (Exception e) {
-                    logger.error("Failed to start embedded jetty server", e);
-                }
 
-                logger.info(startedMessage);
-                System.out.println(startedMessage);
+                    logger.info(startedMessage);
+                    System.out.println(startedMessage);
 
-                try {
                     server.join();
-                } catch (InterruptedException ie) {
-                    logger.error("InterruptedException while waiting for jetty server", ie);
+                } catch (Throwable t) {
+                    logger.error("Exception while starting server", t);
+                    future.setException(t);
                 } finally {
                     future.set(server.getState());
                 }
@@ -221,7 +214,7 @@ public abstract class AbstractRunner {
         return stopped;
     }
 
-    private class ShutdownThread extends Thread {
+    class ShutdownThread extends Thread {
         private final int port;
         private ServerSocket serverSocket;
 
@@ -235,7 +228,6 @@ public abstract class AbstractRunner {
         public void run() {
             try {
                 try {
-
                     serverSocket = new ServerSocket(port);
                     logger.info("Waiting to receive MockServer stop request on port [" + port + "]");
 

@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.same;
@@ -102,7 +103,7 @@ public class ExpectationSerializerTest {
         Expectation[] expectations = expectationSerializer.deserializeArray(requestBytes);
 
         // then
-        assertEquals(new Expectation[]{fullExpectation, fullExpectation}, expectations);
+        assertArrayEquals(new Expectation[]{fullExpectation, fullExpectation}, expectations);
     }
 
     @Test(expected = RuntimeException.class)
