@@ -45,7 +45,7 @@ public class HttpServletRequestMapper {
     }
 
     private void setPath(HttpRequest httpRequest, HttpServletRequest httpServletRequest) {
-        httpRequest.withPath(httpServletRequest.getRequestURI());
+        httpRequest.withPath(httpServletRequest.getContextPath() == null ? httpServletRequest.getRequestURI() : httpServletRequest.getPathInfo());
     }
 
     private void setQueryString(HttpRequest httpRequest, HttpServletRequest httpServletRequest) {

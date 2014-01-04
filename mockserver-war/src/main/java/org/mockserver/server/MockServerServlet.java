@@ -37,7 +37,9 @@ public class MockServerServlet extends HttpServlet {
     private void handlePOSTorGET(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
         HttpRequest httpRequest = httpServletRequestMapper.mapHttpServletRequestToHttpRequest(httpServletRequest);
         HttpResponse httpResponse = mockServer.handle(httpRequest);
+        System.out.println("httpRequest = " + httpRequest);
         if (httpResponse != null) {
+            System.out.println("httpResponse = " + httpResponse);
             httpServletResponseMapper.mapHttpResponseToHttpServletResponse(httpResponse, httpServletResponse);
         } else {
             httpServletResponse.setStatus(HttpStatusCode.NOT_FOUND_404.code());
@@ -45,7 +47,7 @@ public class MockServerServlet extends HttpServlet {
     }
 
     public void doPut(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
-        switch (httpServletRequest.getRequestURI()) {
+        switch (httpServletRequest.getPathInfo() != null && httpServletRequest.getContextPath() != null ? httpServletRequest.getPathInfo() : httpServletRequest.getRequestURI()) {
             case "/dumpToLog":
                 mockServer.dumpToLog(null);
                 httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());

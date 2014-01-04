@@ -1,7 +1,7 @@
 package org.mockserver.client.http;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.SettableFuture;
+import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
@@ -17,12 +17,12 @@ import org.eclipse.jetty.http.MimeTypes;
 import org.eclipse.jetty.util.HttpCookieStore;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.mockserver.client.serialization.HttpRequestSerializer;
-import org.mockserver.socket.SSLFactory;
 import org.mockserver.mappers.jetty.HttpClientResponseMapper;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.socket.SSLFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,8 +75,12 @@ public class HttpRequestClient {
         }
     }
 
-    public ContentResponse sendPUTRequest(String baseUri, final String body, final String path) {
+    public ContentResponse sendPUTRequest(String baseUri, String body, String path) {
         try {
+            System.out.println("baseUri + path = " + baseUri + path);
+            if (baseUri.endsWith("/") && path.startsWith("/")) {
+                path = StringUtils.substringAfter(path, "/");
+            }
             return httpClient.newRequest(baseUri + path)
                     .method(HttpMethod.PUT)
                     .header("Content-Type", "application/json; charset=utf-8")

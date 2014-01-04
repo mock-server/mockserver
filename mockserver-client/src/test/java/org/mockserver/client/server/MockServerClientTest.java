@@ -92,7 +92,7 @@ public class MockServerClientTest {
                 "    \"remainingTimes\" : 0,\n" +
                 "    \"unlimited\" : true\n" +
                 "  }\n" +
-                "}", "");
+                "}", "/");
     }
 
     @Test

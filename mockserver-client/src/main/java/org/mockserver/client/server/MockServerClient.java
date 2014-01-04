@@ -1,5 +1,6 @@
 package org.mockserver.client.server;
 
+import org.apache.commons.lang3.StringUtils;
 import org.mockserver.client.http.HttpRequestClient;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
@@ -26,8 +27,7 @@ public class MockServerClient {
      * @param port the port for the MockServer to communicate with
      */
     public MockServerClient(String host, int port) {
-        uriBase = "http://" + host + ":" + port;
-        httpClient = new HttpRequestClient();
+        this(host, port, "");
     }
 
     /**
@@ -41,7 +41,9 @@ public class MockServerClient {
      * @param contextPath the context path that the MockServer war is deployed to
      */
     public MockServerClient(String host, int port, String contextPath) {
-        uriBase = "http://" + host + ":" + port + "/" + contextPath;
+        if(StringUtils.isEmpty(host)) throw new IllegalArgumentException("Host can not be null or empty");
+        if(contextPath == null) throw new IllegalArgumentException("ContextPath can not be null");
+        uriBase = "http://" + host + ":" + port + (contextPath.length() > 0 && !contextPath.startsWith("/") ? "/" : "") + contextPath;
         httpClient = new HttpRequestClient();
     }
 
@@ -122,7 +124,7 @@ public class MockServerClient {
     }
 
     protected void sendExpectation(Expectation expectation) {
-        httpClient.sendPUTRequest(uriBase, expectation != null ? expectationSerializer.serialize(expectation) : "", "");
+        httpClient.sendPUTRequest(uriBase, expectation != null ? expectationSerializer.serialize(expectation) : "", "/");
     }
 
 }

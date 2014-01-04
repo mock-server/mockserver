@@ -24,7 +24,8 @@ public class HttpServletRequestMapperTest {
     @Test
     public void shouldMapHttpServletRequestToHttpRequest() {
         // given
-        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("GET", "requestURI");
+        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("GET", "/requestURI");
+        httpServletRequest.setContextPath(null);
         httpServletRequest.setQueryString("parameterName=parameterValue");
         httpServletRequest.addHeader("headerName1", "headerValue1_1");
         httpServletRequest.addHeader("headerName1", "headerValue1_2");
@@ -36,12 +37,27 @@ public class HttpServletRequestMapperTest {
         HttpRequest httpRequest = new HttpServletRequestMapper().mapHttpServletRequestToHttpRequest(httpServletRequest);
 
         // then
-        assertEquals("http://localhost:80requestURI?parameterName=parameterValue", httpRequest.getURL());
-        assertEquals("requestURI", httpRequest.getPath());
+        assertEquals("http://localhost:80/requestURI?parameterName=parameterValue", httpRequest.getURL());
+        assertEquals("/requestURI", httpRequest.getPath());
         assertEquals("somebody", httpRequest.getBody());
         assertEquals("parameterName=parameterValue", httpRequest.getQueryString());
         assertEquals(Lists.newArrayList(new Header("headerName1", "headerValue1_1", "headerValue1_2"), new Header("headerName2", "headerValue2")), httpRequest.getHeaders());
         assertEquals(Lists.newArrayList(new Cookie("cookieName1", "cookieValue1"), new Cookie("cookieName2", "cookieValue2")), httpRequest.getCookies());
+    }
+
+    @Test
+    public void shouldMapPathForRequestsWithAContextPath() {
+        // given
+        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("GET", "/requestURI");
+        httpServletRequest.setContextPath("contextPath");
+        httpServletRequest.setPathInfo("pathInfo");
+        httpServletRequest.setContent("".getBytes());
+
+        // when
+        HttpRequest httpRequest = new HttpServletRequestMapper().mapHttpServletRequestToHttpRequest(httpServletRequest);
+
+        // then
+        assertEquals("pathInfo", httpRequest.getPath());
     }
 
     @Test(expected = RuntimeException.class)

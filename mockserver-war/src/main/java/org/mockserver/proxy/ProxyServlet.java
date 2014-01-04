@@ -1,5 +1,6 @@
 package org.mockserver.proxy;
 
+import org.apache.commons.lang3.StringUtils;
 import org.mockserver.client.http.HttpRequestClient;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
@@ -76,7 +77,7 @@ public class ProxyServlet extends HttpServlet {
 
     @Override
     protected void doPut(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws ServletException, IOException {
-        switch (httpServletRequest.getRequestURI()) {
+        switch (StringUtils.substringAfter(httpServletRequest.getRequestURI(), httpServletRequest.getContextPath())) {
             case "/dumpToLog":
                 filter.dumpToLog(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToByteArray(httpServletRequest)));
                 httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
