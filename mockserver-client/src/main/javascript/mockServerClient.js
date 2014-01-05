@@ -1,9 +1,9 @@
 var mockServer = mockServer || {};
 
-(function () {
+(function (baseUrl) {
     "use strict";
 
-    mockServer.factory = function (testIdQueryString) {
+    mockServer.factory = function (testIdQueryString, baseUrl) {
         var xmlhttp = new XMLHttpRequest(),
             defaultHeaders = [
                 {"name": "Content-Type", "values": ["application/json; charset=utf-8"]},
@@ -44,14 +44,18 @@ var mockServer = mockServer || {};
                     }
                 };
             },
-            mockResponse = function (path, responseBody, url, statusCode) {
+            mockResponse = function (path, responseBody, statusCode) {
                 var expectedResponse = createExpectation(path, responseBody, statusCode);
-                xmlhttp.open("PUT", url || "http://localhost:4002", false);
+                xmlhttp.open("PUT", baseUrl, false);
                 xmlhttp.setRequestHeader("Content-Type", "application/json; charset=utf-8");
                 xmlhttp.send(JSON.stringify(expectedResponse));
             },
-            clearMock = function (url) {
-                xmlhttp.open("PUT", url || "http://localhost:4002/clear", false);
+            clearMock = function () {
+                xmlhttp.open("PUT", baseUrl + "/clear", false);
+                xmlhttp.send(JSON.stringify(createExpectation(".*", "")));
+            },
+            dumpToLog = function () {
+                xmlhttp.open("PUT", baseUrl + "/dumpToLog", false);
                 xmlhttp.send(JSON.stringify(createExpectation(".*", "")));
             },
             setDefaultHeaders = function (headers) {
@@ -61,6 +65,7 @@ var mockServer = mockServer || {};
         return {
             mockResponse: mockResponse,
             clearMock: clearMock,
+            dumpToLog: dumpToLog,
             setDefaultHeaders: setDefaultHeaders
         };
     };
@@ -70,6 +75,6 @@ var mockServer = mockServer || {};
     if (window.location.href.match(/testId\=.*/g)) {
         testIdQueryString = window.location.href.match(/testId\=.*/g)[0];
     }
-    mockServer.client = mockServer.factory(testIdQueryString || "testId=" + Math.floor(Math.random() * 0x100000000000).toString(16));
+    mockServer.client = mockServer.factory(testIdQueryString || "testId=" + Math.floor(Math.random() * 0x100000000000).toString(16), baseUrl);
 
 }());

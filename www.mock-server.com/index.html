@@ -10,7 +10,7 @@
 <meta name="format-detection" content="telephone=no">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="google-site-verification" content="QIzvnb0rY1MnkLjIDI217X0RjxZCX2tWdUp1CvejoVw"/>
-<meta name="msvalidate.01" content="9DBA7A5F05A6179123259382E10FB4A7" />
+<meta name="msvalidate.01" content="9DBA7A5F05A6179123259382E10FB4A7"/>
 <meta id="description" name="description" content="An API to easily mock any system or service you integrate with via HTTP from either Java or JavaScript.">
 <meta name="title" content="Mock Server">
 <meta property="og:locale" content="en_GB">
@@ -282,11 +282,12 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 		<ul>
 			<li><a href="#what-is-mockserver">What is MockServer</a></li>
 			<li><a href="#why-use-mockserver">Features</a></li>
-			<li><a href="#versions">Version</a></li>
+			<li><a href="#versions">Versions</a></li>
 			<li><a href="#client">Clients</a></li>
-			<li><a href="#maven-central">Maven Central</a></li>
-			<li><a href="#vertx-repository">Vert.X</a></li>
 			<li><a href="#requirements">Requirements</a></li>
+			<li><a href="#github">GitHub</a></li>
+			<li><a href="#maven-central">Maven Central</a></li>
+			<li><a href="#vertx-registry">Vert.X Registry</a></li>
 		</ul>
 	</div>
 	<div class="pure-menu pure-menu-open">
@@ -308,19 +309,21 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 	<h2>Easy mocking of any system you integrate with via HTTP or HTTPS</h2>
 </div>
 <div class="content" itemscope itemtype="http://schema.org/Article">
-<p style="color: darkred"><strong><em>This documentation is currently being rewritten to make it clearer and easily to understand, a new version will be publish by mid January 2014</em></strong></p>
+<p style="color: darkred"><strong><em>This documentation is currently being rewritten to make it clearer, a new version will be publish by mid January 2014</em></strong></p>
 
 <a name="what-is-mockserver" class="anchor" href="#what-is-mockserver">&nbsp;</a>
 
 <h2>What is MockServer</h2>
 
-<p>MockServer is an API to enable the easy mocking of any system you integrate with via HTTP (i.e. services, web sites, etc) from either Java or JavaScript.</p>
+<p>MockServer is an API to enable the easy mocking of any system you integrate with via HTTP or HTTPS (i.e. services, web sites, etc) from either Java or JavaScript.</p>
+
+<h3>Mocking</h3>
 
 <p>Requests can be matched on:</p>
 
 <ul>
 	<li>path (regex or plain text)</li>
-	<li>body (regex or plain text)</li>
+	<li>body (XPath, regex or plain text)</li>
 	<li>headers</li>
 	<li>cookies</li>
 	<li>query parameters (GET)</li>
@@ -334,13 +337,24 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 	<li>headers</li>
 	<li>cookies</li>
 </ul>
-<p>MockServer is used on several large commercial projects to run large test suits that execute in parallel.</p>
+
+<h3>Proxying</h3>
+
+<p>MockServer also provides an HTTP / HTTPS proxy that can be used to record requests / responses.</p>
+
+<p>Once requests / responses have been recorded:</p>
+
+<ul>
+	 <li>they can be queried (such as during a test) to confirm what requests and system under test has sent</li>
+	 <li>they can output to a log as Expectations in JSON format</li>
+	 <li>they can output to a log as Expectations in JSON Java code format that can be pasted into test setup</li>
+</ul>
 
 <a name="why-use-mockserver" class="anchor" href="#why-use-mockserver">&nbsp;</a>
 
 <h2>Why use MockServer</h2>
 
-<p>MockServer allows you to mock any server or service that you connect to over HTTP, such as REST or RPC service. </p>
+<p>MockServer allows you to mock any server or service that you connect to over HTTP or HTTPS, such as a REST or RPC service. </p>
 
 <p>This is useful in the following scenarios:</p>
 
@@ -362,47 +376,125 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 	</li>
 </ul>
 
+<p>MockServer is used on several large commercial projects to run large test suits that execute in parallel.</p>
+
 <a name="versions" class="anchor" href="#versions">&nbsp;</a>
 
 <h2>Versions</h2>
 
-<p>MockServer can be run in multiple ways:</p>
+<p>MockServer can be used to <strong>mock HTTP and HTTPS</strong>:</p>
 
 <ul>
 	<li>via a Maven plugin (as part of a maven build),</li>
 	<li>as a stand alone web server (using Embedded Jetty),</li>
 	<li>as a Vert.X module,</li>
-	<li>as a deployable WAR (to run on any JEE web server),</li>
+	<li>as a deployable WAR that runs on any JEE web server,</li>
+</ul>
+
+<p>MockServer can be used as an <strong>HTTP and HTTPS proxy to record and query requests and responses</strong>:</p>
+
+<ul>
+	<li>as a stand alone web server (using Embedded Jetty),</li>
+	<li>as a Vert.X module (currently only supports HTTP, HTTPS will be available soon),</li>
+</ul>
+
+<p>MockServer will soon also be able to run:</p>
+
+<ul>
 	<li>as a NodeJS module (however this is currently been written and is not yet finished).</li>
 </ul>
 
 <a name="client" class="anchor" href="#client">&nbsp;</a>
 
-<h2>Client</h2>
+<h2>Clients</h2>
 
-<p>MockServer also has two client versions:</p>
+<p>MockServer has three client versions:</p>
 
 <ul>
-	<li>one written in Java - org.mockserver.client.server.MockServerClient in mockserver-client</li>
-	<li>and one written in JavaScript - mockServerClient.js in mockserver-client</li>
+	<li>Java
+		<ul>
+			<li><strong>org.mockserver.client.server.MockServerClient</strong> - a client for MockServer that supports:
+				<ul>
+					<li>creating expectations</li>
+					<li>clearing expectations (selectively)</li>
+					<li>resetting (clearing all expectations)</li>
+					<li>dumping all expectations to the log (for debugging)</li>
+				</ul>
+			</li>
+			<li><strong>org.mockserver.client.proxy.ProxyClient</strong> - a client for MockServer that supports:
+				<ul>
+					<li>retrieving all recorded requests / responses as JSON or Expectation objects</li>
+					<li>outputting to the log all recorded requests / responses as Expectations in JSON format</li>
+					<li>outputting to the log all recorded requests / responses as Expectations in Java code format that can be pasted into test setup methods</li>
+					<li>clearing recorded requests / responses (selectively)</li>
+					<li>resetting (clearing all recorded requests / responses)</li>
+				</ul>
+			</li>
+		</ul>
+	</li>
+	<li>JavaScript
+		<ul>
+			<li><strong>mockServerClient.js</strong> - a simple client for MockServer that supports:
+				<ul>
+					<li>creating expectations</li>
+					<li>clearing expectations (selectively)</li>
+					<li>resetting (clearing all expectations)</li>
+					<li>dumping all expectations to the log (for debugging)</li>
+				</ul>
+			</li>
+		</ul>
+	</li>
 </ul>
-<p>It is not necessary to use the provided clients because the proptocol for expectations is simple JSON. However, the clients avoid the need to understand the underlying JSON protocol and provide a simple API.</p>
+<p><strong>Note:</strong> It is not necessary to use the provided clients because the protocol for expectations is simple JSON (as explained below). However, the clients avoid the need to understand the underlying JSON protocol and provide a simple API.</p>
+
+<h2>Requirements</h2>
+
+<ul>
+	<li>Java 7 - because MockServer uses Jetty 9 to increase reliability, simplicity and flexibility which in turn requires Java 7 (<a href="http://webtide.intalio.com/2012/09/jetty-9-features/">http://webtide.intalio.com/2012/09/jetty-9-features/</a>)</li>
+</ul>
+
+<a name="github" class="anchor" href="#github">&nbsp;</a>
+
+<h2>GitHub</h2>
+
+<p>The source control for MockServer is git which is hosted at GitHub <a href="https://github.com/jamesdbloom/mockserver">jamesdbloom/mockserver</a></p>
+
+<p>GitHub is also used to track issues / bugs and manage pull-requests.</p>
 
 <a name="maven-central" class="anchor" href="#maven-central">&nbsp;</a>
 
 <h2>Maven Central</h2>
 
-<p>Maven Central contains the following artifacts:</p>
+<p>Maven Central contains the following MockServer artifacts:</p>
 
 <ul>
-	<li>org.mock-server:mockserver-maven-plugin - a set of maven plugins to start, stop and fork MockServer using maven</li>
-	<li>org.mock-server:mockserver-jetty - a stand alone web server (using Embedded Jetty)</li>
-	<li>org.mock-server:mockserver-vertx - a Vert.X module</li>
-	<li>org.mock-server:mockserver-war - a deployable WAR (to run on any JEE web server)</li>
-	<li>org.mock-server:mockserver-client - a Java client</li>
-	<li>org.mock-server:mockserver-core - core classes shared by all versions</li>
+	<li><a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver-maven-plugin">org.mock-server:mockserver-maven-plugin</a> - a set of maven plugins to start, stop and fork MockServer using maven</li>
+	<li><a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver-vertx">org.mock-server:mockserver-vertx</a> - a Vert.X module that mocks HTTP and HTTPS requests</li>
+	<li><a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver-jetty">org.mock-server:mockserver-jetty</a> - a stand alone web server that mocks HTTP and HTTPS requests (using Embedded Jetty)</li>
+	<li><a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver-war">org.mock-server:mockserver-war</a> - a deployable WAR for mocking HTTP and HTTP requests (that runs on any JEE web server)</li>
+	<li><a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver-proxy">org.mock-server:mockserver-proxy</a> - an HTTP / HTTPS proxy that allows the recording and querying of requests and response</li>
+	<li><a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver-client">org.mock-server:mockserver-client</a> - a Java and JavaScript client to communicate with both the server and the proxy</li>
+	<li><a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver-core">org.mock-server:mockserver-core</a> - core classes shared by all versions</li>
+	<li><a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver-integration-testing">org.mock-server:mockserver-integration-testing</a> - common classes used in integration testing different versions of MockServer</li>
 </ul>
-<p>MockServer can be found on Maven Central at <a href="https://oss.sonatype.org/index.html#nexus-search;quick%7Emockserver">https://oss.sonatype.org/index.html#nexus-search;quick~mockserver</a>.</p>
+
+<p>In addition MockServer SNAPSHOT artifacts can also be found at <a href="https://oss.sonatype.org/index.html#nexus-search;quick%7Emockserver">https://oss.sonatype.org/index.html#nexus-search;quick~mockserver</a>.</p>
+
+<a name="vertx-registry" class="anchor" href="#vertx-registry">&nbsp;</a>
+
+<h2>Vert.X Module Registry</h2>
+
+<p>Vert.X Module Registry contains the following artifacts:</p>
+
+<ul>
+	<li><a href="http://modulereg.vertx.io/">org.mock-server~mockserver-vertx~1.12</a> - a Vert.X module that mocks HTTP and HTTPS requests</li>
+</ul>
+
+<p>Vert.X Module Registry will shortly also have the following artifacts:</p>
+
+<ul>
+	<li><a href="http://modulereg.vertx.io/">org.mock-server~mockserver-vertx-proxy~1.12</a> - a Vert.X module that proxies HTTP and HTTPS allowing the recording and querying of requests and responses</li>
+</ul>
 
 <a name="how-to-use-mockserver" class="anchor" href="#how-to-use-mockserver">&nbsp;</a>
 
@@ -1021,11 +1113,6 @@ xmlHttpRequest.send();
 
 <a name="requirements" class="anchor" href="#requirements">&nbsp;</a>
 
-<h2>Requirements</h2>
-
-<ul>
-	<li>Java 7 - because MockServer uses Jetty 9 to increase reliability, simplicity and flexibility which in turn requires Java 7 (<a href="http://webtide.intalio.com/2012/09/jetty-9-features/">http://webtide.intalio.com/2012/09/jetty-9-features/</a>)</li>
-</ul>
 <p><br><a href="https://plus.google.com/110954472544793839756?rel=author">James D Bloom</a> - <a href="http://blog.jamesdbloom.com">Blog</a></p>
 <span itemprop="author" itemscope itemtype="http://schema.org/Person">
     <meta itemprop="name" content="James D Bloom">

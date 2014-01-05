@@ -40,12 +40,21 @@ public class ProxyClientTest {
     }
 
     @Test
-    public void shouldSendDumpToLogRequest() throws Exception {
+    public void shouldSendDumpToLogAsJSONRequest() throws Exception {
         // when
-        proxyClient.dumpToLog();
+        proxyClient.dumpToLogAsJSON();
 
         // then
         verify(mockHttpClient).sendPUTRequest("http://localhost:8080", "/dumpToLog", "");
+    }
+
+    @Test
+    public void shouldSendDumpToLogAsJavaRequest() throws Exception {
+        // when
+        proxyClient.dumpToLogAsJava();
+
+        // then
+        verify(mockHttpClient).sendPUTRequest("http://localhost:8080", "/dumpToLog?type=java", "");
     }
 
     @Test

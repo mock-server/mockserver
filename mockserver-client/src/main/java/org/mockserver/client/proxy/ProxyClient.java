@@ -31,11 +31,19 @@ public class ProxyClient {
     }
 
     /**
-     * Pretty-print the json for all expectations already setup to the log.  They are printed at
+     * Pretty-print the json for all requests / responses as Expectations to the log.  They are printed at
      * WARN level to ensure they appear even if the default logging level has not been altered
      */
-    public void dumpToLog() {
+    public void dumpToLogAsJSON() {
         httpClient.sendPUTRequest(uri, "/dumpToLog", "");
+    }
+
+    /**
+     * Output Java code for creating all requests / responses as Expectations to the log.  They are printed
+     * at WARN level to ensure they appear even if the default logging level has not been altered
+     */
+    public void dumpToLogAsJava() {
+        httpClient.sendPUTRequest(uri, "/dumpToLog?type=java", "");
     }
 
     /**
