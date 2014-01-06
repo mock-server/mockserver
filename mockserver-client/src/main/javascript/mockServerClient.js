@@ -5,10 +5,29 @@ var mockServer = mockServer || {};
 
     mockServer.factory = function (testIdQueryString, baseUrl) {
         var xmlhttp = new XMLHttpRequest(),
-            defaultHeaders = [
+            defaultResponseHeaders = [
                 {"name": "Content-Type", "values": ["application/json; charset=utf-8"]},
                 {"name": "Cache-Control", "values": ["no-cache, no-store"]}
             ],
+            createResponseMatcher = function(path) {
+                var headers = [];
+                if (testId) {
+                    headers = [
+                        {
+                            "name": "Referer",
+                            "values": [".*" + testId + ".*"]
+                        }
+                    ];
+                }
+                return {
+                    method: "",
+                    path: path,
+                    body: "",
+                    headers: headers,
+                    cookies: [],
+                    parameters: []
+                }
+            },
             createExpectation = function (path, responseBody, statusCode) {
                 var headers = [];
                 if (testIdQueryString) {
@@ -20,19 +39,12 @@ var mockServer = mockServer || {};
                     ];
                 }
                 return {
-                    httpRequest: {
-                        method: "",
-                        path: path,
-                        body: "",
-                        headers: headers,
-                        cookies: [],
-                        parameters: []
-                    },
+                    httpRequest: createResponseMatcher(path),
                     httpResponse: {
                         statusCode: statusCode || 200,
                         body: JSON.stringify(responseBody),
                         cookies: [],
-                        headers: defaultHeaders,
+                        headers: defaultResponseHeaders,
                         delay: {
                             timeUnit: "MICROSECONDS",
                             value: 0
@@ -52,14 +64,14 @@ var mockServer = mockServer || {};
             },
             clearMock = function () {
                 xmlhttp.open("PUT", baseUrl + "/clear", false);
-                xmlhttp.send(JSON.stringify(createExpectation(".*", "")));
+                xmlhttp.send(JSON.stringify(createResponseMatcher(".*")));
             },
             dumpToLog = function () {
                 xmlhttp.open("PUT", baseUrl + "/dumpToLog", false);
                 xmlhttp.send(JSON.stringify(createExpectation(".*", "")));
             },
             setDefaultHeaders = function (headers) {
-                defaultHeaders = headers;
+                defaultResponseHeaders = headers;
             };
 
         return {

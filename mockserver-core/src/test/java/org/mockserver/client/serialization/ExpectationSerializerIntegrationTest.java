@@ -5,18 +5,262 @@ import org.mockserver.client.serialization.model.*;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.Cookie;
+import org.mockserver.model.Delay;
 import org.mockserver.model.Header;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 /**
  * @author jamesdbloom
  */
 public class ExpectationSerializerIntegrationTest {
+
+
+    @Test
+    public void shouldIgnoreExtraFields() throws IOException {
+        // given
+        byte[] requestBytes = ("{\n" +
+                "    \"httpRequest\": {\n" +
+                "        \"path\": \"somePath\",\n" +
+                "        \"extra_field\": \"extra_value\"\n" +
+                "    },\n" +
+                "    \"httpResponse\": {\n" +
+                "        \"body\": \"someBody\",\n" +
+                "        \"extra_field\": \"extra_value\"\n" +
+                "    }\n" +
+                "}").getBytes();
+
+        // when
+        Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
+
+        // then
+        assertEquals(new ExpectationDTO()
+                .setHttpRequest(
+                        new HttpRequestDTO()
+                                .setPath("somePath")
+                )
+                .setHttpResponse(
+                        new HttpResponseDTO()
+                                .setBody("someBody")
+                )
+                .buildObject(), expectation);
+    }
+
+    @Test
+    public void shouldIgnoreEmptyStringObjects() throws IOException {
+        // given
+        byte[] requestBytes = ("{\n" +
+                "    \"httpRequest\": {\n" +
+                "        \"path\": \"somePath\"\n" +
+                "    },\n" +
+                "    \"httpResponse\": \"\"\n" +
+                "}").getBytes();
+
+        // when
+        Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
+
+        // then
+        assertEquals(new ExpectationDTO()
+                .setHttpRequest(
+                        new HttpRequestDTO()
+                                .setPath("somePath")
+                )
+                .buildObject(), expectation);
+    }
+
+    @Test
+    public void shouldHandleNullPrimitives() throws IOException {
+        // given
+        byte[] requestBytes = ("{\n" +
+                "    \"httpRequest\": {\n" +
+                "        \"path\": \"somePath\"\n" +
+                "    },\n" +
+                "    \"httpResponse\": {\n" +
+                "        \"body\": \"someBody\"\n" +
+                "    },\n" +
+                "    \"times\": {\n" +
+                "        \"remainingTimes\": null,\n" +
+                "        \"unlimited\": false\n" +
+                "    }\n" +
+                "}").getBytes();
+
+        // when
+        Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
+
+        // then
+        assertEquals(new ExpectationDTO()
+                .setHttpRequest(
+                        new HttpRequestDTO()
+                                .setPath("somePath")
+                )
+                .setHttpResponse(
+                        new HttpResponseDTO()
+                                .setBody("someBody")
+                )
+                .setTimes(new TimesDTO(Times.exactly(0)))
+                .buildObject(), expectation);
+    }
+
+    @Test
+    public void shouldHandleEmptyPrimitives() throws IOException {
+        // given
+        byte[] requestBytes = ("{\n" +
+                "    \"httpRequest\": {\n" +
+                "        \"path\": \"somePath\"\n" +
+                "    },\n" +
+                "    \"httpResponse\": {\n" +
+                "        \"body\": \"someBody\"\n" +
+                "    },\n" +
+                "    \"times\": {\n" +
+                "        \"remainingTimes\": \"\",\n" +
+                "        \"unlimited\": false\n" +
+                "    }\n" +
+                "}").getBytes();
+
+        // when
+        Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
+
+        // then
+        assertEquals(new ExpectationDTO()
+                .setHttpRequest(
+                        new HttpRequestDTO()
+                                .setPath("somePath")
+                )
+                .setHttpResponse(
+                        new HttpResponseDTO()
+                                .setBody("someBody")
+                )
+                .setTimes(new TimesDTO(Times.exactly(0)))
+                .buildObject(), expectation);
+    }
+
+    @Test
+    public void shouldHandleNullEnums() throws IOException {
+        // given
+        byte[] requestBytes = ("{\n" +
+                "    \"httpRequest\": {\n" +
+                "        \"path\": \"somePath\"\n" +
+                "    },\n" +
+                "    \"httpResponse\": {\n" +
+                "        \"body\": \"someBody\",\n" +
+                "        \"delay\": {\n" +
+                "            \"timeUnit\": null,\n" +
+                "            \"value\": null\n" +
+                "        }\n" +
+                "    }\n" +
+                "}").getBytes();
+
+        // when
+        Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
+
+        // then
+        assertEquals(new ExpectationDTO()
+                .setHttpRequest(
+                        new HttpRequestDTO()
+                                .setPath("somePath")
+                )
+                .setHttpResponse(
+                        new HttpResponseDTO()
+                                .setBody("someBody")
+                                .setDelay(new DelayDTO(new Delay(null, 0)))
+                )
+                .buildObject(), expectation);
+    }
+
+    @Test
+    public void shouldAllowSingleObjectForArray() throws IOException {
+        // given
+        byte[] requestBytes = ("{\n" +
+                "    \"httpRequest\": {\n" +
+                "        \"path\": \"somePath\",\n" +
+                "        \"extra_field\": \"extra_value\"\n" +
+                "    },\n" +
+                "    \"httpResponse\": {\n" +
+                "        \"body\": \"someBody\",\n" +
+                "        \"extra_field\": \"extra_value\"\n" +
+                "    }\n" +
+                "}").getBytes();
+
+        // when
+        Expectation[] expectations = new ExpectationSerializer().deserializeArray(requestBytes);
+
+        // then
+        assertArrayEquals(new Expectation[]{
+                new ExpectationDTO()
+                        .setHttpRequest(
+                                new HttpRequestDTO()
+                                        .setPath("somePath")
+                        )
+                        .setHttpResponse(
+                                new HttpResponseDTO()
+                                        .setBody("someBody")
+                        )
+                        .buildObject()
+        }, expectations);
+    }
+
+
+    @Test
+    public void shouldAllowMultipleObjectsForArray() throws IOException {
+        // given
+        byte[] requestBytes = ("[" +
+                "  {\n" +
+                "      \"httpRequest\": {\n" +
+                "          \"path\": \"somePath\",\n" +
+                "          \"extra_field\": \"extra_value\"\n" +
+                "      },\n" +
+                "      \"httpResponse\": {\n" +
+                "          \"body\": \"someBody\",\n" +
+                "          \"extra_field\": \"extra_value\"\n" +
+                "      }\n" +
+                "  }," +
+                "  {\n" +
+                "      \"httpRequest\": {\n" +
+                "          \"path\": \"somePath\",\n" +
+                "          \"extra_field\": \"extra_value\"\n" +
+                "      },\n" +
+                "      \"httpResponse\": {\n" +
+                "          \"body\": \"someBody\",\n" +
+                "          \"extra_field\": \"extra_value\"\n" +
+                "      }\n" +
+                "  }," +
+                "  {\n" +
+                "      \"httpRequest\": {\n" +
+                "          \"path\": \"somePath\",\n" +
+                "          \"extra_field\": \"extra_value\"\n" +
+                "      },\n" +
+                "      \"httpResponse\": {\n" +
+                "          \"body\": \"someBody\",\n" +
+                "          \"extra_field\": \"extra_value\"\n" +
+                "      }\n" +
+                "  }" +
+                "]").getBytes();
+        Expectation expectation = new ExpectationDTO()
+                .setHttpRequest(
+                        new HttpRequestDTO()
+                                .setPath("somePath")
+                )
+                .setHttpResponse(
+                        new HttpResponseDTO()
+                                .setBody("someBody")
+                )
+                .buildObject();
+
+        // when
+        Expectation[] expectations = new ExpectationSerializer().deserializeArray(requestBytes);
+
+        // then
+        assertArrayEquals(new Expectation[]{
+                expectation,
+                expectation,
+                expectation
+        }, expectations);
+    }
 
     @Test
     public void shouldDeserializeCompleteObject() throws IOException {
@@ -250,5 +494,62 @@ public class ExpectationSerializerIntegrationTest {
                 "    \"unlimited\" : false\n" +
                 "  }\n" +
                 "}", jsonExpectation);
+    }
+
+
+    @Test
+    public void shouldSerializePartialExpectationArray() throws IOException {
+        // when
+        Expectation expectation = new ExpectationDTO()
+                .setHttpRequest(
+                        new HttpRequestDTO()
+                                .setPath("somePath")
+                )
+                .setHttpResponse(
+                        new HttpResponseDTO()
+                                .setBody("someBody")
+                )
+                .buildObject();
+        String jsonExpectation = new ExpectationSerializer().serialize(new Expectation[]{
+                expectation,
+                expectation,
+                expectation
+        });
+
+        // then
+        assertEquals("[ {\n" +
+                "  \"httpRequest\" : {\n" +
+                "    \"path\" : \"somePath\"\n" +
+                "  },\n" +
+                "  \"httpResponse\" : {\n" +
+                "    \"body\" : \"someBody\"\n" +
+                "  },\n" +
+                "  \"times\" : {\n" +
+                "    \"remainingTimes\" : 1,\n" +
+                "    \"unlimited\" : false\n" +
+                "  }\n" +
+                "}, {\n" +
+                "  \"httpRequest\" : {\n" +
+                "    \"path\" : \"somePath\"\n" +
+                "  },\n" +
+                "  \"httpResponse\" : {\n" +
+                "    \"body\" : \"someBody\"\n" +
+                "  },\n" +
+                "  \"times\" : {\n" +
+                "    \"remainingTimes\" : 1,\n" +
+                "    \"unlimited\" : false\n" +
+                "  }\n" +
+                "}, {\n" +
+                "  \"httpRequest\" : {\n" +
+                "    \"path\" : \"somePath\"\n" +
+                "  },\n" +
+                "  \"httpResponse\" : {\n" +
+                "    \"body\" : \"someBody\"\n" +
+                "  },\n" +
+                "  \"times\" : {\n" +
+                "    \"remainingTimes\" : 1,\n" +
+                "    \"unlimited\" : false\n" +
+                "  }\n" +
+                "} ]", jsonExpectation);
     }
 }

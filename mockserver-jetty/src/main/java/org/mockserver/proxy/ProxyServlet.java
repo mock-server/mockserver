@@ -1,6 +1,5 @@
 package org.mockserver.proxy;
 
-import org.apache.commons.lang3.StringUtils;
 import org.mockserver.client.http.HttpRequestClient;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
@@ -12,8 +11,6 @@ import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.proxy.filters.*;
 import org.mockserver.streams.IOStreamUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;

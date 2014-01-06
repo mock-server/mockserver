@@ -214,17 +214,18 @@ public class MockServerServletTest {
         // given
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
         MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/dumpToLog");
-        Expectation expectation = new Expectation(new HttpRequest(), Times.unlimited()).thenRespond(new HttpResponse());
+        HttpRequest httpRequest = new HttpRequest();
 
         byte[] requestBytes = "requestBytes".getBytes();
         httpServletRequest.setContent(requestBytes);
-        when(expectationSerializer.deserialize(requestBytes)).thenReturn(expectation);
+        when(httpRequestSerializer.deserialize(requestBytes)).thenReturn(httpRequest);
 
         // when
         mockServerServlet.doPut(httpServletRequest, httpServletResponse);
 
         // then
-        verify(mockServer).dumpToLog(null);
+        verify(httpRequestSerializer).deserialize(requestBytes);
+        verify(mockServer).dumpToLog(httpRequest);
         verifyNoMoreInteractions(httpServletRequestMapper);
     }
 }

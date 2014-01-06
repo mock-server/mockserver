@@ -260,17 +260,18 @@ public class MockServerVerticalTest {
                         .withMethod("PUT")
                         .withPath("/dumpToLog")
                         .withResponse(httpServerResponse);
-        Expectation expectation = new Expectation(new HttpRequest(), Times.unlimited()).thenRespond(new HttpResponse());
+        HttpRequest httpRequest = new HttpRequest();
 
         byte[] requestBytes = "requestBytes".getBytes();
         httpServerRequest.withBody(requestBytes);
-        when(expectationSerializer.deserialize(requestBytes)).thenReturn(expectation);
+        when(httpRequestSerializer.deserialize(requestBytes)).thenReturn(httpRequest);
 
         // when
         mockServerVertical.getRequestHandler().handle(httpServerRequest);
 
         // then
-        verify(mockServer).dumpToLog(null);
+        verify(httpRequestSerializer).deserialize(requestBytes);
+        verify(mockServer).dumpToLog(httpRequest);
         verifyNoMoreInteractions(httpServerRequestMapper);
     }
 }

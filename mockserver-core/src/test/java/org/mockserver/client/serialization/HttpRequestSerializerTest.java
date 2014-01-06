@@ -91,18 +91,12 @@ public class HttpRequestSerializerTest {
     @Test
     public void serialize() throws IOException {
         // given
-        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT)).thenReturn(objectMapper);
-        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL)).thenReturn(objectMapper);
-        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_EMPTY)).thenReturn(objectMapper);
         when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
 
         // when
         httpRequestSerializer.serialize(fullHttpRequest);
 
         // then
-        verify(objectMapper).setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT);
-        verify(objectMapper).setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL);
-        verify(objectMapper).setSerializationInclusion(JsonSerialize.Inclusion.NON_EMPTY);
         verify(objectMapper).writerWithDefaultPrettyPrinter();
         verify(objectWriter).writeValueAsString(fullHttpRequestDTO);
     }
@@ -111,9 +105,6 @@ public class HttpRequestSerializerTest {
     public void serializeHandlesException() throws IOException {
         // given
         HttpRequest httpRequest = mock(HttpRequest.class);
-        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT)).thenReturn(objectMapper);
-        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL)).thenReturn(objectMapper);
-        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_EMPTY)).thenReturn(objectMapper);
         when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
         when(objectWriter.writeValueAsString(any(HttpRequestDTO.class))).thenThrow(new IOException());
 

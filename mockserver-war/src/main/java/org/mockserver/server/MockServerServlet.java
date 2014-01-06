@@ -47,7 +47,7 @@ public class MockServerServlet extends HttpServlet {
     public void doPut(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
         switch (httpServletRequest.getPathInfo() != null && httpServletRequest.getContextPath() != null ? httpServletRequest.getPathInfo() : httpServletRequest.getRequestURI()) {
             case "/dumpToLog":
-                mockServer.dumpToLog(null);
+                mockServer.dumpToLog(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToByteArray(httpServletRequest)));
                 httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
                 break;
             case "/reset":

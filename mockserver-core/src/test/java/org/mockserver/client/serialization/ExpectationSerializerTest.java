@@ -22,6 +22,8 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.HttpResponse.response;
 
 /**
  * @author jamesdbloom
@@ -83,19 +85,12 @@ public class ExpectationSerializerTest {
     @Test
     public void shouldSerializeObject() throws IOException {
         // given
-        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT)).thenReturn(objectMapper);
-        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL)).thenReturn(objectMapper);
-        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_EMPTY)).thenReturn(objectMapper);
         when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
-
 
         // when
         expectationSerializer.serialize(fullExpectation);
 
         // then
-        verify(objectMapper).setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT);
-        verify(objectMapper).setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL);
-        verify(objectMapper).setSerializationInclusion(JsonSerialize.Inclusion.NON_EMPTY);
         verify(objectMapper).writerWithDefaultPrettyPrinter();
         verify(objectWriter).writeValueAsString(fullExpectationDTO);
     }
@@ -106,34 +101,34 @@ public class ExpectationSerializerTest {
         assertEquals("\n" +
                 "new MockServerClient()\n" +
                 "        .when(\n" +
-                "                new HttpRequest()\n" +
+                "                request()\n" +
                 "                        .withMethod(\"GET\")\n" +
                 "                        .withURL(\"url\")\n" +
                 "                        .withPath(\"somepath\")\n" +
                 "                        .withQueryString(\"queryString\")\n" +
                 "                        .withHeaders(\n" +
-                "                                new Header(\"headerNameOne\", \"headerValueOneOne\", \"headerValueOneTwo\")\n" +
-                "                                new Header(\"headerNameTwo\", \"headerValueTwo\")\n" +
+                "                                new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\"),\n" +
+                "                                new Header(\"requestHeaderNameTwo\", \"requestHeaderValueTwo\")\n" +
                 "                        )\n" +
                 "                        .withCookies(\n" +
-                "                                new Cookie(\"cookieNameOne\", \"cookieValueOneOne\", \"cookieValueOneTwo\")\n" +
-                "                                new Cookie(\"cookieNameTwo\", \"cookieValueTwo\")\n" +
+                "                                new Cookie(\"requestCookieNameOne\", \"requestCookieValueOneOne\", \"requestCookieValueOneTwo\"),\n" +
+                "                                new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")\n" +
                 "                        )\n" +
                 "                        .withBody(\"somebody\"),\n" +
                 "                Times.once()\n" +
-                "        )" +
+                "        )\n" +
                 "        .thenRespond(\n" +
-                "                new HttpResponse()\n" +
-                "                .withStatusCode(304)\n" +
+                "                response()\n" +
+                "                        .withStatusCode(304)\n" +
                 "                        .withHeaders(\n" +
-                "                                new Header(\"headerNameOne\", \"headerValueOneOne\", \"headerValueOneTwo\")\n" +
-                "                                new Header(\"headerNameTwo\", \"headerValueTwo\")\n" +
+                "                                new Header(\"responseHeaderNameOne\", \"responseHeaderValueOneOne\", \"responseHeaderValueOneTwo\"),\n" +
+                "                                new Header(\"responseHeaderNameTwo\", \"responseHeaderValueTwo\")\n" +
                 "                        )\n" +
                 "                        .withCookies(\n" +
-                "                                new Cookie(\"cookieNameOne\", \"cookieValueOneOne\", \"cookieValueOneTwo\")\n" +
-                "                                new Cookie(\"cookieNameTwo\", \"cookieValueTwo\")\n" +
+                "                                new Cookie(\"responseCookieNameOne\", \"responseCookieValueOneOne\", \"responseCookieValueOneTwo\"),\n" +
+                "                                new Cookie(\"responseCookieNameTwo\", \"responseCookieValueTwo\")\n" +
                 "                        )\n" +
-                "                .withBody(\"somebody\")\n" +
+                "                        .withBody(\"somebody\")\n" +
                 "        );",
                 expectationSerializer.serializeAsJava(
                         new Expectation(
@@ -143,12 +138,12 @@ public class ExpectationSerializerTest {
                                         .withPath("somepath")
                                         .withQueryString("queryString")
                                         .withHeaders(
-                                                new Header("headerNameOne", "headerValueOneOne", "headerValueOneTwo"),
-                                                new Header("headerNameTwo", "headerValueTwo")
+                                                new Header("requestHeaderNameOne", "requestHeaderValueOneOne", "requestHeaderValueOneTwo"),
+                                                new Header("requestHeaderNameTwo", "requestHeaderValueTwo")
                                         )
                                         .withCookies(
-                                                new Cookie("cookieNameOne", "cookieValueOneOne", "cookieValueOneTwo"),
-                                                new Cookie("cookieNameTwo", "cookieValueTwo")
+                                                new Cookie("requestCookieNameOne", "requestCookieValueOneOne", "requestCookieValueOneTwo"),
+                                                new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
                                         )
                                         .withBody("somebody"),
                                 Times.once()
@@ -156,12 +151,12 @@ public class ExpectationSerializerTest {
                                 new HttpResponse()
                                         .withStatusCode(304)
                                         .withHeaders(
-                                                new Header("headerNameOne", "headerValueOneOne", "headerValueOneTwo"),
-                                                new Header("headerNameTwo", "headerValueTwo")
+                                                new Header("responseHeaderNameOne", "responseHeaderValueOneOne", "responseHeaderValueOneTwo"),
+                                                new Header("responseHeaderNameTwo", "responseHeaderValueTwo")
                                         )
                                         .withCookies(
-                                                new Cookie("cookieNameOne", "cookieValueOneOne", "cookieValueOneTwo"),
-                                                new Cookie("cookieNameTwo", "cookieValueTwo")
+                                                new Cookie("responseCookieNameOne", "responseCookieValueOneOne", "responseCookieValueOneTwo"),
+                                                new Cookie("responseCookieNameTwo", "responseCookieValueTwo")
                                         )
                                         .withBody("somebody")
                         )
@@ -175,14 +170,14 @@ public class ExpectationSerializerTest {
         assertEquals("\n" +
                 "new MockServerClient()\n" +
                 "        .when(\n" +
-                "                new HttpRequest()\n" +
+                "                request()\n" +
                 "                        .withPath(\"somepath\")\n" +
                 "                        .withBody(\"somebody\"),\n" +
                 "                Times.once()\n" +
-                "        )" +
+                "        )\n" +
                 "        .thenRespond(\n" +
-                "                new HttpResponse()\n" +
-                "                .withStatusCode(304)\n" +
+                "                response()\n" +
+                "                        .withStatusCode(304)\n" +
                 "        );",
                 expectationSerializer.serializeAsJava(
                         new Expectation(
@@ -199,24 +194,24 @@ public class ExpectationSerializerTest {
         assertEquals("\n" +
                 "new MockServerClient()\n" +
                 "        .when(\n" +
-                "                new HttpRequest()\n" +
+                "                request()\n" +
                 "                        .withMethod(\"GET\")\n" +
                 "                        .withURL(\"url\")\n" +
                 "                        .withQueryString(\"queryString\")\n" +
                 "                        .withCookies(\n" +
-                "                                new Cookie(\"cookieNameOne\", \"cookieValueOneOne\", \"cookieValueOneTwo\")\n" +
-                "                                new Cookie(\"cookieNameTwo\", \"cookieValueTwo\")\n" +
+                "                                new Cookie(\"requestCookieNameOne\", \"requestCookieValueOneOne\", \"requestCookieValueOneTwo\"),\n" +
+                "                                new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")\n" +
                 "                        ),\n" +
                 "                Times.once()\n" +
-                "        )" +
+                "        )\n" +
                 "        .thenRespond(\n" +
-                "                new HttpResponse()\n" +
-                "                .withStatusCode(200)\n" +
+                "                response()\n" +
+                "                        .withStatusCode(200)\n" +
                 "                        .withCookies(\n" +
-                "                                new Cookie(\"cookieNameOne\", \"cookieValueOneOne\", \"cookieValueOneTwo\")\n" +
-                "                                new Cookie(\"cookieNameTwo\", \"cookieValueTwo\")\n" +
+                "                                new Cookie(\"responseCookieNameOne\", \"responseCookieValueOneOne\", \"responseCookieValueOneTwo\"),\n" +
+                "                                new Cookie(\"responseCookieNameTwo\", \"responseCookieValueTwo\")\n" +
                 "                        )\n" +
-                "                .withBody(\"somebody\")\n" +
+                "                        .withBody(\"somebody\")\n" +
                 "        );",
                 expectationSerializer.serializeAsJava(
                         new Expectation(
@@ -225,16 +220,16 @@ public class ExpectationSerializerTest {
                                         .withURL("url")
                                         .withQueryString("queryString")
                                         .withCookies(
-                                                new Cookie("cookieNameOne", "cookieValueOneOne", "cookieValueOneTwo"),
-                                                new Cookie("cookieNameTwo", "cookieValueTwo")
+                                                new Cookie("requestCookieNameOne", "requestCookieValueOneOne", "requestCookieValueOneTwo"),
+                                                new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
                                         ),
                                 Times.once()
                         ).thenRespond(
                                 new HttpResponse()
                                         .withHeaders()
                                         .withCookies(
-                                                new Cookie("cookieNameOne", "cookieValueOneOne", "cookieValueOneTwo"),
-                                                new Cookie("cookieNameTwo", "cookieValueTwo")
+                                                new Cookie("responseCookieNameOne", "responseCookieValueOneOne", "responseCookieValueOneTwo"),
+                                                new Cookie("responseCookieNameTwo", "responseCookieValueTwo")
                                         )
                                         .withBody("somebody")
                         )
@@ -245,9 +240,6 @@ public class ExpectationSerializerTest {
     @Test
     public void shouldSerializeArray() throws IOException {
         // given
-        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT)).thenReturn(objectMapper);
-        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL)).thenReturn(objectMapper);
-        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_EMPTY)).thenReturn(objectMapper);
         when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
 
 
@@ -255,9 +247,6 @@ public class ExpectationSerializerTest {
         expectationSerializer.serialize(new Expectation[]{fullExpectation, fullExpectation});
 
         // then
-        verify(objectMapper).setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT);
-        verify(objectMapper).setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL);
-        verify(objectMapper).setSerializationInclusion(JsonSerialize.Inclusion.NON_EMPTY);
         verify(objectMapper).writerWithDefaultPrettyPrinter();
         verify(objectWriter).writeValueAsString(new ExpectationDTO[]{fullExpectationDTO, fullExpectationDTO});
     }
@@ -265,9 +254,6 @@ public class ExpectationSerializerTest {
     @Test(expected = RuntimeException.class)
     public void shouldHandleExceptionWhileSerializingObject() throws IOException {
         // given
-        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT)).thenReturn(objectMapper);
-        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL)).thenReturn(objectMapper);
-        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_EMPTY)).thenReturn(objectMapper);
         when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
         when(objectWriter.writeValueAsString(any(ExpectationDTO.class))).thenThrow(new IOException());
 
@@ -278,9 +264,6 @@ public class ExpectationSerializerTest {
     @Test(expected = RuntimeException.class)
     public void shouldHandleExceptionWhileSerializingArray() throws IOException {
         // given
-        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT)).thenReturn(objectMapper);
-        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL)).thenReturn(objectMapper);
-        when(objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_EMPTY)).thenReturn(objectMapper);
         when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
         when(objectWriter.writeValueAsString(any(ExpectationDTO[].class))).thenThrow(new IOException());
 
