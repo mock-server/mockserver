@@ -18,6 +18,10 @@ public class HttpResponse extends EqualsHashCodeToString {
     private List<Header> headers = new ArrayList<Header>();
     private Delay delay;
 
+    public static HttpResponse response() {
+        return new HttpResponse();
+    }
+
     public HttpResponse() {
     }
 

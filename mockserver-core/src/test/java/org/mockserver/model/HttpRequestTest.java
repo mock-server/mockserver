@@ -5,11 +5,18 @@ import org.junit.Test;
 import java.util.Collection;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotSame;
 
 /**
  * @author jamesdbloom
  */
 public class HttpRequestTest {
+
+    @Test
+    public void shouldAlwaysCreateNewObject() {
+        assertEquals(new HttpRequest().request(), HttpRequest.request());
+        assertNotSame(HttpRequest.request(), HttpRequest.request());
+    }
 
     @Test
     public void returnsPath() {

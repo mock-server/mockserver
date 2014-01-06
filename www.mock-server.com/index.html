@@ -23,7 +23,7 @@
 <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.3.0/pure-min.css">
 <style>
 body {
-	color: black;
+	color: #000;
 }
 
 /*
@@ -53,7 +53,7 @@ The content `<div>` is where all your content goes.
 .content {
 	margin: 0 auto;
 	padding: 0 2em;
-	max-width: 1000px;
+	max-width: 1300px;
 	margin-bottom: 50px;
 	line-height: 1.6em;
 }
@@ -131,7 +131,7 @@ Change color of the anchor links on hover/focus.
 #menu .pure-menu li a:hover,
 #menu .pure-menu li a:focus {
 	background: #ffffff;
-	color: black;
+	color: #000;
 }
 
 /*
@@ -226,6 +226,78 @@ a.anchor, a.anchor:hover, a.anchor:active, a.anchor:focus {
 	cursor: default;
 }
 
+.code {
+	display: block;
+	width: 95%;
+	margin: 1em auto;
+	padding: 1em;
+	white-space: pre-wrap;
+	background-color: #000;
+	color: #fff;
+	-moz-border-radius: 8px;
+	-webkit-border-radius: 8px;
+	-o-border-radius: 8px;
+	-ms-border-radius: 8px;
+	-khtml-border-radius: 8px;
+	border-radius: 8px;
+	word-break: break-all;
+	font-family: Menlo, Monaco, "Courier New", monospace;
+	font-size: 13px;
+}
+
+.inline {
+	display: inline;
+	width: auto;
+	margin: 0;
+}
+
+.code .keyword {
+	color: #008dff;
+}
+
+.code .annotation {
+	color: #bdb76b;
+}
+
+.code .numeric_literal {
+	color: #89bdff;
+}
+
+.code .final {
+	color: #e28964;
+	font-style: italic;
+}
+
+.code .string_literal {
+	color: #00ce6b;
+}
+
+.code .this_value {
+	color: #ff4f31;
+}
+
+.code .element {
+	color: #0000cd;
+}
+
+.code .attribute_name,
+.code .comment {
+	color: #b2b2b2;
+}
+
+.code .comment.bold {
+	color: gray;
+}
+
+.code .attribute_value {
+	color: blue;
+}
+
+.sub_title {
+	margin-top: 3em;
+	font-weight: bold;
+}
+
 /* -- Responsive Styles (Media Queries) ------------------------------------- */
 
 /*
@@ -285,6 +357,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 			<li><a href="#versions">Versions</a></li>
 			<li><a href="#client">Clients</a></li>
 			<li><a href="#requirements">Requirements</a></li>
+			<li><a href="#downloads">Downloads</a></li>
 			<li><a href="#github">GitHub</a></li>
 			<li><a href="#maven-central">Maven Central</a></li>
 			<li><a href="#vertx-registry">Vert.X Registry</a></li>
@@ -309,15 +382,40 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 	<h2>Easy mocking of any system you integrate with via HTTP or HTTPS</h2>
 </div>
 <div class="content" itemscope itemtype="http://schema.org/Article">
-<p style="color: darkred"><strong><em>This documentation is currently being rewritten to make it clearer, a new version will be publish by mid January 2014</em></strong></p>
+<p style="color: #8b0000; text-align: center"><strong><em>This documentation is currently being rewritten to make it clearer, a new version will be completed by mid January 2014</em></strong></p>
 
 <a name="what-is-mockserver" class="anchor" href="#what-is-mockserver">&nbsp;</a>
 
 <h2>What is MockServer</h2>
 
-<p>MockServer is an API to enable the easy mocking of any system you integrate with via HTTP or HTTPS (i.e. services, web sites, etc) from either Java or JavaScript.</p>
+<p>MockServer is an API to enable the easy mocking of any system you integrate with via HTTP or HTTPS (i.e. services, web sites, etc). There are currently specific clients written in Java and JavaScript although any language that can send JSON via HTTP can easily use the MockServer API.</p>
 
 <h3>Mocking</h3>
+
+<p>To mock an HTTP / HTTPS interaction an expectation is setup specifying how a request should be matched and what response the MockServer should reply with when the request has been matched.</p>
+
+<p>For example:</p>
+<pre><code class="code"><span class="keyword">new</span> MockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">9999</span>)
+        .when(
+                request()
+                        .withMethod(<span class="string_literal">"POST"</span>)
+                        .withPath(<span class="string_literal">"/login"</span>)
+                        .withCookies(
+                                <span class="keyword">new</span> Cookie(<span class="string_literal">"sessionId"</span>, <span class="string_literal">"2By8LOhBmaW5nZXJwcmludCIlMDAzMW"</span>)
+                        )
+                        .withBody(<span class="string_literal">"{username: 'foo', password: 'bar'}"</span>),
+                Times.exactly(<span class="numeric_literal">1</span>)
+        )
+        .respond(
+                response()
+                        .withStatusCode(<span class="numeric_literal">401</span>)
+                        .withHeaders(
+                                <span class="keyword">new</span> Header(<span class="string_literal">"Content-Type"</span>, <span class="string_literal">"application/json; charset=utf-8"</span>),
+                                <span class="keyword">new</span> Header(<span class="string_literal">"Cache-Control"</span>, <span class="string_literal">"public, max-age=86400"</span>)
+                        )
+                        .withBody(<span class="string_literal">"{ message: 'incorrect username and password combination' }"</span>)
+                        .withDelay(new Delay(TimeUnit.<span class="final">SECONDS</span>, <span class="numeric_literal">1</span>))
+        );</code></pre>
 
 <p>Requests can be matched on:</p>
 
@@ -329,6 +427,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 	<li>query parameters (GET)</li>
 	<li>body parameters (POST)</li>
 </ul>
+
 <p>Responses can contain:</p>
 
 <ul>
@@ -338,6 +437,13 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 	<li>cookies</li>
 </ul>
 
+<p>Responses can be further controlled using:</p>
+
+<ul>
+	<li>a delay before the response is sent</li>
+	<li>the number of times the response is sent (or unlimited)</li>
+</ul>
+
 <h3>Proxying</h3>
 
 <p>MockServer also provides an HTTP / HTTPS proxy that can be used to record requests / responses.</p>
@@ -345,9 +451,22 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 <p>Once requests / responses have been recorded:</p>
 
 <ul>
-	 <li>they can be queried (such as during a test) to confirm what requests and system under test has sent</li>
-	 <li>they can output to a log as Expectations in JSON format</li>
-	 <li>they can output to a log as Expectations in JSON Java code format that can be pasted into test setup</li>
+	<li>They can be queried pragmatically to confirm what requests have been sent and what responses have been received.
+		<ul>
+			<li>This supports test assertions that confirm what requests the system-under-test has been sending during a test.</li>
+		</ul>
+	</li>
+	<li>They can be output in JSON format to log what request the system under has sent and what responses it received.
+		<ul>
+			<li>This is useful for analysing an existing system prior to writing automated tests.</li>
+			<li>This is also useful to simplify the creation of test setup code as the JSON output is in the MockServer expectation format.</li>
+		</ul>
+	</li>
+	<li>They can be output in human readable Java code format that can be pasted directly into a test setup method.
+		<ul>
+			<li>This is useful to simplify the creation of expectations in test setup methods as the code can be easily pasted directly into a test setup method and then modified as appropriate for the needs of the test scenario.</li>
+		</ul>
+	</li>
 </ul>
 
 <a name="why-use-mockserver" class="anchor" href="#why-use-mockserver">&nbsp;</a>
@@ -364,19 +483,17 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 		<ul>
 			<li>easily recreate all types of responses for HTTP dependencies such as REST or RPC services to test applications easily and affectively</li>
 			<li>isolate the system under test to ensure tests run reliably and only fail when there is a genuine bug. It is important only the system under test is tested and not its dependencies to avoid tests failing due to irrelevant external changes such as network failure or a server being rebooted / redeployed.</li>
-			<li>easily setup mock responses independently for each test to ensure test data is encapsulated with each test. Avoid sharing data between tests that is difficult to manage and maintain and risks test infecting each other.</li>
+			<li>easily setup mock responses independently for each test to ensure test data is encapsulated with each test. Avoid sharing data between tests that is difficult to manage and maintain and risks tests infecting each other.</li>
 		</ul>
 	</li>
 	<li>de-coupling development
 
 		<ul>
-			<li>start working against a service API before the service is available. If an API or service is not yet fully developed MockServer can mock the API allowing the teams who is using the service to start work without being delayed.</li>
+			<li>start working against a service API before the service is available. If an API or service is not yet fully developed MockServer can mock the API allowing any team who is using the service to start work without being delayed.</li>
 			<li>isolate development teams particularly critical during the initial development phases when the APIs / services may be extremely unstable and volatile. Using the MockServer allows development work to continue even when an external service fails.</li>
 		</ul>
 	</li>
 </ul>
-
-<p>MockServer is used on several large commercial projects to run large test suits that execute in parallel.</p>
 
 <a name="versions" class="anchor" href="#versions">&nbsp;</a>
 
@@ -413,7 +530,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 <ul>
 	<li>Java
 		<ul>
-			<li><strong>org.mockserver.client.server.MockServerClient</strong> - a client for MockServer that supports:
+			<li><strong>org.mockserver.client.server.MockServerClient</strong> - supports:
 				<ul>
 					<li>creating expectations</li>
 					<li>clearing expectations (selectively)</li>
@@ -421,7 +538,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 					<li>dumping all expectations to the log (for debugging)</li>
 				</ul>
 			</li>
-			<li><strong>org.mockserver.client.proxy.ProxyClient</strong> - a client for MockServer that supports:
+			<li><strong>org.mockserver.client.proxy.ProxyClient</strong> - supports:
 				<ul>
 					<li>retrieving all recorded requests / responses as JSON or Expectation objects</li>
 					<li>outputting to the log all recorded requests / responses as Expectations in JSON format</li>
@@ -434,7 +551,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 	</li>
 	<li>JavaScript
 		<ul>
-			<li><strong>mockServerClient.js</strong> - a simple client for MockServer that supports:
+			<li><strong>mockServerClient.js</strong> - supports:
 				<ul>
 					<li>creating expectations</li>
 					<li>clearing expectations (selectively)</li>
@@ -445,13 +562,36 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 		</ul>
 	</li>
 </ul>
-<p><strong>Note:</strong> It is not necessary to use the provided clients because the protocol for expectations is simple JSON (as explained below). However, the clients avoid the need to understand the underlying JSON protocol and provide a simple API.</p>
+<p><strong>Note:</strong> It is not necessary to use the provided clients because the protocol for expectations is simple JSON (as explained below). However using the clients avoids the need to understand the underlying JSON protocol and provides a simple API.</p>
 
 <a name="requirements" class="anchor" href="#requirements">&nbsp;</a>
+
 <h2>Requirements</h2>
 
 <ul>
-	<li>Java 7 - because MockServer uses Jetty 9 to increase reliability, simplicity and flexibility which in turn requires Java 7 (<a href="http://webtide.intalio.com/2012/09/jetty-9-features/">http://webtide.intalio.com/2012/09/jetty-9-features/</a>)</li>
+	<li><strong>Java 7+</strong>&nbsp;&nbsp;&nbsp;because MockServer uses Jetty 9 (to increase reliability, simplicity and flexibility) which in turn requires Java 7</li>
+</ul>
+
+<a name="downloads" class="anchor" href="#versions">&nbsp;</a>
+
+<h2>Downloads</h2>
+
+<p>The simpliest way to run and download MockServer is by using the fully stand alone web server embedded with all dependencies that mocks HTTP and HTTPS requests, as follows:</p>
+
+<ol>
+	<li><p>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-jetty/1.12/mockserver-jetty-1.12-jar-with-dependencies.jar">mockserver-jetty-1.12-jar-with-dependencies.jar</a> from Maven Central</p></li>
+	<li>
+		<pre><code class="code inline">java -jar &lt;path to mockserver-jetty-1.12-jar-with-dependencies.jar&gt; &lt;port&gt;</code></pre>
+	</li>
+</ol>
+
+<p class="sub_title">For more details on downloads see:</p>
+
+<ul>
+	<li><p>jar-with-dependencies / jar / war packages at <a href="#maven-central">MockServer on Maven Central</a>.</p></li>
+	<li><p>Vert.X Modules at <a href="#vertx-registry">MockServer on Vert.X Module Registry</a>.</p></li>
+	<li><p>source code at <a href="#github">MockServer on GitHub</a>.</p></li>
+	<li><p>Running the MockServer at <a href="#22-starting-the-mockserver">Starting the MockServer</a>.</p></li>
 </ul>
 
 <a name="github" class="anchor" href="#github">&nbsp;</a>
@@ -471,7 +611,8 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 <ul>
 	<li><a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver-maven-plugin">org.mock-server:mockserver-maven-plugin</a> - a set of maven plugins to start, stop and fork MockServer using maven</li>
 	<li><a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver-vertx">org.mock-server:mockserver-vertx</a> - a Vert.X module that mocks HTTP and HTTPS requests</li>
-	<li><a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver-jetty">org.mock-server:mockserver-jetty</a> - a stand alone web server that mocks HTTP and HTTPS requests (using Embedded Jetty)</li>
+	<li><a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver-jetty">org.mock-server:mockserver-jetty</a> - a web server that mocks HTTP and HTTPS requests (using Embedded Jetty)</li>
+	<li><a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver-jetty">org.mock-server:mockserver-jetty:jar-with-dependencies</a> - a fully stand alone web server embedded with all dependencies that mocks HTTP and HTTPS requests (using Embedded Jetty)</li>
 	<li><a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver-war">org.mock-server:mockserver-war</a> - a deployable WAR for mocking HTTP and HTTP requests (that runs on any JEE web server)</li>
 	<li><a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver-proxy">org.mock-server:mockserver-proxy</a> - an HTTP / HTTPS proxy that allows the recording and querying of requests and response</li>
 	<li><a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver-client">org.mock-server:mockserver-client</a> - a Java and JavaScript client to communicate with both the server and the proxy</li>
@@ -543,7 +684,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p>To mock a response in Java use the org.mockserver.model.HttpResponse class which specifies the details of each HTTP response with a fluent API:</p>
 
-<pre><code>public class HttpResponse {
+<pre><code class="code">public class HttpResponse {
 
     public HttpResponse withStatusCode(Integer responseCode);
 
@@ -561,7 +702,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p>For example:</p>
 
-<pre><code>HttpResponse httpResponse =
+<pre><code class="code">HttpResponse httpResponse =
         new HttpResponse()
                 .withStatusCode(200)
                 .withHeaders(
@@ -577,7 +718,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p>To mock a response in javascript use JSON to specify the details with the following format: </p>
 
-<pre><code>"httpResponse": {
+<pre><code class="code">"httpResponse": {
     "statusCode": 200,
     "body": "",
     "cookies": [],
@@ -591,7 +732,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p>Each cookie or header array entry has the following syntax:</p>
 
-<pre><code>{
+<pre><code class="code">{
     "name": "",
     "values": ["", "", ...]
 }
@@ -599,7 +740,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p>The "timeUnit" value in "delay" can be:</p>
 
-<pre><code>"NANOSECONDS"
+<pre><code class="code">"NANOSECONDS"
 "MICROSECONDS"
 "MILLISECONDS"
 "SECONDS"
@@ -610,7 +751,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p>The same example as above would be:</p>
 
-<pre><code>"httpResponse": {
+<pre><code class="code">"httpResponse": {
     "statusCode": 200,
     "body": "{ message: 'a simple json response' }",
     "headers": [
@@ -665,7 +806,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p>To specify a request matcher in Java use the org.mockserver.model.HttpRequest class which specifies the details of each HTTP response with a fluent API:</p>
 
-<pre><code>public class HttpRequest {
+<pre><code class="code">public class HttpRequest {
 
     public HttpRequest withMethod(String method);
 
@@ -686,7 +827,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p>For example:</p>
 
-<pre><code>HttpRequest httpRequest = new HttpRequest()
+<pre><code class="code">HttpRequest httpRequest = new HttpRequest()
         .withMethod("POST")
         .withPath("/login")
         .withBody("{username: 'foo', password: 'bar'}")
@@ -701,7 +842,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p>To specify a request matcher in javascript use JSON to specify the details with the following format: </p>
 
-<pre><code>"httpRequest": {
+<pre><code class="code">"httpRequest": {
     "method": "",
     "path": "",
     "parameters": []
@@ -713,7 +854,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p>Each cookie or header array entry has the following syntax:</p>
 
-<pre><code>{
+<pre><code class="code">{
     "name": "",
     "values": ["", "", ...]
 }
@@ -721,7 +862,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p>The same example as above would be:</p>
 
-<pre><code>"httpRequest": {
+<pre><code class="code">"httpRequest": {
     "method": "POST",
     "path": "/login",
     "body": "{username: 'foo', password: 'bar'}",
@@ -760,7 +901,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p>To run MockServer as part of your build add the following plugin to your pom.xml:</p>
 
-<pre><code>&lt;plugin&gt;
+<pre><code class="code">&lt;plugin&gt;
     &lt;groupId&gt;org.mock-server&lt;/groupId&gt;
     &lt;artifactId&gt;mockserver-maven-plugin&lt;/artifactId&gt;
     &lt;version&gt;1.12&lt;/version&gt;
@@ -794,7 +935,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p>It is also possible to run the MockServer as a forked JVM using the <strong>runForked</strong> and <strong>stopForked</strong> goals as follows:</p>
 
-<pre><code> &lt;plugin&gt;
+<pre><code class="code"> &lt;plugin&gt;
      &lt;groupId&gt;org.mock-server&lt;/groupId&gt;
      &lt;artifactId&gt;mockserver-maven-plugin&lt;/artifactId&gt;
      &lt;version&gt;1.12&lt;/version&gt;
@@ -827,17 +968,17 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p>To run the MockServer synchronously and block:</p>
 
-<pre><code> mvn mockserver:run
+<pre><code class="code"> mvn mockserver:run
 </code></pre>
 
 <p>To run the MockServer asynchronously as a forked JVM:</p>
 
-<pre><code> mvn mockserver:runForked
+<pre><code class="code"> mvn mockserver:runForked
 </code></pre>
 
 <p>To stop a forked instance of the MockServer running on the same machine:</p>
 
-<pre><code> mvn mockserver:stopForked
+<pre><code class="code"> mvn mockserver:stopForked
 </code></pre>
 
 <p>The <strong>stopForked</strong> goal does assumes that the MockServer is running on the same physical machine as it uses 127.0.0.1 to communicate with the MockServer stop socket.</p>
@@ -887,9 +1028,12 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p>To run as Embedded Jetty run the following command:</p>
 
-<pre><code>download [mockserver-jetty-1.12-jar-with-dependencies.jar](http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-jetty/1.12/mockserver-jetty-1.12-jar-with-dependencies.jar) from Maven Central
-java -jar &lt;path to mockserver-jetty-1.12-jar-with-dependencies.jar&gt; &lt;port&gt;
-</code></pre>
+<ol>
+	<li><p>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-jetty/1.12/mockserver-jetty-1.12-jar-with-dependencies.jar">mockserver-jetty-1.12-jar-with-dependencies.jar</a> from Maven Central</p></li>
+	<li>
+		<pre><code class="code inline">java -jar &lt;path to mockserver-jetty-1.12-jar-with-dependencies.jar&gt; &lt;port&gt;</code></pre>
+	</li>
+</ol>
 
 <p><strong>Vert.X</strong></p>
 
@@ -897,14 +1041,14 @@ java -jar &lt;path to mockserver-jetty-1.12-jar-with-dependencies.jar&gt; &lt;po
 
 <p>To run as Vert.X module run the following command:</p>
 
-<pre><code>vertx install org.mock-server~mockserver-vertx~1.12
+<pre><code class="code">vertx install org.mock-server~mockserver-vertx~1.12
 export VERTX_OPTS="-Dmockserver.port=9090 -Dmockserver.logLevel=TRACE"
 vertx runmod org.mock-server~mockserver-vertx~1.12
 </code></pre>
 
 <p>Alternatively build from source and run the Vert.X module as a zip file:</p>
 
-<pre><code>git clone https://github.com/jamesdbloom/mockservice.git
+<pre><code class="code">git clone https://github.com/jamesdbloom/mockservice.git
 cd mockserver
 mvn clean package
 export VERTX_OPTS="-Dmockserver.port=9090 -Dmockserver.logLevel=TRACE"
@@ -913,7 +1057,7 @@ vertx runzip mockserver-vertx/target/org.mock-server~mockserver-vertx~2.0-SNAPSH
 
 <p>The default port for the Vert.X MockServer module is <strong>8080</strong>. To run the MockServer on another port set / add an <strong>VERTX_OPTS</strong> environment variable specifying the system property <strong>mockserver.port</strong> as follows <strong>-Dmockserver.port=&lt;port&gt;</strong> for example:</p>
 
-<pre><code>export VERTX_OPTS="-Dmockserver.port=9090 -Dmockserver.logLevel=TRACE"
+<pre><code class="code">export VERTX_OPTS="-Dmockserver.port=9090 -Dmockserver.logLevel=TRACE"
 </code></pre>
 
 <p>It is also possible to update the default logging level by setting the system properties <strong>mockserver.logLevel</strong> as above.</p>
@@ -922,9 +1066,10 @@ vertx runzip mockserver-vertx/target/org.mock-server~mockserver-vertx~2.0-SNAPSH
 
 <p>To run as a WAR deployed on any JEE web server:</p>
 
-<pre><code>download [mockserver-war-1.12.war](http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-war/1.12/mockserver-war-1.12.war) from Maven Central
-deploy mockserver-war-1.12.war to web server
-</code></pre>
+<ol>
+	<li>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-war/1.12/mockserver-war-1.12.war">mockserver-war-1.12.war</a> from Maven Central</li>
+	<li>deploy mockserver-war-1.12.war to web server</li>
+</ol>
 
 <p><strong>Build From Source</strong></p>
 
@@ -932,7 +1077,7 @@ deploy mockserver-war-1.12.war to web server
 
 <p>First clone the repository as follows:</p>
 
-<pre><code>git clone https://github.com/jamesdbloom/mockservice.git
+<pre><code class="code">git clone https://github.com/jamesdbloom/mockservice.git
 cd mockserver
 </code></pre>
 
@@ -942,35 +1087,29 @@ cd mockserver
 
 <p>To build an executable jar containing all dependancies run the following command:</p>
 
-<pre><code>mvn clean package
-</code></pre>
+<pre><code class="code">mvn clean package</code></pre>
 
 <p>This will produce a jar file under the target directory called, as follows:</p>
 
-<pre><code>mockserver-jetty/target/mockserver-jetty-2.0-SNAPSHOT-jar-with-dependencies.jar
-</code></pre>
+<pre><code class="code">mockserver-jetty/target/mockserver-jetty-2.0-SNAPSHOT-jar-with-dependencies.jar</code></pre>
 
 <p>Run the MockServer then using the executable jar as follows:</p>
 
-<pre><code>java -jar &lt;path to mockserver-jetty-2.0-SNAPSHOT-jar-with-dependencies.jar&gt; -serverPort &lt;port&gt;
-</code></pre>
+<pre><code class="code">java -jar &lt;path to mockserver-jetty-2.0-SNAPSHOT-jar-with-dependencies.jar&gt; -serverPort &lt;port&gt;</code></pre>
 
 <p>For example to run the MockServer on port 9999:</p>
 
-<pre><code>java -jar mockserver-jetty/target/mockserver-jetty-2.0-SNAPSHOT-jar-with-dependencies.jar -serverPort 9999
-</code></pre>
+<pre><code class="code">java -jar mockserver-jetty/target/mockserver-jetty-2.0-SNAPSHOT-jar-with-dependencies.jar -serverPort 9999</code></pre>
 
 <p><strong><em>Gradle</em></strong></p>
 
 <p>In gradle the project can be built and run in a single command as follows:</p>
 
-<pre><code>gradle run -Pport=&lt;port&gt;
-</code></pre>
+<pre><code class="code">gradle run -Pport=&lt;port&gt;</code></pre>
 
 <p>For example to run the MockServer on port 9999:</p>
 
-<pre><code>gradle run -Pport=9999
-</code></pre>
+<pre><code class="code">gradle run -Pport=9999</code></pre>
 
 <a name="23-sending-mock-expectation" class="anchor" href="#23-sending-mock-expectation">&nbsp;</a>
 <h4>2.3 Sending mock expectation</h4>
@@ -981,7 +1120,7 @@ cd mockserver
 
 <p>In Java MockServerClient can be used to send mock expectation to MockServer, as follows:</p>
 
-<pre><code>String hostname = "localhost";
+<pre><code class="code">String hostname = "localhost";
 int port = 9999;
 
 MockServerClient mockServerClient = new MockServerClient(hostname, port);
@@ -1001,18 +1140,17 @@ HttpResponse httpResponse =
                         new Header("Content-Type", "application/json; charset=utf-8"),
                         new Header("Cache-Control", "public, max-age=86400")
                 )
-                .withBody("{ message: 'a simple json response' }");
+                .withBody("{ message: 'a simple json response' }")
+                .withDelay(new Delay(TimeUnit.SECONDS, 1));
 
-Expectation expectation = new Expectation(httpRequest, Times.unlimited());
-
-mockServerClient.sendExpectation(expectation).respond(httpResponse));
+mockServerClient.when(httpRequest, Times.unlimited()).respond(httpResponse);
 </code></pre>
 
 <p>The org.mockserver.matchers.Times class is used to specify how many times you want the MockServer to match a request:</p>
 
 <p>To create an instance to Times use one of the static factor methods:</p>
 
-<pre><code>Times.unlimited();
+<pre><code class="code">Times.unlimited();
 Times.once();
 Times.exactly(int count);
 </code></pre>
@@ -1021,7 +1159,7 @@ Times.exactly(int count);
 
 <p>In JavaScript a AJAX request can be used to send mock expectation to MockServer, as follows:</p>
 
-<pre><code>var xmlHttpRequest = new XMLHttpRequest();
+<pre><code class="code">var xmlHttpRequest = new XMLHttpRequest();
 xmlHttpRequest.open("PUT", "http://localhost:9999", false);
 xmlHttpRequest.setRequestHeader("Content-Type", "application/json; charset=utf-8");
 xmlHttpRequest.send(JSON.stringify({
@@ -1078,14 +1216,14 @@ xmlHttpRequest.send(JSON.stringify({
 
 <p>To clear <strong>ALL expectations</strong> from the MockServer (without restarting it) use the /reset endpoint, as follows:</p>
 
-<pre><code>var xmlHttpRequest = new XMLHttpRequest();
+<pre><code class="code">var xmlHttpRequest = new XMLHttpRequest();
 xmlHttpRequest.open("PUT", "http://localhost:9999/reset", false);
 xmlHttpRequest.send();
 </code></pre>
 
 <p>To clear <strong>only specific</strong> expectations from the MockServer use the /clear endpoint, as follows:</p>
 
-<pre><code>var xmlHttpRequest = new XMLHttpRequest();
+<pre><code class="code">var xmlHttpRequest = new XMLHttpRequest();
 xmlHttpRequest.open("PUT", "http://localhost:9999/clear", false);
 xmlHttpRequest.setRequestHeader("Content-Type", "application/json; charset=utf-8");
 xmlHttpRequest.send(JSON.stringify({
@@ -1105,7 +1243,7 @@ xmlHttpRequest.send(JSON.stringify({
 
 <p>To simplfy debugging the MockServer will dump all expectations as JSON to the log (as WARN level) when a request is made to the /dump endpoint, as follows:</p>
 
-<pre><code>var xmlHttpRequest = new XMLHttpRequest();
+<pre><code class="code">var xmlHttpRequest = new XMLHttpRequest();
 xmlHttpRequest.open("PUT", "http://localhost:9999/dumpToLog", false);
 xmlHttpRequest.send();
 </code></pre>

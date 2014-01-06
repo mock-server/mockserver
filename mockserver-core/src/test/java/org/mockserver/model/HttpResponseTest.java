@@ -5,12 +5,19 @@ import org.junit.Test;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotSame;
 import static org.mockito.Mockito.*;
 
 /**
  * @author jamesdbloom
  */
 public class HttpResponseTest {
+
+    @Test
+    public void shouldAlwaysCreateNewObject() {
+        assertEquals(new HttpResponse().response(), HttpResponse.response());
+        assertNotSame(HttpResponse.response(), HttpResponse.response());
+    }
 
     @Test
     public void returnsResponseCode() {

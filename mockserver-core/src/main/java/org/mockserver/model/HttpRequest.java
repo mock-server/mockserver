@@ -18,6 +18,10 @@ public class HttpRequest extends EqualsHashCodeToString {
     private List<Header> headers = new ArrayList<Header>();
     private List<Cookie> cookies = new ArrayList<Cookie>();
 
+    public static HttpRequest request() {
+        return new HttpRequest();
+    }
+
     public HttpRequest() {
     }
 
