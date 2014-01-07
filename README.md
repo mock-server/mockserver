@@ -19,7 +19,7 @@ Maven Central contains the following MockServer artifacts:
 * [org.mock-server:mockserver-core](org.mock-server:mockserver-core) - core classes shared by all versions
 * [org.mock-server:mockserver-integration-testing](org.mock-server:mockserver-integration-testing) - common classes used in integration testing different versions of MockServer</li>
 
-In addition MockServer SNAPSHOT artifacts can also be found at [https://oss.sonatype.org/index.html#nexus-search;quick~mockserver](https://oss.sonatype.org/index.html#nexus-search;quick~mockserver).
+In addition MockServer SNAPSHOT artifacts can also be found on [Sonatype](https://oss.sonatype.org/index.html#nexus-search;quick~mockserver).
 
 ### Vert.X Module Registry
 
