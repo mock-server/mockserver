@@ -9,15 +9,13 @@ For information on how to use the MockServer and more information please see htt
 
 Maven Central contains the following MockServer artifacts:
 
-* [org.mock-server:mockserver-maven-plugin](http://search.maven.org/#search%7Cga%7C1%7Cmockserver-maven-plugin) - a set of maven plugins to start, stop and fork MockServer using maven
-* [org.mock-server:mockserver-vertx](org.mock-server:mockserver-vertx) - a Vert.X module that mocks HTTP and HTTPS requests
-* [org.mock-server:mockserver-jetty](org.mock-server:mockserver-jetty) - a web server that mocks HTTP and HTTPS requests (using Embedded Jetty)
-* [org.mock-server:mockserver-jetty:jar-with-dependencies](org.mock-server:mockserver-jetty:jar-with-dependencies) - a fully stand alone web server embedded with all dependencies that mocks HTTP and HTTPS requests (using Embedded Jetty)
-* [org.mock-server:mockserver-war](org.mock-server:mockserver-war) - a deployable WAR for mocking HTTP and HTTP requests (that runs on any JEE web server)
-* [org.mock-server:mockserver-proxy](org.mock-server:mockserver-proxy) - an HTTP / HTTPS proxy that allows the recording and querying of requests and response
-* [org.mock-server:mockserver-client](org.mock-server:mockserver-client) - a Java and JavaScript client to communicate with both the server and the proxy
-* [org.mock-server:mockserver-core](org.mock-server:mockserver-core) - core classes shared by all versions
-* [org.mock-server:mockserver-integration-testing](org.mock-server:mockserver-integration-testing) - common classes used in integration testing different versions of MockServer</li>
+* [mockserver-maven-plugin](http://search.maven.org/#search%7Cga%7C1%7Cmockserver-maven-plugin) - a set of maven plugins to start, stop and fork MockServer using maven
+* [mockserver-vertx](org.mock-server:mockserver-vertx) - a Vert.X module that mocks HTTP and HTTPS requests
+* [mockserver-jetty](org.mock-server:mockserver-jetty) - a web server that mocks HTTP and HTTPS requests (using Embedded Jetty)
+* [mockserver-jetty:jar-with-dependencies](org.mock-server:mockserver-jetty:jar-with-dependencies) - a fully stand alone web server embedded with all dependencies that mocks HTTP and HTTPS requests (using Embedded Jetty)
+* [mockserver-war](org.mock-server:mockserver-war) - a deployable WAR for mocking HTTP and HTTP requests (that runs on any JEE web server)
+* [mockserver-proxy](org.mock-server:mockserver-proxy) - an HTTP / HTTPS proxy that allows the recording and querying of requests and response
+* [mockserver-client](org.mock-server:mockserver-client) - a Java and JavaScript client to communicate with both the server and the proxy
 
 In addition MockServer SNAPSHOT artifacts can also be found on [Sonatype](https://oss.sonatype.org/index.html#nexus-search;quick~mockserver).
 
