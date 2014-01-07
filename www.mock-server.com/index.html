@@ -179,7 +179,7 @@ small screens.
 .menu-link {
 	display: none; /* show this only on small screens */
 	top: 0;
-	left: 150px; /* `#menu`'s width */
+	left: 200px; /* `#menu`'s width */
 	background: #000;
 	font-size: 10px; /* change this value to increase/decrease button size */
 	z-index: 10;
@@ -306,7 +306,15 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 @media (max-width: 767px) {
 
 	.header {
-		text-align: left;
+		/*text-align: left;*/
+	}
+
+	.header h1 {
+		font-size: 2.5em;
+	}
+
+	.header h2 {
+		font-size: 1.25em;
 	}
 
 	/*
@@ -319,12 +327,12 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 	#layout.active {
 		position: relative;
-		left: 150px;
+		left: 200px;
 	}
 
 	#layout.active #menu {
-		left: 150px;
-		width: 150px;
+		left: 200px;
+		width: 200px;
 	}
 
 	#menu {
@@ -338,7 +346,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 	}
 
 	#layout.active .menu-link {
-		left: 150px;
+		left: 200px;
 	}
 }
 </style>
@@ -1264,6 +1272,43 @@ xmlHttpRequest.send();
 </div>
 </div>
 </body>
+<script>
+	(function (window, document) {
+
+		var layout   = document.getElementById('layout'),
+				menu     = document.getElementById('menu'),
+				menuLink = document.getElementById('menuLink');
+
+		function toggleClass(element, className) {
+			var classes = element.className.split(/\s+/),
+					length = classes.length,
+					i = 0;
+
+			for(; i < length; i++) {
+				if (classes[i] === className) {
+					classes.splice(i, 1);
+					break;
+				}
+			}
+			// The className is not found
+			if (length === classes.length) {
+				classes.push(className);
+			}
+
+			element.className = classes.join(' ');
+		}
+
+		menuLink.onclick = function (e) {
+			var active = 'active';
+
+			e.preventDefault();
+			toggleClass(layout, active);
+			toggleClass(menu, active);
+			toggleClass(menuLink, active);
+		};
+
+	}(this, this.document));
+</script>
 <script>
 	// google analytics
 	var _gaq = _gaq || [];
