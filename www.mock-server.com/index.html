@@ -226,70 +226,113 @@ a.anchor, a.anchor:hover, a.anchor:active, a.anchor:focus {
 	cursor: default;
 }
 
+pre {
+	white-space: pre;
+	word-wrap: normal;
+}
+
 .code {
 	display: block;
+	white-space: pre;
+	overflow: auto;
 	width: 95%;
 	margin: 1em auto;
 	padding: 1em;
-	white-space: pre-wrap;
-	background-color: #000;
-	color: #fff;
+	background-color: #0f0101;
+	color: #F1F1F1;
 	-moz-border-radius: 8px;
 	-webkit-border-radius: 8px;
 	-o-border-radius: 8px;
 	-ms-border-radius: 8px;
 	-khtml-border-radius: 8px;
 	border-radius: 8px;
-	word-break: break-all;
 	font-family: Menlo, Monaco, "Courier New", monospace;
-	font-size: 13px;
+	font-size: 1em;
+	border: 1px solid #888;
 }
 
 .inline {
-	display: inline;
-	width: auto;
+	display: inline-block;
+	white-space: pre;
+	word-wrap: normal;
+	width: 90%;
+	overflow: auto;
 	margin: 0;
 }
 
-.code .keyword {
-	color: #008dff;
+.xml {
+	color: #C9C9C9;
 }
 
-.code .annotation {
+span.keyword {
+	color: #5B93DA;
+}
+
+span.annotation {
 	color: #bdb76b;
 }
 
-.code .numeric_literal {
-	color: #89bdff;
+span.numeric_literal {
+	color: #008dff;
 }
 
-.code .final {
+span.final,
+span.constant {
 	color: #e28964;
 	font-style: italic;
 }
 
-.code .string_literal {
-	color: #00ce6b;
+span.string_literal,
+span.command_line_argument_switch {
+	color: #5BA382;
 }
 
-.code .this_value {
+span.this_value {
 	color: #ff4f31;
 }
 
-.code .element {
-	color: #0000cd;
+span.element {
+	color: #89bdff;
+	/*font-style: italic;*/
+	font-size: 0.9em;
+	/*font-size: 1.2em;*/
+	/*letter-spacing: 1px;*/
 }
 
-.code .attribute_name,
-.code .comment {
-	color: #b2b2b2;
+span.attribute_name,
+span.comment,
+span.command_line_argument_placeholder {
+	color: #9c9c9c;
+	font-style: italic;
+	font-size: 0.9em;
 }
 
-.code .comment.bold {
+span.comment a {
+	color: #6391c3;
+	text-decoration: none;
+}
+
+span.comment.bold {
 	color: gray;
 }
 
-.code .attribute_value {
+span.javadoc_param_name {
+	color: #c5c5c5;
+}
+
+span.javadoc_param_annotation {
+	color: #9c9c9c;
+	text-decoration: underline;
+}
+
+span.element_value {
+	/*font-weight: bold;*/
+	font-size: 1.15em;
+	/*letter-spacing: 1px;*/
+	color: #E28964;
+}
+
+span.attribute_value {
 	color: blue;
 }
 
@@ -422,7 +465,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
                                 <span class="keyword">new</span> Header(<span class="string_literal">"Cache-Control"</span>, <span class="string_literal">"public, max-age=86400"</span>)
                         )
                         .withBody(<span class="string_literal">"{ message: 'incorrect username and password combination' }"</span>)
-                        .withDelay(new Delay(TimeUnit.<span class="final">SECONDS</span>, <span class="numeric_literal">1</span>))
+                        .withDelay(new Delay(TimeUnit.<span class="constant">SECONDS</span>, <span class="numeric_literal">1</span>))
         );</code></pre>
 
 <p>Requests can be matched on:</p>
@@ -584,12 +627,12 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <h2>Downloads</h2>
 
-<p>The simpliest way to run and download MockServer is by using the fully stand alone web server embedded with all dependencies that mocks HTTP and HTTPS requests, as follows:</p>
+<p>The simplest way to run and download MockServer is by using the fully stand alone web server embedded with all dependencies that mocks HTTP and HTTPS requests, as follows:</p>
 
 <ol>
 	<li><p>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-jetty/1.12/mockserver-jetty-1.12-jar-with-dependencies.jar">mockserver-jetty-1.12-jar-with-dependencies.jar</a> from Maven Central</p></li>
 	<li>
-		<pre><code class="code inline">java -jar &lt;path to mockserver-jetty-1.12-jar-with-dependencies.jar&gt; &lt;port&gt;</code></pre>
+		<code class="code inline">java -jar &lt;path to mockserver-jetty-1.12-jar-with-dependencies.jar&gt; -serverPort &lt;port&gt;</code>
 	</li>
 </ol>
 
@@ -692,32 +735,68 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p>To mock a response in Java use the org.mockserver.model.HttpResponse class which specifies the details of each HTTP response with a fluent API:</p>
 
-<pre><code class="code">public class HttpResponse {
+<pre><code class="code"><span class="keyword">public class</span> HttpResponse {
 
-    public HttpResponse withStatusCode(Integer responseCode);
+    <span class="comment">/**
+     * The status code to return, such as <span class="numeric_literal">200</span>, <span class="numeric_literal">404</span>, the status code specified
+     * here will result in the default status message for this status code for
+     * example for <span class="numeric_literal">200</span> the status message <span class="string_literal">"OK"</span> is used
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">statusCode</span> an integer such as <span class="numeric_literal">200</span> or <span class="numeric_literal">404</span>
+     */</span>
+    <span class="keyword">public</span> HttpResponse withStatusCode(Integer responseCode);
 
-    public HttpResponse withCookies(List&lt;Cookie&gt; cookies);
-    public HttpResponse withCookies(Cookie... cookies);
+    <span class="comment">/**
+     * The cookies to return as Set-Cookie headers as a list of Cookie objects
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">cookies</span> a list of Cookie objects
+     */</span>
+    <span class="keyword">public</span> HttpResponse withCookies(List&lt;Cookie&gt; cookies);
+    <span class="comment">/**
+     * The cookies to return as Set-Cookie headers as a varargs of Cookie objects
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">cookies</span> a varargs of Cookie objects
+     */</span>
+    <span class="keyword">public</span> HttpResponse withCookies(Cookie... cookies);
 
-    public HttpResponse withHeaders(List&lt;Header&gt; headers);
-    public HttpResponse withHeaders(Header... headers);
+    <span class="comment">/**
+     * The headers to return as a list of Header objects
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">headers</span> a list of Header objects
+     */</span>
+    <span class="keyword">public</span> HttpResponse withHeaders(List&lt;Header&gt; headers);
+    <span class="comment">/**
+     * The headers to return as a varargs of Header objects
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">headers</span> a varargs of Header objects
+     */</span>
+    <span class="keyword">public</span> HttpResponse withHeaders(Header... headers);
 
-    public HttpResponse withBody(String body);
+    <span class="comment">/**
+     * The response body
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">body</span> a <span class="string_literal">"UTF-8"</span> string
+     */</span>
+    <span class="keyword">public</span> HttpResponse withBody(String body);
 
-    public HttpResponse withDelay(Delay delay);
-}
-</code></pre>
+    <span class="comment">/**
+     * The delay before responding with this request as a Delay object, for example <span class="keyword">new</span> Delay(TimeUnit.<span class="constant">SECONDS</span>, <span class="numeric_literal">3</span>)
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">delay</span> a Delay object, for example <span class="keyword">new</span> Delay(TimeUnit.<span class="constant">SECONDS</span>, <span class="numeric_literal">3</span>)
+     */</span>
+    <span class="keyword">public</span> HttpResponse withDelay(Delay delay);
+}</code></pre>
 
 <p>For example:</p>
 
 <pre><code class="code">HttpResponse httpResponse =
-        new HttpResponse()
-                .withStatusCode(200)
+        response()
+                .withStatusCode(<span class="numeric_literal">200</span>)
                 .withHeaders(
-                        new Header("Content-Type", "application/json; charset=utf-8"),
-                        new Header("Cache-Control", "public, max-age=86400")
+                        new Header(<span class="string_literal">"Content-Type"</span>, <span class="string_literal">"application/json; charset=utf-8"</span>),
+                        new Header(<span class="string_literal">"Cache-Control"</span>, <span class="string_literal">"public, max-age=86400"</span>)
                 )
-                .withBody("{ message: 'a simple json response' }");
+                .withBody(<span class="string_literal">"{ message: 'a simple json response' }"</span>);
 </code></pre>
 
 <p><strong>JavaScript</strong></p>
@@ -726,14 +805,14 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p>To mock a response in javascript use JSON to specify the details with the following format: </p>
 
-<pre><code class="code">"httpResponse": {
-    "statusCode": 200,
-    "body": "",
-    "cookies": [],
-    "headers": [],
-    "delay": {
-        "timeUnit": "MICROSECONDS",
-        "value": 0
+<pre><code class="code"><span class="string_literal">"httpResponse"</span>: {
+    <span class="string_literal">"statusCode"</span>: <span class="numeric_literal">200</span>,
+    <span class="string_literal">"body"</span>: <span class="string_literal">""</span>,
+    <span class="string_literal">"cookies"</span>: [],
+    <span class="string_literal">"headers"</span>: [],
+    <span class="string_literal">"delay"</span>: {
+        <span class="string_literal">"timeUnit"</span>: <span class="string_literal">"MICROSECONDS"</span>,
+        <span class="string_literal">"value"</span>: <span class="numeric_literal">0</span>
     }
 }
 </code></pre>
@@ -741,39 +820,37 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 <p>Each cookie or header array entry has the following syntax:</p>
 
 <pre><code class="code">{
-    "name": "",
-    "values": ["", "", ...]
+    <span class="string_literal">"name"</span>: <span class="string_literal">""</span>,
+    <span class="string_literal">"values"</span>: [<span class="string_literal">""</span>, <span class="string_literal">""</span>, ...]
 }
 </code></pre>
 
 <p>The "timeUnit" value in "delay" can be:</p>
 
-<pre><code class="code">"NANOSECONDS"
-"MICROSECONDS"
-"MILLISECONDS"
-"SECONDS"
-"MINUTES"
-"HOURS"
-"DAYS"
-</code></pre>
+<pre><code class="code"><span class="string_literal">"NANOSECONDS"</span>
+<span class="string_literal">"MICROSECONDS"</span>
+<span class="string_literal">"MILLISECONDS"</span>
+<span class="string_literal">"SECONDS"</span>
+<span class="string_literal">"MINUTES"</span>
+<span class="string_literal">"HOURS"</span>
+<span class="string_literal">"DAYS"</span></code></pre>
 
 <p>The same example as above would be:</p>
 
-<pre><code class="code">"httpResponse": {
-    "statusCode": 200,
-    "body": "{ message: 'a simple json response' }",
-    "headers": [
+<pre><code class="code"><span class="string_literal">"httpResponse"</span>: {
+    <span class="string_literal">"statusCode"</span>: <span class="numeric_literal">200</span>,
+    <span class="string_literal">"body"</span>: <span class="string_literal">"{ message: 'a simple json response' }"</span>,
+    <span class="string_literal">"headers"</span>: [
         {
-            "name": "Content-Type",
-            "values": ["application/json; charset=utf-8"]
+            <span class="string_literal">"name"</span>: <span class="string_literal">"Content-Type"</span>,
+            <span class="string_literal">"values"</span>: [<span class="string_literal">"application/json; charset=utf-8"</span>]
         },
         {
-            "name": "Cache-Control",
-            "values": ["public, max-age=86400"]
+            <span class="string_literal">"name"</span>: <span class="string_literal">"Cache-Control"</span>,
+            <span class="string_literal">"values"</span>: [<span class="string_literal">"public, max-age=86400"</span>]
         }
     ]
-}
-</code></pre>
+}</code></pre>
 
 <a name="2-setup-mock-expectations" class="anchor" href="#2-setup-mock-expectations">&nbsp;</a>
 
@@ -814,35 +891,92 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p>To specify a request matcher in Java use the org.mockserver.model.HttpRequest class which specifies the details of each HTTP response with a fluent API:</p>
 
-<pre><code class="code">public class HttpRequest {
+<pre><code class="code"><span class="keyword">public class</span> HttpRequest {
 
-    public HttpRequest withMethod(String method);
+    <span class="comment">/**
+     * The HTTP method to match on such as <span class="string_literal">"GET"</span> or <span class="string_literal">"POST"</span>
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">method</span> the HTTP method such as <span class="string_literal">"GET"</span> or <span class="string_literal">"POST"</span>
+     */</span>
+    <span class="keyword">public</span> HttpRequest withMethod(String method);
 
-    public HttpRequest withPath(String path);
+    <span class="comment">/**
+     * The URL to match on such as <span class="string_literal">"http://localhost:9999/some_mocked_path"</span> regex values are also
+     * supported such as <span class="string_literal">".*some_mocked_path"</span>, see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>
+     * for full details of the supported regex syntax
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">url</span> the full URL such as <span class="string_literal">"http://localhost:9999/some_mocked_path"</span> or a regex
+     */</span>
+    <span class="keyword">public</span> HttpRequest withURL(String url);
 
-    public HttpRequest withParameters(List&lt;Parameter&gt; parameters);
-    public HttpRequest withParameters(Parameter... parameters);
+    <span class="comment">/**
+     * The path to match on such as <span class="string_literal">"/some_mocked_path"</span> any servlet context path is ignored for matching and should not be specified here
+     * regex values are also supported such as <span class="string_literal">".*_path"</span>, see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>
+     * for full details of the supported regex syntax
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">path</span> the path such as <span class="string_literal">"/some_mocked_path"</span> or a regex
+     */</span>
+    <span class="keyword">public</span> HttpRequest withPath(String path);
 
-    public HttpRequest withBody(String body);
+    <span class="comment">/**
+     * The query string - this method only currently supports an exact match such as <span class="string_literal">"param=value&otherParam=otherValue"</span> or a regex match,
+     * see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a> for full details of the supported regex syntax
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">queryString</span> the query string such as <span class="string_literal">"someParameter=someValue&someOtherParameter=someOtherValue"</span> or a regex
+     */</span>
+    <span class="keyword">public</span> HttpRequest withQueryString(String queryString);
 
-    public HttpRequest withHeaders(List&lt;Header&gt; headers);
-    public HttpRequest withHeaders(Header... headers);
+    <span class="comment">/**
+     * The body to match on such as <span class="string_literal">"{username: 'foo', password: 'bar'}"</span> or a regex (see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>)
+     * or an XPath expression which returns one or more values or evaluates to true (see <a href="http://saxon.sourceforge.net/saxon6.5.3/expressions.html">http://saxon.sourceforge.net/saxon6.5.3/expressions.html</a>)
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">body</span> the body on such as <span class="string_literal">"{username: 'foo', password: 'bar'}"</span>
+     *             or a regex such as <span class="string_literal">"username[a-z]{4}"</span>
+     *             or an XPath such as <span class="string_literal">"/element[key = 'some_key' and value = 'some_value']"</span>
+     */</span>
+    <span class="keyword">public</span> HttpRequest withBody(String body);
 
-    public HttpRequest withCookies(List&lt;Cookie&gt; cookies);
-    public HttpRequest withCookies(Cookie... cookies);
-}
-</code></pre>
+    <span class="comment">/**
+     * The headers to match on as a list of Header objects where the values of each header can be either a string or a regex
+     * (for more details of the supported regex syntax see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>)
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">headers</span> the list of Header objects where the values of each header can be either a string or a regex
+     */</span>
+    <span class="keyword">public</span> HttpRequest withHeaders(List&lt;Header&gt; headers);
+    <span class="comment">/**
+     * The headers to match on as a varags of Header objects  where the values of each header can be either a string or a regex
+     * (for more details of the supported regex syntax see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>)
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">headers</span> the varags of Header objects where the values of each header can be either a string or a regex
+     */</span>
+    <span class="keyword">public</span> HttpRequest withHeaders(Header... headers);
+
+    <span class="comment">/**
+     * The cookies to match on as a list of Cookie objects  where the values of each cookie can be either a string or a regex
+     * (for more details of the supported regex syntax see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>)
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">cookies</span> the list of Cookie objects where the values of each cookie can be either a string or a regex
+     */</span>
+    <span class="keyword">public</span> HttpRequest withCookies(List&lt;Cookie&gt; cookies);
+    <span class="comment">/**
+     * The cookies to match on as a varags Cookie objects where the values of each cookie can be either a string or a regex
+     * (for more details of the supported regex syntax see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>)
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">cookies</span> the varags Cookie objects where the values of each cookie can be either a string or a regex
+     */</span>
+    <span class="keyword">public</span> HttpRequest withCookies(Cookie... cookies);
+}</code></pre>
 
 <p>For example:</p>
 
-<pre><code class="code">HttpRequest httpRequest = new HttpRequest()
-        .withMethod("POST")
-        .withPath("/login")
-        .withBody("{username: 'foo', password: 'bar'}")
-        .withCookies(
-                new Cookie("sessionId", "2By8LOhBmaW5nZXJwcmludCIlMDAzMW")
-        );
-</code></pre>
+<pre><code class="code">HttpRequest httpRequest =
+        request()
+                .withMethod(<span class="string_literal">"POST"</span>)
+                .withPath(<span class="string_literal">"/login"</span>)
+                .withBody(<span class="string_literal">"{username: 'foo', password: 'bar'}"</span>)
+                .withCookies(
+                        new Cookie(<span class="string_literal">"sessionId"</span>, <span class="string_literal">"2By8LOhBmaW5nZXJwcmludCIlMDAzMW"</span>)
+                );</code></pre>
 
 <p><strong>JavaScript</strong></p>
 
@@ -850,40 +984,37 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p>To specify a request matcher in javascript use JSON to specify the details with the following format: </p>
 
-<pre><code class="code">"httpRequest": {
-    "method": "",
-    "path": "",
-    "parameters": []
-    "body": "",
-    "cookies": [],
-    "headers": [],
-}
-</code></pre>
+<pre><code class="code"><span class="string_literal">"httpRequest"</span>: {
+    <span class="string_literal">"method"</span>: <span class="string_literal">""</span>,
+    <span class="string_literal">"path"</span>: <span class="string_literal">""</span>,
+    <span class="string_literal">"parameters"</span>: []
+    <span class="string_literal">"body"</span>: <span class="string_literal">""</span>,
+    <span class="string_literal">"cookies"</span>: [],
+    <span class="string_literal">"headers"</span>: [],
+}</code></pre>
 
 <p>Each cookie or header array entry has the following syntax:</p>
 
 <pre><code class="code">{
-    "name": "",
-    "values": ["", "", ...]
-}
-</code></pre>
+    <span class="string_literal">"name"</span>: <span class="string_literal">""</span>,
+    <span class="string_literal">"values"</span>: [<span class="string_literal">""</span>, <span class="string_literal">""</span>, ...]
+}</code></pre>
 
 <p>The same example as above would be:</p>
 
-<pre><code class="code">"httpRequest": {
-    "method": "POST",
-    "path": "/login",
-    "body": "{username: 'foo', password: 'bar'}",
-    "cookies": [
+<pre><code class="code"><span class="string_literal">"httpRequest"</span>: {
+    <span class="string_literal">"method"</span>: <span class="string_literal">"POST"</span>,
+    <span class="string_literal">"path"</span>: <span class="string_literal">"/login"</span>,
+    <span class="string_literal">"body"</span>: <span class="string_literal">"{username: 'foo', password: 'bar'}"</span>,
+    <span class="string_literal">"cookies"</span>: [
         {
-            "name": "sessionId",
-            "values": ["2By8LOhBmaW5nZXJwcmludCIlMDAzMW"]
+            <span class="string_literal">"name"</span>: <span class="string_literal">"sessionId"</span>,
+            <span class="string_literal">"values"</span>: [<span class="string_literal">"2By8LOhBmaW5nZXJwcmludCIlMDAzMW"</span>]
         }
     ],
-    "headers": [],
-    "parameters": []
-}
-</code></pre>
+    <span class="string_literal">"headers"</span>: [],
+    <span class="string_literal">"parameters"</span>: []
+}</code></pre>
 
 <a name="22-starting-the-mockserver" class="anchor" href="#22-starting-the-mockserver">&nbsp;</a>
 <h4>2.2 Starting the MockServer</h4>
@@ -909,32 +1040,31 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p>To run MockServer as part of your build add the following plugin to your pom.xml:</p>
 
-<pre><code class="code">&lt;plugin&gt;
-    &lt;groupId&gt;org.mock-server&lt;/groupId&gt;
-    &lt;artifactId&gt;mockserver-maven-plugin&lt;/artifactId&gt;
-    &lt;version&gt;1.12&lt;/version&gt;
-    &lt;configuration&gt;
-        &lt;port&gt;9090&lt;/port&gt;
-        &lt;logLevel&gt;TRACE&lt;/logLevel&gt;
-    &lt;/configuration&gt;
-    &lt;executions&gt;
-        &lt;execution&gt;
-            &lt;id&gt;initialize&lt;/id&gt;
-            &lt;phase&gt;initialize&lt;/phase&gt;
-            &lt;goals&gt;
-                &lt;goal&gt;start&lt;/goal&gt;
-            &lt;/goals&gt;
-        &lt;/execution&gt;
-        &lt;execution&gt;
-            &lt;id&gt;verify&lt;/id&gt;
-            &lt;phase&gt;verify&lt;/phase&gt;
-            &lt;goals&gt;
-                &lt;goal&gt;stop&lt;/goal&gt;
-            &lt;/goals&gt;
-        &lt;/execution&gt;
-    &lt;/executions&gt;
-&lt;/plugin&gt;
-</code></pre>
+<pre><code class="code xml">&lt;<span class="element">plugin</span>&gt;
+    &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;
+    &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-maven-plugin</span>&lt;/<span class="element">artifactId</span>&gt;
+    &lt;<span class="element">version</span>&gt;<span class="element_value">1.12</span>&lt;/<span class="element">version</span>&gt;
+    &lt;<span class="element">configuration</span>&gt;
+        &lt;<span class="element">port</span>&gt;<span class="element_value">9090</span>&lt;/<span class="element">port</span>&gt;
+        &lt;<span class="element">logLevel</span>&gt;<span class="element_value">TRACE</span>&lt;/<span class="element">logLevel</span>&gt;
+    &lt;/<span class="element">configuration</span>&gt;
+    &lt;<span class="element">executions</span>&gt;
+        &lt;<span class="element">execution</span>&gt;
+            &lt;<span class="element">id</span>&gt;<span class="element_value">initialize</span>&lt;/<span class="element">id</span>&gt;
+            &lt;<span class="element">phase</span>&gt;<span class="element_value">initialize</span>&lt;/<span class="element">phase</span>&gt;
+            &lt;<span class="element">goals</span>&gt;
+                &lt;<span class="element">goal</span>&gt;<span class="element_value">start</span>&lt;/<span class="element">goal</span>&gt;
+            &lt;/<span class="element">goals</span>&gt;
+        &lt;/<span class="element">execution</span>&gt;
+        &lt;<span class="element">execution</span>&gt;
+            &lt;<span class="element">id</span>&gt;<span class="element_value">verify</span>&lt;/<span class="element">id</span>&gt;
+            &lt;<span class="element">phase</span>&gt;<span class="element_value">verify</span>&lt;/<span class="element">phase</span>&gt;
+            &lt;<span class="element">goals</span>&gt;
+                &lt;<span class="element">goal</span>&gt;<span class="element_value">stop</span>&lt;/<span class="element">goal</span>&gt;
+            &lt;/<span class="element">goals</span>&gt;
+        &lt;/<span class="element">execution</span>&gt;
+    &lt;/<span class="element">executions</span>&gt;
+&lt;/<span class="element">plugin</span>&gt;</code></pre>
 
 <p>This will start the MockServer during the <strong>initialize</strong> phase and will stop the MockServer during the <strong>verify</strong> phase. For more details about Maven build phases see:
 	<a href="http://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html">http://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html</a>.</p>
@@ -943,51 +1073,48 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p>It is also possible to run the MockServer as a forked JVM using the <strong>runForked</strong> and <strong>stopForked</strong> goals as follows:</p>
 
-<pre><code class="code"> &lt;plugin&gt;
-     &lt;groupId&gt;org.mock-server&lt;/groupId&gt;
-     &lt;artifactId&gt;mockserver-maven-plugin&lt;/artifactId&gt;
-     &lt;version&gt;1.12&lt;/version&gt;
-     &lt;configuration&gt;
-         &lt;port&gt;9090&lt;/port&gt;
-         &lt;logLevel&gt;TRACE&lt;/logLevel&gt;
-         &lt;stopPort&gt;9091&lt;/stopPort&gt;
-         &lt;stopKey&gt;STOP_KEY&lt;/stopKey&gt;
-     &lt;/configuration&gt;
-     &lt;executions&gt;
-         &lt;execution&gt;
-             &lt;id&gt;initialize&lt;/id&gt;
-             &lt;phase&gt;initialize&lt;/phase&gt;
-             &lt;goals&gt;
-                 &lt;goal&gt;runForked&lt;/goal&gt;
-             &lt;/goals&gt;
-         &lt;/execution&gt;
-         &lt;execution&gt;
-             &lt;id&gt;verify&lt;/id&gt;
-             &lt;phase&gt;verify&lt;/phase&gt;
-             &lt;goals&gt;
-                 &lt;goal&gt;stopForked&lt;/goal&gt;
-             &lt;/goals&gt;
-         &lt;/execution&gt;
-     &lt;/executions&gt;
- &lt;/plugin&gt;
+<pre><code class="code xml"> &lt;<span class="element">plugin</span>&gt;
+     &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;
+     &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-maven-plugin</span>&lt;/<span class="element">artifactId</span>&gt;
+     &lt;<span class="element">version</span>&gt;<span class="element_value">1.12</span>&lt;/<span class="element">version</span>&gt;
+     &lt;<span class="element">configuration</span>&gt;
+         &lt;<span class="element">port</span>&gt;<span class="element_value">9090</span>&lt;/<span class="element">port</span>&gt;
+         &lt;<span class="element">logLevel</span>&gt;<span class="element_value">TRACE</span>&lt;/<span class="element">logLevel</span>&gt;
+         &lt;<span class="element">stopPort</span>&gt;<span class="element_value">9091</span>&lt;/<span class="element">stopPort</span>&gt;
+         &lt;<span class="element">stopKey</span>&gt;<span class="element_value">STOP_KEY</span>&lt;/<span class="element">stopKey</span>&gt;
+     &lt;/<span class="element">configuration</span>&gt;
+     &lt;<span class="element">executions</span>&gt;
+         &lt;<span class="element">execution</span>&gt;
+             &lt;<span class="element">id</span>&gt;<span class="element_value">initialize</span>&lt;/<span class="element">id</span>&gt;
+             &lt;<span class="element">phase</span>&gt;<span class="element_value">initialize</span>&lt;/<span class="element">phase</span>&gt;
+             &lt;<span class="element">goals</span>&gt;
+                 &lt;<span class="element">goal</span>&gt;<span class="element_value">runForked</span>&lt;/<span class="element">goal</span>&gt;
+             &lt;/<span class="element">goals</span>&gt;
+         &lt;/<span class="element">execution</span>&gt;
+         &lt;<span class="element">execution</span>&gt;
+             &lt;<span class="element">id</span>&gt;<span class="element_value">verify</span>&lt;/<span class="element">id</span>&gt;
+             &lt;<span class="element">phase</span>&gt;<span class="element_value">verify</span>&lt;/<span class="element">phase</span>&gt;
+             &lt;<span class="element">goals</span>&gt;
+                 &lt;<span class="element">goal</span>&gt;<span class="element_value">stopForked</span>&lt;/<span class="element">goal</span>&gt;
+             &lt;/<span class="element">goals</span>&gt;
+         &lt;/<span class="element">execution</span>&gt;
+     &lt;/<span class="element">executions</span>&gt;
+ &lt;/<span class="element">plugin</span>&gt;
 </code></pre>
 
 <p>These goals can be used from the command line as well to start and stop MockServer, as follows:</p>
 
 <p>To run the MockServer synchronously and block:</p>
 
-<pre><code class="code"> mvn mockserver:run
-</code></pre>
+<pre><code class="code">mvn mockserver:run</code></pre>
 
 <p>To run the MockServer asynchronously as a forked JVM:</p>
 
-<pre><code class="code"> mvn mockserver:runForked
-</code></pre>
+<pre><code class="code">mvn mockserver:runForked</code></pre>
 
 <p>To stop a forked instance of the MockServer running on the same machine:</p>
 
-<pre><code class="code"> mvn mockserver:stopForked
-</code></pre>
+<pre><code class="code">mvn mockserver:stopForked</code></pre>
 
 <p>The <strong>stopForked</strong> goal does assumes that the MockServer is running on the same physical machine as it uses 127.0.0.1 to communicate with the MockServer stop socket.</p>
 
@@ -1039,7 +1166,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 <ol>
 	<li><p>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-jetty/1.12/mockserver-jetty-1.12-jar-with-dependencies.jar">mockserver-jetty-1.12-jar-with-dependencies.jar</a> from Maven Central</p></li>
 	<li>
-		<pre><code class="code inline">java -jar &lt;path to mockserver-jetty-1.12-jar-with-dependencies.jar&gt; &lt;port&gt;</code></pre>
+		<code class="code inline">java -jar &lt;path to mockserver-jetty-1.12-jar-with-dependencies.jar&gt; -serverPort &lt;port&gt;</code>
 	</li>
 </ol>
 
@@ -1050,23 +1177,20 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 <p>To run as Vert.X module run the following command:</p>
 
 <pre><code class="code">vertx install org.mock-server~mockserver-vertx~1.12
-export VERTX_OPTS="-Dmockserver.port=9090 -Dmockserver.logLevel=TRACE"
-vertx runmod org.mock-server~mockserver-vertx~1.12
-</code></pre>
+export VERTX_OPTS=<span class="string_literal">"-Dmockserver.port=9090 -Dmockserver.logLevel=TRACE"</span>
+vertx runmod org.mock-server~mockserver-vertx~1.12</code></pre>
 
 <p>Alternatively build from source and run the Vert.X module as a zip file:</p>
 
 <pre><code class="code">git clone https://github.com/jamesdbloom/mockservice.git
 cd mockserver
 mvn clean package
-export VERTX_OPTS="-Dmockserver.port=9090 -Dmockserver.logLevel=TRACE"
-vertx runzip mockserver-vertx/target/org.mock-server~mockserver-vertx~2.0-SNAPSHOT.zip
-</code></pre>
+export VERTX_OPTS=<span class="string_literal">"-Dmockserver.port=9090 -Dmockserver.logLevel=TRACE"</span>
+vertx runzip mockserver-vertx/target/org.mock-server~mockserver-vertx~2.0-SNAPSHOT.zip</code></pre>
 
 <p>The default port for the Vert.X MockServer module is <strong>8080</strong>. To run the MockServer on another port set / add an <strong>VERTX_OPTS</strong> environment variable specifying the system property <strong>mockserver.port</strong> as follows <strong>-Dmockserver.port=&lt;port&gt;</strong> for example:</p>
 
-<pre><code class="code">export VERTX_OPTS="-Dmockserver.port=9090 -Dmockserver.logLevel=TRACE"
-</code></pre>
+<pre><code class="code">export VERTX_OPTS=<span class="string_literal">"-Dmockserver.port=9090 -Dmockserver.logLevel=TRACE"</span></code></pre>
 
 <p>It is also possible to update the default logging level by setting the system properties <strong>mockserver.logLevel</strong> as above.</p>
 
@@ -1086,14 +1210,13 @@ vertx runzip mockserver-vertx/target/org.mock-server~mockserver-vertx~2.0-SNAPSH
 <p>First clone the repository as follows:</p>
 
 <pre><code class="code">git clone https://github.com/jamesdbloom/mockservice.git
-cd mockserver
-</code></pre>
+cd mockserver</code></pre>
 
 <p>Next build and run the project using either maven or gradle.</p>
 
 <p><strong><em>Maven</em></strong></p>
 
-<p>To build an executable jar containing all dependancies run the following command:</p>
+<p>To build an executable jar containing all dependencies run the following command:</p>
 
 <pre><code class="code">mvn clean package</code></pre>
 
@@ -1128,31 +1251,30 @@ cd mockserver
 
 <p>In Java MockServerClient can be used to send mock expectation to MockServer, as follows:</p>
 
-<pre><code class="code">String hostname = "localhost";
-int port = 9999;
+<pre><code class="code">String hostname = <span class="string_literal">"localhost"</span>;
+<span class="keyword">int</span> port = <span class="numeric_literal">9999</span>;
 
-MockServerClient mockServerClient = new MockServerClient(hostname, port);
+MockServerClient mockServerClient = <span class="keyword">new</span> MockServerClient(hostname, port);
 
-HttpRequest httpRequest = new HttpRequest()
-        .withMethod("POST")
-        .withPath("/login")
-        .withBody("{username: 'foo', password: 'bar'}")
+HttpRequest httpRequest = <span class="keyword">new</span> HttpRequest()
+        .withMethod(<span class="string_literal">"POST"</span>)
+        .withPath(<span class="string_literal">"/login"</span>)
+        .withBody(<span class="string_literal">"{username: 'foo', password: 'bar'}"</span>)
         .withCookies(
-                new Cookie("sessionId", "2By8LOhBmaW5nZXJwcmludCIlMDAzMW")
+                new Cookie(<span class="string_literal">"sessionId"</span>, <span class="string_literal">"2By8LOhBmaW5nZXJwcmludCIlMDAzMW"</span>)
         );
 
 HttpResponse httpResponse =
-        new HttpResponse()
-                .withStatusCode(200)
+        <span class="keyword">new</span> HttpResponse()
+                .withStatusCode(<span class="numeric_literal">200</span>)
                 .withHeaders(
-                        new Header("Content-Type", "application/json; charset=utf-8"),
-                        new Header("Cache-Control", "public, max-age=86400")
+                        new Header(<span class="string_literal">"Content-Type"</span>, <span class="string_literal">"application/json; charset=utf-8"</span>),
+                        new Header(<span class="string_literal">"Cache-Control"</span>, <span class="string_literal">"public, max-age=86400"</span>)
                 )
-                .withBody("{ message: 'a simple json response' }")
-                .withDelay(new Delay(TimeUnit.SECONDS, 1));
+                .withBody(<span class="string_literal">"{ message: 'a simple json response' }"</span>)
+                .withDelay(new Delay(TimeUnit.<span class="constant">SECONDS</span>, <span class="numeric_literal">1</span>));
 
-mockServerClient.when(httpRequest, Times.unlimited()).respond(httpResponse);
-</code></pre>
+mockServerClient.when(httpRequest, Times.unlimited()).respond(httpResponse);</code></pre>
 
 <p>The org.mockserver.matchers.Times class is used to specify how many times you want the MockServer to match a request:</p>
 
@@ -1160,48 +1282,47 @@ mockServerClient.when(httpRequest, Times.unlimited()).respond(httpResponse);
 
 <pre><code class="code">Times.unlimited();
 Times.once();
-Times.exactly(int count);
-</code></pre>
+Times.exactly(<span class="keyword">int</span> count);</code></pre>
 
 <p><strong>JavaScript</strong></p>
 
 <p>In JavaScript a AJAX request can be used to send mock expectation to MockServer, as follows:</p>
 
-<pre><code class="code">var xmlHttpRequest = new XMLHttpRequest();
-xmlHttpRequest.open("PUT", "http://localhost:9999", false);
-xmlHttpRequest.setRequestHeader("Content-Type", "application/json; charset=utf-8");
+<pre><code class="code"><span class="keyword">var</span> xmlHttpRequest = <span class="keyword">new</span> XMLHttpRequest();
+xmlHttpRequest.open(<span class="string_literal">"PUT"</span>, <span class="string_literal">"http://localhost:9999"</span>, <span class="keyword">false</span>);
+xmlHttpRequest.setRequestHeader(<span class="string_literal">"Content-Type"</span>, <span class="string_literal">"application/json; charset=utf-8"</span>);
 xmlHttpRequest.send(JSON.stringify({
-    "httpRequest": {
-        "method": "POST",
-        "path": "/login",
-        "cookies": [
+    <span class="string_literal">"httpRequest"</span>: {
+        <span class="string_literal">"method"</span>: <span class="string_literal">"POST"</span>,
+        <span class="string_literal">"path"</span>: <span class="string_literal">"/login"</span>,
+        <span class="string_literal">"cookies"</span>: [
             {
-                "name": "sessionId",
-                "values": ["2By8LOhBmaW5nZXJwcmludCIlMDAzMW"]
+                <span class="string_literal">"name"</span>: <span class="string_literal">"sessionId"</span>,
+                <span class="string_literal">"values"</span>: [<span class="string_literal">"2By8LOhBmaW5nZXJwcmludCIlMDAzMW"</span>]
             }
         ]
     },
-    "httpResponse": {
-        "statusCode": 200,
-        "body": JSON.stringify({ code: "LOGIN_SUCCESS", message: 'login success' }),
-        "headers": [
+    <span class="string_literal">"httpResponse"</span>: {
+        <span class="string_literal">"statusCode"</span>: <span class="numeric_literal">200</span>,
+        <span class="string_literal">"body"</span>: JSON.stringify({ code: <span class="string_literal">"LOGIN_SUCCESS"</span>, message: <span class="string_literal">"login success"</span> }),
+        <span class="string_literal">"headers"</span>: [
             {
-                "name": "Content-Type",
-                "values": ["application/json; charset=utf-8"]
+                <span class="string_literal">"name"</span>: <span class="string_literal">"Content-Type"</span>,
+                <span class="string_literal">"values"</span>: [<span class="string_literal">"application/json; charset=utf-8"</span>]
             },
             {
-                "name": "Cache-Control",
-                "values": ["public, max-age=86400"]
+                <span class="string_literal">"name"</span>: <span class="string_literal">"Cache-Control"</span>,
+                <span class="string_literal">"values"</span>: [<span class="string_literal">"public, max-age=86400"</span>]
             }
         ],
-        "delay": {
-            "timeUnit": "MICROSECONDS",
-            "value": 0
+        <span class="string_literal">"delay"</span>: {
+            <span class="string_literal">"timeUnit"</span>: <span class="string_literal">"MICROSECONDS"</span>,
+            <span class="string_literal">"value"</span>: <span class="numeric_literal">0</span>
         }
     },
-    "times": {
-        "remainingTimes": 1,
-        "unlimited": true
+    <span class="string_literal">"times"</span>: {
+        <span class="string_literal">"remainingTimes"</span>: <span class="numeric_literal">1</span>,
+        <span class="string_literal">"unlimited"</span>: <span class="keyword">true</span>
     }
 }));
 </code></pre>
@@ -1224,24 +1345,22 @@ xmlHttpRequest.send(JSON.stringify({
 
 <p>To clear <strong>ALL expectations</strong> from the MockServer (without restarting it) use the /reset endpoint, as follows:</p>
 
-<pre><code class="code">var xmlHttpRequest = new XMLHttpRequest();
-xmlHttpRequest.open("PUT", "http://localhost:9999/reset", false);
-xmlHttpRequest.send();
-</code></pre>
+<pre><code class="code"><span class="keyword">var</span> xmlHttpRequest = <span class="keyword">new</span> XMLHttpRequest();
+xmlHttpRequest.open(<span class="string_literal">"PUT"</span>, <span class="string_literal">"http://localhost:9999/reset"</span>, <span class="keyword">false</span>);
+xmlHttpRequest.send();</code></pre>
 
 <p>To clear <strong>only specific</strong> expectations from the MockServer use the /clear endpoint, as follows:</p>
 
-<pre><code class="code">var xmlHttpRequest = new XMLHttpRequest();
-xmlHttpRequest.open("PUT", "http://localhost:9999/clear", false);
-xmlHttpRequest.setRequestHeader("Content-Type", "application/json; charset=utf-8");
+<pre><code class="code"><span class="keyword">var</span> xmlHttpRequest = <span class="keyword">new</span> XMLHttpRequest();
+xmlHttpRequest.open(<span class="string_literal">"PUT"</span>, <span class="string_literal">"http://localhost:9999/clear"</span>, <span class="keyword">false</span>);
+xmlHttpRequest.setRequestHeader(<span class="string_literal">"Content-Type"</span>, <span class="string_literal">"application/json; charset=utf-8"</span>);
 xmlHttpRequest.send(JSON.stringify({
-    "httpRequest": {
-        "method": "POST",
-        "path": "/login",
-        "cookies": [ ]
+    <span class="string_literal">"httpRequest"</span>: {
+        <span class="string_literal">"method"</span>: <span class="string_literal">"POST"</span>,
+        <span class="string_literal">"path"</span>: <span class="string_literal">"/login"</span>,
+        <span class="string_literal">"cookies"</span>: [ ]
     }
-}));
-</code></pre>
+}));</code></pre>
 
 <p>The example above clears all expectations that will match incoming requests on the path <strong>/login</strong>.</p>
 
@@ -1249,12 +1368,11 @@ xmlHttpRequest.send(JSON.stringify({
 
 <h2>Debugging Issues</h2>
 
-<p>To simplfy debugging the MockServer will dump all expectations as JSON to the log (as WARN level) when a request is made to the /dump endpoint, as follows:</p>
+<p>To simplify debugging the MockServer will dump all expectations as JSON to the log (as WARN level) when a request is made to the /dump endpoint, as follows:</p>
 
-<pre><code class="code">var xmlHttpRequest = new XMLHttpRequest();
-xmlHttpRequest.open("PUT", "http://localhost:9999/dumpToLog", false);
-xmlHttpRequest.send();
-</code></pre>
+<pre><code class="code"><span class="keyword">var</span> xmlHttpRequest = <span class="keyword">new</span> XMLHttpRequest();
+xmlHttpRequest.open(<span class="string_literal">"PUT"</span>, <span class="string_literal">"http://localhost:9999/dumpToLog"</span>, <span class="keyword">false</span>);
+xmlHttpRequest.send();</code></pre>
 
 <p>This will dump all expectations to the log using pretty-printed JSON.</p>
 
@@ -1275,8 +1393,8 @@ xmlHttpRequest.send();
 <script>
 	(function (window, document) {
 
-		var layout   = document.getElementById('layout'),
-				menu     = document.getElementById('menu'),
+		var layout = document.getElementById('layout'),
+				menu = document.getElementById('menu'),
 				menuLink = document.getElementById('menuLink');
 
 		function toggleClass(element, className) {
@@ -1284,7 +1402,7 @@ xmlHttpRequest.send();
 					length = classes.length,
 					i = 0;
 
-			for(; i < length; i++) {
+			for (; i < length; i++) {
 				if (classes[i] === className) {
 					classes.splice(i, 1);
 					break;
