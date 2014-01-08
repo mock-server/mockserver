@@ -31,11 +31,12 @@ Vert.X Module Registry will shortly also have the following artifacts:
 
 # Issues
 
-If you have any problems, please [check the project issues](https://github.com/jamesdbloom/mockserver/issues).
+If you have any problems, please [check the project issues](https://github.com/jamesdbloom/mockserver/issues?state=open).
 
 # Contributions
 
-Pull requests are, of course, very welcome! Please read our [contributing to the project](https://github.com/jamesdbloom/mockserver/wiki/Contributing-to-the-project) guide first. Then head over to the [open issues](https://github.com/jamesdbloom/mockserver/issues) to see what we need help with. Make sure you let us know if you intend to work on something. Also, check out the [milestones](https://github.com/jamesdbloom/mockserver/issues/milestones) to see what is planned for future releases.
+Pull requests are, of course, very welcome! Please read our [contributing to the project](https://github.com/jamesdbloom/mockserver/wiki/Contributing-to-the-project) guide first. Then head over to the [open issues](https://github.com/jamesdbloom/mockserver/issues?state=open) to see what we need help with. Make sure you let us know if you intend to work on something. Also, check out the [milestones](https://github.com/jamesdbloom/mockserver/issues/milestones) to see what is planned for future releases.
 
 # Maintainers
 * [James D Bloom](http://blog.jamesdbloom.com)
+* [Samira Rabbanian](https://github.com/samirarabbanian)
