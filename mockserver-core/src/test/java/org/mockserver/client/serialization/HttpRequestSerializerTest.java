@@ -10,9 +10,11 @@ import org.mockito.Mock;
 import org.mockserver.client.serialization.model.CookieDTO;
 import org.mockserver.client.serialization.model.HeaderDTO;
 import org.mockserver.client.serialization.model.HttpRequestDTO;
+import org.mockserver.client.serialization.model.ParameterDTO;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.Parameter;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -35,6 +37,9 @@ public class HttpRequestSerializerTest {
                     .withURL("url")
                     .withPath("somepath")
                     .withQueryString("queryString")
+                    .withParameters(
+                            new Parameter("parameterOneName", Arrays.asList("parameterOneValue")),                            new Parameter("parameterTwoName", Arrays.asList("parameterTwoValue"))
+                    )
                     .withBody("somebody")
                     .withHeaders(new Header("headerName", "headerValue"))
                     .withCookies(new Cookie("cookieName", "cookieValue"));
@@ -44,6 +49,10 @@ public class HttpRequestSerializerTest {
                     .setURL("url")
                     .setPath("somepath")
                     .setQueryString("queryString")
+                    .setParameters(Arrays.<ParameterDTO>asList(
+                            new ParameterDTO(new Parameter("parameterOneName", Arrays.asList("parameterOneValue"))),
+                            new ParameterDTO(new Parameter("parameterTwoName", Arrays.asList("parameterTwoValue")))
+                    ))
                     .setBody("somebody")
                     .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("headerName", Arrays.asList("headerValue")))))
                     .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("cookieName", Arrays.asList("cookieValue")))));

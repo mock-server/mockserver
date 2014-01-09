@@ -1,5 +1,7 @@
 package org.mockserver.matchers;
 
+import org.apache.commons.lang3.StringUtils;
+import org.mockserver.collections.CircularMultiMap;
 import org.mockserver.model.*;
 
 import java.util.ArrayList;
@@ -14,6 +16,7 @@ public class HttpRequestMatcher extends EqualsHashCodeToString implements Matche
     private StringMatcher urlMatcher = null;
     private StringMatcher pathMatcher = null;
     private StringMatcher queryStringMatcher = null;
+    private MapMatcher parameterMatcher = null;
     private StringMatcher bodyMatcher = null;
     private MapMatcher headerMatcher = null;
     private MapMatcher cookieMatcher = null;
@@ -35,6 +38,16 @@ public class HttpRequestMatcher extends EqualsHashCodeToString implements Matche
 
     public HttpRequestMatcher withQueryString(String queryString) {
         this.queryStringMatcher = new StringMatcher(queryString);
+        return this;
+    }
+
+    public HttpRequestMatcher withParameters(Parameter... parameters) {
+        this.parameterMatcher = new MapMatcher(KeyToMultiValue.toMultiMap(parameters));
+        return this;
+    }
+
+    public HttpRequestMatcher withParameters(List<Parameter> parameters) {
+        this.parameterMatcher = new MapMatcher(KeyToMultiValue.toMultiMap(parameters));
         return this;
     }
 
@@ -69,13 +82,34 @@ public class HttpRequestMatcher extends EqualsHashCodeToString implements Matche
             boolean urlMatches = matches(urlMatcher, httpRequest.getURL());
             boolean pathMatches = matches(pathMatcher, httpRequest.getPath());
             boolean queryStringMatches = matches(queryStringMatcher, httpRequest.getQueryString());
+            boolean parametersMatch = matches(parameterMatcher, (httpRequest.getParameters() != null && httpRequest.getParameters().size() > 0 ? new ArrayList<KeyToMultiValue>(httpRequest.getParameters()) : new ArrayList<KeyToMultiValue>(queryStringToParameters(httpRequest.getQueryString()))));
             boolean bodyMatches = matches(bodyMatcher, httpRequest.getBody());
             boolean headersMatch = matches(headerMatcher, (httpRequest.getHeaders() != null ? new ArrayList<KeyToMultiValue>(httpRequest.getHeaders()) : null));
             boolean cookiesMatch = matches(cookieMatcher, (httpRequest.getCookies() != null ? new ArrayList<KeyToMultiValue>(httpRequest.getCookies()) : null));
-            return methodMatches && urlMatches && pathMatches && queryStringMatches && bodyMatches && headersMatch && cookiesMatch;
+            return methodMatches && urlMatches && pathMatches && queryStringMatches && parametersMatch && bodyMatches && headersMatch && cookiesMatch;
         } else {
             return false;
         }
+    }
+
+    private List<Parameter> queryStringToParameters(String queryString) {
+        List<Parameter> parameters = new ArrayList<>();
+        if (StringUtils.isNotEmpty(queryString)) {
+            CircularMultiMap<String, String> parameterMap = new CircularMultiMap<>(20, 20);
+            for (String param : queryString.split("&")) {
+                String[] pair = param.split("=");
+                String key = pair[0];
+                String value = "";
+                if (pair.length > 1) {
+                    value = pair[1];
+                }
+                parameterMap.put(key, value);
+            }
+            for (String key : parameterMap.keySet()) {
+                parameters.add(new Parameter(key, parameterMap.getAll(key)));
+            }
+        }
+        return parameters;
     }
 
     private <T> boolean matches(Matcher<T> matcher, T t) {

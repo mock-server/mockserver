@@ -4,9 +4,11 @@ import org.junit.Test;
 import org.mockserver.client.serialization.model.CookieDTO;
 import org.mockserver.client.serialization.model.HeaderDTO;
 import org.mockserver.client.serialization.model.HttpRequestDTO;
+import org.mockserver.client.serialization.model.ParameterDTO;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.Parameter;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -44,6 +46,10 @@ public class HttpRequestSerializerIntegrationTest {
                 "    \"url\": \"someURL\",\n" +
                 "    \"path\": \"somePath\",\n" +
                 "    \"queryString\": \"someQueryString\",\n" +
+                "    \"parameters\" : [ {\n" +
+                "        \"name\" : \"parameterName\",\n" +
+                "        \"values\" : [ \"parameterValue\" ]\n" +
+                "    } ],\n" +
                 "    \"body\": \"someBody\",\n" +
                 "    \"headers\": [\n" +
                 "        {\n" +
@@ -68,6 +74,7 @@ public class HttpRequestSerializerIntegrationTest {
                 .setURL("someURL")
                 .setPath("somePath")
                 .setQueryString("someQueryString")
+                .setParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("parameterName", Arrays.asList("parameterValue")))))
                 .setBody("someBody")
                 .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
                 .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", Arrays.asList("someCookieValue")))))
@@ -99,6 +106,7 @@ public class HttpRequestSerializerIntegrationTest {
                         .setURL("someURL")
                         .setPath("somePath")
                         .setQueryString("someQueryString")
+                        .setParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("parameterName", Arrays.asList("parameterValue")))))
                         .setBody("someBody")
                         .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
                         .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", Arrays.asList("someCookieValue")))))
@@ -111,6 +119,10 @@ public class HttpRequestSerializerIntegrationTest {
                 "  \"url\" : \"someURL\",\n" +
                 "  \"path\" : \"somePath\",\n" +
                 "  \"queryString\" : \"someQueryString\",\n" +
+                "  \"parameters\" : [ {\n" +
+                "    \"name\" : \"parameterName\",\n" +
+                "    \"values\" : [ \"parameterValue\" ]\n" +
+                "  } ],\n" +
                 "  \"body\" : \"someBody\",\n" +
                 "  \"cookies\" : [ {\n" +
                 "    \"name\" : \"someCookieName\",\n" +

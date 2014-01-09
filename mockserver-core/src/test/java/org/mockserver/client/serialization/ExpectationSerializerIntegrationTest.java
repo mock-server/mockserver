@@ -7,6 +7,7 @@ import org.mockserver.mock.Expectation;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Delay;
 import org.mockserver.model.Header;
+import org.mockserver.model.Parameter;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -271,6 +272,10 @@ public class ExpectationSerializerIntegrationTest {
                 "        \"url\": \"someURL\",\n" +
                 "        \"path\": \"somePath\",\n" +
                 "        \"queryString\": \"someQueryString\",\n" +
+                "        \"parameters\" : [ {\n" +
+                "            \"name\" : \"parameterName\",\n" +
+                "            \"values\" : [ \"parameterValue\" ]\n" +
+                "        } ]," +
                 "        \"body\": \"someBody\",\n" +
                 "        \"headers\": [\n" +
                 "            {\n" +
@@ -322,6 +327,7 @@ public class ExpectationSerializerIntegrationTest {
                                 .setURL("someURL")
                                 .setPath("somePath")
                                 .setQueryString("someQueryString")
+                                .setParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("parameterName", Arrays.asList("parameterValue")))))
                                 .setBody("someBody")
                                 .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
                                 .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", Arrays.asList("someCookieValue")))))
@@ -377,6 +383,7 @@ public class ExpectationSerializerIntegrationTest {
                                 .setURL("someURL")
                                 .setPath("somePath")
                                 .setQueryString("someQueryString")
+                                .setParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("parameterName", Arrays.asList("parameterValue")))))
                                 .setBody("someBody")
                                 .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
                                 .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", Arrays.asList("someCookieValue")))))
@@ -402,6 +409,10 @@ public class ExpectationSerializerIntegrationTest {
                 "    \"url\" : \"someURL\",\n" +
                 "    \"path\" : \"somePath\",\n" +
                 "    \"queryString\" : \"someQueryString\",\n" +
+                "    \"parameters\" : [ {\n" +
+                "      \"name\" : \"parameterName\",\n" +
+                "      \"values\" : [ \"parameterValue\" ]\n" +
+                "    } ],\n" +
                 "    \"body\" : \"someBody\",\n" +
                 "    \"cookies\" : [ {\n" +
                 "      \"name\" : \"someCookieName\",\n" +

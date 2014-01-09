@@ -14,6 +14,7 @@ public class HttpRequest extends EqualsHashCodeToString {
     private String url = "";
     private String path = "";
     private String queryString = "";
+    private List<Parameter> parameters = new ArrayList<Parameter>();
     private String body = "";
     private List<Header> headers = new ArrayList<Header>();
     private List<Cookie> cookies = new ArrayList<Cookie>();
@@ -84,6 +85,32 @@ public class HttpRequest extends EqualsHashCodeToString {
     public HttpRequest withQueryString(String queryString) {
         this.queryString = queryString;
         return this;
+    }
+
+    /**
+     * The parameters (in the query string or body) to match on as a list of Parameter objects where the values of each parameter can be either a string or a regex
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html)
+     *
+     * @param parameters the list of Parameter objects where the values of each parameter can be either a string or a regex
+     */
+    public HttpRequest withParameters(List<Parameter> parameters) {
+        this.parameters = parameters;
+        return this;
+    }
+
+    /**
+     * The parameters (in the query string or body) to match on as a varags Parameter objects where the values of each parameter can be either a string or a regex
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html)
+     *
+     * @param parameters the varags Parameter objects where the values of each parameter can be either a string or a regex
+     */
+    public HttpRequest withParameters(Parameter... parameters) {
+        this.parameters = Arrays.asList(parameters);
+        return this;
+    }
+
+    public List<Parameter> getParameters() {
+        return parameters;
     }
 
     public String getBody() {

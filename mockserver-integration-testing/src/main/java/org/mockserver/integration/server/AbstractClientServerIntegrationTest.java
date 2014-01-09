@@ -177,6 +177,152 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
+    public void clientCanCallServerMatchBodyWithXPath() {
+        // when
+        mockServerClient.when(new HttpRequest().withBody("/bookstore/book[price>35]/price"), Times.exactly(2)).respond(new HttpResponse().withBody("some_body"));
+
+        // then
+        // - in http
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("https://localhost:" + getSecurePort() + "/" + getServletContext() + (getServletContext().length() > 0 && !getServletContext().endsWith("/") ? "/" : "") + "some_path")
+                                .withBody("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n" +
+                                        "\n" +
+                                        "<bookstore>\n" +
+                                        "\n" +
+                                        "<book category=\"COOKING\">\n" +
+                                        "  <title lang=\"en\">Everyday Italian</title>\n" +
+                                        "  <author>Giada De Laurentiis</author>\n" +
+                                        "  <year>2005</year>\n" +
+                                        "  <price>30.00</price>\n" +
+                                        "</book>\n" +
+                                        "\n" +
+                                        "<book category=\"CHILDREN\">\n" +
+                                        "  <title lang=\"en\">Harry Potter</title>\n" +
+                                        "  <author>J K. Rowling</author>\n" +
+                                        "  <year>2005</year>\n" +
+                                        "  <price>29.99</price>\n" +
+                                        "</book>\n" +
+                                        "\n" +
+                                        "<book category=\"WEB\">\n" +
+                                        "  <title lang=\"en\">Learning XML</title>\n" +
+                                        "  <author>Erik T. Ray</author>\n" +
+                                        "  <year>2003</year>\n" +
+                                        "  <price>39.95</price>\n" +
+                                        "</book>\n" +
+                                        "\n" +
+                                        "</bookstore>")
+                ));
+        // - in https
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("https://localhost:" + getSecurePort() + "/" + getServletContext() + (getServletContext().length() > 0 && !getServletContext().endsWith("/") ? "/" : "") + "some_path")
+                                .withBody("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n" +
+                                        "\n" +
+                                        "<bookstore>\n" +
+                                        "\n" +
+                                        "<book category=\"COOKING\">\n" +
+                                        "  <title lang=\"en\">Everyday Italian</title>\n" +
+                                        "  <author>Giada De Laurentiis</author>\n" +
+                                        "  <year>2005</year>\n" +
+                                        "  <price>30.00</price>\n" +
+                                        "</book>\n" +
+                                        "\n" +
+                                        "<book category=\"CHILDREN\">\n" +
+                                        "  <title lang=\"en\">Harry Potter</title>\n" +
+                                        "  <author>J K. Rowling</author>\n" +
+                                        "  <year>2005</year>\n" +
+                                        "  <price>29.99</price>\n" +
+                                        "</book>\n" +
+                                        "\n" +
+                                        "<book category=\"WEB\">\n" +
+                                        "  <title lang=\"en\">Learning XML</title>\n" +
+                                        "  <author>Erik T. Ray</author>\n" +
+                                        "  <year>2003</year>\n" +
+                                        "  <price>39.95</price>\n" +
+                                        "</book>\n" +
+                                        "\n" +
+                                        "</bookstore>")
+                ));
+        // - in http
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("https://localhost:" + getSecurePort() + "/" + getServletContext() + (getServletContext().length() > 0 && !getServletContext().endsWith("/") ? "/" : "") + "some_path")
+                                .withBody("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n" +
+                                        "\n" +
+                                        "<bookstore>\n" +
+                                        "\n" +
+                                        "<book category=\"COOKING\">\n" +
+                                        "  <title lang=\"en\">Everyday Italian</title>\n" +
+                                        "  <author>Giada De Laurentiis</author>\n" +
+                                        "  <year>2005</year>\n" +
+                                        "  <price>30.00</price>\n" +
+                                        "</book>\n" +
+                                        "\n" +
+                                        "<book category=\"CHILDREN\">\n" +
+                                        "  <title lang=\"en\">Harry Potter</title>\n" +
+                                        "  <author>J K. Rowling</author>\n" +
+                                        "  <year>2005</year>\n" +
+                                        "  <price>29.99</price>\n" +
+                                        "</book>\n" +
+                                        "\n" +
+                                        "<book category=\"WEB\">\n" +
+                                        "  <title lang=\"en\">Learning XML</title>\n" +
+                                        "  <author>Erik T. Ray</author>\n" +
+                                        "  <year>2003</year>\n" +
+                                        "  <price>31.95</price>\n" +
+                                        "</book>\n" +
+                                        "\n" +
+                                        "</bookstore>")
+                ));
+        // - in https
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("https://localhost:" + getSecurePort() + "/" + getServletContext() + (getServletContext().length() > 0 && !getServletContext().endsWith("/") ? "/" : "") + "some_path")
+                                .withBody("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n" +
+                                        "\n" +
+                                        "<bookstore>\n" +
+                                        "\n" +
+                                        "<book category=\"COOKING\">\n" +
+                                        "  <title lang=\"en\">Everyday Italian</title>\n" +
+                                        "  <author>Giada De Laurentiis</author>\n" +
+                                        "  <year>2005</year>\n" +
+                                        "  <price>30.00</price>\n" +
+                                        "</book>\n" +
+                                        "\n" +
+                                        "<book category=\"CHILDREN\">\n" +
+                                        "  <title lang=\"en\">Harry Potter</title>\n" +
+                                        "  <author>J K. Rowling</author>\n" +
+                                        "  <year>2005</year>\n" +
+                                        "  <price>29.99</price>\n" +
+                                        "</book>\n" +
+                                        "\n" +
+                                        "<book category=\"WEB\">\n" +
+                                        "  <title lang=\"en\">Learning XML</title>\n" +
+                                        "  <author>Erik T. Ray</author>\n" +
+                                        "  <year>2003</year>\n" +
+                                        "  <price>31.95</price>\n" +
+                                        "</book>\n" +
+                                        "\n" +
+                                        "</bookstore>")
+                ));
+    }
+
+    @Test
     public void clientCanCallServerMatchPathWithDelay() {
         // when
         mockServerClient.when(
@@ -413,7 +559,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withMethod("GET")
                                 .withPath("/some_pathRequest")
-                                .withQueryString("parameterName=parameterValue")
+                                .withParameters(new Parameter("parameterName", "parameterValue"))
                                 .withBody("some_bodyRequest")
                 )
                 .respond(
@@ -446,6 +592,20 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
                 )
         );
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("GET")
+                                .withURL("http://localhost:" + getPort() + "/" + getServletContext() + (getServletContext().length() > 0 && !getServletContext().endsWith("/") ? "/" : "") + "some_pathRequest?parameterName=parameterOtherValue")
+                                .withPath("/some_pathRequest")
+                                .withQueryString("parameterName=parameterOtherValue")
+                                .withBody("some_bodyRequest")
+                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
+                )
+        );
         // - in https
         assertEquals(
                 new HttpResponse()
@@ -463,6 +623,149 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withPath("/some_pathRequest")
                                 .withQueryString("parameterName=parameterValue")
                                 .withBody("some_bodyRequest")
+                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
+                )
+        );
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("GET")
+                                .withURL("https://localhost:" + getSecurePort() + "/" + getServletContext() + (getServletContext().length() > 0 && !getServletContext().endsWith("/") ? "/" : "") + "some_pathRequest?otherParameterName=parameterValue")
+                                .withPath("/some_pathRequest")
+                                .withQueryString("otherParameterName=parameterValue")
+                                .withBody("some_bodyRequest")
+                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
+                )
+        );
+    }
+
+
+    @Test
+    public void clientCanCallServerPositiveMatchForGETAndMatchingBodyAndQueryParameters() {
+        // when
+        mockServerClient
+                .when(
+                        new HttpRequest()
+                                .withPath("/some_pathRequest")
+                                .withParameters(new Parameter("parameterName", "parameterValue"))
+                )
+                .respond(
+                        new HttpResponse()
+                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                                .withBody("some_bodyResponse")
+                );
+
+        // then
+        // - in http
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withBody("some_bodyResponse"),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("GET")
+                                .withURL("http://localhost:" + getPort() + "/" + getServletContext() + (getServletContext().length() > 0 && !getServletContext().endsWith("/") ? "/" : "") + "some_pathRequest?parameterName=parameterValue")
+                                .withPath("/some_pathRequest")
+                                .withBody("parameterName=parameterValue")
+                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
+                )
+        );
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withBody("some_bodyResponse"),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("GET")
+                                .withURL("http://localhost:" + getPort() + "/" + getServletContext() + (getServletContext().length() > 0 && !getServletContext().endsWith("/") ? "/" : "") + "some_pathRequest?parameterName=parameterValue")
+                                .withPath("/some_pathRequest")
+                                .withQueryString("parameterName=parameterValue")
+                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
+                )
+        );
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("GET")
+                                .withURL("http://localhost:" + getPort() + "/" + getServletContext() + (getServletContext().length() > 0 && !getServletContext().endsWith("/") ? "/" : "") + "some_pathRequest?parameterName=parameterOtherValue")
+                                .withPath("/some_pathRequest")
+                                .withQueryString("parameterName=parameterOtherValue")
+                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
+                )
+        );
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("GET")
+                                .withURL("http://localhost:" + getPort() + "/" + getServletContext() + (getServletContext().length() > 0 && !getServletContext().endsWith("/") ? "/" : "") + "some_pathRequest?parameterName=parameterOtherValue")
+                                .withPath("/some_pathRequest")
+                                .withBody("parameterName=parameterOtherValue")
+                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
+                )
+        );
+        // - in https
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withBody("some_bodyResponse"),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("GET")
+                                .withURL("https://localhost:" + getSecurePort() + "/" + getServletContext() + (getServletContext().length() > 0 && !getServletContext().endsWith("/") ? "/" : "") + "some_pathRequest?parameterName=parameterValue")
+                                .withPath("/some_pathRequest")
+                                .withBody("parameterName=parameterValue")
+                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
+                )
+        );
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withBody("some_bodyResponse"),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("GET")
+                                .withURL("https://localhost:" + getSecurePort() + "/" + getServletContext() + (getServletContext().length() > 0 && !getServletContext().endsWith("/") ? "/" : "") + "some_pathRequest?parameterName=parameterValue")
+                                .withPath("/some_pathRequest")
+                                .withQueryString("parameterName=parameterValue")
+                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
+                )
+        );
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("GET")
+                                .withURL("https://localhost:" + getSecurePort() + "/" + getServletContext() + (getServletContext().length() > 0 && !getServletContext().endsWith("/") ? "/" : "") + "some_pathRequest?otherParameterName=parameterValue")
+                                .withPath("/some_pathRequest")
+                                .withQueryString("otherParameterName=parameterValue")
+                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
+                )
+        );
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("GET")
+                                .withURL("https://localhost:" + getSecurePort() + "/" + getServletContext() + (getServletContext().length() > 0 && !getServletContext().endsWith("/") ? "/" : "") + "some_pathRequest?otherParameterName=parameterValue")
+                                .withPath("/some_pathRequest")
+                                .withBody("otherParameterName=parameterValue")
                                 .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
                                 .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
                 )

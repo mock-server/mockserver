@@ -18,7 +18,7 @@
 <meta property="og:url" content="http://www.mock-server.com/">
 <meta property="og:site_name" content="MockServer">
 <meta property="og:title" content="MockServer">
-<meta property="og:description" content="An API to easily mock any system or service you integrate with via HTTP from either Java or JavaScript.">
+<meta property="og:description" content="An API to easily mock any system or service you integrate with via HTTP or HTTPS from either Java or JavaScript.">
 <link href="//fonts.googleapis.com/css?family=Averia+Sans+Libre:300normal,300italic,400normal,400italic,700normal,700italic|Amatic+SC:400normal|Belleza:400normal|Belgrano:400normal|Open+Sans:400normal|Dosis:400normal|Codystar:400normal|Concert+One:400normal|Oswald:400normal|Economica:400normal|Duru+Sans:400normal&amp;subset=all" rel="stylesheet" type="text/css">
 <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.3.0/pure-min.css">
 <style>
@@ -53,7 +53,7 @@ The content `<div>` is where all your content goes.
 .content {
 	margin: 0 auto;
 	padding: 0 2em;
-	max-width: 1300px;
+	max-width: 1350px;
 	margin-bottom: 50px;
 	line-height: 1.6em;
 }
@@ -927,6 +927,21 @@ Hides the menu at `767px`, but modify this based on your app's needs.
     <span class="keyword">public</span> HttpRequest withQueryString(String queryString);
 
     <span class="comment">/**
+     * The parameters (in the query string or body) to match on as a list of Parameter objects where the values of each parameter can be either a string or a regex
+     * (for more details of the supported regex syntax see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>)
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">parameters</span> the list of Parameter objects where the values of each parameter can be either a string or a regex
+     */</span>
+    <span class="keyword">public</span> HttpRequest withParameters(List&lt;Parameter&gt; parameters) {
+    <span class="comment">/**
+     * The parameters (in the query string or body) to match on as a varags Parameter objects where the values of each parameter can be either a string or a regex
+     * (for more details of the supported regex syntax see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>)
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">parameters</span> the varags Parameter objects where the values of each parameter can be either a string or a regex
+     */</span>
+    <span class="keyword">public</span> HttpRequest withParameters(Parameter... parameters) {
+
+    <span class="comment">/**
      * The body to match on such as <span class="string_literal">"{username: 'foo', password: 'bar'}"</span> or a regex (see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>)
      * or an XPath expression which returns one or more values or evaluates to true (see <a href="http://saxon.sourceforge.net/saxon6.5.3/expressions.html">http://saxon.sourceforge.net/saxon6.5.3/expressions.html</a>)
      *
@@ -1385,7 +1400,7 @@ xmlHttpRequest.send();</code></pre>
     <meta itemprop="gender" content="male">
 </span>
 <meta itemprop="name" content="MockServer">
-<meta itemprop="description" content="An API to easily mock any system or service you integrate with via HTTP from either Java or JavaScript.">
+<meta itemprop="description" content="An API to easily mock any system or service you integrate with via HTTP or HTTPS from either Java or JavaScript.">
 </div>
 </div>
 </div>

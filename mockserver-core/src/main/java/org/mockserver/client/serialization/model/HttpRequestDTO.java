@@ -2,10 +2,7 @@ package org.mockserver.client.serialization.model;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
-import org.mockserver.model.Cookie;
-import org.mockserver.model.EqualsHashCodeToString;
-import org.mockserver.model.Header;
-import org.mockserver.model.HttpRequest;
+import org.mockserver.model.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +15,7 @@ public class HttpRequestDTO extends EqualsHashCodeToString {
     private String url;
     private String path;
     private String queryString;
+    private List<ParameterDTO> parameters = new ArrayList<ParameterDTO>();
     private String body;
     private List<CookieDTO> cookies = new ArrayList<CookieDTO>();
     private List<HeaderDTO> headers = new ArrayList<HeaderDTO>();
@@ -27,6 +25,11 @@ public class HttpRequestDTO extends EqualsHashCodeToString {
         url = httpRequest.getURL();
         path = httpRequest.getPath();
         queryString = httpRequest.getQueryString();
+        parameters = Lists.transform(httpRequest.getParameters(), new Function<Parameter, ParameterDTO>() {
+            public ParameterDTO apply(Parameter parameter) {
+                return new ParameterDTO(parameter);
+            }
+        });
         body = httpRequest.getBody();
         headers = Lists.transform(httpRequest.getHeaders(), new Function<Header, HeaderDTO>() {
             public HeaderDTO apply(Header header) {
@@ -49,6 +52,11 @@ public class HttpRequestDTO extends EqualsHashCodeToString {
                 .withURL(url)
                 .withPath(path)
                 .withQueryString(queryString)
+                .withParameters(Lists.transform(parameters, new Function<ParameterDTO, Parameter>() {
+                    public Parameter apply(ParameterDTO parameter) {
+                        return parameter.buildObject();
+                    }
+                }))
                 .withBody(body)
                 .withHeaders(Lists.transform(headers, new Function<HeaderDTO, Header>() {
                     public Header apply(HeaderDTO header) {
@@ -95,6 +103,15 @@ public class HttpRequestDTO extends EqualsHashCodeToString {
 
     public HttpRequestDTO setQueryString(String queryString) {
         this.queryString = queryString;
+        return this;
+    }
+
+    public List<ParameterDTO> getParameters() {
+        return parameters;
+    }
+
+    public HttpRequestDTO setParameters(List<ParameterDTO> parameters) {
+        this.parameters = parameters;
         return this;
     }
 

@@ -4,10 +4,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mockserver.matchers.HttpRequestMatcher;
-import org.mockserver.model.Cookie;
-import org.mockserver.model.Header;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
+import org.mockserver.model.*;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -184,7 +181,7 @@ public class MockServerBasicResponsesTest {
     }
 
     @Test
-    public void respondWhenParameterMatchesExactly() {
+    public void respondWhenQueryStringMatchesExactly() {
         // when
         mockServer.when(httpRequest.withQueryString("name=value")).thenRespond(httpResponse.withBody("somebody"));
 
@@ -193,7 +190,7 @@ public class MockServerBasicResponsesTest {
     }
 
     @Test
-    public void respondWhenParameterWithMultipleValuesMatchesExactly() {
+    public void respondWhenQueryStringWithMultipleValuesMatchesExactly() {
         // when
         mockServer.when(httpRequest.withQueryString("name=value1&name=value2")).thenRespond(httpResponse.withBody("somebody"));
 
@@ -202,7 +199,7 @@ public class MockServerBasicResponsesTest {
     }
 
     @Test
-    public void doNotRespondWhenParameterWithMultipleValuesDoesNotMatch() {
+    public void doNotRespondWhenQueryStringWithMultipleValuesDoesNotMatch() {
         // when
         mockServer.when(httpRequest.withQueryString("name=value1&name=value2")).thenRespond(httpResponse.withBody("somebody"));
 
@@ -211,7 +208,7 @@ public class MockServerBasicResponsesTest {
     }
 
     @Test
-    public void doNotRespondWhenParameterWithMultipleValuesHasMissingValue() {
+    public void doNotRespondWhenQueryStringWithMultipleValuesHasMissingValue() {
         // when
         mockServer.when(httpRequest.withQueryString("name=value1&name=value2")).thenRespond(httpResponse.withBody("somebody"));
 
@@ -220,13 +217,94 @@ public class MockServerBasicResponsesTest {
     }
 
     @Test
-    @Ignore
-    public void respondWhenParameterMatchesAndExtraParameters() {
+    public void respondWhenQueryStringMatchesAndExtraParameters() {
         // when
-        mockServer.when(httpRequest.withQueryString("name=value")).thenRespond(httpResponse.withBody("somebody"));
+        mockServer.when(httpRequest.withQueryString(".*name=value.*")).thenRespond(httpResponse.withBody("somebody"));
 
         // then
         assertEquals(httpResponse, mockServer.handle(new HttpRequest().withQueryString("nameExtra=valueExtra&name=value&nameExtraExtra=valueExtraExtra")));
+    }
+
+
+    @Test
+    public void respondWhenParametersMatchesExactly() {
+        // when
+        mockServer.when(httpRequest.withParameters(new Parameter("name", "val[a-z]{2}"))).thenRespond(httpResponse.withBody("somebody"));
+
+        // then
+        assertEquals(httpResponse, mockServer.handle(new HttpRequest().withParameters(new Parameter("name", "value"))));
+    }
+
+    @Test
+    public void respondWhenParametersWithMultipleValuesMatchesExactly() {
+        // when
+        mockServer.when(httpRequest.withParameters(new Parameter("name", "valueOne", "valueTwo"))).thenRespond(httpResponse.withBody("somebody"));
+
+        // then
+        assertEquals(httpResponse, mockServer.handle(new HttpRequest().withParameters(new Parameter("name", "valueOne", "valueTwo"))));
+    }
+
+    @Test
+    public void doNotRespondWhenParametersWithMultipleValuesDoesNotMatch() {
+        // when
+        mockServer.when(httpRequest.withParameters(new Parameter("name", "valueOne", "valueTwo"))).thenRespond(httpResponse.withBody("somebody"));
+
+        // then
+        assertNull(mockServer.handle(new HttpRequest().withParameters(new Parameter("name", "valueOne", "valueThree"))));
+    }
+
+    @Test
+    public void doNotRespondWhenParametersWithMultipleValuesHasMissingValue() {
+        // when
+        mockServer.when(httpRequest.withParameters(new Parameter("name", "valueOne", "valueTwo"))).thenRespond(httpResponse.withBody("somebody"));
+
+        // then
+        assertNull(mockServer.handle(new HttpRequest().withParameters(new Parameter("name", "valueOne"))));
+    }
+
+    @Test
+    public void respondWhenParameterMatchesAndExtraQueryStringParameters() {
+        // when
+        mockServer.when(httpRequest.withParameters(new Parameter("name", "val[a-z]{2}"))).thenRespond(httpResponse.withBody("somebody"));
+
+        // then
+        assertEquals(httpResponse, mockServer.handle(new HttpRequest().withQueryString("nameExtra=valueExtra&name=value&nameExtraExtra=valueExtraExtra")));
+    }
+
+    @Test
+    public void respondWhenParameterMatchesAndMultipleQueryStringParameters() {
+        // when
+        mockServer.when(httpRequest.withParameters(new Parameter("nameOne", "valueOne"), new Parameter("nameTwo", "valueTwo"))).thenRespond(httpResponse.withBody("somebody"));
+
+        // then
+        assertEquals(httpResponse, mockServer.handle(new HttpRequest().withQueryString("nameOne=valueOne&nameTwo=valueTwo")));
+    }
+
+    @Test
+    public void respondWhenParameterMatchesAndMultipleQueryStringValues() {
+        // when
+        mockServer.when(httpRequest.withParameters(new Parameter("nameOne", "valueOne", "valueTwo"))).thenRespond(httpResponse.withBody("somebody"));
+
+        // then
+        assertEquals(httpResponse, mockServer.handle(new HttpRequest().withQueryString("nameOne=valueOne&nameOne=valueTwo")));
+    }
+
+    @Test
+    public void doNotRespondWhenParameterDoesNotMatchAndMultipleQueryStringValues() {
+        // when
+        mockServer.when(httpRequest.withParameters(new Parameter("nameOne", "valueTwo", "valueTwo"))).thenRespond(httpResponse.withBody("somebody"));
+
+        // then
+        assertEquals(httpResponse, mockServer.handle(new HttpRequest().withQueryString("nameOne=valueOne&nameOne=valueTwo")));
+    }
+
+    @Test
+    public void doNotRespondWhenParameterDoesNotMatchAndMultipleQueryStringParameters() {
+        // when
+        mockServer.when(httpRequest.withParameters(new Parameter("nameOne", "valueTwo"), new Parameter("nameTwo", "valueOne"))).thenRespond(httpResponse.withBody("somebody"));
+
+        // then
+        assertNull(mockServer.handle(new HttpRequest().withQueryString("nameOne=valueOne&nameOne=valueTwo")));
     }
 
     @Test

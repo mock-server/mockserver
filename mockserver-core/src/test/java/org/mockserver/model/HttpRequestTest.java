@@ -24,6 +24,16 @@ public class HttpRequestTest {
     }
 
     @Test
+    public void returnsQueryString() {
+        assertEquals("name=value", new HttpRequest().withQueryString("name=value").getQueryString());
+    }
+
+    @Test
+    public void returnsParameters() {
+        assertEquals(new Parameter("name", "value"), new HttpRequest().withParameters(new Parameter("name", "value")).getParameters().get(0));
+    }
+
+    @Test
     public void returnsBody() {
         assertEquals("somebody", new HttpRequest().withBody("somebody").getBody());
     }
@@ -42,11 +52,6 @@ public class HttpRequestTest {
         assertEquals(new Cookie("name", "value_one", "value_two"), new HttpRequest().withCookies(new Cookie("name", "value_one", "value_two")).getCookies().get(0));
         assertEquals(new Cookie("name", (Collection<String>) null), new HttpRequest().withCookies(new Cookie("name")).getCookies().get(0));
         assertEquals(new Cookie("name"), new HttpRequest().withCookies(new Cookie("name")).getCookies().get(0));
-    }
-
-    @Test
-    public void returnsParameters() {
-        assertEquals("name=value", new HttpRequest().withQueryString("name=value").getQueryString());
     }
 
     @Test

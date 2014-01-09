@@ -14,6 +14,7 @@ public class MatcherBuilder {
                     .withURL(httpRequest.getURL())
                     .withPath(httpRequest.getPath())
                     .withQueryString(httpRequest.getQueryString())
+                    .withParameters(httpRequest.getParameters())
                     .withBody(httpRequest.getBody())
                     .withHeaders(httpRequest.getHeaders())
                     .withCookies(httpRequest.getCookies());

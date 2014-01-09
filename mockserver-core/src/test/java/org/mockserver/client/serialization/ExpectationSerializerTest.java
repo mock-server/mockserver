@@ -36,6 +36,7 @@ public class ExpectationSerializerTest {
                     .withURL("url")
                     .withPath("somepath")
                     .withQueryString("queryString")
+                    .withParameters(new Parameter("parameterName", "parameterValue"))
                     .withBody("somebody")
                     .withHeaders(new Header("headerName", "headerValue"))
                     .withCookies(new Cookie("cookieName", "cookieValue")),
@@ -53,6 +54,7 @@ public class ExpectationSerializerTest {
                             .setURL("url")
                             .setPath("somepath")
                             .setQueryString("queryString")
+                            .setParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("parameterName", Arrays.asList("parameterValue")))))
                             .setBody("somebody")
                             .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("headerName", Arrays.asList("headerValue")))))
                             .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("cookieName", Arrays.asList("cookieValue")))))
