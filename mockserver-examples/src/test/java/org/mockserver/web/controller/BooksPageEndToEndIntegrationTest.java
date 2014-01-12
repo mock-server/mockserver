@@ -8,8 +8,6 @@ import org.mockserver.client.proxy.Times;
 import org.mockserver.configuration.RootConfiguration;
 import org.mockserver.integration.ClientAndProxy;
 import org.mockserver.model.Parameter;
-import org.mockserver.proxy.ProxyRunner;
-import org.mockserver.service.BookService;
 import org.mockserver.servicebackend.BackEndServiceConfiguration;
 import org.mockserver.servicebackend.BookServer;
 import org.mockserver.web.configuration.WebMvcConfiguration;
@@ -24,7 +22,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.web.context.WebApplicationContext;
 
-import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 
 import static org.mockserver.integration.ClientAndProxy.startClientAndProxy;

@@ -1,11 +1,11 @@
 package org.mockserver.web.controller;
 
-import org.mockserver.model.Book;
-import org.mockserver.service.BookService;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockserver.model.Book;
+import org.mockserver.service.BookService;
 import org.springframework.ui.Model;
 
 import static org.junit.Assert.assertEquals;

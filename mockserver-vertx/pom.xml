@@ -47,7 +47,7 @@
         </dependency>
 
         <!-- logging -->
-        <dependency> <!-- will map to any underlying logging framework -->
+        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>

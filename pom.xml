@@ -57,6 +57,7 @@
         <project.build.sourceEncoding>UTF8</project.build.sourceEncoding>
         <jetty.version>9.1.0.v20131115</jetty.version>
         <vertx.version>2.1M2</vertx.version>
+        <slf4j.version>1.7.5</slf4j.version>
     </properties>
 
     <dependencyManagement>
@@ -180,7 +181,25 @@
             <dependency> <!-- will map to any underlying logging framework -->
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
-                <version>1.7.5</version>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-jcl</artifactId>
+                <version>${slf4j.version}</version>
+                <scope>runtime</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-log4j12</artifactId>
+                <version>${slf4j.version}</version>
+                <scope>runtime</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-jdk14</artifactId>
+                <version>${slf4j.version}</version>
+                <scope>runtime</scope>
             </dependency>
             <dependency>
                 <groupId>ch.qos.logback</groupId>

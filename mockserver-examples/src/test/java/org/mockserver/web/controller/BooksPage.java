@@ -1,9 +1,9 @@
 package org.mockserver.web.controller;
 
-import org.mockserver.model.Book;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.mockserver.model.Book;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.io.UnsupportedEncodingException;
@@ -22,7 +22,7 @@ public class BooksPage {
     }
 
     public void containsListOfBooks(Collection<Book> books) {
-        for(Book book : books){
+        for (Book book : books) {
             Element bookRow = html.select("#" + book.getId()).first();
             assertEquals("" + book.getId(), bookRow.select(".id").text());
             assertEquals(book.getTitle(), bookRow.select(".title").text());

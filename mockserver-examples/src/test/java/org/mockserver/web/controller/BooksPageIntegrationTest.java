@@ -1,6 +1,8 @@
 package org.mockserver.web.controller;
 
-import org.junit.*;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockserver.client.proxy.Times;
 import org.mockserver.configuration.RootConfiguration;
@@ -9,7 +11,6 @@ import org.mockserver.integration.ClientAndServer;
 import org.mockserver.model.Book;
 import org.mockserver.model.Parameter;
 import org.mockserver.web.configuration.WebMvcConfiguration;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
@@ -21,7 +22,6 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.web.context.WebApplicationContext;
 
 import javax.annotation.Resource;
-
 import java.util.Arrays;
 
 import static org.mockserver.integration.ClientAndProxy.startClientAndProxy;

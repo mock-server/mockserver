@@ -34,7 +34,6 @@
             <artifactId>mockserver-integration-testing</artifactId>
         </dependency>
 
-
         <!-- http -->
         <dependency>
             <groupId>javax.servlet</groupId>
@@ -71,9 +70,8 @@
             <artifactId>guava</artifactId>
         </dependency>
 
-
         <!-- logging -->
-        <dependency> <!-- will map to any underlying logging framework -->
+        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
