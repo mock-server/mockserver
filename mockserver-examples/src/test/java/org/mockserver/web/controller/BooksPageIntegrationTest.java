@@ -150,6 +150,8 @@ public abstract class BooksPageIntegrationTest {
 
     @After
     public void stopProxy() {
+        proxy.dumpToLogAsJSON();
+        proxy.dumpToLogAsJava();
         proxy.stop();
         mockServer.stop();
     }

@@ -32,16 +32,18 @@ public class ProxyClient {
     }
 
     /**
-     * Pretty-print the json for all requests / responses as Expectations to the log.  They are printed at
-     * WARN level to ensure they appear even if the default logging level has not been altered
+     * Pretty-print the json for all requests / responses as Expectations to the log.
+     * They are printed into a dedicated log called mockserver_request.log
      */
     public ProxyClient dumpToLogAsJSON() {
         return dumpToLogAsJSON(null);
     }
 
     /**
-     * Pretty-print the json for matching requests and their responses as Expectations to the log.  They are printed at
-     * WARN level to ensure they appear even if the default logging level has not been altered
+     * Pretty-print the json for matching requests and their responses as Expectations to the log.
+     * They are printed into a dedicated log called mockserver_request.log
+     *
+     * @param httpRequest the http request that is matched against when deciding what to log if null all requests are logged
      */
     public ProxyClient dumpToLogAsJSON(HttpRequest httpRequest) {
         httpClient.sendPUTRequest(uri, "/dumpToLog", httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "");
@@ -49,16 +51,18 @@ public class ProxyClient {
     }
 
     /**
-     * Output Java code for creating all requests / responses as Expectations to the log.  They are printed
-     * at WARN level to ensure they appear even if the default logging level has not been altered
+     * Output Java code for creating all requests / responses as Expectations to the log.
+     * They are printed into a dedicated log called mockserver_request.log
      */
     public ProxyClient dumpToLogAsJava() {
         return dumpToLogAsJava(null);
     }
 
     /**
-     * Output Java code for creating matching requests and their responses as Expectations to the log.  They are printed
-     * at WARN level to ensure they appear even if the default logging level has not been altered
+     * Output Java code for creating matching requests and their responses as Expectations to the log.
+     * They are printed into a dedicated log called mockserver_request.log
+     *
+     * @param httpRequest the http request that is matched against when deciding what to log if null all requests are logged
      */
     public ProxyClient dumpToLogAsJava(HttpRequest httpRequest) {
         httpClient.sendPUTRequest(uri, "/dumpToLog?type=java", httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "");
@@ -76,7 +80,7 @@ public class ProxyClient {
     /**
      * Clear all recorded requests that match the httpRequest parameter
      *
-     * @param httpRequest the http that is matched against when deciding whether to clear recorded requests
+     * @param httpRequest the http request that is matched against when deciding whether to clear recorded requests
      */
     public ProxyClient clear(HttpRequest httpRequest) {
         httpClient.sendPUTRequest(uri, "/clear", httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "");
@@ -93,7 +97,7 @@ public class ProxyClient {
      *                           .withBody("some_request_body")
      *           );
      *
-     * @param httpRequest the http that must be matched for this verification to pass
+     * @param httpRequest the http request that must be matched for this verification to pass
      * @throws AssertionError if the request has not been found
      */
     public ProxyClient verify(HttpRequest httpRequest) throws AssertionError {
@@ -111,7 +115,7 @@ public class ProxyClient {
      *                   Times.exactly(3)
      *           );
      *
-     * @param httpRequest the http that must be matched for this verification to pass
+     * @param httpRequest the http request that must be matched for this verification to pass
      * @param times the number of times this request must be matched
      * @throws AssertionError if the request has not been found
      */
@@ -142,7 +146,7 @@ public class ProxyClient {
     /**
      * Retrieve the recorded requests that match the httpRequest parameter as expectations, use null for the parameter to retrieve all requests
      *
-     * @param httpRequest the http that is matched against when deciding whether to return each expectation, use null for the parameter to retrieve for all requests
+     * @param httpRequest the http request that is matched against when deciding whether to return each expectation, use null for the parameter to retrieve for all requests
      * @return an array of all expectations that have been recorded by the proxy
      */
     public Expectation[] retrieveAsExpectations(HttpRequest httpRequest) {
@@ -152,7 +156,7 @@ public class ProxyClient {
     /**
      * Retrieve the recorded requests that match the httpRequest parameter as a JSON array, use null for the parameter to retrieve all requests
      *
-     * @param httpRequest the http that is matched against when deciding whether to return each expectation, use null for the parameter to retrieve for all requests
+     * @param httpRequest the http request that is matched against when deciding whether to return each expectation, use null for the parameter to retrieve for all requests
      * @return a JSON array of all expectations that have been recorded by the proxy
      */
     public String retrieveAsJSON(HttpRequest httpRequest) {

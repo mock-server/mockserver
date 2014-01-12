@@ -20,7 +20,6 @@ import static org.mockito.MockitoAnnotations.initMocks;
  */
 public class LogFilterDumpToLogTest {
 
-
     private final HttpResponse httpResponseOne = new HttpResponse().withBody("body_one");
     private final HttpResponse httpResponseTwo = new HttpResponse().withBody("body_two");
     private final HttpResponse httpResponseThree = new HttpResponse().withBody("body_three");
@@ -48,9 +47,9 @@ public class LogFilterDumpToLogTest {
         logFilter.dumpToLog(null, false);
 
         // then
-        verify(logger).info(new ExpectationSerializer().serialize(new Expectation(httpRequest, Times.once()).thenRespond(httpResponseOne)));
-        verify(logger).info(new ExpectationSerializer().serialize(new Expectation(httpRequest, Times.once()).thenRespond(httpResponseThree)));
-        verify(logger).info(new ExpectationSerializer().serialize(new Expectation(otherHttpRequest, Times.once()).thenRespond(httpResponseTwo)));
+        verify(logger).warn(new ExpectationSerializer().serialize(new Expectation(httpRequest, Times.once()).thenRespond(httpResponseOne)));
+        verify(logger).warn(new ExpectationSerializer().serialize(new Expectation(httpRequest, Times.once()).thenRespond(httpResponseThree)));
+        verify(logger).warn(new ExpectationSerializer().serialize(new Expectation(otherHttpRequest, Times.once()).thenRespond(httpResponseTwo)));
         verifyNoMoreInteractions(logger);
     }
 
@@ -61,9 +60,9 @@ public class LogFilterDumpToLogTest {
         logFilter.dumpToLog(null, true);
 
         // then
-        verify(logger).info(new ExpectationSerializer().serializeAsJava(new Expectation(httpRequest, Times.once()).thenRespond(httpResponseOne)));
-        verify(logger).info(new ExpectationSerializer().serializeAsJava(new Expectation(httpRequest, Times.once()).thenRespond(httpResponseThree)));
-        verify(logger).info(new ExpectationSerializer().serializeAsJava(new Expectation(otherHttpRequest, Times.once()).thenRespond(httpResponseTwo)));
+        verify(logger).warn(new ExpectationSerializer().serializeAsJava(new Expectation(httpRequest, Times.once()).thenRespond(httpResponseOne)));
+        verify(logger).warn(new ExpectationSerializer().serializeAsJava(new Expectation(httpRequest, Times.once()).thenRespond(httpResponseThree)));
+        verify(logger).warn(new ExpectationSerializer().serializeAsJava(new Expectation(otherHttpRequest, Times.once()).thenRespond(httpResponseTwo)));
         verifyNoMoreInteractions(logger);
     }
 
@@ -73,9 +72,9 @@ public class LogFilterDumpToLogTest {
         logFilter.dumpToLog(new HttpRequest(), false);
 
         // then
-        verify(logger).info(new ExpectationSerializer().serialize(new Expectation(httpRequest, Times.once()).thenRespond(httpResponseOne)));
-        verify(logger).info(new ExpectationSerializer().serialize(new Expectation(httpRequest, Times.once()).thenRespond(httpResponseThree)));
-        verify(logger).info(new ExpectationSerializer().serialize(new Expectation(otherHttpRequest, Times.once()).thenRespond(httpResponseTwo)));
+        verify(logger).warn(new ExpectationSerializer().serialize(new Expectation(httpRequest, Times.once()).thenRespond(httpResponseOne)));
+        verify(logger).warn(new ExpectationSerializer().serialize(new Expectation(httpRequest, Times.once()).thenRespond(httpResponseThree)));
+        verify(logger).warn(new ExpectationSerializer().serialize(new Expectation(otherHttpRequest, Times.once()).thenRespond(httpResponseTwo)));
         verifyNoMoreInteractions(logger);
     }
 
@@ -85,9 +84,9 @@ public class LogFilterDumpToLogTest {
         logFilter.dumpToLog(new HttpRequest(), true);
 
         // then
-        verify(logger).info(new ExpectationSerializer().serializeAsJava(new Expectation(httpRequest, Times.once()).thenRespond(httpResponseOne)));
-        verify(logger).info(new ExpectationSerializer().serializeAsJava(new Expectation(httpRequest, Times.once()).thenRespond(httpResponseThree)));
-        verify(logger).info(new ExpectationSerializer().serializeAsJava(new Expectation(otherHttpRequest, Times.once()).thenRespond(httpResponseTwo)));
+        verify(logger).warn(new ExpectationSerializer().serializeAsJava(new Expectation(httpRequest, Times.once()).thenRespond(httpResponseOne)));
+        verify(logger).warn(new ExpectationSerializer().serializeAsJava(new Expectation(httpRequest, Times.once()).thenRespond(httpResponseThree)));
+        verify(logger).warn(new ExpectationSerializer().serializeAsJava(new Expectation(otherHttpRequest, Times.once()).thenRespond(httpResponseTwo)));
         verifyNoMoreInteractions(logger);
     }
 
@@ -97,15 +96,15 @@ public class LogFilterDumpToLogTest {
         logFilter.dumpToLog(new HttpRequest().withPath("some_path"), false);
 
         // then
-        verify(logger).info(new ExpectationSerializer().serialize(new Expectation(httpRequest, Times.once()).thenRespond(httpResponseOne)));
-        verify(logger).info(new ExpectationSerializer().serialize(new Expectation(httpRequest, Times.once()).thenRespond(httpResponseThree)));
+        verify(logger).warn(new ExpectationSerializer().serialize(new Expectation(httpRequest, Times.once()).thenRespond(httpResponseOne)));
+        verify(logger).warn(new ExpectationSerializer().serialize(new Expectation(httpRequest, Times.once()).thenRespond(httpResponseThree)));
         verifyNoMoreInteractions(logger);
 
         // when
         logFilter.dumpToLog(new HttpRequest().withPath("some_other_path"), false);
 
         // then
-        verify(logger).info(new ExpectationSerializer().serialize(new Expectation(otherHttpRequest, Times.once()).thenRespond(httpResponseTwo)));
+        verify(logger).warn(new ExpectationSerializer().serialize(new Expectation(otherHttpRequest, Times.once()).thenRespond(httpResponseTwo)));
         verifyNoMoreInteractions(logger);
     }
 
@@ -115,15 +114,15 @@ public class LogFilterDumpToLogTest {
         logFilter.dumpToLog(new HttpRequest().withPath("some_path"), true);
 
         // then
-        verify(logger).info(new ExpectationSerializer().serializeAsJava(new Expectation(httpRequest, Times.once()).thenRespond(httpResponseOne)));
-        verify(logger).info(new ExpectationSerializer().serializeAsJava(new Expectation(httpRequest, Times.once()).thenRespond(httpResponseThree)));
+        verify(logger).warn(new ExpectationSerializer().serializeAsJava(new Expectation(httpRequest, Times.once()).thenRespond(httpResponseOne)));
+        verify(logger).warn(new ExpectationSerializer().serializeAsJava(new Expectation(httpRequest, Times.once()).thenRespond(httpResponseThree)));
         verifyNoMoreInteractions(logger);
 
         // when
         logFilter.dumpToLog(new HttpRequest().withPath("some_other_path"), true);
 
         // then
-        verify(logger).info(new ExpectationSerializer().serializeAsJava(new Expectation(otherHttpRequest, Times.once()).thenRespond(httpResponseTwo)));
+        verify(logger).warn(new ExpectationSerializer().serializeAsJava(new Expectation(otherHttpRequest, Times.once()).thenRespond(httpResponseTwo)));
         verifyNoMoreInteractions(logger);
     }
 }

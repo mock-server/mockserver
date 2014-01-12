@@ -1,7 +1,7 @@
 package org.mockserver.configuration;
 
-import org.mockserver.service.ApacheHttpClientConfiguration;
-import org.mockserver.service.JettyHttpClientConfiguration;
+import org.mockserver.service.apacheclient.ApacheHttpClientConfiguration;
+import org.mockserver.service.jettyclient.JettyHttpClientConfiguration;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.PropertySource;

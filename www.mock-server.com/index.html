@@ -432,8 +432,10 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 		<span class="pure-menu-heading">How?</span>
 		<ul>
 			<li><a href="#getting-started">Getting Started</a></li>
-			<li><a href="#starting-the-mockserver">Starting MockServer</a></li>
-			<li><a href="#2-setup-mock-expectations">Creating Expectations</a></li>
+			<li><a href="#starting-mockserver">Starting MockServer</a></li>
+			<li><a href="#create-expectations">Creating Expectations</a></li>
+			<li><a href="#verify-behaviour">Verifying Behaviour</a></li>
+			<li><a href="#analysing-behaviour">Analysing Behaviour</a></li>
 			<li><a href="#ensuring-tests-can-run-in-parallel">Running Tests In Parallel</a></li>
 			<li><a href="#clear-and-reset">Clear & Reset</a></li>
 			<li><a href="#debugging-issues">Debugging Issues</a></li>
@@ -770,15 +772,15 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 <p>To use the MockServer:</p>
 
 <ol>
-	<li><a href="#starting-the-mockserver">Start the MockServer</a></li>
-	<li><a href="#setup-expectations">Setup Expectations</a></li>
+	<li><a href="#starting-mockserver">Start MockServer</a></li>
+	<li><a href="#create-expectations">Create Expectations</a></li>
 	<li><a href="#verify-behaviour">Verify Behaviour</a></li>
 	<li>Run Tests</li>
 </ol>
 
-<a name="starting-the-mockserver" class="anchor" href="#starting-the-mockserver">&nbsp;</a>
+<a name="starting-mockserver" class="anchor" href="#starting-mockserver">&nbsp;</a>
 
-<h3>Starting the MockServer</h3>
+<h3>Starting MockServer</h3>
 
 <p>Before any mock expectation can be sent to the MockServer it must be started.</p>
 
@@ -957,20 +959,20 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p>Use factory method to start server and client when appropriate, for example in <span class="annotation">@Before</span> method:</p>
 
-<pre><code class="code">    <span class="annotation">@Before</span>
-    <span class="keyword">public void</span> startProxy() {
-        <span class="this_value">mockServer</span> = startClientAndServer(<span class="numeric_literal">8080</span>);
-        <span class="this_value">proxy</span> = startClientAndProxy(<span class="numeric_literal">9090</span>);
-    }</code></pre>
+<pre><code class="code"><span class="annotation">@Before</span>
+<span class="keyword">public void</span> startProxy() {
+    <span class="this_value">mockServer</span> = startClientAndServer(<span class="numeric_literal">8080</span>);
+    <span class="this_value">proxy</span> = startClientAndProxy(<span class="numeric_literal">9090</span>);
+}</code></pre>
 
 <p>Stop server and client when appropriate, for example in <span class="annotation">@After</span> method:</p>
 
 
-<pre><code class="code">    <span class="annotation">@After</span>
-    <span class="keyword">public void</span> stopProxy() {
-        <span class="this_value">proxy</span>.stop();
-        <span class="this_value">mockServer</span>.stop();
-    }</code></pre>
+<pre><code class="code"><span class="annotation">@After</span>
+<span class="keyword">public void</span> stopProxy() {
+    <span class="this_value">proxy</span>.stop();
+    <span class="this_value">mockServer</span>.stop();
+}</code></pre>
 
 <p>The <a href="https://github.com/jamesdbloom/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example test called
 	<a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-examples/src/test/java/org/mockserver/web/controller/BooksPageIntegrationTest.java">BookPageIntegrationTest</a> that demonstrates a fully working example.</p>
@@ -1094,186 +1096,324 @@ cd mockserver</code></pre>
 
 <pre><code class="code">gradle run -<strong>P</strong>serverPort=8080 -<strong>P</strong>serverSecurePort=1443 -<strong>P</strong>proxyPort=9090</code></pre>
 
-<a name="setup-expectations" class="anchor" href="#setup-expectations">&nbsp;</a>
+<p><strong>Create Client For Existing MockServer or Proxy</strong></p>
 
-<a name="1-create-mock-response" class="anchor" href="#1-create-mock-response">&nbsp;</a>
+<p>To create a pointing at an existing endpoint using the MockServerClient and ProxyClient constructors, for example:</p>
 
-<h3>1. create mock response</h3>
-
-<p>The mock response can include any aspects of a HTTP request including: </p>
-
-<ul>
-	<li>
-		<strong>response code</strong> i.e. 200, 302, 404, etc
-	</li>
-	<li>
-		<strong>body</strong> - a string containing any content
-	</li>
-	<li>
-		<strong>cookies</strong> - each with a name and with one or more values, more complex cookies can be modelled by using the a Set-Cookie header
-	</li>
-	<li>
-		<strong>headers</strong> - each with a name and one or more values
-	</li>
-	<li>
-		<strong>delay</strong> - including both the time unit (java.util.concurrent.TimeUnit) and value
-	</li>
-</ul>
-<p><strong>Java</strong></p>
-
-<p>To mock a response in Java use the org.mockserver.model.HttpResponse class which specifies the details of each HTTP response with a fluent API:</p>
-
-<pre><code class="code"><span class="keyword">public class</span> HttpResponse {
-
-    <span class="comment">/**
-     * The status code to return, such as <span class="numeric_literal">200</span>, <span class="numeric_literal">404</span>, the status code specified
-     * here will result in the default status message for this status code for
-     * example for <span class="numeric_literal">200</span> the status message <span class="string_literal">"OK"</span> is used
-     *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">statusCode</span> an integer such as <span class="numeric_literal">200</span> or <span class="numeric_literal">404</span>
-     */</span>
-    <span class="keyword">public</span> HttpResponse withStatusCode(Integer responseCode);
-
-    <span class="comment">/**
-     * The cookies to return as Set-Cookie headers as a list of Cookie objects
-     *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">cookies</span> a list of Cookie objects
-     */</span>
-    <span class="keyword">public</span> HttpResponse withCookies(List&lt;Cookie&gt; cookies);
-    <span class="comment">/**
-     * The cookies to return as Set-Cookie headers as a varargs of Cookie objects
-     *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">cookies</span> a varargs of Cookie objects
-     */</span>
-    <span class="keyword">public</span> HttpResponse withCookies(Cookie... cookies);
-
-    <span class="comment">/**
-     * The headers to return as a list of Header objects
-     *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">headers</span> a list of Header objects
-     */</span>
-    <span class="keyword">public</span> HttpResponse withHeaders(List&lt;Header&gt; headers);
-    <span class="comment">/**
-     * The headers to return as a varargs of Header objects
-     *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">headers</span> a varargs of Header objects
-     */</span>
-    <span class="keyword">public</span> HttpResponse withHeaders(Header... headers);
-
-    <span class="comment">/**
-     * The response body
-     *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">body</span> a <span class="string_literal">"UTF-8"</span> string
-     */</span>
-    <span class="keyword">public</span> HttpResponse withBody(String body);
-
-    <span class="comment">/**
-     * The delay before responding with this request as a Delay object, for example <span class="keyword">new</span> Delay(TimeUnit.<span class="constant">SECONDS</span>, <span class="numeric_literal">3</span>)
-     *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">delay</span> a Delay object, for example <span class="keyword">new</span> Delay(TimeUnit.<span class="constant">SECONDS</span>, <span class="numeric_literal">3</span>)
-     */</span>
-    <span class="keyword">public</span> HttpResponse withDelay(Delay delay);
+<pre><code class="code"><span class="annotation">@Before</span>
+<span class="keyword">public void</span> startProxy() {
+    <span class="this_value">mockServer</span> = <span class="keyword">new</span> MockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">8080</span>);
+    <span class="this_value">proxy</span> = <span class="keyword">new</span> ProxyClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">9090</span>);
 }</code></pre>
 
-<p>For example:</p>
+<p>The MockServerClient has the following methods:</p>
 
-<pre><code class="code">HttpResponse httpResponse =
-        response()
-                .withStatusCode(<span class="numeric_literal">200</span>)
-                .withHeaders(
-                        new Header(<span class="string_literal">"Content-Type"</span>, <span class="string_literal">"application/json; charset=utf-8"</span>),
-                        new Header(<span class="string_literal">"Cache-Control"</span>, <span class="string_literal">"public, max-age=86400"</span>)
-                )
-                .withBody(<span class="string_literal">"{ message: 'a simple json response' }"</span>);
-</code></pre>
+<pre><code class="code"><span class="comment">/**
+* Start the client communicating to a MockServer at the specified host and port
+* for example:
+*
+*   MockServerClient mockServerClient = <span class="keyword">new</span> MockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">8080</span>);
+*
+* <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">host</span> the host for the MockServer to communicate with
+* <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">port</span> the port for the MockServer to communicate with
+*/</span>
+<span class="keyword">public</span> MockServerClient(String host, <span class="keyword">int</span> port);
+
+<span class="comment">/**
+* Start the client communicating to a MockServer at the specified host and port
+* and contextPath for example:
+*
+*   MockServerClient mockServerClient = <span class="keyword">new</span> MockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">8080</span>, <span class="string_literal">"/mockserver"</span>);
+*
+* <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">host</span> the host for the MockServer to communicate with
+* <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">port</span> the port for the MockServer to communicate with
+* <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">contextPath</span> the context path that the MockServer war is deployed to
+*/</span>
+<span class="keyword">public</span> MockServerClient(String host, <span class="keyword">int</span> port, String contextPath);
+
+<span class="comment">/**
+* Specify an unlimited expectation that will respond regardless of the number of matching http
+* for example:
+*
+*   <span class="this_value">mockServerClient</span>
+*           .when(
+*                   request()
+*                           .withPath(<span class="string_literal">"/some_path"</span>)
+*                           .withBody(<span class="string_literal">"some_request_body"</span>)
+*           )
+*           .respond(
+*                   request()
+*                           .withBody(<span class="string_literal">"some_response_body"</span>)
+*                           .withHeaders(
+*                                   new Header(<span class="string_literal">"responseName"</span>, <span class="string_literal">"responseValue"</span>)
+*                           )
+*           );
+*
+* <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpRequest</span> the http request that must be matched for this expectation to respond
+* <span class="javadoc_param_annotation">@return</span> an Expectation object that can be used to specify the response
+*/</span>
+<span class="keyword">public</span> ForwardChainExpectation when(HttpRequest httpRequest);
+
+<span class="comment">/**
+* Specify an limited expectation that will respond a specified number of times when the http is matched
+* for example:
+*
+*   <span class="this_value">mockServerClient</span>
+*           .when(
+*                   new HttpRequest()
+*                           .withPath(<span class="string_literal">"/some_path"</span>)
+*                           .withBody(<span class="string_literal">"some_request_body"</span>),
+*                   Times.exactly(<span class="numeric_literal">5</span>)
+*           )
+*           .respond(
+*                   new HttpResponse()
+*                           .withBody(<span class="string_literal">"some_response_body"</span>)
+*                           .withHeaders(
+*                                   new Header(<span class="string_literal">"responseName"</span>, <span class="string_literal">"responseValue"</span>)
+*                           )
+*           );
+*
+* <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpRequest</span> the http request that must be matched for this expectation to respond
+* <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">times</span>       the number of times to respond when this http is matched
+* <span class="javadoc_param_annotation">@return</span> an Expectation object that can be used to specify the response
+*/</span>
+<span class="keyword">public</span> ForwardChainExpectation when(HttpRequest httpRequest, Times times);
+
+<span class="comment">/**
+* Pretty-print the json for all expectations to the log.
+* They are printed into a dedicated log called <span class="annotation">mockserver_request.log</span>
+*/</span>
+<span class="keyword">public</span> MockServerClient dumpToLog();
+
+<span class="comment">/**
+* Pretty-print the json for all expectations that match the request to the log.
+* They are printed into a dedicated log called <span class="annotation">mockserver_request.log</span>
+*
+* <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpRequest</span> the http request that is matched against when deciding what to log
+*                    if <span class="keyword">null</span> all requests are logged
+*/</span>
+<span class="keyword">public</span> MockServerClient dumpToLog(HttpRequest httpRequest);
+
+<span class="comment">/**
+* Reset MockServer by clearing all expectations
+*/</span>
+<span class="keyword">public</span> MockServerClient reset();
+
+<span class="comment">/**
+* Clear all expectations that match the http
+*
+* <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpRequest</span> the http request that is matched against when deciding whether to clear each expectation
+*                    if <span class="keyword">null</span> all expectations are cleared
+*/</span>
+<span class="keyword">public</span> MockServerClient clear(HttpRequest httpRequest);</code></pre>
+
+<p>The ProxyClient has the following methods:</p>
+
+<pre><code class="code"><span class="comment">/**
+* Start the client communicating to the proxy at the specified host and port
+* for example:
+*   ProxyClient mockServerClient = <span class="keyword">new</span> ProxyClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1080</span>);
+*
+* <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">host</span> the host for the proxy to communicate with
+* <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">port</span> the port for the proxy to communicate with
+*/</span>
+<span class="keyword">public</span> ProxyClient(String host, <span class="keyword">int</span> port);
+
+<span class="comment">/**
+* Pretty-print the json for all requests / responses as Expectations to the log.  
+* They are printed into a dedicated log called <span class="annotation">mockserver_request.log</span>
+*/</span>
+<span class="keyword">public</span> ProxyClient dumpToLogAsJSON();
+
+<span class="comment">/**
+* Pretty-print the json for matching requests and their responses as Expectations to the log.  
+* They are printed into a dedicated log called <span class="annotation">mockserver_request.log</span>
+*	
+* <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpRequest</span> the http request that is matched against when deciding what to log
+*                    if <span class="keyword">null</span> all requests are logged
+*/</span>
+<span class="keyword">public</span> ProxyClient dumpToLogAsJSON(HttpRequest httpRequest);
+
+<span class="comment">/**
+* Output Java code for creating all requests / responses as Expectations to the log.  
+* They are printed into a dedicated log called <span class="annotation">mockserver_request.log</span>
+*/</span>
+<span class="keyword">public</span> ProxyClient dumpToLogAsJava();
+
+<span class="comment">/**
+* Output Java code for creating matching requests and their responses as Expectations to the log.  
+* They are printed into a dedicated log called <span class="annotation">mockserver_request.log</span>
+*	
+* <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpRequest</span> the http request that is matched against when deciding what to log
+*                    if <span class="keyword">null</span> all requests are logged
+*/</span>
+<span class="keyword">public</span> ProxyClient dumpToLogAsJava(HttpRequest httpRequest);
+
+<span class="comment">/**
+* Reset the proxy by clearing recorded requests
+*/</span>
+<span class="keyword">public</span> ProxyClient reset();
+
+<span class="comment">/**
+* Clear all recorded requests that match the httpRequest parameter
+*
+* <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpRequest</span> the http request that is matched against when deciding whether to clear recorded requests
+*/</span>
+<span class="keyword">public</span> ProxyClient clear(HttpRequest httpRequest);
+
+<span class="comment">/**
+* Verify a request has been sent for example:
+*
+*   <span class="this_value">mockServerClient</span>
+*           .verify(
+*                   request()
+*                           .withPath(<span class="string_literal">"/some_path"</span>)
+*                           .withBody(<span class="string_literal">"some_request_body"</span>)
+*           );
+*
+* <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpRequest</span> the http request that must be matched for this verification to pass
+* <span class="javadoc_param_annotation">@throws</span> <span class="javadoc_param_name">AssertionError</span> if the request has not been found
+*/</span>
+<span class="keyword">public</span> ProxyClient verify(HttpRequest httpRequest) <span class="keyword">throws</span> AssertionError;
+
+<span class="comment">/**
+* Verify a request has been sent for example:
+*
+*   <span class="this_value">mockServerClient</span>
+*           .verify(
+*                   request()
+*                           .withPath(<span class="string_literal">"/some_path"</span>)
+*                           .withBody(<span class="string_literal">"some_request_body"</span>),
+*                   Times.exactly(<span class="numeric_literal">3</span>)
+*           );
+*
+* <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpRequest</span> the http request that must be matched for this verification to pass
+* <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">times</span> the number of times this request must be matched
+* <span class="javadoc_param_annotation">@throws</span> <span class="javadoc_param_name">AssertionError</span> if the request has not been found
+*/</span>
+<span class="keyword">public</span> ProxyClient verify(HttpRequest httpRequest, Times times) <span class="keyword">throws</span> AssertionError;
+
+<span class="comment">/**
+* Retrieve the recorded requests that match the httpRequest parameter as expectations
+*
+* <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpRequest</span> the http request that is matched against when deciding whether to return each expectation,
+*                    use <span class="keyword">null</span> for the parameter to retrieve for all requests
+* <span class="javadoc_param_annotation">@return</span> an array of all expectations that have been recorded by the proxy
+*/</span>
+<span class="keyword">public</span> Expectation[] retrieveAsExpectations(HttpRequest httpRequest);
+
+<span class="comment">/**
+* Retrieve the recorded requests that match the httpRequest parameter as a JSON array
+*
+* <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpRequest</span> the http request that is matched against when deciding whether to return each expectation,
+*                    use <span class="keyword">null</span> for the parameter to retrieve for all requests
+* <span class="javadoc_param_annotation">@return</span> a JSON array of all expectations that have been recorded by the proxy
+*/</span>
+<span class="keyword">public</span> String retrieveAsJSON(HttpRequest httpRequest);</code></pre>
+
+<a name="create-expectations" class="anchor" href="#create-expectations">&nbsp;</a>
+
+<h3>Create Expectations</h3>
+
+<p>To create an expectation you need to define the <a href="#request-matchers">request matcher</a> and what <a href="#mock-response">response</a> should be returned when the request is matched.</p>
+
+<p>The MockServer will play expectations in the exact order they are setup. For example, if an expectation <span class="annotation">A</span> is setup to response <strong>3</strong> times then expectation
+	<span class="annotation">B</span> is setup to response <strong>2</strong> times for the same request the MockServer will response in the following order <span class="annotation">A</span>, <span class="annotation">A</span>, <span class="annotation">A</span>, <span class="annotation">B</span>, <span class="annotation">B</span>.</p>
+
+<p>The following shows a simple expectation example:</p>
+
+<p><strong>Java</strong></p>
+
+<pre><code class="code"><span class="this_value">mockServer</span>
+        .when(
+                request()
+                        .withMethod(<span class="string_literal">"POST"</span>)
+                        .withPath(<span class="string_literal">"/login"</span>)
+                        .withCookies(
+                                <span class="keyword">new</span> Cookie(<span class="string_literal">"sessionId"</span>, <span class="string_literal">"2By8LOhBmaW5nZXJwcmludCIlMDAzMW"</span>)
+                        )
+                        .withBody(<span class="string_literal">"{username: 'foo', password: 'bar'}"</span>),
+                Times.exactly(<span class="numeric_literal">1</span>)
+        )
+        .respond(
+                response()
+                        .withStatusCode(<span class="numeric_literal">401</span>)
+                        .withHeaders(
+                                <span class="keyword">new</span> Header(<span class="string_literal">"Content-Type"</span>, <span class="string_literal">"application/json; charset=utf-8"</span>),
+                                <span class="keyword">new</span> Header(<span class="string_literal">"Cache-Control"</span>, <span class="string_literal">"public, max-age=86400"</span>)
+                        )
+                        .withBody(<span class="string_literal">"{ message: 'incorrect username and password combination' }"</span>)
+                        .withDelay(new Delay(TimeUnit.<span class="constant">SECONDS</span>, <span class="numeric_literal">1</span>))
+        );</code></pre>
+
+<p>The <a href="https://github.com/jamesdbloom/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example test called
+	<a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-examples/src/test/java/org/mockserver/web/controller/BooksPageIntegrationTest.java">BookPageIntegrationTest</a> that demonstrates a fully working example.</p>
 
 <p><strong>JavaScript</strong></p>
 
-<p>A JavaScript client is provided called mockServerClient.js in the mockserver-client.jar maven dependency. This can also be found at mockservice/mockserver-client/src/main/javascript/mockServerClient.js in the git repository.</p>
-
-<p>To mock a response in javascript use JSON to specify the details with the following format: </p>
-
-<pre><code class="code"><span class="string_literal">"httpResponse"</span>: {
-    <span class="string_literal">"statusCode"</span>: <span class="numeric_literal">200</span>,
-    <span class="string_literal">"body"</span>: <span class="string_literal">""</span>,
-    <span class="string_literal">"cookies"</span>: [],
-    <span class="string_literal">"headers"</span>: [],
-    <span class="string_literal">"delay"</span>: {
-        <span class="string_literal">"timeUnit"</span>: <span class="string_literal">"MICROSECONDS"</span>,
-        <span class="string_literal">"value"</span>: <span class="numeric_literal">0</span>
-    }
-}
-</code></pre>
-
-<p>Each cookie or header array entry has the following syntax:</p>
-
-<pre><code class="code">{
-    <span class="string_literal">"name"</span>: <span class="string_literal">""</span>,
-    <span class="string_literal">"values"</span>: [<span class="string_literal">""</span>, <span class="string_literal">""</span>, ...]
-}
-</code></pre>
-
-<p>The "timeUnit" value in "delay" can be:</p>
-
-<pre><code class="code"><span class="string_literal">"NANOSECONDS"</span>
-<span class="string_literal">"MICROSECONDS"</span>
-<span class="string_literal">"MILLISECONDS"</span>
-<span class="string_literal">"SECONDS"</span>
-<span class="string_literal">"MINUTES"</span>
-<span class="string_literal">"HOURS"</span>
-<span class="string_literal">"DAYS"</span></code></pre>
-
-<p>The same example as above would be:</p>
-
-<pre><code class="code"><span class="string_literal">"httpResponse"</span>: {
-    <span class="string_literal">"statusCode"</span>: <span class="numeric_literal">200</span>,
-    <span class="string_literal">"body"</span>: <span class="string_literal">"{ message: 'a simple json response' }"</span>,
-    <span class="string_literal">"headers"</span>: [
-        {
-            <span class="string_literal">"name"</span>: <span class="string_literal">"Content-Type"</span>,
-            <span class="string_literal">"values"</span>: [<span class="string_literal">"application/json; charset=utf-8"</span>]
-        },
-        {
-            <span class="string_literal">"name"</span>: <span class="string_literal">"Cache-Control"</span>,
-            <span class="string_literal">"values"</span>: [<span class="string_literal">"public, max-age=86400"</span>]
+<pre><code class="code"><span class="keyword">var</span> xmlHttpRequest = <span class="keyword">new</span> XMLHttpRequest();
+xmlHttpRequest.open(<span class="string_literal">"PUT"</span>, <span class="string_literal">"http://localhost:8080"</span>, <span class="keyword">false</span>);
+xmlHttpRequest.setRequestHeader(<span class="string_literal">"Content-Type"</span>, <span class="string_literal">"application/json; charset=utf-8"</span>);
+xmlHttpRequest.send(JSON.stringify({
+    <span class="string_literal">"httpRequest"</span>: {
+        <span class="string_literal">"method"</span>: <span class="string_literal">"POST"</span>,
+        <span class="string_literal">"path"</span>: <span class="string_literal">"/login"</span>,
+        <span class="string_literal">"cookies"</span>: [
+            {
+                <span class="string_literal">"name"</span>: <span class="string_literal">"sessionId"</span>,
+                <span class="string_literal">"values"</span>: [<span class="string_literal">"2By8LOhBmaW5nZXJwcmludCIlMDAzMW"</span>]
+            }
+        ],
+        <span class="string_literal">"body"</span>: JSON.stringify({ username: <span class="string_literal">"foo"</span>, password: <span class="string_literal">"bar"</span> })
+    },
+    <span class="string_literal">"httpResponse"</span>: {
+        <span class="string_literal">"statusCode"</span>: <span class="numeric_literal">401</span>,
+        <span class="string_literal">"headers"</span>: [
+            {
+                <span class="string_literal">"name"</span>: <span class="string_literal">"Content-Type"</span>,
+                <span class="string_literal">"values"</span>: [<span class="string_literal">"application/json; charset=utf-8"</span>]
+            },
+            {
+                <span class="string_literal">"name"</span>: <span class="string_literal">"Cache-Control"</span>,
+                <span class="string_literal">"values"</span>: [<span class="string_literal">"public, max-age=86400"</span>]
+            }
+        ],
+        <span class="string_literal">"body"</span>: JSON.stringify({ message: <span class="string_literal">"incorrect username and password combination"</span> }),
+        <span class="string_literal">"delay"</span>: {
+            <span class="string_literal">"timeUnit"</span>: <span class="string_literal">"SECONDS"</span>,
+            <span class="string_literal">"value"</span>: <span class="numeric_literal">1</span>
         }
-    ]
-}</code></pre>
+    },
+    <span class="string_literal">"times"</span>: {
+        <span class="string_literal">"remainingTimes"</span>: <span class="numeric_literal">1</span>,
+        <span class="string_literal">"unlimited"</span>: <span class="keyword">false</span>
+    }
+}));
+</code></pre>
 
-<a name="2-setup-mock-expectations" class="anchor" href="#2-setup-mock-expectations">&nbsp;</a>
+<a name="request-matchers" class="anchor" href="#request-matchers">&nbsp;</a>
 
-<h3>2. Setup mock expectations</h3>
+<h3>Request Matcher</h3>
 
-<a name="21-request-matcher" class="anchor" href="#21-request-matcher">&nbsp;</a>
-<h4>2.1 Request matcher</h4>
+<p>To specify when a response should be mocked a request matcher must be provided in each expectation.</p>
 
-<p>A mock expectation tells the MockServer how to response when receiving a request. To setup a mock expectation you need to provide the mock response (as described in 1. create mock response) and specify when and how often this response should be provided.</p>
+<p>When an incoming request matches the request matcher in an expectation MockServer will return the response for that expectation.</p>
 
-<p>To specify when a response should be provided a request matcher must be provided. When the MockServer then receives a request that matches a matching request it will respond with the response specified in the mock expectation.</p>
-
-<p>A request can be matched on the following:</p>
+<p>Requests can be matched on:</p>
 
 <ul>
-	<li>
-		<strong>method</strong> i.e. GET, POST, PUT, HEAD, etc
-	</li>
-	<li>
-		<strong>path</strong> - a regular expression such as "/jamesdbloom/mockserver.*" or an exaxct match
-	</li>
-	<li>
-		<strong>body</strong> - a regular expression or an exact match
-	</li>
-	<li>
-		<strong>parameters</strong> - match of query parameters, not all query parameters need to be specified but those that are specified must match exactly, query parameters not specified will be ignored
-	</li>
-	<li>
-		<strong>headers</strong> - not all headers need to be specified but those that are specified must match exactly, headers not specified will be ignored
-	</li>
-	<li>
-		<strong>cookies</strong> - not all cookies need to be specified but those that are specified must match exactly, cookies not specified will be ignored
-	</li>
+	<li><strong>url</strong> - regex or plain text</li>
+	<li><strong>path</strong> - regex or plain text</li>
+	<li><strong>query string</strong> - regex or plain text</li>
+	<li><strong>parameters (query string or body)</strong> - regex or plain text</li>
+	<li><strong>headers</strong> - regex or plain text</li>
+	<li><strong>cookies</strong> - regex or plain text</li>
+	<li><strong>body</strong> - XPath, regex or plain text</li>
 </ul>
-<p>For full details of the regular expression format supported for body and path see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">Java API for java.util.regex.Pattern</a></p>
+
+<p>The body can be matched using plain text, an XPath expression or a regular expression, see <a href="http://saxon.sourceforge.net/saxon6.5.3/expressions.html">XPath Expression Syntax</a> for supported XPath syntax.</p>
+
+<p>All other matching can be done using plain text or a regular expression, see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">Pattern (Java Platform SE 7)</a> for supported regular expression syntax.</p>
 
 <p><strong>Java</strong></p>
 
@@ -1383,8 +1523,6 @@ cd mockserver</code></pre>
 
 <p><strong>JavaScript</strong></p>
 
-<p>A JavaScript client is provided called mockServerClient.js in the mockserver-client.jar maven dependency. This can also be found at mockservice/mockserver-client/src/main/javascript/mockServerClient.js in the git repository.</p>
-
 <p>To specify a request matcher in javascript use JSON to specify the details with the following format: </p>
 
 <pre><code class="code"><span class="string_literal">"httpRequest"</span>: {
@@ -1396,14 +1534,16 @@ cd mockserver</code></pre>
     <span class="string_literal">"headers"</span>: [],
 }</code></pre>
 
-<p>Each cookie or header array entry has the following syntax:</p>
+<p><strong>Note:</strong> Only values which are matched on need to be specified, if a value is missing then it will not be matched on. For example, below both the parameters and headers fields are not specified.</p>
+
+<p>Each cookie, header or parameter array entry has the following syntax:</p>
 
 <pre><code class="code">{
-    <span class="string_literal">"name"</span>: <span class="string_literal">""</span>,
-    <span class="string_literal">"values"</span>: [<span class="string_literal">""</span>, <span class="string_literal">""</span>, ...]
+    <span class="string_literal">"name"</span>: <span class="string_literal">"someName"</span>,
+    <span class="string_literal">"values"</span>: [<span class="string_literal">"someValueOne"</span>, <span class="string_literal">"someValueTwo"</span>, ...]
 }</code></pre>
 
-<p>The same example as above would be:</p>
+<p>The same example, as in Java above, in JavaScript would be :</p>
 
 <pre><code class="code"><span class="string_literal">"httpRequest"</span>: {
     <span class="string_literal">"method"</span>: <span class="string_literal">"POST"</span>,
@@ -1414,100 +1554,325 @@ cd mockserver</code></pre>
             <span class="string_literal">"name"</span>: <span class="string_literal">"sessionId"</span>,
             <span class="string_literal">"values"</span>: [<span class="string_literal">"2By8LOhBmaW5nZXJwcmludCIlMDAzMW"</span>]
         }
-    ],
-    <span class="string_literal">"headers"</span>: [],
-    <span class="string_literal">"parameters"</span>: []
+    ]
 }</code></pre>
 
-<a name="23-sending-mock-expectation" class="anchor" href="#23-sending-mock-expectation">&nbsp;</a>
-<h4>2.3 Sending mock expectation</h4>
-
-<p>To setup a mock expectation on the MockServer the mock response and request matcher must be sent to the MockServer. </p>
-
-<p><strong>Java</strong></p>
-
-<p>In Java MockServerClient can be used to send mock expectation to MockServer, as follows:</p>
-
-<pre><code class="code">String hostname = <span class="string_literal">"localhost"</span>;
-<span class="keyword">int</span> port = <span class="numeric_literal">9999</span>;
-
-MockServerClient mockServerClient = <span class="keyword">new</span> MockServerClient(hostname, port);
-
-HttpRequest httpRequest = <span class="keyword">new</span> HttpRequest()
-        .withMethod(<span class="string_literal">"POST"</span>)
-        .withPath(<span class="string_literal">"/login"</span>)
-        .withBody(<span class="string_literal">"{username: 'foo', password: 'bar'}"</span>)
-        .withCookies(
-                new Cookie(<span class="string_literal">"sessionId"</span>, <span class="string_literal">"2By8LOhBmaW5nZXJwcmludCIlMDAzMW"</span>)
-        );
-
-HttpResponse httpResponse =
-        <span class="keyword">new</span> HttpResponse()
-                .withStatusCode(<span class="numeric_literal">200</span>)
-                .withHeaders(
-                        new Header(<span class="string_literal">"Content-Type"</span>, <span class="string_literal">"application/json; charset=utf-8"</span>),
-                        new Header(<span class="string_literal">"Cache-Control"</span>, <span class="string_literal">"public, max-age=86400"</span>)
-                )
-                .withBody(<span class="string_literal">"{ message: 'a simple json response' }"</span>)
-                .withDelay(new Delay(TimeUnit.<span class="constant">SECONDS</span>, <span class="numeric_literal">1</span>));
-
-mockServerClient.when(httpRequest, Times.unlimited()).respond(httpResponse);</code></pre>
+<p><strong>Times</strong></p>
 
 <p>The org.mockserver.matchers.Times class is used to specify how many times you want the MockServer to match a request:</p>
 
-<p>To create an instance to Times use one of the static factor methods:</p>
+<p>To create an instance of Times use one of the static factory methods:</p>
 
 <pre><code class="code">Times.unlimited();
 Times.once();
 Times.exactly(<span class="keyword">int</span> count);</code></pre>
 
-<p><strong>JavaScript</strong></p>
+<a name="mock-response" class="anchor" href="#mock-response">&nbsp;</a>
 
-<p>In JavaScript a AJAX request can be used to send mock expectation to MockServer, as follows:</p>
+<h3>Mock Responses</h3>
 
-<pre><code class="code"><span class="keyword">var</span> xmlHttpRequest = <span class="keyword">new</span> XMLHttpRequest();
-xmlHttpRequest.open(<span class="string_literal">"PUT"</span>, <span class="string_literal">"http://localhost:9999"</span>, <span class="keyword">false</span>);
-xmlHttpRequest.setRequestHeader(<span class="string_literal">"Content-Type"</span>, <span class="string_literal">"application/json; charset=utf-8"</span>);
-xmlHttpRequest.send(JSON.stringify({
-    <span class="string_literal">"httpRequest"</span>: {
-        <span class="string_literal">"method"</span>: <span class="string_literal">"POST"</span>,
-        <span class="string_literal">"path"</span>: <span class="string_literal">"/login"</span>,
-        <span class="string_literal">"cookies"</span>: [
-            {
-                <span class="string_literal">"name"</span>: <span class="string_literal">"sessionId"</span>,
-                <span class="string_literal">"values"</span>: [<span class="string_literal">"2By8LOhBmaW5nZXJwcmludCIlMDAzMW"</span>]
-            }
-        ]
-    },
-    <span class="string_literal">"httpResponse"</span>: {
-        <span class="string_literal">"statusCode"</span>: <span class="numeric_literal">200</span>,
-        <span class="string_literal">"body"</span>: JSON.stringify({ code: <span class="string_literal">"LOGIN_SUCCESS"</span>, message: <span class="string_literal">"login success"</span> }),
-        <span class="string_literal">"headers"</span>: [
-            {
-                <span class="string_literal">"name"</span>: <span class="string_literal">"Content-Type"</span>,
-                <span class="string_literal">"values"</span>: [<span class="string_literal">"application/json; charset=utf-8"</span>]
-            },
-            {
-                <span class="string_literal">"name"</span>: <span class="string_literal">"Cache-Control"</span>,
-                <span class="string_literal">"values"</span>: [<span class="string_literal">"public, max-age=86400"</span>]
-            }
-        ],
-        <span class="string_literal">"delay"</span>: {
-            <span class="string_literal">"timeUnit"</span>: <span class="string_literal">"MICROSECONDS"</span>,
-            <span class="string_literal">"value"</span>: <span class="numeric_literal">0</span>
-        }
-    },
-    <span class="string_literal">"times"</span>: {
-        <span class="string_literal">"remainingTimes"</span>: <span class="numeric_literal">1</span>,
-        <span class="string_literal">"unlimited"</span>: <span class="keyword">true</span>
-    }
-}));
+<p>Responses can contain:</p>
+
+<ul>
+	<li><strong>status code</strong> i.e. 200, 302, 404, etc</li>
+	<li><strong>body</strong> - a UTF-8 encoded sequence of bytes containing any content</li>
+	<li><strong>headers</strong> - each with a name and one or more values</li>
+	<li><strong>cookies</strong> - each with a name and with one or more values, more complex cookies can be modelled by using the a Set-Cookie header</li>
+</ul>
+
+<p>Responses can be further controlled using:</p>
+
+<ul>
+	<li>a delay before the response is sent</li>
+	<li>the number of times the response is sent (including unlimited)</li>
+</ul>
+
+<p><strong>Java</strong></p>
+
+<p>To mock a response in Java use the org.mockserver.model.HttpResponse class which specifies the details of each HTTP response with a fluent API:</p>
+
+<pre><code class="code"><span class="keyword">public class</span> HttpResponse {
+
+    <span class="comment">/**
+     * The status code to return, such as <span class="numeric_literal">200</span>, <span class="numeric_literal">404</span>, the status code specified
+     * here will result in the default status message for this status code for
+     * example for <span class="numeric_literal">200</span> the status message <span class="string_literal">"OK"</span> is used
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">statusCode</span> an integer such as <span class="numeric_literal">200</span> or <span class="numeric_literal">404</span>
+     */</span>
+    <span class="keyword">public</span> HttpResponse withStatusCode(Integer responseCode);
+
+    <span class="comment">/**
+     * The cookies to return as Set-Cookie headers as a list of Cookie objects
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">cookies</span> a list of Cookie objects
+     */</span>
+    <span class="keyword">public</span> HttpResponse withCookies(List&lt;Cookie&gt; cookies);
+    <span class="comment">/**
+     * The cookies to return as Set-Cookie headers as a varargs of Cookie objects
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">cookies</span> a varargs of Cookie objects
+     */</span>
+    <span class="keyword">public</span> HttpResponse withCookies(Cookie... cookies);
+
+    <span class="comment">/**
+     * The headers to return as a list of Header objects
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">headers</span> a list of Header objects
+     */</span>
+    <span class="keyword">public</span> HttpResponse withHeaders(List&lt;Header&gt; headers);
+    <span class="comment">/**
+     * The headers to return as a varargs of Header objects
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">headers</span> a varargs of Header objects
+     */</span>
+    <span class="keyword">public</span> HttpResponse withHeaders(Header... headers);
+
+    <span class="comment">/**
+     * The response body
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">body</span> a <span class="string_literal">"UTF-8"</span> string
+     */</span>
+    <span class="keyword">public</span> HttpResponse withBody(String body);
+
+    <span class="comment">/**
+     * The delay before responding with this request as a Delay object, for example <span class="keyword">new</span> Delay(TimeUnit.<span class="constant">SECONDS</span>, <span class="numeric_literal">3</span>)
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">delay</span> a Delay object, for example <span class="keyword">new</span> Delay(TimeUnit.<span class="constant">SECONDS</span>, <span class="numeric_literal">3</span>)
+     */</span>
+    <span class="keyword">public</span> HttpResponse withDelay(Delay delay);
+}</code></pre>
+
+<p>For example:</p>
+
+<pre><code class="code">HttpResponse httpResponse =
+        response()
+                .withStatusCode(<span class="numeric_literal">401</span>)
+                .withHeaders(
+                        new Header(<span class="string_literal">"Content-Type"</span>, <span class="string_literal">"application/json; charset=utf-8"</span>),
+                        new Header(<span class="string_literal">"Cache-Control"</span>, <span class="string_literal">"public, max-age=86400"</span>)
+                )
+                .withBody(<span class="string_literal">"{ message: 'incorrect username and password combination' }"</span>)
+                .withDelay(new Delay(TimeUnit.<span class="constant">SECONDS</span>, <span class="numeric_literal">1</span>));
 </code></pre>
 
-<a name="3-run-test" class="anchor" href="#3-run-test">&nbsp;</a>
-<h4>3. Run test</h4>
+<p><strong>JavaScript</strong></p>
 
-<p>Once the mock expectations have been setup on the MockServer the test can be run. </p>
+<p>To mock a response in javascript use JSON to specify the details with the following format: </p>
+
+<pre><code class="code"><span class="string_literal">"httpResponse"</span>: {
+    <span class="string_literal">"statusCode"</span>: <span class="numeric_literal">200</span>,
+    <span class="string_literal">"body"</span>: <span class="string_literal">""</span>,
+    <span class="string_literal">"cookies"</span>: [],
+    <span class="string_literal">"headers"</span>: [],
+    <span class="string_literal">"delay"</span>: {
+        <span class="string_literal">"timeUnit"</span>: <span class="string_literal">"MICROSECONDS"</span>,
+        <span class="string_literal">"value"</span>: <span class="numeric_literal">0</span>
+    }
+}
+</code></pre>
+
+<p>Each cookie or header array entry has the following syntax:</p>
+
+<pre><code class="code">{
+    <span class="string_literal">"name"</span>: <span class="string_literal">"someName"</span>,
+    <span class="string_literal">"values"</span>: [<span class="string_literal">"someValueOne"</span>, <span class="string_literal">"someValueTwo"</span>, ...]
+}</code></pre>
+
+<p>The "timeUnit" value in "delay" can be:</p>
+
+<pre><code class="code"><span class="string_literal">"NANOSECONDS"</span>
+<span class="string_literal">"MICROSECONDS"</span>
+<span class="string_literal">"MILLISECONDS"</span>
+<span class="string_literal">"SECONDS"</span>
+<span class="string_literal">"MINUTES"</span>
+<span class="string_literal">"HOURS"</span>
+<span class="string_literal">"DAYS"</span></code></pre>
+
+<p>The same example as above would be:</p>
+
+<pre><code class="code"><span class="string_literal">"httpResponse"</span>: {
+    <span class="string_literal">"statusCode"</span>: <span class="numeric_literal">401</span>,
+    <span class="string_literal">"headers"</span>: [
+        {
+            <span class="string_literal">"name"</span>: <span class="string_literal">"Content-Type"</span>,
+            <span class="string_literal">"values"</span>: [<span class="string_literal">"application/json; charset=utf-8"</span>]
+        },
+        {
+            <span class="string_literal">"name"</span>: <span class="string_literal">"Cache-Control"</span>,
+            <span class="string_literal">"values"</span>: [<span class="string_literal">"public, max-age=86400"</span>]
+        }
+    ],
+    <span class="string_literal">"body"</span>: JSON.stringify({ message: <span class="string_literal">"incorrect username and password combination"</span> }),
+    <span class="string_literal">"delay"</span>: {
+        <span class="string_literal">"timeUnit"</span>: <span class="string_literal">"SECONDS"</span>,
+        <span class="string_literal">"value"</span>: <span class="numeric_literal">1</span>
+    }
+}</code></pre>
+
+<a name="verify-behaviour" class="anchor" href="#verify-behaviour">&nbsp;</a>
+
+<h2>Verifying Behaviour</h2>
+
+<p>To verify that the system under test has sent a request it must be configured to use the MockServer proxy.</p>
+
+<p>Do this with a Jetty HttpClient, as follows:</p>
+
+<pre><code class="code">HttpClient httpClient = <span class="keyword">new</span> HttpClient();
+<span class="keyword">try</span> {
+    httpClient.getProxyConfiguration().getProxies().add(<span class="keyword">new</span> HttpProxy(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">9090</span>));
+    httpClient.start();
+} <span class="keyword">catch</span> (Exception e) {
+    <span class="keyword">throw new</span> RuntimeException(<span class="string_literal">"Exception creating HttpClient"</span>, e);
+}</code></pre>
+
+<p>The <a href="https://github.com/jamesdbloom/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example of using the proxy with Apache HttpClient called
+	<a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-examples/src/main/java/org/mockserver/service/apacheclient/BookServiceApacheHttpClient.java">BookServiceApacheHttpClient</a> that demonstrates a fully working example.</p>
+
+<p>Do this with an Apache HttpClient, as follows:</p>
+
+<pre><code class="code">HttpHost httpHost = <span class="keyword">new</span> HttpHost(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">9090</span>);
+DefaultProxyRoutePlanner defaultProxyRoutePlanner = <span class="keyword">new</span> DefaultProxyRoutePlanner(httpHost);
+HttpClient httpClient = HttpClients.custom().setRoutePlanner(defaultProxyRoutePlanner).build();</code></pre>
+
+<p>The <a href="https://github.com/jamesdbloom/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example of using the proxy with Jetty HttpClient called
+	<a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-examples/src/main/java/org/mockserver/service/jettyclient/BookServiceJettyHttpClient.java">BookServiceJettyHttpClient</a> that demonstrates a fully working example.</p>
+
+<p>To verify that a request has been sent use the verify method of the ProxyClient as follows:</p>
+
+ <pre><code class="code"><span class="keyword">new</span> ProxyClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">9090</span>).verify(
+        request()
+                .withMethod(<span class="string_literal">"POST"</span>)
+                .withPath(<span class="string_literal">"/login"</span>)
+                .withBody(<span class="string_literal">"{username: 'foo', password: 'bar'}"</span>)
+                .withCookies(
+                        new Cookie(<span class="string_literal">"sessionId"</span>, <span class="string_literal">".*"</span>)
+                ),
+        Times.exactly(<span class="numeric_literal">1</span>)
+);</code></pre>
+
+<p>The org.mockserver.client.proxy.Times class is used to specify how many times you want the MockServer to match a request:</p>
+
+<p>To create an instance of Times use one of the static factory methods:</p>
+
+<pre><code class="code">Times.once();
+Times.exactly(<span class="keyword">int</span> count);
+Times.atLeast(<span class="keyword">int</span> count);</code></pre>
+
+<p>The <a href="https://github.com/jamesdbloom/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example test called
+	<a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-examples/src/test/java/org/mockserver/web/controller/BooksPageIntegrationTest.java">BookPageIntegrationTest</a> that demonstrates a fully working example.</p>
+
+<a name="analysing-behaviour" class="anchor" href="#analysing-behaviour">&nbsp;</a>
+
+<h2>Analysing Behaviour</h2>
+
+<p>To analyse the requests that system makes the proxy can be used to record all requests and write them into the <span class="annotation">mockserver_request.log</span>.  This can be particularly helpful when refactoring an existing or legacy system.</p>
+
+<p>The requests can be written to the log in JSON or as Java code.  The Java code can then be used to setup expectations in the MockServer and exactly replay all interactions.</p>
+
+<p>First the system that is being analysed must be configured to use the proxy.</p>
+
+<p>Do this with a Jetty HttpClient, as follows:</p>
+
+<pre><code class="code">HttpClient httpClient = <span class="keyword">new</span> HttpClient();
+<span class="keyword">try</span> {
+    httpClient.getProxyConfiguration().getProxies().add(<span class="keyword">new</span> HttpProxy(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">9090</span>));
+    httpClient.start();
+} <span class="keyword">catch</span> (Exception e) {
+    <span class="keyword">throw new</span> RuntimeException(<span class="string_literal">"Exception creating HttpClient"</span>, e);
+}</code></pre>
+
+<p>The <a href="https://github.com/jamesdbloom/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example of using the proxy with Apache HttpClient called
+	<a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-examples/src/main/java/org/mockserver/service/apacheclient/BookServiceApacheHttpClient.java">BookServiceApacheHttpClient</a> that demonstrates a fully working example.</p>
+
+<p>Do this with an Apache HttpClient, as follows:</p>
+
+<pre><code class="code">HttpHost httpHost = <span class="keyword">new</span> HttpHost(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">9090</span>);
+DefaultProxyRoutePlanner defaultProxyRoutePlanner = <span class="keyword">new</span> DefaultProxyRoutePlanner(httpHost);
+HttpClient httpClient = HttpClients.custom().setRoutePlanner(defaultProxyRoutePlanner).build();</code></pre>
+
+<p>The <a href="https://github.com/jamesdbloom/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example of using the proxy with Jetty HttpClient called
+	<a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-examples/src/main/java/org/mockserver/service/jettyclient/BookServiceJettyHttpClient.java">BookServiceJettyHttpClient</a> that demonstrates a fully working example.</p>
+
+<p><strong>Write Requests To Log</strong></p>
+
+<p>Write the recorded request to the log as Java code, as follows:</p>
+
+ <pre><code class="code"><span class="keyword">new</span> ProxyClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">9090</span>).dumpToLogAsJava(
+        request()
+                .withMethod(<span class="string_literal">"POST"</span>)
+                .withPath(<span class="string_literal">"/login"</span>)
+);</code></pre>
+
+<p>The Java code format that requests are written to the logs is as follows:</p>
+
+<pre><code class="code">2014-01-12 21:46:33,305
+<span class="keyword">new</span> MockServerClient()
+        .when(
+                request()
+                        .withMethod(<span class="string_literal">"GET"</span>)
+                        .withURL(<span class="string_literal">"http://localhost:8080/get_book?id=1"</span>)
+                        .withPath(<span class="string_literal">"/get_book"</span>)
+                        .withQueryString(<span class="string_literal">"id=1"</span>)
+                        .withHeaders(
+                                new Header(<span class="string_literal">"Accept-Encoding"</span>, <span class="string_literal">"gzip"</span>),
+                                new Header(<span class="string_literal">"Host"</span>, <span class="string_literal">"localhost:1090"</span>),
+                                new Header(<span class="string_literal">"User-Agent"</span>, <span class="string_literal">"Jetty/9.1.0.v20131115"</span>)
+                        ),
+                Times.once()
+        )
+        .thenRespond(
+                response()
+                        .withStatusCode(<span class="numeric_literal">200</span>)
+                        .withHeaders(
+                                new Header(<span class="string_literal">"Server"</span>, <span class="string_literal">"Jetty(9.1.0.v20131115)"</span>)
+                        )
+                        .withBody(<span class="string_literal">"{\n        \"id\": \"1\",\n        \"title\": \"Xenophon's imperial fiction : on the education of Cyrus\",\n        \"author\": \"James Tatum\",\n        \"isbn\": \"0691067570\",\n        \"publicationDate\": \"1989\"\n    }"</span>)
+        );</code></pre>
+
+<p>Write the recorded request to the log as JSON, as follows:</p>
+
+ <pre><code class="code"><span class="keyword">new</span> ProxyClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">9090</span>).dumpToLogAsJSON(
+        request()
+                .withMethod(<span class="string_literal">"POST"</span>)
+                .withPath(<span class="string_literal">"/login"</span>)
+);</code></pre>
+
+<p>The JSON format that requests are written to the logs is as follows:</p>
+
+<pre><code class="code">2014-01-12 21:46:33,299 {
+    <span class="string_literal">"httpRequest"</span> : {
+        <span class="string_literal">"method"</span> : <span class="string_literal">"GET"</span>,
+        <span class="string_literal">"url"</span> : <span class="string_literal">"http://localhost:8080/get_book?id=1"</span>,
+        <span class="string_literal">"path"</span> : <span class="string_literal">"/get_book"</span>,
+        <span class="string_literal">"queryString"</span> : <span class="string_literal">"id=1"</span>,
+        <span class="string_literal">"headers"</span> : [
+            {
+                <span class="string_literal">"name"</span> : <span class="string_literal">"Accept-Encoding"</span>,
+                <span class="string_literal">"values"</span> : [ <span class="string_literal">"gzip"</span> ]
+            },
+            {
+                <span class="string_literal">"name"</span> : <span class="string_literal">"Host"</span>,
+                <span class="string_literal">"values"</span> : [ <span class="string_literal">"localhost:8080"</span> ]
+            },
+            {
+                <span class="string_literal">"name"</span> : <span class="string_literal">"User-Agent"</span>,
+                <span class="string_literal">"values"</span> : [ <span class="string_literal">"Jetty/9.1.0.v20131115"</span> ]
+            } ]
+    },
+    <span class="string_literal">"httpResponse"</span> : {
+        <span class="string_literal">"statusCode"</span> : <span class="numeric_literal">200</span>,
+        <span class="string_literal">"body"</span> : <span class="string_literal">"{\n    \"id\": \"1\",\n    \"title\": \"Xenophon's imperial fiction : on the education of Cyrus\",\n    \"author\": \"James Tatum\",\n    \"isbn\": \"0691067570\",\n    \"publicationDate\": \"1989\"\n}"</span>,
+        <span class="string_literal">"headers"</span> : [ {
+            <span class="string_literal">"name"</span> : <span class="string_literal">"Server"</span>,
+            <span class="string_literal">"values"</span> : [ <span class="string_literal">"Jetty(9.1.0.v20131115)"</span> ]
+        } ]
+    },
+    <span class="string_literal">"times"</span> : {
+        <span class="string_literal">"remainingTimes"</span> : <span class="numeric_literal">1</span>,
+        <span class="string_literal">"unlimited"</span> : <span class="keyword">false</span>
+    }
+}</code></pre>
 
 <a name="ensuring-tests-can-run-in-parallel" class="anchor" href="#ensuring-tests-can-run-in-parallel">&nbsp;</a>
 

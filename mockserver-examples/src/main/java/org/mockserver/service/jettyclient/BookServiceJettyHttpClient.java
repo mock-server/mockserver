@@ -1,30 +1,27 @@
-package org.mockserver.service;
+package org.mockserver.service.jettyclient;
 
-import org.apache.http.HttpHost;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
-import org.apache.http.impl.conn.SystemDefaultRoutePlanner;
-import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
+import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.HttpProxy;
+import org.eclipse.jetty.client.api.ContentResponse;
+import org.eclipse.jetty.http.HttpMethod;
+import org.eclipse.jetty.http.HttpScheme;
 import org.mockserver.model.Book;
+import org.mockserver.service.BookService;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
-import java.net.ProxySelector;
 
 /**
  * @author jamesdbloom
  */
 @Component
-public class BookServiceApacheHttpClient implements BookService {
+public class BookServiceJettyHttpClient implements BookService {
 
     @Resource
     private Environment environment;
@@ -62,38 +59,51 @@ public class BookServiceApacheHttpClient implements BookService {
     }
 
     private HttpClient createHttpClient() {
-        return HttpClients.custom().setRoutePlanner(new DefaultProxyRoutePlanner(new HttpHost("localhost", proxyPort))).build();
-        // todo - need to support SOCKS protocol for this solution to work - jamesdbloom 12/01/2014
-//        return HttpClients.custom().setRoutePlanner(new SystemDefaultRoutePlanner(ProxySelector.getDefault())).build();
-        // todo - or this solution - jamesdbloom 12/01/2014
-//        return HttpClients.custom().build();
-
+        HttpClient httpClient = new HttpClient();
+        try {
+            if (proxyPort != null) {
+                httpClient.getProxyConfiguration().getProxies().add(new HttpProxy("localhost", proxyPort));
+            }
+            httpClient.start();
+        } catch (Exception e) {
+            throw new RuntimeException("Exception creating HttpClient", e);
+        }
+        return httpClient;
     }
 
+    @PreDestroy
+    private void stopClient() {
+        try {
+            httpClient.stop();
+        } catch (Exception e) {
+            throw new RuntimeException("Exception stopping HttpClient", e);
+        }
+    }
+
+    @Override
     public Book[] getAllBooks() {
         try {
-            HttpResponse response = httpClient.execute(new HttpGet(new URIBuilder()
-                    .setScheme("http")
-                    .setHost(host)
-                    .setPort(port)
-                    .setPath("/get_books")
-                    .build()));
-            return objectMapper.readValue(EntityUtils.toByteArray(response.getEntity()), Book[].class);
+            ContentResponse response = httpClient.newRequest(host, port)
+                    .scheme(HttpScheme.HTTP.asString())
+                    .method(HttpMethod.GET)
+                    .path("/get_books")
+                    .send();
+            return objectMapper.readValue(response.getContent(), Book[].class);
         } catch (Exception e) {
             throw new RuntimeException("Exception creating HttpClient", e);
         }
     }
 
+    @Override
     public Book getBook(String id) {
         try {
-            HttpResponse response = httpClient.execute(new HttpGet(new URIBuilder()
-                    .setScheme("http")
-                    .setHost(host)
-                    .setPort(port)
-                    .setPath("/get_book")
-                    .setParameter("id", id)
-                    .build()));
-            return objectMapper.readValue(EntityUtils.toByteArray(response.getEntity()), Book.class);
+            ContentResponse response = httpClient.newRequest(host, port)
+                    .scheme(HttpScheme.HTTP.asString())
+                    .method(HttpMethod.GET)
+                    .path("/get_book")
+                    .param("id", id)
+                    .send();
+            return objectMapper.readValue(response.getContent(), Book.class);
         } catch (Exception e) {
             throw new RuntimeException("Exception creating HttpClient", e);
         }

@@ -1,5 +1,6 @@
 package org.mockserver.client.serialization;
 
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -80,7 +81,7 @@ public class ExpectationSerializer {
                 serializeAsJavaKeyToMultiValue(output, "Cookie", new ArrayList<KeyToMultiValue>(httpRequest.getCookies()));
             }
             if (StringUtils.isNotEmpty(httpRequest.getBody())) {
-                output.append("\n                        .withBody(\"" + httpRequest.getBody() + "\")");
+                output.append("\n                        .withBody(\"" + StringEscapeUtils.escapeJava(httpRequest.getBody()) + "\")");
             }
             output.append(",\n" +
                     "                Times.once()\n" +
@@ -97,7 +98,7 @@ public class ExpectationSerializer {
                 serializeAsJavaKeyToMultiValue(output, "Cookie", new ArrayList<KeyToMultiValue>(httpResponse.getCookies()));
             }
             if (httpResponse.getBody() != null && httpResponse.getBody().length > 0) {
-                output.append("\n                        .withBody(\"" + new String(httpResponse.getBody(), StandardCharsets.UTF_8) + "\")");
+                output.append("\n                        .withBody(\"" + StringEscapeUtils.escapeJava(new String(httpResponse.getBody(), StandardCharsets.UTF_8)) + "\")");
             }
             output.append("\n        );");
         }

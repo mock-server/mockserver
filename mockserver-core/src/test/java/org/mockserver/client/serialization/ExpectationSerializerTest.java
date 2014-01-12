@@ -167,6 +167,125 @@ public class ExpectationSerializerTest {
     }
 
     @Test
+    public void shouldEscapeJSONBodies() throws IOException {
+        // when
+        assertEquals("\n" +
+                "new MockServerClient()\n" +
+                "        .when(\n" +
+                "                request()\n" +
+                "                        .withPath(\"somepath\")\n" +
+                "                        .withBody(\"[\\n    {\\n        \\\"id\\\": \\\"1\\\",\\n        \\\"title\\\": \\\"Xenophon's imperial fiction : on the education of Cyrus\\\",\\n        \\\"author\\\": \\\"James Tatum\\\",\\n        \\\"isbn\\\": \\\"0691067570\\\",\\n        \\\"publicationDate\\\": \\\"1989\\\"\\n    },\\n    {\\n        \\\"id\\\": \\\"2\\\",\\n        \\\"title\\\": \\\"You are here : personal geographies and other maps of the imagination\\\",\\n        \\\"author\\\": \\\"Katharine A. Harmon\\\",\\n        \\\"isbn\\\": \\\"1568984308\\\",\\n        \\\"publicationDate\\\": \\\"2004\\\"\\n    },\\n    {\\n        \\\"id\\\": \\\"3\\\",\\n        \\\"title\\\": \\\"You just don't understand : women and men in conversation\\\",\\n        \\\"author\\\": \\\"Deborah Tannen\\\",\\n        \\\"isbn\\\": \\\"0345372050\\\",\\n        \\\"publicationDate\\\": \\\"1990\\\"\\n    }\\n]\"),\n" +
+                "                Times.once()\n" +
+                "        )\n" +
+                "        .thenRespond(\n" +
+                "                response()\n" +
+                "                        .withStatusCode(304)\n" +
+                "                        .withBody(\"[\\n    {\\n        \\\"id\\\": \\\"1\\\",\\n        \\\"title\\\": \\\"Xenophon's imperial fiction : on the education of Cyrus\\\",\\n        \\\"author\\\": \\\"James Tatum\\\",\\n        \\\"isbn\\\": \\\"0691067570\\\",\\n        \\\"publicationDate\\\": \\\"1989\\\"\\n    },\\n    {\\n        \\\"id\\\": \\\"2\\\",\\n        \\\"title\\\": \\\"You are here : personal geographies and other maps of the imagination\\\",\\n        \\\"author\\\": \\\"Katharine A. Harmon\\\",\\n        \\\"isbn\\\": \\\"1568984308\\\",\\n        \\\"publicationDate\\\": \\\"2004\\\"\\n    },\\n    {\\n        \\\"id\\\": \\\"3\\\",\\n        \\\"title\\\": \\\"You just don't understand : women and men in conversation\\\",\\n        \\\"author\\\": \\\"Deborah Tannen\\\",\\n        \\\"isbn\\\": \\\"0345372050\\\",\\n        \\\"publicationDate\\\": \\\"1990\\\"\\n    }\\n]\")\n" +
+                "        );",
+                expectationSerializer.serializeAsJava(
+                        new Expectation(
+                                new HttpRequest()
+                                        .withPath("somepath")
+                                        .withBody("[\n" +
+                                                "    {\n" +
+                                                "        \"id\": \"1\",\n" +
+                                                "        \"title\": \"Xenophon's imperial fiction : on the education of Cyrus\",\n" +
+                                                "        \"author\": \"James Tatum\",\n" +
+                                                "        \"isbn\": \"0691067570\",\n" +
+                                                "        \"publicationDate\": \"1989\"\n" +
+                                                "    },\n" +
+                                                "    {\n" +
+                                                "        \"id\": \"2\",\n" +
+                                                "        \"title\": \"You are here : personal geographies and other maps of the imagination\",\n" +
+                                                "        \"author\": \"Katharine A. Harmon\",\n" +
+                                                "        \"isbn\": \"1568984308\",\n" +
+                                                "        \"publicationDate\": \"2004\"\n" +
+                                                "    },\n" +
+                                                "    {\n" +
+                                                "        \"id\": \"3\",\n" +
+                                                "        \"title\": \"You just don't understand : women and men in conversation\",\n" +
+                                                "        \"author\": \"Deborah Tannen\",\n" +
+                                                "        \"isbn\": \"0345372050\",\n" +
+                                                "        \"publicationDate\": \"1990\"\n" +
+                                                "    }\n" +
+                                                "]"),
+                                Times.once()
+                        ).thenRespond(
+                                new HttpResponse()
+                                        .withStatusCode(304)
+                                        .withBody("[\n" +
+                                                "    {\n" +
+                                                "        \"id\": \"1\",\n" +
+                                                "        \"title\": \"Xenophon's imperial fiction : on the education of Cyrus\",\n" +
+                                                "        \"author\": \"James Tatum\",\n" +
+                                                "        \"isbn\": \"0691067570\",\n" +
+                                                "        \"publicationDate\": \"1989\"\n" +
+                                                "    },\n" +
+                                                "    {\n" +
+                                                "        \"id\": \"2\",\n" +
+                                                "        \"title\": \"You are here : personal geographies and other maps of the imagination\",\n" +
+                                                "        \"author\": \"Katharine A. Harmon\",\n" +
+                                                "        \"isbn\": \"1568984308\",\n" +
+                                                "        \"publicationDate\": \"2004\"\n" +
+                                                "    },\n" +
+                                                "    {\n" +
+                                                "        \"id\": \"3\",\n" +
+                                                "        \"title\": \"You just don't understand : women and men in conversation\",\n" +
+                                                "        \"author\": \"Deborah Tannen\",\n" +
+                                                "        \"isbn\": \"0345372050\",\n" +
+                                                "        \"publicationDate\": \"1990\"\n" +
+                                                "    }\n" +
+                                                "]")
+                        )
+                )
+        );
+        assertEquals("\n" +
+                "new MockServerClient()\n" +
+                "        .when(\n" +
+                "                request()\n" +
+                "                        .withMethod(\"GET\")\n" +
+                "                        .withURL(\"url\")\n" +
+                "                        .withQueryString(\"queryString\")\n" +
+                "                        .withCookies(\n" +
+                "                                new Cookie(\"requestCookieNameOne\", \"requestCookieValueOneOne\", \"requestCookieValueOneTwo\"),\n" +
+                "                                new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")\n" +
+                "                        ),\n" +
+                "                Times.once()\n" +
+                "        )\n" +
+                "        .thenRespond(\n" +
+                "                response()\n" +
+                "                        .withStatusCode(200)\n" +
+                "                        .withCookies(\n" +
+                "                                new Cookie(\"responseCookieNameOne\", \"responseCookieValueOneOne\", \"responseCookieValueOneTwo\"),\n" +
+                "                                new Cookie(\"responseCookieNameTwo\", \"responseCookieValueTwo\")\n" +
+                "                        )\n" +
+                "                        .withBody(\"somebody\")\n" +
+                "        );",
+                expectationSerializer.serializeAsJava(
+                        new Expectation(
+                                new HttpRequest()
+                                        .withMethod("GET")
+                                        .withURL("url")
+                                        .withQueryString("queryString")
+                                        .withCookies(
+                                                new Cookie("requestCookieNameOne", "requestCookieValueOneOne", "requestCookieValueOneTwo"),
+                                                new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
+                                        ),
+                                Times.once()
+                        ).thenRespond(
+                                new HttpResponse()
+                                        .withHeaders()
+                                        .withCookies(
+                                                new Cookie("responseCookieNameOne", "responseCookieValueOneOne", "responseCookieValueOneTwo"),
+                                                new Cookie("responseCookieNameTwo", "responseCookieValueTwo")
+                                        )
+                                        .withBody("somebody")
+                        )
+                )
+        );
+    }
+
+    @Test
     public void shouldSerializeMinimalObjectAsJava() throws IOException {
         // when
         assertEquals("\n" +

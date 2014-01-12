@@ -32,9 +32,9 @@ public class MockServerClient {
 
     /**
      * Start the client communicating to a MockServer at the specified host and port
-     * for example:
+     * and contextPath for example:
      *
-     *   MockServerClient mockServerClient = new MockServerClient("localhost", 8080);
+     *   MockServerClient mockServerClient = new MockServerClient("localhost", 8080, "/mockserver");
      *
      * @param host the host for the MockServer to communicate with
      * @param port the port for the MockServer to communicate with
@@ -65,10 +65,10 @@ public class MockServerClient {
      *                           )
      *           );
      *
-     * @param httpRequest the http that must be matched for this expectation to respond
+     * @param httpRequest the http request that must be matched for this expectation to respond
      * @return an Expectation object that can be used to specify the response
      */
-    public ForwardChainExpectation when(final HttpRequest httpRequest) {
+    public ForwardChainExpectation when(HttpRequest httpRequest) {
         return when(httpRequest, Times.unlimited());
     }
 
@@ -91,7 +91,7 @@ public class MockServerClient {
      *                           )
      *           );
      *
-     * @param httpRequest the http that must be matched for this expectation to respond
+     * @param httpRequest the http request that must be matched for this expectation to respond
      * @param times       the number of times to respond when this http is matched
      * @return an Expectation object that can be used to specify the response
      */
@@ -100,8 +100,7 @@ public class MockServerClient {
     }
 
     /**
-     * Pretty-print the json for all expectations to the log.  They are printed at WARN
-     * level to ensure they appear even if the default logging level has not been altered
+     * Pretty-print the json for all expectations to the log.  They are printed into a dedicated log called mockserver_request.log
      */
     public MockServerClient dumpToLog() {
         dumpToLog(null);
@@ -109,8 +108,9 @@ public class MockServerClient {
     }
 
     /**
-     * Pretty-print the json for all expectations that match the request to the log.  They are printed
-     * at WARN level to ensure they appear even if the default logging level has not been altered
+     * Pretty-print the json for all expectations that match the request to the log.  They are printed into a dedicated log called mockserver_request.log
+     *
+     * @param httpRequest the http request that is matched against when deciding what to log if null all requests are logged
      */
     public MockServerClient dumpToLog(HttpRequest httpRequest) {
         httpClient.sendPUTRequest(uriBase, "/dumpToLog", httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "");
@@ -128,7 +128,7 @@ public class MockServerClient {
     /**
      * Clear all expectations that match the http
      *
-     * @param httpRequest the http that is matched against when deciding whether to clear each expectation
+     * @param httpRequest the http request that is matched against when deciding whether to clear each expectation if null all expectations are cleared
      */
     public MockServerClient clear(HttpRequest httpRequest) {
         httpClient.sendPUTRequest(uriBase, "/clear", httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "");
