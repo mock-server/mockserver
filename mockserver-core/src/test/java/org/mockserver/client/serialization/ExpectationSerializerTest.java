@@ -332,9 +332,9 @@ public class ExpectationSerializerTest {
         expectationSerializer.deserialize(new byte[0]);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void shouldValidateInputForArray() throws IOException {
         // when
-        expectationSerializer.deserializeArray(new byte[0]);
+        assertArrayEquals(new Expectation[]{}, expectationSerializer.deserializeArray(new byte[0]));
     }
 }

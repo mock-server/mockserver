@@ -11,8 +11,6 @@ import javax.servlet.http.HttpServlet;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import static org.junit.Assert.*;
 import static org.mockserver.configuration.SystemProperties.stopPort;
@@ -38,11 +36,7 @@ public class AbstractRunnerTest {
     public void shouldStartOnNonSecurePortOnly() throws InterruptedException, ExecutionException, UnknownHostException {
         try {
             // when
-            try {
-                runner.start(port, null).get(1, TimeUnit.SECONDS);
-            } catch (TimeoutException te) {
-                // ignore as expected
-            }
+            runner.start(port, null);
 
             // then
             assertEquals("http://" + InetAddress.getLocalHost().getHostAddress() + ":" + port + "/", runner.server.getURI().toString());
@@ -55,11 +49,7 @@ public class AbstractRunnerTest {
     public void shouldStartOnSecurePortOnly() throws InterruptedException, ExecutionException, UnknownHostException {
         try {
             // when
-            try {
-                runner.start(null, port).get(1, TimeUnit.SECONDS);
-            } catch (TimeoutException te) {
-                // ignore as expected
-            }
+            runner.start(null, port);
 
             // then
             assertNotNull(runner.server.getBean(ConnectHandler.class));
@@ -79,16 +69,8 @@ public class AbstractRunnerTest {
     public void shouldNotStartTwice() throws InterruptedException, ExecutionException, UnknownHostException {
         try {
             // when
-            try {
-                runner.start(port, null).get(1, TimeUnit.SECONDS);
-            } catch (TimeoutException te) {
-                // ignore as expected
-            }
-            try {
-                runner.start(port + 1, null).get(1, TimeUnit.SECONDS);
-            } catch (TimeoutException te) {
-                // ignore as expected
-            }
+            runner.start(port, null);
+            runner.start(port + 1, null);
         } finally {
             runner.stop();
         }
@@ -103,11 +85,7 @@ public class AbstractRunnerTest {
     public void shouldNotStopTwice() throws InterruptedException, ExecutionException, UnknownHostException {
         try {
             // when
-            try {
-                runner.start(port, null).get(1, TimeUnit.SECONDS);
-            } catch (TimeoutException te) {
-                // ignore as expected
-            }
+            runner.start(port, null);
             runner.stop();
         } finally {
             runner.stop();
@@ -118,11 +96,7 @@ public class AbstractRunnerTest {
     public void shouldStopRemoteServerAndWaitForResponse() throws InterruptedException, ExecutionException, UnknownHostException {
         try {
             // when
-            try {
-                runner.start(port, null).get(1, TimeUnit.SECONDS);
-            } catch (TimeoutException te) {
-                // ignore as expected
-            }
+            runner.start(port, null);
 
             // then
             assertTrue(new MockServerRunner().stop("127.0.0.1", stopPort(port, null), 30));
@@ -139,11 +113,7 @@ public class AbstractRunnerTest {
     public void shouldStopRemoteServerAndNotWaitForResponse() throws InterruptedException, ExecutionException, UnknownHostException {
         try {
             // when
-            try {
-                runner.start(port, null).get(1, TimeUnit.SECONDS);
-            } catch (TimeoutException te) {
-                // ignore as expected
-            }
+            runner.start(port, null);
 
             // then
             assertTrue(new MockServerRunner().stop("127.0.0.1", stopPort(port, null), 0));
@@ -159,11 +129,7 @@ public class AbstractRunnerTest {
     @Test
     public void shouldIndicateIfCanNotStopRemoteServer() throws InterruptedException, ExecutionException, UnknownHostException {
         // when
-        try {
-            runner.start(port, null).get(1, TimeUnit.SECONDS);
-        } catch (TimeoutException te) {
-            // ignore as expected
-        }
+        runner.start(port, null);
         new MockServerRunner().stop("127.0.0.1", stopPort(port, null), 5);
 
         // then

@@ -2,30 +2,25 @@ package org.mockserver.server;
 
 import org.junit.After;
 import org.junit.Before;
+import org.mockserver.integration.ClientAndServer;
 import org.mockserver.integration.server.AbstractClientServerIntegrationTest;
 import org.mockserver.socket.PortFactory;
 
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+
+import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 
 /**
  * @author jamesdbloom
  */
-public class ClientServerEmbeddedJettyAPIIntegrationTest extends AbstractClientServerIntegrationTest {
+public class ClientAndServerIntegrationTest extends AbstractClientServerIntegrationTest {
 
     private final int serverPort = PortFactory.findFreePort();
     private final int serverSecurePort = PortFactory.findFreePort();
-    private MockServerRunner mockServerRunner;
 
     @Before
     public void startServer() throws InterruptedException, ExecutionException {
-        mockServerRunner = new MockServerRunner();
-        try {
-            mockServerRunner.start(serverPort, serverSecurePort).get(1, TimeUnit.SECONDS);
-        } catch (TimeoutException e) {
-            // do nothing
-        }
+        mockServerClient = startClientAndServer(serverPort, serverSecurePort);
     }
 
     @Override
@@ -40,6 +35,6 @@ public class ClientServerEmbeddedJettyAPIIntegrationTest extends AbstractClientS
 
     @After
     public void stopServer() {
-        mockServerRunner.stop();
+        ((ClientAndServer) mockServerClient).stop();
     }
 }

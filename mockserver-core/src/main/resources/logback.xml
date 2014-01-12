@@ -1,4 +1,5 @@
 <configuration>
+    <!-- application log -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>mockserver.log</file>
         <encoder>
@@ -11,12 +12,13 @@
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>mockserver.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
             <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-                <maxFileSize>500MB</maxFileSize>
+                <maxFileSize>250MB</maxFileSize>
             </timeBasedFileNamingAndTriggeringPolicy>
             <maxHistory>2</maxHistory>
         </rollingPolicy>
     </appender>
 
+    <!-- application console log (errors and warnings) -->
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <target>System.err</target>
         <encoder>
@@ -28,7 +30,19 @@
     </appender>
 
     <logger name="org.mockserver" level="TRACE"/>
-    <logger name="org.eclipse.jetty.util.thread.ShutdownThread" level="TRACE"/>
+
+    <!-- proxy request log -->
+    <appender name="REQUEST_LOG" class="ch.qos.logback.core.FileAppender">
+        <file>mockserver_request.log</file>
+
+        <encoder>
+            <pattern>%date %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="request" level="INFO" additivity="false">
+        <appender-ref ref="REQUEST_LOG"/>
+    </logger>
 
     <root level="WARN">
         <appender-ref ref="FILE"/>

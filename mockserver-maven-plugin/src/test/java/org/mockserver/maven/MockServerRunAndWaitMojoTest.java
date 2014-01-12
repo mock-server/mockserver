@@ -5,9 +5,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockserver.server.MockServerRunner;
 
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -22,7 +22,7 @@ public class MockServerRunAndWaitMojoTest {
     @Mock
     private EmbeddedJettyHolder mockEmbeddedJettyHolder;
     @Mock
-    private Future mockFuture;
+    private MockServerRunner mockServerRunner;
     @InjectMocks
     private MockServerRunAndWaitMojo mockServerRunAndWaitMojo;
 
@@ -38,14 +38,14 @@ public class MockServerRunAndWaitMojoTest {
         mockServerRunAndWaitMojo.securePort = 2;
         mockServerRunAndWaitMojo.logLevel = "LEVEL";
         mockServerRunAndWaitMojo.timeout = 0;
-        when(mockEmbeddedJettyHolder.start(1, 2, "LEVEL")).thenReturn(mockFuture);
+        when(mockEmbeddedJettyHolder.start(1, 2, "LEVEL")).thenReturn(mockServerRunner);
 
         // when
         mockServerRunAndWaitMojo.execute();
 
         // then
         verify(mockEmbeddedJettyHolder).start(1, 2, "LEVEL");
-        verify(mockFuture).get();
+        verify(mockServerRunner).join();
     }
 
     @Test
@@ -55,15 +55,15 @@ public class MockServerRunAndWaitMojoTest {
         mockServerRunAndWaitMojo.securePort = 2;
         mockServerRunAndWaitMojo.logLevel = "LEVEL";
         mockServerRunAndWaitMojo.timeout = 0;
-        when(mockEmbeddedJettyHolder.start(1, 2, "LEVEL")).thenReturn(mockFuture);
-        when(mockFuture.get()).thenThrow(new InterruptedException());
+        when(mockEmbeddedJettyHolder.start(1, 2, "LEVEL")).thenReturn(mockServerRunner);
+        doThrow(new InterruptedException()).when(mockServerRunner).join();
 
         // when
         mockServerRunAndWaitMojo.execute();
 
         // then
         verify(mockEmbeddedJettyHolder).start(1, 2, "LEVEL");
-        verify(mockFuture).get();
+        verify(mockServerRunner).join();
     }
 
     @Test
@@ -73,15 +73,15 @@ public class MockServerRunAndWaitMojoTest {
         mockServerRunAndWaitMojo.securePort = 2;
         mockServerRunAndWaitMojo.logLevel = "LEVEL";
         mockServerRunAndWaitMojo.timeout = 2;
-        when(mockEmbeddedJettyHolder.start(1, 2, "LEVEL")).thenReturn(mockFuture);
-        when(mockFuture.get(2, TimeUnit.SECONDS)).thenThrow(new TimeoutException());
+        when(mockEmbeddedJettyHolder.start(1, 2, "LEVEL")).thenReturn(mockServerRunner);
+        doThrow(new InterruptedException()).when(mockServerRunner).join(TimeUnit.SECONDS.toMillis(2));
 
         // when
         mockServerRunAndWaitMojo.execute();
 
         // then
         verify(mockEmbeddedJettyHolder).start(1, 2, "LEVEL");
-        verify(mockFuture).get(2, TimeUnit.SECONDS);
+        verify(mockServerRunner).join(TimeUnit.SECONDS.toMillis(2));
     }
 
     @Test

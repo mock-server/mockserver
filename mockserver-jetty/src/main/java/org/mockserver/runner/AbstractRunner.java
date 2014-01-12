@@ -1,7 +1,6 @@
 package org.mockserver.runner;
 
 import ch.qos.logback.classic.Level;
-import com.google.common.util.concurrent.SettableFuture;
 import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
@@ -20,9 +19,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static org.mockserver.configuration.SystemProperties.*;
@@ -30,7 +26,7 @@ import static org.mockserver.configuration.SystemProperties.*;
 /**
  * @author jamesdbloom
  */
-public abstract class AbstractRunner {
+public abstract class AbstractRunner<T extends AbstractRunner> {
     static {
         System.setProperty("java.net.preferIPv4Stack", "true");
         System.setProperty("java.net.preferIPv6Addresses", "false");
@@ -57,57 +53,45 @@ public abstract class AbstractRunner {
      * If -Dmockserver.stopPort is not provided the default value used will be the port parameter + 1.
      *
      * @param port the port the listens to incoming HTTP requests
-     * @return A Future that returns the state of the MockServer once it is stopped, this Future can be used to block execution until the MockServer is stopped.
      */
-    public Future<String> start(final Integer port, final Integer securePort) {
+    public T start(final Integer port, final Integer securePort) {
         if (port == null && securePort == null) throw new IllegalStateException("You must specify a port or a secure port");
         if (isRunning()) throw new IllegalStateException("Server already running");
         final String startedMessage = "Started " + this.getClass().getSimpleName().replace("Runner", "") + " listening on:" + (port != null ? " standard port " + port : "") + (securePort != null ? " secure port " + securePort : "");
 
-        final SettableFuture<String> future = SettableFuture.create();
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    server = new Server();
+        try {
+            server = new Server();
 
-                    // add connectors
-                    if (port != null) {
-                        server.addConnector(createHTTPConnector(server, port, securePort));
-                    }
-                    if (securePort != null) {
-                        server.addConnector(createHTTPSConnector(server, securePort));
-                    }
-
-                    // add handler
-                    ServletHandler servletHandler = new ServletHandler();
-                    servletHandler.addServletWithMapping(new ServletHolder(getServlet()), "/");
-                    if (securePort != null) {
-                        server.setHandler(new ConnectHandler(servletHandler, securePort));
-                    } else {
-                        server.setHandler(servletHandler);
-                    }
-
-                    // start server
-                    server.start();
-
-                    // create and start shutdown thread
-                    shutdownThread = new ShutdownThread(stopPort(port, securePort));
-                    shutdownThread.start();
-
-                    logger.info(startedMessage);
-                    System.out.println(startedMessage);
-
-                    server.join();
-                } catch (Throwable t) {
-                    logger.error("Exception while starting server", t);
-                    future.setException(t);
-                } finally {
-                    future.set(server.getState());
-                }
+            // add connectors
+            if (port != null) {
+                server.addConnector(createHTTPConnector(server, port, securePort));
             }
-        }).start();
-        return future;
+            if (securePort != null) {
+                server.addConnector(createHTTPSConnector(server, securePort));
+            }
+
+            // add handler
+            ServletHandler servletHandler = new ServletHandler();
+            servletHandler.addServletWithMapping(new ServletHolder(getServlet()), "/");
+            if (securePort != null) {
+                server.setHandler(new ConnectHandler(servletHandler, securePort));
+            } else {
+                server.setHandler(servletHandler);
+            }
+
+            // start server
+            server.start();
+
+            // create and start shutdown thread
+            shutdownThread = new ShutdownThread(stopPort(port, securePort));
+            shutdownThread.start();
+
+            logger.info(startedMessage);
+            System.out.println(startedMessage);
+        } catch (Throwable t) {
+            logger.error("Exception while starting server", t);
+        }
+        return (T) this;
     }
 
     protected abstract HttpServlet getServlet();
@@ -149,6 +133,24 @@ public abstract class AbstractRunner {
         https.setPort(securePort);
         https.setIdleTimeout(maxTimeout());
         return https;
+    }
+
+    public void join() throws InterruptedException {
+        server.join();
+    }
+
+    public void join(long millis) throws InterruptedException {
+        Thread thread = new Thread(new Runnable() {
+            public void run() {
+                try {
+                    server.join();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException("InterruptedException while attempting to join server ThreadPool", e);
+                }
+            }
+        });
+        thread.start();
+        thread.join(millis);
     }
 
     /**

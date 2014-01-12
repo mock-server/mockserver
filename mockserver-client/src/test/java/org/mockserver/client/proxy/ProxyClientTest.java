@@ -94,7 +94,7 @@ public class ProxyClientTest {
 
         // when
         assertSame(expectations, proxyClient
-                .retrieveExpectationsAsObjects(
+                .retrieveAsExpectations(
                         new HttpRequest()
                                 .withPath("/some_path")
                                 .withBody("some_request_body")
@@ -118,7 +118,7 @@ public class ProxyClientTest {
         when(expectationSerializer.deserializeArray(aryEq("body".getBytes()))).thenReturn(expectations);
 
         // when
-        assertSame(expectations, proxyClient.retrieveExpectationsAsObjects(null));
+        assertSame(expectations, proxyClient.retrieveAsExpectations(null));
 
         // then
         verify(mockHttpClient).sendPUTRequest("http://localhost:8080", "/retrieve", "");
@@ -134,7 +134,7 @@ public class ProxyClientTest {
 
         // when
         assertEquals(expectations, proxyClient
-                .retrieveExpectationsAsJSON(
+                .retrieveAsJSON(
                         new HttpRequest()
                                 .withPath("/some_path")
                                 .withBody("some_request_body")
@@ -156,7 +156,7 @@ public class ProxyClientTest {
         when(mockHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn(contentResponse);
 
         // when
-        assertEquals(expectations, proxyClient.retrieveExpectationsAsJSON(null));
+        assertEquals(expectations, proxyClient.retrieveAsJSON(null));
 
         // then
         verify(mockHttpClient).sendPUTRequest("http://localhost:8080", "/retrieve", "");

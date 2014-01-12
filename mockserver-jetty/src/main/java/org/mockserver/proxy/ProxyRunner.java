@@ -7,13 +7,17 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.proxy.filters.ProxyRequestFilter;
 import org.mockserver.proxy.filters.ProxyResponseFilter;
 import org.mockserver.runner.AbstractRunner;
+import org.mockserver.socket.PortFactory;
 
 import javax.servlet.http.HttpServlet;
 
 /**
  * @author jamesdbloom
  */
-public class ProxyRunner extends AbstractRunner {
+public class ProxyRunner extends AbstractRunner<ProxyRunner> {
+
+    public static final int PROXY_PORT = PortFactory.findFreePort();
+    public static final int PROXY_SECURE_PORT = PortFactory.findFreePort();
 
     @VisibleForTesting
     ProxyServlet proxyServlet = new ProxyServlet();

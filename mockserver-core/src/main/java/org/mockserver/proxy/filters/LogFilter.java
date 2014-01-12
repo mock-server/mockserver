@@ -23,7 +23,7 @@ public class LogFilter implements ProxyResponseFilter {
 
     private final CircularMultiMap<HttpRequest, HttpResponse> requestResponseLog = new CircularMultiMap<>(100, 100);
     private final MatcherBuilder matcherBuilder = new MatcherBuilder();
-    private Logger logger = LoggerFactory.getLogger(this.getClass());
+    private Logger requestLogger = LoggerFactory.getLogger("request");
 
     public HttpResponse onResponse(HttpRequest httpRequest, HttpResponse httpResponse) {
         requestResponseLog.put(httpRequest, httpResponse);
@@ -76,18 +76,18 @@ public class LogFilter implements ProxyResponseFilter {
             for (Map.Entry<HttpRequest, HttpResponse> entry : requestResponseLog.entrySet()) {
                 if (httpRequestMatcher.matches(entry.getKey())) {
                     if (asJava) {
-                        logger.warn(expectationSerializer.serializeAsJava(new Expectation(entry.getKey(), Times.once()).thenRespond(entry.getValue())));
+                        requestLogger.info(expectationSerializer.serializeAsJava(new Expectation(entry.getKey(), Times.once()).thenRespond(entry.getValue())));
                     } else {
-                        logger.warn(expectationSerializer.serialize(new Expectation(entry.getKey(), Times.once()).thenRespond(entry.getValue())));
+                        requestLogger.info(expectationSerializer.serialize(new Expectation(entry.getKey(), Times.once()).thenRespond(entry.getValue())));
                     }
                 }
             }
         } else {
             for (Map.Entry<HttpRequest, HttpResponse> entry : requestResponseLog.entrySet()) {
                 if (asJava) {
-                    logger.warn(expectationSerializer.serializeAsJava(new Expectation(entry.getKey(), Times.once()).thenRespond(entry.getValue())));
+                    requestLogger.info(expectationSerializer.serializeAsJava(new Expectation(entry.getKey(), Times.once()).thenRespond(entry.getValue())));
                 } else {
-                    logger.warn(expectationSerializer.serialize(new Expectation(entry.getKey(), Times.once()).thenRespond(entry.getValue())));
+                    requestLogger.info(expectationSerializer.serialize(new Expectation(entry.getKey(), Times.once()).thenRespond(entry.getValue())));
                 }
             }
         }

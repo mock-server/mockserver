@@ -41,8 +41,8 @@ public class MockServerClient {
      * @param contextPath the context path that the MockServer war is deployed to
      */
     public MockServerClient(String host, int port, String contextPath) {
-        if(StringUtils.isEmpty(host)) throw new IllegalArgumentException("Host can not be null or empty");
-        if(contextPath == null) throw new IllegalArgumentException("ContextPath can not be null");
+        if (StringUtils.isEmpty(host)) throw new IllegalArgumentException("Host can not be null or empty");
+        if (contextPath == null) throw new IllegalArgumentException("ContextPath can not be null");
         uriBase = "http://" + host + ":" + port + (contextPath.length() > 0 && !contextPath.startsWith("/") ? "/" : "") + contextPath;
         httpClient = new HttpRequestClient();
     }
@@ -53,12 +53,12 @@ public class MockServerClient {
      *
      *   mockServerClient
      *           .when(
-     *                   new HttpRequest()
+     *                   request()
      *                           .withPath("/some_path")
      *                           .withBody("some_request_body")
      *           )
      *           .respond(
-     *                   new HttpResponse()
+     *                   request()
      *                           .withBody("some_response_body")
      *                           .withHeaders(
      *                                   new Header("responseName", "responseValue")
@@ -100,18 +100,29 @@ public class MockServerClient {
     }
 
     /**
-     * Pretty-print the json for all expectations already setup to the log.  They are printed at
-     * WARN level to ensure they appear even if the default logging level has not been altered
+     * Pretty-print the json for all expectations to the log.  They are printed at WARN
+     * level to ensure they appear even if the default logging level has not been altered
      */
-    public void dumpToLog() {
-        httpClient.sendPUTRequest(uriBase, "/dumpToLog", "");
+    public MockServerClient dumpToLog() {
+        dumpToLog(null);
+        return this;
+    }
+
+    /**
+     * Pretty-print the json for all expectations that match the request to the log.  They are printed
+     * at WARN level to ensure they appear even if the default logging level has not been altered
+     */
+    public MockServerClient dumpToLog(HttpRequest httpRequest) {
+        httpClient.sendPUTRequest(uriBase, "/dumpToLog", httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "");
+        return this;
     }
 
     /**
      * Reset MockServer by clearing all expectations
      */
-    public void reset() {
+    public MockServerClient reset() {
         httpClient.sendPUTRequest(uriBase, "/reset", "");
+        return this;
     }
 
     /**
@@ -119,8 +130,9 @@ public class MockServerClient {
      *
      * @param httpRequest the http that is matched against when deciding whether to clear each expectation
      */
-    public void clear(HttpRequest httpRequest) {
+    public MockServerClient clear(HttpRequest httpRequest) {
         httpClient.sendPUTRequest(uriBase, "/clear", httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "");
+        return this;
     }
 
     protected void sendExpectation(Expectation expectation) {

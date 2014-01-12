@@ -6,7 +6,9 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.mockserver.client.serialization.model.ExpectationDTO;
 import org.mockserver.mock.Expectation;
-import org.mockserver.model.*;
+import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpResponse;
+import org.mockserver.model.KeyToMultiValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -139,7 +141,7 @@ public class ExpectationSerializer {
     }
 
     public Expectation deserialize(byte[] jsonExpectation) {
-        if (jsonExpectation.length == 0) throw new IllegalArgumentException("Expected an JSON expectation object but http body is empty");
+        if (jsonExpectation == null || jsonExpectation.length == 0) throw new IllegalArgumentException("Expected an JSON expectation object but http body is empty");
         Expectation expectation = null;
         try {
             ExpectationDTO expectationDTO = objectMapper.readValue(jsonExpectation, ExpectationDTO.class);
@@ -153,20 +155,21 @@ public class ExpectationSerializer {
         return expectation;
     }
 
-    public Expectation[] deserializeArray(byte[] jsonExpectation) {
-        if (jsonExpectation.length == 0) throw new IllegalArgumentException("Expected an JSON expectation array object but http body is empty");
-        Expectation[] expectations = null;
-        try {
-            ExpectationDTO[] expectationDTOs = objectMapper.readValue(jsonExpectation, ExpectationDTO[].class);
-            if (expectationDTOs != null && expectationDTOs.length > 0) {
-                expectations = new Expectation[expectationDTOs.length];
-                for (int i = 0; i < expectationDTOs.length; i++) {
-                    expectations[i] = expectationDTOs[i].buildObject();
+    public Expectation[] deserializeArray(byte[] jsonExpectations) {
+        Expectation[] expectations = new Expectation[]{};
+        if (jsonExpectations != null && jsonExpectations.length > 0) {
+            try {
+                ExpectationDTO[] expectationDTOs = objectMapper.readValue(jsonExpectations, ExpectationDTO[].class);
+                if (expectationDTOs != null && expectationDTOs.length > 0) {
+                    expectations = new Expectation[expectationDTOs.length];
+                    for (int i = 0; i < expectationDTOs.length; i++) {
+                        expectations[i] = expectationDTOs[i].buildObject();
+                    }
                 }
+            } catch (IOException ioe) {
+                logger.error("Exception while parsing response [" + new String(jsonExpectations) + "] for http response expectation array", ioe);
+                throw new RuntimeException("Exception while parsing response [" + new String(jsonExpectations) + "] for http response expectation array", ioe);
             }
-        } catch (IOException ioe) {
-            logger.error("Exception while parsing response [" + new String(jsonExpectation) + "] for http response expectation array", ioe);
-            throw new RuntimeException("Exception while parsing response [" + new String(jsonExpectation) + "] for http response expectation array", ioe);
         }
         return expectations;
     }

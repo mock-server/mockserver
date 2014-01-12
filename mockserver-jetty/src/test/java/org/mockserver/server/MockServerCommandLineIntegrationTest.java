@@ -15,7 +15,7 @@ import static org.mockserver.configuration.SystemProperties.stopPort;
 /**
  * @author jamesdbloom
  */
-public class ClientServerEmbeddedJettyCommandLineIntegrationTest extends AbstractClientServerIntegrationTest {
+public class MockServerCommandLineIntegrationTest extends AbstractClientServerIntegrationTest {
 
     private final static int serverPort = PortFactory.findFreePort();
     private final static int serverSecurePort = PortFactory.findFreePort();

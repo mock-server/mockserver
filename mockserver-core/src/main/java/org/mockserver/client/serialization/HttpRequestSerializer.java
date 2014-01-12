@@ -46,13 +46,15 @@ public class HttpRequestSerializer {
 
     public HttpRequest deserialize(byte[] jsonHttpRequest) {
         HttpRequest httpRequest = null;
-        try {
-            HttpRequestDTO httpRequestDTO = objectMapper.readValue(jsonHttpRequest, HttpRequestDTO.class);
-            if (httpRequestDTO != null) {
-                httpRequest = httpRequestDTO.buildObject();
+        if (jsonHttpRequest != null && jsonHttpRequest.length > 0) {
+            try {
+                HttpRequestDTO httpRequestDTO = objectMapper.readValue(jsonHttpRequest, HttpRequestDTO.class);
+                if (httpRequestDTO != null) {
+                    httpRequest = httpRequestDTO.buildObject();
+                }
+            } catch (IOException ioe) {
+                logger.info("Exception while parsing response [" + new String(jsonHttpRequest) + "] for http response httpRequest", ioe);
             }
-        } catch (IOException ioe) {
-            logger.info("Exception while parsing response [" + new String(jsonHttpRequest) + "] for http response httpRequest", ioe);
         }
         return httpRequest;
     }

@@ -12,7 +12,7 @@ import java.util.concurrent.TimeoutException;
 /**
  * @author jamesdbloom
  */
-public class ProxyEmbeddedJettyAPIIntegrationTest extends AbstractClientProxyIntegrationTest {
+public class ProxyRunnerIntegrationTest extends AbstractClientProxyIntegrationTest {
 
     private final static int SERVER_HTTP_PORT = PortFactory.findFreePort();
     private final static int SERVER_HTTPS_PORT = PortFactory.findFreePort();
@@ -43,12 +43,7 @@ public class ProxyEmbeddedJettyAPIIntegrationTest extends AbstractClientProxyInt
 
     @Before
     public void startProxy() throws ExecutionException, InterruptedException {
-        proxyRunner = new ProxyRunner();
-        try {
-            proxyRunner.start(PROXY_HTTP_PORT, PROXY_HTTPS_PORT).get(5, TimeUnit.SECONDS);
-        } catch (TimeoutException e) {
-            // do nothing
-        }
+        proxyRunner = new ProxyRunner().start(PROXY_HTTP_PORT, PROXY_HTTPS_PORT);
     }
 
     @After
