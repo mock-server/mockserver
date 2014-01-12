@@ -21,12 +21,10 @@ public class MockServerRunAndWaitMojo extends MockServerAbstractMojo {
             getLog().info("Starting MockServer on port " + port);
             try {
                 if (timeout > 0) {
-                    getEmbeddedJettyHolder().start(port, securePort, logLevel).get(timeout, TimeUnit.SECONDS);
+                    getEmbeddedJettyHolder().start(port, securePort, logLevel).join(TimeUnit.SECONDS.toMillis(timeout));
                 } else {
-                    getEmbeddedJettyHolder().start(port, securePort, logLevel).get();
+                    getEmbeddedJettyHolder().start(port, securePort, logLevel).join();
                 }
-            } catch (TimeoutException te) {
-                getLog().info(timeout + "s timeout ended MockServer will terminate");
             } catch (Exception e) {
                 getLog().error("Exception while running MockServer", e);
             }

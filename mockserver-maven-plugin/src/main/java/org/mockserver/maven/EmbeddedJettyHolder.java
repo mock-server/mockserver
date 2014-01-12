@@ -13,7 +13,7 @@ public class EmbeddedJettyHolder {
     @VisibleForTesting
     static MockServerRunner MOCK_SERVER_RUNNER = new MockServerRunner();
 
-    public Future start(final int port, final int securePort, final String logLevel) {
+    public MockServerRunner start(final int port, final int securePort, final String logLevel) {
         if (!MOCK_SERVER_RUNNER.isRunning()) {
             MOCK_SERVER_RUNNER.overrideLogLevel(logLevel);
             return MOCK_SERVER_RUNNER.start((port != -1 ? port : null), (securePort != -1 ? securePort : null));
