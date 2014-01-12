@@ -31,6 +31,14 @@ public class ProxyRunner extends AbstractRunner<ProxyRunner> {
         https_config.addCustomizer(new ForwardedRequestCustomizer());
     }
 
+    @Override
+    protected void serverStarted(final Integer port, final Integer securePort) {
+        System.setProperty("proxySet", "true");
+        System.setProperty("http.proxyHost", "localhost");
+        System.setProperty("http.proxyPort", port.toString());
+        System.setProperty("java.net.useSystemProxies","true");
+    }
+
     /**
      * Add filter for HTTP requests, each filter get called before each request is proxied, if the filter return null then the request is not proxied
      *

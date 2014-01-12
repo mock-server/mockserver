@@ -26,7 +26,7 @@ import static org.mockserver.configuration.SystemProperties.*;
 /**
  * @author jamesdbloom
  */
-public abstract class AbstractRunner<T extends AbstractRunner> {
+public abstract class AbstractRunner<T extends AbstractRunner<T>> {
     static {
         System.setProperty("java.net.preferIPv4Stack", "true");
         System.setProperty("java.net.preferIPv6Addresses", "false");
@@ -54,6 +54,7 @@ public abstract class AbstractRunner<T extends AbstractRunner> {
      *
      * @param port the port the listens to incoming HTTP requests
      */
+    @SuppressWarnings("unchecked")
     public T start(final Integer port, final Integer securePort) {
         if (port == null && securePort == null) throw new IllegalStateException("You must specify a port or a secure port");
         if (isRunning()) throw new IllegalStateException("Server already running");
@@ -85,6 +86,7 @@ public abstract class AbstractRunner<T extends AbstractRunner> {
             // create and start shutdown thread
             shutdownThread = new ShutdownThread(stopPort(port, securePort));
             shutdownThread.start();
+            serverStarted(port, securePort);
 
             logger.info(startedMessage);
             System.out.println(startedMessage);
@@ -98,6 +100,10 @@ public abstract class AbstractRunner<T extends AbstractRunner> {
 
     protected void extendHTTPConfig(HttpConfiguration https_config) {
         // allow subclasses to extend http configuration
+    }
+
+    protected void serverStarted(final Integer port, final Integer securePort) {
+        // allow subclasses to run post start logic
     }
 
     private ServerConnector createHTTPConnector(Server server, Integer port, Integer securePort) {
@@ -163,7 +169,7 @@ public abstract class AbstractRunner<T extends AbstractRunner> {
     /**
      * Stop this MockServer instance
      */
-    public AbstractRunner stop() {
+    public AbstractRunner<T> stop() {
         if (!isRunning()) throw new IllegalStateException("Server is not running");
         try {
             shutdownThread.stopListening();

@@ -24,14 +24,19 @@ public class Main {
             "   java -jar <path to mockserver-jetty-2.0-SNAPSHOT-jar-with-dependencies.jar> [-serverPort <port>] [-serverSecurePort <port>] [-proxyPort <port>] [-proxySecurePort <port>]\n" +
             "   \n" +
             "     valid options are:\n" +
-            "        -serverPort <port>         specifies the port for the MockServer           \n" +
-            "                                   if not provide the MockServer is not started    \n" +
-            "        -serverSecurePort <port>   specifies the port for the MockServer           \n" +
-            "                                   if not provide the MockServer is not started    \n" +
-            "        -proxyPort <path>          specifies the port for the proxy                \n" +
-            "                                   if not provide the proxy is not started         \n" +
-            "        -proxySecurePort <path>    specifies the port for the proxy                \n" +
-            "                                   if not provide the proxy is not started         \n";
+            "        -serverPort <port>         specifies the HTTP port for the MockServer      \n" +
+            "                                   if neither serverPort or serverSecurePort       \n" +
+            "                                   are provide the MockServer is not started       \n" +
+            "        -serverSecurePort <port>   specifies the HTTPS port for the MockServer     \n" +
+            "                                   if neither serverPort or serverSecurePort       \n" +
+            "                                   are provide the MockServer is not started       \n" +
+            "                                                                                   \n" +
+            "        -proxyPort <path>          specifies the HTTP port for the proxy           \n" +
+            "                                   if neither proxyPort or proxySecurePort         \n" +
+            "                                   are provide the MockServer is not started       \n" +
+            "        -proxySecurePort <path>    specifies the HTTPS port for the proxy          \n" +
+            "                                   if neither proxyPort or proxySecurePort         \n" +
+            "                                   are provide the MockServer is not started       \n";
     private static final Logger logger = LoggerFactory.getLogger(MockServerRunner.class);
     @VisibleForTesting
     static ProxyRunner proxyRunner = new ProxyRunner();

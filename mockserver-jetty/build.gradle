@@ -26,8 +26,20 @@ dependencies {
 task run(type: JavaExec, dependsOn: [classes]) {
     main = 'org.mockserver.cli.Main'
     classpath = sourceSets.main.runtimeClasspath
-    if (project.hasProperty("port")) {
+    if (project.hasProperty("serverPort")) {
         args '-serverPort'
-        args port
+        args serverPort
+    }
+    if (project.hasProperty("serverSecurePort")) {
+        args '-serverSecurePort'
+        args serverSecurePort
+    }
+    if (project.hasProperty("proxyPort")) {
+        args '-proxyPort'
+        args proxyPort
+    }
+    if (project.hasProperty("proxySecurePort")) {
+        args '-proxySecurePort'
+        args proxySecurePort
     }
 }
