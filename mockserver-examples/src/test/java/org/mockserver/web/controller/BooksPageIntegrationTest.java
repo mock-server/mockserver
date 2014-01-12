@@ -3,20 +3,15 @@ package org.mockserver.web.controller;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockserver.client.proxy.Times;
-import org.mockserver.configuration.RootConfiguration;
 import org.mockserver.integration.ClientAndProxy;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.model.Book;
 import org.mockserver.model.Parameter;
-import org.mockserver.web.configuration.WebMvcConfiguration;
+import org.mockserver.web.controller.pageobjects.BookPage;
+import org.mockserver.web.controller.pageobjects.BooksPage;
 import org.springframework.core.env.Environment;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.ContextHierarchy;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.web.context.WebApplicationContext;
@@ -36,21 +31,7 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppC
 /**
  * @author jamesdbloom
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@WebAppConfiguration
-@ContextHierarchy({
-        @ContextConfiguration(
-                classes = {
-                        RootConfiguration.class
-                }
-        ),
-        @ContextConfiguration(
-                classes = {
-                        WebMvcConfiguration.class
-                }
-        )
-})
-public class BooksPageIntegrationTest {
+public abstract class BooksPageIntegrationTest {
 
     private ClientAndProxy proxy;
     private ClientAndServer mockServer;

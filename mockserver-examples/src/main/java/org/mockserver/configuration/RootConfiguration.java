@@ -1,7 +1,9 @@
 package org.mockserver.configuration;
 
-import org.springframework.context.annotation.ComponentScan;
+import org.mockserver.service.ApacheHttpClientConfiguration;
+import org.mockserver.service.JettyHttpClientConfiguration;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.PropertySource;
 
 /**
@@ -11,7 +13,10 @@ import org.springframework.context.annotation.PropertySource;
  */
 @Configuration
 @PropertySource({"classpath:application.properties"})
-@ComponentScan(basePackages = {"org.mockserver.service"})
+@Import({
+        ApacheHttpClientConfiguration.class,
+        JettyHttpClientConfiguration.class
+})
 public class RootConfiguration {
 
 }

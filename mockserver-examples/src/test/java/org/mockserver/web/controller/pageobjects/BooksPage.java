@@ -1,4 +1,4 @@
-package org.mockserver.web.controller;
+package org.mockserver.web.controller.pageobjects;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
