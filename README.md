@@ -23,11 +23,11 @@ In addition MockServer SNAPSHOT artifacts can also be found on [Sonatype](https:
 
 Vert.X Module Registry contains the following artifacts:
 
-* [org.mock-server~mockserver-vertx~1.12](http://modulereg.vertx.io/) - a Vert.X module that mocks HTTP and HTTPS requests
+* [org.mock-server~mockserver-vertx~2.0](http://modulereg.vertx.io/) - a Vert.X module that mocks HTTP and HTTPS requests
 
 Vert.X Module Registry will shortly also have the following artifacts:
 
-* [org.mock-server~mockserver-vertx-proxy~1.12](http://modulereg.vertx.io/) - a Vert.X module that proxies HTTP and HTTPS allowing the recording and querying of requests and responses
+* [org.mock-server~mockserver-vertx-proxy~2.0](http://modulereg.vertx.io/) - a Vert.X module that proxies HTTP and HTTPS allowing the recording and querying of requests and responses
 
 # Issues
 

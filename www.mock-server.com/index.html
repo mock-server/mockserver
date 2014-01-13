@@ -148,6 +148,15 @@ This styles the selected menu item `<li>`.
 	border-top: 1px solid #333;
 }
 
+#menu div:first-of-type .pure-menu-selected:first-of-type,
+#menu div:first-of-type .pure-menu-heading:first-of-type {
+	margin-top: 5px;
+}
+
+#menu div:last-of-type li:last-of-type {
+	margin-bottom: 25px;
+}
+
 /*
 This styles a link within a selected menu item `<li>`.
 */
@@ -459,7 +468,6 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 	<h2>Easy mocking of any system you integrate with via HTTP or HTTPS</h2>
 </div>
 <div class="content" itemscope itemtype="http://schema.org/Article">
-<p style="color: #8b0000; text-align: center"><strong><em>This documentation is currently being rewritten to make it clearer, a new version will be completed by mid January 2014</em></strong></p>
 
 <a name="what-is-mockserver" class="anchor" href="#what-is-mockserver">&nbsp;</a>
 
@@ -1026,9 +1034,9 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p>Then to run MockServer as Vert.X module run the following command:</p>
 
-<pre><code class="code">vertx install org.mock-server~mockserver-vertx~1.12
+<pre><code class="code">vertx install org.mock-server~mockserver-vertx~2.0
 export VERTX_OPTS=<span class="string_literal">"-Dmockserver.port=8080 -Dmockserver.securePort=1443 -Dmockserver.logLevel=TRACE"</span>
-vertx runmod org.mock-server~mockserver-vertx~1.12</code></pre>
+vertx runmod org.mock-server~mockserver-vertx~2.0</code></pre>
 
 <p>The specify the HTTP port and / or HTTPS port the <strong>VERTX_OPTS</strong> environment variable must be set specifying the system property <strong>mockserver.port</strong> for the HTTP port and <strong>mockserver.securePort</strong> for the HTTPS port.</p>
 
@@ -2022,13 +2030,13 @@ xmlHttpRequest.send(JSON.stringify({
 <p>Vert.X Module Registry contains the following artifacts:</p>
 
 <ul>
-	<li><a href="http://modulereg.vertx.io/">org.mock-server~mockserver-vertx~1.12</a> - a Vert.X module that mocks HTTP and HTTPS requests</li>
+	<li><a href="http://modulereg.vertx.io/">org.mock-server~mockserver-vertx~2.0</a> - a Vert.X module that mocks HTTP and HTTPS requests</li>
 </ul>
 
 <p>Vert.X Module Registry will shortly also have the following artifacts:</p>
 
 <ul>
-	<li><a href="http://modulereg.vertx.io/">org.mock-server~mockserver-vertx-proxy~1.12</a> - a Vert.X module that proxies HTTP and HTTPS allowing the recording and querying of requests and responses</li>
+	<li><a href="http://modulereg.vertx.io/">org.mock-server~mockserver-vertx-proxy~2.0</a> - a Vert.X module that proxies HTTP and HTTPS allowing the recording and querying of requests and responses</li>
 </ul>
 
 <p><br><a href="https://plus.google.com/110954472544793839756?rel=author">James D Bloom</a> - <a href="http://blog.jamesdbloom.com">Blog</a></p>
