@@ -31,12 +31,20 @@ public class SystemProperties {
         System.setProperty("mockserver.requestBufferSize", "" + size);
     }
 
-    public static int stopPort(Integer port, Integer securePort) {
-        return SystemProperties.readIntegerProperty("mockserver.stopPort", Math.max((port != null ? port : 0), (securePort != null ? securePort : 0)) + 1);
+    public static int serverStopPort(Integer port, Integer securePort) {
+        return SystemProperties.readIntegerProperty("mockserver.serverStopPort", Math.max((port != null ? port : 0), (securePort != null ? securePort : 0)) + 1);
     }
 
-    public static void stopPort(int port) {
-        System.setProperty("mockserver.stopPort", "" + port);
+    public static void serverStopPort(int port) {
+        System.setProperty("mockserver.serverStopPort", "" + port);
+    }
+
+    public static int proxyStopPort(Integer port, Integer securePort) {
+        return SystemProperties.readIntegerProperty("mockserver.proxyStopPort", Math.max((port != null ? port : 0), (securePort != null ? securePort : 0)) + 1);
+    }
+
+    public static void proxyStopPort(int port) {
+        System.setProperty("mockserver.proxyStopPort", "" + port);
     }
 
     private static Integer readIntegerProperty(String key, int defaultValue) {

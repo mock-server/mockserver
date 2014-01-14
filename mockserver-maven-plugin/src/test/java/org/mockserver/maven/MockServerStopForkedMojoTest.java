@@ -25,33 +25,35 @@ public class MockServerStopForkedMojoTest {
     }
 
     @Test
-    public void shouldStopMockServerSuccessfully() throws MojoExecutionException {
+    public void shouldStopMockServerAndProxySuccessfully() throws MojoExecutionException {
         // given
-        mockServerStopForkedMojo.stopPort = 1;
-        mockServerStopForkedMojo.stopWait = 2;
+        mockServerStopForkedMojo.serverStopPort = 1;
+        mockServerStopForkedMojo.proxyStopPort = 2;
+        mockServerStopForkedMojo.stopWait = 3;
         mockServerStopForkedMojo.logLevel = "LEVEL";
-        when(mockEmbeddedJettyHolder.stop(1, 2, "LEVEL")).thenReturn(true);
+        when(mockEmbeddedJettyHolder.stop(1, 2, 3, "LEVEL")).thenReturn(true);
 
         // when
         mockServerStopForkedMojo.execute();
 
         // then
-        verify(mockEmbeddedJettyHolder).stop(1, 2, "LEVEL");
+        verify(mockEmbeddedJettyHolder).stop(1, 2, 3, "LEVEL");
     }
 
     @Test
-    public void shouldStopMockServerUnsuccessfully() throws MojoExecutionException {
+    public void shouldStopMockServerAndProxyUnsuccessfully() throws MojoExecutionException {
         // given
-        mockServerStopForkedMojo.stopPort = 1;
-        mockServerStopForkedMojo.stopWait = 2;
+        mockServerStopForkedMojo.serverStopPort = 1;
+        mockServerStopForkedMojo.proxyStopPort = 2;
+        mockServerStopForkedMojo.stopWait = 3;
         mockServerStopForkedMojo.logLevel = "LEVEL";
-        when(mockEmbeddedJettyHolder.stop(1, 2, "LEVEL")).thenReturn(false);
+        when(mockEmbeddedJettyHolder.stop(1, 2, 3, "LEVEL")).thenReturn(false);
 
         // when
         mockServerStopForkedMojo.execute();
 
         // then
-        verify(mockEmbeddedJettyHolder).stop(1, 2, "LEVEL");
+        verify(mockEmbeddedJettyHolder).stop(1, 2, 3, "LEVEL");
     }
 
     @Test

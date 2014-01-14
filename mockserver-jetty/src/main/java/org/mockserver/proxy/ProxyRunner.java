@@ -16,6 +16,9 @@ import java.net.*;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.mockserver.configuration.SystemProperties.proxyStopPort;
+import static org.mockserver.configuration.SystemProperties.serverStopPort;
+
 /**
  * @author jamesdbloom
  */
@@ -45,6 +48,11 @@ public class ProxyRunner extends AbstractRunner<ProxyRunner> {
 
     protected HttpServlet getServlet() {
         return proxyServlet;
+    }
+
+    @Override
+    protected int stopPort(Integer port, Integer securePort) {
+        return proxyStopPort(port, securePort);
     }
 
     @Override

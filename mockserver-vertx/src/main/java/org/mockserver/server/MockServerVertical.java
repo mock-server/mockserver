@@ -94,12 +94,12 @@ public class MockServerVertical extends Verticle {
     /**
      * Starts the MockServer verticle using system properties to override default port and logging level
      * <p/>
-     * -Dmockserver.port=<port> - override the default port
+     * -Dmockserver.serverPort=<port> - override the default port
      * -Dmockserver.logLevel=<level> - override the default logging level
      */
     public void start() {
-        int port = Integer.parseInt(System.getProperty("mockserver.port", "-1"));
-        int securePort = Integer.parseInt(System.getProperty("mockserver.securePort", "-1"));
+        int port = Integer.parseInt(System.getProperty("mockserver.serverPort", "-1"));
+        int securePort = Integer.parseInt(System.getProperty("mockserver.serverSecurePort", "-1"));
         MockServerVertical.overrideLogLevel(System.getProperty("mockserver.logLevel"));
 
         String startedMessage = "Started " + this.getClass().getSimpleName().replace("Vertical", "") + " listening on:";

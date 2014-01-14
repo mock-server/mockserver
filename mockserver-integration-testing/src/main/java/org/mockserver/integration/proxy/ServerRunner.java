@@ -1,4 +1,4 @@
-package org.mockserver.proxy;
+package org.mockserver.integration.proxy;
 
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;

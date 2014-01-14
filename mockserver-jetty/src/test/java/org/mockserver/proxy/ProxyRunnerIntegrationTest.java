@@ -3,11 +3,10 @@ package org.mockserver.proxy;
 import org.junit.After;
 import org.junit.Before;
 import org.mockserver.integration.proxy.AbstractClientProxyIntegrationTest;
+import org.mockserver.integration.proxy.ServerRunner;
 import org.mockserver.socket.PortFactory;
 
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 /**
  * @author jamesdbloom

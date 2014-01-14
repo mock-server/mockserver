@@ -477,7 +477,7 @@ java -jar &lt;path to mockserver-jetty-1.12-jar-with-dependencies.jar&gt; &lt;po
 <p>To run as Vert.X module run the following command:</p>
 
 <pre><code>vertx install org.mock-server~mockserver-vertx~2.0
-export VERTX_OPTS="-Dmockserver.port=9090 -Dmockserver.logLevel=TRACE"
+export VERTX_OPTS="-Dmockserver.serverPort=9090 -Dmockserver.logLevel=TRACE"
 vertx runmod org.mock-server~mockserver-vertx~2.0
 </code></pre>
 
@@ -486,13 +486,13 @@ vertx runmod org.mock-server~mockserver-vertx~2.0
 <pre><code>git clone https://github.com/jamesdbloom/mockservice.git
 cd mockserver
 mvn clean package
-export VERTX_OPTS="-Dmockserver.port=9090 -Dmockserver.logLevel=TRACE"
+export VERTX_OPTS="-Dmockserver.serverPort=9090 -Dmockserver.logLevel=TRACE"
 vertx runzip mockserver-vertx/target/org.mock-server~mockserver-vertx~2.1-SNAPSHOT.zip
 </code></pre>
 
-<p>The default port for the Vert.X MockServer module is <strong>8080</strong>.  To run the MockServer on another port set / add an <strong>VERTX_OPTS</strong> environment variable specifying the system property <strong>mockserver.port</strong> as follows <strong>-Dmockserver.port=&lt;port&gt;</strong> for example:</p>
+<p>The default port for the Vert.X MockServer module is <strong>8080</strong>.  To run the MockServer on another port set / add an <strong>VERTX_OPTS</strong> environment variable specifying the system property <strong>mockserver.serverPort</strong> as follows <strong>-Dmockserver.serverPort=&lt;port&gt;</strong> for example:</p>
 
-<pre><code>export VERTX_OPTS="-Dmockserver.port=9090 -Dmockserver.logLevel=TRACE"
+<pre><code>export VERTX_OPTS="-Dmockserver.serverPort=9090 -Dmockserver.logLevel=TRACE"
 </code></pre>
 
 <p>It is also possible to update the default logging level by setting the system properties <strong>mockserver.logLevel</strong> as above.</p>

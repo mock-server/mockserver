@@ -1,16 +1,14 @@
 package org.mockserver.server;
 
-import org.eclipse.jetty.server.ShutdownMonitor;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.mockserver.cli.Main;
+import org.mockserver.configuration.SystemProperties;
 import org.mockserver.integration.server.AbstractClientServerIntegrationTest;
 import org.mockserver.socket.PortFactory;
 
 import java.util.concurrent.TimeUnit;
-
-import static org.mockserver.configuration.SystemProperties.stopPort;
 
 /**
  * @author jamesdbloom
@@ -30,7 +28,7 @@ public class MockServerCommandLineIntegrationTest extends AbstractClientServerIn
 
     @AfterClass
     public static void stopServer() {
-        new MockServerRunner().stop("127.0.0.1", stopPort(serverPort, serverSecurePort), 5);
+        new MockServerRunner().stop("127.0.0.1", SystemProperties.serverStopPort(serverPort, serverSecurePort), 5);
     }
 
     @Before

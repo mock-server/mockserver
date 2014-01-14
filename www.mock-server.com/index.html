@@ -422,6 +422,18 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 		font-size: 0.65em;
 	}
 }
+
+@media (max-width: 568px) {
+
+	ul, ol {
+		margin-left: 4%;
+		padding-left: 4%;
+	}
+
+	.code {
+		padding: 2%;
+	}
+}
 </style>
 </head>
 <body>
@@ -1035,14 +1047,14 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 <p>Then to run MockServer as Vert.X module run the following command:</p>
 
 <pre><code class="code">vertx install org.mock-server~mockserver-vertx~2.0
-export VERTX_OPTS=<span class="string_literal">"-Dmockserver.port=8080 -Dmockserver.securePort=1443 -Dmockserver.logLevel=TRACE"</span>
+export VERTX_OPTS=<span class="string_literal">"-Dmockserver.serverPort=8080 -Dmockserver.serverSecurePort=1443 -Dmockserver.logLevel=TRACE"</span>
 vertx runmod org.mock-server~mockserver-vertx~2.0</code></pre>
 
-<p>The specify the HTTP port and / or HTTPS port the <strong>VERTX_OPTS</strong> environment variable must be set specifying the system property <strong>mockserver.port</strong> for the HTTP port and <strong>mockserver.securePort</strong> for the HTTPS port.</p>
+<p>The specify the HTTP port and / or HTTPS port the <strong>VERTX_OPTS</strong> environment variable must be set specifying the system property <strong>mockserver.serverPort</strong> for the HTTP port and <strong>mockserver.serverSecurePort</strong> for the HTTPS port.</p>
 
 <p><strong>Note:</strong> At least one of either the HTTP or the HTTPS port must be specified for the MockServer to run.</p>
 
-<pre><code class="code">export VERTX_OPTS=<span class="string_literal">"-Dmockserver.port=8080 -Dmockserver.securePort=1443 -Dmockserver.logLevel=TRACE"</span></code></pre>
+<pre><code class="code">export VERTX_OPTS=<span class="string_literal">"-Dmockserver.serverPort=8080 -Dmockserver.serverSecurePort=1443 -Dmockserver.logLevel=TRACE"</span></code></pre>
 
 <p>It is also possible to update the default logging level by setting the system properties <strong>mockserver.logLevel</strong> as above.</p>
 
@@ -1777,6 +1789,15 @@ Times.atLeast(<span class="keyword">int</span> count);</code></pre>
 <p>The requests can be written to the log in JSON or as Java code.  The Java code can then be used to setup expectations in the MockServer and exactly replay all interactions.</p>
 
 <p>First the system that is being analysed must be configured to use the proxy.</p>
+
+<p>If the proxy is being started programmatically from within the same JVM using <span class="annotation">org.mockserver.proxy.ProxyRunner</span> or <span class="annotation">org.mockserver.integration.ClientAndProxy</span> then the environment variables for <strong>"proxySet"</strong>, <strong>"http.proxyHost"</strong> and <strong>"http.proxyPort"</strong> will be set automatically.</p>
+<p>If the proxy is being started as separate JVM, for example using <a href="#running-from-command-line">the command line</a>, then the system being analysed needs the following command line options to set the correct environment variables.</p>
+
+<pre><code class="code">-DproxySet=true -Dhttp.proxyHost=&lt;proxy hostname&gt; -Dhttp.proxyPort=&lt;proxy port&gt;</code></pre>
+
+<p>For example:</p>
+
+<pre><code class="code">-DproxySet=true -Dhttp.proxyHost=localhost -Dhttp.proxyPort=9090</code></pre>
 
 <h4>Apache HttpClient</h4>
 

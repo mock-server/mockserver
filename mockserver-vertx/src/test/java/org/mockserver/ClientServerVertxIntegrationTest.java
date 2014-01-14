@@ -18,8 +18,8 @@ public class ClientServerVertxIntegrationTest extends AbstractClientServerIntegr
     private final int securePort = PortFactory.findFreePort();
     private final Thread vertxServer = new Thread(new Runnable() {
         public void run() {
-            System.setProperty("mockserver.port", "" + getPort());
-            System.setProperty("mockserver.securePort", "" + getSecurePort());
+            System.setProperty("mockserver.serverPort", "" + getPort());
+            System.setProperty("mockserver.serverSecurePort", "" + getSecurePort());
             Starter.main(new String[]{"run", "org.mockserver.server.MockServerVertical"});
         }
     });

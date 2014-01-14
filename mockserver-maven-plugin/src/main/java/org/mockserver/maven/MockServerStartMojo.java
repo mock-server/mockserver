@@ -16,8 +16,8 @@ public class MockServerStartMojo extends MockServerAbstractMojo {
         if (skip) {
             getLog().info("Skipping plugin execution");
         } else {
-            getLog().info("Starting MockServer on port " + port);
-            getEmbeddedJettyHolder().start(port, securePort, logLevel);
+            getLog().info("Starting MockServer on port " + serverPort);
+            getEmbeddedJettyHolder().start(serverPort, serverSecurePort, proxyPort, proxySecurePort, logLevel);
         }
 
     }

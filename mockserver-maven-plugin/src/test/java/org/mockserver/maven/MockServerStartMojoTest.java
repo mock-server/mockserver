@@ -28,15 +28,17 @@ public class MockServerStartMojoTest {
     @Test
     public void shouldStartMockServer() throws MojoExecutionException {
         // given
-        mockServerStartMojo.port = 1;
-        mockServerStartMojo.securePort = 2;
+        mockServerStartMojo.serverPort = 1;
+        mockServerStartMojo.serverSecurePort = 2;
+        mockServerStartMojo.proxyPort = 3;
+        mockServerStartMojo.proxySecurePort = 4;
         mockServerStartMojo.logLevel = "LEVEL";
 
         // when
         mockServerStartMojo.execute();
 
         // then
-        verify(mockEmbeddedJettyHolder).start(1, 2, "LEVEL");
+        verify(mockEmbeddedJettyHolder).start(1, 2, 3, 4, "LEVEL");
     }
 
     @Test

@@ -2,6 +2,7 @@ package org.mockserver.runner;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockserver.configuration.SystemProperties;
 import org.mockserver.proxy.connect.ConnectHandler;
 import org.mockserver.server.MockServerRunner;
 import org.mockserver.server.MockServerServlet;
@@ -13,7 +14,7 @@ import java.net.UnknownHostException;
 import java.util.concurrent.ExecutionException;
 
 import static org.junit.Assert.*;
-import static org.mockserver.configuration.SystemProperties.stopPort;
+import static org.mockserver.configuration.SystemProperties.serverStopPort;
 
 /**
  * @author jamesdbloom
@@ -21,6 +22,7 @@ import static org.mockserver.configuration.SystemProperties.stopPort;
 public class AbstractRunnerTest {
 
     private final int port = PortFactory.findFreePort();
+    private final int stopPort = PortFactory.findFreePort();
     private AbstractRunner runner;
 
     @Before
@@ -28,6 +30,11 @@ public class AbstractRunnerTest {
         runner = new AbstractRunner() {
             protected HttpServlet getServlet() {
                 return new MockServerServlet();
+            }
+
+            @Override
+            protected int stopPort(Integer port, Integer securePort) {
+                return stopPort;
             }
         };
     }
@@ -99,7 +106,7 @@ public class AbstractRunnerTest {
             runner.start(port, null);
 
             // then
-            assertTrue(new MockServerRunner().stop("127.0.0.1", stopPort(port, null), 30));
+            assertTrue(new MockServerRunner().stop("127.0.0.1", stopPort, 30));
         } finally {
             try {
                 runner.stop();
@@ -116,7 +123,7 @@ public class AbstractRunnerTest {
             runner.start(port, null);
 
             // then
-            assertTrue(new MockServerRunner().stop("127.0.0.1", stopPort(port, null), 0));
+            assertTrue(new MockServerRunner().stop("127.0.0.1", stopPort, 0));
         } finally {
             try {
                 runner.stop();
@@ -130,10 +137,10 @@ public class AbstractRunnerTest {
     public void shouldIndicateIfCanNotStopRemoteServer() throws InterruptedException, ExecutionException, UnknownHostException {
         // when
         runner.start(port, null);
-        new MockServerRunner().stop("127.0.0.1", stopPort(port, null), 5);
+        new MockServerRunner().stop("127.0.0.1", stopPort, 5);
 
         // then
-        assertFalse(new MockServerRunner().stop("127.0.0.1", stopPort(port, null), 3));
+        assertFalse(new MockServerRunner().stop("127.0.0.1", stopPort, 3));
     }
 
     @Test(expected = IllegalArgumentException.class)

@@ -116,7 +116,7 @@ public class ProxyVertical extends Verticle {
     /**
      * Starts the MockServer verticle using system properties to override default port and logging level
      * <p/>
-     * -Dmockserver.port=<port> - override the default port (default: 8080)
+     * -Dmockserver.serverPort=<port> - override the default port (default: 8080)
      * -Dmockserver.logLevel=<level> - override the default logging level (default: WARN)
      */
     public void start() {

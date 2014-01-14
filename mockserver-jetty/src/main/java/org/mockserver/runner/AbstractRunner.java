@@ -49,10 +49,10 @@ public abstract class AbstractRunner<T extends AbstractRunner<T>> {
     }
 
     /**
-     * Start the MockServer instance in the port provided using -Dmockserver.stopPort for the stopPort.
-     * If -Dmockserver.stopPort is not provided the default value used will be the port parameter + 1.
+     * Start the instance using the ports provided
      *
-     * @param port the port the listens to incoming HTTP requests
+     * @param port the http port to use
+     * @param securePort the secure https port to use
      */
     @SuppressWarnings("unchecked")
     public T start(final Integer port, final Integer securePort) {
@@ -97,6 +97,8 @@ public abstract class AbstractRunner<T extends AbstractRunner<T>> {
     }
 
     protected abstract HttpServlet getServlet();
+
+    protected abstract int stopPort(final Integer port, final Integer securePort);
 
     protected void extendHTTPConfig(HttpConfiguration https_config) {
         // allow subclasses to extend http configuration
@@ -260,7 +262,7 @@ public abstract class AbstractRunner<T extends AbstractRunner<T>> {
                     serverSocket.close();
                 }
             } catch (Exception e) {
-                logger.trace("Exception in shutdown thread", e);
+                logger.trace("Exception while creating " + this.getClass().getSimpleName().replace("Runner", "") + " shutdown thread", e);
             }
         }
 
