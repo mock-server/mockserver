@@ -1,6 +1,10 @@
+apply plugin: 'war'
+
 dependencies {
     // http
+    providedCompile "javax.servlet:javax.servlet-api:$servletVersion"
     compile "org.eclipse.jetty:jetty-http:$jettyVersion"
+    compile "org.eclipse.jetty:jetty-server:$jettyVersion"
     compile "org.eclipse.jetty:jetty-client:$jettyVersion"
     compile "org.eclipse.jetty:jetty-util:$jettyVersion"
 
