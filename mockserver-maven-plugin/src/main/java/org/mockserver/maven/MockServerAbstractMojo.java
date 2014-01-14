@@ -11,13 +11,23 @@ public abstract class MockServerAbstractMojo extends AbstractMojo {
     /**
      * The port to run MockServer on
      */
-    @Parameter(property = "mockserver.port", defaultValue = "-1")
-    protected int port;
+    @Parameter(property = "mockserver.serverPort", defaultValue = "-1")
+    protected int serverPort = -1;
     /**
      * The secure port to run MockServer on
      */
-    @Parameter(property = "mockserver.securePort", defaultValue = "-1")
-    protected int securePort;
+    @Parameter(property = "mockserver.serverSecurePort", defaultValue = "-1")
+    protected int serverSecurePort = -1;
+    /**
+     * The port to run the proxy on
+     */
+    @Parameter(property = "mockserver.proxyPort", defaultValue = "-1")
+    protected int proxyPort = -1;
+    /**
+     * The secure port to run the proxy on
+     */
+    @Parameter(property = "mockserver.proxySecurePort", defaultValue = "-1")
+    protected int proxySecurePort = -1;
     /**
      * Timeout to wait before stopping MockServer, to run MockServer indefinitely do not set a value
      */
@@ -41,14 +51,18 @@ public abstract class MockServerAbstractMojo extends AbstractMojo {
     /**
      * The port to stop MockServer
      */
-    @Parameter(property = "mockserver.stopPort", defaultValue = "8081")
-    protected int stopPort;
+    @Parameter(property = "mockserver.serverStopPort", defaultValue = "8081")
+    protected int serverStopPort;
+    /**
+     * The port to stop the proxy
+     */
+    @Parameter(property = "mockserver.proxyStopPort", defaultValue = "8081")
+    protected int proxyStopPort;
     /**
      * Max time in seconds to wait for the MockServer to stop
      */
     @Parameter(property = "mockserver.stopWait")
     protected int stopWait;
-
     /**
      * Holds reference to jetty across plugin execution
      */

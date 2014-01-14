@@ -54,19 +54,27 @@ public class MockServerRunForkedMojo extends MockServerAbstractMojo {
         if (skip) {
             getLog().info("Skipping plugin execution");
         } else {
-            getLog().info("Starting MockServer on port " + port);
+            getLog().info("Starting MockServer on port " + serverPort);
             List<String> arguments = new ArrayList<>(Arrays.asList(getJavaBin(),
                     "-Dmockserver.logLevel=" + logLevel,
-                    "-Dmockserver.stopPort=" + stopPort,
+                    "-Dmockserver.serverStopPort=" + serverStopPort,
 //                    "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5006",
                     "-jar", jarWithDependencies()));
-            if (port != -1) {
+            if (serverPort != -1) {
                 arguments.add("-serverPort");
-                arguments.add("" + port);
+                arguments.add("" + serverPort);
             }
-            if (securePort != -1) {
+            if (serverSecurePort != -1) {
                 arguments.add("-serverSecurePort");
-                arguments.add("" + securePort);
+                arguments.add("" + serverSecurePort);
+            }
+            if (proxyPort != -1) {
+                arguments.add("-proxyPort");
+                arguments.add("" + proxyPort);
+            }
+            if (proxySecurePort != -1) {
+                arguments.add("-proxySecurePort");
+                arguments.add("" + proxySecurePort);
             }
             ProcessBuilder processBuilder = newProcessBuilder(arguments);
             if (pipeLogToConsole) {
