@@ -833,7 +833,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 <pre><code class="code xml">&lt;<span class="element">plugin</span>&gt;
     &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;
     &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-maven-plugin</span>&lt;/<span class="element">artifactId</span>&gt;
-    &lt;<span class="element">version</span>&gt;<span class="element_value">2.0</span>&lt;/<span class="element">version</span>&gt;
+    &lt;<span class="element">version</span>&gt;<span class="element_value">2.1</span>&lt;/<span class="element">version</span>&gt;
     &lt;<span class="element">configuration</span>&gt;
         &lt;<span class="element">port</span>&gt;<span class="element_value">9090</span>&lt;/<span class="element">port</span>&gt;
         &lt;<span class="element">logLevel</span>&gt;<span class="element_value">TRACE</span>&lt;/<span class="element">logLevel</span>&gt;
@@ -866,7 +866,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 <pre><code class="code xml"> &lt;<span class="element">plugin</span>&gt;
      &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;
      &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-maven-plugin</span>&lt;/<span class="element">artifactId</span>&gt;
-     &lt;<span class="element">version</span>&gt;<span class="element_value">2.0</span>&lt;/<span class="element">version</span>&gt;
+     &lt;<span class="element">version</span>&gt;<span class="element_value">2.1</span>&lt;/<span class="element">version</span>&gt;
      &lt;<span class="element">configuration</span>&gt;
          &lt;<span class="element">port</span>&gt;<span class="element_value">9090</span>&lt;/<span class="element">port</span>&gt;
          &lt;<span class="element">logLevel</span>&gt;<span class="element_value">TRACE</span>&lt;/<span class="element">logLevel</span>&gt;
@@ -961,7 +961,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 &lt;<span class="element">dependency</span>&gt;
      &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;<span class="element">/groupId</span>&gt;
      &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-jetty</span>&lt;<span class="element">/artifactId</span>&gt;
-     &lt;<span class="element">version</span>&gt;<span class="element_value">2.0</span>&lt;<span class="element">/version</span>&gt;
+     &lt;<span class="element">version</span>&gt;<span class="element_value">2.1</span>&lt;<span class="element">/version</span>&gt;
 &lt;<span class="element">/dependency</span>&gt;</code></pre>
 
 <p>To start the server and create a client the simplest way is to the start factory methods ClientAndServer.startClientAndServer or ClientAndProxy.startClientAndProxy as follows:</p>
@@ -1004,9 +1004,9 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 <p>MockServer can be run directly from the command line and using Embedded Jetty as follow:</p>
 
 <ol>
-	<li><p>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-jetty/2.0/mockserver-jetty-2.0-jar-with-dependencies.jar">mockserver-jetty-2.0-jar-with-dependencies.jar</a> from Maven Central</p></li>
+	<li><p>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-jetty/2.1/mockserver-jetty-2.1-jar-with-dependencies.jar">mockserver-jetty-2.1-jar-with-dependencies.jar</a> from Maven Central</p></li>
 	<li>
-		<code class="code inline">java -jar &lt;path to mockserver-jetty-2.0-jar-with-dependencies.jar&gt; -serverPort &lt;port&gt;</code>
+		<code class="code inline">java -jar &lt;path to mockserver-jetty-2.1-jar-with-dependencies.jar&gt; -serverPort &lt;port&gt;</code>
 	</li>
 </ol>
 
@@ -1034,7 +1034,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p>For example:</p>
 
-<pre><code class="code">java -jar ~/Downloads/mockserver-jetty-2.0-jar-with-dependencies.jar -serverPort 8080 -proxyPort 9090</code></pre>
+<pre><code class="code">java -jar ~/Downloads/mockserver-jetty-2.1-jar-with-dependencies.jar -serverPort 8080 -proxyPort 9090</code></pre>
 
 <a name="vertx-module" class="anchor" href="#vertx-module">&nbsp;</a>
 
@@ -1065,8 +1065,8 @@ vertx runmod org.mock-server~mockserver-vertx~2.0</code></pre>
 <p>To run as a WAR deployed on any JEE web server:</p>
 
 <ol>
-	<li>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-war/2.0/mockserver-war-2.0.war">mockserver-war-2.0.war</a> from Maven Central</li>
-	<li>deploy <strong>mockserver-war-2.0.war</strong> to any JEE web server</li>
+	<li>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-war/2.1/mockserver-war-2.1.war">mockserver-war-2.1.war</a> from Maven Central</li>
+	<li>deploy <strong>mockserver-war-2.1.war</strong> to any JEE web server</li>
 </ol>
 
 <p><strong>WAR Context Path</strong></p>
@@ -1100,7 +1100,7 @@ cd mockserver</code></pre>
 
 <p>This will produce a jar file under the target directory called, as follows:</p>
 
-<pre><code class="code">mockserver-jetty/target/mockserver-jetty-2.0-jar-with-dependencies.jar</code></pre>
+<pre><code class="code">mockserver-jetty/target/mockserver-jetty-2.1-jar-with-dependencies.jar</code></pre>
 
 <p>Run the MockServer then using the executable jar as per the instruction above in <a href="#running-from-command-line">Running From The Command Line</a></p>
 
@@ -2086,9 +2086,9 @@ xmlHttpRequest.send(JSON.stringify({
 <p>The simplest way to run and download MockServer is by using the fully stand alone web server embedded with all dependencies that mocks HTTP and HTTPS requests, as follows:</p>
 
 <ol>
-	<li><p>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-jetty/2.0/mockserver-jetty-2.0-jar-with-dependencies.jar">mockserver-jetty-2.0-jar-with-dependencies.jar</a> from Maven Central</p></li>
+	<li><p>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-jetty/2.1/mockserver-jetty-2.1-jar-with-dependencies.jar">mockserver-jetty-2.1-jar-with-dependencies.jar</a> from Maven Central</p></li>
 	<li>
-		<code class="code inline">java -jar &lt;path to mockserver-jetty-2.0-jar-with-dependencies.jar&gt; -serverPort &lt;port&gt;</code>
+		<code class="code inline">java -jar &lt;path to mockserver-jetty-2.1-jar-with-dependencies.jar&gt; -serverPort &lt;port&gt;</code>
 	</li>
 </ol>
 

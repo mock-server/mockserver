@@ -21,7 +21,7 @@ public class Main {
     public static final String SERVER_PORT_KEY = "serverPort";
     public static final String SERVER_SECURE_PORT_KEY = "serverSecurePort";
     public static final String USAGE = "" +
-            "   java -jar <path to mockserver-jetty-2.1-SNAPSHOT-jar-with-dependencies.jar> [-serverPort <port>] [-serverSecurePort <port>] [-proxyPort <port>] [-proxySecurePort <port>]\n" +
+            "   java -jar <path to mockserver-jetty-jar-with-dependencies.jar> [-serverPort <port>] [-serverSecurePort <port>] [-proxyPort <port>] [-proxySecurePort <port>]\n" +
             "   \n" +
             "     valid options are:\n" +
             "        -serverPort <port>         specifies the HTTP port for the MockServer      \n" +

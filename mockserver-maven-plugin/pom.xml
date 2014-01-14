@@ -150,7 +150,7 @@
                             <localRepositoryPath>${project.build.directory}/local-repo</localRepositoryPath>
                             <extraArtifacts>
                                 <!-- groupId:artifactId:version:type:classifier -->
-                                <extraArtifact>org.mock-server:mockserver:2.1-SNAPSHOT:pom</extraArtifact>
+                                <extraArtifact>org.mock-server:mockserver:2.2-SNAPSHOT:pom</extraArtifact>
                             </extraArtifacts>
                             <settingsFile>src/integration-tests/settings.xml</settingsFile>
                             <!--<mavenOpts>-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005</mavenOpts>-->
