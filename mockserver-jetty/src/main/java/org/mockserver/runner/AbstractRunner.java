@@ -106,6 +106,10 @@ public abstract class AbstractRunner<T extends AbstractRunner<T>> {
         // allow subclasses to run post start logic
     }
 
+    protected void serverStopped() {
+        // allow subclasses to run post start logic
+    }
+
     private ServerConnector createHTTPConnector(Server server, Integer port, Integer securePort) {
         // HTTP Configuration
         HttpConfiguration http_config = new HttpConfiguration();
@@ -172,6 +176,7 @@ public abstract class AbstractRunner<T extends AbstractRunner<T>> {
     public AbstractRunner<T> stop() {
         if (!isRunning()) throw new IllegalStateException("Server is not running");
         try {
+            serverStopped();
             shutdownThread.stopListening();
             server.stop();
             server.join();

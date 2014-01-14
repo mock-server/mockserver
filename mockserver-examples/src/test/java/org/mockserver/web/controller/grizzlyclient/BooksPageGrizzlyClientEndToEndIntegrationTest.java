@@ -1,4 +1,4 @@
-package org.mockserver.web.controller.jettyclient;
+package org.mockserver.web.controller.grizzlyclient;
 
 import org.junit.runner.RunWith;
 import org.mockserver.configuration.RootConfiguration;
@@ -29,7 +29,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
                 }
         )
 })
-@ActiveProfiles(profiles = {"backend", "jettyClient"})
-public class BooksPageJettyClientEndToEndIntegrationTest extends BooksPageEndToEndIntegrationTest {
+@ActiveProfiles(profiles = {"backend", "grizzlyClient"})
+public class BooksPageGrizzlyClientEndToEndIntegrationTest extends BooksPageEndToEndIntegrationTest {
 
 }

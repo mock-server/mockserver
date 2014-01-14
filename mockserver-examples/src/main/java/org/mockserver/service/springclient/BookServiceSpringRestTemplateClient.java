@@ -1,43 +1,47 @@
-package org.mockserver.service.apacheclient;
+package org.mockserver.service.springclient;
 
 import org.apache.http.HttpHost;
-import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
-import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.mockserver.model.Book;
 import org.mockserver.service.BookService;
 import org.springframework.core.env.Environment;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author jamesdbloom
  */
 @Component
-public class BookServiceApacheHttpClient implements BookService {
+public class BookServiceSpringRestTemplateClient implements BookService {
 
     @Resource
     private Environment environment;
     private Integer port;
+    private Integer proxyPort;
     private String host;
     private ObjectMapper objectMapper;
-    private HttpClient httpClient;
+    private RestTemplate restTemplate;
 
     @PostConstruct
     private void initialise() {
         port = environment.getProperty("bookService.port", Integer.class);
+        proxyPort = environment.getProperty("bookService.proxyPort", Integer.class);
         host = environment.getProperty("bookService.host", "localhost");
         objectMapper = createObjectMapper();
-        httpClient = createHttpClient();
+        restTemplate = createRestTemplate();
     }
 
     private ObjectMapper createObjectMapper() {
@@ -58,44 +62,39 @@ public class BookServiceApacheHttpClient implements BookService {
         return objectMapper;
     }
 
-    private HttpClient createHttpClient() {
+    private RestTemplate createRestTemplate() {
+        // jackson message converter
+        MappingJacksonHttpMessageConverter mappingJacksonHttpMessageConverter = new MappingJacksonHttpMessageConverter();
+        mappingJacksonHttpMessageConverter.setObjectMapper(objectMapper);
+
+        // create message converters list
+        List<HttpMessageConverter<?>> httpMessageConverters = new ArrayList<>();
+        httpMessageConverters.add(mappingJacksonHttpMessageConverter);
+
+        // create rest template
+        RestTemplate restTemplate = new RestTemplate();
+        restTemplate.setMessageConverters(httpMessageConverters);
+
+        // configure proxy
         if (Boolean.parseBoolean(System.getProperty("proxySet"))) {
             HttpHost httpHost = new HttpHost(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort")));
             DefaultProxyRoutePlanner defaultProxyRoutePlanner = new DefaultProxyRoutePlanner(httpHost);
-            return HttpClients.custom().setRoutePlanner(defaultProxyRoutePlanner).build();
+            HttpClient httpClient = HttpClients.custom().setRoutePlanner(defaultProxyRoutePlanner).build();
 //            todo - need to support SOCKS protocol for this solution to work - jamesdbloom 12/01/2014
-//            return HttpClients.custom().setRoutePlanner(new SystemDefaultRoutePlanner(PROXY_SELECTOR.getDefault())).build();
-        } else {
-            return HttpClients.custom().build();
+//            HttpClient httpClient = HttpClients.custom().setRoutePlanner(new SystemDefaultRoutePlanner(PROXY_SELECTOR.getDefault())).build();
+            restTemplate.setRequestFactory(new HttpComponentsClientHttpRequestFactory(httpClient));
         }
+
+        return restTemplate;
     }
 
+    @Override
     public Book[] getAllBooks() {
-        try {
-            HttpResponse response = httpClient.execute(new HttpGet(new URIBuilder()
-                    .setScheme("http")
-                    .setHost(host)
-                    .setPort(port)
-                    .setPath("/get_books")
-                    .build()));
-            return objectMapper.readValue(EntityUtils.toByteArray(response.getEntity()), Book[].class);
-        } catch (Exception e) {
-            throw new RuntimeException("Exception making request to retrieve all books", e);
-        }
+        return restTemplate.getForObject("http://" + host + ":" + port + "/get_books", Book[].class);
     }
 
+    @Override
     public Book getBook(String id) {
-        try {
-            HttpResponse response = httpClient.execute(new HttpGet(new URIBuilder()
-                    .setScheme("http")
-                    .setHost(host)
-                    .setPort(port)
-                    .setPath("/get_book")
-                    .setParameter("id", id)
-                    .build()));
-            return objectMapper.readValue(EntityUtils.toByteArray(response.getEntity()), Book.class);
-        } catch (Exception e) {
-            throw new RuntimeException("Exception making request to retrieve a book with id [" + id + "]", e);
-        }
+        return restTemplate.getForObject("http://" + host + ":" + port + "/get_book?id=" + id, Book.class);
     }
 }

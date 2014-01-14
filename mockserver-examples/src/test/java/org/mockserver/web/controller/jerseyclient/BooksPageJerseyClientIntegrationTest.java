@@ -1,10 +1,9 @@
-package org.mockserver.web.controller.jettyclient;
+package org.mockserver.web.controller.jerseyclient;
 
 import org.junit.runner.RunWith;
 import org.mockserver.configuration.RootConfiguration;
-import org.mockserver.servicebackend.BackEndServiceConfiguration;
 import org.mockserver.web.configuration.WebMvcConfiguration;
-import org.mockserver.web.controller.BooksPageEndToEndIntegrationTest;
+import org.mockserver.web.controller.BooksPageIntegrationTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.ContextHierarchy;
@@ -19,8 +18,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
 @ContextHierarchy({
         @ContextConfiguration(
                 classes = {
-                        RootConfiguration.class,
-                        BackEndServiceConfiguration.class
+                        RootConfiguration.class
                 }
         ),
         @ContextConfiguration(
@@ -29,7 +27,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
                 }
         )
 })
-@ActiveProfiles(profiles = {"backend", "jettyClient"})
-public class BooksPageJettyClientEndToEndIntegrationTest extends BooksPageEndToEndIntegrationTest {
+@ActiveProfiles(profiles = {"jerseyClient"})
+public class BooksPageJerseyClientIntegrationTest extends BooksPageIntegrationTest {
 
 }

@@ -27,7 +27,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
                 }
         )
 })
-@ActiveProfiles(profiles = {"jettyClient"})
+@ActiveProfiles(profiles = {"apacheClient"})
 public class BooksPageApacheClientIntegrationTest extends BooksPageIntegrationTest {
 
 }

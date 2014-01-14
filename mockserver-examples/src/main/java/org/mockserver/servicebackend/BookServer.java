@@ -43,7 +43,7 @@ public class BookServer {
                     if ("/get_books".equals(uri)) {
                         request.setHandled(true);
                         httpServletResponse.setStatus(200);
-                        httpServletResponse.setHeader("X-Test", "test_headers_only");
+                        httpServletResponse.setHeader("Content-Type", "application/json");
                         httpServletResponse.getOutputStream().print(
                                 objectMapper
                                         .writerWithDefaultPrettyPrinter()
@@ -52,7 +52,7 @@ public class BookServer {
                     } else if ("/get_book".equals(uri)) {
                         request.setHandled(true);
                         httpServletResponse.setStatus(200);
-                        httpServletResponse.setHeader("X-Test", "test_headers_and_body");
+                        httpServletResponse.setHeader("Content-Type", "application/json");
                         Book book = booksDB.get(request.getParameter("id"));
                         if (book != null) {
                             httpServletResponse.getOutputStream().print(

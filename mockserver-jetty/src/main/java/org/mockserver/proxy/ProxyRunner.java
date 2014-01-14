@@ -7,7 +7,6 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.proxy.filters.ProxyRequestFilter;
 import org.mockserver.proxy.filters.ProxyResponseFilter;
 import org.mockserver.runner.AbstractRunner;
-import org.mockserver.socket.PortFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,12 +21,27 @@ import java.util.List;
  */
 public class ProxyRunner extends AbstractRunner<ProxyRunner> {
 
-    public static final int PROXY_PORT = PortFactory.findFreePort();
-    public static final int PROXY_SECURE_PORT = PortFactory.findFreePort();
-    private Logger logger = LoggerFactory.getLogger(this.getClass());
-
+    private static Logger logger = LoggerFactory.getLogger(ProxyRunner.class);
     @VisibleForTesting
     ProxyServlet proxyServlet = new ProxyServlet();
+
+    public static ProxySelector proxySelector() {
+        if (Boolean.parseBoolean(System.getProperty("proxySet"))) {
+            return new ProxySelector() {
+                @Override
+                public List<Proxy> select(URI uri) {
+                    return Arrays.asList(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort")))));
+                }
+
+                @Override
+                public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {
+                    logger.error("Connection could not be established to proxy at socket [" + sa + "]", ioe);
+                }
+            };
+        } else {
+            throw new IllegalStateException("ProxySelector can not be returned proxy has not been started yet");
+        }
+    }
 
     protected HttpServlet getServlet() {
         return proxyServlet;
@@ -40,22 +54,19 @@ public class ProxyRunner extends AbstractRunner<ProxyRunner> {
 
     @Override
     protected void serverStarted(final Integer port, final Integer securePort) {
+        System.setProperty("proxySet", "true");
+        System.setProperty("http.proxyHost", "localhost");
+        System.setProperty("http.proxyPort", port.toString());
+        System.setProperty("java.net.useSystemProxies", "true");
         // todo - need to support SOCKS protocol for this solution to work - jamesdbloom 12/01/2014
-//        System.setProperty("proxySet", "true");
-//        System.setProperty("http.proxyHost", "localhost");
-//        System.setProperty("http.proxyPort", port.toString());
-//        System.setProperty("java.net.useSystemProxies","true");
-//        java.net.ProxySelector.setDefault(new ProxySelector() {
-//            @Override
-//            public List<Proxy> select(URI uri) {
-//                return Arrays.asList(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("localhost", port)));
-//            }
-//
-//            @Override
-//            public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {
-//                logger.error("Connection could not be established to proxy at socket [" + sa + "]", ioe);
-//            }
-//        });
+//        java.net.ProxySelector.setDefault(proxySelector());
+    }
+
+    protected void serverStopped() {
+        System.clearProperty("proxySet");
+        System.clearProperty("http.proxyHost");
+        System.clearProperty("http.proxyPort");
+        System.clearProperty("java.net.useSystemProxies");
     }
 
     /**

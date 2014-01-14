@@ -1,13 +1,13 @@
 package org.mockserver.web.controller;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 import org.mockserver.client.proxy.Times;
 import org.mockserver.integration.ClientAndProxy;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.model.Book;
+import org.mockserver.model.Header;
 import org.mockserver.model.Parameter;
+import org.mockserver.socket.PortFactory;
 import org.mockserver.web.controller.pageobjects.BookPage;
 import org.mockserver.web.controller.pageobjects.BooksPage;
 import org.springframework.core.env.Environment;
@@ -33,7 +33,7 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppC
  */
 public abstract class BooksPageIntegrationTest {
 
-    private ClientAndProxy proxy;
+    private static ClientAndProxy proxy;
     private ClientAndServer mockServer;
     @Resource
     private Environment environment;
@@ -46,10 +46,15 @@ public abstract class BooksPageIntegrationTest {
         mockMvc = webAppContextSetup(webApplicationContext).build();
     }
 
+    @BeforeClass
+    public static void startProxy() {
+        proxy = startClientAndProxy(PortFactory.findFreePort());
+    }
+
     @Before
-    public void startProxy() {
+    public void startMockServer() {
         mockServer = startClientAndServer(environment.getProperty("bookService.port", Integer.class));
-        proxy = startClientAndProxy(environment.getProperty("bookService.proxyPort", Integer.class));
+        proxy.reset();
     }
 
     @Test
@@ -62,6 +67,9 @@ public abstract class BooksPageIntegrationTest {
                 )
                 .respond(
                         response()
+                                .withHeaders(
+                                        new Header("Content-Type", "application/json")
+                                )
                                 .withBody("" +
                                         "[\n" +
                                         "    {\n" +
@@ -121,6 +129,9 @@ public abstract class BooksPageIntegrationTest {
                 )
                 .respond(
                         response()
+                                .withHeaders(
+                                        new Header("Content-Type", "application/json")
+                                )
                                 .withBody("" +
                                         "{\n" +
                                         "    \"id\": \"1\",\n" +
@@ -149,11 +160,18 @@ public abstract class BooksPageIntegrationTest {
     }
 
     @After
-    public void stopProxy() {
+    public void stopMockServer() {
+        mockServer.stop();
+
+        // for debugging test
         proxy.dumpToLogAsJSON();
         proxy.dumpToLogAsJava();
+
+    }
+
+    @AfterClass
+    public static void stopProxy() {
         proxy.stop();
-        mockServer.stop();
     }
 
 }

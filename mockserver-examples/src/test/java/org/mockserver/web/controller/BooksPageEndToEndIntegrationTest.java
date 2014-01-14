@@ -1,15 +1,13 @@
 package org.mockserver.web.controller;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 import org.mockserver.client.proxy.Times;
 import org.mockserver.integration.ClientAndProxy;
 import org.mockserver.model.Parameter;
 import org.mockserver.servicebackend.BookServer;
+import org.mockserver.socket.PortFactory;
 import org.mockserver.web.controller.pageobjects.BookPage;
 import org.mockserver.web.controller.pageobjects.BooksPage;
-import org.springframework.core.env.Environment;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -29,14 +27,22 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppC
  */
 public abstract class BooksPageEndToEndIntegrationTest {
 
-    private ClientAndProxy proxy;
-    @Resource
-    private Environment environment;
+    private static ClientAndProxy proxy;
     @Resource
     private BookServer bookServer;
     @Resource
     private WebApplicationContext webApplicationContext;
     private MockMvc mockMvc;
+
+    @BeforeClass
+    public static void startProxy() {
+        proxy = startClientAndProxy(PortFactory.findFreePort());
+    }
+
+    @AfterClass
+    public static void stopProxy() throws Exception {
+        proxy.stop();
+    }
 
     @Before
     public void setupFixture() {
@@ -44,8 +50,7 @@ public abstract class BooksPageEndToEndIntegrationTest {
     }
 
     @Before
-    public void startProxy() {
-        proxy = startClientAndProxy(environment.getProperty("bookService.proxyPort", Integer.class));
+    public void startBookServer() {
         bookServer.startServer();
     }
 
@@ -89,8 +94,7 @@ public abstract class BooksPageEndToEndIntegrationTest {
     }
 
     @After
-    public void stopProxy() throws Exception {
-        proxy.stop();
+    public void stopBookServer() throws Exception {
         bookServer.stopServer();
     }
 

@@ -1778,27 +1778,108 @@ Times.atLeast(<span class="keyword">int</span> count);</code></pre>
 
 <p>First the system that is being analysed must be configured to use the proxy.</p>
 
-<p>Do this with a Jetty HttpClient, as follows:</p>
+<h4>Apache HttpClient</h4>
 
-<pre><code class="code">HttpClient httpClient = <span class="keyword">new</span> HttpClient();
-<span class="keyword">try</span> {
-    httpClient.getProxyConfiguration().getProxies().add(<span class="keyword">new</span> HttpProxy(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">9090</span>));
-    httpClient.start();
-} <span class="keyword">catch</span> (Exception e) {
-    <span class="keyword">throw new</span> RuntimeException(<span class="string_literal">"Exception creating HttpClient"</span>, e);
+<p>To configure the proxy with an Apache HttpClient, as follows:</p>
+
+<pre><code class="code"><span class="keyword">public</span> HttpClient createHttpClient() {
+    <span class="keyword">if</span> (Boolean.parseBoolean(System.getProperty(<span class="string_literal">"proxySet"</span>))) {
+        HttpHost httpHost = <span class="keyword">new</span> HttpHost(System.getProperty(<span class="string_literal">"http.proxyHost"</span>), Integer.parseInt(System.getProperty(<span class="string_literal">"http.proxyPort"</span>)));
+        DefaultProxyRoutePlanner defaultProxyRoutePlanner = <span class="string_literal">new</span> DefaultProxyRoutePlanner(httpHost);
+        <span class="string_literal">return</span> HttpClients.custom().setRoutePlanner(defaultProxyRoutePlanner).build();
+    } <span class="string_literal">else</span> {
+        <span class="string_literal">return</span> HttpClients.custom().build();
+    }
 }</code></pre>
 
-<p>The <a href="https://github.com/jamesdbloom/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example of using the proxy with Apache HttpClient called
+<p>The <a href="https://github.com/jamesdbloom/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example of using the proxy with a Apache HttpClient called
 	<a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-examples/src/main/java/org/mockserver/service/apacheclient/BookServiceApacheHttpClient.java">BookServiceApacheHttpClient</a> that demonstrates a fully working example.</p>
 
-<p>Do this with an Apache HttpClient, as follows:</p>
+<h4>Grizzly AsyncHttpClient</h4>
 
-<pre><code class="code">HttpHost httpHost = <span class="keyword">new</span> HttpHost(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">9090</span>);
-DefaultProxyRoutePlanner defaultProxyRoutePlanner = <span class="keyword">new</span> DefaultProxyRoutePlanner(httpHost);
-HttpClient httpClient = HttpClients.custom().setRoutePlanner(defaultProxyRoutePlanner).build();</code></pre>
+<p>To configure the proxy with a Grizzly AsyncHttpClient, as follows:</p>
 
-<p>The <a href="https://github.com/jamesdbloom/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example of using the proxy with Jetty HttpClient called
-	<a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-examples/src/main/java/org/mockserver/service/jettyclient/BookServiceJettyHttpClient.java">BookServiceJettyHttpClient</a> that demonstrates a fully working example.</p>
+<pre><code class="code"><span class="keyword">public</span> AsyncHttpClient createHttpClient() {
+    AsyncHttpClientConfig.Builder clientConfigBuilder = <span class="keyword">new</span> AsyncHttpClientConfig.Builder();
+    <span class="keyword">if</span> (Boolean.parseBoolean(System.getProperty(<span class="string_literal">"proxySet"</span>))) {
+        clientConfigBuilder.setProxyServerSelector(ProxyUtils.createProxyServerSelector(ProxyRunner.proxySelector()));
+    }
+    <span class="keyword">return new</span> AsyncHttpClient(clientConfigBuilder.build());
+}</code></pre>
+
+<p>The <a href="https://github.com/jamesdbloom/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example of using the proxy with a Grizzly AsyncHttpClient called
+	<a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-examples/src/main/java/org/mockserver/service/grizzlyclient/BookServiceGrizzlyHttpClient.java">BookServiceGrizzlyHttpClient</a> that demonstrates a fully working example.</p>
+
+<h4>Jersey Client</h4>
+
+<p>To configure the proxy with a  Jersey Client, as follows:</p>
+
+<pre><code class="code"><span class="keyword">public</span> Client createHttpClient() {
+    ClientConfig clientConfig = <span class="keyword">new</span> ClientConfig()
+            .register(<span class="keyword">new</span> JacksonFeature())
+            .connectorProvider(<span class="keyword">new</span> ApacheConnectorProvider());
+    <span class="keyword">if</span> (Boolean.parseBoolean(System.getProperty(<span class="string_literal">"proxySet"</span>))) {
+        clientConfig.property(ClientProperties.PROXY_URI, <span class="string_literal">"http://"</span> + System.getProperty(<span class="string_literal">"http.proxyHost"</span>) + <span class="string_literal">":"</span> + System.getProperty(<span class="string_literal">"http.proxyPort"</span>));
+    }
+    <span class="keyword">return</span> ClientBuilder.newClient(clientConfig);
+}</code></pre>
+
+<p>The <a href="https://github.com/jamesdbloom/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example of using the proxy with a Jersey Client called
+	<a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-examples/src/main/java/org/mockserver/service/jerseyclient/BookServiceJerseyClient.java">BookServiceJerseyClient</a> that demonstrates a fully working example.</p>
+
+<h4>Jetty HttpClient</h4>
+
+<p>To configure the proxy with a Jetty HttpClient, as follows:</p>
+
+<pre><code class="code"><span class="keyword">public</span> HttpClient createHttpClient() {
+    HttpClient httpClient = <span class="keyword">new</span> HttpClient();
+    <span class="keyword">try</span> {
+        if (Boolean.parseBoolean(System.getProperty(<span class="string_literal">"proxySet"</span>))) {
+            httpClient.getProxyConfiguration().getProxies().add(<span class="keyword">new</span> HttpProxy(System.getProperty(<span class="string_literal">"http.proxyHost"</span>), Integer.parseInt(System.getProperty(<span class="string_literal">"http.proxyPort"</span>))));
+        }
+        httpClient.start();
+    } <span class="keyword">catch</span> (Exception e) {
+        <span class="keyword">throw new</span> RuntimeException(<span class="string_literal">"Exception creating HttpClient"</span>, e);
+    }
+    <span class="keyword">return</span> httpClient;
+}</code></pre>
+
+<p>The <a href="https://github.com/jamesdbloom/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example of using the proxy with a Jetty HttpClient called
+	<a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-examples/src/main/java/org/mockserver/service/apacheclient/BookServiceApacheHttpClient.java">BookServiceJettyHttpClient</a> that demonstrates a fully working example.</p>
+
+<h4>Spring RestTemplate</h4>
+
+<p>To configure the proxy with a Spring RestTemplate, as follows:</p>
+
+<pre><code class="code"><span class="keyword">public</span> RestTemplate createRestTemplate() {
+    <span class="comment">// jackson message converter</span>
+    MappingJacksonHttpMessageConverter mappingJacksonHttpMessageConverter = <span class="keyword">new</span> MappingJacksonHttpMessageConverter();
+    mappingJacksonHttpMessageConverter.setObjectMapper(objectMapper);
+
+    <span class="comment">// create message converters list</span>
+    List&lt;HttpMessageConverter&lt;?&gt;&gt; httpMessageConverters = <span class="keyword">new</span> ArrayList<>();
+    httpMessageConverters.add(mappingJacksonHttpMessageConverter);
+
+    <span class="comment">// create rest template</span>
+    RestTemplate restTemplate = <span class="keyword">new</span> RestTemplate();
+    restTemplate.setMessageConverters(httpMessageConverters);
+
+    <span class="comment">// configure proxy</span>
+    <span class="keyword">if</span> (Boolean.parseBoolean(System.getProperty(<span class="string_literal">"proxySet"</span>))) {
+        HttpHost httpHost = <span class="keyword">new</span> HttpHost(
+                System.getProperty(<span class="string_literal">"http.proxyHost"</span>),
+                Integer.parseInt(System.getProperty(<span class="string_literal">"http.proxyPort"</span>))
+        );
+        DefaultProxyRoutePlanner defaultProxyRoutePlanner = <span class="keyword">new</span> DefaultProxyRoutePlanner(httpHost);
+        HttpClient httpClient = HttpClients.custom().setRoutePlanner(defaultProxyRoutePlanner).build();
+        restTemplate.setRequestFactory(<span class="keyword">new</span> HttpComponentsClientHttpRequestFactory(httpClient));
+    }
+
+    <span class="keyword">return</span> restTemplate;
+}</code></pre>
+
+<p>The <a href="https://github.com/jamesdbloom/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example of using the proxy with a Spring RestTemplate called
+	<a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-examples/src/main/java/org/mockserver/service/springclient/BookServiceSpringRestTemplateClient.java">BookServiceSpringRestTemplateClient</a> that demonstrates a fully working example.</p>
 
 <p><strong>Write Requests To Log</strong></p>
 
