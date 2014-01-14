@@ -112,7 +112,7 @@ public class MockServerRunForkedMojo extends MockServerAbstractMojo {
 
     @VisibleForTesting
     String jarWithDependencies() {
-        Artifact jarWithDependencies = repositorySystem.createArtifactWithClassifier("org.mock-server", "mockserver-jetty", "2.1-SNAPSHOT", "jar", "jar-with-dependencies");
+        Artifact jarWithDependencies = repositorySystem.createArtifactWithClassifier("org.mock-server", "mockserver-jetty", "2.2-SNAPSHOT", "jar", "jar-with-dependencies");
         artifactResolver.resolve(new ArtifactResolutionRequest().setArtifact(jarWithDependencies));
         getLog().debug("Running MockServer using " + jarWithDependencies.getFile().getAbsolutePath());
         return jarWithDependencies.getFile().getAbsolutePath();
