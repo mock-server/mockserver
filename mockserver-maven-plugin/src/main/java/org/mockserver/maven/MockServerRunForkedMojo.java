@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author jamesdbloom
@@ -55,11 +56,16 @@ public class MockServerRunForkedMojo extends MockServerAbstractMojo {
             getLog().info("Skipping plugin execution");
         } else {
             getLog().info("Starting MockServer on port " + serverPort);
-            List<String> arguments = new ArrayList<>(Arrays.asList(getJavaBin(),
-                    "-Dmockserver.logLevel=" + logLevel,
-                    "-Dmockserver.serverStopPort=" + serverStopPort,
-//                    "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5006",
-                    "-jar", jarWithDependencies()));
+            List<String> arguments = new ArrayList<>(Arrays.asList(getJavaBin(), "-Dmockserver.logLevel=" + logLevel));
+            if (serverStopPort != -1) {
+                arguments.add("-Dmockserver.serverStopPort=" + serverStopPort);
+            }
+            if (proxyStopPort != -1) {
+                arguments.add("-Dmockserver.proxyStopPort=" + proxyStopPort);
+            }
+            // arguments.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5006");
+            arguments.add("-jar");
+            arguments.add(jarWithDependencies());
             if (serverPort != -1) {
                 arguments.add("-serverPort");
                 arguments.add("" + serverPort);
@@ -84,6 +90,11 @@ public class MockServerRunForkedMojo extends MockServerAbstractMojo {
                 processBuilder.start();
             } catch (IOException e) {
                 getLog().error("Exception while starting MockServer", e);
+            }
+            try {
+                TimeUnit.SECONDS.sleep((timeout == 0 ? 2 : timeout));
+            } catch (InterruptedException e) {
+                throw new RuntimeException("Exception while waiting for mock server JVM to start", e);
             }
         }
 
@@ -112,7 +123,7 @@ public class MockServerRunForkedMojo extends MockServerAbstractMojo {
 
     @VisibleForTesting
     String jarWithDependencies() {
-        Artifact jarWithDependencies = repositorySystem.createArtifactWithClassifier("org.mock-server", "mockserver-jetty", "2.2-SNAPSHOT", "jar", "jar-with-dependencies");
+        Artifact jarWithDependencies = repositorySystem.createArtifactWithClassifier("org.mock-server", "mockserver-jetty", "2.3-SNAPSHOT", "jar", "jar-with-dependencies");
         artifactResolver.resolve(new ArtifactResolutionRequest().setArtifact(jarWithDependencies));
         getLog().debug("Running MockServer using " + jarWithDependencies.getFile().getAbsolutePath());
         return jarWithDependencies.getFile().getAbsolutePath();
