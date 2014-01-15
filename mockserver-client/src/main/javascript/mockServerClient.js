@@ -1,4 +1,4 @@
-var mockServer = function (baseUrl) {
+var mockServerClient = function (mockServerUrl, proxyUrl) {
     "use strict";
 
     var xmlhttp = new XMLHttpRequest(),
@@ -45,28 +45,74 @@ var mockServer = function (baseUrl) {
                 }
             };
         },
-        mockResponse = function (path, responseBody, statusCode) {
-            var expectedResponse = createExpectation(path, responseBody, statusCode);
-            xmlhttp.open("PUT", baseUrl, false);
+        mockAnyResponse = function (expectation) {
+            xmlhttp.open("PUT", mockServerUrl, false);
             xmlhttp.setRequestHeader("Content-Type", "application/json; charset=utf-8");
-            xmlhttp.send(JSON.stringify(expectedResponse));
+            xmlhttp.send(JSON.stringify(expectation));
         },
-        clearMock = function () {
-            xmlhttp.open("PUT", baseUrl + "/clear", false);
-            xmlhttp.send(JSON.stringify(createResponseMatcher(".*")));
+        mockSimpleResponse = function (path, responseBody, statusCode) {
+            mockAnyResponse(createExpectation(path, responseBody, statusCode));
         },
-        dumpToLog = function () {
-            xmlhttp.open("PUT", baseUrl + "/dumpToLog", false);
-            xmlhttp.send(JSON.stringify(createExpectation(".*", "")));
+        butFoundAssertionErrorMessage = function() {
+            xmlhttp.open("PUT", proxyUrl + "/retrieve", false);
+            xmlhttp.send();
+            return " but " + (xmlhttp.responseText ? "only found" + xmlhttp.responseText: "found no requests");
+        },
+        verify = function (request, count, exact) {
+            xmlhttp.open("PUT", proxyUrl + "/retrieve", false);
+            xmlhttp.send(JSON.stringify(request));
+            var expectations = xmlhttp.responseText && JSON.parse(xmlhttp.responseText);
+            if (!expectations) {
+                throw "Expected " + JSON.stringify(request) + butFoundAssertionErrorMessage();
+            }
+            if (exact) {
+                if (expectations.length !== count) {
+                    throw "Expected " + JSON.stringify(request) + butFoundAssertionErrorMessage();
+                }
+            } else {
+                if (expectations.size < count) {
+                    throw "Expected " + JSON.stringify(request) + butFoundAssertionErrorMessage();
+                }
+            }
+        },
+        resetMocks = function (path) {
+            xmlhttp.open("PUT", mockServerUrl + "/reset", false);
+            xmlhttp.send(JSON.stringify(createResponseMatcher(path || ".*")));
+        },
+        resetProxy = function (path) {
+            xmlhttp.open("PUT", proxyUrl + "/reset", false);
+            xmlhttp.send(JSON.stringify(createResponseMatcher(path || ".*")));
+        },
+        clearMocks = function (path) {
+            xmlhttp.open("PUT", mockServerUrl + "/clear", false);
+            xmlhttp.send(JSON.stringify(createResponseMatcher(path || ".*")));
+        },
+        clearProxy = function (path) {
+            xmlhttp.open("PUT", proxyUrl + "/clear", false);
+            xmlhttp.send(JSON.stringify(createResponseMatcher(path || ".*")));
+        },
+        dumpMocksToLog = function (path) {
+            xmlhttp.open("PUT", mockServerUrl + "/dumpToLog", false);
+            xmlhttp.send(JSON.stringify(createExpectation(path || ".*", "")));
+        },
+        dumpProxyToLog = function (path) {
+            xmlhttp.open("PUT", proxyUrl + "/dumpToLog", false);
+            xmlhttp.send(JSON.stringify(createExpectation(path || ".*", "")));
         },
         setDefaultHeaders = function (headers) {
             defaultResponseHeaders = headers;
         };
 
     return {
-        mockResponse: mockResponse,
-        clearMock: clearMock,
-        dumpToLog: dumpToLog,
+        mockAnyResponse: mockAnyResponse,
+        mockSimpleResponse: mockSimpleResponse,
+        verify: verify,
+        resetMocks: resetMocks,
+        resetProxy: resetProxy,
+        clearMocks: clearMocks,
+        clearProxy: clearProxy,
+        dumpMocksToLog: dumpMocksToLog,
+        dumpProxyToLog: dumpProxyToLog,
         setDefaultHeaders: setDefaultHeaders
     };
 };

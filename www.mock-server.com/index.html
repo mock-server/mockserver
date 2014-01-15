@@ -733,17 +733,10 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 				<ul>
 					<li>creating expectations</li>
 					<li>clearing expectations (selectively)</li>
-					<li>resetting (clearing all expectations)</li>
+					<li>verifying which requests have been recorded</li>
+					<li>resetting mock server (clearing all expectations)</li>
 					<li>dumping all expectations to the log (for debugging)</li>
-				</ul>
-			</li>
-			<li><strong>proxyClient.js</strong> - supports:
-				<ul>
-					<li>retrieving all recorded requests / responses as JSON or Expectation objects</li>
-					<li>outputting to the log all recorded requests / responses as Expectations in JSON format</li>
-					<li>outputting to the log all recorded requests / responses as Expectations in Java code format that can be pasted into test setup methods</li>
-					<li>clearing recorded requests / responses (selectively)</li>
-					<li>resetting (clearing all recorded requests / responses)</li>
+					<li>resetting proxy (clearing all recorded requests / responses)</li>
 				</ul>
 			</li>
 		</ul>
@@ -840,15 +833,15 @@ Hides the menu at `767px`, but modify this based on your app's needs.
     &lt;/<span class="element">configuration</span>&gt;
     &lt;<span class="element">executions</span>&gt;
         &lt;<span class="element">execution</span>&gt;
-            &lt;<span class="element">id</span>&gt;<span class="element_value">initialize</span>&lt;/<span class="element">id</span>&gt;
-            &lt;<span class="element">phase</span>&gt;<span class="element_value">initialize</span>&lt;/<span class="element">phase</span>&gt;
+            &lt;<span class="element">id</span>&gt;<span class="element_value">pre-integration-test</span>&lt;/<span class="element">id</span>&gt;
+            &lt;<span class="element">phase</span>&gt;<span class="element_value">pre-integration-test</span>&lt;/<span class="element">phase</span>&gt;
             &lt;<span class="element">goals</span>&gt;
                 &lt;<span class="element">goal</span>&gt;<span class="element_value">start</span>&lt;/<span class="element">goal</span>&gt;
             &lt;/<span class="element">goals</span>&gt;
         &lt;/<span class="element">execution</span>&gt;
         &lt;<span class="element">execution</span>&gt;
-            &lt;<span class="element">id</span>&gt;<span class="element_value">verify</span>&lt;/<span class="element">id</span>&gt;
-            &lt;<span class="element">phase</span>&gt;<span class="element_value">verify</span>&lt;/<span class="element">phase</span>&gt;
+            &lt;<span class="element">id</span>&gt;<span class="element_value">post-integration-test</span>&lt;/<span class="element">id</span>&gt;
+            &lt;<span class="element">phase</span>&gt;<span class="element_value">post-integration-test</span>&lt;/<span class="element">phase</span>&gt;
             &lt;<span class="element">goals</span>&gt;
                 &lt;<span class="element">goal</span>&gt;<span class="element_value">stop</span>&lt;/<span class="element">goal</span>&gt;
             &lt;/<span class="element">goals</span>&gt;
@@ -856,10 +849,12 @@ Hides the menu at `767px`, but modify this based on your app's needs.
     &lt;/<span class="element">executions</span>&gt;
 &lt;/<span class="element">plugin</span>&gt;</code></pre>
 
-<p>This will start the MockServer during the <strong>initialize</strong> phase and will stop the MockServer during the <strong>verify</strong> phase. For more details about Maven build phases see:
+<p>This will start the MockServer during the <strong>pre-integration-test</strong> phase and will stop the MockServer during the <strong>post-integration-test</strong> phase. For more details about Maven build phases see:
 	<a href="http://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html">Introduction to the Build Lifecycle</a>.</p>
 
-<p>This ensures that any tests you run during you build in either the normal <strong>test</strong> phase or the <strong>integration-test</strong> phase can use the MockServer on the port specified.</p>
+<p>This ensures that any integration tests you run during the <strong>integration-test</strong> phase can use the MockServer on the port specified.</p>
+
+<p>If any unit tests, that run in the <strong>test</strong> phase, use the MockServer modify the <strong>start</strong> goal execution so that the MockServer is started during the <strong>test</strong> phase.</p>
 
 <p>It is also possible to run the MockServer as a forked JVM using the <strong>runForked</strong> and <strong>stopForked</strong> goals as follows:</p>
 
@@ -875,15 +870,15 @@ Hides the menu at `767px`, but modify this based on your app's needs.
      &lt;/<span class="element">configuration</span>&gt;
      &lt;<span class="element">executions</span>&gt;
          &lt;<span class="element">execution</span>&gt;
-             &lt;<span class="element">id</span>&gt;<span class="element_value">initialize</span>&lt;/<span class="element">id</span>&gt;
-             &lt;<span class="element">phase</span>&gt;<span class="element_value">initialize</span>&lt;/<span class="element">phase</span>&gt;
+             &lt;<span class="element">id</span>&gt;<span class="element_value">pre-integration-test</span>&lt;/<span class="element">id</span>&gt;
+             &lt;<span class="element">phase</span>&gt;<span class="element_value">pre-integration-test</span>&lt;/<span class="element">phase</span>&gt;
              &lt;<span class="element">goals</span>&gt;
                  &lt;<span class="element">goal</span>&gt;<span class="element_value">runForked</span>&lt;/<span class="element">goal</span>&gt;
              &lt;/<span class="element">goals</span>&gt;
          &lt;/<span class="element">execution</span>&gt;
          &lt;<span class="element">execution</span>&gt;
-             &lt;<span class="element">id</span>&gt;<span class="element_value">verify</span>&lt;/<span class="element">id</span>&gt;
-             &lt;<span class="element">phase</span>&gt;<span class="element_value">verify</span>&lt;/<span class="element">phase</span>&gt;
+             &lt;<span class="element">id</span>&gt;<span class="element_value">post-integration-test</span>&lt;/<span class="element">id</span>&gt;
+             &lt;<span class="element">phase</span>&gt;<span class="element_value">post-integration-test</span>&lt;/<span class="element">phase</span>&gt;
              &lt;<span class="element">goals</span>&gt;
                  &lt;<span class="element">goal</span>&gt;<span class="element_value">stopForked</span>&lt;/<span class="element">goal</span>&gt;
              &lt;/<span class="element">goals</span>&gt;

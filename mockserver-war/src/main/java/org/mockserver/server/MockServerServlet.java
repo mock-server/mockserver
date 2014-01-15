@@ -31,6 +31,7 @@ public class MockServerServlet extends HttpServlet {
     }
 
     public void doPost(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
+
         handlePOSTorGET(httpServletRequest, httpServletResponse);
     }
 

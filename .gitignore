@@ -53,6 +53,8 @@ Thumbs.db
 # Maven build artifacts files #
 ###############################
 target
+pom.xml.releaseBackup
+release.properties
 
 # Gradle build artifacts files #
 ################################

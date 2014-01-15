@@ -60,6 +60,7 @@ public class Main {
         if (parseArguments.size() > 0) {
             if (parseArguments.containsKey(PROXY_PORT_KEY) || parseArguments.containsKey(PROXY_SECURE_PORT_KEY)) {
                 proxyRunner.overrideLogLevel(System.getProperty("mockserver.logLevel"));
+
                 proxyRunner.start(parseArguments.get(PROXY_PORT_KEY), parseArguments.get(PROXY_SECURE_PORT_KEY));
             }
 

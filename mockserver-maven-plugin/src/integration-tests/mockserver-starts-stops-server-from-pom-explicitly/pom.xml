@@ -18,7 +18,7 @@
         <dependency>
             <groupId>org.mock-server</groupId>
             <artifactId>mockserver-integration-testing</artifactId>
-            <version>2.2-SNAPSHOT</version>
+            <version>2.3-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
 
@@ -35,7 +35,7 @@
             <plugin>
                 <groupId>org.mock-server</groupId>
                 <artifactId>mockserver-maven-plugin</artifactId>
-                <version>2.2-SNAPSHOT</version>
+                <version>2.3-SNAPSHOT</version>
                 <configuration>
                     <serverPort>8080</serverPort>
                     <serverSecurePort>8082</serverSecurePort>

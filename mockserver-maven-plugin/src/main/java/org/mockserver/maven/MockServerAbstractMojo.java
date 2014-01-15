@@ -51,13 +51,13 @@ public abstract class MockServerAbstractMojo extends AbstractMojo {
     /**
      * The port to stop MockServer
      */
-    @Parameter(property = "mockserver.serverStopPort", defaultValue = "8081")
-    protected int serverStopPort;
+    @Parameter(property = "mockserver.serverStopPort", defaultValue = "-1")
+    protected int serverStopPort = -1;
     /**
      * The port to stop the proxy
      */
-    @Parameter(property = "mockserver.proxyStopPort", defaultValue = "8081")
-    protected int proxyStopPort;
+    @Parameter(property = "mockserver.proxyStopPort", defaultValue = "-1")
+    protected int proxyStopPort = -1;
     /**
      * Max time in seconds to wait for the MockServer to stop
      */
