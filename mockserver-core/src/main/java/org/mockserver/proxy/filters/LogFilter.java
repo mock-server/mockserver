@@ -53,7 +53,9 @@ public class LogFilter implements ProxyResponseFilter {
     }
 
     public void reset() {
-        requestResponseLog.clear();
+        synchronized (this.requestResponseLog) {
+            requestResponseLog.clear();
+        }
     }
 
     public void clear(HttpRequest httpRequest) {
@@ -61,7 +63,9 @@ public class LogFilter implements ProxyResponseFilter {
             HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
             for (HttpRequest key : new LinkedHashSet<>(requestResponseLog.keySet())) {
                 if (httpRequestMatcher.matches(key)) {
-                    requestResponseLog.removeAll(key);
+                    synchronized (this.requestResponseLog) {
+                        requestResponseLog.removeAll(key);
+                    }
                 }
             }
         } else {

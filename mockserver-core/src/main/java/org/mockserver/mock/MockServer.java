@@ -51,7 +51,11 @@ public class MockServer extends EqualsHashCodeToString {
         for (Expectation expectation : expectations) {
             if (expectation.matches(httpRequest)) {
                 if (!expectation.getTimes().greaterThenZero()) {
-                    this.expectations.remove(expectation);
+                    synchronized (this.expectations) {
+                        if (this.expectations.contains(expectation)) {
+                            this.expectations.remove(expectation);
+                        }
+                    }
                 }
                 return expectation.getHttpResponse();
             }
@@ -63,7 +67,11 @@ public class MockServer extends EqualsHashCodeToString {
         if (httpRequest != null) {
             for (Expectation expectation : new ArrayList<>(expectations)) {
                 if (expectation.matches(httpRequest)) {
-                    expectations.remove(expectation);
+                    synchronized (this.expectations) {
+                        if (this.expectations.contains(expectation)) {
+                            this.expectations.remove(expectation);
+                        }
+                    }
                 }
             }
         } else {
@@ -72,7 +80,9 @@ public class MockServer extends EqualsHashCodeToString {
     }
 
     public void reset() {
-        expectations.clear();
+        synchronized (this.expectations) {
+            this.expectations.clear();
+        }
     }
 
     public void dumpToLog(HttpRequest httpRequest) {
