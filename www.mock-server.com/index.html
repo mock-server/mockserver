@@ -861,9 +861,9 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p>This ensures that any integration tests you run during the <strong>integration-test</strong> phase can use the MockServer on the port specified.</p>
 
-<p>If any unit tests, that run in the <strong>test</strong> phase, use the MockServer modify the <strong>start</strong> goal execution so that the MockServer is started during the <strong>test</strong> phase.</p>
+<p>If any unit tests, that run in the <strong>test</strong> phase, use the MockServer modify the <span class="annotation">start</span> goal execution so that the MockServer is started during the <strong>test</strong> phase.</p>
 
-<p>It is also possible to run the MockServer as a forked JVM using the <strong>runForked</strong> and <strong>stopForked</strong> goals as follows:</p>
+<p>It is also possible to run the MockServer as a forked JVM using the <span class="annotation">runForked</span> and <span class="annotation">stopForked</span> goals as follows:</p>
 
 <pre><code class="code xml"> &lt;<span class="element">plugin</span>&gt;
      &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;
@@ -892,6 +892,10 @@ Hides the menu at `767px`, but modify this based on your app's needs.
          &lt;/<span class="element">execution</span>&gt;
      &lt;/<span class="element">executions</span>&gt;
  &lt;/<span class="element">plugin</span>&gt;</code></pre>
+
+<p>
+	<strong>Note:</strong> If you use the <span class="annotation">runForked</span> goal as above and the <strong>test</strong> phase fails (because a test has failed) the MockServer will not be stopped as Maven does not run any more phases after a phase has failed. In the case above the <strong>post-integration-test</strong> phase is not run if a test fails so the forked MockServer will not be stopped. If you want to ensure the MockServer is stopped even when there are test failures make sure you use <span class="annotation">start</span> and <span class="annotation">stop</span> goals as these run the MockServer on a separate thread that is stopped however maven exits (even if a test fails).
+</p>
 
 <p>These goals can be used from the command line as well to start and stop MockServer, as follows:</p>
 
@@ -1337,8 +1341,8 @@ cd mockserver</code></pre>
 
 <p>To create an expectation you need to define the <a href="#request-matchers">request matcher</a> and what <a href="#mock-response">response</a> should be returned when the request is matched.</p>
 
-<p>The MockServer will play expectations in the exact order they are setup. For example, if an expectation <span class="annotation">A</span> is setup to response <strong>3</strong> times then expectation
-	<span class="annotation">B</span> is setup to response <strong>2</strong> times for the same request the MockServer will response in the following order <span class="annotation">A</span>, <span class="annotation">A</span>, <span class="annotation">A</span>, <span class="annotation">B</span>, <span class="annotation">B</span>.</p>
+<p>The MockServer will play expectations in the exact order they are setup. For example, if an expectation <span class="annotation">A</span> is setup to response <strong>3</strong> times then expectation <span class="annotation">B</span> is setup to response
+	<strong>2</strong> times for the same request the MockServer will response in the following order <span class="annotation">A</span>, <span class="annotation">A</span>, <span class="annotation">A</span>, <span class="annotation">B</span>, <span class="annotation">B</span>.</p>
 
 <p>The following shows a simple expectation example:</p>
 
@@ -1786,13 +1790,15 @@ Times.atLeast(<span class="keyword">int</span> count);</code></pre>
 
 <h2>Analysing Behaviour</h2>
 
-<p>To analyse the requests that system makes the proxy can be used to record all requests and write them into the <span class="annotation">mockserver_request.log</span>.  This can be particularly helpful when refactoring an existing or legacy system.</p>
+<p>To analyse the requests that system makes the proxy can be used to record all requests and write them into the <span class="annotation">mockserver_request.log</span>. This can be particularly helpful when refactoring an existing or legacy system.</p>
 
-<p>The requests can be written to the log in JSON or as Java code.  The Java code can then be used to setup expectations in the MockServer and exactly replay all interactions.</p>
+<p>The requests can be written to the log in JSON or as Java code. The Java code can then be used to setup expectations in the MockServer and exactly replay all interactions.</p>
 
 <p>First the system that is being analysed must be configured to use the proxy.</p>
 
-<p>If the proxy is being started programmatically from within the same JVM using <span class="annotation">org.mockserver.proxy.ProxyRunner</span> or <span class="annotation">org.mockserver.integration.ClientAndProxy</span> then the environment variables for <strong>"proxySet"</strong>, <strong>"http.proxyHost"</strong> and <strong>"http.proxyPort"</strong> will be set automatically.</p>
+<p>If the proxy is being started programmatically from within the same JVM using <span class="annotation">org.mockserver.proxy.ProxyRunner</span> or <span class="annotation">org.mockserver.integration.ClientAndProxy</span> then the environment variables for <strong>"proxySet"</strong>,
+	<strong>"http.proxyHost"</strong> and <strong>"http.proxyPort"</strong> will be set automatically.</p>
+
 <p>If the proxy is being started as separate JVM, for example using <a href="#running-from-command-line">the command line</a>, then the system being analysed needs the following command line options to set the correct environment variables.</p>
 
 <pre><code class="code">-DproxySet=true -Dhttp.proxyHost=&lt;proxy hostname&gt; -Dhttp.proxyPort=&lt;proxy port&gt;</code></pre>
@@ -1835,7 +1841,7 @@ Times.atLeast(<span class="keyword">int</span> count);</code></pre>
 
 <h4>Jersey Client</h4>
 
-<p>To configure the proxy with a  Jersey Client, as follows:</p>
+<p>To configure the proxy with a Jersey Client, as follows:</p>
 
 <pre><code class="code"><span class="keyword">public</span> Client createHttpClient() {
     ClientConfig clientConfig = <span class="keyword">new</span> ClientConfig()
