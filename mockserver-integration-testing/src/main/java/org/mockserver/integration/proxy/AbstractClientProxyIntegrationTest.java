@@ -8,6 +8,8 @@ import org.eclipse.jetty.http.HttpScheme;
 import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.junit.Test;
+import org.mockserver.client.proxy.ProxyClient;
+import org.mockserver.client.proxy.Times;
 import org.mockserver.socket.SSLFactory;
 import org.mockserver.streams.IOStreamUtils;
 
@@ -17,6 +19,7 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.test.Assert.assertContains;
 
 /**
@@ -241,6 +244,150 @@ public abstract class AbstractClientProxyIntegrationTest {
                 // then
                 assertContains(IOStreamUtils.readInputStreamToString(sslSocket), "HTTP/1.1 404 Not Found");
             }
+        }
+    }
+
+    @Test
+    public void shouldVerifyRequests() throws Exception {
+        // given
+        HttpClient httpClient = new HttpClient();
+        httpClient.getProxyConfiguration().getProxies().add(new HttpProxy("localhost", getProxyPort()));
+        ProxyClient proxyClient = new ProxyClient("127.0.0.1", getProxyPort()).reset();
+        try {
+            httpClient.start();
+
+            // when
+            httpClient.newRequest("localhost", getServerPort())
+                    .scheme(HttpScheme.HTTP.asString())
+                    .method(HttpMethod.GET)
+                    .path("/test_headers_and_body")
+                    .send();
+            httpClient.newRequest("localhost", getServerPort())
+                    .scheme(HttpScheme.HTTP.asString())
+                    .method(HttpMethod.GET)
+                    .path("/test_headers_only")
+                    .send();
+
+            // then
+            proxyClient
+                    .verify(
+                            request()
+                                    .withMethod("GET")
+                                    .withPath("/test_headers_and_body"),
+                            Times.exactly(1)
+                    );
+            proxyClient
+                    .verify(
+                            request()
+                                    .withPath("/test_headers_.*"),
+                            Times.atLeast(1)
+                    );
+            proxyClient
+                    .verify(
+                            request()
+                                    .withPath("/test_headers_.*"),
+                            Times.exactly(2)
+                    );
+        } finally {
+            httpClient.stop();
+        }
+    }
+
+    @Test
+    public void shouldClearRequests() throws Exception {
+        // given
+        HttpClient httpClient = new HttpClient();
+        httpClient.getProxyConfiguration().getProxies().add(new HttpProxy("localhost", getProxyPort()));
+        ProxyClient proxyClient = new ProxyClient("127.0.0.1", getProxyPort()).reset();
+        try {
+            httpClient.start();
+
+            // when
+            httpClient.newRequest("localhost", getServerPort())
+                    .scheme(HttpScheme.HTTP.asString())
+                    .method(HttpMethod.GET)
+                    .path("/test_headers_and_body")
+                    .send();
+            httpClient.newRequest("localhost", getServerPort())
+                    .scheme(HttpScheme.HTTP.asString())
+                    .method(HttpMethod.GET)
+                    .path("/test_headers_only")
+                    .send();
+            proxyClient.clear(
+                    request()
+                            .withMethod("GET")
+                            .withPath("/test_headers_and_body")
+            );
+
+            // then
+            proxyClient
+                    .verify(
+                            request()
+                                    .withMethod("GET")
+                                    .withPath("/test_headers_and_body"),
+                            Times.exactly(0)
+                    );
+            proxyClient
+                    .verify(
+                            request()
+                                    .withPath("/test_headers_.*"),
+                            Times.atLeast(1)
+                    );
+            proxyClient
+                    .verify(
+                            request()
+                                    .withPath("/test_headers_.*"),
+                            Times.exactly(1)
+                    );
+        } finally {
+            httpClient.stop();
+        }
+    }
+
+    @Test
+    public void shouldResetRequests() throws Exception {
+        // given
+        HttpClient httpClient = new HttpClient();
+        httpClient.getProxyConfiguration().getProxies().add(new HttpProxy("localhost", getProxyPort()));
+        ProxyClient proxyClient = new ProxyClient("127.0.0.1", getProxyPort()).reset();
+        try {
+            httpClient.start();
+
+            // when
+            httpClient.newRequest("localhost", getServerPort())
+                    .scheme(HttpScheme.HTTP.asString())
+                    .method(HttpMethod.GET)
+                    .path("/test_headers_and_body")
+                    .send();
+            httpClient.newRequest("localhost", getServerPort())
+                    .scheme(HttpScheme.HTTP.asString())
+                    .method(HttpMethod.GET)
+                    .path("/test_headers_only")
+                    .send();
+            proxyClient.reset();
+
+            // then
+            proxyClient
+                    .verify(
+                            request()
+                                    .withMethod("GET")
+                                    .withPath("/test_headers_and_body"),
+                            Times.exactly(0)
+                    );
+            proxyClient
+                    .verify(
+                            request()
+                                    .withPath("/test_headers_.*"),
+                            Times.atLeast(0)
+                    );
+            proxyClient
+                    .verify(
+                            request()
+                                    .withPath("/test_headers_.*"),
+                            Times.exactly(0)
+                    );
+        } finally {
+            httpClient.stop();
         }
     }
 }
