@@ -55,6 +55,7 @@ Thumbs.db
 target
 pom.xml.releaseBackup
 release.properties
+mockserver-client/jasmine/google/
 
 # Gradle build artifacts files #
 ################################
