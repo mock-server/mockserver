@@ -733,10 +733,17 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 				<ul>
 					<li>creating expectations</li>
 					<li>clearing expectations (selectively)</li>
-					<li>verifying which requests have been recorded</li>
-					<li>resetting mock server (clearing all expectations)</li>
+					<li>resetting (clearing all expectations)</li>
 					<li>dumping all expectations to the log (for debugging)</li>
-					<li>resetting proxy (clearing all recorded requests / responses)</li>
+				</ul>
+			</li>
+			<li><strong>proxyClient.js</strong> - supports:
+				<ul>
+					<li>verifying which requests have been recorded</li>
+					<li>retrieving all recorded requests / responses as JSON or Expectation objects</li>
+					<li>outputting to the log all recorded requests / responses as Expectations in JSON format</li>
+					<li>clearing recorded requests / responses (selectively)</li>
+					<li>resetting (clearing all recorded requests / responses)</li>
 				</ul>
 			</li>
 		</ul>

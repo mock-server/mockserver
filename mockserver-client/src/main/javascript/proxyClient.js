@@ -1,4 +1,4 @@
-var mockServerClient = function (mockServerUrl) {
+var proxyClient = function (proxyUrl) {
     "use strict";
 
     var xmlhttp = new XMLHttpRequest(),
@@ -45,34 +45,47 @@ var mockServerClient = function (mockServerUrl) {
                 }
             };
         },
-        mockAnyResponse = function (expectation) {
-            xmlhttp.open("PUT", mockServerUrl, false);
-            xmlhttp.setRequestHeader("Content-Type", "application/json; charset=utf-8");
-            xmlhttp.send(JSON.stringify(expectation));
+        butFoundAssertionErrorMessage = function() {
+            xmlhttp.open("PUT", proxyUrl + "/retrieve", false);
+            xmlhttp.send();
+            return " but " + (xmlhttp.responseText ? "only found" + xmlhttp.responseText: "found no requests");
         },
-        mockSimpleResponse = function (path, responseBody, statusCode) {
-            mockAnyResponse(createExpectation(path, responseBody, statusCode));
+        retrieve = function(request) {
+            xmlhttp.open("PUT", proxyUrl + "/retrieve", false);
+            xmlhttp.send(JSON.stringify(request));
+            return xmlhttp.responseText && JSON.parse(xmlhttp.responseText);
         },
-        setDefaultHeaders = function (headers) {
-            defaultResponseHeaders = headers;
+        verify = function (request, count, exact) {
+            var expectations = retrieve(request);
+            if (!expectations) {
+                throw "Expected " + JSON.stringify(request) + butFoundAssertionErrorMessage();
+            }
+            if (exact) {
+                if (expectations.length !== count) {
+                    throw "Expected " + JSON.stringify(request) + butFoundAssertionErrorMessage();
+                }
+            } else {
+                if (expectations.size < count) {
+                    throw "Expected " + JSON.stringify(request) + butFoundAssertionErrorMessage();
+                }
+            }
         },
         reset = function (path) {
-            xmlhttp.open("PUT", mockServerUrl + "/reset", false);
+            xmlhttp.open("PUT", proxyUrl + "/reset", false);
             xmlhttp.send(JSON.stringify(createResponseMatcher(path || ".*")));
         },
         clear = function (path) {
-            xmlhttp.open("PUT", mockServerUrl + "/clear", false);
+            xmlhttp.open("PUT", proxyUrl + "/clear", false);
             xmlhttp.send(JSON.stringify(createResponseMatcher(path || ".*")));
         },
         dumpToLogs = function (path) {
-            xmlhttp.open("PUT", mockServerUrl + "/dumpToLog", false);
+            xmlhttp.open("PUT", proxyUrl + "/dumpToLog", false);
             xmlhttp.send(JSON.stringify(createExpectation(path || ".*", "")));
         };
 
     return {
-        mockAnyResponse: mockAnyResponse,
-        mockSimpleResponse: mockSimpleResponse,
-        setDefaultHeaders: setDefaultHeaders,
+        retrieve: retrieve,
+        verify: verify,
         reset: reset,
         clear: clear,
         dumpToLogs: dumpToLogs

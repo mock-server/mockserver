@@ -76,19 +76,31 @@
                     <verbose>true</verbose>
                     <filesets>
                         <fileset>
-                            <directory>src/integration-tests/run-from-command-line/target</directory>
+                            <directory>src/integration-tests/mockserver-run-from-command-line/target</directory>
                         </fileset>
                         <fileset>
-                            <directory>src/integration-tests/run-stop-forked-from-command-line/target</directory>
+                            <directory>src/integration-tests/mockserver-run-stop-forked-from-command-line/target</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>src/integration-tests/mockserver-starts-stops-forked-server-from-pom/target</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>src/integration-tests/mockserver-starts-stops-server-from-pom-explicitly/target</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>src/integration-tests/proxy-run-from-command-line/target</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>src/integration-tests/proxy-run-stop-forked-from-command-line/target</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>src/integration-tests/proxy-starts-stops-forked-server-from-pom/target</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>src/integration-tests/proxy-starts-stops-server-from-pom-explicitly/target</directory>
                         </fileset>
                         <fileset>
                             <directory>src/integration-tests/skip/target</directory>
-                        </fileset>
-                        <fileset>
-                            <directory>src/integration-tests/starts-stops-forked-server-from-pom/target</directory>
-                        </fileset>
-                        <fileset>
-                            <directory>src/integration-tests/starts-stops-server-from-pom-explicitly/target</directory>
                         </fileset>
                         <fileset>
                             <directory>${basedir}</directory>
