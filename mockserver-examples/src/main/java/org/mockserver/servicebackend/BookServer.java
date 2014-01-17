@@ -11,6 +11,8 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.mockserver.model.Book;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -21,7 +23,6 @@ import java.util.Map;
 /**
  * @author jamesdbloom
  */
-@Component
 public class BookServer {
 
     private final Map<String, Book> booksDB = createBookData();
@@ -33,6 +34,7 @@ public class BookServer {
         this.httpPort = httpPort;
     }
 
+    @PostConstruct
     public void startServer() {
         try {
             server = new Server();
@@ -115,6 +117,7 @@ public class BookServer {
         return booksDB;
     }
 
+    @PreDestroy
     public void stopServer() throws Exception {
         server.stop();
     }

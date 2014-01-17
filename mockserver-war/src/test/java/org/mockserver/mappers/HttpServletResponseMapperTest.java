@@ -55,7 +55,7 @@ public class HttpServletResponseMapperTest {
         httpResponse.withCookies(new Cookie("cookieName1", "cookieValue1"), new Cookie("cookieName2", "cookieValue2"));
         // - an HttpServletResponse
         HttpServletResponse httpServletResponse = mock(HttpServletResponse.class);
-        when(httpServletResponse.getOutputStream()).thenThrow(new IOException());
+        when(httpServletResponse.getOutputStream()).thenThrow(new IOException("TEST EXCEPTION"));
 
         // when
         new HttpServletResponseMapper().mapHttpResponseToHttpServletResponse(httpResponse, httpServletResponse);

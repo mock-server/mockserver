@@ -101,7 +101,7 @@ public class HttpRequestClientTest {
             public void run() {
                 httpRequestClient.sendRequest(
                         new HttpRequest()
-                                .withURL("url")
+                                .withURL("http://www.example.com")
                                 .withMethod("POST")
                                 .withBody("body")
                                 .withHeaders(
@@ -120,7 +120,7 @@ public class HttpRequestClientTest {
 
         // then
         // - basic request building
-        verify(mockHttpClient).newRequest("url");
+        verify(mockHttpClient).newRequest("http://www.example.com");
         verify(mockRequest).method(HttpMethod.POST);
         verify(mockRequest).content(new ComparableStringContentProvider("body", StandardCharsets.UTF_8));
         verify(mockRequest).header("header_name_one", "header_value_one_one");
@@ -154,7 +154,7 @@ public class HttpRequestClientTest {
                 try {
                     responseFuture.set(httpRequestClient.sendRequest(
                             new HttpRequest()
-                                    .withURL("url")
+                                    .withURL("http://www.example.com")
                                     .withMethod("GET")
                     ));
                 } catch (Throwable t) {
@@ -178,12 +178,12 @@ public class HttpRequestClientTest {
         // given
         HttpRequestClient httpRequestClient = spy(new HttpRequestClient());
         when(httpRequestClient.newHttpClient()).thenReturn(mockHttpClient);
-        doThrow(new RuntimeException()).when(mockHttpClient).setConnectTimeout(maxTimeout());
+        doThrow(new RuntimeException("TEST EXCEPTION")).when(mockHttpClient).setConnectTimeout(maxTimeout());
 
         // when
         httpRequestClient.sendRequest(
                 new HttpRequest()
-                        .withURL("url")
+                        .withURL("http://www.example.com")
                         .withMethod("GET")
         );
     }
@@ -191,12 +191,12 @@ public class HttpRequestClientTest {
     @Test(expected = RuntimeException.class)
     public void shouldHandleExceptionWhenSendingHttpRequest() throws Exception {
         // given
-        when(mockRequest.send()).thenThrow(new TimeoutException());
+        when(mockRequest.send()).thenThrow(new TimeoutException("TEST EXCEPTION"));
 
         // when
         httpRequestClient.sendRequest(
                 new HttpRequest()
-                        .withURL("url")
+                        .withURL("http://www.example.com")
                         .withMethod("GET")
         );
     }
@@ -204,7 +204,7 @@ public class HttpRequestClientTest {
     @Test(expected = RuntimeException.class)
     public void shouldHandleExceptionWhenSendingExpectationRequest() throws Exception {
         // given
-        when(mockRequest.send()).thenThrow(new TimeoutException());
+        when(mockRequest.send()).thenThrow(new TimeoutException("TEST EXCEPTION"));
 
         // when
         httpRequestClient.sendPUTRequest("baseUri", "/path", "body");

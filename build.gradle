@@ -35,10 +35,9 @@ allprojects {
         options.forkOptions.executable = 'javac'
     }
 
-
     test {
-        forkEvery 10
-        maxParallelForks 2
+        forkEvery 1
+        maxParallelForks 1
     }
 }
 
@@ -72,6 +71,12 @@ project(':mockserver-vertx') {
     dependencies {
         compile project(':mockserver-core')
         testCompile project(':mockserver-client'), project(':mockserver-integration-testing')
+    }
+}
+
+project(':mockserver-examples') {
+    dependencies {
+        compile project(':mockserver-jetty'), project(':mockserver-client'), project(':mockserver-core')
     }
 }
 

@@ -34,7 +34,7 @@ public class HttpRequestSerializerTest {
     private final HttpRequest fullHttpRequest =
             new HttpRequest()
                     .withMethod("GET")
-                    .withURL("url")
+                    .withURL("http://www.example.com")
                     .withPath("somepath")
                     .withQueryString("queryString")
                     .withParameters(
@@ -46,7 +46,7 @@ public class HttpRequestSerializerTest {
     private final HttpRequestDTO fullHttpRequestDTO =
             new HttpRequestDTO()
                     .setMethod("GET")
-                    .setURL("url")
+                    .setURL("http://www.example.com")
                     .setPath("somepath")
                     .setQueryString("queryString")
                     .setParameters(Arrays.<ParameterDTO>asList(
@@ -87,7 +87,7 @@ public class HttpRequestSerializerTest {
     public void deserializeHandleException() throws IOException {
         // given
         byte[] requestBytes = "requestBytes".getBytes();
-        when(objectMapper.readValue(eq(requestBytes), same(HttpRequestDTO.class))).thenThrow(new IOException());
+        when(objectMapper.readValue(eq(requestBytes), same(HttpRequestDTO.class))).thenThrow(new IOException("TEST EXCEPTION"));
 
         try {
             // when
@@ -115,7 +115,7 @@ public class HttpRequestSerializerTest {
         // given
         HttpRequest httpRequest = mock(HttpRequest.class);
         when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
-        when(objectWriter.writeValueAsString(any(HttpRequestDTO.class))).thenThrow(new IOException());
+        when(objectWriter.writeValueAsString(any(HttpRequestDTO.class))).thenThrow(new IOException("TEST EXCEPTION"));
 
         // when
         httpRequestSerializer.serialize(httpRequest);

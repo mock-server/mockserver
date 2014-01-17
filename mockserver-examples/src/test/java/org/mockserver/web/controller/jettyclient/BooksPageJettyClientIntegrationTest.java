@@ -4,6 +4,7 @@ import org.junit.runner.RunWith;
 import org.mockserver.configuration.RootConfiguration;
 import org.mockserver.web.configuration.WebMvcConfiguration;
 import org.mockserver.web.controller.BooksPageIntegrationTest;
+import org.mockserver.web.controller.PropertyMockingApplicationContextInitializer;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.ContextHierarchy;
@@ -19,7 +20,8 @@ import org.springframework.test.context.web.WebAppConfiguration;
         @ContextConfiguration(
                 classes = {
                         RootConfiguration.class
-                }
+                },
+                initializers = PropertyMockingApplicationContextInitializer.class
         ),
         @ContextConfiguration(
                 classes = {

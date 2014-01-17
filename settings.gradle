@@ -4,6 +4,7 @@ include 'mockserver-war'
 include 'mockserver-jetty'
 include 'mockserver-vertx'
 include 'mockserver-integration-testing'
+include 'mockserver-examples'
 
 rootProject.name = 'mockserver'
 

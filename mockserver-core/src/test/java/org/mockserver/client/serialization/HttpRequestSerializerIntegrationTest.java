@@ -43,7 +43,7 @@ public class HttpRequestSerializerIntegrationTest {
         // given
         byte[] requestBytes = ("{\n" +
                 "    \"method\": \"someMethod\",\n" +
-                "    \"url\": \"someURL\",\n" +
+                "    \"url\": \"http://www.example.com\",\n" +
                 "    \"path\": \"somePath\",\n" +
                 "    \"queryString\": \"someQueryString\",\n" +
                 "    \"parameters\" : [ {\n" +
@@ -71,7 +71,7 @@ public class HttpRequestSerializerIntegrationTest {
         // then
         assertEquals(new HttpRequestDTO()
                 .setMethod("someMethod")
-                .setURL("someURL")
+                .setURL("http://www.example.com")
                 .setPath("somePath")
                 .setQueryString("someQueryString")
                 .setParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("parameterName", Arrays.asList("parameterValue")))))
@@ -103,7 +103,7 @@ public class HttpRequestSerializerIntegrationTest {
         String jsonExpectation = new HttpRequestSerializer().serialize(
                 new HttpRequestDTO()
                         .setMethod("someMethod")
-                        .setURL("someURL")
+                        .setURL("http://www.example.com")
                         .setPath("somePath")
                         .setQueryString("someQueryString")
                         .setParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("parameterName", Arrays.asList("parameterValue")))))
@@ -116,7 +116,7 @@ public class HttpRequestSerializerIntegrationTest {
         // then
         assertEquals("{\n" +
                 "  \"method\" : \"someMethod\",\n" +
-                "  \"url\" : \"someURL\",\n" +
+                "  \"url\" : \"http://www.example.com\",\n" +
                 "  \"path\" : \"somePath\",\n" +
                 "  \"queryString\" : \"someQueryString\",\n" +
                 "  \"parameters\" : [ {\n" +

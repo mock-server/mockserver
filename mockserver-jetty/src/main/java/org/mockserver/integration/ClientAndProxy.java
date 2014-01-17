@@ -4,6 +4,8 @@ import org.mockserver.client.proxy.ProxyClient;
 import org.mockserver.client.server.MockServerClient;
 import org.mockserver.proxy.ProxyRunner;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * @author jamesdbloom
  */
@@ -31,5 +33,9 @@ public class ClientAndProxy extends ProxyClient {
 
     public void stop() {
         proxyRunner.stop();
+    }
+
+    public boolean isRunning() {
+        return proxyRunner.isRunning();
     }
 }

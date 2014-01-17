@@ -15,7 +15,6 @@
     </appender>
 
     <logger name="org.mockserver" level="TRACE"/>
-    <logger name="org.eclipse.jetty.util.thread.ShutdownThread" level="TRACE"/>
 
     <root level="WARN">
         <appender-ref ref="FILE"/>

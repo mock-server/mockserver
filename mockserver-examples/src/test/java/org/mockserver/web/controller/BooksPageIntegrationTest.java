@@ -41,14 +41,19 @@ public abstract class BooksPageIntegrationTest {
     private WebApplicationContext webApplicationContext;
     private MockMvc mockMvc;
 
-    @Before
-    public void setupFixture() {
-        mockMvc = webAppContextSetup(webApplicationContext).build();
-    }
-
     @BeforeClass
     public static void startProxy() {
         proxy = startClientAndProxy(PortFactory.findFreePort());
+    }
+
+    @AfterClass
+    public static void stopProxy() {
+        proxy.stop();
+    }
+
+    @Before
+    public void setupFixture() {
+        mockMvc = webAppContextSetup(webApplicationContext).build();
     }
 
     @Before
@@ -167,11 +172,6 @@ public abstract class BooksPageIntegrationTest {
         proxy.dumpToLogAsJSON();
         proxy.dumpToLogAsJava();
 
-    }
-
-    @AfterClass
-    public static void stopProxy() {
-        proxy.stop();
     }
 
 }

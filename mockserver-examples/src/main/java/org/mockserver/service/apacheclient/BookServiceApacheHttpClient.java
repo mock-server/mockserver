@@ -1,5 +1,6 @@
 package org.mockserver.service.apacheclient;
 
+import com.google.common.base.Charsets;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -71,6 +72,7 @@ public class BookServiceApacheHttpClient implements BookService {
     }
 
     public Book[] getAllBooks() {
+        String responseBody = "";
         try {
             HttpResponse response = httpClient.execute(new HttpGet(new URIBuilder()
                     .setScheme("http")
@@ -78,9 +80,14 @@ public class BookServiceApacheHttpClient implements BookService {
                     .setPort(port)
                     .setPath("/get_books")
                     .build()));
-            return objectMapper.readValue(EntityUtils.toByteArray(response.getEntity()), Book[].class);
+            responseBody = new String(EntityUtils.toByteArray(response.getEntity()), Charsets.UTF_8);
         } catch (Exception e) {
             throw new RuntimeException("Exception making request to retrieve all books", e);
+        }
+        try {
+            return objectMapper.readValue(responseBody, Book[].class);
+        } catch (Exception e) {
+            throw new RuntimeException("Exception parsing JSON response [" + responseBody + "]", e);
         }
     }
 

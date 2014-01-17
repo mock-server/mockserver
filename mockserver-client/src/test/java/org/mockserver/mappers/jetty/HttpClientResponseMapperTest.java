@@ -72,9 +72,10 @@ public class HttpClientResponseMapperTest {
         // given
         Response httpClientResponse = mock(org.eclipse.jetty.client.HttpResponse.class);
         HttpFields headers = new HttpFields();
-        headers.add("Set-Cookie", "cookie_name=cookie_value");
-        headers.add("Set-Cookie", "=other_cookie_value");
-        headers.add("Set-Cookie", "other_cookie_name=");
+        headers.add("Set-Cookie", "valid_name=valid_value");
+        headers.add("Set-Cookie", "=invalid");
+        headers.add("Set-Cookie", "valid_name=");
+        headers.add("Set-Cookie", "invalid");
         headers.add("Set-Cookie", "");
         when(httpClientResponse.getHeaders()).thenReturn(headers);
 
@@ -83,17 +84,8 @@ public class HttpClientResponseMapperTest {
 
         // then
         assertEquals(httpResponse.getCookies(), Arrays.asList(
-                new Cookie("cookie_name", "cookie_value"),
-                new Cookie("other_cookie_name", "")
+                new Cookie("valid_name", "valid_value"),
+                new Cookie("valid_name", "")
         ));
-
-        // [Cookie[name=cookie_name,values=[cookie_value]],
-        // Cookie[name=cookie_name,values=[]],
-        // Cookie[name=cookie_name,values=[cookie_value]],
-        // Cookie[name=cookie_name,values=[]],
-        // Cookie[name=cookie_name,values=[cookie_value]],
-        // Cookie[name=cookie_name,values=[]],
-        // Cookie[name=cookie_name,values=[cookie_value]],
-        // Cookie[name=cookie_name,values=[]]]
     }
 }

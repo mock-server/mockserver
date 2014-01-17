@@ -23,7 +23,7 @@ public class LogFilter implements ProxyResponseFilter {
 
     private final CircularMultiMap<HttpRequest, HttpResponse> requestResponseLog = new CircularMultiMap<>(100, 100);
     private final MatcherBuilder matcherBuilder = new MatcherBuilder();
-    private Logger requestLogger = LoggerFactory.getLogger("request");
+    private Logger requestLogger = LoggerFactory.getLogger("REQUEST");
 
     public HttpResponse onResponse(HttpRequest httpRequest, HttpResponse httpResponse) {
         requestResponseLog.put(httpRequest, httpResponse);

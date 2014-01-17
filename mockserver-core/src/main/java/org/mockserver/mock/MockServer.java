@@ -7,6 +7,8 @@ import org.mockserver.matchers.Times;
 import org.mockserver.model.EqualsHashCodeToString;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -18,6 +20,7 @@ import java.util.List;
 public class MockServer extends EqualsHashCodeToString {
 
     protected final List<Expectation> expectations = new ArrayList<Expectation>();
+    private Logger requestLogger = LoggerFactory.getLogger("REQUEST");
 
     public Expectation when(HttpRequest httpRequest) {
         return when(httpRequest, Times.unlimited());
@@ -90,13 +93,13 @@ public class MockServer extends EqualsHashCodeToString {
             ExpectationSerializer expectationSerializer = new ExpectationSerializer();
             for (Expectation expectation : new ArrayList<>(expectations)) {
                 if (expectation.matches(httpRequest)) {
-                    logger.warn(expectationSerializer.serialize(expectation));
+                    requestLogger.warn(expectationSerializer.serialize(expectation));
                 }
             }
         } else {
             ExpectationSerializer expectationSerializer = new ExpectationSerializer();
             for (Expectation expectation : new ArrayList<>(expectations)) {
-                logger.warn(expectationSerializer.serialize(expectation));
+                requestLogger.warn(expectationSerializer.serialize(expectation));
             }
         }
     }

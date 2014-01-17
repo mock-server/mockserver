@@ -33,7 +33,7 @@ public class ExpectationSerializerTest {
     private final Expectation fullExpectation = new Expectation(
             new HttpRequest()
                     .withMethod("GET")
-                    .withURL("url")
+                    .withURL("http://www.example.com")
                     .withPath("somepath")
                     .withQueryString("queryString")
                     .withParameters(new Parameter("parameterName", "parameterValue"))
@@ -51,7 +51,7 @@ public class ExpectationSerializerTest {
             .setHttpRequest(
                     new HttpRequestDTO()
                             .setMethod("GET")
-                            .setURL("url")
+                            .setURL("http://www.example.com")
                             .setPath("somepath")
                             .setQueryString("queryString")
                             .setParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("parameterName", Arrays.asList("parameterValue")))))
@@ -105,7 +105,7 @@ public class ExpectationSerializerTest {
                 "        .when(\n" +
                 "                request()\n" +
                 "                        .withMethod(\"GET\")\n" +
-                "                        .withURL(\"url\")\n" +
+                "                        .withURL(\"http://www.example.com\")\n" +
                 "                        .withPath(\"somepath\")\n" +
                 "                        .withQueryString(\"queryString\")\n" +
                 "                        .withHeaders(\n" +
@@ -136,7 +136,7 @@ public class ExpectationSerializerTest {
                         new Expectation(
                                 new HttpRequest()
                                         .withMethod("GET")
-                                        .withURL("url")
+                                        .withURL("http://www.example.com")
                                         .withPath("somepath")
                                         .withQueryString("queryString")
                                         .withHeaders(
@@ -244,7 +244,7 @@ public class ExpectationSerializerTest {
                 "        .when(\n" +
                 "                request()\n" +
                 "                        .withMethod(\"GET\")\n" +
-                "                        .withURL(\"url\")\n" +
+                "                        .withURL(\"http://www.example.com\")\n" +
                 "                        .withQueryString(\"queryString\")\n" +
                 "                        .withCookies(\n" +
                 "                                new Cookie(\"requestCookieNameOne\", \"requestCookieValueOneOne\", \"requestCookieValueOneTwo\"),\n" +
@@ -265,7 +265,7 @@ public class ExpectationSerializerTest {
                         new Expectation(
                                 new HttpRequest()
                                         .withMethod("GET")
-                                        .withURL("url")
+                                        .withURL("http://www.example.com")
                                         .withQueryString("queryString")
                                         .withCookies(
                                                 new Cookie("requestCookieNameOne", "requestCookieValueOneOne", "requestCookieValueOneTwo"),
@@ -317,7 +317,7 @@ public class ExpectationSerializerTest {
                 "        .when(\n" +
                 "                request()\n" +
                 "                        .withMethod(\"GET\")\n" +
-                "                        .withURL(\"url\")\n" +
+                "                        .withURL(\"http://www.example.com\")\n" +
                 "                        .withQueryString(\"queryString\")\n" +
                 "                        .withCookies(\n" +
                 "                                new Cookie(\"requestCookieNameOne\", \"requestCookieValueOneOne\", \"requestCookieValueOneTwo\"),\n" +
@@ -338,7 +338,7 @@ public class ExpectationSerializerTest {
                         new Expectation(
                                 new HttpRequest()
                                         .withMethod("GET")
-                                        .withURL("url")
+                                        .withURL("http://www.example.com")
                                         .withQueryString("queryString")
                                         .withCookies(
                                                 new Cookie("requestCookieNameOne", "requestCookieValueOneOne", "requestCookieValueOneTwo"),
@@ -376,7 +376,7 @@ public class ExpectationSerializerTest {
     public void shouldHandleExceptionWhileSerializingObject() throws IOException {
         // given
         when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
-        when(objectWriter.writeValueAsString(any(ExpectationDTO.class))).thenThrow(new IOException());
+        when(objectWriter.writeValueAsString(any(ExpectationDTO.class))).thenThrow(new IOException("TEST EXCEPTION"));
 
         // when
         expectationSerializer.serialize(mock(Expectation.class));
@@ -386,7 +386,7 @@ public class ExpectationSerializerTest {
     public void shouldHandleExceptionWhileSerializingArray() throws IOException {
         // given
         when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
-        when(objectWriter.writeValueAsString(any(ExpectationDTO[].class))).thenThrow(new IOException());
+        when(objectWriter.writeValueAsString(any(ExpectationDTO[].class))).thenThrow(new IOException("TEST EXCEPTION"));
 
         // when
         expectationSerializer.serialize(new Expectation[]{mock(Expectation.class), mock(Expectation.class)});
@@ -429,7 +429,7 @@ public class ExpectationSerializerTest {
     public void shouldHandleExceptionWhileDeserializingObject() throws IOException {
         // given
         byte[] requestBytes = "requestBytes".getBytes();
-        when(objectMapper.readValue(eq(requestBytes), same(ExpectationDTO.class))).thenThrow(new IOException());
+        when(objectMapper.readValue(eq(requestBytes), same(ExpectationDTO.class))).thenThrow(new IOException("TEST EXCEPTION"));
 
         // when
         expectationSerializer.deserialize(requestBytes);
@@ -439,7 +439,7 @@ public class ExpectationSerializerTest {
     public void shouldHandleExceptionWhileDeserializingArray() throws IOException {
         // given
         byte[] requestBytes = "requestBytes".getBytes();
-        when(objectMapper.readValue(eq(requestBytes), same(ExpectationDTO[].class))).thenThrow(new IOException());
+        when(objectMapper.readValue(eq(requestBytes), same(ExpectationDTO[].class))).thenThrow(new IOException("TEST EXCEPTION"));
 
         // when
         expectationSerializer.deserializeArray(requestBytes);

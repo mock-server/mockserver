@@ -14,7 +14,7 @@ dependencies {
     // test
     testCompile "junit:junit:$junitVersion"
     testCompile "org.mockito:mockito-all:$mockitoAllVersion"
-    testCompile "org.springframework:spring-test:$springTestVersion"
+    testCompile "org.springframework:spring-test:$springVersion"
     testCompile "org.eclipse.jetty:jetty-http:$jettyVersion"
     testCompile "org.eclipse.jetty:jetty-server:$jettyVersion"
     testCompile "org.eclipse.jetty:jetty-servlet:$jettyVersion"

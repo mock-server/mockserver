@@ -1,5 +1,6 @@
 package org.mockserver.servicebackend;
 
+import org.mockserver.socket.PortFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -20,6 +21,9 @@ public class BackEndServiceConfiguration {
 
     @Resource
     private Environment environment;
+
+    @Resource
+    private BookServer bookServer;
 
     @Bean
     public BookServer bookServer() {

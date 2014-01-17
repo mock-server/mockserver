@@ -80,10 +80,10 @@ public class IOStreamUtilsTest {
     public void shouldHandleExceptionWhenReadingServletRequestInputStreamToString() throws IOException {
         // given
         ServletRequest servletRequest = mock(ServletRequest.class);
-        when(servletRequest.getInputStream()).thenThrow(new IOException());
+        when(servletRequest.getInputStream()).thenThrow(new IOException("TEST EXCEPTION"));
 
         // when
-        String result = IOStreamUtils.readInputStreamToString(servletRequest);
+        IOStreamUtils.readInputStreamToString(servletRequest);
     }
 
     @Test
@@ -103,7 +103,7 @@ public class IOStreamUtilsTest {
     public void shouldHandleExceptionWhenReadInputStreamToByteArray() throws IOException {
         // given
         ServletRequest servletRequest = mock(ServletRequest.class);
-        when(servletRequest.getInputStream()).thenThrow(new IOException());
+        when(servletRequest.getInputStream()).thenThrow(new IOException("TEST EXCEPTION"));
 
         // when
         byte[] result = IOStreamUtils.readInputStreamToByteArray(servletRequest);
@@ -131,7 +131,7 @@ public class IOStreamUtilsTest {
     public void shouldHandleExceptionWriteToOutputStream() throws IOException {
         // given
         ServletResponse mockServletResponse = mock(ServletResponse.class);
-        when(mockServletResponse.getOutputStream()).thenThrow(new IOException());
+        when(mockServletResponse.getOutputStream()).thenThrow(new IOException("TEST EXCEPTION"));
 
         // when
         IOStreamUtils.writeToOutputStream("data".getBytes(), mockServletResponse);

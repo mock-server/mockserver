@@ -1,4 +1,7 @@
 <configuration>
+    <!-- include request log configuration -->
+    <include file="logbackRequests.xml"/>
+
     <!-- application log -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>mockserver.log</file>
@@ -30,19 +33,7 @@
     </appender>
 
     <logger name="org.mockserver" level="TRACE"/>
-
-    <!-- proxy request log -->
-    <appender name="REQUEST_LOG" class="ch.qos.logback.core.FileAppender">
-        <file>mockserver_request.log</file>
-
-        <encoder>
-            <pattern>%date %msg%n</pattern>
-        </encoder>
-    </appender>
-
-    <logger name="request" level="INFO" additivity="false">
-        <appender-ref ref="REQUEST_LOG"/>
-    </logger>
+    <logger name="org.eclipse.jetty.client" level="TRACE"/>
 
     <root level="WARN">
         <appender-ref ref="FILE"/>

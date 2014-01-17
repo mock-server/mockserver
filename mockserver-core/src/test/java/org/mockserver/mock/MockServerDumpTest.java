@@ -4,7 +4,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.slf4j.Logger;
@@ -20,7 +19,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class MockServerDumpTest {
 
     @Mock
-    private Logger logger;
+    private Logger requestLogger;
     @InjectMocks
     private MockServer mockServer;
 
@@ -54,7 +53,7 @@ public class MockServerDumpTest {
         mockServer.dumpToLog(null);
 
         // then
-        verify(logger).warn("{\n" +
+        verify(requestLogger).warn("{\n" +
                 "  \"httpRequest\" : {\n" +
                 "    \"path\" : \"some_path\"\n" +
                 "  },\n" +
@@ -67,7 +66,7 @@ public class MockServerDumpTest {
                 "    \"unlimited\" : true\n" +
                 "  }\n" +
                 "}");
-        verify(logger).warn("{\n" +
+        verify(requestLogger).warn("{\n" +
                 "  \"httpRequest\" : {\n" +
                 "    \"path\" : \"some_other_path\"\n" +
                 "  },\n" +
@@ -106,7 +105,7 @@ public class MockServerDumpTest {
         mockServer.dumpToLog(new HttpRequest().withPath("some_path"));
 
         // then
-        verify(logger).warn("{\n" +
+        verify(requestLogger).warn("{\n" +
                 "  \"httpRequest\" : {\n" +
                 "    \"path\" : \"some_path\"\n" +
                 "  },\n" +
@@ -119,7 +118,7 @@ public class MockServerDumpTest {
                 "    \"unlimited\" : true\n" +
                 "  }\n" +
                 "}");
-        verifyNoMoreInteractions(logger);
+        verifyNoMoreInteractions(requestLogger);
     }
 
 }

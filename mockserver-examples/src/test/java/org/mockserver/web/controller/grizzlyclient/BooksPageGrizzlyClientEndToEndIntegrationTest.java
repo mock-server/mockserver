@@ -2,9 +2,9 @@ package org.mockserver.web.controller.grizzlyclient;
 
 import org.junit.runner.RunWith;
 import org.mockserver.configuration.RootConfiguration;
-import org.mockserver.servicebackend.BackEndServiceConfiguration;
 import org.mockserver.web.configuration.WebMvcConfiguration;
 import org.mockserver.web.controller.BooksPageEndToEndIntegrationTest;
+import org.mockserver.web.controller.PropertyMockingApplicationContextInitializer;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.ContextHierarchy;
@@ -19,9 +19,9 @@ import org.springframework.test.context.web.WebAppConfiguration;
 @ContextHierarchy({
         @ContextConfiguration(
                 classes = {
-                        RootConfiguration.class,
-                        BackEndServiceConfiguration.class
-                }
+                        RootConfiguration.class
+                },
+                initializers = PropertyMockingApplicationContextInitializer.class
         ),
         @ContextConfiguration(
                 classes = {

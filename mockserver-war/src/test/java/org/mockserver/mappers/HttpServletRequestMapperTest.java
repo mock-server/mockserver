@@ -70,7 +70,7 @@ public class HttpServletRequestMapperTest {
         Enumeration<String> enumeration = mock(Enumeration.class);
         when(enumeration.hasMoreElements()).thenReturn(false);
         when(httpServletRequest.getHeaderNames()).thenReturn(enumeration);
-        when(httpServletRequest.getInputStream()).thenThrow(new IOException());
+        when(httpServletRequest.getInputStream()).thenThrow(new IOException("TEST EXCEPTION"));
 
         // when
         new HttpServletRequestMapper().mapHttpServletRequestToHttpRequest(httpServletRequest);

@@ -49,11 +49,6 @@ public abstract class BooksPageEndToEndIntegrationTest {
         mockMvc = webAppContextSetup(webApplicationContext).build();
     }
 
-    @Before
-    public void startBookServer() {
-        bookServer.startServer();
-    }
-
     @Test
     public void shouldLoadListOfBooks() throws Exception {
         // when
@@ -91,11 +86,6 @@ public abstract class BooksPageEndToEndIntegrationTest {
                         ),
                 Times.exactly(1)
         );
-    }
-
-    @After
-    public void stopBookServer() throws Exception {
-        bookServer.stopServer();
     }
 
 }

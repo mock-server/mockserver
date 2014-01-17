@@ -60,7 +60,7 @@ public class HttpResponseTest {
     public void applyDelayHandlesException() throws InterruptedException {
         // given
         TimeUnit timeUnit = mock(TimeUnit.class);
-        doThrow(new InterruptedException()).when(timeUnit).sleep(10);
+        doThrow(new InterruptedException("TEST EXCEPTION")).when(timeUnit).sleep(10);
 
         // when
         new HttpResponse().withDelay(new Delay(timeUnit, 10)).applyDelay();

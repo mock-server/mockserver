@@ -176,7 +176,7 @@ public abstract class AbstractRunner<T extends AbstractRunner<T>> {
      * Stop this MockServer instance
      */
     public AbstractRunner<T> stop() {
-        if (!isRunning()) throw new IllegalStateException("Server is not running");
+        if (!isRunning()) throw new IllegalStateException(this.getClass().getSimpleName().replace("Runner", "") + " is not running");
         try {
             serverStopped();
             shutdownThread.stopListening();
