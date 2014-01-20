@@ -22,6 +22,8 @@ import java.nio.channels.SocketChannel;
 import java.util.Arrays;
 
 import static org.mockserver.bytes.ByteUtils.printHexBinary;
+import static org.mockserver.configuration.SystemProperties.extraHTTPPorts;
+import static org.mockserver.configuration.SystemProperties.extraHTTPSPorts;
 import static org.mockserver.proxy.socks.message.socks4.Socks4Message.SOCKS4_REQUEST_GRANTED;
 import static org.mockserver.proxy.socks.message.socks4.Socks4Message.SOCKS4_VERSION;
 import static org.mockserver.proxy.socks.message.socks5.Socks5Message.*;
@@ -33,73 +35,103 @@ public class SocksProxy {
 
     private static final Logger logger = LoggerFactory.getLogger(SocksProxy.class);
     private final ByteBufferPool byteBufferPool = new MappedByteBufferPool();
+    private SocketAddress fixedDownStreamSocketAddress;
+    private SocketAddress fixedDownStreamSecureSocketAddress;
 
-    public SocksProxy(int port) {
-        try {
-            try (ServerSocketChannel serverSocketChannel = ServerSocketChannel.open()) {
-                serverSocketChannel.socket().bind(new InetSocketAddress(port));
-                logger.debug("SOCKS Proxy waiting to receive request on [localhost:" + port + "]");
-                while (serverSocketChannel.isOpen()) {
-                    startSession(serverSocketChannel.accept());
+    public SocksProxy(final int port) {
+        this(port, null, null);
+    }
+
+    public SocksProxy(final int port, SocketAddress fixedDownStreamSocketAddress, SocketAddress fixedDownStreamSecureSocketAddress) {
+        this.fixedDownStreamSocketAddress = fixedDownStreamSocketAddress;
+        this.fixedDownStreamSecureSocketAddress = fixedDownStreamSecureSocketAddress;
+        new Thread(new Runnable() {
+            public void run() {
+                try {
+                    try (ServerSocketChannel serverSocketChannel = ServerSocketChannel.open()) {
+                        serverSocketChannel.socket().bind(new InetSocketAddress(port));
+                        logger.debug("SOCKS Proxy waiting to receive request on [localhost:" + port + "]");
+                        while (serverSocketChannel.isOpen()) {
+                            readSocksRequests(serverSocketChannel.accept());
+                        }
+                    }
+                } catch (IOException ioe) {
+                    logger.debug("Exception creating request for port [" + port + "]", ioe);
                 }
             }
-        } catch (IOException ioe) {
-            logger.debug("Exception creating request for port [" + port + "]", ioe);
-        }
+        }).start();
     }
 
     public static void main(String[] args) {
-        SocksProxy socksProxy = new SocksProxy(2001);
+        new SocksProxy(1099);
     }
 
-    private void startSession(final SocketChannel socketChannel) throws IOException {
+    private void readSocksRequests(final SocketChannel socketChannel) throws IOException {
         // read buffer
         int bufferCapacity = 512;
         ByteBuffer socketBuffer = ByteBuffer.allocate(bufferCapacity);
         socketChannel.read(socketBuffer);
         socketBuffer.flip(); // write to read
-        printByteBuffer("one", socketBuffer);
+        printByteBuffer("first request", socketBuffer);
 
         InetSocketAddress address = null;
         if (socketBuffer.get(0) == SOCKS5_VERSION) {
-            Socks5StartSessionRequest startSessionRequest = new Socks5StartSessionRequest(socketBuffer);
-            socketChannel.write(new Socks5StartSessionResponse(SOCKS5_NO_AUTHENTICATION).messageBytes());
+            if (new Socks5StartSessionRequest(socketBuffer).isValid()) {
+                socketChannel.write(new Socks5StartSessionResponse(SOCKS5_NO_AUTHENTICATION).messageBytes());
 
-            // read buffer
-            socketBuffer = ByteBuffer.allocate(bufferCapacity);
-            socketChannel.read(socketBuffer);
-            socketBuffer.flip(); // write to read
-            printByteBuffer("two", socketBuffer);
+                // read buffer
+                socketBuffer = ByteBuffer.allocate(bufferCapacity);
+                socketChannel.read(socketBuffer);
+                socketBuffer.flip(); // write to read
+                printByteBuffer("second request", socketBuffer);
 
-            Socks5ConnectionRequest connectionRequest = new Socks5ConnectionRequest(socketBuffer);
-            address = connectionRequest.address();
-            socketChannel.write(new Socks5ConnectionResponse(SOCKS5_REQUEST_GRANTED, connectionRequest.addressType(), address).messageBytes());
-
-
+                Socks5ConnectionRequest connectionRequest = new Socks5ConnectionRequest(socketBuffer);
+                if (connectionRequest.isValid()) {
+                    address = connectionRequest.address();
+                    socketChannel.write(new Socks5ConnectionResponse(SOCKS5_REQUEST_GRANTED, connectionRequest.addressType(), address).messageBytes());
+                }
+            }
         } else if (socketBuffer.get(0) == SOCKS4_VERSION) {
             Socks4ConnectionRequest connectionRequest = new Socks4ConnectionRequest(socketBuffer);
-            address = connectionRequest.address();
-            socketChannel.write(new Socks4ConnectionResponse(SOCKS4_REQUEST_GRANTED).messageBytes());
+            if (connectionRequest.isValid()) {
+                address = connectionRequest.address();
+                socketChannel.write(new Socks4ConnectionResponse(SOCKS4_REQUEST_GRANTED).messageBytes());
+            }
         } else {
             throw new RuntimeException("Unrecognized SOCKS version number expected one of [" + Arrays.asList(printHexBinary(SOCKS5_VERSION), printHexBinary(SOCKS4_VERSION)) + "] but found [" + printHexBinary(socketBuffer.get(0)) + "]");
         }
         if (address != null) {
-            startPipe(socketChannel, address);
+            if (isHTTP(address)) {
+                startPipe(socketChannel, (fixedDownStreamSocketAddress == null ? address : fixedDownStreamSocketAddress));
+            } else if (isHTTPS(address)) {
+                startPipe(socketChannel, (fixedDownStreamSecureSocketAddress == null ? address : fixedDownStreamSecureSocketAddress));
+            } else {
+                logger.debug("Assuming traffic on port [" + address.getPort() + "] is not HTTP or HTTPS to configure this port as HTTP or HTTPS use -Dmockserver.extraHTTPPorts=<comma separated ports> or -Dmockserver.extraHTTPSPorts=<comma separated ports>");
+                startPipe(socketChannel, address);
+            }
         }
     }
 
-    private void startPipe(final SocketChannel socketChannel, final SocketAddress socketAddress) {
+    private boolean isHTTP(InetSocketAddress address) {
+        return address.getPort() == 80 || address.getPort() == 8080 || extraHTTPPorts().contains(new Integer(address.getPort()));
+    }
+
+    private boolean isHTTPS(InetSocketAddress address) {
+        return address.getPort() == 443 || address.getPort() == 1443 || extraHTTPSPorts().contains(new Integer(address.getPort()));
+    }
+
+    private void startPipe(final SocketChannel upStreamSocketChannel, final SocketAddress downStreamSocketAddress) {
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
                     SocketChannel downStream = SocketChannel.open();
-                    if (downStream.connect(socketAddress)) {
-                        new Pipe(socketChannel, downStream, byteBufferPool).start();
-                        new Pipe(downStream, socketChannel, byteBufferPool).start();
+                    if (downStream.connect(downStreamSocketAddress)) {
+                        new Pipe(upStreamSocketChannel, downStream, byteBufferPool).start();
+                        new Pipe(downStream, upStreamSocketChannel, byteBufferPool).start();
                     }
                 } catch (Exception e) {
-                    logger.error("Exception while creating socket pipe from [" + socketChannel + "] to [" + socketAddress + "]", e);
+                    logger.error("Exception while creating socket pipe from [" + upStreamSocketChannel + "] to [" + downStreamSocketAddress + "]", e);
                 }
             }
         }).start();

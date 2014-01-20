@@ -95,6 +95,10 @@ public class Socks5ConnectionRequest extends Socks5Message {
         }
     }
 
+    public boolean isValid() {
+        return true;
+    }
+
     public byte addressType() {
         return addressType;
     }

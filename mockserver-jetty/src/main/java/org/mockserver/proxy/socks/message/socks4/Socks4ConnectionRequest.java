@@ -98,6 +98,10 @@ public class Socks4ConnectionRequest extends Socks4Message {
         return new String(bytes);
     }
 
+    public boolean isValid() {
+        return true;
+    }
+
     public InetSocketAddress address() {
         return socket;
     }

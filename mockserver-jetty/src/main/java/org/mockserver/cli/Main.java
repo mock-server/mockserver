@@ -1,6 +1,7 @@
 package org.mockserver.cli;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import org.mockserver.proxy.ProxyRunner;
 import org.mockserver.server.MockServerRunner;
 import org.slf4j.Logger;
@@ -56,6 +57,10 @@ public class Main {
      */
     public static void main(String... arguments) {
         Map<String, Integer> parseArguments = parseArguments(arguments);
+
+        if(logger.isDebugEnabled()) {
+            logger.debug("\n\nUsing command line options: " + Joiner.on(", ").withKeyValueSeparator("=").join(parseArguments) + "\n");
+        }
 
         if (parseArguments.size() > 0) {
             if (parseArguments.containsKey(PROXY_PORT_KEY) || parseArguments.containsKey(PROXY_SECURE_PORT_KEY)) {

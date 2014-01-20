@@ -6,6 +6,7 @@ import org.eclipse.jetty.server.HttpConfiguration;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.proxy.filters.ProxyRequestFilter;
 import org.mockserver.proxy.filters.ProxyResponseFilter;
+import org.mockserver.proxy.socks.SocksProxy;
 import org.mockserver.runner.AbstractRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +18,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.mockserver.configuration.SystemProperties.proxyStopPort;
-import static org.mockserver.configuration.SystemProperties.serverStopPort;
+import static org.mockserver.configuration.SystemProperties.socksPort;
 
 /**
  * @author jamesdbloom
@@ -63,11 +64,17 @@ public class ProxyRunner extends AbstractRunner<ProxyRunner> {
     @Override
     protected void serverStarted(final Integer port, final Integer securePort) {
         System.setProperty("proxySet", "true");
-        System.setProperty("http.proxyHost", "localhost");
-        System.setProperty("http.proxyPort", port.toString());
+        System.setProperty("http.proxyHost", "127.0.0.1");
         System.setProperty("java.net.useSystemProxies", "true");
-        // todo - need to support SOCKS protocol for this solution to work - jamesdbloom 12/01/2014
-//        java.net.ProxySelector.setDefault(proxySelector());
+
+        int socksPort = socksPort();
+        if (socksPort != -1) {
+            new SocksProxy(socksPort, new InetSocketAddress("127.0.0.1", port), new InetSocketAddress("127.0.0.1", securePort));
+            System.setProperty("http.proxyPort", "" + socksPort);
+            java.net.ProxySelector.setDefault(proxySelector());
+        } else {
+            System.setProperty("http.proxyPort", port.toString());
+        }
     }
 
     protected void serverStopped() {

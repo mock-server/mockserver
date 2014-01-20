@@ -50,6 +50,10 @@ public class Socks5StartSessionRequest extends Socks5Message {
         }
     }
 
+    public boolean isValid() {
+        return true;
+    }
+
     public String toString() {
         return "" +
                 "Socks5StartSessionRequest {\n" +
@@ -59,5 +63,4 @@ public class Socks5StartSessionRequest extends Socks5Message {
                 "   bytes:                         " + printHexBinary(bytes) + "\n" +
                 "}";
     }
-
 }
