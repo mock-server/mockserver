@@ -46,24 +46,20 @@ public class MockServerServlet extends HttpServlet {
     }
 
     public void doPut(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
-        switch (httpServletRequest.getPathInfo() != null && httpServletRequest.getContextPath() != null ? httpServletRequest.getPathInfo() : httpServletRequest.getRequestURI()) {
-            case "/dumpToLog":
-                mockServer.dumpToLog(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToByteArray(httpServletRequest)));
-                httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
-                break;
-            case "/reset":
-                mockServer.reset();
-                httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
-                break;
-            case "/clear":
-                mockServer.clear(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToByteArray(httpServletRequest)));
-                httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
-                break;
-            default:
-                Expectation expectation = expectationSerializer.deserialize(IOStreamUtils.readInputStreamToByteArray(httpServletRequest));
-                mockServer.when(expectation.getHttpRequest(), expectation.getTimes()).thenRespond(expectation.getHttpResponse());
-                httpServletResponse.setStatus(HttpStatusCode.CREATED_201.code());
+        String requestPath = httpServletRequest.getPathInfo() != null && httpServletRequest.getContextPath() != null ? httpServletRequest.getPathInfo() : httpServletRequest.getRequestURI();
+        if (requestPath.equals("/dumpToLog")) {
+            mockServer.dumpToLog(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
+            httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
+        } else if (requestPath.equals("/reset")) {
+            mockServer.reset();
+            httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
+        } else if (requestPath.equals("/clear")) {
+            mockServer.clear(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
+            httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
+        } else {
+            Expectation expectation = expectationSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest));
+            mockServer.when(expectation.getHttpRequest(), expectation.getTimes()).thenRespond(expectation.getHttpResponse());
+            httpServletResponse.setStatus(HttpStatusCode.CREATED_201.code());
         }
     }
-
 }

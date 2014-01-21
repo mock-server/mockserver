@@ -1,5 +1,6 @@
 package org.mockserver.proxy.connect;
 
+import org.apache.commons.io.Charsets;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.HttpProxy;
 import org.eclipse.jetty.client.api.ContentResponse;
@@ -26,7 +27,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.test.Assert.assertContains;
@@ -80,8 +80,10 @@ public class ConnectHandlerTest {
 
     @Test
     public void shouldConnectToSecurePort() throws Exception {
-        try (Socket socket = new Socket("localhost", HTTP_PORT)) {
+        Socket socket = null;
+        try {
             // given
+            socket = new Socket("localhost", HTTP_PORT);
             OutputStream output = socket.getOutputStream();
 
             // when
@@ -89,11 +91,15 @@ public class ConnectHandlerTest {
                     "CONNECT localhost:666 HTTP/1.1\r\n" +
                     "Host: localhost:666\r\n" +
                     "\r\n"
-            ).getBytes(StandardCharsets.UTF_8));
+            ).getBytes(Charsets.UTF_8));
             output.flush();
 
             // then
             assertContains(IOStreamUtils.readInputStreamToString(socket), "HTTP/1.1 200 OK");
+        } finally {
+            if (socket != null) {
+                socket.close();
+            }
         }
     }
 
@@ -106,8 +112,10 @@ public class ConnectHandlerTest {
         try {
             server.start();
 
-            try (Socket socket = new Socket("localhost", port)) {
+            Socket socket = null;
+            try {
                 // given
+                socket = new Socket("localhost", port);
                 OutputStream output = socket.getOutputStream();
 
                 // when
@@ -115,11 +123,15 @@ public class ConnectHandlerTest {
                         "CONNECT localhost:666 HTTP/1.1\r\n" +
                         "Host: localhost:666\r\n" +
                         "\r\n"
-                ).getBytes(StandardCharsets.UTF_8));
+                ).getBytes(Charsets.UTF_8));
                 output.flush();
 
                 // then
                 assertContains(IOStreamUtils.readInputStreamToString(socket), "HTTP/1.1 504 Gateway Timeout");
+            } finally {
+                if (socket != null) {
+                    socket.close();
+                }
             }
         } finally {
             server.stop();
@@ -128,8 +140,10 @@ public class ConnectHandlerTest {
 
     @Test
     public void shouldForwardRequestsToSecurePortUsingSocketDirectly() throws Exception {
-        try (Socket socket = new Socket("localhost", HTTP_PORT)) {
+        Socket socket = null;
+        try {
             // given
+            socket = new Socket("localhost", HTTP_PORT);
             OutputStream output = socket.getOutputStream();
 
             // when
@@ -138,14 +152,16 @@ public class ConnectHandlerTest {
                     "CONNECT localhost:666 HTTP/1.1\r\n" +
                     "Host: localhost:666\r\n" +
                     "\r\n"
-            ).getBytes(StandardCharsets.UTF_8));
+            ).getBytes(Charsets.UTF_8));
             output.flush();
 
             // - flush CONNECT response
             assertContains(IOStreamUtils.readInputStreamToString(socket), "HTTP/1.1 200 OK");
 
             // Upgrade the socket to SSL
-            try (SSLSocket sslSocket = SSLFactory.wrapSocket(socket, sslContextFactory.getSslContext())) {
+            SSLSocket sslSocket = null;
+            try {
+                sslSocket = SSLFactory.wrapSocket(socket, sslContextFactory.getSslContext());
                 output = sslSocket.getOutputStream();
 
                 // - send GET request for headers only
@@ -153,7 +169,7 @@ public class ConnectHandlerTest {
                         "GET /test_headers_only HTTP/1.1\r\n" +
                         "Host: localhost:666\r\n" +
                         "\r\n"
-                ).getBytes(StandardCharsets.UTF_8));
+                ).getBytes(Charsets.UTF_8));
                 output.flush();
 
                 // then
@@ -164,13 +180,21 @@ public class ConnectHandlerTest {
                         "GET /test_headers_and_body HTTP/1.1\r\n" +
                         "Host: localhost:666\r\n" +
                         "\r\n"
-                ).getBytes(StandardCharsets.UTF_8));
+                ).getBytes(Charsets.UTF_8));
                 output.flush();
 
                 // then
                 String response = IOStreamUtils.readInputStreamToString(sslSocket);
                 assertContains(response, "X-Test: test_headers_and_body");
                 assertContains(response, "an_example_body");
+            } finally {
+                if (sslSocket != null) {
+                    sslSocket.close();
+                }
+            }
+        } finally {
+            if (socket != null) {
+                socket.close();
             }
         }
     }
@@ -200,8 +224,10 @@ public class ConnectHandlerTest {
 
     @Test
     public void shouldForwardRequestsToUnknownPath() throws Exception {
-        try (Socket socket = new Socket("localhost", HTTP_PORT)) {
+        Socket socket = null;
+        try {
             // given
+            socket = new Socket("localhost", HTTP_PORT);
             OutputStream output = socket.getOutputStream();
 
             // when
@@ -210,25 +236,36 @@ public class ConnectHandlerTest {
                     "CONNECT localhost:666 HTTP/1.1\r\n" +
                     "Host: localhost:666\r\n" +
                     "\r\n"
-            ).getBytes(StandardCharsets.UTF_8));
+            ).getBytes(Charsets.UTF_8));
             output.flush();
 
             // - flush CONNECT response
             assertContains(IOStreamUtils.readInputStreamToString(socket), "HTTP/1.1 200 OK");
 
             // Upgrade the socket to SSL
-            try (SSLSocket sslSocket = SSLFactory.wrapSocket(socket, sslContextFactory.getSslContext())) {
+            SSLSocket sslSocket = null;
+            try {
+                sslSocket = SSLFactory.wrapSocket(socket, sslContextFactory.getSslContext());
+
                 // - send GET request
                 output = sslSocket.getOutputStream();
                 output.write(("" +
                         "GET /unknown HTTP/1.1\r\n" +
                         "Host: localhost:666\r\n" +
                         "\r\n"
-                ).getBytes(StandardCharsets.UTF_8));
+                ).getBytes(Charsets.UTF_8));
                 output.flush();
 
                 // then
                 assertContains(IOStreamUtils.readInputStreamToString(sslSocket), "HTTP/1.1 404 Not Found");
+            } finally {
+                if (sslSocket != null) {
+                    sslSocket.close();
+                }
+            }
+        } finally {
+            if (socket != null) {
+                socket.close();
             }
         }
     }

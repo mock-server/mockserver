@@ -1,10 +1,7 @@
 package org.mockserver.integration;
 
 import org.mockserver.client.proxy.ProxyClient;
-import org.mockserver.client.server.MockServerClient;
 import org.mockserver.proxy.ProxyRunner;
-
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author jamesdbloom

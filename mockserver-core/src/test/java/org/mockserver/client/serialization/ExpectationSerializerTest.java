@@ -2,7 +2,6 @@ package org.mockserver.client.serialization;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.ObjectWriter;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -22,8 +21,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
-import static org.mockserver.model.HttpRequest.request;
-import static org.mockserver.model.HttpResponse.response;
 
 /**
  * @author jamesdbloom
@@ -402,11 +399,10 @@ public class ExpectationSerializerTest {
     @Test
     public void shouldDeserializeObject() throws IOException {
         // given
-        byte[] requestBytes = "requestBytes".getBytes();
-        when(objectMapper.readValue(eq(requestBytes), same(ExpectationDTO.class))).thenReturn(fullExpectationDTO);
+        when(objectMapper.readValue(eq("requestBytes"), same(ExpectationDTO.class))).thenReturn(fullExpectationDTO);
 
         // when
-        Expectation expectation = expectationSerializer.deserialize(requestBytes);
+        Expectation expectation = expectationSerializer.deserialize("requestBytes");
 
         // then
         assertEquals(fullExpectation, expectation);
@@ -415,11 +411,10 @@ public class ExpectationSerializerTest {
     @Test
     public void shouldDeserializeArray() throws IOException {
         // given
-        byte[] requestBytes = "requestBytes".getBytes();
-        when(objectMapper.readValue(eq(requestBytes), same(ExpectationDTO[].class))).thenReturn(new ExpectationDTO[]{fullExpectationDTO, fullExpectationDTO});
+        when(objectMapper.readValue(eq("requestBytes"), same(ExpectationDTO[].class))).thenReturn(new ExpectationDTO[]{fullExpectationDTO, fullExpectationDTO});
 
         // when
-        Expectation[] expectations = expectationSerializer.deserializeArray(requestBytes);
+        Expectation[] expectations = expectationSerializer.deserializeArray("requestBytes");
 
         // then
         assertArrayEquals(new Expectation[]{fullExpectation, fullExpectation}, expectations);
@@ -428,32 +423,30 @@ public class ExpectationSerializerTest {
     @Test(expected = RuntimeException.class)
     public void shouldHandleExceptionWhileDeserializingObject() throws IOException {
         // given
-        byte[] requestBytes = "requestBytes".getBytes();
-        when(objectMapper.readValue(eq(requestBytes), same(ExpectationDTO.class))).thenThrow(new IOException("TEST EXCEPTION"));
+        when(objectMapper.readValue(eq("requestBytes"), same(ExpectationDTO.class))).thenThrow(new IOException("TEST EXCEPTION"));
 
         // when
-        expectationSerializer.deserialize(requestBytes);
+        expectationSerializer.deserialize("requestBytes");
     }
 
     @Test(expected = RuntimeException.class)
     public void shouldHandleExceptionWhileDeserializingArray() throws IOException {
         // given
-        byte[] requestBytes = "requestBytes".getBytes();
-        when(objectMapper.readValue(eq(requestBytes), same(ExpectationDTO[].class))).thenThrow(new IOException("TEST EXCEPTION"));
+        when(objectMapper.readValue(eq("requestBytes"), same(ExpectationDTO[].class))).thenThrow(new IOException("TEST EXCEPTION"));
 
         // when
-        expectationSerializer.deserializeArray(requestBytes);
+        expectationSerializer.deserializeArray("requestBytes");
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void shouldValidateInputForObject() throws IOException {
         // when
-        expectationSerializer.deserialize(new byte[0]);
+        expectationSerializer.deserialize("");
     }
 
     @Test
     public void shouldValidateInputForArray() throws IOException {
         // when
-        assertArrayEquals(new Expectation[]{}, expectationSerializer.deserializeArray(new byte[0]));
+        assertArrayEquals(new Expectation[]{}, expectationSerializer.deserializeArray(""));
     }
 }

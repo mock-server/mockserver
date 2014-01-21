@@ -1,7 +1,7 @@
 package org.mockserver.client.server;
 
 import org.apache.commons.lang3.StringUtils;
-import org.mockserver.client.http.HttpRequestClient;
+import org.mockserver.client.http.ApacheHttpClient;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.matchers.Times;
@@ -13,7 +13,7 @@ import org.mockserver.model.HttpRequest;
  */
 public class MockServerClient {
     private final String uriBase;
-    private HttpRequestClient httpClient;
+    private ApacheHttpClient apacheHttpClient;
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
 
@@ -44,7 +44,7 @@ public class MockServerClient {
         if (StringUtils.isEmpty(host)) throw new IllegalArgumentException("Host can not be null or empty");
         if (contextPath == null) throw new IllegalArgumentException("ContextPath can not be null");
         uriBase = "http://" + host + ":" + port + (contextPath.length() > 0 && !contextPath.startsWith("/") ? "/" : "") + contextPath;
-        httpClient = new HttpRequestClient();
+        apacheHttpClient = new ApacheHttpClient();
     }
 
     /**
@@ -113,7 +113,7 @@ public class MockServerClient {
      * @param httpRequest the http request that is matched against when deciding what to log if null all requests are logged
      */
     public MockServerClient dumpToLog(HttpRequest httpRequest) {
-        httpClient.sendPUTRequest(uriBase, "/dumpToLog", httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "");
+        apacheHttpClient.sendPUTRequest(uriBase, "/dumpToLog", httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "");
         return this;
     }
 
@@ -121,7 +121,7 @@ public class MockServerClient {
      * Reset MockServer by clearing all expectations
      */
     public MockServerClient reset() {
-        httpClient.sendPUTRequest(uriBase, "/reset", "");
+        apacheHttpClient.sendPUTRequest(uriBase, "/reset", "");
         return this;
     }
 
@@ -131,12 +131,12 @@ public class MockServerClient {
      * @param httpRequest the http request that is matched against when deciding whether to clear each expectation if null all expectations are cleared
      */
     public MockServerClient clear(HttpRequest httpRequest) {
-        httpClient.sendPUTRequest(uriBase, "/clear", httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "");
+        apacheHttpClient.sendPUTRequest(uriBase, "/clear", httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "");
         return this;
     }
 
     protected void sendExpectation(Expectation expectation) {
-        httpClient.sendPUTRequest(uriBase, "/", expectation != null ? expectationSerializer.serialize(expectation) : "");
+        apacheHttpClient.sendPUTRequest(uriBase, "/", expectation != null ? expectationSerializer.serialize(expectation) : "");
     }
 
 }

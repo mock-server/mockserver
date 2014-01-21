@@ -4,6 +4,7 @@ import com.google.common.collect.Multimap;
 import org.mockserver.model.EqualsHashCodeToString;
 import org.mockserver.model.KeyToMultiValue;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.regex.PatternSyntaxException;
 
@@ -31,13 +32,13 @@ public class MapMatcher extends EqualsHashCodeToString implements Matcher<List<K
 
     private boolean containsAll(Multimap<String, String> superSet, Multimap<String, String> subSet) {
         for (String key : subSet.keySet()) {
-            for (String subSetValue : subSet.get(key)) {
+            for (String subSetValue : getIgnoreCase(subSet, key)) {
                 if (!superSet.containsEntry(key, subSetValue)) {
-                    if (!superSet.containsKey(key)) { // check if sub-set key exists in super-set
+                    if (!containsIgnoreCase(superSet.keySet(), key)) { // check if sub-set key exists in super-set
                         return false;
                     } else { // check if sub-set value matches at least one super-set values using regex
                         boolean atLeastOneRegexMatches = false;
-                        for (String superSetValue : superSet.get(key)) {
+                        for (String superSetValue : getIgnoreCase(superSet, key)) {
                             try {
                                 if (superSetValue.matches(subSetValue)) {
                                     atLeastOneRegexMatches = true;
@@ -55,5 +56,22 @@ public class MapMatcher extends EqualsHashCodeToString implements Matcher<List<K
             }
         }
         return true;
+    }
+
+    private Collection<String> getIgnoreCase(Multimap<String, String> multiMap, String key) {
+        // allow for containers like tomcat that lower case header names
+        Collection<String> superSetValuesForKey = multiMap.get(key);
+        superSetValuesForKey.addAll(multiMap.get(key.toLowerCase()));
+        superSetValuesForKey.addAll(multiMap.get(key.toUpperCase()));
+        return superSetValuesForKey;
+    }
+
+    private boolean containsIgnoreCase(Collection<String> list, String value) {
+        for (String listItem : list) {
+            if (listItem.equalsIgnoreCase(value)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

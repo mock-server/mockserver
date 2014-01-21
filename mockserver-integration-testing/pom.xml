@@ -44,6 +44,12 @@
             <artifactId>jetty-util</artifactId>
         </dependency>
 
+        <!-- commons & guava -->
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+        </dependency>
+
         <!-- test -->
         <dependency>
             <groupId>junit</groupId>

@@ -894,8 +894,9 @@ Hides the menu at `767px`, but modify this based on your app's needs.
  &lt;/<span class="element">plugin</span>&gt;</code></pre>
 
 <p>
-	<strong>Note:</strong> If you use the <span class="annotation">runForked</span> goal as above and the <strong>test</strong> phase fails (because a test has failed) the MockServer will not be stopped as Maven does not run any more phases after a phase has failed. In the case above the <strong>post-integration-test</strong> phase is not run if a test fails so the forked MockServer will not be stopped. If you want to ensure the MockServer is stopped even when there are test failures make sure you use <span class="annotation">start</span> and <span class="annotation">stop</span> goals as these run the MockServer on a separate thread that is stopped however maven exits (even if a test fails).
-</p>
+	<strong>Note:</strong> If you use the <span class="annotation">runForked</span> goal as above and the <strong>test</strong> phase fails (because a test has failed) the MockServer will not be stopped as Maven does not run any more phases after a phase has failed. In the case above the
+	<strong>post-integration-test</strong> phase is not run if a test fails so the forked MockServer will not be stopped. If you want to ensure the MockServer is stopped even when there are test failures make sure you use <span class="annotation">start</span> and
+	<span class="annotation">stop</span> goals as these run the MockServer on a separate thread that is stopped however maven exits (even if a test fails). </p>
 
 <p>These goals can be used from the command line as well to start and stop MockServer, as follows:</p>
 

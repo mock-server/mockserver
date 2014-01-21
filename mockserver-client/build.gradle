@@ -1,15 +1,15 @@
 dependencies {
     // http
-    compile "org.eclipse.jetty:jetty-http:$jettyVersion"
-    compile "org.eclipse.jetty:jetty-client:$jettyVersion"
-    compile "org.eclipse.jetty:jetty-util:$jettyVersion"
+    compile "org.apache.httpcomponents:httpclient:$apacheClientVersion"
+    compile "org.apache.httpcomponents:httpcore:$apacheCoreVersion"
 
     // json
     compile "org.codehaus.jackson:jackson-mapper-asl:$jacksonMapperAslVersion"
 
     // guava
-    compile "com.google.guava:guava:$guavaVersion"
     compile "org.apache.commons:commons-lang3:$commonsLang3Version"
+    compile "commons-io:commons-io:$commonsIoVersion"
+    compile "com.google.guava:guava:$guavaVersion"
 
     // logging
     compile "org.slf4j:slf4j-api:$slf4jVersion"
@@ -19,4 +19,10 @@ dependencies {
     testCompile "junit:junit:$junitVersion"
     testCompile "org.mockito:mockito-all:$mockitoAllVersion"
 }
+
+
+
+
+
+
 

@@ -25,7 +25,7 @@ public class HopByHopHeaderFilter implements ProxyRequestFilter {
                 "proxy-authenticate",
                 "upgrade"
         );
-        List<Header> filteredHeaders = new ArrayList<>();
+        List<Header> filteredHeaders = new ArrayList<Header>();
         for (Header header : httpRequest.getHeaders()) {
             if (!headersToRemove.contains(header.getName().toLowerCase(Locale.ENGLISH))) {
                 filteredHeaders.add(header);

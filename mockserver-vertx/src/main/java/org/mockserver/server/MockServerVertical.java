@@ -2,9 +2,9 @@ package org.mockserver.server;
 
 import ch.qos.logback.classic.Level;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
-import org.mockserver.socket.SSLFactory;
 import org.mockserver.mappers.HttpServerRequestMapper;
 import org.mockserver.mappers.HttpServerResponseMapper;
 import org.mockserver.mock.Expectation;
@@ -12,16 +12,14 @@ import org.mockserver.mock.MockServer;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpStatusCode;
+import org.mockserver.socket.SSLFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.VoidHandler;
 import org.vertx.java.core.buffer.Buffer;
-import org.vertx.java.core.http.HttpServer;
 import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.platform.Verticle;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author jamesdbloom
@@ -47,16 +45,16 @@ public class MockServerVertical extends Verticle {
                             setStatusAndEnd(request, HttpStatusCode.ACCEPTED_202);
                             vertx.stop();
                         } else if (request.path().equals("/dumpToLog")) {
-                            mockServer.dumpToLog(httpRequestSerializer.deserialize(body.getBytes()));
+                            mockServer.dumpToLog(httpRequestSerializer.deserialize(new String(body.getBytes(), Charsets.UTF_8)));
                             setStatusAndEnd(request, HttpStatusCode.ACCEPTED_202);
                         } else if (request.path().equals("/reset")) {
                             mockServer.reset();
                             setStatusAndEnd(request, HttpStatusCode.ACCEPTED_202);
                         } else if (request.path().equals("/clear")) {
-                            mockServer.clear(httpRequestSerializer.deserialize(body.getBytes()));
+                            mockServer.clear(httpRequestSerializer.deserialize(new String(body.getBytes(), Charsets.UTF_8)));
                             setStatusAndEnd(request, HttpStatusCode.ACCEPTED_202);
                         } else {
-                            Expectation expectation = expectationSerializer.deserialize(body.getBytes());
+                            Expectation expectation = expectationSerializer.deserialize(new String(body.getBytes(), Charsets.UTF_8));
                             mockServer.when(expectation.getHttpRequest(), expectation.getTimes()).thenRespond(expectation.getHttpResponse());
                             setStatusAndEnd(request, HttpStatusCode.CREATED_201);
                         }

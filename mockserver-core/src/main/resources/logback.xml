@@ -1,6 +1,6 @@
 <configuration>
     <!-- include request log configuration -->
-    <include file="logbackRequests.xml"/>
+    <include resource="logbackRequests.xml"/>
 
     <!-- application log -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">

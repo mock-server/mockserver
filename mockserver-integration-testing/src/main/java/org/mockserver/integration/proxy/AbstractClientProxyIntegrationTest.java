@@ -1,5 +1,6 @@
 package org.mockserver.integration.proxy;
 
+import org.apache.commons.io.Charsets;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.HttpProxy;
 import org.eclipse.jetty.client.api.ContentResponse;
@@ -16,7 +17,6 @@ import org.mockserver.streams.IOStreamUtils;
 import javax.net.ssl.SSLSocket;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.model.HttpRequest.request;
@@ -47,7 +47,10 @@ public abstract class AbstractClientProxyIntegrationTest {
 
     @Test
     public void shouldForwardRequestsUsingSocketDirectly() throws Exception {
-        try (Socket socket = new Socket("localhost", getProxyPort())) {
+        Socket socket = null;
+        try {
+            socket = new Socket("localhost", getProxyPort());
+
             // given
             OutputStream output = socket.getOutputStream();
 
@@ -57,7 +60,7 @@ public abstract class AbstractClientProxyIntegrationTest {
                     "GET /test_headers_only HTTP/1.1\r\n" +
                     "Host: localhost:" + getServerPort() + "\r\n" +
                     "\r\n"
-            ).getBytes(StandardCharsets.UTF_8));
+            ).getBytes(Charsets.UTF_8));
             output.flush();
 
             // then
@@ -68,13 +71,17 @@ public abstract class AbstractClientProxyIntegrationTest {
                     "GET /test_headers_and_body HTTP/1.1\r\n" +
                     "Host: localhost:" + getServerPort() + "\r\n" +
                     "\r\n"
-            ).getBytes(StandardCharsets.UTF_8));
+            ).getBytes(Charsets.UTF_8));
             output.flush();
 
             // then
             String response = IOStreamUtils.readInputStreamToString(socket);
             assertContains(response, "X-Test: test_headers_and_body");
             assertContains(response, "an_example_body");
+        } finally {
+            if (socket != null) {
+                socket.close();
+            }
         }
     }
 
@@ -103,7 +110,9 @@ public abstract class AbstractClientProxyIntegrationTest {
 
     @Test
     public void shouldForwardRequestsToUnknownPath() throws Exception {
-        try (Socket socket = new Socket("localhost", getProxyPort())) {
+        Socket socket = null;
+        try {
+            socket = new Socket("localhost", getProxyPort());
             // given
             OutputStream output = socket.getOutputStream();
 
@@ -113,17 +122,23 @@ public abstract class AbstractClientProxyIntegrationTest {
                     "GET /unknown HTTP/1.1\r\n" +
                     "Host: localhost:" + getServerPort() + "\r\n" +
                     "\r\n"
-            ).getBytes(StandardCharsets.UTF_8));
+            ).getBytes(Charsets.UTF_8));
             output.flush();
 
             // then
             assertContains(IOStreamUtils.readInputStreamToString(socket), "HTTP/1.1 404 Not Found");
+        } finally {
+            if (socket != null) {
+                socket.close();
+            }
         }
     }
 
     @Test
     public void shouldConnectToSecurePort() throws Exception {
-        try (Socket socket = new Socket("localhost", getProxyPort())) {
+        Socket socket = null;
+        try {
+            socket = new Socket("localhost", getProxyPort());
             // given
             OutputStream output = socket.getOutputStream();
 
@@ -132,17 +147,23 @@ public abstract class AbstractClientProxyIntegrationTest {
                     "CONNECT localhost:666 HTTP/1.1\r\n" +
                     "Host: localhost:666\r\n" +
                     "\r\n"
-            ).getBytes(StandardCharsets.UTF_8));
+            ).getBytes(Charsets.UTF_8));
             output.flush();
 
             // then
             assertContains(IOStreamUtils.readInputStreamToString(socket), "HTTP/1.1 200 OK");
+        } finally {
+            if (socket != null) {
+                socket.close();
+            }
         }
     }
 
     @Test
     public void shouldForwardRequestsToSecurePortUsingSocketDirectly() throws Exception {
-        try (Socket socket = new Socket("localhost", getProxyPort())) {
+        Socket socket = null;
+        try {
+            socket = new Socket("localhost", getProxyPort());
             // given
             OutputStream output = socket.getOutputStream();
 
@@ -152,14 +173,17 @@ public abstract class AbstractClientProxyIntegrationTest {
                     "CONNECT localhost:666 HTTP/1.1\r\n" +
                     "Host: localhost:666\r\n" +
                     "\r\n"
-            ).getBytes(StandardCharsets.UTF_8));
+            ).getBytes(Charsets.UTF_8));
             output.flush();
 
             // - flush CONNECT response
             assertContains(IOStreamUtils.readInputStreamToString(socket), "HTTP/1.1 200 OK");
 
             // Upgrade the socket to SSL
-            try (SSLSocket sslSocket = SSLFactory.wrapSocket(socket, sslContextFactory.getSslContext())) {
+            SSLSocket sslSocket = null;
+            try {
+                sslSocket = SSLFactory.wrapSocket(socket, sslContextFactory.getSslContext());
+
                 output = sslSocket.getOutputStream();
 
                 // - send GET request for headers only
@@ -167,7 +191,7 @@ public abstract class AbstractClientProxyIntegrationTest {
                         "GET /test_headers_only HTTP/1.1\r\n" +
                         "Host: localhost:" + getServerSecurePort() + "\r\n" +
                         "\r\n"
-                ).getBytes(StandardCharsets.UTF_8));
+                ).getBytes(Charsets.UTF_8));
                 output.flush();
 
                 // then
@@ -178,13 +202,21 @@ public abstract class AbstractClientProxyIntegrationTest {
                         "GET /test_headers_and_body HTTP/1.1\r\n" +
                         "Host: localhost:" + getServerSecurePort() + "\r\n" +
                         "\r\n"
-                ).getBytes(StandardCharsets.UTF_8));
+                ).getBytes(Charsets.UTF_8));
                 output.flush();
 
                 // then
                 String response = IOStreamUtils.readInputStreamToString(sslSocket);
                 assertContains(response, "X-Test: test_headers_and_body");
                 assertContains(response, "an_example_body");
+            } finally {
+                if (sslSocket != null) {
+                    sslSocket.close();
+                }
+            }
+        } finally {
+            if (socket != null) {
+                socket.close();
             }
         }
     }
@@ -214,7 +246,9 @@ public abstract class AbstractClientProxyIntegrationTest {
 
     @Test
     public void shouldForwardRequestsToSecurePortAndUnknownPath() throws Exception {
-        try (Socket socket = new Socket("localhost", getProxyPort())) {
+        Socket socket = null;
+        try {
+            socket = new Socket("localhost", getProxyPort());
             // given
             OutputStream output = socket.getOutputStream();
 
@@ -224,25 +258,36 @@ public abstract class AbstractClientProxyIntegrationTest {
                     "CONNECT localhost:666 HTTP/1.1\r\n" +
                     "Host: localhost:666\r\n" +
                     "\r\n"
-            ).getBytes(StandardCharsets.UTF_8));
+            ).getBytes(Charsets.UTF_8));
             output.flush();
 
             // - flush CONNECT response
             assertContains(IOStreamUtils.readInputStreamToString(socket), "HTTP/1.1 200 OK");
 
             // Upgrade the socket to SSL
-            try (SSLSocket sslSocket = SSLFactory.wrapSocket(socket, sslContextFactory.getSslContext())) {
+            SSLSocket sslSocket = null;
+            try {
+                sslSocket = SSLFactory.wrapSocket(socket, sslContextFactory.getSslContext());
+
                 // - send GET request
                 output = sslSocket.getOutputStream();
                 output.write(("" +
                         "GET /unknown HTTP/1.1\r\n" +
                         "Host: localhost:" + getServerSecurePort() + "\r\n" +
                         "\r\n"
-                ).getBytes(StandardCharsets.UTF_8));
+                ).getBytes(Charsets.UTF_8));
                 output.flush();
 
                 // then
                 assertContains(IOStreamUtils.readInputStreamToString(sslSocket), "HTTP/1.1 404 Not Found");
+            } finally {
+                if (sslSocket != null) {
+                    sslSocket.close();
+                }
+            }
+        } finally {
+            if (socket != null) {
+                socket.close();
             }
         }
     }

@@ -2,7 +2,6 @@ package org.mockserver.runner;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockserver.configuration.SystemProperties;
 import org.mockserver.proxy.connect.ConnectHandler;
 import org.mockserver.server.MockServerRunner;
 import org.mockserver.server.MockServerServlet;
@@ -14,7 +13,6 @@ import java.net.UnknownHostException;
 import java.util.concurrent.ExecutionException;
 
 import static org.junit.Assert.*;
-import static org.mockserver.configuration.SystemProperties.serverStopPort;
 
 /**
  * @author jamesdbloom

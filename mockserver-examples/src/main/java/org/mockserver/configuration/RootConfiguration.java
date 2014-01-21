@@ -7,7 +7,6 @@ import org.mockserver.service.jettyclient.JettyHttpClientConfiguration;
 import org.mockserver.service.springclient.SpringRestTemplateConfiguration;
 import org.mockserver.servicebackend.BackEndServiceConfiguration;
 import org.mockserver.socket.PortFactory;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.PropertySource;

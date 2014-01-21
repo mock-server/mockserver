@@ -57,11 +57,11 @@ public class HttpServletRequestMapper {
     }
 
     private void setHeaders(HttpRequest httpRequest, HttpServletRequest httpServletRequest) {
-        List<Header> mappedHeaders = new ArrayList<>();
+        List<Header> mappedHeaders = new ArrayList<Header>();
         Enumeration<String> headerNames = httpServletRequest.getHeaderNames();
         while (headerNames.hasMoreElements()) {
             String headerName = headerNames.nextElement();
-            List<String> mappedHeaderValues = new ArrayList<>();
+            List<String> mappedHeaderValues = new ArrayList<String>();
             Enumeration<String> headerValues = httpServletRequest.getHeaders(headerName);
             while (headerValues.hasMoreElements()) {
                 mappedHeaderValues.add(headerValues.nextElement());
@@ -72,7 +72,7 @@ public class HttpServletRequestMapper {
     }
 
     private void setCookies(HttpRequest httpRequest, HttpServletRequest httpServletRequest) {
-        List<Cookie> mappedCookies = new ArrayList<>();
+        List<Cookie> mappedCookies = new ArrayList<Cookie>();
         if (httpServletRequest.getCookies() != null) {
             for (javax.servlet.http.Cookie cookie : httpServletRequest.getCookies()) {
                 mappedCookies.add(new Cookie(cookie.getName(), cookie.getValue()));

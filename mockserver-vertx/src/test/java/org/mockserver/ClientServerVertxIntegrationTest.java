@@ -1,7 +1,9 @@
 package org.mockserver;
 
-import org.junit.After;
-import org.junit.Before;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.mockserver.client.http.ApacheHttpClient;
+import org.mockserver.client.server.MockServerClient;
 import org.mockserver.integration.server.AbstractClientServerIntegrationTest;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.socket.PortFactory;
@@ -14,20 +16,23 @@ import java.util.concurrent.TimeUnit;
  */
 public class ClientServerVertxIntegrationTest extends AbstractClientServerIntegrationTest {
 
-    private final int port = PortFactory.findFreePort();
-    private final int securePort = PortFactory.findFreePort();
-    private final Thread vertxServer = new Thread(new Runnable() {
+    private final static int port = PortFactory.findFreePort();
+    private final static int securePort = PortFactory.findFreePort();
+    private final static Thread vertxServer = new Thread(new Runnable() {
         public void run() {
-            System.setProperty("mockserver.serverPort", "" + getPort());
-            System.setProperty("mockserver.serverSecurePort", "" + getSecurePort());
+            System.setProperty("mockserver.serverPort", "" + port);
+            System.setProperty("mockserver.serverSecurePort", "" + securePort);
             Starter.main(new String[]{"run", "org.mockserver.server.MockServerVertical"});
         }
     });
 
-    @Before
-    public void startServer() throws InterruptedException {
+    @BeforeClass
+    public static void startServer() throws InterruptedException {
         vertxServer.start();
         vertxServer.join(TimeUnit.SECONDS.toMillis(1));
+
+        // start client
+        mockServerClient = new MockServerClient("localhost", port, servletContext);
     }
 
     @Override
@@ -40,12 +45,12 @@ public class ClientServerVertxIntegrationTest extends AbstractClientServerIntegr
         return securePort;
     }
 
-    @After
-    public void stopServer() {
-        makeRequest(
+    @AfterClass
+    public static void stopServer() {
+        new ApacheHttpClient().sendRequest(
                 new HttpRequest()
                         .withMethod("PUT")
-                        .withURL("http://localhost:" + getPort() + "/stop")
+                        .withURL("http://localhost:" + port + "/stop")
                         .withPath("/stop")
         );
     }

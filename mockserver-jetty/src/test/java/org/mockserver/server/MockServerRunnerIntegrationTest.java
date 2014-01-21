@@ -1,26 +1,28 @@
 package org.mockserver.server;
 
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
+import org.mockserver.client.server.MockServerClient;
 import org.mockserver.integration.server.AbstractClientServerIntegrationTest;
 import org.mockserver.socket.PortFactory;
 
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 /**
  * @author jamesdbloom
  */
 public class MockServerRunnerIntegrationTest extends AbstractClientServerIntegrationTest {
 
-    private final int serverPort = PortFactory.findFreePort();
-    private final int serverSecurePort = PortFactory.findFreePort();
-    private MockServerRunner mockServerRunner;
+    private static final int serverPort = PortFactory.findFreePort();
+    private static final int serverSecurePort = PortFactory.findFreePort();
+    private static MockServerRunner mockServerRunner;
 
-    @Before
-    public void startServer() throws InterruptedException, ExecutionException {
+    @BeforeClass
+    public static void startServer() throws InterruptedException, ExecutionException {
         mockServerRunner = new MockServerRunner().start(serverPort, serverSecurePort);
+        mockServerClient = new MockServerClient("localhost", serverPort, servletContext);
     }
 
     @Override
@@ -33,8 +35,10 @@ public class MockServerRunnerIntegrationTest extends AbstractClientServerIntegra
         return serverSecurePort;
     }
 
-    @After
-    public void stopServer() {
-        mockServerRunner.stop();
+    @AfterClass
+    public static void stopServer() {
+        if (mockServerRunner != null) {
+            mockServerRunner.stop();
+        }
     }
 }

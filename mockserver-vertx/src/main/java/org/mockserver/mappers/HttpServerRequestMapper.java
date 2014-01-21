@@ -1,6 +1,6 @@
 package org.mockserver.mappers;
 
-import org.apache.commons.lang3.CharEncoding;
+import org.apache.commons.io.Charsets;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
@@ -10,8 +10,6 @@ import org.vertx.java.core.MultiMap;
 import org.vertx.java.core.http.HttpServerRequest;
 
 import java.net.HttpCookie;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -50,16 +48,16 @@ public class HttpServerRequestMapper {
     }
 
     private void setHeaders(HttpRequest httpRequest, HttpServerRequest httpServerRequest) {
-        List<Header> mappedHeaders = new ArrayList<>();
+        List<Header> mappedHeaders = new ArrayList<Header>();
         MultiMap headers = httpServerRequest.headers();
         for (String headerName : headers.names()) {
-            mappedHeaders.add(new Header(headerName, new ArrayList<>(headers.getAll(headerName))));
+            mappedHeaders.add(new Header(headerName, new ArrayList<String>(headers.getAll(headerName))));
         }
         httpRequest.withHeaders(mappedHeaders);
     }
 
     private void setCookies(HttpRequest httpRequest, HttpServerRequest httpServerRequest) {
-        List<Cookie> mappedCookies = new ArrayList<>();
+        List<Cookie> mappedCookies = new ArrayList<Cookie>();
         MultiMap headers = httpServerRequest.headers();
         for (String headerName : headers.names()) {
             if (headerName.equals("Cookie") || headerName.equals("Set-Cookie")) {
@@ -74,6 +72,6 @@ public class HttpServerRequestMapper {
     }
 
     private void setBody(HttpRequest httpRequest, byte[] bodyBytes) {
-        httpRequest.withBody(new String(bodyBytes, StandardCharsets.UTF_8));
+        httpRequest.withBody(new String(bodyBytes, Charsets.UTF_8));
     }
 }

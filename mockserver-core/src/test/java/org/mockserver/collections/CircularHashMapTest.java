@@ -13,7 +13,7 @@ public class CircularHashMapTest {
     @Test
     public void shouldNotContainMoreThenMaximumNumberOfEntries() {
         // given
-        CircularHashMap<String, String> circularHashMap = new CircularHashMap<>(3);
+        CircularHashMap<String, String> circularHashMap = new CircularHashMap<String, String>(3);
 
         // when
         circularHashMap.put("1", "1");

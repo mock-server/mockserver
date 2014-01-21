@@ -1,18 +1,20 @@
 package org.mockserver.client.proxy;
 
-import org.eclipse.jetty.client.api.ContentResponse;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.entity.StringEntity;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockserver.client.http.HttpRequestClient;
+import org.mockserver.client.http.ApacheHttpClient;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
 
+import java.io.UnsupportedEncodingException;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
-import static org.mockito.AdditionalMatchers.aryEq;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -24,9 +26,9 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class ProxyClientTest {
 
     @Mock
-    private ContentResponse contentResponse;
+    private CloseableHttpResponse mockHttpResponse;
     @Mock
-    private HttpRequestClient mockHttpClient;
+    private ApacheHttpClient mockApacheHttpClient;
     @Mock
     private ExpectationSerializer expectationSerializer;
     @InjectMocks
@@ -45,7 +47,7 @@ public class ProxyClientTest {
         proxyClient.dumpToLogAsJSON();
 
         // then
-        verify(mockHttpClient).sendPUTRequest("http://localhost:8080", "/dumpToLog", "");
+        verify(mockApacheHttpClient).sendPUTRequest("http://localhost:8080", "/dumpToLog", "");
     }
 
     @Test
@@ -54,7 +56,7 @@ public class ProxyClientTest {
         proxyClient.dumpToLogAsJava();
 
         // then
-        verify(mockHttpClient).sendPUTRequest("http://localhost:8080", "/dumpToLog?type=java", "");
+        verify(mockApacheHttpClient).sendPUTRequest("http://localhost:8080", "/dumpToLog?type=java", "");
     }
 
     @Test
@@ -63,7 +65,7 @@ public class ProxyClientTest {
         proxyClient.reset();
 
         // then
-        verify(mockHttpClient).sendPUTRequest("http://localhost:8080", "/reset", "");
+        verify(mockApacheHttpClient).sendPUTRequest("http://localhost:8080", "/reset", "");
     }
 
     @Test
@@ -77,7 +79,7 @@ public class ProxyClientTest {
                 );
 
         // then
-        verify(mockHttpClient).sendPUTRequest("http://localhost:8080", "/clear", "" +
+        verify(mockApacheHttpClient).sendPUTRequest("http://localhost:8080", "/clear", "" +
                 "{\n" +
                 "  \"path\" : \"/some_path\",\n" +
                 "  \"body\" : \"some_request_body\"\n" +
@@ -85,12 +87,12 @@ public class ProxyClientTest {
     }
 
     @Test
-    public void shouldReceiveExpectationsAsObjects() {
+    public void shouldReceiveExpectationsAsObjects() throws UnsupportedEncodingException {
         // given
         Expectation[] expectations = {};
-        when(contentResponse.getContent()).thenReturn("body".getBytes());
-        when(mockHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn(contentResponse);
-        when(expectationSerializer.deserializeArray(aryEq("body".getBytes()))).thenReturn(expectations);
+        when(mockHttpResponse.getEntity()).thenReturn(new StringEntity("body"));
+        when(mockApacheHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn("body");
+        when(expectationSerializer.deserializeArray("body")).thenReturn(expectations);
 
         // when
         assertSame(expectations, proxyClient
@@ -101,36 +103,36 @@ public class ProxyClientTest {
                 ));
 
         // then
-        verify(mockHttpClient).sendPUTRequest("http://localhost:8080", "/retrieve", "" +
+        verify(mockApacheHttpClient).sendPUTRequest("http://localhost:8080", "/retrieve", "" +
                 "{\n" +
                 "  \"path\" : \"/some_path\",\n" +
                 "  \"body\" : \"some_request_body\"\n" +
                 "}");
-        verify(expectationSerializer).deserializeArray("body".getBytes());
+        verify(expectationSerializer).deserializeArray("body");
     }
 
     @Test
-    public void shouldReceiveExpectationsAsObjectsWithNullRequest() {
+    public void shouldReceiveExpectationsAsObjectsWithNullRequest() throws UnsupportedEncodingException {
         // given
         Expectation[] expectations = {};
-        when(contentResponse.getContent()).thenReturn("body".getBytes());
-        when(mockHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn(contentResponse);
-        when(expectationSerializer.deserializeArray(aryEq("body".getBytes()))).thenReturn(expectations);
+        when(mockHttpResponse.getEntity()).thenReturn(new StringEntity("body"));
+        when(mockApacheHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn("body");
+        when(expectationSerializer.deserializeArray("body")).thenReturn(expectations);
 
         // when
         assertSame(expectations, proxyClient.retrieveAsExpectations(null));
 
         // then
-        verify(mockHttpClient).sendPUTRequest("http://localhost:8080", "/retrieve", "");
-        verify(expectationSerializer).deserializeArray("body".getBytes());
+        verify(mockApacheHttpClient).sendPUTRequest("http://localhost:8080", "/retrieve", "");
+        verify(expectationSerializer).deserializeArray("body");
     }
 
     @Test
-    public void shouldReceiveExpectationsAsJSON() {
+    public void shouldReceiveExpectationsAsJSON() throws UnsupportedEncodingException {
         // given
         String expectations = "body";
-        when(contentResponse.getContent()).thenReturn("body".getBytes());
-        when(mockHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn(contentResponse);
+        when(mockHttpResponse.getEntity()).thenReturn(new StringEntity("body"));
+        when(mockApacheHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn("body");
 
         // when
         assertEquals(expectations, proxyClient
@@ -141,7 +143,7 @@ public class ProxyClientTest {
                 ));
 
         // then
-        verify(mockHttpClient).sendPUTRequest("http://localhost:8080", "/retrieve", "" +
+        verify(mockApacheHttpClient).sendPUTRequest("http://localhost:8080", "/retrieve", "" +
                 "{\n" +
                 "  \"path\" : \"/some_path\",\n" +
                 "  \"body\" : \"some_request_body\"\n" +
@@ -149,16 +151,16 @@ public class ProxyClientTest {
     }
 
     @Test
-    public void shouldReceiveExpectationsAsJSONWithNullRequest() {
+    public void shouldReceiveExpectationsAsJSONWithNullRequest() throws UnsupportedEncodingException {
         // given
         String expectations = "body";
-        when(contentResponse.getContent()).thenReturn("body".getBytes());
-        when(mockHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn(contentResponse);
+        when(mockHttpResponse.getEntity()).thenReturn(new StringEntity("body"));
+        when(mockApacheHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn("body");
 
         // when
         assertEquals(expectations, proxyClient.retrieveAsJSON(null));
 
         // then
-        verify(mockHttpClient).sendPUTRequest("http://localhost:8080", "/retrieve", "");
+        verify(mockApacheHttpClient).sendPUTRequest("http://localhost:8080", "/retrieve", "");
     }
 }

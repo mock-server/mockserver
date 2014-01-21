@@ -1,15 +1,17 @@
 package org.mockserver.mappers.jetty;
 
-import org.apache.commons.lang3.CharEncoding;
-import org.eclipse.jetty.client.api.Response;
-import org.eclipse.jetty.http.HttpFields;
+import org.apache.commons.io.Charsets;
+import org.apache.http.ProtocolVersion;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.message.BasicHeader;
+import org.apache.http.message.BasicStatusLine;
 import org.junit.Test;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpResponse;
 
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
+import java.io.IOException;
 import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
@@ -22,17 +24,18 @@ import static org.mockito.Mockito.when;
 public class HttpClientResponseMapperTest {
 
     @Test
-    public void shouldMapHttpClientResponseToHttpResponse() {
+    public void shouldMapHttpClientResponseToHttpResponse() throws IOException {
         // given
-        Response httpClientResponse = mock(org.eclipse.jetty.client.HttpResponse.class);
-        when(httpClientResponse.getStatus()).thenReturn(500);
-        HttpFields headers = new HttpFields();
-        headers.add("header_name", "header_value");
-        headers.add("Set-Cookie", "cookie_name=cookie_value");
-        when(httpClientResponse.getHeaders()).thenReturn(headers);
+        CloseableHttpResponse httpClientResponse = mock(CloseableHttpResponse.class);
+        when(httpClientResponse.getStatusLine()).thenReturn(new BasicStatusLine(new ProtocolVersion("HTTP", 1, 1), 500, "Server Error"));
+        when(httpClientResponse.getAllHeaders()).thenReturn(new org.apache.http.Header[]{
+                new BasicHeader("header_name", "header_value"),
+                new BasicHeader("Set-Cookie", "cookie_name=cookie_value")
+        });
+        when(httpClientResponse.getEntity()).thenReturn(new StringEntity("somebody"));
 
         // when
-        HttpResponse httpResponse = new HttpClientResponseMapper().mapHttpClientResponseToHttpResponse(httpClientResponse, "somebody".getBytes());
+        HttpResponse httpResponse = new HttpClientResponseMapper().mapHttpClientResponseToHttpResponse(httpClientResponse);
 
         // then
         assertEquals(httpResponse.getStatusCode(), new Integer(500));
@@ -43,23 +46,25 @@ public class HttpClientResponseMapperTest {
         assertEquals(httpResponse.getCookies(), Arrays.asList(
                 new Cookie("cookie_name", "cookie_value")
         ));
-        assertEquals(new String(httpResponse.getBody(), StandardCharsets.UTF_8), "somebody");
+        assertEquals(new String(httpResponse.getBody(), Charsets.UTF_8), "somebody");
         assertEquals(httpResponse.getBodyAsString(), "somebody");
     }
 
     @Test
-    public void shouldFilterHeader() {
+    public void shouldFilterHeader() throws IOException {
         // given
-        Response httpClientResponse = mock(org.eclipse.jetty.client.HttpResponse.class);
-        HttpFields headers = new HttpFields();
-        headers.add("header_name", "header_value");
-        headers.add("Content-Encoding", "gzip");
-        headers.add("Content-Length", "1024");
-        headers.add("Transfer-Encoding", "chunked");
-        when(httpClientResponse.getHeaders()).thenReturn(headers);
+        CloseableHttpResponse httpClientResponse = mock(CloseableHttpResponse.class);
+        when(httpClientResponse.getStatusLine()).thenReturn(new BasicStatusLine(new ProtocolVersion("HTTP", 1, 1), 500, "Server Error"));
+        when(httpClientResponse.getAllHeaders()).thenReturn(new org.apache.http.Header[]{
+                new BasicHeader("header_name", "header_value"),
+                new BasicHeader("Content-Encoding", "gzip"),
+                new BasicHeader("Content-Length", "1024"),
+                new BasicHeader("Transfer-Encoding", "chunked")
+        });
+        when(httpClientResponse.getEntity()).thenReturn(new StringEntity(""));
 
         // when
-        HttpResponse httpResponse = new HttpClientResponseMapper().mapHttpClientResponseToHttpResponse(httpClientResponse, "".getBytes());
+        HttpResponse httpResponse = new HttpClientResponseMapper().mapHttpClientResponseToHttpResponse(httpClientResponse);
 
         // then
         assertEquals(httpResponse.getHeaders(), Arrays.asList(
@@ -68,19 +73,21 @@ public class HttpClientResponseMapperTest {
     }
 
     @Test
-    public void shouldIgnoreIncorrectlyFormattedCookies() {
+    public void shouldIgnoreIncorrectlyFormattedCookies() throws IOException {
         // given
-        Response httpClientResponse = mock(org.eclipse.jetty.client.HttpResponse.class);
-        HttpFields headers = new HttpFields();
-        headers.add("Set-Cookie", "valid_name=valid_value");
-        headers.add("Set-Cookie", "=invalid");
-        headers.add("Set-Cookie", "valid_name=");
-        headers.add("Set-Cookie", "invalid");
-        headers.add("Set-Cookie", "");
-        when(httpClientResponse.getHeaders()).thenReturn(headers);
+        CloseableHttpResponse httpClientResponse = mock(CloseableHttpResponse.class);
+        when(httpClientResponse.getStatusLine()).thenReturn(new BasicStatusLine(new ProtocolVersion("HTTP", 1, 1), 500, "Server Error"));
+        when(httpClientResponse.getAllHeaders()).thenReturn(new org.apache.http.Header[]{
+                new BasicHeader("Set-Cookie", "valid_name=valid_value"),
+                new BasicHeader("Set-Cookie", "=invalid"),
+                new BasicHeader("Set-Cookie", "valid_name="),
+                new BasicHeader("Set-Cookie", "invalid"),
+                new BasicHeader("Set-Cookie", "")
+        });
+        when(httpClientResponse.getEntity()).thenReturn(new StringEntity(""));
 
         // when
-        HttpResponse httpResponse = new HttpClientResponseMapper().mapHttpClientResponseToHttpResponse(httpClientResponse, "".getBytes());
+        HttpResponse httpResponse = new HttpClientResponseMapper().mapHttpClientResponseToHttpResponse(httpClientResponse);
 
         // then
         assertEquals(httpResponse.getCookies(), Arrays.asList(

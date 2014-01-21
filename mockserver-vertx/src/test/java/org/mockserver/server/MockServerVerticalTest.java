@@ -1,5 +1,6 @@
 package org.mockserver.server;
 
+import com.google.common.base.Charsets;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -101,7 +102,7 @@ public class MockServerVerticalTest {
         Times times = Times.unlimited();
         HttpRequest httpRequest = new HttpRequest();
         Expectation expectation = spy(new Expectation(httpRequest, times).thenRespond(new HttpResponse()));
-        when(expectationSerializer.deserialize(httpServerRequest.body())).thenReturn(expectation);
+        when(expectationSerializer.deserialize(new String(httpServerRequest.body(), Charsets.UTF_8))).thenReturn(expectation);
         // - an MockServer that returns the deserialized expectation
         when(mockServer.when(same(httpRequest), same(times))).thenReturn(expectation);
 
@@ -216,8 +217,8 @@ public class MockServerVerticalTest {
                         .withResponse(httpServerResponse);
         HttpRequest httpRequest = new HttpRequest();
 
-        byte[] requestBytes = "requestBytes".getBytes();
-        httpServerRequest.withBody(requestBytes);
+        String requestBytes = "requestBytes";
+        httpServerRequest.withBody(requestBytes.getBytes());
         when(httpRequestSerializer.deserialize(requestBytes)).thenReturn(httpRequest);
 
         // when
@@ -239,8 +240,8 @@ public class MockServerVerticalTest {
                         .withResponse(httpServerResponse);
         Expectation expectation = new Expectation(new HttpRequest(), Times.unlimited()).thenRespond(new HttpResponse());
 
-        byte[] requestBytes = "requestBytes".getBytes();
-        httpServerRequest.withBody(requestBytes);
+        String requestBytes = "requestBytes";
+        httpServerRequest.withBody(requestBytes.getBytes());
         when(expectationSerializer.deserialize(requestBytes)).thenReturn(expectation);
 
         // when
@@ -262,8 +263,8 @@ public class MockServerVerticalTest {
                         .withResponse(httpServerResponse);
         HttpRequest httpRequest = new HttpRequest();
 
-        byte[] requestBytes = "requestBytes".getBytes();
-        httpServerRequest.withBody(requestBytes);
+        String requestBytes = "requestBytes";
+        httpServerRequest.withBody(requestBytes.getBytes());
         when(httpRequestSerializer.deserialize(requestBytes)).thenReturn(httpRequest);
 
         // when

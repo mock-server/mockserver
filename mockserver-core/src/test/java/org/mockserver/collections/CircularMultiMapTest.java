@@ -16,7 +16,7 @@ public class CircularMultiMapTest {
     @Test
     public void shouldStoreMultipleValuesAgainstSingleKey() {
         // given
-        CircularMultiMap<String, String> circularMultiMap = new CircularMultiMap<>(3, 3);
+        CircularMultiMap<String, String> circularMultiMap = new CircularMultiMap<String, String>(3, 3);
 
         // when
         circularMultiMap.put("1", "1_1");
@@ -32,7 +32,7 @@ public class CircularMultiMapTest {
     @Test
     public void shouldNotContainMoreThenMaximumNumberOfKeys() {
         // given
-        CircularMultiMap<String, String> circularMultiMap = new CircularMultiMap<>(3, 3);
+        CircularMultiMap<String, String> circularMultiMap = new CircularMultiMap<String, String>(3, 3);
 
         // when
         circularMultiMap.put("1", "1");
@@ -52,7 +52,7 @@ public class CircularMultiMapTest {
     @Test
     public void shouldNotAllowAddingMoreThenMaximumNumberOfValuePerKey() {
         // given
-        CircularMultiMap<String, String> circularMultiMap = new CircularMultiMap<>(3, 3);
+        CircularMultiMap<String, String> circularMultiMap = new CircularMultiMap<String, String>(3, 3);
 
         // when
         circularMultiMap.put("1", "1");
@@ -85,7 +85,7 @@ public class CircularMultiMapTest {
     @Test
     public void shouldSupportPuttingAllEntriesInAMap() {
         // given
-        CircularMultiMap<String, String> circularMultiMap = new CircularMultiMap<>(3, 3);
+        CircularMultiMap<String, String> circularMultiMap = new CircularMultiMap<String, String>(3, 3);
 
         // when
         circularMultiMap.put("1", "1_1");
@@ -107,14 +107,14 @@ public class CircularMultiMapTest {
     @Test
 
     public void shouldIndicateWhenEmpty() {
-        assertTrue(new CircularMultiMap<>(3, 3).isEmpty());
+        assertTrue(new CircularMultiMap<String, String>(3, 3).isEmpty());
     }
 
     @Test
 
     public void shouldSupportBeingCleared() {
         // given
-        CircularMultiMap<String, String> circularMultiMap = new CircularMultiMap<>(3, 3);
+        CircularMultiMap<String, String> circularMultiMap = new CircularMultiMap<String, String>(3, 3);
         circularMultiMap.put("1", "1_1");
         circularMultiMap.put("1", "1_2");
         circularMultiMap.put("1", "1_3");
@@ -135,7 +135,7 @@ public class CircularMultiMapTest {
 
     public void shouldReturnEntrySet() {
         // given
-        CircularMultiMap<String, String> circularMultiMap = new CircularMultiMap<>(3, 3);
+        CircularMultiMap<String, String> circularMultiMap = new CircularMultiMap<String, String>(3, 3);
 
         // when
         circularMultiMap.put("1", "1_1");
@@ -157,7 +157,7 @@ public class CircularMultiMapTest {
 
     public void shouldCorrectlyConstructAndGetEntryValue() {
         // when
-        CircularMultiMap.ImmutableEntry immutableEntry = new CircularMultiMap<>(3, 3).new ImmutableEntry("key", "value");
+        CircularMultiMap.ImmutableEntry immutableEntry = new CircularMultiMap<String, String>(3, 3).new ImmutableEntry("key", "value");
 
         // then
         assertEquals(immutableEntry.getKey(), "key");
@@ -166,14 +166,14 @@ public class CircularMultiMapTest {
 
     @Test(expected = UnsupportedOperationException.class)
     public void shouldNotAllowImmutableEntryToBeModified() {
-        new CircularMultiMap<>(3, 3).new ImmutableEntry("key", "value").setValue("new_value");
+        new CircularMultiMap<String, String>(3, 3).new ImmutableEntry("key", "value").setValue("new_value");
     }
 
     @Test
 
     public void shouldSupportRemovingAllValues() {
         // given
-        CircularMultiMap<String, String> circularMultiMap = new CircularMultiMap<>(3, 3);
+        CircularMultiMap<String, String> circularMultiMap = new CircularMultiMap<String, String>(3, 3);
         circularMultiMap.put("1", "1_1");
         circularMultiMap.put("1", "1_2");
         circularMultiMap.put("1", "1_3");
@@ -205,7 +205,7 @@ public class CircularMultiMapTest {
 
     public void shouldSupportRemovingAValue() {
         // given
-        CircularMultiMap<String, String> circularMultiMap = new CircularMultiMap<>(3, 3);
+        CircularMultiMap<String, String> circularMultiMap = new CircularMultiMap<String, String>(3, 3);
         circularMultiMap.put("1", "1_1");
         circularMultiMap.put("1", "1_2");
         circularMultiMap.put("1", "1_3");

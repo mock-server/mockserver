@@ -58,6 +58,7 @@
         <jetty.version>9.1.0.v20131115</jetty.version>
         <vertx.version>2.1M2</vertx.version>
         <slf4j.version>1.7.5</slf4j.version>
+        <tomcat.version>7.0.47</tomcat.version>
     </properties>
 
     <dependencyManagement>
@@ -104,6 +105,8 @@
                 <artifactId>javax.servlet-api</artifactId>
                 <version>3.1.0</version>
             </dependency>
+
+            <!-- Jetty Server -->
             <dependency>
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-http</artifactId>
@@ -119,6 +122,8 @@
                 <artifactId>jetty-servlet</artifactId>
                 <version>${jetty.version}</version>
             </dependency>
+
+            <!-- Jetty HTTP Client -->
             <dependency>
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-client</artifactId>
@@ -134,6 +139,25 @@
                 <artifactId>jetty-io</artifactId>
                 <version>${jetty.version}</version>
             </dependency>
+
+            <!-- Apache HTTP Client -->
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpclient</artifactId>
+                <version>4.3.2</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpasyncclient</artifactId>
+                <version>4.0</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpcore</artifactId>
+                <version>4.3.1</version>
+            </dependency>
+
+            <!-- Vert.X -->
             <dependency>
                 <groupId>io.vertx</groupId>
                 <artifactId>vertx-core</artifactId>
@@ -240,6 +264,20 @@
                 <version>3.2.5.RELEASE</version>
                 <scope>test</scope>
             </dependency>
+
+            <!-- tomcat -->
+            <dependency>
+                <groupId>org.apache.tomcat.embed</groupId>
+                <artifactId>tomcat-embed-core</artifactId>
+                <version>${tomcat.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.tomcat.embed</groupId>
+                <artifactId>tomcat-embed-logging-juli</artifactId>
+                <version>${tomcat.version}</version>
+                <scope>test</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -274,6 +312,8 @@
                         <arg>-XDignore.symbol.file</arg>
                         <arg>-Xlint:all</arg>
                     </compilerArgs>
+                    <source>1.7</source>
+                    <target>1.7</target>
                 </configuration>
                 <executions>
                     <execution>
@@ -333,6 +373,12 @@
                         </fileset>
                         <fileset>
                             <directory>${basedir}/mods</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>${basedir}/tomcat</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>${basedir}/tomcat_mockserver</directory>
                         </fileset>
                     </filesets>
                 </configuration>

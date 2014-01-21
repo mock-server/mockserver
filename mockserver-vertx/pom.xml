@@ -14,10 +14,13 @@
     <description>A MockServer that uses Vert.X to run</description>
 
     <dependencies>
-        <!-- core -->
         <dependency>
             <groupId>org.mock-server</groupId>
             <artifactId>mockserver-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.mock-server</groupId>
+            <artifactId>mockserver-client</artifactId>
         </dependency>
         <dependency>
             <groupId>org.mock-server</groupId>
@@ -40,6 +43,10 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>

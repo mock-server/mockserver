@@ -68,7 +68,7 @@ public class BookServiceSpringRestTemplateClient implements BookService {
         mappingJacksonHttpMessageConverter.setObjectMapper(objectMapper);
 
         // create message converters list
-        List<HttpMessageConverter<?>> httpMessageConverters = new ArrayList<>();
+        List<HttpMessageConverter<?>> httpMessageConverters = new ArrayList<HttpMessageConverter<?>>();
         httpMessageConverters.add(mappingJacksonHttpMessageConverter);
 
         // create rest template

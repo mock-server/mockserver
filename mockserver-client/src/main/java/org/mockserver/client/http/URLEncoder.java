@@ -1,12 +1,11 @@
 package org.mockserver.client.http;
 
+import org.apache.commons.io.Charsets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.net.URLDecoder;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 /**
@@ -28,7 +27,7 @@ public class URLEncoder {
 
     protected static String encodeURL(String input) {
         try {
-            byte[] sourceBytes = URLDecoder.decode(input, StandardCharsets.UTF_8.name()).getBytes(StandardCharsets.UTF_8);
+            byte[] sourceBytes = URLDecoder.decode(input, Charsets.UTF_8.name()).getBytes(Charsets.UTF_8);
             ByteArrayOutputStream bos = new ByteArrayOutputStream(sourceBytes.length);
             for (byte aSource : sourceBytes) {
                 int b = aSource;
@@ -46,7 +45,7 @@ public class URLEncoder {
                     bos.write(hex2);
                 }
             }
-            return new String(bos.toByteArray(), StandardCharsets.UTF_8);
+            return new String(bos.toByteArray(), Charsets.UTF_8);
         } catch (Exception e) {
             logger.trace("Exception while decoding or encoding url [" + input + "]", e);
             return input;

@@ -87,9 +87,10 @@ public class Socks4ConnectionRequest extends Socks4Message {
     }
 
     private String readToNull(ByteBuffer messageBytes) {
-        ByteBuffer buffer = ByteBuffer.allocate(128);
+        int capacity = 128;
+        ByteBuffer buffer = ByteBuffer.allocate(capacity);
         byte singleByte = messageBytes.get();
-        while (singleByte != 0x00) {
+        while (singleByte != 0x00 && buffer.limit() < capacity) {
             buffer.put(singleByte);
         }
         buffer.flip();

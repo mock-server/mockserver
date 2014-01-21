@@ -13,7 +13,7 @@ public class CircularMultiMap<K, V> implements Map<K, V> {
 
     public CircularMultiMap(int maxNumberOfKeys, int maxNumberOfValuesPerKey) {
         this.maxValuesPerKeySize = maxNumberOfValuesPerKey;
-        backingMap = new CircularHashMap<>(maxNumberOfKeys);
+        backingMap = new CircularHashMap<K, List<V>>(maxNumberOfKeys);
     }
 
     @Override
@@ -100,7 +100,7 @@ public class CircularMultiMap<K, V> implements Map<K, V> {
 
     @Override
     public synchronized Collection<V> values() {
-        Collection<V> values = new ArrayList<>();
+        Collection<V> values = new ArrayList<V>();
         for (List<V> valuesForKey : backingMap.values()) {
             values.addAll(valuesForKey);
         }
@@ -109,7 +109,7 @@ public class CircularMultiMap<K, V> implements Map<K, V> {
 
     @Override
     public synchronized Set<Entry<K, V>> entrySet() {
-        Set<Entry<K, V>> entrySet = new LinkedHashSet<>();
+        Set<Entry<K, V>> entrySet = new LinkedHashSet<Entry<K, V>>();
         for (Entry<K, List<V>> entry : backingMap.entrySet()) {
             for (V value : entry.getValue()) {
                 entrySet.add(new ImmutableEntry(entry.getKey(), value));

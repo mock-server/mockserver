@@ -1,6 +1,9 @@
 package org.mockserver.web.controller;
 
-import org.junit.*;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 import org.mockserver.client.proxy.Times;
 import org.mockserver.integration.ClientAndProxy;
 import org.mockserver.model.Parameter;

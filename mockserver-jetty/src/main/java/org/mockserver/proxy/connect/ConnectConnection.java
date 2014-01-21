@@ -89,7 +89,7 @@ public class ConnectConnection extends AbstractConnection {
     public String toString() {
         return String.format("%s from: %s to: %s",
                 super.toString(),
-                getEndPoint().getLocalAddress().getHostString(),
-                getEndPoint().getRemoteAddress().getHostString());
+                getEndPoint().getLocalAddress().getHostName(),
+                getEndPoint().getRemoteAddress().getHostName());
     }
 }

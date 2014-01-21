@@ -45,12 +45,12 @@ var proxyClient = function (proxyUrl) {
                 }
             };
         },
-        butFoundAssertionErrorMessage = function() {
+        butFoundAssertionErrorMessage = function () {
             xmlhttp.open("PUT", proxyUrl + "/retrieve", false);
             xmlhttp.send();
-            return " but " + (xmlhttp.responseText ? "only found" + xmlhttp.responseText: "found no requests");
+            return " but " + (xmlhttp.responseText ? "only found" + xmlhttp.responseText : "found no requests");
         },
-        retrieve = function(request) {
+        retrieve = function (request) {
             xmlhttp.open("PUT", proxyUrl + "/retrieve", false);
             xmlhttp.send(JSON.stringify(request));
             return xmlhttp.responseText && JSON.parse(xmlhttp.responseText);

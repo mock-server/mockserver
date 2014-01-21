@@ -14,7 +14,7 @@ public class CircularLinkedListTest {
     @Test
     public void shouldNotAllowAddingMoreThenMaximumNumberOfEntriesWhenUsingAdd() {
         // given
-        CircularLinkedList<String> circularLinkedList = new CircularLinkedList<>(3);
+        CircularLinkedList<String> circularLinkedList = new CircularLinkedList<String>(3);
 
         // when
         circularLinkedList.add("1");
@@ -34,7 +34,7 @@ public class CircularLinkedListTest {
     @Test
     public void shouldNotAllowAddingMoreThenMaximumNumberOfEntriesWhenUsingAddFirst() {
         // given
-        CircularLinkedList<String> circularLinkedList = new CircularLinkedList<>(3);
+        CircularLinkedList<String> circularLinkedList = new CircularLinkedList<String>(3);
 
         // when
         circularLinkedList.addFirst("1");
@@ -54,7 +54,7 @@ public class CircularLinkedListTest {
     @Test
     public void shouldNotAllowAddingMoreThenMaximumNumberOfEntriesWhenUsingAddLast() {
         // given
-        CircularLinkedList<String> circularLinkedList = new CircularLinkedList<>(3);
+        CircularLinkedList<String> circularLinkedList = new CircularLinkedList<String>(3);
 
         // when
         circularLinkedList.addLast("1");
@@ -74,7 +74,7 @@ public class CircularLinkedListTest {
     @Test
     public void shouldNotAllowAddingMoreThenMaximumNumberOfEntriesWhenUsingAddAll() {
         // given
-        CircularLinkedList<String> circularLinkedList = new CircularLinkedList<>(3);
+        CircularLinkedList<String> circularLinkedList = new CircularLinkedList<String>(3);
 
         // when
         circularLinkedList.addAll(Arrays.asList("1", "2", "3", "4"));
@@ -91,7 +91,7 @@ public class CircularLinkedListTest {
     @Test
     public void shouldNotAllowAddingMoreThenMaximumNumberOfEntriesWhenUsingAddAllWithIndex() {
         // given
-        CircularLinkedList<String> circularLinkedList = new CircularLinkedList<>(3);
+        CircularLinkedList<String> circularLinkedList = new CircularLinkedList<String>(3);
 
         // when
         circularLinkedList.add("1");
@@ -112,7 +112,7 @@ public class CircularLinkedListTest {
     @Test(expected = IllegalArgumentException.class)
     public void shouldNotAllowInsertingListInIndexGreaterThenMaximumNumberOfEntries() {
         // given
-        CircularLinkedList<String> circularLinkedList = new CircularLinkedList<>(3);
+        CircularLinkedList<String> circularLinkedList = new CircularLinkedList<String>(3);
 
         // when
         circularLinkedList.add("1");
@@ -124,7 +124,7 @@ public class CircularLinkedListTest {
     @Test
     public void shouldNotAllowAddingMoreThenMaximumNumberOfEntriesWhenUsingAddWithIndex() {
         // given
-        CircularLinkedList<String> circularLinkedList = new CircularLinkedList<>(3);
+        CircularLinkedList<String> circularLinkedList = new CircularLinkedList<String>(3);
 
         // when
         circularLinkedList.add("1");
@@ -144,7 +144,7 @@ public class CircularLinkedListTest {
     @Test(expected = IllegalArgumentException.class)
     public void shouldNotAllowInsertingItemInIndexGreaterThenMaximumNumberOfEntries() {
         // given
-        CircularLinkedList<String> circularLinkedList = new CircularLinkedList<>(3);
+        CircularLinkedList<String> circularLinkedList = new CircularLinkedList<String>(3);
 
         // when
         circularLinkedList.add("1");

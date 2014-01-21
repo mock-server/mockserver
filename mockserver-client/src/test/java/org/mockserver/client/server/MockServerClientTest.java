@@ -4,7 +4,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockserver.client.http.HttpRequestClient;
+import org.mockserver.client.http.ApacheHttpClient;
 import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
@@ -24,7 +24,7 @@ public class MockServerClientTest {
     @Mock
     private MatcherBuilder matcherBuilder;
     @Mock
-    private HttpRequestClient mockHttpClient;
+    private ApacheHttpClient mockHttpClient;
     @InjectMocks
     private MockServerClient mockServerClient;
 

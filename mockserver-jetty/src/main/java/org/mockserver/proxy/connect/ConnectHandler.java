@@ -92,7 +92,7 @@ public class ConnectHandler extends HandlerWrapper {
 
         @Override
         public Connection newConnection(SocketChannel channel, EndPoint endpoint, Object attachment) throws IOException {
-            logger.debug("Connected to {}", channel.getRemoteAddress());
+            logger.debug("Connected to {}", channel.socket());
             return new ConnectConnection(endpoint, executor, (ConnectContext) attachment);
         }
 

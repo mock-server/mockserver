@@ -67,6 +67,21 @@ public class MapMatcherTest {
     }
 
     @Test
+    public void matchesMatchingValuesIgnoringCase() {
+        // given
+        multimap.put("foo1", "bar1");
+        multimap.put("FOO2", "bar2");
+
+        // when
+        keyToMultiValues.add(new KeyToMultiValue("foo0", "bar0"));
+        keyToMultiValues.add(new KeyToMultiValue("FOO1", "bar1"));
+        keyToMultiValues.add(new KeyToMultiValue("foo2", "bar2"));
+
+        // then
+        assertTrue(mapMatcher.matches(keyToMultiValues));
+    }
+
+    @Test
     public void matchesMatchingRegexValuesWithExtraValues() {
         // given
         multimap.put("foo1", ".*1");
@@ -76,6 +91,20 @@ public class MapMatcherTest {
         keyToMultiValues.add(new KeyToMultiValue("foo0", "bar0"));
         keyToMultiValues.add(new KeyToMultiValue("foo1", "bar1"));
         keyToMultiValues.add(new KeyToMultiValue("foo2", "bar2"));
+
+        // then
+        assertTrue(mapMatcher.matches(keyToMultiValues));
+    }
+
+    @Test
+    public void matchesMatchingRegexValuesIgnoringCase() {
+        // given
+        multimap.put("FOO1", ".*1");
+        multimap.put("foo2", ".*2");
+
+        // when
+        keyToMultiValues.add(new KeyToMultiValue("foo1", "bar1"));
+        keyToMultiValues.add(new KeyToMultiValue("FOO2", "bar2"));
 
         // then
         assertTrue(mapMatcher.matches(keyToMultiValues));

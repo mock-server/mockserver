@@ -1,5 +1,6 @@
 package org.mockserver.client.serialization;
 
+import org.apache.commons.io.Charsets;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jackson.map.DeserializationConfig;
@@ -14,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -98,7 +98,7 @@ public class ExpectationSerializer {
                 serializeAsJavaKeyToMultiValue(output, "Cookie", new ArrayList<KeyToMultiValue>(httpResponse.getCookies()));
             }
             if (httpResponse.getBody() != null && httpResponse.getBody().length > 0) {
-                output.append("\n                        .withBody(\"" + StringEscapeUtils.escapeJava(new String(httpResponse.getBody(), StandardCharsets.UTF_8)) + "\")");
+                output.append("\n                        .withBody(\"" + StringEscapeUtils.escapeJava(new String(httpResponse.getBody(), Charsets.UTF_8)) + "\")");
             }
             output.append("\n        );");
         }
@@ -141,8 +141,8 @@ public class ExpectationSerializer {
         }
     }
 
-    public Expectation deserialize(byte[] jsonExpectation) {
-        if (jsonExpectation == null || jsonExpectation.length == 0) throw new IllegalArgumentException("Expected an JSON expectation object but http body is empty");
+    public Expectation deserialize(String jsonExpectation) {
+        if (jsonExpectation == null || jsonExpectation.isEmpty()) throw new IllegalArgumentException("Expected an JSON expectation object but http body is empty");
         Expectation expectation = null;
         try {
             ExpectationDTO expectationDTO = objectMapper.readValue(jsonExpectation, ExpectationDTO.class);
@@ -150,15 +150,15 @@ public class ExpectationSerializer {
                 expectation = expectationDTO.buildObject();
             }
         } catch (IOException ioe) {
-            logger.error("Exception while parsing response [" + new String(jsonExpectation) + "] for http response expectation", ioe);
-            throw new RuntimeException("Exception while parsing response [" + new String(jsonExpectation) + "] for http response expectation", ioe);
+            logger.error("Exception while parsing response [" + jsonExpectation + "] for http response expectation", ioe);
+            throw new RuntimeException("Exception while parsing response [" + jsonExpectation + "] for http response expectation", ioe);
         }
         return expectation;
     }
 
-    public Expectation[] deserializeArray(byte[] jsonExpectations) {
+    public Expectation[] deserializeArray(String jsonExpectations) {
         Expectation[] expectations = new Expectation[]{};
-        if (jsonExpectations != null && jsonExpectations.length > 0) {
+        if (jsonExpectations != null && !jsonExpectations.isEmpty()) {
             try {
                 ExpectationDTO[] expectationDTOs = objectMapper.readValue(jsonExpectations, ExpectationDTO[].class);
                 if (expectationDTOs != null && expectationDTOs.length > 0) {
@@ -168,8 +168,8 @@ public class ExpectationSerializer {
                     }
                 }
             } catch (IOException ioe) {
-                logger.error("Exception while parsing response [" + new String(jsonExpectations) + "] for http response expectation array", ioe);
-                throw new RuntimeException("Exception while parsing response [" + new String(jsonExpectations) + "] for http response expectation array", ioe);
+                logger.error("Exception while parsing response [" + jsonExpectations + "] for http response expectation array", ioe);
+                throw new RuntimeException("Exception while parsing response [" + jsonExpectations + "] for http response expectation array", ioe);
             }
         }
         return expectations;

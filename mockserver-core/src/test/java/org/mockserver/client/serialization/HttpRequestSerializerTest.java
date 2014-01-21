@@ -2,7 +2,6 @@ package org.mockserver.client.serialization;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.ObjectWriter;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -38,7 +37,7 @@ public class HttpRequestSerializerTest {
                     .withPath("somepath")
                     .withQueryString("queryString")
                     .withParameters(
-                            new Parameter("parameterOneName", Arrays.asList("parameterOneValue")),                            new Parameter("parameterTwoName", Arrays.asList("parameterTwoValue"))
+                            new Parameter("parameterOneName", Arrays.asList("parameterOneValue")), new Parameter("parameterTwoName", Arrays.asList("parameterTwoValue"))
                     )
                     .withBody("somebody")
                     .withHeaders(new Header("headerName", "headerValue"))
@@ -73,11 +72,10 @@ public class HttpRequestSerializerTest {
     @Test
     public void deserialize() throws IOException {
         // given
-        byte[] requestBytes = "requestBytes".getBytes();
-        when(objectMapper.readValue(eq(requestBytes), same(HttpRequestDTO.class))).thenReturn(fullHttpRequestDTO);
+        when(objectMapper.readValue(eq("requestBytes"), same(HttpRequestDTO.class))).thenReturn(fullHttpRequestDTO);
 
         // when
-        HttpRequest httpRequest = httpRequestSerializer.deserialize(requestBytes);
+        HttpRequest httpRequest = httpRequestSerializer.deserialize("requestBytes");
 
         // then
         assertEquals(fullHttpRequest, httpRequest);
@@ -86,12 +84,11 @@ public class HttpRequestSerializerTest {
     @Test
     public void deserializeHandleException() throws IOException {
         // given
-        byte[] requestBytes = "requestBytes".getBytes();
-        when(objectMapper.readValue(eq(requestBytes), same(HttpRequestDTO.class))).thenThrow(new IOException("TEST EXCEPTION"));
+        when(objectMapper.readValue(eq("requestBytes"), same(HttpRequestDTO.class))).thenThrow(new IOException("TEST EXCEPTION"));
 
         try {
             // when
-            httpRequestSerializer.deserialize(requestBytes);
+            httpRequestSerializer.deserialize("requestBytes");
         } catch (Throwable t) {
             fail();
         }

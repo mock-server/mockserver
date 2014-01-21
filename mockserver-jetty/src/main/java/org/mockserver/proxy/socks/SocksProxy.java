@@ -48,11 +48,18 @@ public class SocksProxy {
         new Thread(new Runnable() {
             public void run() {
                 try {
-                    try (ServerSocketChannel serverSocketChannel = ServerSocketChannel.open()) {
+                    ServerSocketChannel serverSocketChannel = null;
+                    try {
+                        serverSocketChannel = ServerSocketChannel.open();
+
                         serverSocketChannel.socket().bind(new InetSocketAddress(port));
                         logger.debug("SOCKS Proxy waiting to receive request on [localhost:" + port + "]");
                         while (serverSocketChannel.isOpen()) {
                             readSocksRequests(serverSocketChannel.accept());
+                        }
+                    } finally {
+                        if (serverSocketChannel != null) {
+                            serverSocketChannel.close();
                         }
                     }
                 } catch (IOException ioe) {
@@ -98,7 +105,7 @@ public class SocksProxy {
                 socketChannel.write(new Socks4ConnectionResponse(SOCKS4_REQUEST_GRANTED).messageBytes());
             }
         } else {
-            throw new RuntimeException("Unrecognized SOCKS version number expected one of [" + Arrays.asList(printHexBinary(SOCKS5_VERSION), printHexBinary(SOCKS4_VERSION)) + "] but found [" + printHexBinary(socketBuffer.get(0)) + "]");
+            throw new RuntimeException("Unrecognized SOCKS version number expected one of " + Arrays.asList(printHexBinary(SOCKS5_VERSION), printHexBinary(SOCKS4_VERSION)) + " but found [" + printHexBinary(socketBuffer.get(0)) + "]");
         }
         if (address != null) {
             if (isHTTP(address)) {

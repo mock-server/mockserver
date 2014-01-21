@@ -2,14 +2,15 @@ package org.mockserver.mappers.jetty;
 
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
-import org.eclipse.jetty.client.api.Response;
-import org.eclipse.jetty.http.HttpField;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.util.EntityUtils;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.HttpCookie;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,34 +22,34 @@ import java.util.List;
 public class HttpClientResponseMapper {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public HttpResponse mapHttpClientResponseToHttpResponse(Response clientResponse, byte[] content) {
+    public HttpResponse mapHttpClientResponseToHttpResponse(CloseableHttpResponse clientResponse) throws IOException {
         HttpResponse httpResponse = new HttpResponse();
         setStatusCode(httpResponse, clientResponse);
         setHeaders(httpResponse, clientResponse);
         setCookies(httpResponse);
-        setBody(httpResponse, content);
+        if (clientResponse.getEntity() != null) {
+            setBody(httpResponse, EntityUtils.toByteArray(clientResponse.getEntity()));
+        }
         return httpResponse;
     }
 
-    private void setStatusCode(HttpResponse httpResponse, Response clientResponse) {
-        httpResponse.withStatusCode(clientResponse.getStatus());
-    }
-
-    private void setBody(HttpResponse httpResponse, byte[] content) {
-        httpResponse.withBody(content);
-    }
-
-    private void setHeaders(HttpResponse httpResponse, Response clientResponse) {
-        Multimap<String, String> headerMap = LinkedListMultimap.create();
-        for (HttpField httpField : clientResponse.getHeaders()) {
-            headerMap.put(httpField.getName(), httpField.getValue());
+    private void setStatusCode(HttpResponse httpResponse, CloseableHttpResponse clientResponse) {
+        if (clientResponse.getStatusLine() != null) {
+            httpResponse.withStatusCode(clientResponse.getStatusLine().getStatusCode());
         }
-        List<Header> headers = new ArrayList<>();
+    }
+
+    private void setHeaders(HttpResponse httpResponse, CloseableHttpResponse clientResponse) {
+        Multimap<String, String> headerMap = LinkedListMultimap.create();
+        for (org.apache.http.Header header : clientResponse.getAllHeaders()) {
+            headerMap.put(header.getName(), header.getValue());
+        }
+        List<Header> headers = new ArrayList<Header>();
         for (String header : headerMap.keySet()) {
             headers.add(new Header(header, headerMap.get(header)));
         }
         List<String> headersToRemove = Arrays.asList("Content-Encoding", "Content-Length", "Transfer-Encoding");
-        for (Header header : new ArrayList<>(headers)) {
+        for (Header header : new ArrayList<Header>(headers)) {
             if (headersToRemove.contains(header.getName())) {
                 headers.remove(header);
             }
@@ -57,7 +58,7 @@ public class HttpClientResponseMapper {
     }
 
     private void setCookies(HttpResponse httpResponse) {
-        List<Cookie> mappedCookies = new ArrayList<>();
+        List<Cookie> mappedCookies = new ArrayList<Cookie>();
         for (Header header : httpResponse.getHeaders()) {
             if (header.getName().equals("Cookie") || header.getName().equals("Set-Cookie")) {
                 for (String cookieHeader : header.getValues()) {
@@ -72,5 +73,9 @@ public class HttpClientResponseMapper {
             }
         }
         httpResponse.withCookies(mappedCookies);
+    }
+
+    private void setBody(HttpResponse httpResponse, byte[] content) {
+        httpResponse.withBody(content);
     }
 }

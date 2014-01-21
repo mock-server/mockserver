@@ -22,9 +22,9 @@ public class KeyToMultiValue extends EqualsHashCodeToString {
     public KeyToMultiValue(String name, Collection<String> values) {
         this.name = name;
         if (values != null) {
-            this.values = new ArrayList<>(values);
+            this.values = new ArrayList<String>(values);
         } else {
-            this.values = new ArrayList<>();
+            this.values = new ArrayList<String>();
         }
     }
 

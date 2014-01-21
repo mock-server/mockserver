@@ -8,7 +8,7 @@ dependencies {
     compile "org.eclipse.jetty:jetty-client:$jettyVersion"
     compile "org.eclipse.jetty:jetty-util:$jettyVersion"
     compile "org.apache.httpcomponents:httpclient:$apacheClientVersion"
-    compile "org.apache.httpcomponents:httpcore:$apacheClientVersion"
+    compile "org.apache.httpcomponents:httpcore:$apacheCoreVersion"
     compile "javax.ws.rs:javax.ws.rs-api:$javaxRsVersion"
     compile "org.glassfish.jersey.core:jersey-client:$jerseyVersion"
     compile "org.glassfish.jersey.media:jersey-media-json-jackson:$jerseyVersion"

@@ -76,8 +76,8 @@ public class MockServerServletTest {
         Times times = mock(Times.class);
         Expectation expectation = new Expectation(httpRequest, times).thenRespond(new HttpResponse());
 
-        byte[] requestBytes = "requestBytes".getBytes();
-        httpServletRequest.setContent(requestBytes);
+        String requestBytes = "requestBytes";
+        httpServletRequest.setContent(requestBytes.getBytes());
         when(expectationSerializer.deserialize(requestBytes)).thenReturn(expectation);
         when(mockServer.when(same(httpRequest), same(times))).thenReturn(expectation);
 
@@ -178,8 +178,8 @@ public class MockServerServletTest {
         MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/clear");
         HttpRequest httpRequest = new HttpRequest();
 
-        byte[] requestBytes = "requestBytes".getBytes();
-        httpServletRequest.setContent(requestBytes);
+        String requestBytes = "requestBytes";
+        httpServletRequest.setContent(requestBytes.getBytes());
         when(httpRequestSerializer.deserialize(requestBytes)).thenReturn(httpRequest);
 
         // when
@@ -197,8 +197,8 @@ public class MockServerServletTest {
         MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/reset");
         Expectation expectation = new Expectation(new HttpRequest(), Times.unlimited()).thenRespond(new HttpResponse());
 
-        byte[] requestBytes = "requestBytes".getBytes();
-        httpServletRequest.setContent(requestBytes);
+        String requestBytes = "requestBytes";
+        httpServletRequest.setContent(requestBytes.getBytes());
         when(expectationSerializer.deserialize(requestBytes)).thenReturn(expectation);
 
         // when
@@ -216,8 +216,8 @@ public class MockServerServletTest {
         MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/dumpToLog");
         HttpRequest httpRequest = new HttpRequest();
 
-        byte[] requestBytes = "requestBytes".getBytes();
-        httpServletRequest.setContent(requestBytes);
+        String requestBytes = "requestBytes";
+        httpServletRequest.setContent(requestBytes.getBytes());
         when(httpRequestSerializer.deserialize(requestBytes)).thenReturn(httpRequest);
 
         // when

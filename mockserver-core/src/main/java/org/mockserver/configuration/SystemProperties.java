@@ -89,7 +89,7 @@ public class SystemProperties {
 
     private static List<Integer> readIntegerListProperty(String key, int defaultValue) {
         try {
-            List<Integer> integers = new ArrayList<>();
+            List<Integer> integers = new ArrayList<Integer>();
             for (String value : Splitter.on(",").split(System.getProperty(key, "" + defaultValue))) {
                 integers.add(Integer.parseInt(value));
             }

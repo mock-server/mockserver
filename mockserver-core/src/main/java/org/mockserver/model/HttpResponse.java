@@ -1,9 +1,7 @@
 package org.mockserver.model;
 
-import org.apache.commons.lang3.CharEncoding;
+import org.apache.commons.io.Charsets;
 
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -18,11 +16,11 @@ public class HttpResponse extends EqualsHashCodeToString {
     private List<Header> headers = new ArrayList<Header>();
     private Delay delay;
 
-    public static HttpResponse response() {
-        return new HttpResponse();
+    public HttpResponse() {
     }
 
-    public HttpResponse() {
+    public static HttpResponse response() {
+        return new HttpResponse();
     }
 
     /**
@@ -65,7 +63,7 @@ public class HttpResponse extends EqualsHashCodeToString {
     }
 
     public String getBodyAsString() {
-        return new String(body, StandardCharsets.UTF_8);
+        return new String(body, Charsets.UTF_8);
     }
 
     /**
@@ -77,6 +75,7 @@ public class HttpResponse extends EqualsHashCodeToString {
         this.cookies = cookies;
         return this;
     }
+
     /**
      * The cookies to return as Set-Cookie headers as a varargs of Cookie objects
      *
@@ -100,6 +99,7 @@ public class HttpResponse extends EqualsHashCodeToString {
         this.headers = headers;
         return this;
     }
+
     /**
      * The headers to return as a varargs of Header objects
      *

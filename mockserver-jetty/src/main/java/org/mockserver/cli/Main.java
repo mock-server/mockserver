@@ -58,7 +58,7 @@ public class Main {
     public static void main(String... arguments) {
         Map<String, Integer> parseArguments = parseArguments(arguments);
 
-        if(logger.isDebugEnabled()) {
+        if (logger.isDebugEnabled()) {
             logger.debug("\n\nUsing command line options: " + Joiner.on(", ").withKeyValueSeparator("=").join(parseArguments) + "\n");
         }
 
@@ -86,7 +86,7 @@ public class Main {
     }
 
     private static Map<String, Integer> parseArguments(String... arguments) {
-        Map<String, Integer> parsedArguments = new HashMap<>();
+        Map<String, Integer> parsedArguments = new HashMap<String, Integer>();
         Iterator<String> argumentsIterator = Arrays.asList(arguments).iterator();
         while (argumentsIterator.hasNext()) {
             String argumentName = argumentsIterator.next();

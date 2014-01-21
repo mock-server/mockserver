@@ -4,6 +4,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.mockserver.cli.Main;
+import org.mockserver.client.server.MockServerClient;
 import org.mockserver.configuration.SystemProperties;
 import org.mockserver.integration.server.AbstractClientServerIntegrationTest;
 import org.mockserver.socket.PortFactory;
@@ -24,6 +25,7 @@ public class MockServerCommandLineIntegrationTest extends AbstractClientServerIn
         Main.main("-serverPort", "" + serverPort, "-serverSecurePort", "" + serverSecurePort);
         // wait for server to start up
         Thread.sleep(TimeUnit.SECONDS.toMillis(1));
+        mockServerClient = new MockServerClient("localhost", serverPort, servletContext);
     }
 
     @AfterClass

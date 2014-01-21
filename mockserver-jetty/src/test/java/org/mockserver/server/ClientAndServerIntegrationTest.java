@@ -1,7 +1,9 @@
 package org.mockserver.server;
 
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.integration.server.AbstractClientServerIntegrationTest;
 import org.mockserver.socket.PortFactory;
@@ -15,11 +17,11 @@ import static org.mockserver.integration.ClientAndServer.startClientAndServer;
  */
 public class ClientAndServerIntegrationTest extends AbstractClientServerIntegrationTest {
 
-    private final int serverPort = PortFactory.findFreePort();
-    private final int serverSecurePort = PortFactory.findFreePort();
+    private static final int serverPort = PortFactory.findFreePort();
+    private static final int serverSecurePort = PortFactory.findFreePort();
 
-    @Before
-    public void startServer() throws InterruptedException, ExecutionException {
+    @BeforeClass
+    public static void startServer() throws InterruptedException, ExecutionException {
         mockServerClient = startClientAndServer(serverPort, serverSecurePort);
     }
 
@@ -33,8 +35,10 @@ public class ClientAndServerIntegrationTest extends AbstractClientServerIntegrat
         return serverSecurePort;
     }
 
-    @After
-    public void stopServer() {
-        ((ClientAndServer) mockServerClient).stop();
+    @AfterClass
+    public static void stopServer() {
+        if (mockServerClient instanceof ClientAndServer) {
+            ((ClientAndServer) mockServerClient).stop();
+        }
     }
 }

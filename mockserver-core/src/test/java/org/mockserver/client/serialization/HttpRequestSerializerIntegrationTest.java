@@ -24,10 +24,10 @@ public class HttpRequestSerializerIntegrationTest {
     @Test
     public void shouldIgnoreExtraFields() throws IOException {
         // given
-        byte[] requestBytes = ("{\n" +
+        String requestBytes = ("{\n" +
                 "    \"path\": \"somePath\",\n" +
                 "    \"extra_field\": \"extra_value\"\n" +
-                "}").getBytes();
+                "}");
 
         // when
         HttpRequest expectation = new HttpRequestSerializer().deserialize(requestBytes);
@@ -41,7 +41,7 @@ public class HttpRequestSerializerIntegrationTest {
     @Test
     public void shouldDeserializeCompleteObject() throws IOException {
         // given
-        byte[] requestBytes = ("{\n" +
+        String requestBytes = ("{\n" +
                 "    \"method\": \"someMethod\",\n" +
                 "    \"url\": \"http://www.example.com\",\n" +
                 "    \"path\": \"somePath\",\n" +
@@ -63,7 +63,7 @@ public class HttpRequestSerializerIntegrationTest {
                 "            \"values\": [\"someCookieValue\"]\n" +
                 "        }\n" +
                 "    ]\n" +
-                "}").getBytes();
+                "}");
 
         // when
         HttpRequest expectation = new HttpRequestSerializer().deserialize(requestBytes);
@@ -84,9 +84,9 @@ public class HttpRequestSerializerIntegrationTest {
     @Test
     public void shouldDeserializePartialObject() throws IOException {
         // given
-        byte[] requestBytes = ("{\n" +
+        String requestBytes = ("{\n" +
                 "    \"path\": \"somePath\"\n" +
-                "}").getBytes();
+                "}");
 
         // when
         HttpRequest expectation = new HttpRequestSerializer().deserialize(requestBytes);

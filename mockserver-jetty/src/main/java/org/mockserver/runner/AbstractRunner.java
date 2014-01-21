@@ -1,6 +1,7 @@
 package org.mockserver.runner;
 
 import ch.qos.logback.classic.Level;
+import org.apache.commons.io.Charsets;
 import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
@@ -17,11 +18,11 @@ import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.util.concurrent.TimeUnit;
 
-import static org.mockserver.configuration.SystemProperties.*;
+import static org.mockserver.configuration.SystemProperties.bufferSize;
+import static org.mockserver.configuration.SystemProperties.maxTimeout;
 
 /**
  * @author jamesdbloom
@@ -201,10 +202,13 @@ public abstract class AbstractRunner<T extends AbstractRunner<T>> {
 
         boolean stopped = false;
         try {
-            try (Socket socket = new Socket(InetAddress.getByName(ipAddress), stopPort)) {
+            Socket socket = null;
+            try {
+                socket = new Socket(InetAddress.getByName(ipAddress), stopPort);
+
                 if (socket.isConnected() && socket.isBound()) {
                     OutputStream out = socket.getOutputStream();
-                    out.write("stop".getBytes(StandardCharsets.UTF_8));
+                    out.write("stop".getBytes(Charsets.UTF_8));
                     socket.shutdownOutput();
 
                     if (stopWait > 0) {
@@ -219,6 +223,10 @@ public abstract class AbstractRunner<T extends AbstractRunner<T>> {
                     } else {
                         stopped = true;
                     }
+                }
+            } finally {
+                if (socket != null) {
+                    socket.close();
                 }
             }
             TimeUnit.MILLISECONDS.sleep(100);
@@ -247,14 +255,21 @@ public abstract class AbstractRunner<T extends AbstractRunner<T>> {
                     logger.info("Waiting to receive MockServer stop request on port [" + port + "]");
 
                     while (serverSocket.isBound() && !serverSocket.isClosed()) {
-                        try (Socket socket = serverSocket.accept()) {
+                        Socket socket = null;
+                        try {
+                            socket = serverSocket.accept();
+
                             if (new BufferedReader(new InputStreamReader(socket.getInputStream())).readLine().contains("stop")) {
                                 // shutdown server
                                 AbstractRunner.this.stop();
 
                                 // inform client
                                 OutputStream out = socket.getOutputStream();
-                                out.write("stopped".getBytes(StandardCharsets.UTF_8));
+                                out.write("stopped".getBytes(Charsets.UTF_8));
+                            }
+                        } finally {
+                            if (socket != null) {
+                                socket.close();
                             }
                         }
                     }

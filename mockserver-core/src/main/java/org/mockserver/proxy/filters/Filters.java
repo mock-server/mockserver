@@ -11,8 +11,8 @@ import org.mockserver.model.HttpResponse;
  */
 public class Filters {
 
-    private final CircularMultiMap<HttpRequestMatcher, ProxyResponseFilter> responseFilters = new CircularMultiMap<>(100, 100);
-    private final CircularMultiMap<HttpRequestMatcher, ProxyRequestFilter> requestFilters = new CircularMultiMap<>(100, 100);
+    private final CircularMultiMap<HttpRequestMatcher, ProxyResponseFilter> responseFilters = new CircularMultiMap<HttpRequestMatcher, ProxyResponseFilter>(100, 100);
+    private final CircularMultiMap<HttpRequestMatcher, ProxyRequestFilter> requestFilters = new CircularMultiMap<HttpRequestMatcher, ProxyRequestFilter>(100, 100);
     private final MatcherBuilder matcherBuilder = new MatcherBuilder();
 
     public Filters withFilter(HttpRequest httpRequest, ProxyRequestFilter filter) {

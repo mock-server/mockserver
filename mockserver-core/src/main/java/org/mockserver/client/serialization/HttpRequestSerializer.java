@@ -44,9 +44,9 @@ public class HttpRequestSerializer {
         }
     }
 
-    public HttpRequest deserialize(byte[] jsonHttpRequest) {
+    public HttpRequest deserialize(String jsonHttpRequest) {
         HttpRequest httpRequest = null;
-        if (jsonHttpRequest != null && jsonHttpRequest.length > 0) {
+        if (jsonHttpRequest != null && !jsonHttpRequest.isEmpty()) {
             try {
                 HttpRequestDTO httpRequestDTO = objectMapper.readValue(jsonHttpRequest, HttpRequestDTO.class);
                 if (httpRequestDTO != null) {

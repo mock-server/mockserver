@@ -25,7 +25,7 @@ public class ExpectationSerializerIntegrationTest {
     @Test
     public void shouldIgnoreExtraFields() throws IOException {
         // given
-        byte[] requestBytes = ("{\n" +
+        String requestBytes = ("{\n" +
                 "    \"httpRequest\": {\n" +
                 "        \"path\": \"somePath\",\n" +
                 "        \"extra_field\": \"extra_value\"\n" +
@@ -34,7 +34,7 @@ public class ExpectationSerializerIntegrationTest {
                 "        \"body\": \"someBody\",\n" +
                 "        \"extra_field\": \"extra_value\"\n" +
                 "    }\n" +
-                "}").getBytes();
+                "}");
 
         // when
         Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
@@ -55,12 +55,12 @@ public class ExpectationSerializerIntegrationTest {
     @Test
     public void shouldIgnoreEmptyStringObjects() throws IOException {
         // given
-        byte[] requestBytes = ("{\n" +
+        String requestBytes = ("{\n" +
                 "    \"httpRequest\": {\n" +
                 "        \"path\": \"somePath\"\n" +
                 "    },\n" +
                 "    \"httpResponse\": \"\"\n" +
-                "}").getBytes();
+                "}");
 
         // when
         Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
@@ -77,7 +77,7 @@ public class ExpectationSerializerIntegrationTest {
     @Test
     public void shouldHandleNullPrimitives() throws IOException {
         // given
-        byte[] requestBytes = ("{\n" +
+        String requestBytes = ("{\n" +
                 "    \"httpRequest\": {\n" +
                 "        \"path\": \"somePath\"\n" +
                 "    },\n" +
@@ -88,7 +88,7 @@ public class ExpectationSerializerIntegrationTest {
                 "        \"remainingTimes\": null,\n" +
                 "        \"unlimited\": false\n" +
                 "    }\n" +
-                "}").getBytes();
+                "}");
 
         // when
         Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
@@ -110,7 +110,7 @@ public class ExpectationSerializerIntegrationTest {
     @Test
     public void shouldHandleEmptyPrimitives() throws IOException {
         // given
-        byte[] requestBytes = ("{\n" +
+        String requestBytes = ("{\n" +
                 "    \"httpRequest\": {\n" +
                 "        \"path\": \"somePath\"\n" +
                 "    },\n" +
@@ -121,7 +121,7 @@ public class ExpectationSerializerIntegrationTest {
                 "        \"remainingTimes\": \"\",\n" +
                 "        \"unlimited\": false\n" +
                 "    }\n" +
-                "}").getBytes();
+                "}");
 
         // when
         Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
@@ -143,7 +143,7 @@ public class ExpectationSerializerIntegrationTest {
     @Test
     public void shouldHandleNullEnums() throws IOException {
         // given
-        byte[] requestBytes = ("{\n" +
+        String requestBytes = ("{\n" +
                 "    \"httpRequest\": {\n" +
                 "        \"path\": \"somePath\"\n" +
                 "    },\n" +
@@ -154,7 +154,7 @@ public class ExpectationSerializerIntegrationTest {
                 "            \"value\": null\n" +
                 "        }\n" +
                 "    }\n" +
-                "}").getBytes();
+                "}");
 
         // when
         Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
@@ -176,7 +176,7 @@ public class ExpectationSerializerIntegrationTest {
     @Test
     public void shouldAllowSingleObjectForArray() throws IOException {
         // given
-        byte[] requestBytes = ("{\n" +
+        String requestBytes = ("{\n" +
                 "    \"httpRequest\": {\n" +
                 "        \"path\": \"somePath\",\n" +
                 "        \"extra_field\": \"extra_value\"\n" +
@@ -185,7 +185,7 @@ public class ExpectationSerializerIntegrationTest {
                 "        \"body\": \"someBody\",\n" +
                 "        \"extra_field\": \"extra_value\"\n" +
                 "    }\n" +
-                "}").getBytes();
+                "}");
 
         // when
         Expectation[] expectations = new ExpectationSerializer().deserializeArray(requestBytes);
@@ -209,7 +209,7 @@ public class ExpectationSerializerIntegrationTest {
     @Test
     public void shouldAllowMultipleObjectsForArray() throws IOException {
         // given
-        byte[] requestBytes = ("[" +
+        String requestBytes = ("[" +
                 "  {\n" +
                 "      \"httpRequest\": {\n" +
                 "          \"path\": \"somePath\",\n" +
@@ -240,7 +240,7 @@ public class ExpectationSerializerIntegrationTest {
                 "          \"extra_field\": \"extra_value\"\n" +
                 "      }\n" +
                 "  }" +
-                "]").getBytes();
+                "]");
         Expectation expectation = new ExpectationDTO()
                 .setHttpRequest(
                         new HttpRequestDTO()
@@ -266,7 +266,7 @@ public class ExpectationSerializerIntegrationTest {
     @Test
     public void shouldDeserializeCompleteObject() throws IOException {
         // given
-        byte[] requestBytes = ("{\n" +
+        String requestBytes = ("{\n" +
                 "    \"httpRequest\": {\n" +
                 "        \"method\": \"someMethod\",\n" +
                 "        \"url\": \"http://www.example.com\",\n" +
@@ -314,7 +314,7 @@ public class ExpectationSerializerIntegrationTest {
                 "        \"remainingTimes\": 5,\n" +
                 "        \"unlimited\": false\n" +
                 "    }\n" +
-                "}").getBytes();
+                "}");
 
         // when
         Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
@@ -348,14 +348,14 @@ public class ExpectationSerializerIntegrationTest {
     @Test
     public void shouldDeserializePartialObject() throws IOException {
         // given
-        byte[] requestBytes = ("{\n" +
+        String requestBytes = ("{\n" +
                 "    \"httpRequest\": {\n" +
                 "        \"path\": \"somePath\"\n" +
                 "    },\n" +
                 "    \"httpResponse\": {\n" +
                 "        \"body\": \"someBody\"\n" +
                 "    }\n" +
-                "}").getBytes();
+                "}");
 
         // when
         Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);

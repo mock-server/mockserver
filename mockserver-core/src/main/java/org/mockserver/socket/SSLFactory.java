@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class SSLFactory {
 
+    public static final String KEY_STORE_ALIAS = "certAlias";
     public static final String KEY_STORE_PASSWORD = "changeit";
     public static final String KEY_STORE_FILENAME = "keystore.jks";
     private static KeyStore keystore;
@@ -49,23 +50,29 @@ public class SSLFactory {
     private static void dynamicallyCreateKeyStore() {
         try {
             keystore = SSLFactory.generateCertificate(
-                    "certAlias",
+                    KEY_STORE_ALIAS,
                     KEY_STORE_PASSWORD.toCharArray(),
                     KeyAlgorithmName.RSA,
                     "CN=www.mockserver.com, O=MockServer, L=London, S=England, C=UK"
             );
-        } catch (IOException | GeneralSecurityException e) {
+        } catch (Exception e) {
             throw new RuntimeException("Exception while building KeyStore dynamically", e);
         }
     }
 
     private static void loadKeyStore(File keyStoreFile) {
         try {
-            try (FileInputStream fileInputStream = new FileInputStream(KEY_STORE_FILENAME)) {
+            FileInputStream fileInputStream = null;
+            try {
+                fileInputStream = new FileInputStream(KEY_STORE_FILENAME);
                 keystore = KeyStore.getInstance(KeyStore.getDefaultType());
                 keystore.load(fileInputStream, KEY_STORE_PASSWORD.toCharArray());
+            } finally {
+                if (fileInputStream != null) {
+                    fileInputStream.close();
+                }
             }
-        } catch (IOException | GeneralSecurityException e) {
+        } catch (Exception e) {
             throw new RuntimeException("Exception while loading KeyStore from " + keyStoreFile.getAbsolutePath(), e);
         }
     }
@@ -75,11 +82,17 @@ public class SSLFactory {
             ByteArrayOutputStream bout = new ByteArrayOutputStream();
             keystore.store(bout, KEY_STORE_PASSWORD.toCharArray());
             File keyStoreFile = new File(KEY_STORE_FILENAME);
-            try (FileOutputStream fileOutputStream = new FileOutputStream(keyStoreFile)) {
+            FileOutputStream fileOutputStream = null;
+            try {
+                fileOutputStream = new FileOutputStream(keyStoreFile);
                 fileOutputStream.write(bout.toByteArray());
+            } finally {
+                if (fileOutputStream != null) {
+                    fileOutputStream.close();
+                }
             }
             keyStoreFile.deleteOnExit();
-        } catch (IOException | GeneralSecurityException e) {
+        } catch (Exception e) {
             throw new RuntimeException("Exception while saving KeyStore", e);
         }
     }

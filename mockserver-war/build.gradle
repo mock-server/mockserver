@@ -15,8 +15,7 @@ dependencies {
     testCompile "junit:junit:$junitVersion"
     testCompile "org.mockito:mockito-all:$mockitoAllVersion"
     testCompile "org.springframework:spring-test:$springVersion"
-    testCompile "org.eclipse.jetty:jetty-http:$jettyVersion"
-    testCompile "org.eclipse.jetty:jetty-server:$jettyVersion"
-    testCompile "org.eclipse.jetty:jetty-servlet:$jettyVersion"
+    testCompile "org.apache.tomcat.embed:tomcat-embed-core:$tomcatVersion"
+    testCompile "org.apache.tomcat.embed:tomcat-embed-logging-juli:$tomcatVersion"
 }
 

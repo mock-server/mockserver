@@ -1,6 +1,6 @@
 package org.mockserver.proxy;
 
-import org.mockserver.client.http.HttpRequestClient;
+import org.mockserver.client.http.ApacheHttpClient;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.mappers.HttpServletRequestMapper;
@@ -27,7 +27,7 @@ public class ProxyServlet extends HttpServlet {
     private HttpServletResponseMapper httpServletResponseMapper = new HttpServletResponseMapper();
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
-    private HttpRequestClient httpRequestClient = new HttpRequestClient();
+    private ApacheHttpClient apacheHttpClient = new ApacheHttpClient();
     private LogFilter logFilter = new LogFilter();
     private Filters filters = new Filters();
 
@@ -75,26 +75,22 @@ public class ProxyServlet extends HttpServlet {
 
     @Override
     protected void doPut(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws ServletException, IOException {
-        switch (httpServletRequest.getPathInfo() != null && httpServletRequest.getContextPath() != null ? httpServletRequest.getPathInfo() : httpServletRequest.getRequestURI()) {
-            case "/dumpToLog":
-                logFilter.dumpToLog(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToByteArray(httpServletRequest)), "java".equals(httpServletRequest.getParameter("type")));
-                httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
-                break;
-            case "/retrieve":
-                Expectation[] expectations = logFilter.retrieve(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToByteArray(httpServletRequest)));
-                IOStreamUtils.writeToOutputStream(expectationSerializer.serialize(expectations).getBytes(), httpServletResponse);
-                httpServletResponse.setStatus(HttpStatusCode.OK_200.code());
-                break;
-            case "/reset":
-                logFilter.reset();
-                httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
-                break;
-            case "/clear":
-                logFilter.clear(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToByteArray(httpServletRequest)));
-                httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
-                break;
-            default:
-                forwardRequest(httpServletRequest, httpServletResponse);
+        String requestPath = httpServletRequest.getPathInfo() != null && httpServletRequest.getContextPath() != null ? httpServletRequest.getPathInfo() : httpServletRequest.getRequestURI();
+        if (requestPath.equals("/dumpToLog")) {
+            logFilter.dumpToLog(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)), "java".equals(httpServletRequest.getParameter("type")));
+            httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
+        } else if (requestPath.equals("/retrieve")) {
+            Expectation[] expectations = logFilter.retrieve(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
+            IOStreamUtils.writeToOutputStream(expectationSerializer.serialize(expectations).getBytes(), httpServletResponse);
+            httpServletResponse.setStatus(HttpStatusCode.OK_200.code());
+        } else if (requestPath.equals("/reset")) {
+            logFilter.reset();
+            httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
+        } else if (requestPath.equals("/clear")) {
+            logFilter.clear(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
+            httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
+        } else {
+            forwardRequest(httpServletRequest, httpServletResponse);
         }
     }
 
@@ -120,7 +116,7 @@ public class ProxyServlet extends HttpServlet {
     private void sendRequest(final HttpRequest httpRequest, final HttpServletResponse httpServletResponse) {
         // if HttpRequest was set to null by a filter don't send request
         if (httpRequest != null) {
-            HttpResponse httpResponse = filters.applyFilters(httpRequest, httpRequestClient.sendRequest(httpRequest));
+            HttpResponse httpResponse = filters.applyFilters(httpRequest, apacheHttpClient.sendRequest(httpRequest));
             httpServletResponseMapper.mapHttpResponseToHttpServletResponse(httpResponse, httpServletResponse);
         }
     }

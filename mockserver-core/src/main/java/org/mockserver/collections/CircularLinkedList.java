@@ -54,7 +54,7 @@ class CircularLinkedList<V> extends LinkedList<V> {
 
     @Override
     public boolean addAll(int index, Collection<? extends V> c) {
-        List<V> objects = new ArrayList<>(c);
+        List<V> objects = new ArrayList<V>(c);
         for (int i = 0; i < c.size(); i++) {
             add(index, objects.get(i));
         }

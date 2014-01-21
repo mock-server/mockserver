@@ -93,9 +93,9 @@ public class HttpRequestMatcher extends EqualsHashCodeToString implements Matche
     }
 
     private List<Parameter> queryStringToParameters(String queryString) {
-        List<Parameter> parameters = new ArrayList<>();
+        List<Parameter> parameters = new ArrayList<Parameter>();
         if (StringUtils.isNotEmpty(queryString)) {
-            CircularMultiMap<String, String> parameterMap = new CircularMultiMap<>(20, 20);
+            CircularMultiMap<String, String> parameterMap = new CircularMultiMap<String, String>(20, 20);
             for (String param : queryString.split("&")) {
                 String[] pair = param.split("=");
                 String key = pair[0];
