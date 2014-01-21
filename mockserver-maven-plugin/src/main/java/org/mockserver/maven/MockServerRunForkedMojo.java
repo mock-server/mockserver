@@ -56,7 +56,7 @@ public class MockServerRunForkedMojo extends MockServerAbstractMojo {
             getLog().info("Skipping plugin execution");
         } else {
             getLog().info("Starting MockServer on port " + serverPort);
-            List<String> arguments = new ArrayList<>(Arrays.asList(getJavaBin(), "-Dmockserver.logLevel=" + logLevel));
+            List<String> arguments = new ArrayList<String>(Arrays.asList(getJavaBin(), "-Dmockserver.logLevel=" + logLevel));
             if (serverStopPort != -1) {
                 arguments.add("-Dmockserver.serverStopPort=" + serverStopPort);
             }

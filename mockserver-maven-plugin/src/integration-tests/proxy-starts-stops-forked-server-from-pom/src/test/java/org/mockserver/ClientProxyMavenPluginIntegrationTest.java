@@ -1,12 +1,12 @@
 package org.mockserver;
 
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.mockserver.integration.proxy.AbstractClientProxyIntegrationTest;
 import org.mockserver.integration.proxy.ServerRunner;
 import org.mockserver.socket.PortFactory;
 
 import java.util.concurrent.TimeUnit;
-import org.junit.BeforeClass;
-import org.junit.AfterClass;
 
 /**
  * @author jamesdbloom
