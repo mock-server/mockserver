@@ -164,20 +164,5 @@ public class IOStreamUtilsTest {
             super.close();
             this.inputStream.close();
         }
-
-        @Override
-        public boolean isFinished() {
-            throw new UnsupportedOperationException("method not implemented yet");
-        }
-
-        @Override
-        public boolean isReady() {
-            throw new UnsupportedOperationException("method not implemented yet");
-        }
-
-        @Override
-        public void setReadListener(ReadListener readListener) {
-            throw new UnsupportedOperationException("method not implemented yet");
-        }
     }
 }

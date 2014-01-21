@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.mock-server</groupId>
         <artifactId>mockserver</artifactId>
-        <version>2.4-SNAPSHOT</version>
+        <version>2.5-SNAPSHOT</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -27,6 +27,12 @@
         </dependency>
         <dependency>
             <groupId>org.mock-server</groupId>
+            <artifactId>mockserver-proxy-war</artifactId>
+            <classifier>classes</classifier>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mock-server</groupId>
             <artifactId>mockserver-client</artifactId>
         </dependency>
         <dependency>
@@ -39,6 +45,8 @@
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
         </dependency>
+
+        <!-- Jetty Server -->
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-http</artifactId>
@@ -51,6 +59,8 @@
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-servlet</artifactId>
         </dependency>
+
+        <!-- Jetty HTTP Client -->
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-client</artifactId>

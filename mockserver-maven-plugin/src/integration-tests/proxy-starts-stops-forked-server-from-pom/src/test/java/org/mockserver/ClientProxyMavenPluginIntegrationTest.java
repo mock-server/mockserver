@@ -21,7 +21,7 @@ public class ClientProxyMavenPluginIntegrationTest extends AbstractClientProxyIn
 
     @BeforeClass
     public static void startServer() throws Exception {
-        serverRunner.startServer(SERVER_HTTP_PORT, SERVER_HTTPS_PORT, sslContextFactory);
+        serverRunner.startServer(SERVER_HTTP_PORT, SERVER_HTTPS_PORT);
         // wait for server to start up
         Thread.sleep(TimeUnit.MILLISECONDS.toMillis(500));
     }

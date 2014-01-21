@@ -1,18 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <groupId>org.mock-server</groupId>
         <artifactId>mockserver</artifactId>
+        <groupId>org.mock-server</groupId>
         <version>2.5-SNAPSHOT</version>
     </parent>
-
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>mockserver-war</artifactId>
+    <artifactId>mockserver-proxy-war</artifactId>
     <packaging>war</packaging>
 
-    <name>MockServer Web Archive</name>
-    <description>A MockServer that can be deployed as a WAR to any JEE web server</description>
+    <name>MockServer Proxy Web Archive</name>
+    <description>An HTTP/HTTPS proxy that can be deployed as a WAR to any JEE web server</description>
 
     <dependencies>
         <!-- mockserver -->

@@ -4,6 +4,8 @@ import org.apache.commons.io.Charsets;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpHeaders;
+import org.apache.http.client.CircularRedirectException;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.*;
 import org.apache.http.client.utils.URLEncodedUtils;
@@ -29,7 +31,9 @@ import org.mockserver.socket.SSLFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
@@ -94,6 +98,9 @@ public class ApacheHttpClient {
         try {
             URI url = new URI(URLEncoder.encodeURL(httpRequest.getURL()));
             HttpMethod httpMethod = HttpMethod.parseString(httpRequest.getMethod());
+            if (logger.isDebugEnabled()) {
+                System.out.println(httpMethod + " => " + url);
+            }
             HttpUriRequest proxiedRequest = createHttpUriRequest(httpMethod, url);
 
             for (Header header : httpRequest.getHeaders()) {
@@ -134,8 +141,15 @@ public class ApacheHttpClient {
                 ((HttpEntityEnclosingRequest) proxiedRequest).setEntity(new StringEntity(httpRequest.getBody()));
             }
             return httpClientResponseMapper.mapHttpClientResponseToHttpResponse(this.httpClient.execute(proxiedRequest));
-        } catch (Exception ioe) {
-            throw new RuntimeException("IOException while sending PUT request", ioe);
+        } catch (IOException ioe) {
+            if(ioe.getCause() instanceof CircularRedirectException) {
+                logger.debug("Circular redirect aborting request", ioe);
+                return new HttpResponse();
+            } else {
+                throw new RuntimeException("IOException while sending request for url [" + httpRequest.getURL() + "]", ioe);
+            }
+        } catch (URISyntaxException urle) {
+            throw new RuntimeException("URISyntaxException for url [" + httpRequest.getURL() + "]", urle);
         }
     }
 

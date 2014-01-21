@@ -67,7 +67,6 @@ public class ClientServerWarNoContextPathIntegrationTest extends AbstractClientS
     public static void stopServer() throws Exception {
         tomcat.stop();
         tomcat.getServer().await();
-        TimeUnit.SECONDS.sleep(1);
     }
 
     @Override

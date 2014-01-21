@@ -10,7 +10,10 @@
 
     <groupId>org.mock-server</groupId>
     <artifactId>mockserver</artifactId>
-    <version>2.4-SNAPSHOT</version>
+    <version>2.5-SNAPSHOT</version>
+    <modules>
+        <module>mockserver-proxy-war</module>
+    </modules>
     <packaging>pom</packaging>
 
     <name>MockServer</name>
@@ -40,20 +43,45 @@
         </developer>
     </developers>
 
-    <modules>
-        <module>mockserver-client</module>
-        <module>mockserver-core</module>
-        <module>mockserver-war</module>
-        <module>mockserver-jetty</module>
-        <module>mockserver-vertx</module>
-        <module>mockserver-maven-plugin</module>
-        <module>mockserver-integration-testing</module>
-        <module>mockserver-examples</module>
-    </modules>
+    <profiles>
+        <profile>
+            <id>jdk16</id>
+            <activation>
+                <jdk>1.6</jdk>
+            </activation>
+            <properties>
+                <maven.compiler.source>1.6</maven.compiler.source>
+                <maven.compiler.target>1.6</maven.compiler.target>
+            </properties>
+            <modules>
+                <module>mockserver-client</module>
+                <module>mockserver-core</module>
+                <module>mockserver-war</module>
+                <module>mockserver-proxy-war</module>
+                <module>mockserver-integration-testing</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>jdk17</id>
+            <activation>
+                <jdk>1.7</jdk>
+            </activation>
+            <properties>
+                <maven.compiler.source>1.7</maven.compiler.source>
+                <maven.compiler.target>1.7</maven.compiler.target>
+            </properties>
+            <modules>
+                <module>mockserver-jetty</module>
+                <module>mockserver-vertx</module>
+                <module>mockserver-maven-plugin</module>
+                <module>mockserver-examples</module>
+                <!-- requires mockserver plugin for tests -->
+                <module>mockserver-javascript</module>
+            </modules>
+        </profile>
+    </profiles>
 
     <properties>
-        <maven.compiler.source>1.7</maven.compiler.source>
-        <maven.compiler.target>1.7</maven.compiler.target>
         <project.build.sourceEncoding>UTF8</project.build.sourceEncoding>
         <jetty.version>9.1.0.v20131115</jetty.version>
         <vertx.version>2.1M2</vertx.version>
@@ -72,6 +100,12 @@
             <dependency>
                 <groupId>org.mock-server</groupId>
                 <artifactId>mockserver-war</artifactId>
+                <classifier>classes</classifier>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mock-server</groupId>
+                <artifactId>mockserver-proxy-war</artifactId>
                 <classifier>classes</classifier>
                 <version>${project.version}</version>
             </dependency>
@@ -103,7 +137,7 @@
             <dependency>
                 <groupId>javax.servlet</groupId>
                 <artifactId>javax.servlet-api</artifactId>
-                <version>3.1.0</version>
+                <version>3.0.1</version>
             </dependency>
 
             <!-- Jetty Server -->
@@ -270,13 +304,11 @@
                 <groupId>org.apache.tomcat.embed</groupId>
                 <artifactId>tomcat-embed-core</artifactId>
                 <version>${tomcat.version}</version>
-                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.apache.tomcat.embed</groupId>
                 <artifactId>tomcat-embed-logging-juli</artifactId>
                 <version>${tomcat.version}</version>
-                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -295,7 +327,7 @@
                         </goals>
                         <phase>generate-sources</phase>
                         <configuration>
-                            <failOnWarning>true</failOnWarning>
+                            <failOnWarning>false</failOnWarning>
                             <ignoreNonCompile>true</ignoreNonCompile>
                         </configuration>
                     </execution>
@@ -312,8 +344,6 @@
                         <arg>-XDignore.symbol.file</arg>
                         <arg>-Xlint:all</arg>
                     </compilerArgs>
-                    <source>1.7</source>
-                    <target>1.7</target>
                 </configuration>
                 <executions>
                     <execution>
@@ -380,8 +410,32 @@
                         <fileset>
                             <directory>${basedir}/tomcat_mockserver</directory>
                         </fileset>
+                        <fileset>
+                            <directory>${basedir}/.extract</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>${basedir}/jasmine/google</directory>
+                        </fileset>
                     </filesets>
                 </configuration>
+            </plugin>
+            <!-- tomcat plugin -->
+            <plugin>
+                <groupId>org.apache.tomcat.maven</groupId>
+                <artifactId>tomcat7-maven-plugin</artifactId>
+                <version>2.2</version>
+                <executions>
+                    <execution>
+                        <id>tomcat-run</id>
+                        <goals>
+                            <goal>exec-war-only</goal>
+                        </goals>
+                        <phase>package</phase>
+                        <configuration>
+                            <path>mockserver</path>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

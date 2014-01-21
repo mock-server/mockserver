@@ -4,12 +4,7 @@ dependencies {
     // http
     providedCompile "javax.servlet:javax.servlet-api:$servletVersion"
 
-    // json
-    compile "org.codehaus.jackson:jackson-mapper-asl:$jacksonMapperAslVersion"
-
     // commons & guava
-    compile "org.apache.commons:commons-lang3:$commonsLang3Version"
-    compile "commons-io:commons-io:$commonsIoVersion"
     compile "com.google.guava:guava:$guavaVersion"
 
     // logging
@@ -19,7 +14,8 @@ dependencies {
     // test
     testCompile "junit:junit:$junitVersion"
     testCompile "org.mockito:mockito-all:$mockitoAllVersion"
-    testCompile "org.hamcrest:hamcrest-core:$hamcrestCore"
     testCompile "org.springframework:spring-test:$springVersion"
+    testCompile "org.apache.tomcat.embed:tomcat-embed-core:$tomcatVersion"
+    testCompile "org.apache.tomcat.embed:tomcat-embed-logging-juli:$tomcatVersion"
 }
 

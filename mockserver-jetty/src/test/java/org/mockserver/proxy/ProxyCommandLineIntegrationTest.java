@@ -5,6 +5,7 @@ import org.junit.BeforeClass;
 import org.mockserver.cli.Main;
 import org.mockserver.configuration.SystemProperties;
 import org.mockserver.integration.proxy.AbstractClientProxyIntegrationTest;
+import org.mockserver.integration.proxy.AbstractClientSecureProxyIntegrationTest;
 import org.mockserver.integration.proxy.ServerRunner;
 import org.mockserver.server.MockServerRunner;
 import org.mockserver.socket.PortFactory;
@@ -14,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author jamesdbloom
  */
-public class ProxyCommandLineIntegrationTest extends AbstractClientProxyIntegrationTest {
+public class ProxyCommandLineIntegrationTest extends AbstractClientSecureProxyIntegrationTest {
 
     private final static int SERVER_HTTP_PORT = PortFactory.findFreePort();
     private final static int SERVER_HTTPS_PORT = PortFactory.findFreePort();
@@ -24,7 +25,7 @@ public class ProxyCommandLineIntegrationTest extends AbstractClientProxyIntegrat
 
     @BeforeClass
     public static void startServer() throws Exception {
-        serverRunner.startServer(SERVER_HTTP_PORT, SERVER_HTTPS_PORT, sslContextFactory);
+        serverRunner.startServer(SERVER_HTTP_PORT, SERVER_HTTPS_PORT);
         // wait for server to start up
         Thread.sleep(TimeUnit.MILLISECONDS.toMillis(500));
     }

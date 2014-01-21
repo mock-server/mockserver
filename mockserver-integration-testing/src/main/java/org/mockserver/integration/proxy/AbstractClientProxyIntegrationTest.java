@@ -1,16 +1,19 @@
 package org.mockserver.integration.proxy;
 
 import org.apache.commons.io.Charsets;
-import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.HttpProxy;
-import org.eclipse.jetty.client.api.ContentResponse;
-import org.eclipse.jetty.http.HttpMethod;
-import org.eclipse.jetty.http.HttpScheme;
-import org.eclipse.jetty.http.HttpStatus;
-import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.apache.http.HttpHost;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.conn.ssl.AllowAllHostnameVerifier;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
+import org.apache.http.util.EntityUtils;
 import org.junit.Test;
 import org.mockserver.client.proxy.ProxyClient;
 import org.mockserver.client.proxy.Times;
+import org.mockserver.model.HttpStatusCode;
 import org.mockserver.socket.SSLFactory;
 import org.mockserver.streams.IOStreamUtils;
 
@@ -27,16 +30,15 @@ import static org.mockserver.test.Assert.assertContains;
  */
 public abstract class AbstractClientProxyIntegrationTest {
 
-    protected static SslContextFactory sslContextFactory = createSSLContextFactory();
-
-    public static SslContextFactory createSSLContextFactory() {
-        SslContextFactory sslContextFactory = new SslContextFactory();
-        sslContextFactory.setKeyStore(SSLFactory.buildKeyStore());
-        sslContextFactory.setKeyStorePassword(SSLFactory.KEY_STORE_PASSWORD);
-        sslContextFactory.setKeyManagerPassword(SSLFactory.KEY_STORE_PASSWORD);
-        sslContextFactory.checkKeyStore();
-        sslContextFactory.setTrustStore(SSLFactory.buildKeyStore());
-        return sslContextFactory;
+    protected HttpClient createHttpClient() throws Exception {
+        HttpHost httpHost = new HttpHost("localhost", getProxyPort());
+        DefaultProxyRoutePlanner defaultProxyRoutePlanner = new DefaultProxyRoutePlanner(httpHost);
+        return HttpClients
+                .custom()
+                .setRoutePlanner(defaultProxyRoutePlanner)
+                .setSslcontext(SSLFactory.sslContext())
+                .setHostnameVerifier(new AllowAllHostnameVerifier())
+                .build();
     }
 
     public abstract int getProxyPort();
@@ -88,24 +90,23 @@ public abstract class AbstractClientProxyIntegrationTest {
     @Test
     public void shouldForwardRequestsUsingHttpClient() throws Exception {
         // given
-        HttpClient httpClient = new HttpClient();
-        httpClient.getProxyConfiguration().getProxies().add(new HttpProxy("localhost", getProxyPort()));
-        try {
-            httpClient.start();
+        HttpClient httpClient = createHttpClient();
 
-            // when
-            ContentResponse response = httpClient.newRequest("localhost", getServerPort())
-                    .scheme(HttpScheme.HTTP.asString())
-                    .method(HttpMethod.GET)
-                    .path("/test_headers_and_body")
-                    .send();
+        // when
+        HttpResponse response = httpClient.execute(
+                new HttpGet(
+                        new URIBuilder()
+                                .setScheme("http")
+                                .setHost("localhost")
+                                .setPort(getServerPort())
+                                .setPath("/test_headers_and_body")
+                                .build()
+                )
+        );
 
-            // then
-            assertEquals(HttpStatus.OK_200, response.getStatus());
-            assertEquals("an_example_body", response.getContentAsString());
-        } finally {
-            httpClient.stop();
-        }
+        // then
+        assertEquals(HttpStatusCode.OK_200.code(), response.getStatusLine().getStatusCode());
+        assertEquals("an_example_body", new String(EntityUtils.toByteArray(response.getEntity()), com.google.common.base.Charsets.UTF_8));
     }
 
     @Test
@@ -135,304 +136,158 @@ public abstract class AbstractClientProxyIntegrationTest {
     }
 
     @Test
-    public void shouldConnectToSecurePort() throws Exception {
-        Socket socket = null;
-        try {
-            socket = new Socket("localhost", getProxyPort());
-            // given
-            OutputStream output = socket.getOutputStream();
-
-            // when
-            output.write(("" +
-                    "CONNECT localhost:666 HTTP/1.1\r\n" +
-                    "Host: localhost:666\r\n" +
-                    "\r\n"
-            ).getBytes(Charsets.UTF_8));
-            output.flush();
-
-            // then
-            assertContains(IOStreamUtils.readInputStreamToString(socket), "HTTP/1.1 200 OK");
-        } finally {
-            if (socket != null) {
-                socket.close();
-            }
-        }
-    }
-
-    @Test
-    public void shouldForwardRequestsToSecurePortUsingSocketDirectly() throws Exception {
-        Socket socket = null;
-        try {
-            socket = new Socket("localhost", getProxyPort());
-            // given
-            OutputStream output = socket.getOutputStream();
-
-            // when
-            // - send CONNECT request
-            output.write(("" +
-                    "CONNECT localhost:666 HTTP/1.1\r\n" +
-                    "Host: localhost:666\r\n" +
-                    "\r\n"
-            ).getBytes(Charsets.UTF_8));
-            output.flush();
-
-            // - flush CONNECT response
-            assertContains(IOStreamUtils.readInputStreamToString(socket), "HTTP/1.1 200 OK");
-
-            // Upgrade the socket to SSL
-            SSLSocket sslSocket = null;
-            try {
-                sslSocket = SSLFactory.wrapSocket(socket, sslContextFactory.getSslContext());
-
-                output = sslSocket.getOutputStream();
-
-                // - send GET request for headers only
-                output.write(("" +
-                        "GET /test_headers_only HTTP/1.1\r\n" +
-                        "Host: localhost:" + getServerSecurePort() + "\r\n" +
-                        "\r\n"
-                ).getBytes(Charsets.UTF_8));
-                output.flush();
-
-                // then
-                assertContains(IOStreamUtils.readInputStreamToString(sslSocket), "X-Test: test_headers_only");
-
-                // - send GET request for headers and body
-                output.write(("" +
-                        "GET /test_headers_and_body HTTP/1.1\r\n" +
-                        "Host: localhost:" + getServerSecurePort() + "\r\n" +
-                        "\r\n"
-                ).getBytes(Charsets.UTF_8));
-                output.flush();
-
-                // then
-                String response = IOStreamUtils.readInputStreamToString(sslSocket);
-                assertContains(response, "X-Test: test_headers_and_body");
-                assertContains(response, "an_example_body");
-            } finally {
-                if (sslSocket != null) {
-                    sslSocket.close();
-                }
-            }
-        } finally {
-            if (socket != null) {
-                socket.close();
-            }
-        }
-    }
-
-    @Test
-    public void shouldForwardRequestsToSecurePortUsingHttpClient() throws Exception {
-        // given
-        HttpClient httpClient = new HttpClient(sslContextFactory);
-        httpClient.getProxyConfiguration().getProxies().add(new HttpProxy("localhost", getProxyPort()));
-        try {
-            httpClient.start();
-
-            // when
-            ContentResponse response = httpClient.newRequest("localhost", getServerSecurePort())
-                    .scheme(HttpScheme.HTTPS.asString())
-                    .method(HttpMethod.GET)
-                    .path("/test_headers_and_body")
-                    .send();
-
-            // then
-            assertEquals(HttpStatus.OK_200, response.getStatus());
-            assertEquals("an_example_body", response.getContentAsString());
-        } finally {
-            httpClient.stop();
-        }
-    }
-
-    @Test
-    public void shouldForwardRequestsToSecurePortAndUnknownPath() throws Exception {
-        Socket socket = null;
-        try {
-            socket = new Socket("localhost", getProxyPort());
-            // given
-            OutputStream output = socket.getOutputStream();
-
-            // when
-            // - send CONNECT request
-            output.write(("" +
-                    "CONNECT localhost:666 HTTP/1.1\r\n" +
-                    "Host: localhost:666\r\n" +
-                    "\r\n"
-            ).getBytes(Charsets.UTF_8));
-            output.flush();
-
-            // - flush CONNECT response
-            assertContains(IOStreamUtils.readInputStreamToString(socket), "HTTP/1.1 200 OK");
-
-            // Upgrade the socket to SSL
-            SSLSocket sslSocket = null;
-            try {
-                sslSocket = SSLFactory.wrapSocket(socket, sslContextFactory.getSslContext());
-
-                // - send GET request
-                output = sslSocket.getOutputStream();
-                output.write(("" +
-                        "GET /unknown HTTP/1.1\r\n" +
-                        "Host: localhost:" + getServerSecurePort() + "\r\n" +
-                        "\r\n"
-                ).getBytes(Charsets.UTF_8));
-                output.flush();
-
-                // then
-                assertContains(IOStreamUtils.readInputStreamToString(sslSocket), "HTTP/1.1 404 Not Found");
-            } finally {
-                if (sslSocket != null) {
-                    sslSocket.close();
-                }
-            }
-        } finally {
-            if (socket != null) {
-                socket.close();
-            }
-        }
-    }
-
-    @Test
     public void shouldVerifyRequests() throws Exception {
         // given
-        HttpClient httpClient = new HttpClient();
-        httpClient.getProxyConfiguration().getProxies().add(new HttpProxy("localhost", getProxyPort()));
+        HttpClient httpClient = createHttpClient();
         ProxyClient proxyClient = new ProxyClient("127.0.0.1", getProxyPort()).reset();
-        try {
-            httpClient.start();
 
-            // when
-            httpClient.newRequest("localhost", getServerPort())
-                    .scheme(HttpScheme.HTTP.asString())
-                    .method(HttpMethod.GET)
-                    .path("/test_headers_and_body")
-                    .send();
-            httpClient.newRequest("localhost", getServerPort())
-                    .scheme(HttpScheme.HTTP.asString())
-                    .method(HttpMethod.GET)
-                    .path("/test_headers_only")
-                    .send();
+        // when
+        httpClient.execute(
+                new HttpGet(
+                        new URIBuilder()
+                                .setScheme("http")
+                                .setHost("localhost")
+                                .setPort(getServerPort())
+                                .setPath("/test_headers_and_body")
+                                .build()
+                )
+        );
+        httpClient.execute(
+                new HttpGet(
+                        new URIBuilder()
+                                .setScheme("http")
+                                .setHost("localhost")
+                                .setPort(getServerPort())
+                                .setPath("/test_headers_only")
+                                .build()
+                )
+        );
 
-            // then
-            proxyClient
-                    .verify(
-                            request()
-                                    .withMethod("GET")
-                                    .withPath("/test_headers_and_body"),
-                            Times.exactly(1)
-                    );
-            proxyClient
-                    .verify(
-                            request()
-                                    .withPath("/test_headers_.*"),
-                            Times.atLeast(1)
-                    );
-            proxyClient
-                    .verify(
-                            request()
-                                    .withPath("/test_headers_.*"),
-                            Times.exactly(2)
-                    );
-        } finally {
-            httpClient.stop();
-        }
+        // then
+        proxyClient
+                .verify(
+                        request()
+                                .withMethod("GET")
+                                .withPath("/test_headers_and_body"),
+                        Times.exactly(1)
+                );
+        proxyClient
+                .verify(
+                        request()
+                                .withPath("/test_headers_.*"),
+                        Times.atLeast(1)
+                );
+        proxyClient
+                .verify(
+                        request()
+                                .withPath("/test_headers_.*"),
+                        Times.exactly(2)
+                );
     }
 
     @Test
     public void shouldClearRequests() throws Exception {
         // given
-        HttpClient httpClient = new HttpClient();
-        httpClient.getProxyConfiguration().getProxies().add(new HttpProxy("localhost", getProxyPort()));
+        HttpClient httpClient = createHttpClient();
         ProxyClient proxyClient = new ProxyClient("127.0.0.1", getProxyPort()).reset();
-        try {
-            httpClient.start();
 
-            // when
-            httpClient.newRequest("localhost", getServerPort())
-                    .scheme(HttpScheme.HTTP.asString())
-                    .method(HttpMethod.GET)
-                    .path("/test_headers_and_body")
-                    .send();
-            httpClient.newRequest("localhost", getServerPort())
-                    .scheme(HttpScheme.HTTP.asString())
-                    .method(HttpMethod.GET)
-                    .path("/test_headers_only")
-                    .send();
-            proxyClient.clear(
-                    request()
-                            .withMethod("GET")
-                            .withPath("/test_headers_and_body")
-            );
+        // when
+        httpClient.execute(
+                new HttpGet(
+                        new URIBuilder()
+                                .setScheme("http")
+                                .setHost("localhost")
+                                .setPort(getServerPort())
+                                .setPath("/test_headers_and_body")
+                                .build()
+                )
+        );
+        httpClient.execute(
+                new HttpGet(
+                        new URIBuilder()
+                                .setScheme("http")
+                                .setHost("localhost")
+                                .setPort(getServerPort())
+                                .setPath("/test_headers_only")
+                                .build()
+                )
+        );
+        proxyClient.clear(
+                request()
+                        .withMethod("GET")
+                        .withPath("/test_headers_and_body")
+        );
 
-            // then
-            proxyClient
-                    .verify(
-                            request()
-                                    .withMethod("GET")
-                                    .withPath("/test_headers_and_body"),
-                            Times.exactly(0)
-                    );
-            proxyClient
-                    .verify(
-                            request()
-                                    .withPath("/test_headers_.*"),
-                            Times.atLeast(1)
-                    );
-            proxyClient
-                    .verify(
-                            request()
-                                    .withPath("/test_headers_.*"),
-                            Times.exactly(1)
-                    );
-        } finally {
-            httpClient.stop();
-        }
+        // then
+        proxyClient
+                .verify(
+                        request()
+                                .withMethod("GET")
+                                .withPath("/test_headers_and_body"),
+                        Times.exactly(0)
+                );
+        proxyClient
+                .verify(
+                        request()
+                                .withPath("/test_headers_.*"),
+                        Times.atLeast(1)
+                );
+        proxyClient
+                .verify(
+                        request()
+                                .withPath("/test_headers_.*"),
+                        Times.exactly(1)
+                );
     }
 
     @Test
     public void shouldResetRequests() throws Exception {
         // given
-        HttpClient httpClient = new HttpClient();
-        httpClient.getProxyConfiguration().getProxies().add(new HttpProxy("localhost", getProxyPort()));
+        HttpClient httpClient = createHttpClient();
         ProxyClient proxyClient = new ProxyClient("127.0.0.1", getProxyPort()).reset();
-        try {
-            httpClient.start();
 
-            // when
-            httpClient.newRequest("localhost", getServerPort())
-                    .scheme(HttpScheme.HTTP.asString())
-                    .method(HttpMethod.GET)
-                    .path("/test_headers_and_body")
-                    .send();
-            httpClient.newRequest("localhost", getServerPort())
-                    .scheme(HttpScheme.HTTP.asString())
-                    .method(HttpMethod.GET)
-                    .path("/test_headers_only")
-                    .send();
-            proxyClient.reset();
+        // when
+        httpClient.execute(
+                new HttpGet(
+                        new URIBuilder()
+                                .setScheme("http")
+                                .setHost("localhost")
+                                .setPort(getServerPort())
+                                .setPath("/test_headers_and_body")
+                                .build()
+                )
+        );
+        httpClient.execute(
+                new HttpGet(
+                        new URIBuilder()
+                                .setScheme("http")
+                                .setHost("localhost")
+                                .setPort(getServerPort())
+                                .setPath("/test_headers_only")
+                                .build()
+                )
+        );
+        proxyClient.reset();
 
-            // then
-            proxyClient
-                    .verify(
-                            request()
-                                    .withMethod("GET")
-                                    .withPath("/test_headers_and_body"),
-                            Times.exactly(0)
-                    );
-            proxyClient
-                    .verify(
-                            request()
-                                    .withPath("/test_headers_.*"),
-                            Times.atLeast(0)
-                    );
-            proxyClient
-                    .verify(
-                            request()
-                                    .withPath("/test_headers_.*"),
-                            Times.exactly(0)
-                    );
-        } finally {
-            httpClient.stop();
-        }
+        // then
+        proxyClient
+                .verify(
+                        request()
+                                .withMethod("GET")
+                                .withPath("/test_headers_and_body"),
+                        Times.exactly(0)
+                );
+        proxyClient
+                .verify(
+                        request()
+                                .withPath("/test_headers_.*"),
+                        Times.atLeast(0)
+                );
+        proxyClient
+                .verify(
+                        request()
+                                .withPath("/test_headers_.*"),
+                        Times.exactly(0)
+                );
     }
 }

@@ -1,17 +1,14 @@
 package org.mockserver.socket;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import sun.security.x509.*;
 
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.*;
 import java.io.*;
 import java.math.BigInteger;
 import java.net.Socket;
-import java.security.GeneralSecurityException;
-import java.security.KeyStore;
-import java.security.PrivateKey;
-import java.security.SecureRandom;
+import java.security.*;
 import java.security.cert.X509Certificate;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
@@ -21,17 +18,36 @@ import java.util.concurrent.TimeUnit;
  */
 public class SSLFactory {
 
+    private final static Logger logger = LoggerFactory.getLogger(SSLFactory.class);
     public static final String KEY_STORE_ALIAS = "certAlias";
     public static final String KEY_STORE_PASSWORD = "changeit";
     public static final String KEY_STORE_FILENAME = "keystore.jks";
     private static KeyStore keystore;
 
-    public static SSLSocket wrapSocket(Socket socket, SSLContext sslContext) throws Exception {
-        SSLSocketFactory socketFactory = sslContext.getSocketFactory();
-        SSLSocket sslSocket = (SSLSocket) socketFactory.createSocket(socket, socket.getInetAddress().getHostAddress(), socket.getPort(), true);
+    public static SSLSocket wrapSocket(Socket socket) throws Exception {
+        // ssl socket factory
+        SSLSocketFactory sslSocketFactory = sslContext().getSocketFactory();
+
+        // ssl socket
+        SSLSocket sslSocket = (SSLSocket) sslSocketFactory.createSocket(socket, socket.getInetAddress().getHostAddress(), socket.getPort(), true);
         sslSocket.setUseClientMode(true);
         sslSocket.startHandshake();
         return sslSocket;
+    }
+
+    public static SSLContext sslContext() throws Exception {
+        // trust manager
+        TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        trustManagerFactory.init(buildKeyStore());
+
+        // key manager
+        KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+        keyManagerFactory.init(buildKeyStore(), KEY_STORE_PASSWORD.toCharArray());
+
+        // ssl context
+        SSLContext sslContext = SSLContext.getInstance("TLS");
+        sslContext.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), null);
+        return sslContext;
     }
 
     public static KeyStore buildKeyStore() {
@@ -65,6 +81,7 @@ public class SSLFactory {
             FileInputStream fileInputStream = null;
             try {
                 fileInputStream = new FileInputStream(KEY_STORE_FILENAME);
+                logger.trace("Loading key store from file [" + keyStoreFile + "]");
                 keystore = KeyStore.getInstance(KeyStore.getDefaultType());
                 keystore.load(fileInputStream, KEY_STORE_PASSWORD.toCharArray());
             } finally {
@@ -82,6 +99,7 @@ public class SSLFactory {
             ByteArrayOutputStream bout = new ByteArrayOutputStream();
             keystore.store(bout, KEY_STORE_PASSWORD.toCharArray());
             File keyStoreFile = new File(KEY_STORE_FILENAME);
+            logger.trace("Saving key store to file [" + keyStoreFile + "]");
             FileOutputStream fileOutputStream = null;
             try {
                 fileOutputStream = new FileOutputStream(keyStoreFile);

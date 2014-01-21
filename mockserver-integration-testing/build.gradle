@@ -3,10 +3,10 @@ apply plugin: 'war'
 dependencies {
     // http
     providedCompile "javax.servlet:javax.servlet-api:$servletVersion"
-    compile "org.eclipse.jetty:jetty-http:$jettyVersion"
-    compile "org.eclipse.jetty:jetty-server:$jettyVersion"
-    compile "org.eclipse.jetty:jetty-client:$jettyVersion"
-    compile "org.eclipse.jetty:jetty-util:$jettyVersion"
+
+    // tomcat
+    compile "org.apache.tomcat.embed:tomcat-embed-core:$tomcatVersion"
+    compile "org.apache.tomcat.embed:tomcat-embed-logging-juli:$tomcatVersion"
 
     // test
     compile "junit:junit:$junitVersion"

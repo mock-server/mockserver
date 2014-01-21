@@ -180,7 +180,7 @@ public class LogFilterTest {
 
         // then
         assertEquals(logFilter.httpResponses(new HttpRequest()), Arrays.asList(otherHttpResponse));
-        assertEquals(logFilter.httpResponses(new HttpRequest().withPath("some_path")), Arrays.asList());
+        assertEquals(logFilter.httpResponses(new HttpRequest().withPath("some_path")), Arrays.<HttpResponse>asList());
         assertEquals(logFilter.httpResponses(new HttpRequest().withPath("some_other_path")), Arrays.asList(otherHttpResponse));
     }
 }

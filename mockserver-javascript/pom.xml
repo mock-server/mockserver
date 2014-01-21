@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>mockserver</artifactId>
+        <groupId>org.mock-server</groupId>
+        <version>2.5-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>mockserver-javascript</artifactId>
+    <name>MockServer JavaScript Client</name>
+    <description>A javascript client for the MockServer</description>
+    <url>http://www.mock-server.com</url>
+
+    <build>
+        <resources>
+            <resource>
+                <directory>src/main/javascript</directory>
+            </resource>
+        </resources>
+        <plugins>
+            <!-- run mock server for javascript client tests -->
+            <plugin>
+                <groupId>org.mock-server</groupId>
+                <artifactId>mockserver-maven-plugin</artifactId>
+                <version>${project.version}</version>
+                <configuration>
+                    <logLevel>DEBUG</logLevel>
+                    <serverPort>1080</serverPort>
+                    <serverSecurePort>1082</serverSecurePort>
+                    <serverStopPort>1085</serverStopPort>
+                    <proxyPort>1090</proxyPort>
+                    <proxySecurePort>1092</proxySecurePort>
+                    <proxyStopPort>1095</proxyStopPort>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>pre-integration-test</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>start</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>post-integration-test</id>
+                        <phase>post-integration-test</phase>
+                        <goals>
+                            <goal>stop</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- run javascript client tests -->
+            <plugin>
+                <groupId>com.github.searls</groupId>
+                <artifactId>jasmine-maven-plugin</artifactId>
+                <version>1.3.1.4</version>
+                <executions>
+                    <execution>
+                        <id>no_proxy</id>
+                        <phase>integration-test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <specIncludes>
+                                <include>no_proxy/**</include>
+                            </specIncludes>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>with_proxy</id>
+                        <phase>integration-test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <specIncludes>
+                                <include>with_proxy/**</include>
+                            </specIncludes>
+                            <webDriverCapabilities>
+                                <capability>
+                                    <name>proxy</name>
+                                    <map>
+                                        <httpProxy>localhost:1090</httpProxy>
+                                    </map>
+                                </capability>
+                            </webDriverCapabilities>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
