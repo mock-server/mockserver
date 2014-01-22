@@ -2,8 +2,8 @@ package org.mockserver.maven;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockserver.proxy.ProxyRunner;
-import org.mockserver.server.MockServerRunner;
+import org.mockserver.jetty.proxy.ProxyRunner;
+import org.mockserver.jetty.server.MockServerRunner;
 
 import static org.mockito.Mockito.*;
 
