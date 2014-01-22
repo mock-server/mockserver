@@ -2,8 +2,8 @@ package org.mockserver.web.controller;
 
 import org.junit.*;
 import org.mockserver.client.proxy.Times;
-import org.mockserver.integration.ClientAndProxy;
-import org.mockserver.integration.ClientAndServer;
+import org.mockserver.jetty.integration.ClientAndProxy;
+import org.mockserver.jetty.integration.ClientAndServer;
 import org.mockserver.model.Book;
 import org.mockserver.model.Header;
 import org.mockserver.model.Parameter;
@@ -19,8 +19,8 @@ import org.springframework.web.context.WebApplicationContext;
 import javax.annotation.Resource;
 import java.util.Arrays;
 
-import static org.mockserver.integration.ClientAndProxy.startClientAndProxy;
-import static org.mockserver.integration.ClientAndServer.startClientAndServer;
+import static org.mockserver.jetty.integration.ClientAndProxy.startClientAndProxy;
+import static org.mockserver.jetty.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;

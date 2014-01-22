@@ -8,7 +8,7 @@ import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.mockserver.model.Book;
-import org.mockserver.proxy.ProxyRunner;
+import org.mockserver.jetty.proxy.ProxyRunner;
 import org.mockserver.service.BookService;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;

@@ -5,7 +5,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockserver.server.MockServerRunner;
+import org.mockserver.jetty.server.MockServerRunner;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;

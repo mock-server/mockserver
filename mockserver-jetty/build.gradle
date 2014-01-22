@@ -24,7 +24,7 @@ dependencies {
 }
 
 task run(type: JavaExec, dependsOn: [classes]) {
-    main = 'org.mockserver.cli.Main'
+    main = 'org.mockserver.jetty.cli.Main'
     classpath = sourceSets.main.runtimeClasspath
     if (project.hasProperty("serverPort")) {
         args '-serverPort'

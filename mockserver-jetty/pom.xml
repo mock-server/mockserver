@@ -120,7 +120,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>org.mockserver.cli.Main</mainClass>
+                            <mainClass>org.mockserver.jetty.cli.Main</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>

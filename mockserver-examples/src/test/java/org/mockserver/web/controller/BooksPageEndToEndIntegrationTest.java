@@ -5,7 +5,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.proxy.Times;
-import org.mockserver.integration.ClientAndProxy;
+import org.mockserver.jetty.integration.ClientAndProxy;
 import org.mockserver.model.Parameter;
 import org.mockserver.servicebackend.BookServer;
 import org.mockserver.socket.PortFactory;
@@ -18,7 +18,7 @@ import org.springframework.web.context.WebApplicationContext;
 
 import javax.annotation.Resource;
 
-import static org.mockserver.integration.ClientAndProxy.startClientAndProxy;
+import static org.mockserver.jetty.integration.ClientAndProxy.startClientAndProxy;
 import static org.mockserver.model.HttpRequest.request;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;

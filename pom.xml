@@ -11,9 +11,6 @@
     <groupId>org.mock-server</groupId>
     <artifactId>mockserver</artifactId>
     <version>2.5-SNAPSHOT</version>
-    <modules>
-        <module>mockserver-proxy-war</module>
-    </modules>
     <packaging>pom</packaging>
 
     <name>MockServer</name>
@@ -59,6 +56,7 @@
                 <module>mockserver-war</module>
                 <module>mockserver-proxy-war</module>
                 <module>mockserver-integration-testing</module>
+                <module>mockserver-tomcat</module>
             </modules>
         </profile>
         <profile>
@@ -155,6 +153,18 @@
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-servlet</artifactId>
                 <version>${jetty.version}</version>
+            </dependency>
+
+            <!-- Tomcat Server -->
+            <dependency>
+                <groupId>org.apache.tomcat.embed</groupId>
+                <artifactId>tomcat-embed-core</artifactId>
+                <version>${tomcat.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.tomcat.embed</groupId>
+                <artifactId>tomcat-embed-logging-juli</artifactId>
+                <version>${tomcat.version}</version>
             </dependency>
 
             <!-- Jetty HTTP Client -->
@@ -298,18 +308,6 @@
                 <version>3.2.5.RELEASE</version>
                 <scope>test</scope>
             </dependency>
-
-            <!-- tomcat -->
-            <dependency>
-                <groupId>org.apache.tomcat.embed</groupId>
-                <artifactId>tomcat-embed-core</artifactId>
-                <version>${tomcat.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.tomcat.embed</groupId>
-                <artifactId>tomcat-embed-logging-juli</artifactId>
-                <version>${tomcat.version}</version>
-            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -418,24 +416,6 @@
                         </fileset>
                     </filesets>
                 </configuration>
-            </plugin>
-            <!-- tomcat plugin -->
-            <plugin>
-                <groupId>org.apache.tomcat.maven</groupId>
-                <artifactId>tomcat7-maven-plugin</artifactId>
-                <version>2.2</version>
-                <executions>
-                    <execution>
-                        <id>tomcat-run</id>
-                        <goals>
-                            <goal>exec-war-only</goal>
-                        </goals>
-                        <phase>package</phase>
-                        <configuration>
-                            <path>mockserver</path>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>

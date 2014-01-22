@@ -1,9 +1,9 @@
 package org.mockserver.maven;
 
 import com.google.common.annotations.VisibleForTesting;
-import org.mockserver.proxy.ProxyRunner;
-import org.mockserver.runner.AbstractRunner;
-import org.mockserver.server.MockServerRunner;
+import org.mockserver.jetty.proxy.ProxyRunner;
+import org.mockserver.jetty.runner.AbstractRunner;
+import org.mockserver.jetty.server.MockServerRunner;
 
 /**
  * @author jamesdbloom
