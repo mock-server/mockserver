@@ -5,20 +5,19 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.mock-server.integration-test</groupId>
-    <artifactId>test</artifactId>
+    <artifactId>proxy-starts-stops-forked-server-from-pom</artifactId>
     <version>1.0-SNAPSHOT</version>
 
-    <name>Test</name>
-    <description>
-        Test server:start
-    </description>
+    <properties>
+        <mockserver.version>2.5-SNAPSHOT</mockserver.version>
+    </properties>
 
     <dependencies>
-        <!-- MockServer -->
+        <!-- mockserver -->
         <dependency>
             <groupId>org.mock-server</groupId>
             <artifactId>mockserver-integration-testing</artifactId>
-            <version>2.3-SNAPSHOT</version>
+            <version>${mockserver.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -28,22 +27,22 @@
             <plugin>
                 <groupId>org.mock-server</groupId>
                 <artifactId>mockserver-maven-plugin</artifactId>
-                <version>2.3-SNAPSHOT</version>
+                <version>${mockserver.version}</version>
                 <configuration>
                     <proxyPort>9090</proxyPort>
                     <proxySecurePort>9092</proxySecurePort>
                 </configuration>
                 <executions>
                     <execution>
-                        <id>initialize</id>
-                        <phase>initialize</phase>
+                        <id>test-compile</id>
+                        <phase>test-compile</phase>
                         <goals>
                             <goal>runForked</goal>
                         </goals>
                     </execution>
                     <execution>
-                        <id>verify</id>
-                        <phase>verify</phase>
+                        <id>post-integration-test</id>
+                        <phase>post-integration-test</phase>
                         <goals>
                             <goal>stopForked</goal>
                         </goals>

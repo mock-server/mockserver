@@ -2,6 +2,8 @@ package org.mockserver;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
+import org.mockserver.client.server.MockServerClient;
 import org.mockserver.integration.server.AbstractClientServerIntegrationTest;
 
 /**
@@ -12,9 +14,10 @@ public class ClientServerMavenPluginIntegrationTest extends AbstractClientServer
     private final static int port = 8080;
     private final static int serverSecurePort = 8082;
 
-    @Before
-    public void startServer() throws Exception {
-        // do nothing maven build should have started server
+    @BeforeClass
+    public static void createClient() throws Exception {
+        // start client
+        mockServerClient = new MockServerClient("localhost", port, servletContext);
     }
 
     @Before

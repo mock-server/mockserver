@@ -1,7 +1,9 @@
 package org.mockserver;
 
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
+import org.mockserver.client.proxy.ProxyClient;
 import org.mockserver.integration.proxy.AbstractClientProxyIntegrationTest;
 import org.mockserver.integration.proxy.ServerRunner;
 import org.mockserver.socket.PortFactory;
@@ -18,12 +20,16 @@ public class ClientProxyMavenPluginIntegrationTest extends AbstractClientProxyIn
     private final static int PROXY_HTTP_PORT = 9090;
     private final static int PROXY_HTTPS_PORT = 9092;
     private final static ServerRunner serverRunner = new ServerRunner();
+    private static ProxyClient proxyClient;
 
     @BeforeClass
     public static void startServer() throws Exception {
         serverRunner.startServer(SERVER_HTTP_PORT, SERVER_HTTPS_PORT);
         // wait for server to start up
         Thread.sleep(TimeUnit.MILLISECONDS.toMillis(500));
+
+        // start client
+        proxyClient = new ProxyClient("localhost", PROXY_HTTP_PORT);
     }
 
     @AfterClass
@@ -31,6 +37,11 @@ public class ClientProxyMavenPluginIntegrationTest extends AbstractClientProxyIn
         serverRunner.stopServer();
         // wait for server to shutdown
         Thread.sleep(TimeUnit.SECONDS.toMillis(1));
+    }
+
+    @Before
+    public void resetProxy() {
+        proxyClient.reset();
     }
 
     @Override
