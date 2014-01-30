@@ -4,6 +4,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockserver.collections.CaseInsensitiveRegexMultiMap;
 import org.mockserver.model.KeyToMultiValue;
 
 import java.util.ArrayList;
@@ -18,12 +19,12 @@ import static org.junit.Assert.assertTrue;
 public class MapMatcherTest {
 
     private MapMatcher mapMatcher;
-    private Multimap<String, String> multimap;
+    private CaseInsensitiveRegexMultiMap multimap;
     private List<KeyToMultiValue> keyToMultiValues;
 
     @Before
     public void setupTestFixture() {
-        multimap = HashMultimap.create();
+        multimap = new CaseInsensitiveRegexMultiMap();
         mapMatcher = new MapMatcher(multimap);
         keyToMultiValues = new ArrayList<KeyToMultiValue>();
     }
@@ -41,9 +42,33 @@ public class MapMatcherTest {
     }
 
     @Test
-    public void matchesRegexMatchingValues() {
+    public void matchesMatchingRegexValue() {
         // given
         multimap.put("foo", "b.*");
+
+        // when
+        keyToMultiValues.add(new KeyToMultiValue("foo", "bar"));
+
+        // then
+        assertTrue(mapMatcher.matches(keyToMultiValues));
+    }
+
+    @Test
+    public void matchesMatchingRegexKey() {
+        // given
+        multimap.put("f.*", "bar");
+
+        // when
+        keyToMultiValues.add(new KeyToMultiValue("foo", "bar"));
+
+        // then
+        assertTrue(mapMatcher.matches(keyToMultiValues));
+    }
+
+    @Test
+    public void matchesMatchingRegexValueAndKey() {
+        // given
+        multimap.put("f.*", "b.*");
 
         // when
         keyToMultiValues.add(new KeyToMultiValue("foo", "bar"));
@@ -86,6 +111,36 @@ public class MapMatcherTest {
         // given
         multimap.put("foo1", ".*1");
         multimap.put("foo2", ".*2");
+
+        // when
+        keyToMultiValues.add(new KeyToMultiValue("foo0", "bar0"));
+        keyToMultiValues.add(new KeyToMultiValue("foo1", "bar1"));
+        keyToMultiValues.add(new KeyToMultiValue("foo2", "bar2"));
+
+        // then
+        assertTrue(mapMatcher.matches(keyToMultiValues));
+    }
+
+    @Test
+    public void matchesMatchingRegexKeysWithExtraValues() {
+        // given
+        multimap.put("f.*1", "bar1");
+        multimap.put("f.*2", "bar2");
+
+        // when
+        keyToMultiValues.add(new KeyToMultiValue("foo0", "bar0"));
+        keyToMultiValues.add(new KeyToMultiValue("foo1", "bar1"));
+        keyToMultiValues.add(new KeyToMultiValue("foo2", "bar2"));
+
+        // then
+        assertTrue(mapMatcher.matches(keyToMultiValues));
+    }
+
+    @Test
+    public void matchesMatchingRegexKeysAndValuesWithExtraValues() {
+        // given
+        multimap.put("f.*1", ".*1");
+        multimap.put("f.*2", ".*2");
 
         // when
         keyToMultiValues.add(new KeyToMultiValue("foo0", "bar0"));
@@ -140,7 +195,7 @@ public class MapMatcherTest {
     }
 
     @Test
-    public void doesNotMatchIncorrectRegex() {
+    public void doesNotMatchIncorrectRegexValue() {
         // given
         multimap.put("foo1", "a.*1");
 
@@ -154,9 +209,49 @@ public class MapMatcherTest {
     }
 
     @Test
-    public void shouldHandleIllegalRegexPattern() {
+    public void doesNotMatchIncorrectRegexKey() {
+        // given
+        multimap.put("g.*1", "bar1");
+
+        // when
+        keyToMultiValues.add(new KeyToMultiValue("foo0", "bar0"));
+        keyToMultiValues.add(new KeyToMultiValue("foo1", "bar1"));
+        keyToMultiValues.add(new KeyToMultiValue("foo2", "bar2"));
+
+        // then
+        assertFalse(mapMatcher.matches(keyToMultiValues));
+    }
+
+    @Test
+    public void doesNotMatchIncorrectRegexKeyAndValue() {
+        // given
+        multimap.put("g.*1", "a.*1");
+
+        // when
+        keyToMultiValues.add(new KeyToMultiValue("foo0", "bar0"));
+        keyToMultiValues.add(new KeyToMultiValue("foo1", "bar1"));
+        keyToMultiValues.add(new KeyToMultiValue("foo2", "bar2"));
+
+        // then
+        assertFalse(mapMatcher.matches(keyToMultiValues));
+    }
+
+    @Test
+    public void shouldHandleIllegalRegexValuePattern() {
         // given
         multimap.put("foo", "/{}");
+
+        // when
+        keyToMultiValues.add(new KeyToMultiValue("foo", "/{}/"));
+
+        // then
+        assertFalse(mapMatcher.matches(keyToMultiValues));
+    }
+
+    @Test
+    public void shouldHandleIllegalRegexKeyPattern() {
+        // given
+        multimap.put("/{}", "bar");
 
         // when
         keyToMultiValues.add(new KeyToMultiValue("foo", "/{}/"));

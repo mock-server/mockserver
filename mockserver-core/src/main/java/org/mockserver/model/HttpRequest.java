@@ -1,10 +1,11 @@
 package org.mockserver.model;
 
+import org.codehaus.jackson.annotate.JsonIgnore;
+import org.mockserver.client.serialization.ObjectMapperFactory;
+
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author jamesdbloom
@@ -13,11 +14,10 @@ public class HttpRequest extends EqualsHashCodeToString {
     private String method = "";
     private String url = "";
     private String path = "";
-    private String queryString = "";
-    private List<Parameter> parameters = new ArrayList<Parameter>();
-    private String body = "";
-    private List<Header> headers = new ArrayList<Header>();
-    private List<Cookie> cookies = new ArrayList<Cookie>();
+    private Map<String, Parameter> queryStringParameters = new LinkedHashMap<String, Parameter>();
+    private Body body = null;
+    private Map<String, Header> headers = new LinkedHashMap<String, Header>();
+    private Map<String, Cookie> cookies = new LinkedHashMap<String, Cookie>();
 
     public HttpRequest() {
     }
@@ -72,129 +72,214 @@ public class HttpRequest extends EqualsHashCodeToString {
         return this;
     }
 
-    public String getQueryString() {
-        return queryString;
-    }
-
     /**
-     * The query string - this method supports an exact string match such as "someParameter=someValue&someOtherParameter=someOtherValue" or a regex match,
-     * see http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html for full details of the supported regex syntax
-     *
-     * @param queryString the query string such as "someParameter=someValue&someOtherParameter=someOtherValue" or a regex
-     */
-    public HttpRequest withQueryString(String queryString) {
-        this.queryString = queryString;
-        return this;
-    }
-
-    /**
-     * The parameters (in the query string or body) to match on as a list of Parameter objects where the values of each parameter can be either a string or a regex
+     * The query string parameters to match on as a list of Parameter objects where the values or keys of each parameter can be either a string or a regex
      * (for more details of the supported regex syntax see http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html)
      *
-     * @param parameters the list of Parameter objects where the values of each parameter can be either a string or a regex
+     * @param parameters the list of Parameter objects where the values or keys of each parameter can be either a string or a regex
      */
-    public HttpRequest withParameters(List<Parameter> parameters) {
-        this.parameters = parameters;
+    public HttpRequest withQueryStringParameters(List<Parameter> parameters) {
+        this.queryStringParameters.clear();
+        for (Parameter parameter : parameters) {
+            withQueryStringParameter(parameter);
+        }
         return this;
     }
 
     /**
-     * The parameters (in the query string or body) to match on as a varags Parameter objects where the values of each parameter can be either a string or a regex
+     * The query string parameters to match on as a varags Parameter objects where the values or keys of each parameter can be either a string or a regex
      * (for more details of the supported regex syntax see http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html)
      *
-     * @param parameters the varags Parameter objects where the values of each parameter can be either a string or a regex
+     * @param parameters the varags Parameter objects where the values or keys of each parameter can be either a string or a regex
      */
-    public HttpRequest withParameters(Parameter... parameters) {
-        this.parameters = Arrays.asList(parameters);
+    public HttpRequest withQueryStringParameters(Parameter... parameters) {
+        return withQueryStringParameters(Arrays.asList(parameters));
+    }
+
+    /**
+     * The query string parameters to match on as a Map<String, List<String>> where the values or keys of each parameter can be either a string or a regex
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html)
+     *
+     * @param parameters the Map<String, List<String>> object where the values or keys of each parameter can be either a string or a regex
+     */
+    public HttpRequest withQueryStringParameters(Map<String, List<String>> parameters) {
+        this.queryStringParameters.clear();
+        for (String name : parameters.keySet()) {
+            for (String value : parameters.get(name)) {
+                withQueryStringParameter(new Parameter(name, value));
+            }
+        }
         return this;
     }
 
-    public List<Parameter> getParameters() {
-        return parameters;
+    /**
+     * Adds one query string parameter to match on as a Parameter object where the parameter values list can be a list of strings or regular expressions
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html)
+     *
+     * @param parameter the Parameter object which can have a values list of strings or regular expressions
+     */
+    public HttpRequest withQueryStringParameter(Parameter parameter) {
+        if (this.queryStringParameters.containsKey(parameter.getName())) {
+            this.queryStringParameters.get(parameter.getName()).addValues(parameter.getValues());
+        } else {
+            this.queryStringParameters.put(parameter.getName(), parameter);
+        }
+        return this;
     }
 
-    public String getBody() {
+    public List<Parameter> getQueryStringParameters() {
+        return new ArrayList<Parameter>(queryStringParameters.values());
+    }
+
+    public Body getBody() {
         return body;
     }
 
     /**
+     * TODO - update comments and website
+     *
      * The body to match on such as "{username: 'foo', password: 'bar'}" or a regex (for more details of the supported regex syntax see http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html)
      * or an XPath expression which returns one or more values or evaluates to true (for more detail of XPath syntax see http://saxon.sourceforge.net/saxon6.5.3/expressions.html)
      *
      * @param body the body on such as "{username: 'foo', password: 'bar'}" or a regex such as "username[a-z]{4}" or an XPath such as "/element[key = 'some_key' and value = 'some_value']"
      */
     public HttpRequest withBody(String body) {
+        this.body = new StringBody(body, Body.Type.EXACT);
+        return this;
+    }
+
+    /**
+     * TODO - update comments and website
+     *
+     * The body to match on such as "{username: 'foo', password: 'bar'}" or a regex (for more details of the supported regex syntax see http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html)
+     * or an XPath expression which returns one or more values or evaluates to true (for more detail of XPath syntax see http://saxon.sourceforge.net/saxon6.5.3/expressions.html)
+     *
+     * @param body the body on such as "{username: 'foo', password: 'bar'}" or a regex such as "username[a-z]{4}" or an XPath such as "/element[key = 'some_key' and value = 'some_value']"
+     */
+    public HttpRequest withBody(Body body) {
         this.body = body;
         return this;
     }
 
     /**
-     * The headers to match on as a list of Header objects where the values of each header can be either a string or a regex
+     * The headers to match on as a list of Header objects where the values or keys of each header can be either a string or a regex
      * (for more details of the supported regex syntax see http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html)
      *
-     * @param headers the list of Header objects where the values of each header can be either a string or a regex
+     * @param headers the list of Header objects where the values or keys of each header can be either a string or a regex
      */
     public HttpRequest withHeaders(List<Header> headers) {
-        this.headers = headers;
+        this.headers.clear();
+        for (Header header : headers) {
+            withHeader(header);
+        }
         return this;
     }
 
     /**
-     * The headers to match on as a varags of Header objects where the values of each header can be either a string or a regex
+     * The headers to match on as a varags of Header objects where the values or keys of each header can be either a string or a regex
      * (for more details of the supported regex syntax see http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html)
      *
-     * @param headers the varags of Header objects where the values of each header can be either a string or a regex
+     * @param headers the varags of Header objects where the values or keys of each header can be either a string or a regex
      */
     public HttpRequest withHeaders(Header... headers) {
-        this.headers = Arrays.asList(headers);
+        withHeaders(Arrays.asList(headers));
+        return this;
+    }
+
+    /**
+     * Adds one header to match on as a Header object where the header values list can be a list of strings or regular expressions
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html)
+     *
+     * @param header the Header object which can have a values list of strings or regular expressions
+     */
+    public HttpRequest withHeader(Header header) {
+        if (this.headers.containsKey(header.getName())) {
+            this.headers.get(header.getName()).addValues(header.getValues());
+        } else {
+            this.headers.put(header.getName(), header);
+        }
         return this;
     }
 
     public List<Header> getHeaders() {
-        return headers;
+        return new ArrayList<Header>(headers.values());
     }
 
     /**
-     * The cookies to match on as a list of Cookie objects where the values of each cookie can be either a string or a regex
+     * The cookies to match on as a list of Cookie objects where the values or keys of each cookie can be either a string or a regex
      * (for more details of the supported regex syntax see http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html)
      *
-     * @param cookies the list of Cookie objects where the values of each cookie can be either a string or a regex
+     * @param cookies the list of Cookie objects where the values or keys of each cookie can be either a string or a regex
      */
     public HttpRequest withCookies(List<Cookie> cookies) {
-        this.cookies = cookies;
+        this.cookies.clear();
+        for (Cookie cookie : cookies) {
+            withCookie(cookie);
+        }
         return this;
     }
 
     /**
-     * The cookies to match on as a varags Cookie objects where the values of each cookie can be either a string or a regex
+     * The cookies to match on as a varags Cookie objects where the values or keys of each cookie can be either a string or a regex
      * (for more details of the supported regex syntax see http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html)
      *
-     * @param cookies the varags Cookie objects where the values of each cookie can be either a string or a regex
+     * @param cookies the varags Cookie objects where the values or keys of each cookie can be either a string or a regex
      */
     public HttpRequest withCookies(Cookie... cookies) {
-        this.cookies = Arrays.asList(cookies);
+        withCookies(Arrays.asList(cookies));
+        return this;
+    }
+
+    /**
+     * Adds one cookie to match on as a Cookie object where the cookie values list can be a list of strings or regular expressions
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html)
+     *
+     * @param cookie the Cookie object which can have a values list of strings or regular expressions
+     */
+    public HttpRequest withCookie(Cookie cookie) {
+        if (this.cookies.containsKey(cookie.getName())) {
+            this.cookies.get(cookie.getName()).addValues(cookie.getValues());
+        } else {
+            this.cookies.put(cookie.getName(), cookie);
+        }
         return this;
     }
 
     public List<Cookie> getCookies() {
-        return cookies;
+        return new ArrayList<Cookie>(cookies.values());
     }
 
+    @JsonIgnore
     public int getPort() {
-        URL url = null;
-        try {
-            url = new URL(this.url);
-        } catch (MalformedURLException murle) {
-            logger.debug("MalformedURLException parsing uri [" + this.url + "]", murle);
-        }
-        if (url != null && url.getPort() != -1) {
-            return url.getPort();
-        } else {
-            if (this.url.startsWith("https")) {
-                return 443;
-            } else {
-                return 80;
+        if (this.url != null) {
+            URL url = null;
+            try {
+                url = new URL(this.url);
+            } catch (MalformedURLException murle) {
+                logger.debug("MalformedURLException parsing uri [" + this.url + "]", murle);
             }
+            if (url != null && url.getPort() != -1) {
+                return url.getPort();
+            } else {
+                if (this.url.startsWith("https")) {
+                    return 443;
+                } else {
+                    return 80;
+                }
+            }
+        }
+        return 80;
+    }
+
+    @Override
+    public String toString() {
+        try {
+            return ObjectMapperFactory
+                    .createObjectMapper()
+                    .writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(this);
+        } catch (Exception e) {
+            return super.toString();
         }
     }
 }

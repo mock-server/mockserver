@@ -43,7 +43,7 @@ public class HttpClientRequestMapper {
     private void setBody(HttpRequest httpRequest, HttpClientRequest httpClientRequest) {
         if (httpRequest.getBody() != null) {
             httpClientRequest.setChunked(false);
-            Buffer body = new Buffer(httpRequest.getBody());
+            Buffer body = new Buffer((httpRequest.getBody() != null ? httpRequest.getBody().toString() : ""));
             httpClientRequest.putHeader("Content-Length", "" + body.length());
             httpClientRequest.write(body);
         }

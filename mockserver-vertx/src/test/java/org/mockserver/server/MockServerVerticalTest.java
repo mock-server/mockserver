@@ -7,8 +7,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
-import org.mockserver.mappers.HttpServerRequestMapper;
-import org.mockserver.mappers.HttpServerResponseMapper;
+import org.mockserver.mappers.VertXToMockServerRequestMapper;
+import org.mockserver.mappers.MockServerToVertXResponseMapper;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.MockServer;
@@ -34,9 +34,9 @@ public class MockServerVerticalTest {
     @Mock
     private Expectation expectation;
     @Mock
-    private HttpServerRequestMapper httpServerRequestMapper;
+    private VertXToMockServerRequestMapper vertXToMockServerRequestMapper;
     @Mock
-    private HttpServerResponseMapper httpServerResponseMapper;
+    private MockServerToVertXResponseMapper mockServerToVertXResponseMapper;
     @Mock
     private ExpectationSerializer expectationSerializer;
     @Mock
@@ -59,7 +59,7 @@ public class MockServerVerticalTest {
         MockHttpServerRequest httpServerRequest =
                 new MockHttpServerRequest()
                         .withMethod("GET");
-        when(httpServerRequestMapper.mapHttpServerRequestToHttpRequest(httpServerRequest, "".getBytes())).thenReturn(httpRequest);
+        when(vertXToMockServerRequestMapper.mapVertXRequestToMockServerRequest(httpServerRequest, "".getBytes())).thenReturn(httpRequest);
         // - an expectation that does match
         HttpResponse httpResponse = new HttpResponse();
         when(mockServer.handle(httpRequest)).thenReturn(httpResponse);
@@ -68,7 +68,7 @@ public class MockServerVerticalTest {
         mockServerVertical.getRequestHandler().handle(httpServerRequest);
 
         // then - response mapping should be called
-        verify(httpServerResponseMapper).mapHttpResponseToHttpServerResponse(same(httpResponse), same(httpServerRequest.response()));
+        verify(mockServerToVertXResponseMapper).mapMockServerResponseToVertXResponse(same(httpResponse), same(httpServerRequest.response()));
     }
 
     @Test
@@ -79,7 +79,7 @@ public class MockServerVerticalTest {
         MockHttpServerRequest httpServerRequest =
                 new MockHttpServerRequest()
                         .withMethod("GET");
-        when(httpServerRequestMapper.mapHttpServerRequestToHttpRequest(httpServerRequest, "".getBytes())).thenReturn(httpRequest);
+        when(vertXToMockServerRequestMapper.mapVertXRequestToMockServerRequest(httpServerRequest, "".getBytes())).thenReturn(httpRequest);
         // - an expectation that does not match
         when(mockServer.handle(httpRequest)).thenReturn(null);
 
@@ -87,7 +87,7 @@ public class MockServerVerticalTest {
         mockServerVertical.getRequestHandler().handle(httpServerRequest);
 
         // then - response mapping should be called
-        verify(httpServerResponseMapper, never()).mapHttpResponseToHttpServerResponse(any(HttpResponse.class), same(httpServerRequest.response()));
+        verify(mockServerToVertXResponseMapper, never()).mapMockServerResponseToVertXResponse(any(HttpResponse.class), same(httpServerRequest.response()));
     }
 
     @Test
@@ -97,6 +97,7 @@ public class MockServerVerticalTest {
         MockHttpServerRequest httpServerRequest =
                 new MockHttpServerRequest()
                         .withMethod("PUT")
+                        .withPath("/expectation")
                         .withBody("requestBytes".getBytes());
         // - that deserializes to an expectation
         Times times = Times.unlimited();
@@ -146,6 +147,7 @@ public class MockServerVerticalTest {
         MockHttpServerRequest httpServerRequest =
                 new MockHttpServerRequest()
                         .withMethod("PUT")
+                        .withPath("/expectation")
                         .withResponse(new MockHttpServerResponse())
                         .withBody(jsonExpectation.getBytes());
 
@@ -167,6 +169,7 @@ public class MockServerVerticalTest {
         MockHttpServerRequest httpServerRequest =
                 new MockHttpServerRequest()
                         .withMethod("PUT")
+                        .withPath("/expectation")
                         .withResponse(new MockHttpServerResponse())
                         .withBody(jsonExpectation.getBytes());
 
@@ -195,6 +198,7 @@ public class MockServerVerticalTest {
         MockHttpServerRequest httpServerRequest =
                 new MockHttpServerRequest()
                         .withMethod("PUT")
+                        .withPath("/expectation")
                         .withResponse(new MockHttpServerResponse())
                         .withBody(jsonExpectation.getBytes());
 
@@ -226,7 +230,7 @@ public class MockServerVerticalTest {
 
         // then
         verify(mockServer).clear(httpRequest);
-        verifyNoMoreInteractions(httpServerRequestMapper);
+        verifyNoMoreInteractions(vertXToMockServerRequestMapper);
     }
 
     @Test
@@ -249,7 +253,7 @@ public class MockServerVerticalTest {
 
         // then
         verify(mockServer).reset();
-        verifyNoMoreInteractions(httpServerRequestMapper);
+        verifyNoMoreInteractions(vertXToMockServerRequestMapper);
     }
 
     @Test
@@ -273,6 +277,6 @@ public class MockServerVerticalTest {
         // then
         verify(httpRequestSerializer).deserialize(requestBytes);
         verify(mockServer).dumpToLog(httpRequest);
-        verifyNoMoreInteractions(httpServerRequestMapper);
+        verifyNoMoreInteractions(vertXToMockServerRequestMapper);
     }
 }

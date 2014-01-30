@@ -6,14 +6,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockserver.client.serialization.model.CookieDTO;
-import org.mockserver.client.serialization.model.HeaderDTO;
-import org.mockserver.client.serialization.model.HttpRequestDTO;
-import org.mockserver.client.serialization.model.ParameterDTO;
-import org.mockserver.model.Cookie;
-import org.mockserver.model.Header;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.Parameter;
+import org.mockserver.client.serialization.model.*;
+import org.mockserver.model.*;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -35,11 +29,11 @@ public class HttpRequestSerializerTest {
                     .withMethod("GET")
                     .withURL("http://www.example.com")
                     .withPath("somepath")
-                    .withQueryString("queryString")
-                    .withParameters(
-                            new Parameter("parameterOneName", Arrays.asList("parameterOneValue")), new Parameter("parameterTwoName", Arrays.asList("parameterTwoValue"))
+                    .withQueryStringParameters(
+                            new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
+                            new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
                     )
-                    .withBody("somebody")
+                    .withBody(new StringBody("somebody", Body.Type.EXACT))
                     .withHeaders(new Header("headerName", "headerValue"))
                     .withCookies(new Cookie("cookieName", "cookieValue"));
     private final HttpRequestDTO fullHttpRequestDTO =
@@ -47,12 +41,11 @@ public class HttpRequestSerializerTest {
                     .setMethod("GET")
                     .setURL("http://www.example.com")
                     .setPath("somepath")
-                    .setQueryString("queryString")
-                    .setParameters(Arrays.<ParameterDTO>asList(
-                            new ParameterDTO(new Parameter("parameterOneName", Arrays.asList("parameterOneValue"))),
-                            new ParameterDTO(new Parameter("parameterTwoName", Arrays.asList("parameterTwoValue")))
+                    .setQueryStringParameters(Arrays.asList(
+                            new ParameterDTO(new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two")),
+                            new ParameterDTO(new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One"))
                     ))
-                    .setBody("somebody")
+                    .setBody(BodyDTO.createDTO(new StringBody("somebody", Body.Type.EXACT)))
                     .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("headerName", Arrays.asList("headerValue")))))
                     .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("cookieName", Arrays.asList("cookieValue")))));
     @Mock

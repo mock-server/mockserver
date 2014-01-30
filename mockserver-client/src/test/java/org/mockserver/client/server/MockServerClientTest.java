@@ -8,9 +8,7 @@ import org.mockserver.client.http.ApacheHttpClient;
 import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
-import org.mockserver.model.Header;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
+import org.mockserver.model.*;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.verify;
@@ -41,7 +39,7 @@ public class MockServerClientTest {
         HttpRequest httpRequest =
                 new HttpRequest()
                         .withPath("/some_path")
-                        .withBody("some_request_body");
+                        .withBody(new StringBody("some_request_body", Body.Type.EXACT));
         HttpResponse httpResponse =
                 new HttpResponse()
                         .withBody("some_response_body")
@@ -65,21 +63,24 @@ public class MockServerClientTest {
                 .when(
                         new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody("some_request_body")
-                )
-                .respond(
-                        new HttpResponse()
-                                .withBody("some_response_body")
-                                .withHeaders(new Header("responseName", "responseValue")
+                                .withBody(new StringBody("some_request_body", Body.Type.EXACT))
                                 )
-                );
+                                .respond(
+                                        new HttpResponse()
+                                                .withBody("some_response_body")
+                                                .withHeaders(new Header("responseName", "responseValue")
+                                                )
+                                );
 
         // then
-        verify(mockHttpClient).sendPUTRequest("http://localhost:8080", "/", "" +
+        verify(mockHttpClient).sendPUTRequest("http://localhost:8080", "/expectation", "" +
                 "{\n" +
                 "  \"httpRequest\" : {\n" +
                 "    \"path\" : \"/some_path\",\n" +
-                "    \"body\" : \"some_request_body\"\n" +
+                "    \"body\" : {\n" +
+                "      \"type\" : \"EXACT\",\n" +
+                "      \"value\" : \"some_request_body\"\n" +
+                "    }\n" +
                 "  },\n" +
                 "  \"httpResponse\" : {\n" +
                 "    \"statusCode\" : 200,\n" +
@@ -121,14 +122,17 @@ public class MockServerClientTest {
                 .clear(
                         new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody("some_request_body")
+                                .withBody(new StringBody("some_request_body", Body.Type.EXACT))
                 );
 
         // then
         verify(mockHttpClient).sendPUTRequest("http://localhost:8080", "/clear", "" +
                 "{\n" +
                 "  \"path\" : \"/some_path\",\n" +
-                "  \"body\" : \"some_request_body\"\n" +
+                "  \"body\" : {\n" +
+                "    \"type\" : \"EXACT\",\n" +
+                "    \"value\" : \"some_request_body\"\n" +
+                "  }\n" +
                 "}");
     }
 }

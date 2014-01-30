@@ -25,12 +25,12 @@ public class LogFilter implements ProxyResponseFilter {
     private final MatcherBuilder matcherBuilder = new MatcherBuilder();
     private Logger requestLogger = LoggerFactory.getLogger("REQUEST");
 
-    public HttpResponse onResponse(HttpRequest httpRequest, HttpResponse httpResponse) {
+    public synchronized HttpResponse onResponse(HttpRequest httpRequest, HttpResponse httpResponse) {
         requestResponseLog.put(httpRequest, httpResponse);
         return httpResponse;
     }
 
-    public List<HttpResponse> httpResponses(HttpRequest httpRequest) {
+    public synchronized List<HttpResponse> httpResponses(HttpRequest httpRequest) {
         List<HttpResponse> httpResponses = new ArrayList<HttpResponse>();
         HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
         for (HttpRequest loggedHttpRequest : requestResponseLog.keySet()) {
@@ -41,7 +41,7 @@ public class LogFilter implements ProxyResponseFilter {
         return httpResponses;
     }
 
-    public List<HttpRequest> httpRequests(HttpRequest httpRequest) {
+    public synchronized List<HttpRequest> httpRequests(HttpRequest httpRequest) {
         List<HttpRequest> httpRequests = new ArrayList<HttpRequest>();
         HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
         for (HttpRequest loggedHttpRequest : requestResponseLog.keySet()) {
@@ -52,13 +52,13 @@ public class LogFilter implements ProxyResponseFilter {
         return httpRequests;
     }
 
-    public void reset() {
+    public synchronized void reset() {
         synchronized (this.requestResponseLog) {
             requestResponseLog.clear();
         }
     }
 
-    public void clear(HttpRequest httpRequest) {
+    public synchronized void clear(HttpRequest httpRequest) {
         if (httpRequest != null) {
             HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
             for (HttpRequest key : new LinkedHashSet<HttpRequest>(requestResponseLog.keySet())) {
@@ -73,7 +73,7 @@ public class LogFilter implements ProxyResponseFilter {
         }
     }
 
-    public void dumpToLog(HttpRequest httpRequest, boolean asJava) {
+    public synchronized void dumpToLog(HttpRequest httpRequest, boolean asJava) {
         ExpectationSerializer expectationSerializer = new ExpectationSerializer();
         if (httpRequest != null) {
             HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
@@ -97,7 +97,7 @@ public class LogFilter implements ProxyResponseFilter {
         }
     }
 
-    public Expectation[] retrieve(HttpRequest httpRequest) {
+    public synchronized Expectation[] retrieve(HttpRequest httpRequest) {
         List<Expectation> expectations = new ArrayList<Expectation>();
         if (httpRequest != null) {
             HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);

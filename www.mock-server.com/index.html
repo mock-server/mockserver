@@ -1480,17 +1480,17 @@ xmlHttpRequest.send(JSON.stringify({
     <span class="keyword">public</span> HttpRequest withQueryString(String queryString);
 
     <span class="comment">/**
-     * The parameters (in the query string or body) to match on as a list of Parameter objects where the values of each parameter can be either a string or a regex
+     * The parameters (in the query string or body) to match on as a list of Parameter objects where the values or keys of each parameter can be either a string or a regex
      * (for more details of the supported regex syntax see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>)
      *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">parameters</span> the list of Parameter objects where the values of each parameter can be either a string or a regex
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">parameters</span> the list of Parameter objects where the values or keys of each parameter can be either a string or a regex
      */</span>
     <span class="keyword">public</span> HttpRequest withParameters(List&lt;Parameter&gt; parameters) {
     <span class="comment">/**
-     * The parameters (in the query string or body) to match on as a varags Parameter objects where the values of each parameter can be either a string or a regex
+     * The parameters (in the query string or body) to match on as a varags Parameter objects where the values or keys of each parameter can be either a string or a regex
      * (for more details of the supported regex syntax see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>)
      *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">parameters</span> the varags Parameter objects where the values of each parameter can be either a string or a regex
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">parameters</span> the varags Parameter objects where the values or keys of each parameter can be either a string or a regex
      */</span>
     <span class="keyword">public</span> HttpRequest withParameters(Parameter... parameters) {
 
@@ -1505,32 +1505,32 @@ xmlHttpRequest.send(JSON.stringify({
     <span class="keyword">public</span> HttpRequest withBody(String body);
 
     <span class="comment">/**
-     * The headers to match on as a list of Header objects where the values of each header can be either a string or a regex
+     * The headers to match on as a list of Header objects where the values or keys of each header can be either a string or a regex
      * (for more details of the supported regex syntax see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>)
      *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">headers</span> the list of Header objects where the values of each header can be either a string or a regex
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">headers</span> the list of Header objects where the values or keys of each header can be either a string or a regex
      */</span>
     <span class="keyword">public</span> HttpRequest withHeaders(List&lt;Header&gt; headers);
     <span class="comment">/**
-     * The headers to match on as a varags of Header objects  where the values of each header can be either a string or a regex
+     * The headers to match on as a varags of Header objects  where the values or keys of each header can be either a string or a regex
      * (for more details of the supported regex syntax see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>)
      *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">headers</span> the varags of Header objects where the values of each header can be either a string or a regex
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">headers</span> the varags of Header objects where the values or keys of each header can be either a string or a regex
      */</span>
     <span class="keyword">public</span> HttpRequest withHeaders(Header... headers);
 
     <span class="comment">/**
-     * The cookies to match on as a list of Cookie objects  where the values of each cookie can be either a string or a regex
+     * The cookies to match on as a list of Cookie objects  where the values or keys of each cookie can be either a string or a regex
      * (for more details of the supported regex syntax see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>)
      *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">cookies</span> the list of Cookie objects where the values of each cookie can be either a string or a regex
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">cookies</span> the list of Cookie objects where the values or keys of each cookie can be either a string or a regex
      */</span>
     <span class="keyword">public</span> HttpRequest withCookies(List&lt;Cookie&gt; cookies);
     <span class="comment">/**
-     * The cookies to match on as a varags Cookie objects where the values of each cookie can be either a string or a regex
+     * The cookies to match on as a varags Cookie objects where the values or keys of each cookie can be either a string or a regex
      * (for more details of the supported regex syntax see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>)
      *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">cookies</span> the varags Cookie objects where the values of each cookie can be either a string or a regex
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">cookies</span> the varags Cookie objects where the values or keys of each cookie can be either a string or a regex
      */</span>
     <span class="keyword">public</span> HttpRequest withCookies(Cookie... cookies);
 }</code></pre>

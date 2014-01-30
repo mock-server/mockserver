@@ -23,13 +23,11 @@
             <groupId>org.mock-server</groupId>
             <artifactId>mockserver-war</artifactId>
             <classifier>classes</classifier>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.mock-server</groupId>
             <artifactId>mockserver-proxy-war</artifactId>
             <classifier>classes</classifier>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.mock-server</groupId>
@@ -46,7 +44,7 @@
             <artifactId>javax.servlet-api</artifactId>
         </dependency>
 
-        <!-- Jetty Server -->
+        <!-- Jetty HTTP Server -->
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-http</artifactId>
@@ -72,6 +70,20 @@
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-io</artifactId>
+        </dependency>
+
+        <!-- Tomcat Server (integration testing) -->
+        <dependency>
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-core</artifactId>
+            <version>${tomcat.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-logging-juli</artifactId>
+            <version>${tomcat.version}</version>
+            <scope>test</scope>
         </dependency>
 
         <!-- commons & guava -->

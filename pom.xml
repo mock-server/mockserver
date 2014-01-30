@@ -40,6 +40,20 @@
         </developer>
     </developers>
 
+    <!--<modules>-->
+        <!--<module>mockserver-vertx</module>-->
+        <!--<module>mockserver-client</module>-->
+        <!--<module>mockserver-core</module>-->
+        <!--<module>mockserver-war</module>-->
+        <!--<module>mockserver-proxy-war</module>-->
+        <!--<module>mockserver-integration-testing</module>-->
+        <!--<module>mockserver-jetty</module>-->
+        <!--<module>mockserver-maven-plugin</module>-->
+        <!--<module>mockserver-examples</module>-->
+        <!--<module>mockserver-javascript</module>-->
+        <!--<module>mockserver-netty</module>-->
+    <!--</modules>-->
+
     <profiles>
         <profile>
             <id>jdk16</id>
@@ -47,8 +61,8 @@
                 <jdk>1.6</jdk>
             </activation>
             <properties>
-                <maven.compiler.source>1.6</maven.compiler.source>
-                <maven.compiler.target>1.6</maven.compiler.target>
+                <!--<maven.compiler.source>1.6</maven.compiler.source>-->
+                <!--<maven.compiler.target>1.6</maven.compiler.target>-->
             </properties>
             <modules>
                 <module>mockserver-client</module>
@@ -56,7 +70,7 @@
                 <module>mockserver-war</module>
                 <module>mockserver-proxy-war</module>
                 <module>mockserver-integration-testing</module>
-                <module>mockserver-tomcat</module>
+                <module>mockserver-netty</module>
             </modules>
         </profile>
         <profile>
@@ -65,8 +79,8 @@
                 <jdk>1.7</jdk>
             </activation>
             <properties>
-                <maven.compiler.source>1.7</maven.compiler.source>
-                <maven.compiler.target>1.7</maven.compiler.target>
+                <!--<maven.compiler.source>1.7</maven.compiler.source>-->
+                <!--<maven.compiler.target>1.7</maven.compiler.target>-->
             </properties>
             <modules>
                 <module>mockserver-jetty</module>
@@ -85,6 +99,7 @@
         <vertx.version>2.1M2</vertx.version>
         <slf4j.version>1.7.5</slf4j.version>
         <tomcat.version>7.0.47</tomcat.version>
+        <jackson.version>1.9.13</jackson.version>
     </properties>
 
     <dependencyManagement>
@@ -128,7 +143,7 @@
                 <artifactId>mockserver-integration-testing</artifactId>
                 <version>${project.version}</version>
                 <!-- TODO why is mockserver-client not transitively included for tests in intelliJ but works from mvn directly -->
-                <!--<scope>test</scope>-->
+                <scope>test</scope>
             </dependency>
 
             <!-- http -->
@@ -165,6 +180,7 @@
                 <groupId>org.apache.tomcat.embed</groupId>
                 <artifactId>tomcat-embed-logging-juli</artifactId>
                 <version>${tomcat.version}</version>
+                <scope>runtime</scope>
             </dependency>
 
             <!-- Jetty HTTP Client -->
@@ -201,6 +217,13 @@
                 <version>4.3.1</version>
             </dependency>
 
+            <!-- Netty -->
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+                <version>4.0.15.Final</version>
+            </dependency>
+
             <!-- Vert.X -->
             <dependency>
                 <groupId>io.vertx</groupId>
@@ -225,7 +248,12 @@
             <dependency>
                 <groupId>org.codehaus.jackson</groupId>
                 <artifactId>jackson-mapper-asl</artifactId>
-                <version>1.9.12</version>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-core-asl</artifactId>
+                <version>${jackson.version}</version>
             </dependency>
 
             <!-- commons & guava -->

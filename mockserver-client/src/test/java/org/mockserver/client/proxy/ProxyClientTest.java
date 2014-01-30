@@ -9,7 +9,9 @@ import org.mockito.Mock;
 import org.mockserver.client.http.ApacheHttpClient;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.mock.Expectation;
+import org.mockserver.model.Body;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.StringBody;
 
 import java.io.UnsupportedEncodingException;
 
@@ -75,14 +77,17 @@ public class ProxyClientTest {
                 .clear(
                         new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody("some_request_body")
+                                .withBody(new StringBody("some_request_body", Body.Type.EXACT))
                 );
 
         // then
         verify(mockApacheHttpClient).sendPUTRequest("http://localhost:8080", "/clear", "" +
                 "{\n" +
                 "  \"path\" : \"/some_path\",\n" +
-                "  \"body\" : \"some_request_body\"\n" +
+                "  \"body\" : {\n" +
+                "    \"type\" : \"EXACT\",\n" +
+                "    \"value\" : \"some_request_body\"\n" +
+                "  }\n" +
                 "}");
     }
 
@@ -99,14 +104,17 @@ public class ProxyClientTest {
                 .retrieveAsExpectations(
                         new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody("some_request_body")
+                                .withBody(new StringBody("some_request_body", Body.Type.EXACT))
                 ));
 
         // then
         verify(mockApacheHttpClient).sendPUTRequest("http://localhost:8080", "/retrieve", "" +
                 "{\n" +
                 "  \"path\" : \"/some_path\",\n" +
-                "  \"body\" : \"some_request_body\"\n" +
+                "  \"body\" : {\n" +
+                "    \"type\" : \"EXACT\",\n" +
+                "    \"value\" : \"some_request_body\"\n" +
+                "  }\n" +
                 "}");
         verify(expectationSerializer).deserializeArray("body");
     }
@@ -139,14 +147,17 @@ public class ProxyClientTest {
                 .retrieveAsJSON(
                         new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody("some_request_body")
+                                .withBody(new StringBody("some_request_body", Body.Type.EXACT))
                 ));
 
         // then
         verify(mockApacheHttpClient).sendPUTRequest("http://localhost:8080", "/retrieve", "" +
                 "{\n" +
                 "  \"path\" : \"/some_path\",\n" +
-                "  \"body\" : \"some_request_body\"\n" +
+                "  \"body\" : {\n" +
+                "    \"type\" : \"EXACT\",\n" +
+                "    \"value\" : \"some_request_body\"\n" +
+                "  }\n" +
                 "}");
     }
 

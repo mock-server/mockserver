@@ -15,7 +15,7 @@
 
     <logger name="org.mockserver" level="TRACE"/>
 
-    <root level="warn">
+    <root level="TRACE">
         <appender-ref ref="FILE"/>
         <appender-ref ref="STDOUT"/>
     </root>

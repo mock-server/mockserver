@@ -128,7 +128,7 @@ public abstract class BooksPageIntegrationTest {
                 .when(
                         request()
                                 .withPath("/get_book")
-                                .withParameters(
+                                .withQueryStringParameter(
                                         new Parameter("id", "1")
                                 )
                 )
@@ -157,7 +157,7 @@ public abstract class BooksPageIntegrationTest {
         proxy.verify(
                 request()
                         .withPath("/get_book")
-                        .withParameters(
+                        .withQueryStringParameter(
                                 new Parameter("id", "1")
                         ),
                 Times.exactly(1)

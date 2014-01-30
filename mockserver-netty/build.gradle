@@ -1,0 +1,20 @@
+apply plugin: 'war'
+
+dependencies {
+    // Netty
+    compile "io.netty:netty-all:$nettyVersion"
+
+    // commons & guava
+    compile "org.apache.commons:commons-lang3:$commonsLang3Version"
+    compile "commons-io:commons-io:$commonsIoVersion"
+    compile "com.google.guava:guava:$guavaVersion"
+
+    // logging
+    runtime "org.slf4j:slf4j-api:$slf4jVersion"
+    runtime "ch.qos.logback:logback-classic:$logbackClassicVersion"
+
+    // test
+    testCompile "junit:junit:$junitVersion"
+    testCompile "org.mockito:mockito-all:$mockitoAllVersion"
+    testCompile "org.hamcrest:hamcrest-core:$hamcrestCore"
+}

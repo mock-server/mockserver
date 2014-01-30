@@ -197,7 +197,7 @@ public class CircularMultiMapTest {
         // - should have correct values per key
         assertNull(circularMultiMap.get("1"));
         assertEquals("2", circularMultiMap.get("2"));
-        assertNull(circularMultiMap.getAll("1"));
+        assertEquals(0, circularMultiMap.getAll("1").size());
         assertEquals(Arrays.asList("2"), circularMultiMap.getAll("2"));
     }
 

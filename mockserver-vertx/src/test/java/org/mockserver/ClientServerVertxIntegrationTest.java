@@ -29,7 +29,7 @@ public class ClientServerVertxIntegrationTest extends AbstractClientServerIntegr
     @BeforeClass
     public static void startServer() throws InterruptedException {
         vertxServer.start();
-        vertxServer.join(TimeUnit.SECONDS.toMillis(1));
+        vertxServer.join(TimeUnit.SECONDS.toMillis(2));
 
         // start client
         mockServerClient = new MockServerClient("localhost", port, servletContext);

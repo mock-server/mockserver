@@ -46,7 +46,7 @@ var mockServerClient = function (mockServerUrl) {
             };
         },
         mockAnyResponse = function (expectation) {
-            xmlhttp.open("PUT", mockServerUrl, false);
+            xmlhttp.open("PUT", mockServerUrl + "/expectation", false);
             xmlhttp.setRequestHeader("Content-Type", "application/json; charset=utf-8");
             xmlhttp.send(JSON.stringify(expectation));
         },

@@ -1,5 +1,6 @@
 package org.mockserver.matchers;
 
+import io.netty.handler.codec.http.QueryStringDecoder;
 import org.mockserver.model.HttpRequest;
 
 /**
@@ -10,11 +11,11 @@ public class MatcherBuilder {
     public HttpRequestMatcher transformsToMatcher(HttpRequest httpRequest) {
         if (httpRequest != null) {
             return new HttpRequestMatcher()
+                    .withHttpRequest(httpRequest)
                     .withMethod(httpRequest.getMethod())
                     .withURL(httpRequest.getURL())
                     .withPath(httpRequest.getPath())
-                    .withQueryString(httpRequest.getQueryString())
-                    .withParameters(httpRequest.getParameters())
+                    .withQueryStringParameters(httpRequest.getQueryStringParameters())
                     .withBody(httpRequest.getBody())
                     .withHeaders(httpRequest.getHeaders())
                     .withCookies(httpRequest.getCookies());

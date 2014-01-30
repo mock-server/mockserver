@@ -1,5 +1,8 @@
 dependencies {
-    // http
+    // Netty
+    compile "io.netty:netty-all:$nettyVersion"
+
+    // Vert.X
     compile "io.vertx:vertx-core:$vertxVersion"
     compile "io.vertx:vertx-platform:$vertxVersion"
 

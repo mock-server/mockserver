@@ -14,20 +14,24 @@
     <description>A MockServer that uses Vert.X to run</description>
 
     <dependencies>
+        <!-- mockserver -->
         <dependency>
             <groupId>org.mock-server</groupId>
             <artifactId>mockserver-core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.mock-server</groupId>
-            <artifactId>mockserver-client</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.mock-server</groupId>
             <artifactId>mockserver-integration-testing</artifactId>
         </dependency>
 
-        <!-- http -->
+        <!-- Netty -->
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+            <version>4.0.15.Final</version>
+        </dependency>
+
+        <!-- Vert.X -->
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-core</artifactId>

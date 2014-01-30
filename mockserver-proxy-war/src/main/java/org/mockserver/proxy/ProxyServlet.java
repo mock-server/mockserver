@@ -3,8 +3,8 @@ package org.mockserver.proxy;
 import org.mockserver.client.http.ApacheHttpClient;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
-import org.mockserver.mappers.HttpServletRequestMapper;
-import org.mockserver.mappers.HttpServletResponseMapper;
+import org.mockserver.mappers.HttpServletToMockServerRequestMapper;
+import org.mockserver.mappers.MockServerToHttpServletResponseMapper;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -23,8 +23,8 @@ import java.io.IOException;
  */
 public class ProxyServlet extends HttpServlet {
     private static final long serialVersionUID = 8490389904399790169L;
-    private HttpServletRequestMapper httpServletRequestMapper = new HttpServletRequestMapper();
-    private HttpServletResponseMapper httpServletResponseMapper = new HttpServletResponseMapper();
+    private HttpServletToMockServerRequestMapper httpServletToMockServerRequestMapper = new HttpServletToMockServerRequestMapper();
+    private MockServerToHttpServletResponseMapper mockServerToHttpServletResponseMapper = new MockServerToHttpServletResponseMapper();
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
     private ApacheHttpClient apacheHttpClient = new ApacheHttpClient();
@@ -110,14 +110,14 @@ public class ProxyServlet extends HttpServlet {
     }
 
     private void forwardRequest(HttpServletRequest request, HttpServletResponse response) {
-        sendRequest(filters.applyFilters(httpServletRequestMapper.mapHttpServletRequestToHttpRequest(request)), response);
+        sendRequest(filters.applyFilters(httpServletToMockServerRequestMapper.mapHttpServletRequestToMockServerRequest(request)), response);
     }
 
     private void sendRequest(final HttpRequest httpRequest, final HttpServletResponse httpServletResponse) {
         // if HttpRequest was set to null by a filter don't send request
         if (httpRequest != null) {
             HttpResponse httpResponse = filters.applyFilters(httpRequest, apacheHttpClient.sendRequest(httpRequest));
-            httpServletResponseMapper.mapHttpResponseToHttpServletResponse(httpResponse, httpServletResponse);
+            mockServerToHttpServletResponseMapper.mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
         }
     }
 }

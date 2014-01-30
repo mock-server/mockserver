@@ -15,23 +15,7 @@ import java.io.IOException;
  */
 public class HttpRequestSerializer {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private ObjectMapper objectMapper = new ObjectMapper();
-
-    public HttpRequestSerializer() {
-        // ignore failures
-        objectMapper.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        objectMapper.configure(DeserializationConfig.Feature.FAIL_ON_NULL_FOR_PRIMITIVES, false);
-        objectMapper.configure(DeserializationConfig.Feature.FAIL_ON_NUMBERS_FOR_ENUMS, false);
-        // relax parsing
-        objectMapper.configure(DeserializationConfig.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
-        objectMapper.configure(DeserializationConfig.Feature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
-        // use arrays
-        objectMapper.configure(DeserializationConfig.Feature.USE_JAVA_ARRAY_FOR_JSON_ARRAY, true);
-        // remove empty values from JSON
-        objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT);
-        objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL);
-        objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_EMPTY);
-    }
+    private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
 
     public String serialize(HttpRequest httpRequest) {
         try {

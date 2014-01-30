@@ -14,9 +14,8 @@ public class HttpRequestDTO extends EqualsHashCodeToString {
     private String method;
     private String url;
     private String path;
-    private String queryString;
-    private List<ParameterDTO> parameters = new ArrayList<ParameterDTO>();
-    private String body;
+    private List<ParameterDTO> queryStringParameters = new ArrayList<ParameterDTO>();
+    private BodyDTO body;
     private List<CookieDTO> cookies = new ArrayList<CookieDTO>();
     private List<HeaderDTO> headers = new ArrayList<HeaderDTO>();
 
@@ -24,13 +23,6 @@ public class HttpRequestDTO extends EqualsHashCodeToString {
         method = httpRequest.getMethod();
         url = httpRequest.getURL();
         path = httpRequest.getPath();
-        queryString = httpRequest.getQueryString();
-        parameters = Lists.transform(httpRequest.getParameters(), new Function<Parameter, ParameterDTO>() {
-            public ParameterDTO apply(Parameter parameter) {
-                return new ParameterDTO(parameter);
-            }
-        });
-        body = httpRequest.getBody();
         headers = Lists.transform(httpRequest.getHeaders(), new Function<Header, HeaderDTO>() {
             public HeaderDTO apply(Header header) {
                 return new HeaderDTO(header);
@@ -41,6 +33,12 @@ public class HttpRequestDTO extends EqualsHashCodeToString {
                 return new CookieDTO(cookie);
             }
         });
+        queryStringParameters = Lists.transform(httpRequest.getQueryStringParameters(), new Function<Parameter, ParameterDTO>() {
+            public ParameterDTO apply(Parameter parameter) {
+                return new ParameterDTO(parameter);
+            }
+        });
+        body = BodyDTO.createDTO(httpRequest.getBody());
     }
 
     public HttpRequestDTO() {
@@ -51,13 +49,6 @@ public class HttpRequestDTO extends EqualsHashCodeToString {
                 .withMethod(method)
                 .withURL(url)
                 .withPath(path)
-                .withQueryString(queryString)
-                .withParameters(Lists.transform(parameters, new Function<ParameterDTO, Parameter>() {
-                    public Parameter apply(ParameterDTO parameter) {
-                        return parameter.buildObject();
-                    }
-                }))
-                .withBody(body)
                 .withHeaders(Lists.transform(headers, new Function<HeaderDTO, Header>() {
                     public Header apply(HeaderDTO header) {
                         return header.buildObject();
@@ -67,7 +58,14 @@ public class HttpRequestDTO extends EqualsHashCodeToString {
                     public Cookie apply(CookieDTO cookie) {
                         return cookie.buildObject();
                     }
-                }));
+                }))
+                .withQueryStringParameters(Lists.transform(queryStringParameters, new Function<ParameterDTO, Parameter>() {
+                    public Parameter apply(ParameterDTO parameter) {
+                        return parameter.buildObject();
+                    }
+                }))
+                .withBody((body != null ? body.buildObject() : null));
+
     }
 
     public String getMethod() {
@@ -97,29 +95,20 @@ public class HttpRequestDTO extends EqualsHashCodeToString {
         return this;
     }
 
-    public String getQueryString() {
-        return queryString;
+    public List<ParameterDTO> getQueryStringParameters() {
+        return queryStringParameters;
     }
 
-    public HttpRequestDTO setQueryString(String queryString) {
-        this.queryString = queryString;
+    public HttpRequestDTO setQueryStringParameters(List<ParameterDTO> queryStringParameters) {
+        this.queryStringParameters = queryStringParameters;
         return this;
     }
 
-    public List<ParameterDTO> getParameters() {
-        return parameters;
-    }
-
-    public HttpRequestDTO setParameters(List<ParameterDTO> parameters) {
-        this.parameters = parameters;
-        return this;
-    }
-
-    public String getBody() {
+    public BodyDTO getBody() {
         return body;
     }
 
-    public HttpRequestDTO setBody(String body) {
+    public HttpRequestDTO setBody(BodyDTO body) {
         this.body = body;
         return this;
     }

@@ -5,20 +5,16 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.mock-server.integration-test</groupId>
-    <artifactId>test</artifactId>
+    <artifactId>proxy-run-stop-forked-from-command-line</artifactId>
     <version>1.0-SNAPSHOT</version>
 
-    <name>Test</name>
-    <description>
-        Test server:start
-    </description>
 
     <build>
         <plugins>
             <plugin>
                 <groupId>org.mock-server</groupId>
                 <artifactId>mockserver-maven-plugin</artifactId>
-                <version>2.3-SNAPSHOT</version>
+                <version>2.5-SNAPSHOT</version>
                 <configuration>
                     <proxyPort>8080</proxyPort>
                 </configuration>

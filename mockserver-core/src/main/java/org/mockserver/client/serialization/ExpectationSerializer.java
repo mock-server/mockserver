@@ -3,14 +3,13 @@ package org.mockserver.client.serialization;
 import org.apache.commons.io.Charsets;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.mockserver.client.serialization.model.ExpectationDTO;
 import org.mockserver.mock.Expectation;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
-import org.mockserver.model.KeyToMultiValue;
+import org.mockserver.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,23 +23,7 @@ import java.util.List;
  */
 public class ExpectationSerializer {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private ObjectMapper objectMapper = new ObjectMapper();
-
-    public ExpectationSerializer() {
-        // ignore failures
-        objectMapper.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        objectMapper.configure(DeserializationConfig.Feature.FAIL_ON_NULL_FOR_PRIMITIVES, false);
-        objectMapper.configure(DeserializationConfig.Feature.FAIL_ON_NUMBERS_FOR_ENUMS, false);
-        // relax parsing
-        objectMapper.configure(DeserializationConfig.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
-        objectMapper.configure(DeserializationConfig.Feature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
-        // use arrays
-        objectMapper.configure(DeserializationConfig.Feature.USE_JAVA_ARRAY_FOR_JSON_ARRAY, true);
-        // remove empty values from JSON
-        objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT);
-        objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL);
-        objectMapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_EMPTY);
-    }
+    private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
 
     public String serialize(Expectation expectation) {
         try {
@@ -71,17 +54,23 @@ public class ExpectationSerializer {
             if (StringUtils.isNotEmpty(httpRequest.getPath())) {
                 output.append("\n                        .withPath(\"" + httpRequest.getPath() + "\")");
             }
-            if (StringUtils.isNotEmpty(httpRequest.getQueryString())) {
-                output.append("\n                        .withQueryString(\"" + httpRequest.getQueryString() + "\")");
-            }
             if (httpRequest.getHeaders().size() > 0) {
                 serializeAsJavaKeyToMultiValue(output, "Header", new ArrayList<KeyToMultiValue>(httpRequest.getHeaders()));
             }
             if (httpRequest.getCookies().size() > 0) {
                 serializeAsJavaKeyToMultiValue(output, "Cookie", new ArrayList<KeyToMultiValue>(httpRequest.getCookies()));
             }
-            if (StringUtils.isNotEmpty(httpRequest.getBody())) {
-                output.append("\n                        .withBody(\"" + StringEscapeUtils.escapeJava(httpRequest.getBody()) + "\")");
+            if (httpRequest.getQueryStringParameters().size() > 0) {
+                serializeAsJavaKeyToMultiValue(output, "QueryStringParameter", new ArrayList<KeyToMultiValue>(httpRequest.getQueryStringParameters()));
+            }
+            if (httpRequest.getBody() != null) {
+                if (httpRequest.getBody() instanceof StringBody) {
+                    output.append("\n                        .withBody(new StringBody(\"" + StringEscapeUtils.escapeJava(((StringBody) httpRequest.getBody()).getValue()) + "\", Body.Type." + httpRequest.getBody().getType() + "))");
+                } else if (httpRequest.getBody() instanceof ParameterBody) {
+                    output.append("\n                        .withBody(new ParameterBody(Arrays.asList(");
+                    serializeAsJavaKeyToMultiValueList(output, "Parameter", new ArrayList<KeyToMultiValue>(((ParameterBody) httpRequest.getBody()).getParameters()));
+                    output.append("), Body.Type." + httpRequest.getBody().getType() + "))");
+                }
             }
             output.append(",\n" +
                     "                Times.once()\n" +
@@ -108,6 +97,11 @@ public class ExpectationSerializer {
 
     private void serializeAsJavaKeyToMultiValue(StringBuffer output, String name, List<KeyToMultiValue> keyToMultiValues) {
         output.append("\n                        .with" + name + "s(\n");
+        serializeAsJavaKeyToMultiValueList(output, name, keyToMultiValues);
+        output.append("                        )");
+    }
+
+    private void serializeAsJavaKeyToMultiValueList(StringBuffer output, String name, List<KeyToMultiValue> keyToMultiValues) {
         for (int i = 0; i < keyToMultiValues.size(); i++) {
             KeyToMultiValue keyToMultiValue = keyToMultiValues.get(i);
             output.append("                                new " + name + "(\"" + keyToMultiValue.getName() + "\"");
@@ -120,7 +114,6 @@ public class ExpectationSerializer {
             }
             output.append("\n");
         }
-        output.append("                        )");
     }
 
     public String serialize(Expectation[] expectation) {

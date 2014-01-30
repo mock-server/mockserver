@@ -1,11 +1,11 @@
 package org.mockserver.client.http;
 
+import io.netty.handler.codec.http.QueryStringDecoder;
 import org.apache.commons.io.Charsets;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.CircularRedirectException;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.*;
 import org.apache.http.client.utils.URLEncodedUtils;
@@ -22,11 +22,8 @@ import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.mockserver.mappers.jetty.HttpClientResponseMapper;
-import org.mockserver.model.Cookie;
-import org.mockserver.model.Header;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
+import org.mockserver.mappers.ApacheHttpClientToMockServerResponseMapper;
+import org.mockserver.model.*;
 import org.mockserver.socket.SSLFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +44,7 @@ import static org.mockserver.configuration.SystemProperties.maxTimeout;
 public class ApacheHttpClient {
 
     private static final Logger logger = LoggerFactory.getLogger(ApacheHttpClient.class);
-    private static final HttpClientResponseMapper httpClientResponseMapper = new HttpClientResponseMapper();
+    private static final ApacheHttpClientToMockServerResponseMapper APACHE_TO_MOCK_SERVER_RESPONSE_MAPPER = new ApacheHttpClientToMockServerResponseMapper();
     private final CloseableHttpClient httpClient;
 
     public ApacheHttpClient() {
@@ -96,7 +93,7 @@ public class ApacheHttpClient {
 
     public HttpResponse sendRequest(HttpRequest httpRequest) {
         try {
-            URI url = new URI(URLEncoder.encodeURL(httpRequest.getURL()));
+            URI url = buildUrl(httpRequest);
             HttpMethod httpMethod = HttpMethod.parseString(httpRequest.getMethod());
             if (logger.isDebugEnabled()) {
                 System.out.println(httpMethod + " => " + url);
@@ -137,12 +134,13 @@ public class ApacheHttpClient {
                         .writerWithDefaultPrettyPrinter()
                         .writeValueAsString(httpRequest));
             }
+
             if (proxiedRequest instanceof HttpEntityEnclosingRequest) {
-                ((HttpEntityEnclosingRequest) proxiedRequest).setEntity(new StringEntity(httpRequest.getBody()));
+                ((HttpEntityEnclosingRequest) proxiedRequest).setEntity(new StringEntity((httpRequest.getBody() != null ? httpRequest.getBody().toString() : "")));
             }
-            return httpClientResponseMapper.mapHttpClientResponseToHttpResponse(this.httpClient.execute(proxiedRequest));
+            return APACHE_TO_MOCK_SERVER_RESPONSE_MAPPER.mapApacheHttpClientResponseToMockServerResponse(this.httpClient.execute(proxiedRequest));
         } catch (IOException ioe) {
-            if(ioe.getCause() instanceof CircularRedirectException) {
+            if (ioe.getCause() instanceof CircularRedirectException) {
                 logger.debug("Circular redirect aborting request", ioe);
                 return new HttpResponse();
             } else {
@@ -151,6 +149,37 @@ public class ApacheHttpClient {
         } catch (URISyntaxException urle) {
             throw new RuntimeException("URISyntaxException for url [" + httpRequest.getURL() + "]", urle);
         }
+    }
+
+    private URI buildUrl(HttpRequest httpRequest) throws URISyntaxException {
+        URI url = new URI(URLEncoder.encodeURL(httpRequest.getURL()));
+        if (url.getQuery() != null) {
+            httpRequest.withQueryStringParameters(new QueryStringDecoder("?" + url.getQuery()).parameters());
+        }
+        StringBuilder queryString = new StringBuilder();
+        List<Parameter> queryStringParameters = httpRequest.getQueryStringParameters();
+        for (int i = 0; i < queryStringParameters.size(); i++) {
+            Parameter parameter = queryStringParameters.get(i);
+            if (parameter.getValues().isEmpty()) {
+                queryString.append(parameter.getName());
+                queryString.append('=');
+            } else {
+                List<String> values = parameter.getValues();
+                for (int j = 0; j < values.size(); j++) {
+                    String value = values.get(j);
+                    queryString.append(parameter.getName());
+                    queryString.append('=');
+                    queryString.append(value);
+                    if (j < (values.size() - 1)) {
+                        queryString.append('&');
+                    }
+                }
+            }
+            if (i < (queryStringParameters.size() - 1)) {
+                queryString.append('&');
+            }
+        }
+        return new URI(url.getScheme(), url.getUserInfo(), url.getHost(), url.getPort(), url.getPath(), (queryString.toString().isEmpty() ? null : queryString.toString()), url.getFragment());
     }
 
     protected HttpUriRequest createHttpUriRequest(HttpMethod httpMethod, URI uri) {

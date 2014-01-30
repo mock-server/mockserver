@@ -41,6 +41,8 @@
             <artifactId>javax.servlet-api</artifactId>
             <scope>provided</scope>
         </dependency>
+
+        <!-- Jetty HTTP Server -->
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-http</artifactId>
@@ -86,6 +88,11 @@
             <artifactId>jersey-media-json-jackson</artifactId>
             <version>2.5.1</version>
         </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.connectors</groupId>
+            <artifactId>jersey-apache-connector</artifactId>
+            <version>2.5.1</version>
+        </dependency>
 
         <!-- grizzly -->
         <dependency>
@@ -97,11 +104,6 @@
             <groupId>com.ning</groupId>
             <artifactId>async-http-client</artifactId>
             <version>1.7.22</version>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.jersey.connectors</groupId>
-            <artifactId>jersey-apache-connector</artifactId>
-            <version>2.5.1</version>
         </dependency>
 
         <!-- html -->

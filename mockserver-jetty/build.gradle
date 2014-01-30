@@ -3,14 +3,23 @@ apply plugin: 'war'
 dependencies {
     // http
     providedCompile "javax.servlet:javax.servlet-api:$servletVersion"
+
+    // Jetty HTTP Server
     compile "org.eclipse.jetty:jetty-http:$jettyVersion"
     compile "org.eclipse.jetty:jetty-server:$jettyVersion"
     compile "org.eclipse.jetty:jetty-servlet:$jettyVersion"
+
+    // Jetty HTTP Client
     compile "org.eclipse.jetty:jetty-client:$jettyVersion"
     compile "org.eclipse.jetty:jetty-util:$jettyVersion"
     compile "org.eclipse.jetty:jetty-io:$jettyVersion"
 
+    // Tomcat Server (integration testing)
+    testCompile "org.apache.tomcat.embed:tomcat-embed-core:$tomcatVersion"
+    testCompile "org.apache.tomcat.embed:tomcat-embed-logging-juli:$tomcatVersion"
+
     // commons & guava
+    compile "commons-io:commons-io:$commonsIoVersion"
     compile "com.google.guava:guava:$guavaVersion"
 
     // logging
@@ -20,6 +29,8 @@ dependencies {
     // test
     testCompile "junit:junit:$junitVersion"
     testCompile "org.mockito:mockito-all:$mockitoAllVersion"
+
+    // integration testing
     testCompile "org.springframework:spring-test:$springVersion"
 }
 

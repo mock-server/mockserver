@@ -4,8 +4,12 @@ dependencies {
     // http
     providedCompile "javax.servlet:javax.servlet-api:$servletVersion"
 
+    // netty
+    compile "io.netty:netty-all:$nettyVersion"
+
     // json
     compile "org.codehaus.jackson:jackson-mapper-asl:$jacksonMapperAslVersion"
+    compile "org.codehaus.jackson:jackson-core-asl:$jacksonMapperAslVersion"
 
     // commons & guava
     compile "org.apache.commons:commons-lang3:$commonsLang3Version"

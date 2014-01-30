@@ -22,11 +22,11 @@ public class MockServer extends EqualsHashCodeToString {
     protected final List<Expectation> expectations = new ArrayList<Expectation>();
     private Logger requestLogger = LoggerFactory.getLogger("REQUEST");
 
-    public Expectation when(HttpRequest httpRequest) {
+    public synchronized Expectation when(HttpRequest httpRequest) {
         return when(httpRequest, Times.unlimited());
     }
 
-    public Expectation when(final HttpRequest httpRequest, Times times) {
+    public synchronized Expectation when(final HttpRequest httpRequest, Times times) {
         Expectation expectation;
         if (times.isUnlimited()) {
             Collection<Expectation> existingExpectationsWithMatchingRequest = Collections2.filter(expectations, new Predicate<Expectation>() {
@@ -49,15 +49,13 @@ public class MockServer extends EqualsHashCodeToString {
         return expectation;
     }
 
-    public HttpResponse handle(HttpRequest httpRequest) {
+    public synchronized HttpResponse handle(HttpRequest httpRequest) {
         ArrayList<Expectation> expectations = new ArrayList<Expectation>(this.expectations);
         for (Expectation expectation : expectations) {
             if (expectation.matches(httpRequest)) {
                 if (!expectation.getTimes().greaterThenZero()) {
-                    synchronized (this.expectations) {
-                        if (this.expectations.contains(expectation)) {
-                            this.expectations.remove(expectation);
-                        }
+                    if (this.expectations.contains(expectation)) {
+                        this.expectations.remove(expectation);
                     }
                 }
                 return expectation.getHttpResponse();
@@ -66,14 +64,12 @@ public class MockServer extends EqualsHashCodeToString {
         return null;
     }
 
-    public void clear(HttpRequest httpRequest) {
+    public synchronized void clear(HttpRequest httpRequest) {
         if (httpRequest != null) {
             for (Expectation expectation : new ArrayList<Expectation>(expectations)) {
                 if (expectation.matches(httpRequest)) {
-                    synchronized (this.expectations) {
-                        if (this.expectations.contains(expectation)) {
-                            this.expectations.remove(expectation);
-                        }
+                    if (this.expectations.contains(expectation)) {
+                        this.expectations.remove(expectation);
                     }
                 }
             }
@@ -82,13 +78,11 @@ public class MockServer extends EqualsHashCodeToString {
         }
     }
 
-    public void reset() {
-        synchronized (this.expectations) {
-            this.expectations.clear();
-        }
+    public synchronized void reset() {
+        this.expectations.clear();
     }
 
-    public void dumpToLog(HttpRequest httpRequest) {
+    public synchronized void dumpToLog(HttpRequest httpRequest) {
         if (httpRequest != null) {
             ExpectationSerializer expectationSerializer = new ExpectationSerializer();
             for (Expectation expectation : new ArrayList<Expectation>(expectations)) {

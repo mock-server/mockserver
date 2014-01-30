@@ -3,8 +3,8 @@ package org.mockserver.proxy;
 import ch.qos.logback.classic.Level;
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.lang3.StringUtils;
-import org.mockserver.mappers.HttpServerRequestMapper;
-import org.mockserver.mappers.HttpServerResponseMapper;
+import org.mockserver.mappers.VertXToMockServerRequestMapper;
+import org.mockserver.mappers.MockServerToVertXResponseMapper;
 import org.mockserver.mappers.vertx.HttpClientRequestMapper;
 import org.mockserver.mappers.vertx.HttpClientResponseMapper;
 import org.mockserver.model.HttpRequest;
@@ -26,9 +26,9 @@ import org.vertx.java.platform.Verticle;
 public class ProxyVertical extends Verticle {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     // mappers
-    private HttpServerRequestMapper httpServerRequestMapper = new HttpServerRequestMapper();
+    private VertXToMockServerRequestMapper vertXToMockServerRequestMapper = new VertXToMockServerRequestMapper();
     private HttpClientRequestMapper httpClientRequestMapper = new HttpClientRequestMapper();
-    private HttpServerResponseMapper httpServerResponseMapper = new HttpServerResponseMapper();
+    private MockServerToVertXResponseMapper mockServerToVertXResponseMapper = new MockServerToVertXResponseMapper();
     private HttpClientResponseMapper httpClientResponseMapper = new HttpClientResponseMapper();
     // filters
     private Filters filters = new Filters() {{
@@ -50,7 +50,7 @@ public class ProxyVertical extends Verticle {
             // request end handler
             httpServerRequest.endHandler(new VoidHandler() {
                 public void handle() {
-                    final HttpRequest httpRequest = filters.applyFilters(httpServerRequestMapper.mapHttpServerRequestToHttpRequest(httpServerRequest, requestBody.getBytes()));
+                    final HttpRequest httpRequest = filters.applyFilters(vertXToMockServerRequestMapper.mapVertXRequestToMockServerRequest(httpServerRequest, requestBody.getBytes()));
                     HttpClientRequest clientRequest = vertx
                             .createHttpClient()
                             .setHost(StringUtils.substringBefore(httpServerRequest.headers().get("Host"), ":"))
@@ -70,7 +70,7 @@ public class ProxyVertical extends Verticle {
                                     clientResponse.endHandler(new VoidHandler() {
                                         public void handle() {
                                             HttpResponse httpResponse = httpClientResponseMapper.mapHttpClientResponseToHttpResponse(clientResponse, responseBody.getBytes());
-                                            httpServerResponseMapper.mapHttpResponseToHttpServerResponse(filters.applyFilters(httpRequest, httpResponse), httpServerRequest.response());
+                                            mockServerToVertXResponseMapper.mapMockServerResponseToVertXResponse(filters.applyFilters(httpRequest, httpResponse), httpServerRequest.response());
                                         }
                                     });
                                 }

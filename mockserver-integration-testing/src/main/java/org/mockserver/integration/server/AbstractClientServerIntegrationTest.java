@@ -8,6 +8,7 @@ import org.mockserver.matchers.Times;
 import org.mockserver.model.*;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
@@ -19,9 +20,9 @@ import static org.mockserver.configuration.SystemProperties.maxTimeout;
  */
 public abstract class AbstractClientServerIntegrationTest {
 
-    private final ApacheHttpClient apacheHttpClient;
     protected static MockServerClient mockServerClient;
     protected static String servletContext = "";
+    private final ApacheHttpClient apacheHttpClient;
 
     public AbstractClientServerIntegrationTest() {
         bufferSize(1024);
@@ -34,7 +35,7 @@ public abstract class AbstractClientServerIntegrationTest {
     public abstract int getSecurePort();
 
     @Before
-    public void createClient() throws Exception {
+    public void resetServer() {
         mockServerClient.reset();
     }
 
@@ -174,9 +175,110 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
+    public void clientCanVerifyRequestsReceived() {
+        // when
+        mockServerClient.when(new HttpRequest().withPath("/some_path"), Times.exactly(2)).respond(new HttpResponse().withBody("some_body"));
+
+        // then
+        // - in http
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                                .withPath("/some_path")
+                ));
+        mockServerClient.verify(new HttpRequest()
+                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                .withPath("/some_path"));
+        mockServerClient.verify(new HttpRequest()
+                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                .withPath("/some_path"), org.mockserver.client.proxy.Times.exactly(1));
+
+        // - in https
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                                .withPath("/some_path")
+                ));
+        mockServerClient.verify(new HttpRequest()
+                .withURL("https{0,1}\\:\\/\\/localhost\\:\\d*\\/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("\\/") ? "\\/" : "") + "some_path")
+                .withPath("/some_path"), org.mockserver.client.proxy.Times.atLeast(1));
+        mockServerClient.verify(new HttpRequest()
+                .withURL("https{0,1}\\:\\/\\/localhost\\:\\d*\\/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("\\/") ? "\\/" : "") + "some_path")
+                .withPath("/some_path"), org.mockserver.client.proxy.Times.exactly(2));
+    }
+
+    @Test(expected = AssertionError.class)
+    public void clientCanVerifyNotEnoughRequestsReceived() {
+        // when
+        mockServerClient.when(new HttpRequest().withPath("/some_path"), Times.exactly(2)).respond(new HttpResponse().withBody("some_body"));
+
+        // then
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                                .withPath("/some_path")
+                ));
+        mockServerClient.verify(new HttpRequest()
+                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                .withPath("/some_path"), org.mockserver.client.proxy.Times.atLeast(2));
+    }
+
+    @Test(expected = AssertionError.class)
+    public void clientCanVerifyTooManyRequestsReceived() {
+        // when
+        mockServerClient.when(new HttpRequest().withPath("/some_path"), Times.exactly(2)).respond(new HttpResponse().withBody("some_body"));
+
+        // then
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                                .withPath("/some_path")
+                ));
+        mockServerClient.verify(new HttpRequest()
+                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                .withPath("/some_path"), org.mockserver.client.proxy.Times.exactly(0));
+    }
+
+    @Test(expected = AssertionError.class)
+    public void clientCanVerifyNotMatchingRequestsReceived() {
+        // when
+        mockServerClient.when(new HttpRequest().withPath("/some_path"), Times.exactly(2)).respond(new HttpResponse().withBody("some_body"));
+
+        // then
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                                .withPath("/some_path")
+                ));
+        mockServerClient.verify(new HttpRequest()
+                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_other_path")
+                .withPath("/some_other_path"), org.mockserver.client.proxy.Times.exactly(2));
+    }
+
+    @Test
     public void clientCanCallServerMatchBodyWithXPath() {
         // when
-        mockServerClient.when(new HttpRequest().withBody("/bookstore/book[price>35]/price"), Times.exactly(2)).respond(new HttpResponse().withBody("some_body"));
+        mockServerClient.when(new HttpRequest().withBody(new StringBody("/bookstore/book[price>35]/price", Body.Type.XPATH)), Times.exactly(2)).respond(new HttpResponse().withBody("some_body"));
 
         // then
         // - in http
@@ -188,7 +290,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
                                 .withMethod("POST")
-                                .withBody("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n" +
+                                .withBody(new StringBody("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n" +
                                         "\n" +
                                         "<bookstore>\n" +
                                         "\n" +
@@ -213,7 +315,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         "  <price>39.95</price>\n" +
                                         "</book>\n" +
                                         "\n" +
-                                        "</bookstore>")
+                                        "</bookstore>", Body.Type.EXACT))
                 ));
         // - in https
         assertEquals(
@@ -224,7 +326,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
                                 .withMethod("POST")
-                                .withBody("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n" +
+                                .withBody(new StringBody("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n" +
                                         "\n" +
                                         "<bookstore>\n" +
                                         "\n" +
@@ -249,77 +351,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         "  <price>39.95</price>\n" +
                                         "</book>\n" +
                                         "\n" +
-                                        "</bookstore>")
-                ));
-        // - in http
-        assertEquals(
-                new HttpResponse()
-                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
-                makeRequest(
-                        new HttpRequest()
-                                .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
-                                .withMethod("POST")
-                                .withBody("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n" +
-                                        "\n" +
-                                        "<bookstore>\n" +
-                                        "\n" +
-                                        "<book category=\"COOKING\">\n" +
-                                        "  <title lang=\"en\">Everyday Italian</title>\n" +
-                                        "  <author>Giada De Laurentiis</author>\n" +
-                                        "  <year>2005</year>\n" +
-                                        "  <price>30.00</price>\n" +
-                                        "</book>\n" +
-                                        "\n" +
-                                        "<book category=\"CHILDREN\">\n" +
-                                        "  <title lang=\"en\">Harry Potter</title>\n" +
-                                        "  <author>J K. Rowling</author>\n" +
-                                        "  <year>2005</year>\n" +
-                                        "  <price>29.99</price>\n" +
-                                        "</book>\n" +
-                                        "\n" +
-                                        "<book category=\"WEB\">\n" +
-                                        "  <title lang=\"en\">Learning XML</title>\n" +
-                                        "  <author>Erik T. Ray</author>\n" +
-                                        "  <year>2003</year>\n" +
-                                        "  <price>31.95</price>\n" +
-                                        "</book>\n" +
-                                        "\n" +
-                                        "</bookstore>")
-                ));
-        // - in https
-        assertEquals(
-                new HttpResponse()
-                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
-                makeRequest(
-                        new HttpRequest()
-                                .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
-                                .withMethod("POST")
-                                .withBody("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n" +
-                                        "\n" +
-                                        "<bookstore>\n" +
-                                        "\n" +
-                                        "<book category=\"COOKING\">\n" +
-                                        "  <title lang=\"en\">Everyday Italian</title>\n" +
-                                        "  <author>Giada De Laurentiis</author>\n" +
-                                        "  <year>2005</year>\n" +
-                                        "  <price>30.00</price>\n" +
-                                        "</book>\n" +
-                                        "\n" +
-                                        "<book category=\"CHILDREN\">\n" +
-                                        "  <title lang=\"en\">Harry Potter</title>\n" +
-                                        "  <author>J K. Rowling</author>\n" +
-                                        "  <year>2005</year>\n" +
-                                        "  <price>29.99</price>\n" +
-                                        "</book>\n" +
-                                        "\n" +
-                                        "<book category=\"WEB\">\n" +
-                                        "  <title lang=\"en\">Learning XML</title>\n" +
-                                        "  <author>Erik T. Ray</author>\n" +
-                                        "  <year>2003</year>\n" +
-                                        "  <price>31.95</price>\n" +
-                                        "</book>\n" +
-                                        "\n" +
-                                        "</bookstore>")
+                                        "</bookstore>", Body.Type.EXACT))
                 ));
     }
 
@@ -408,10 +440,12 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
-                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest?parameterName=parameterValue")
+                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
                                 .withPath("/some_pathRequest")
-                                .withQueryString("parameterName=parameterValue")
-                                .withBody("some_bodyRequest")
+                                .withQueryStringParameters(
+                                        new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
+                                        new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                                )
                                 .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
                                 .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
                 )
@@ -424,10 +458,12 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
-                                .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest?parameterName=parameterValue")
+                                .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
                                 .withPath("/some_pathRequest")
-                                .withQueryString("parameterName=parameterValue")
-                                .withBody("some_bodyRequest")
+                                .withQueryStringParameters(
+                                        new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
+                                        new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                                )
                                 .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
                                 .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
                 )
@@ -463,9 +499,12 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("POST")
-                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest?parameterName=parameterValue")
+                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
                                 .withPath("/some_pathRequest")
-                                .withQueryString("parameterName=parameterValue")
+                                .withQueryStringParameters(
+                                        new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
+                                        new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                                )
                                 .withBody("some_bodyRequest")
                                 .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
                                 .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
@@ -482,9 +521,12 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("POST")
-                                .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest?parameterName=parameterValue")
+                                .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
                                 .withPath("/some_pathRequest")
-                                .withQueryString("parameterName=parameterValue")
+                                .withQueryStringParameters(
+                                        new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
+                                        new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                                )
                                 .withBody("some_bodyRequest")
                                 .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
                                 .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
@@ -500,7 +542,10 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withMethod("GET")
                                 .withPath("/some_pathRequest")
-                                .withQueryString("parameterName=parameterValue")
+                                .withQueryStringParameters(
+                                        new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
+                                        new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                                )
                 )
                 .respond(
                         new HttpResponse()
@@ -522,10 +567,12 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
-                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest?parameterName=parameterValue")
+                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest")
                                 .withPath("/some_pathRequest")
-                                .withQueryString("parameterName=parameterValue")
-                                .withBody("some_bodyRequest")
+                                .withQueryStringParameters(
+                                        new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
+                                        new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                                )
                                 .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
                                 .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
                 )
@@ -542,10 +589,8 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
-                                .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest?parameterName=parameterValue")
+                                .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
                                 .withPath("/some_pathRequest")
-                                .withQueryString("parameterName=parameterValue")
-                                .withBody("some_bodyRequest")
                                 .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
                                 .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
                 )
@@ -553,21 +598,22 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanCallServerPositiveMatchForGETAndMatchingPathBodyAndParameters() {
+    public void clientCanCallServerPositiveMatchForGETAndMatchingPathAndHeaders() {
         // when
         mockServerClient
                 .when(
                         new HttpRequest()
-                                .withMethod("POST")
+                                .withMethod("GET")
                                 .withPath("/some_pathRequest")
-                                .withParameters(new Parameter("parameterName", "parameterValue"))
-                                .withBody("some_bodyRequest")
+                                .withHeaders(
+                                        new Header("requestHeaderNameOne", "requestHeaderValueOne_One", "requestHeaderValueOne_Two"),
+                                        new Header("requestHeaderNameTwo", "requestHeaderValueTwo")
+                                )
                 )
                 .respond(
                         new HttpResponse()
                                 .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
                                 .withBody("some_bodyResponse")
-                                .withHeaders(new Header("headerNameResponse", "headerValueResponse"))
                                 .withCookies(new Cookie("cookieNameResponse", "cookieValueResponse"))
                 );
 
@@ -579,31 +625,17 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_bodyResponse")
                         .withCookies(new Cookie("cookieNameResponse", "cookieValueResponse"))
                         .withHeaders(
-                                new Header("headerNameResponse", "headerValueResponse"),
                                 new Header("Set-Cookie", "cookieNameResponse=cookieValueResponse")
                         ),
                 makeRequest(
                         new HttpRequest()
-                                .withMethod("POST")
-                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest?parameterName=parameterValue")
+                                .withMethod("GET")
+                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest")
                                 .withPath("/some_pathRequest")
-                                .withQueryString("parameterName=parameterValue")
-                                .withBody("some_bodyRequest")
-                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
-                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
-                )
-        );
-        assertEquals(
-                new HttpResponse()
-                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
-                makeRequest(
-                        new HttpRequest()
-                                .withMethod("POST")
-                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest?parameterName=parameterOtherValue")
-                                .withPath("/some_pathRequest")
-                                .withQueryString("parameterName=parameterOtherValue")
-                                .withBody("some_bodyRequest")
-                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
+                                .withHeaders(
+                                        new Header("requestHeaderNameOne", "requestHeaderValueOne_One", "requestHeaderValueOne_Two"),
+                                        new Header("requestHeaderNameTwo", "requestHeaderValueTwo")
+                                )
                                 .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
                 )
         );
@@ -614,340 +646,142 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_bodyResponse")
                         .withCookies(new Cookie("cookieNameResponse", "cookieValueResponse"))
                         .withHeaders(
-                                new Header("headerNameResponse", "headerValueResponse"),
                                 new Header("Set-Cookie", "cookieNameResponse=cookieValueResponse")
                         ),
                 makeRequest(
                         new HttpRequest()
-                                .withMethod("POST")
-                                .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest?parameterName=parameterValue")
+                                .withMethod("GET")
+                                .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest")
                                 .withPath("/some_pathRequest")
-                                .withQueryString("parameterName=parameterValue")
-                                .withBody("some_bodyRequest")
-                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
-                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
-                )
-        );
-        assertEquals(
-                new HttpResponse()
-                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
-                makeRequest(
-                        new HttpRequest()
-                                .withMethod("POST")
-                                .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest?otherParameterName=parameterValue")
-                                .withPath("/some_pathRequest")
-                                .withQueryString("otherParameterName=parameterValue")
-                                .withBody("some_bodyRequest")
-                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
+                                .withHeaders(
+                                        new Header("requestHeaderNameOne", "requestHeaderValueOne_One", "requestHeaderValueOne_Two"),
+                                        new Header("requestHeaderNameTwo", "requestHeaderValueTwo")
+                                )
                                 .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
                 )
         );
     }
 
-
     @Test
-    public void clientCanCallServerPositiveMatchForGETAndMatchingBodyAndQueryParameters() {
+    public void clientCanCallServerPositiveMatchForGETAndMatchingPathAndCookies() {
         // when
         mockServerClient
                 .when(
                         new HttpRequest()
+                                .withMethod("GET")
                                 .withPath("/some_pathRequest")
-                                .withParameters(new Parameter("parameterName", "parameterValue"))
+                                .withCookies(
+                                        new Cookie("requestCookieNameOne", "requestCookieValueOne_One", "requestCookieValueOne_Two"),
+                                        new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
+                                )
                 )
                 .respond(
                         new HttpResponse()
                                 .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
                                 .withBody("some_bodyResponse")
+                                .withCookies(
+                                        new Cookie("responseCookieNameOne", "responseCookieValueOne_One", "responseCookieValueOne_Two"),
+                                        new Cookie("responseCookieNameTwo", "responseCookieValueTwo")
+                                )
                 );
 
         // then
-        // - in http
-        assertEquals(
-                new HttpResponse()
-                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                        .withBody("some_bodyResponse"),
-                makeRequest(
-                        new HttpRequest()
-                                .withMethod("GET")
-                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest?parameterName=parameterValue")
-                                .withPath("/some_pathRequest")
-                                .withBody("parameterName=parameterValue")
-                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
-                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
-                )
-        );
-        assertEquals(
-                new HttpResponse()
-                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                        .withBody("some_bodyResponse"),
-                makeRequest(
-                        new HttpRequest()
-                                .withMethod("GET")
-                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest?parameterName=parameterValue")
-                                .withPath("/some_pathRequest")
-                                .withQueryString("parameterName=parameterValue")
-                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
-                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
-                )
-        );
-        assertEquals(
-                new HttpResponse()
-                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
-                makeRequest(
-                        new HttpRequest()
-                                .withMethod("GET")
-                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest?parameterName=parameterOtherValue")
-                                .withPath("/some_pathRequest")
-                                .withQueryString("parameterName=parameterOtherValue")
-                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
-                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
-                )
-        );
-        assertEquals(
-                new HttpResponse()
-                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
-                makeRequest(
-                        new HttpRequest()
-                                .withMethod("GET")
-                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest?parameterName=parameterOtherValue")
-                                .withPath("/some_pathRequest")
-                                .withBody("parameterName=parameterOtherValue")
-                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
-                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
-                )
-        );
-        // - in https
-        assertEquals(
-                new HttpResponse()
-                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                        .withBody("some_bodyResponse"),
-                makeRequest(
-                        new HttpRequest()
-                                .withMethod("GET")
-                                .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest?parameterName=parameterValue")
-                                .withPath("/some_pathRequest")
-                                .withBody("parameterName=parameterValue")
-                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
-                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
-                )
-        );
-        assertEquals(
-                new HttpResponse()
-                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                        .withBody("some_bodyResponse"),
-                makeRequest(
-                        new HttpRequest()
-                                .withMethod("GET")
-                                .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest?parameterName=parameterValue")
-                                .withPath("/some_pathRequest")
-                                .withQueryString("parameterName=parameterValue")
-                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
-                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
-                )
-        );
-        assertEquals(
-                new HttpResponse()
-                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
-                makeRequest(
-                        new HttpRequest()
-                                .withMethod("GET")
-                                .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest?otherParameterName=parameterValue")
-                                .withPath("/some_pathRequest")
-                                .withQueryString("otherParameterName=parameterValue")
-                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
-                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
-                )
-        );
-        assertEquals(
-                new HttpResponse()
-                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
-                makeRequest(
-                        new HttpRequest()
-                                .withMethod("GET")
-                                .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest?otherParameterName=parameterValue")
-                                .withPath("/some_pathRequest")
-                                .withBody("otherParameterName=parameterValue")
-                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
-                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
-                )
-        );
-    }
-
-    @Test
-    public void clientCanCallServerPositiveMatchForGETAndMatchingPathBodyHeadersAndParameters() {
-        // when
-        mockServerClient
-                .when(
-                        new HttpRequest()
-                                .withMethod("POST")
-                                .withPath("/some_pathRequest")
-                                .withQueryString("parameterName=parameterValue")
-                                .withBody("some_bodyRequest")
-                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
-                )
-                .respond(
-                        new HttpResponse()
-                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                                .withBody("some_bodyResponse")
-                                .withHeaders(new Header("headerNameResponse", "headerValueResponse"))
-                                .withCookies(new Cookie("cookieNameResponse", "cookieValueResponse"))
-                );
-
-        // then
-        // - in http
+        // - in http - cookie objects
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
                         .withBody("some_bodyResponse")
-                        .withCookies(new Cookie("cookieNameResponse", "cookieValueResponse"))
+                        .withCookies(
+                                new Cookie("responseCookieNameOne", "responseCookieValueOne_One", "responseCookieValueOne_Two"),
+                                new Cookie("responseCookieNameTwo", "responseCookieValueTwo")
+                        )
                         .withHeaders(
-                                new Header("headerNameResponse", "headerValueResponse"),
-                                new Header("Set-Cookie", "cookieNameResponse=cookieValueResponse")
+                                new Header("Set-Cookie", "responseCookieNameOne=responseCookieValueOne_One", "responseCookieNameOne=responseCookieValueOne_Two", "responseCookieNameTwo=responseCookieValueTwo")
                         ),
                 makeRequest(
                         new HttpRequest()
-                                .withMethod("POST")
-                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest?parameterName=parameterValue")
+                                .withMethod("GET")
+                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest")
                                 .withPath("/some_pathRequest")
-                                .withQueryString("parameterName=parameterValue")
-                                .withBody("some_bodyRequest")
-                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
-                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
+                                .withHeaders(
+                                        new Header("headerNameRequest", "headerValueRequest")
+                                )
+                                .withCookies(
+                                        new Cookie("requestCookieNameOne", "requestCookieValueOne_One", "requestCookieValueOne_Two"),
+                                        new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
+                                )
                 )
         );
-        // - in https
+        // - in http - cookie header
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
                         .withBody("some_bodyResponse")
-                        .withCookies(new Cookie("cookieNameResponse", "cookieValueResponse"))
+                        .withCookies(
+                                new Cookie("responseCookieNameOne", "responseCookieValueOne_One", "responseCookieValueOne_Two"),
+                                new Cookie("responseCookieNameTwo", "responseCookieValueTwo")
+                        )
                         .withHeaders(
-                                new Header("headerNameResponse", "headerValueResponse"),
-                                new Header("Set-Cookie", "cookieNameResponse=cookieValueResponse")
+                                new Header("Set-Cookie", "responseCookieNameOne=responseCookieValueOne_One", "responseCookieNameOne=responseCookieValueOne_Two", "responseCookieNameTwo=responseCookieValueTwo")
                         ),
                 makeRequest(
                         new HttpRequest()
-                                .withMethod("POST")
-                                .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest?parameterName=parameterValue")
+                                .withMethod("GET")
+                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest")
                                 .withPath("/some_pathRequest")
-                                .withQueryString("parameterName=parameterValue")
-                                .withBody("some_bodyRequest")
-                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
-                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
+                                .withHeaders(
+                                        new Header("headerNameRequest", "headerValueRequest"),
+                                        new Header("Cookie", "requestCookieNameOne=requestCookieValueOne_One; requestCookieNameOne=requestCookieValueOne_Two; requestCookieNameTwo=requestCookieValueTwo")
+                                )
                 )
         );
-    }
-
-    @Test
-    public void clientCanCallServerPositiveMatchForGETAndMatchingPathBodyHeadersCookiesAndParameters() {
-        // when
-        mockServerClient
-                .when(
-                        new HttpRequest()
-                                .withMethod("POST")
-                                .withPath("/some_pathRequest")
-                                .withQueryString("parameterName=parameterValue")
-                                .withBody("some_bodyRequest")
-                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
-                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
-                )
-                .respond(
-                        new HttpResponse()
-                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                                .withBody("some_bodyResponse")
-                                .withHeaders(new Header("headerNameResponse", "headerValueResponse"))
-                                .withCookies(new Cookie("cookieNameResponse", "cookieValueResponse"))
-                );
-
-        // then
-        // - in http
+        // - in https - cookie objects
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
                         .withBody("some_bodyResponse")
-                        .withCookies(new Cookie("cookieNameResponse", "cookieValueResponse"))
+                        .withCookies(
+                                new Cookie("responseCookieNameOne", "responseCookieValueOne_One", "responseCookieValueOne_Two"),
+                                new Cookie("responseCookieNameTwo", "responseCookieValueTwo")
+                        )
                         .withHeaders(
-                                new Header("headerNameResponse", "headerValueResponse"),
-                                new Header("Set-Cookie", "cookieNameResponse=cookieValueResponse")
+                                new Header("Set-Cookie", "responseCookieNameOne=responseCookieValueOne_One", "responseCookieNameOne=responseCookieValueOne_Two", "responseCookieNameTwo=responseCookieValueTwo")
                         ),
                 makeRequest(
                         new HttpRequest()
-                                .withMethod("POST")
-                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest?parameterName=parameterValue")
+                                .withMethod("GET")
+                                .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest")
                                 .withPath("/some_pathRequest")
-                                .withQueryString("parameterName=parameterValue")
-                                .withBody("some_bodyRequest")
-                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
-                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
+                                .withHeaders(
+                                        new Header("headerNameRequest", "headerValueRequest")
+                                )
+                                .withCookies(
+                                        new Cookie("requestCookieNameOne", "requestCookieValueOne_One", "requestCookieValueOne_Two"),
+                                        new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
+                                )
                 )
         );
-        // - in https
+        // - in https - cookie header
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
                         .withBody("some_bodyResponse")
-                        .withCookies(new Cookie("cookieNameResponse", "cookieValueResponse"))
+                        .withCookies(
+                                new Cookie("responseCookieNameOne", "responseCookieValueOne_One", "responseCookieValueOne_Two"),
+                                new Cookie("responseCookieNameTwo", "responseCookieValueTwo")
+                        )
                         .withHeaders(
-                                new Header("headerNameResponse", "headerValueResponse"),
-                                new Header("Set-Cookie", "cookieNameResponse=cookieValueResponse")
+                                new Header("Set-Cookie", "responseCookieNameOne=responseCookieValueOne_One", "responseCookieNameOne=responseCookieValueOne_Two", "responseCookieNameTwo=responseCookieValueTwo")
                         ),
                 makeRequest(
                         new HttpRequest()
-                                .withMethod("POST")
-                                .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest?parameterName=parameterValue")
+                                .withMethod("GET")
+                                .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest")
                                 .withPath("/some_pathRequest")
-                                .withQueryString("parameterName=parameterValue")
-                                .withBody("some_bodyRequest")
-                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
-                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
-                )
-        );
-    }
-
-    @Test
-    public void clientCanCallServerPositiveMatchForPOSTAndMatchingPathBodyAndParameters() {
-        // when
-        mockServerClient
-                .when(
-                        new HttpRequest()
-                                .withMethod("POST")
-                                .withPath("/some_path")
-                                .withQueryString("parameterName=parameterValue")
-                                .withBody("bodyParameterName=bodyParameterValue")
-                )
-                .respond(
-                        new HttpResponse()
-                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                                .withBody("some_body")
-                );
-
-        // then
-        // - in http
-        assertEquals(
-                new HttpResponse()
-                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                        .withBody("some_body"),
-                makeRequest(
-                        new HttpRequest()
-                                .withMethod("POST")
-                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path?parameterName=parameterValue")
-                                .withPath("/some_path")
-                                .withQueryString("parameterName=parameterValue")
-                                .withBody("bodyParameterName=bodyParameterValue")
-                )
-        );
-        // - in https
-        assertEquals(
-                new HttpResponse()
-                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                        .withBody("some_body"),
-                makeRequest(
-                        new HttpRequest()
-                                .withMethod("POST")
-                                .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path?parameterName=parameterValue")
-                                .withPath("/some_path")
-                                .withQueryString("parameterName=parameterValue")
-                                .withBody("bodyParameterName=bodyParameterValue")
+                                .withHeaders(
+                                        new Header("headerNameRequest", "headerValueRequest"),
+                                        new Header("Cookie", "requestCookieNameOne=requestCookieValueOne_One; requestCookieNameOne=requestCookieValueOne_Two; requestCookieNameTwo=requestCookieValueTwo")
+                                )
                 )
         );
     }
@@ -960,7 +794,10 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withMethod("POST")
                                 .withPath("/some_path")
-                                .withQueryString("parameterName=parameterValue")
+                                .withQueryStringParameters(
+                                        new Parameter("queryStringParameterOneName", "queryStringParameterOneValueOne", "queryStringParameterOneValueTwo"),
+                                        new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                                )
                 )
                 .respond(
                         new HttpResponse()
@@ -969,7 +806,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 );
 
         // then
-        // - in http
+        // - in http - url query string
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
@@ -977,24 +814,290 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("POST")
-                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path?parameterName=parameterValue")
+                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path" +
+                                        "?queryStringParameterOneName=queryStringParameterOneValueOne" +
+                                        "&queryStringParameterOneName=queryStringParameterOneValueTwo" +
+                                        "&queryStringParameterTwoName=queryStringParameterTwoValue")
                                 .withPath("/some_path")
-                                .withQueryString("parameterName=parameterValue")
-                                .withBody("bodyParameterName=bodyParameterValue")
+                                .withBody(new ParameterBody(new Parameter("bodyParameterName", "bodyParameterValue"))))
+        );
+        // - in https - query string parameter objects
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("POST")
+                                .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                                .withPath("/some_path")
+                                .withQueryStringParameters(
+                                        new Parameter("queryStringParameterOneName", "queryStringParameterOneValueOne", "queryStringParameterOneValueTwo"),
+                                        new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                                )
+                                .withBody(new ParameterBody(new Parameter("bodyParameterName=bodyParameterValue")))
                 )
         );
-        // - in https
+    }
+
+    @Test
+    public void clientCanCallServerPositiveMatchForPOSTAndMatchingPathBodyAndQueryParameters() {
+        // when
+        mockServerClient
+                .when(
+                        new HttpRequest()
+                                .withMethod("POST")
+                                .withPath("/some_pathRequest")
+                                .withQueryStringParameters(
+                                        new Parameter("queryStringParameterOneName", "queryStringParameterOneValueOne", "queryStringParameterOneValueTwo"),
+                                        new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                                )
+                                .withBody("some_bodyRequest")
+                )
+                .respond(
+                        new HttpResponse()
+                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                                .withBody("some_bodyResponse")
+                                .withHeaders(new Header("headerNameResponse", "headerValueResponse"))
+                                .withCookies(new Cookie("cookieNameResponse", "cookieValueResponse"))
+                );
+
+        // then
+        // - in http - url query string
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                        .withBody("some_body"),
+                        .withBody("some_bodyResponse")
+                        .withCookies(new Cookie("cookieNameResponse", "cookieValueResponse"))
+                        .withHeaders(
+                                new Header("headerNameResponse", "headerValueResponse"),
+                                new Header("Set-Cookie", "cookieNameResponse=cookieValueResponse")
+                        ),
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("POST")
-                                .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path?parameterName=parameterValue")
-                                .withPath("/some_path")
-                                .withQueryString("parameterName=parameterValue")
-                                .withBody("bodyParameterName=bodyParameterValue")
+                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest" +
+                                        "?queryStringParameterOneName=queryStringParameterOneValueOne" +
+                                        "&queryStringParameterOneName=queryStringParameterOneValueTwo" +
+                                        "&queryStringParameterTwoName=queryStringParameterTwoValue")
+                                .withPath("/some_pathRequest")
+                                .withBody("some_bodyRequest")
+                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest")))
+        );
+        // - in http - query string parameter objects
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withBody("some_bodyResponse")
+                        .withCookies(new Cookie("cookieNameResponse", "cookieValueResponse"))
+                        .withHeaders(
+                                new Header("headerNameResponse", "headerValueResponse"),
+                                new Header("Set-Cookie", "cookieNameResponse=cookieValueResponse")
+                        ),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("POST")
+                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest")
+                                .withPath("/some_pathRequest")
+                                .withQueryStringParameters(
+                                        new Parameter("queryStringParameterOneName", "queryStringParameterOneValueOne", "queryStringParameterOneValueTwo"),
+                                        new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                                )
+                                .withBody("some_bodyRequest")
+                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest")))
+        );
+        // - in https - url string and query string parameter objects
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withBody("some_bodyResponse")
+                        .withCookies(new Cookie("cookieNameResponse", "cookieValueResponse"))
+                        .withHeaders(
+                                new Header("headerNameResponse", "headerValueResponse"),
+                                new Header("Set-Cookie", "cookieNameResponse=cookieValueResponse")
+                        ),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("POST")
+                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest" +
+                                        "?queryStringParameterOneName=queryStringParameterOneValueOne" +
+                                        "&queryStringParameterOneName=queryStringParameterOneValueTwo" +
+                                        "&queryStringParameterTwoName=queryStringParameterTwoValue")
+                                .withPath("/some_pathRequest")
+                                .withQueryStringParameters(
+                                        new Parameter("queryStringParameterOneName", "queryStringParameterOneValueOne", "queryStringParameterOneValueTwo"),
+                                        new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                                )
+                                .withBody("some_bodyRequest")
+                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest")))
+        );
+    }
+
+    @Test
+    public void clientCanCallServerPositiveMatchForPOSTAndMatchingPathBodyParametersAndQueryParameters() {
+        // when
+        mockServerClient
+                .when(
+                        new HttpRequest()
+                                .withMethod("POST")
+                                .withPath("/some_pathRequest")
+                                .withBody(new ParameterBody(
+                                        new Parameter("bodyParameterOneName", "Parameter One Value One", "Parameter One Value Two"),
+                                        new Parameter("bodyParameterTwoName", "Parameter Two")
+                                ))
+                )
+                .respond(
+                        new HttpResponse()
+                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                                .withBody("some_bodyResponse")
+                                .withHeaders(new Header("headerNameResponse", "headerValueResponse"))
+                                .withCookies(new Cookie("cookieNameResponse", "cookieValueResponse"))
+                );
+
+        // then
+        // - in http - body string
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withBody("some_bodyResponse")
+                        .withCookies(new Cookie("cookieNameResponse", "cookieValueResponse"))
+                        .withHeaders(
+                                new Header("headerNameResponse", "headerValueResponse"),
+                                new Header("Set-Cookie", "cookieNameResponse=cookieValueResponse")
+                        ),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("POST")
+                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest")
+                                .withPath("/some_pathRequest")
+                                .withBody(new StringBody("bodyParameterOneName=Parameter+One+Value+One" +
+                                        "&bodyParameterOneName=Parameter+One+Value+Two" +
+                                        "&bodyParameterTwoName=Parameter+Two", Body.Type.EXACT))
+                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
+                )
+        );
+        // - in http - body parameter objects
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withBody("some_bodyResponse")
+                        .withCookies(new Cookie("cookieNameResponse", "cookieValueResponse"))
+                        .withHeaders(
+                                new Header("headerNameResponse", "headerValueResponse"),
+                                new Header("Set-Cookie", "cookieNameResponse=cookieValueResponse")
+                        ),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("POST")
+                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest")
+                                .withPath("/some_pathRequest")
+                                .withBody(new ParameterBody(
+                                        new Parameter("bodyParameterOneName", "Parameter One Value One", "Parameter One Value Two"),
+                                        new Parameter("bodyParameterTwoName", "Parameter Two")
+                                ))
+                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
+                )
+        );
+        // - in https - url string and query string parameter objects
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withBody("some_bodyResponse")
+                        .withCookies(new Cookie("cookieNameResponse", "cookieValueResponse"))
+                        .withHeaders(
+                                new Header("headerNameResponse", "headerValueResponse"),
+                                new Header("Set-Cookie", "cookieNameResponse=cookieValueResponse")
+                        ),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("POST")
+                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest" +
+                                        "?bodyParameterOneName=bodyParameterOneValueOne" +
+                                        "&bodyParameterOneName=bodyParameterOneValueTwo" +
+                                        "&bodyParameterTwoName=bodyParameterTwoValue")
+                                .withPath("/some_pathRequest")
+                                .withBody(new ParameterBody(
+                                        new Parameter("bodyParameterOneName", "Parameter One Value One", "Parameter One Value Two"),
+                                        new Parameter("bodyParameterTwoName", "Parameter Two")
+                                ))
+                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
+                )
+        );
+    }
+
+    @Test
+    public void clientCanCallServerPositiveMatchForPUTAndMatchingPathBodyParametersAndHeadersAndCookies() {
+        // when
+        mockServerClient
+                .when(
+                        new HttpRequest()
+                                .withMethod("PUT")
+                                .withPath("/some_pathRequest")
+                                .withBody(new StringBody("bodyParameterOneName=Parameter+One+Value+One" +
+                                        "&bodyParameterOneName=Parameter+One+Value+Two" +
+                                        "&bodyParameterTwoName=Parameter+Two", Body.Type.EXACT))
+                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest")))
+                .respond(
+                        new HttpResponse()
+                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                                .withBody("some_bodyResponse")
+                                .withHeaders(new Header("headerNameResponse", "headerValueResponse"))
+                                .withCookies(new Cookie("cookieNameResponse", "cookieValueResponse"))
+                );
+
+        // then
+        // - in http - body string
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withBody("some_bodyResponse")
+                        .withCookies(new Cookie("cookieNameResponse", "cookieValueResponse"))
+                        .withHeaders(
+                                new Header("headerNameResponse", "headerValueResponse"),
+                                new Header("Set-Cookie", "cookieNameResponse=cookieValueResponse")
+                        ),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("PUT")
+                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest")
+                                .withPath("/some_pathRequest")
+                                .withBody(new StringBody("bodyParameterOneName=Parameter+One+Value+One" +
+                                        "&bodyParameterOneName=Parameter+One+Value+Two" +
+                                        "&bodyParameterTwoName=Parameter+Two", Body.Type.EXACT))
+                                .withHeaders(
+                                        new Header("headerNameRequest", "headerValueRequest"),
+                                        new Header("Cookie", "cookieNameRequest=cookieValueRequest")
+                                )
+                )
+        );
+        // - in http - body parameter objects
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withBody("some_bodyResponse")
+                        .withCookies(new Cookie("cookieNameResponse", "cookieValueResponse"))
+                        .withHeaders(
+                                new Header("headerNameResponse", "headerValueResponse"),
+                                new Header("Set-Cookie", "cookieNameResponse=cookieValueResponse")
+                        ),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("PUT")
+                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest")
+                                .withPath("/some_pathRequest")
+                                .withBody(new ParameterBody(
+                                        new Parameter("bodyParameterOneName", "Parameter One Value One", "Parameter One Value Two"),
+                                        new Parameter("bodyParameterTwoName", "Parameter Two")
+                                ))
+                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
                 )
         );
     }
@@ -1007,8 +1110,11 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withMethod("GET")
                                 .withPath("/some_path")
-                                .withQueryString("parameterName=parameterValue")
-                                .withBody("some_body")
+                                .withQueryStringParameters(
+                                        new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
+                                        new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                                )
+                                .withBody(new StringBody("some_body", Body.Type.EXACT))
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
                 )
@@ -1028,10 +1134,13 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
-                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path?parameterName=parameterValue")
+                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
                                 .withPath("/some_path")
-                                .withQueryString("parameterName=parameterValue")
-                                .withBody("some_other_body")
+                                .withQueryStringParameters(
+                                        new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
+                                        new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                                )
+                                .withBody(new StringBody("some_other_body", Body.Type.EXACT))
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
                 )
@@ -1043,14 +1152,95 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
-                                .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path?parameterName=parameterValue")
+                                .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
                                 .withPath("/some_path")
-                                .withQueryString("parameterName=parameterValue")
-                                .withBody("some_other_body")
+                                .withQueryStringParameters(
+                                        new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
+                                        new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                                )
+                                .withBody(new StringBody("some_other_body", Body.Type.EXACT))
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
                 )
         );
+    }
+
+    @Test
+    public void clientCanCallServerNegativeMatchXPathBodyOnly() {
+        // when
+        mockServerClient.when(new HttpRequest().withBody(new StringBody("/bookstore/book[price>35]/price", Body.Type.XPATH)), Times.exactly(2)).respond(new HttpResponse().withBody("some_body"));
+
+        // then
+        // - in http
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                                .withMethod("POST")
+                                .withBody(new StringBody("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n" +
+                                        "\n" +
+                                        "<bookstore>\n" +
+                                        "\n" +
+                                        "<book category=\"COOKING\">\n" +
+                                        "  <title lang=\"en\">Everyday Italian</title>\n" +
+                                        "  <author>Giada De Laurentiis</author>\n" +
+                                        "  <year>2005</year>\n" +
+                                        "  <price>30.00</price>\n" +
+                                        "</book>\n" +
+                                        "\n" +
+                                        "<book category=\"CHILDREN\">\n" +
+                                        "  <title lang=\"en\">Harry Potter</title>\n" +
+                                        "  <author>J K. Rowling</author>\n" +
+                                        "  <year>2005</year>\n" +
+                                        "  <price>29.99</price>\n" +
+                                        "</book>\n" +
+                                        "\n" +
+                                        "<book category=\"WEB\">\n" +
+                                        "  <title lang=\"en\">Learning XML</title>\n" +
+                                        "  <author>Erik T. Ray</author>\n" +
+                                        "  <year>2003</year>\n" +
+                                        "  <price>31.95</price>\n" +
+                                        "</book>\n" +
+                                        "\n" +
+                                        "</bookstore>", Body.Type.EXACT))
+                ));
+        // - in https
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                                .withMethod("POST")
+                                .withBody(new StringBody("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n" +
+                                        "\n" +
+                                        "<bookstore>\n" +
+                                        "\n" +
+                                        "<book category=\"COOKING\">\n" +
+                                        "  <title lang=\"en\">Everyday Italian</title>\n" +
+                                        "  <author>Giada De Laurentiis</author>\n" +
+                                        "  <year>2005</year>\n" +
+                                        "  <price>30.00</price>\n" +
+                                        "</book>\n" +
+                                        "\n" +
+                                        "<book category=\"CHILDREN\">\n" +
+                                        "  <title lang=\"en\">Harry Potter</title>\n" +
+                                        "  <author>J K. Rowling</author>\n" +
+                                        "  <year>2005</year>\n" +
+                                        "  <price>29.99</price>\n" +
+                                        "</book>\n" +
+                                        "\n" +
+                                        "<book category=\"WEB\">\n" +
+                                        "  <title lang=\"en\">Learning XML</title>\n" +
+                                        "  <author>Erik T. Ray</author>\n" +
+                                        "  <year>2003</year>\n" +
+                                        "  <price>31.95</price>\n" +
+                                        "</book>\n" +
+                                        "\n" +
+                                        "</bookstore>", Body.Type.EXACT))
+                ));
     }
 
     @Test
@@ -1061,8 +1251,11 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withMethod("GET")
                                 .withPath("/some_path")
-                                .withQueryString("parameterName=parameterValue")
-                                .withBody("some_body")
+                                .withQueryStringParameters(
+                                        new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
+                                        new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                                )
+                                .withBody(new StringBody("some_body", Body.Type.EXACT))
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
                 )
@@ -1082,10 +1275,13 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
-                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_other_path?parameterName=parameterValue")
+                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_other_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
                                 .withPath("/some_other_path")
-                                .withQueryString("parameterName=parameterValue")
-                                .withBody("some_body")
+                                .withQueryStringParameters(
+                                        new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
+                                        new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                                )
+                                .withBody(new StringBody("some_body", Body.Type.EXACT))
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
                 )
@@ -1097,10 +1293,13 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
-                                .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_other_path?parameterName=parameterValue")
+                                .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_other_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
                                 .withPath("/some_other_path")
-                                .withQueryString("parameterName=parameterValue")
-                                .withBody("some_body")
+                                .withQueryStringParameters(
+                                        new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
+                                        new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                                )
+                                .withBody(new StringBody("some_body", Body.Type.EXACT))
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
                 )
@@ -1108,109 +1307,200 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanCallServerNegativeMatchParameterNameOnly() {
+    public void clientCanCallServerNegativeMatchQueryStringParameterNameOnly() {
         // when
         mockServerClient
                 .when(
                         new HttpRequest()
-                                .withMethod("GET")
-                                .withPath("/some_path")
-                                .withQueryString("parameterName=parameterValue")
-                                .withBody("some_body")
-                                .withHeaders(new Header("headerName", "headerValue"))
-                                .withCookies(new Cookie("cookieName", "cookieValue"))
+                                .withMethod("POST")
+                                .withPath("/some_pathRequest")
+                                .withQueryStringParameters(
+                                        new Parameter("queryStringParameterOneName", "queryStringParameterOneValueOne", "queryStringParameterOneValueTwo"),
+                                        new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                                )
+                                .withBody("some_bodyRequest")
                 )
                 .respond(
                         new HttpResponse()
                                 .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                                .withBody("some_body")
-                                .withHeaders(new Header("headerName", "headerValue"))
-                                .withCookies(new Cookie("cookieName", "cookieValue"))
+                                .withBody("some_bodyResponse")
+                                .withHeaders(new Header("headerNameResponse", "headerValueResponse"))
+                                .withCookies(new Cookie("cookieNameResponse", "cookieValueResponse"))
                 );
 
         // then
-        // - in http
+        // wrong query string parameter name
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         new HttpRequest()
-                                .withMethod("GET")
-                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path?parameterOtherName=parameterValue")
-                                .withPath("/some_path")
-                                .withQueryString("parameterOtherName=parameterValue")
-                                .withBody("some_body")
-                                .withHeaders(new Header("headerName", "headerValue"))
-                                .withCookies(new Cookie("cookieName", "cookieValue"))
-                )
-        );
-        // - in https
-        assertEquals(
-                new HttpResponse()
-                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
-                makeRequest(
-                        new HttpRequest()
-                                .withMethod("GET")
-                                .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path?parameterOtherName=parameterValue")
-                                .withPath("/some_path")
-                                .withQueryString("parameterOtherName=parameterValue")
-                                .withBody("some_body")
-                                .withHeaders(new Header("headerName", "headerValue"))
-                                .withCookies(new Cookie("cookieName", "cookieValue"))
+                                .withMethod("POST")
+                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest" +
+                                        "?OTHERQueryStringParameterOneName=queryStringParameterOneValueOne" +
+                                        "&queryStringParameterOneName=queryStringParameterOneValueTwo" +
+                                        "&queryStringParameterTwoName=queryStringParameterTwoValue")
+                                .withPath("/some_pathRequest")
+                                .withBody("some_bodyRequest")
+                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
                 )
         );
     }
 
     @Test
-    public void clientCanCallServerNegativeMatchParameterValueOnly() {
+    public void clientCanCallServerNegativeMatchBodyParameterNameOnly() {
         // when
         mockServerClient
                 .when(
                         new HttpRequest()
-                                .withMethod("GET")
-                                .withPath("/some_path")
-                                .withQueryString("parameterName=parameterValue")
-                                .withBody("some_body")
-                                .withHeaders(new Header("headerName", "headerValue"))
-                                .withCookies(new Cookie("cookieName", "cookieValue"))
+                                .withMethod("POST")
+                                .withPath("/some_pathRequest")
+                                .withBody(new ParameterBody(
+                                        new Parameter("bodyParameterOneName", "Parameter One Value One", "Parameter One Value Two"),
+                                        new Parameter("bodyParameterTwoName", "Parameter Two")
+                                ))
                 )
                 .respond(
                         new HttpResponse()
                                 .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                                .withBody("some_body")
-                                .withHeaders(new Header("headerName", "headerValue"))
-                                .withCookies(new Cookie("cookieName", "cookieValue"))
+                                .withBody("some_bodyResponse")
+                                .withHeaders(new Header("headerNameResponse", "headerValueResponse"))
+                                .withCookies(new Cookie("cookieNameResponse", "cookieValueResponse"))
                 );
 
         // then
-        // - in http
+        // wrong query string parameter name
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         new HttpRequest()
-                                .withMethod("GET")
-                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path?parameterName=parameterOtherValue")
-                                .withPath("/some_path")
-                                .withQueryString("parameterName=parameterOtherValue")
-                                .withBody("some_body")
-                                .withHeaders(new Header("headerName", "headerValue"))
-                                .withCookies(new Cookie("cookieName", "cookieValue"))
+                                .withMethod("POST")
+                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest")
+                                .withPath("/some_pathRequest")
+                                .withBody(new ParameterBody(
+                                        new Parameter("OTHERBodyParameterOneName", "Parameter One Value One", "Parameter One Value Two"),
+                                        new Parameter("bodyParameterTwoName", "Parameter Two")
+                                ))
+                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
                 )
         );
-        // - in https
+        // wrong query string parameter name
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         new HttpRequest()
-                                .withMethod("GET")
-                                .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path?parameterName=parameterOtherValue")
-                                .withPath("/some_path")
-                                .withQueryString("parameterName=parameterOtherValue")
-                                .withBody("some_body")
-                                .withHeaders(new Header("headerName", "headerValue"))
-                                .withCookies(new Cookie("cookieName", "cookieValue"))
+                                .withMethod("POST")
+                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest")
+                                .withPath("/some_pathRequest")
+                                .withBody(new StringBody("OTHERBodyParameterOneName=Parameter+One+Value+One" +
+                                        "&bodyParameterOneName=Parameter+One+Value+Two" +
+                                        "&bodyParameterTwoName=Parameter+Two", Body.Type.EXACT))
+                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
+                )
+        );
+    }
+
+    @Test
+    public void clientCanCallServerNegativeMatchQueryStringParameterValueOnly() {
+        // when
+        mockServerClient
+                .when(
+                        new HttpRequest()
+                                .withMethod("POST")
+                                .withPath("/some_pathRequest")
+                                .withQueryStringParameters(
+                                        new Parameter("queryStringParameterOneName", "queryStringParameterOneValueOne", "queryStringParameterOneValueTwo"),
+                                        new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                                )
+                                .withBody("some_bodyRequest")
+                )
+                .respond(
+                        new HttpResponse()
+                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                                .withBody("some_bodyResponse")
+                                .withHeaders(new Header("headerNameResponse", "headerValueResponse"))
+                                .withCookies(new Cookie("cookieNameResponse", "cookieValueResponse"))
+                );
+
+        // then
+        // wrong query string parameter value
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("POST")
+                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest")
+                                .withPath("/some_pathRequest")
+                                .withQueryStringParameters(
+                                        new Parameter("queryStringParameterOneName", "OTHERqueryStringParameterOneValueOne", "queryStringParameterOneValueTwo"),
+                                        new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                                )
+                                .withBody("some_bodyRequest")
+                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
+                )
+        );
+    }
+
+    @Test
+    public void clientCanCallServerNegativeMatchBodyParameterValueOnly() {
+        // when
+        mockServerClient
+                .when(
+                        new HttpRequest()
+                                .withMethod("POST")
+                                .withPath("/some_pathRequest")
+                                .withBody(new ParameterBody(
+                                        new Parameter("bodyParameterOneName", "Parameter One Value One", "Parameter One Value Two"),
+                                        new Parameter("bodyParameterTwoName", "Parameter Two")
+                                ))
+                )
+                .respond(
+                        new HttpResponse()
+                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                                .withBody("some_bodyResponse")
+                                .withHeaders(new Header("headerNameResponse", "headerValueResponse"))
+                                .withCookies(new Cookie("cookieNameResponse", "cookieValueResponse"))
+                );
+
+        // then
+        // wrong body parameter value
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("POST")
+                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest")
+                                .withPath("/some_pathRequest")
+                                .withBody(new ParameterBody(
+                                        new Parameter("bodyParameterOneName", "Other Parameter One Value One", "Parameter One Value Two"),
+                                        new Parameter("bodyParameterTwoName", "Parameter Two")
+                                ))
+                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
+                )
+        );
+        // wrong body parameter value
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
+                makeRequest(
+                        new HttpRequest()
+                                .withMethod("POST")
+                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest")
+                                .withPath("/some_pathRequest")
+                                .withBody(new StringBody("bodyParameterOneName=Other Parameter+One+Value+One" +
+                                        "&bodyParameterOneName=Parameter+One+Value+Two" +
+                                        "&bodyParameterTwoName=Parameter+Two", Body.Type.EXACT))
+                                .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
                 )
         );
     }
@@ -1223,8 +1513,11 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withMethod("GET")
                                 .withPath("/some_path")
-                                .withQueryString("parameterName=parameterValue")
-                                .withBody("some_body")
+                                .withQueryStringParameters(
+                                        new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
+                                        new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                                )
+                                .withBody(new StringBody("some_body", Body.Type.EXACT))
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
                 )
@@ -1244,10 +1537,13 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
-                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path?parameterName=parameterValue")
+                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
                                 .withPath("/some_path")
-                                .withQueryString("parameterName=parameterValue")
-                                .withBody("some_body")
+                                .withQueryStringParameters(
+                                        new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
+                                        new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                                )
+                                .withBody(new StringBody("some_body", Body.Type.EXACT))
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieOtherName", "cookieValue"))
                 )
@@ -1259,10 +1555,13 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
-                                .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path?parameterName=parameterValue")
+                                .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
                                 .withPath("/some_path")
-                                .withQueryString("parameterName=parameterValue")
-                                .withBody("some_body")
+                                .withQueryStringParameters(
+                                        new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
+                                        new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                                )
+                                .withBody(new StringBody("some_body", Body.Type.EXACT))
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieOtherName", "cookieValue"))
                 )
@@ -1277,8 +1576,11 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withMethod("GET")
                                 .withPath("/some_path")
-                                .withQueryString("parameterName=parameterValue")
-                                .withBody("some_body")
+                                .withQueryStringParameters(
+                                        new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
+                                        new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                                )
+                                .withBody(new StringBody("some_body", Body.Type.EXACT))
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
                 )
@@ -1298,10 +1600,13 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
-                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path?parameterName=parameterValue")
+                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
                                 .withPath("/some_path")
-                                .withQueryString("parameterName=parameterValue")
-                                .withBody("some_body")
+                                .withQueryStringParameters(
+                                        new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
+                                        new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                                )
+                                .withBody(new StringBody("some_body", Body.Type.EXACT))
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieOtherValue"))
                 )
@@ -1313,10 +1618,13 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
-                                .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path?parameterName=parameterValue")
+                                .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
                                 .withPath("/some_path")
-                                .withQueryString("parameterName=parameterValue")
-                                .withBody("some_body")
+                                .withQueryStringParameters(
+                                        new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
+                                        new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                                )
+                                .withBody(new StringBody("some_body", Body.Type.EXACT))
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieOtherValue"))
                 )
@@ -1331,8 +1639,11 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withMethod("GET")
                                 .withPath("/some_path")
-                                .withQueryString("parameterName=parameterValue")
-                                .withBody("some_body")
+                                .withQueryStringParameters(
+                                        new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
+                                        new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                                )
+                                .withBody(new StringBody("some_body", Body.Type.EXACT))
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
                 )
@@ -1352,10 +1663,13 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
-                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path?parameterName=parameterValue")
+                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
                                 .withPath("/some_path")
-                                .withQueryString("parameterName=parameterValue")
-                                .withBody("some_body")
+                                .withQueryStringParameters(
+                                        new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
+                                        new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                                )
+                                .withBody(new StringBody("some_body", Body.Type.EXACT))
                                 .withHeaders(new Header("headerOtherName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
                 )
@@ -1367,10 +1681,13 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
-                                .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path?parameterName=parameterValue")
+                                .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
                                 .withPath("/some_path")
-                                .withQueryString("parameterName=parameterValue")
-                                .withBody("some_body")
+                                .withQueryStringParameters(
+                                        new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
+                                        new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                                )
+                                .withBody(new StringBody("some_body", Body.Type.EXACT))
                                 .withHeaders(new Header("headerOtherName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
                 )
@@ -1385,8 +1702,11 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withMethod("GET")
                                 .withPath("/some_path")
-                                .withQueryString("parameterName=parameterValue")
-                                .withBody("some_body")
+                                .withQueryStringParameters(
+                                        new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
+                                        new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                                )
+                                .withBody(new StringBody("some_body", Body.Type.EXACT))
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
                 )
@@ -1406,10 +1726,13 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
-                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path?parameterName=parameterValue")
+                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
                                 .withPath("/some_path")
-                                .withQueryString("parameterName=parameterValue")
-                                .withBody("some_body")
+                                .withQueryStringParameters(
+                                        new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
+                                        new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                                )
+                                .withBody(new StringBody("some_body", Body.Type.EXACT))
                                 .withHeaders(new Header("headerName", "headerOtherValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
                 )
@@ -1421,10 +1744,13 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
-                                .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path?parameterName=parameterValue")
+                                .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
                                 .withPath("/some_path")
-                                .withQueryString("parameterName=parameterValue")
-                                .withBody("some_body")
+                                .withQueryStringParameters(
+                                        new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
+                                        new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                                )
+                                .withBody(new StringBody("some_body", Body.Type.EXACT))
                                 .withHeaders(new Header("headerName", "headerOtherValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
                 )
@@ -1563,11 +1889,13 @@ public abstract class AbstractClientServerIntegrationTest {
 
     protected HttpResponse makeRequest(HttpRequest httpRequest) {
         HttpResponse httpResponse = apacheHttpClient.sendRequest(httpRequest);
-        for (Header header : new ArrayList<Header>(httpResponse.getHeaders())) {
-            if (header.getName().equals("Server") || header.getName().equals("Expires") || header.getName().equals("Date")) {
-                httpResponse.getHeaders().remove(header);
+        List<Header> headers = new ArrayList<Header>();
+        for (Header header : httpResponse.getHeaders()) {
+            if (!(header.getName().equals("Server") || header.getName().equals("Expires") || header.getName().equals("Date") || header.getName().equals("Connection"))) {
+                headers.add(header);
             }
         }
+        httpResponse.withHeaders(headers);
         return httpResponse;
     }
 }

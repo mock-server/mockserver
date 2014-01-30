@@ -2,6 +2,7 @@ package org.mockserver.model;
 
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.Collection;
 
 import static org.junit.Assert.assertEquals;
@@ -24,18 +25,14 @@ public class HttpRequestTest {
     }
 
     @Test
-    public void returnsQueryString() {
-        assertEquals("name=value", new HttpRequest().withQueryString("name=value").getQueryString());
-    }
-
-    @Test
-    public void returnsParameters() {
-        assertEquals(new Parameter("name", "value"), new HttpRequest().withParameters(new Parameter("name", "value")).getParameters().get(0));
+    public void returnsQueryStringParameters() {
+        HttpRequest httpRequest = new HttpRequest().withQueryStringParameter(new Parameter("name", "value"));
+        assertEquals(Arrays.asList(new Parameter("name", "value")), httpRequest.getQueryStringParameters());
     }
 
     @Test
     public void returnsBody() {
-        assertEquals("somebody", new HttpRequest().withBody("somebody").getBody());
+        assertEquals(new StringBody("somebody", Body.Type.EXACT), new HttpRequest().withBody(new StringBody("somebody", Body.Type.EXACT)).getBody());
     }
 
     @Test

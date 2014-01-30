@@ -5,8 +5,8 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockserver.mappers.HttpServerRequestMapper;
-import org.mockserver.mappers.HttpServerResponseMapper;
+import org.mockserver.mappers.VertXToMockServerRequestMapper;
+import org.mockserver.mappers.MockServerToVertXResponseMapper;
 import org.mockserver.mappers.vertx.HttpClientRequestMapper;
 import org.mockserver.mappers.vertx.HttpClientResponseMapper;
 import org.mockserver.model.Header;
@@ -37,11 +37,11 @@ public class ProxyVerticalTest {
 
     // mappers
     @Mock
-    private HttpServerRequestMapper httpServerRequestMapper;
+    private VertXToMockServerRequestMapper vertXToMockServerRequestMapper;
     @Mock
     private HttpClientRequestMapper httpClientRequestMapper;
     @Mock
-    private HttpServerResponseMapper httpServerResponseMapper;
+    private MockServerToVertXResponseMapper mockServerToVertXResponseMapper;
     @Mock
     private HttpClientResponseMapper httpClientResponseMapper;
     // request & response
@@ -75,7 +75,7 @@ public class ProxyVerticalTest {
         httpResponse = new HttpResponse();
 
         // mappers
-        when(httpServerRequestMapper.mapHttpServerRequestToHttpRequest(any(MockHttpServerRequest.class), (byte[]) any())).thenReturn(httpRequest);
+        when(vertXToMockServerRequestMapper.mapVertXRequestToMockServerRequest(any(MockHttpServerRequest.class), (byte[]) any())).thenReturn(httpRequest);
         when(httpClientResponseMapper.mapHttpClientResponseToHttpResponse(any(HttpClientResponse.class), (byte[]) any())).thenReturn(httpResponse);
 
         // vertx
@@ -99,7 +99,7 @@ public class ProxyVerticalTest {
         clientHandlerArgumentCaptor.getValue().handle(mockHttpClientResponse);
 
         // then
-        verify(httpServerResponseMapper).mapHttpResponseToHttpServerResponse(any(HttpResponse.class), httpServerResponseArgumentCaptor.capture());
+        verify(mockServerToVertXResponseMapper).mapMockServerResponseToVertXResponse(any(HttpResponse.class), httpServerResponseArgumentCaptor.capture());
         assertEquals(mockHttpServerRequest.response(), httpServerResponseArgumentCaptor.getValue());
         verify(httpClientRequestMapper).mapHttpRequestToHttpClientRequest(httpRequestArgumentCaptor.capture(), same(mockHttpClientRequest));
         assertEquals(httpRequest, httpRequestArgumentCaptor.getValue());

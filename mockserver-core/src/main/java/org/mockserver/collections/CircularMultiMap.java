@@ -52,7 +52,11 @@ public class CircularMultiMap<K, V> implements Map<K, V> {
     }
 
     public synchronized List<V> getAll(Object key) {
-        return backingMap.get(key);
+        List<V> values = backingMap.get(key);
+        if (values == null) {
+            values = new ArrayList<V>();
+        }
+        return values;
     }
 
     @Override

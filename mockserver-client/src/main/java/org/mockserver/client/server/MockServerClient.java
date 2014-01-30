@@ -136,7 +136,82 @@ public class MockServerClient {
     }
 
     protected void sendExpectation(Expectation expectation) {
-        apacheHttpClient.sendPUTRequest(uriBase, "/", expectation != null ? expectationSerializer.serialize(expectation) : "");
+        apacheHttpClient.sendPUTRequest(uriBase, "/expectation", expectation != null ? expectationSerializer.serialize(expectation) : "");
     }
 
+    /**
+     * Verify a request has been sent for example:
+     *
+     *   mockServerClient
+     *           .verify(
+     *                   request()
+     *                           .withPath("/some_path")
+     *                           .withBody("some_request_body")
+     *           );
+     *
+     * @param httpRequest the http request that must be matched for this verification to pass
+     * @throws AssertionError if the request has not been found
+     */
+    public MockServerClient verify(HttpRequest httpRequest) throws AssertionError {
+        return verify(httpRequest, org.mockserver.client.proxy.Times.atLeast(1));
+    }
+
+    /**
+     * Verify a request has been sent for example:
+     *
+     *   mockServerClient
+     *           .verify(
+     *                   request()
+     *                           .withPath("/some_path")
+     *                           .withBody("some_request_body"),
+     *                   Times.exactly(3)
+     *           );
+     *
+     * @param httpRequest the http request that must be matched for this verification to pass
+     * @param times the number of times this request must be matched
+     * @throws AssertionError if the request has not been found
+     */
+    public MockServerClient verify(HttpRequest httpRequest, org.mockserver.client.proxy.Times times) throws AssertionError {
+        if (httpRequest == null) throw new IllegalArgumentException("verify(HttpRequest) requires a non null HttpRequest object");
+
+        Expectation[] expectations = retrieveAsExpectations(httpRequest);
+        if (expectations == null) {
+            throw new AssertionError("Expected " + httpRequestSerializer.serialize(httpRequest) + butFoundAssertionErrorMessage());
+        }
+        if (times.isExact()) {
+            if (expectations.length != times.getCount()) {
+                throw new AssertionError("Expected " + httpRequestSerializer.serialize(httpRequest) + butFoundAssertionErrorMessage());
+            }
+        } else {
+            if (expectations.length < times.getCount()) {
+                throw new AssertionError("Expected " + httpRequestSerializer.serialize(httpRequest) + butFoundAssertionErrorMessage());
+            }
+        }
+        return this;
+    }
+
+    private String butFoundAssertionErrorMessage() {
+        String allRequests = apacheHttpClient.sendPUTRequest(uriBase, "/retrieve", "");
+        return " but " + (StringUtils.isNotEmpty(allRequests) ? "only found " + allRequests : "found no requests");
+    }
+
+    /**
+     * Retrieve the recorded requests that match the httpRequest parameter as expectations, use null for the parameter to retrieve all requests
+     *
+     * @param httpRequest the http request that is matched against when deciding whether to return each expectation, use null for the parameter to retrieve for all requests
+     * @return an array of all expectations that have been recorded by the proxy
+     */
+    public Expectation[] retrieveAsExpectations(HttpRequest httpRequest) {
+        return expectationSerializer.deserializeArray(apacheHttpClient.sendPUTRequest(uriBase, "/retrieve", (httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "")));
+    }
+
+    /**
+     * Retrieve the recorded requests that match the httpRequest parameter as a JSON array, use null for the parameter to retrieve all requests
+     *
+     * @param httpRequest the http request that is matched against when deciding whether to return each expectation, use null for the parameter to retrieve for all requests
+     * @return a JSON array of all expectations that have been recorded by the proxy
+     */
+    public String retrieveAsJSON(HttpRequest httpRequest) {
+        return apacheHttpClient.sendPUTRequest(uriBase, "/retrieve", (httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : ""));
+    }
 }

@@ -1,10 +1,9 @@
 package org.mockserver.model;
 
 import org.apache.commons.io.Charsets;
+import org.mockserver.client.serialization.ObjectMapperFactory;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author jamesdbloom
@@ -12,8 +11,8 @@ import java.util.List;
 public class HttpResponse extends EqualsHashCodeToString {
     private Integer statusCode = 200;
     private byte[] body = new byte[0];
-    private List<Cookie> cookies = new ArrayList<Cookie>();
-    private List<Header> headers = new ArrayList<Header>();
+    private Map<String, Header> headers = new LinkedHashMap<String, Header>();
+    private Map<String, Cookie> cookies = new LinkedHashMap<String, Cookie>();
     private Delay delay;
 
     public HttpResponse() {
@@ -62,32 +61,12 @@ public class HttpResponse extends EqualsHashCodeToString {
         return body;
     }
 
+    public int getContentLength() {
+        return body.length;
+    }
+
     public String getBodyAsString() {
         return new String(body, Charsets.UTF_8);
-    }
-
-    /**
-     * The cookies to return as Set-Cookie headers as a list of Cookie objects
-     *
-     * @param cookies a list of Cookie objects
-     */
-    public HttpResponse withCookies(List<Cookie> cookies) {
-        this.cookies = cookies;
-        return this;
-    }
-
-    /**
-     * The cookies to return as Set-Cookie headers as a varargs of Cookie objects
-     *
-     * @param cookies a varargs of Cookie objects
-     */
-    public HttpResponse withCookies(Cookie... cookies) {
-        this.cookies = Arrays.asList(cookies);
-        return this;
-    }
-
-    public List<Cookie> getCookies() {
-        return cookies;
     }
 
     /**
@@ -96,7 +75,10 @@ public class HttpResponse extends EqualsHashCodeToString {
      * @param headers a list of Header objects
      */
     public HttpResponse withHeaders(List<Header> headers) {
-        this.headers = headers;
+        this.headers.clear();
+        for (Header header : headers) {
+            withHeader(header);
+        }
         return this;
     }
 
@@ -106,12 +88,67 @@ public class HttpResponse extends EqualsHashCodeToString {
      * @param headers a varargs of Header objects
      */
     public HttpResponse withHeaders(Header... headers) {
-        this.headers = Arrays.asList(headers);
+        withHeaders(Arrays.asList(headers));
+        return this;
+    }
+
+    /**
+     * A header to return as a Header objects
+     *
+     * @param header a Header objects
+     */
+    public HttpResponse withHeader(Header header) {
+        if (this.headers.containsKey(header.getName())) {
+            this.headers.get(header.getName()).addValues(header.getValues());
+        } else {
+            this.headers.put(header.getName(), header);
+        }
         return this;
     }
 
     public List<Header> getHeaders() {
-        return headers;
+        return new ArrayList<Header>(headers.values());
+    }
+
+    /**
+     * The cookies to return as Set-Cookie headers as a list of Cookie objects
+     *
+     * @param cookies a list of Cookie objects
+     */
+    public HttpResponse withCookies(List<Cookie> cookies) {
+        this.cookies.clear();
+        for (Cookie cookie : cookies) {
+            withCookie(cookie);
+        }
+        return this;
+    }
+
+    /**
+     * The cookies to return as Set-Cookie headers as a varargs of Cookie objects
+     *
+     * @param cookies a varargs of Cookie objects
+     */
+    public HttpResponse withCookies(Cookie... cookies) {
+        withCookies(Arrays.asList(cookies));
+        return this;
+    }
+
+    /**
+     * Add cookie to return as Set-Cookie header
+     *
+     * @param cookie a Cookie object
+     */
+    public HttpResponse withCookie(Cookie cookie) {
+        if (this.cookies.containsKey(cookie.getName())) {
+            this.cookies.get(cookie.getName()).addValues(cookie.getValues());
+        } else {
+            this.cookies.put(cookie.getName(), cookie);
+        }
+        return this;
+    }
+
+    public List<Cookie> getCookies() {
+        return new ArrayList<Cookie>(cookies.values());
     }
 
     /**
@@ -133,6 +170,18 @@ public class HttpResponse extends EqualsHashCodeToString {
             delay.applyDelay();
         }
         return this;
+    }
+
+    @Override
+    public String toString() {
+        try {
+            return ObjectMapperFactory
+                    .createObjectMapper()
+                    .writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(this);
+        } catch (Exception e) {
+            return super.toString();
+        }
     }
 }
 

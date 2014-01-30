@@ -1,7 +1,6 @@
 package org.mockserver.model;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
+import org.mockserver.collections.CaseInsensitiveRegexMultiMap;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,17 +27,19 @@ public class KeyToMultiValue extends EqualsHashCodeToString {
         }
     }
 
-    public static Multimap<String, String> toMultiMap(List<? extends KeyToMultiValue> keyToMultiValues) {
-        Multimap<String, String> headersMap = HashMultimap.create();
-        for (KeyToMultiValue keyToMultiValue : keyToMultiValues) {
-            for (String value : keyToMultiValue.getValues()) {
-                headersMap.put(keyToMultiValue.getName(), value);
+    public static CaseInsensitiveRegexMultiMap toMultiMap(List<? extends KeyToMultiValue> keyToMultiValues) {
+        CaseInsensitiveRegexMultiMap caseInsensitiveRegexMultiMap = new CaseInsensitiveRegexMultiMap();
+        if (keyToMultiValues != null) {
+            for (KeyToMultiValue keyToMultiValue : keyToMultiValues) {
+                for (String value : keyToMultiValue.getValues()) {
+                    caseInsensitiveRegexMultiMap.put(keyToMultiValue.getName(), value);
+                }
             }
         }
-        return headersMap;
+        return caseInsensitiveRegexMultiMap;
     }
 
-    public static Multimap<String, String> toMultiMap(KeyToMultiValue... keyToMultiValues) {
+    public static CaseInsensitiveRegexMultiMap toMultiMap(KeyToMultiValue... keyToMultiValues) {
         return toMultiMap(Arrays.asList(keyToMultiValues));
     }
 
@@ -48,5 +49,17 @@ public class KeyToMultiValue extends EqualsHashCodeToString {
 
     public List<String> getValues() {
         return values;
+    }
+
+    public void addValue(String value) {
+        if (values != null && !values.contains(value)) {
+            values.add(value);
+        }
+    }
+
+    public void addValues(List<String> values) {
+        if (this.values != null) {
+            this.values.addAll(values);
+        }
     }
 }

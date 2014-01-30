@@ -1,14 +1,8 @@
 package org.mockserver.client.serialization;
 
 import org.junit.Test;
-import org.mockserver.client.serialization.model.CookieDTO;
-import org.mockserver.client.serialization.model.HeaderDTO;
-import org.mockserver.client.serialization.model.HttpRequestDTO;
-import org.mockserver.client.serialization.model.ParameterDTO;
-import org.mockserver.model.Cookie;
-import org.mockserver.model.Header;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.Parameter;
+import org.mockserver.client.serialization.model.*;
+import org.mockserver.model.*;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -42,27 +36,25 @@ public class HttpRequestSerializerIntegrationTest {
     public void shouldDeserializeCompleteObject() throws IOException {
         // given
         String requestBytes = ("{\n" +
-                "    \"method\": \"someMethod\",\n" +
-                "    \"url\": \"http://www.example.com\",\n" +
-                "    \"path\": \"somePath\",\n" +
-                "    \"queryString\": \"someQueryString\",\n" +
-                "    \"parameters\" : [ {\n" +
-                "        \"name\" : \"parameterName\",\n" +
-                "        \"values\" : [ \"parameterValue\" ]\n" +
-                "    } ],\n" +
-                "    \"body\": \"someBody\",\n" +
-                "    \"headers\": [\n" +
-                "        {\n" +
-                "            \"name\": \"someHeaderName\",\n" +
-                "            \"values\": [\"someHeaderValue\"]\n" +
-                "        }\n" +
-                "    ],\n" +
-                "    \"cookies\": [\n" +
-                "        {\n" +
-                "            \"name\": \"someCookieName\",\n" +
-                "            \"values\": [\"someCookieValue\"]\n" +
-                "        }\n" +
-                "    ]\n" +
+                "  \"method\" : \"someMethod\",\n" +
+                "  \"url\" : \"http://www.example.com\",\n" +
+                "  \"path\" : \"somePath\",\n" +
+                "  \"queryStringParameters\" : [ {\n" +
+                "    \"name\" : \"queryParameterName\",\n" +
+                "    \"values\" : [ \"queryParameterValue\" ]\n" +
+                "  } ],\n" +
+                "  \"body\" : {\n" +
+                "    \"type\" : \"EXACT\",\n" +
+                "    \"value\" : \"somebody\"\n" +
+                "  },\n" +
+                "  \"cookies\" : [ {\n" +
+                "    \"name\" : \"someCookieName\",\n" +
+                "    \"values\" : [ \"someCookieValue\" ]\n" +
+                "  } ],\n" +
+                "  \"headers\" : [ {\n" +
+                "    \"name\" : \"someHeaderName\",\n" +
+                "    \"values\" : [ \"someHeaderValue\" ]\n" +
+                "  } ]\n" +
                 "}");
 
         // when
@@ -73,13 +65,17 @@ public class HttpRequestSerializerIntegrationTest {
                 .setMethod("someMethod")
                 .setURL("http://www.example.com")
                 .setPath("somePath")
-                .setQueryString("someQueryString")
-                .setParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("parameterName", Arrays.asList("parameterValue")))))
-                .setBody("someBody")
+                .setQueryStringParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")))))
+                .setBody(BodyDTO.createDTO(new StringBody("somebody", Body.Type.EXACT)))
                 .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
                 .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", Arrays.asList("someCookieValue")))))
                 .buildObject(), expectation);
     }
+
+    /*
+    expected: org.mockserver.model.HttpRequest<HttpRequest[method=someMethod,url=http://www.example.com,path=somePath,queryStringParameters={queryParameterName=Parameter[name=queryParameterName,values=[queryParameterValue]]},body=somebody,headers=[Header[name=someHeaderName,values=[someHeaderValue]]],cookies=[Cookie[name=someCookieName,values=[someCookieValue]]]]>
+     but was: org.mockserver.model.HttpRequest<HttpRequest[method=someMethod,url=http://www.example.com,path=somePath,queryStringParameters={queryParameterName=Parameter[name=queryParameterName,values=[queryParameterValue]]},body=somebody,headers=[Header[name=someHeaderName,values=[someHeaderValue]]],cookies=[Cookie[name=someCookieName,values=[someCookieValue]]]]>
+     */
 
     @Test
     public void shouldDeserializePartialObject() throws IOException {
@@ -105,9 +101,8 @@ public class HttpRequestSerializerIntegrationTest {
                         .setMethod("someMethod")
                         .setURL("http://www.example.com")
                         .setPath("somePath")
-                        .setQueryString("someQueryString")
-                        .setParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("parameterName", Arrays.asList("parameterValue")))))
-                        .setBody("someBody")
+                        .setQueryStringParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")))))
+                        .setBody(BodyDTO.createDTO(new StringBody("somebody", Body.Type.EXACT)))
                         .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
                         .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", Arrays.asList("someCookieValue")))))
                         .buildObject()
@@ -118,12 +113,14 @@ public class HttpRequestSerializerIntegrationTest {
                 "  \"method\" : \"someMethod\",\n" +
                 "  \"url\" : \"http://www.example.com\",\n" +
                 "  \"path\" : \"somePath\",\n" +
-                "  \"queryString\" : \"someQueryString\",\n" +
-                "  \"parameters\" : [ {\n" +
-                "    \"name\" : \"parameterName\",\n" +
-                "    \"values\" : [ \"parameterValue\" ]\n" +
+                "  \"queryStringParameters\" : [ {\n" +
+                "    \"name\" : \"queryParameterName\",\n" +
+                "    \"values\" : [ \"queryParameterValue\" ]\n" +
                 "  } ],\n" +
-                "  \"body\" : \"someBody\",\n" +
+                "  \"body\" : {\n" +
+                "    \"type\" : \"EXACT\",\n" +
+                "    \"value\" : \"somebody\"\n" +
+                "  },\n" +
                 "  \"cookies\" : [ {\n" +
                 "    \"name\" : \"someCookieName\",\n" +
                 "    \"values\" : [ \"someCookieValue\" ]\n" +

@@ -1,9 +1,7 @@
 package org.mockserver.matchers;
 
 import org.junit.Test;
-import org.mockserver.model.Cookie;
-import org.mockserver.model.Header;
-import org.mockserver.model.HttpRequest;
+import org.mockserver.model.*;
 
 import static org.junit.Assert.assertTrue;
 
@@ -15,9 +13,9 @@ public class MatcherBuilderTest {
     private HttpRequest httpRequest = new HttpRequest()
             .withMethod("GET")
             .withPath("some_path")
-            .withQueryString("query_string")
+            .withQueryStringParameter(new Parameter("queryStringParameterName", "queryStringParameterValue"))
             .withURL("http://www.example.com")
-            .withBody("some_body")
+            .withBody(new StringBody("some_body", Body.Type.EXACT))
             .withHeaders(new Header("name", "value"))
             .withCookies(new Cookie("name", "value"));
     ;
@@ -38,9 +36,9 @@ public class MatcherBuilderTest {
                 new HttpRequest()
                         .withMethod("")
                         .withPath("some_path")
-                        .withQueryString("query_string")
+                        .withQueryStringParameter(new Parameter("queryStringParameterName", "queryStringParameterValue"))
                         .withURL("http://www.example.com")
-                        .withBody("some_body")
+                        .withBody(new StringBody("some_body", Body.Type.EXACT))
                         .withHeaders(new Header("name", "value"))
                         .withCookies(new Cookie("name", "value"))
         );
@@ -56,9 +54,9 @@ public class MatcherBuilderTest {
                 new HttpRequest()
                         .withMethod("GET")
                         .withPath("")
-                        .withQueryString("query_string")
+                        .withQueryStringParameter(new Parameter("queryStringParameterName", "queryStringParameterValue"))
                         .withURL("http://www.example.com")
-                        .withBody("some_body")
+                        .withBody(new StringBody("some_body", Body.Type.EXACT))
                         .withHeaders(new Header("name", "value"))
                         .withCookies(new Cookie("name", "value"))
         );
@@ -74,9 +72,27 @@ public class MatcherBuilderTest {
                 new HttpRequest()
                         .withMethod("GET")
                         .withPath("some_path")
-                        .withQueryString("")
+                        .withQueryStringParameters()
                         .withURL("http://www.example.com")
-                        .withBody("some_body")
+                        .withBody(new StringBody("some_body", Body.Type.EXACT))
+                        .withHeaders(new Header("name", "value"))
+                        .withCookies(new Cookie("name", "value"))
+        );
+
+        // then
+        assertTrue(httpRequestMapper.matches(httpRequest));
+    }
+
+    @Test
+    public void shouldCreateMatcherThatIgnoresBodyParameters() {
+        // when
+        HttpRequestMatcher httpRequestMapper = new MatcherBuilder().transformsToMatcher(
+                new HttpRequest()
+                        .withMethod("GET")
+                        .withPath("some_path")
+                        .withQueryStringParameter(new Parameter("queryStringParameterName", "queryStringParameterValue"))
+                        .withURL("http://www.example.com")
+                        .withBody(new ParameterBody())
                         .withHeaders(new Header("name", "value"))
                         .withCookies(new Cookie("name", "value"))
         );
@@ -92,9 +108,9 @@ public class MatcherBuilderTest {
                 new HttpRequest()
                         .withMethod("GET")
                         .withPath("some_path")
-                        .withQueryString("query_string")
+                        .withQueryStringParameter(new Parameter("queryStringParameterName", "queryStringParameterValue"))
                         .withURL("")
-                        .withBody("some_body")
+                        .withBody(new StringBody("some_body", Body.Type.EXACT))
                         .withHeaders(new Header("name", "value"))
                         .withCookies(new Cookie("name", "value"))
         );
@@ -110,9 +126,9 @@ public class MatcherBuilderTest {
                 new HttpRequest()
                         .withMethod("GET")
                         .withPath("some_path")
-                        .withQueryString("query_string")
+                        .withQueryStringParameter(new Parameter("queryStringParameterName", "queryStringParameterValue"))
                         .withURL("http://www.example.com")
-                        .withBody("")
+                        .withBody(new StringBody("", Body.Type.EXACT))
                         .withHeaders(new Header("name", "value"))
                         .withCookies(new Cookie("name", "value"))
         );
@@ -128,9 +144,9 @@ public class MatcherBuilderTest {
                 new HttpRequest()
                         .withMethod("GET")
                         .withPath("some_path")
-                        .withQueryString("query_string")
+                        .withQueryStringParameter(new Parameter("queryStringParameterName", "queryStringParameterValue"))
                         .withURL("http://www.example.com")
-                        .withBody("some_body")
+                        .withBody(new StringBody("some_body", Body.Type.EXACT))
                         .withHeaders()
                         .withCookies(new Cookie("name", "value"))
         );
@@ -146,9 +162,9 @@ public class MatcherBuilderTest {
                 new HttpRequest()
                         .withMethod("GET")
                         .withPath("some_path")
-                        .withQueryString("query_string")
+                        .withQueryStringParameter(new Parameter("queryStringParameterName", "queryStringParameterValue"))
                         .withURL("http://www.example.com")
-                        .withBody("some_body")
+                        .withBody(new StringBody("some_body", Body.Type.EXACT))
                         .withHeaders(new Header("name", "value"))
                         .withCookies()
         );

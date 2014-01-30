@@ -38,33 +38,33 @@ public class AssertTest {
 
     @Test
     public void shouldNotFailWhenListsMatch() {
-        assertSameListEntries(Arrays.asList("1", "2", "3"), Arrays.asList("1", "2", "3"));
-        assertSameListEntries(Arrays.asList("2", "1", "3"), Arrays.asList("1", "2", "3"));
-        assertSameListEntries(Arrays.asList("3", "2", "1"), Arrays.asList("1", "2", "3"));
+        assertSameEntries(Arrays.asList("1", "2", "3"), Arrays.asList("1", "2", "3"));
+        assertSameEntries(Arrays.asList("2", "1", "3"), Arrays.asList("1", "2", "3"));
+        assertSameEntries(Arrays.asList("3", "2", "1"), Arrays.asList("1", "2", "3"));
     }
 
     @Test(expected = AssertionError.class)
     public void shouldFailWhenSecondListLarger() {
-        assertSameListEntries(Arrays.asList("1", "2", "3"), Arrays.asList("1", "2", "3", "4"));
+        assertSameEntries(Arrays.asList("1", "2", "3"), Arrays.asList("1", "2", "3", "4"));
     }
 
     @Test(expected = AssertionError.class)
     public void shouldFailWhenFirstListLarger() {
-        assertSameListEntries(Arrays.asList("1", "2", "3", "4"), Arrays.asList("1", "2", "3"));
+        assertSameEntries(Arrays.asList("1", "2", "3", "4"), Arrays.asList("1", "2", "3"));
     }
 
     @Test(expected = AssertionError.class)
     public void shouldFailWhenListsHaveOneDifferentEntry() {
-        assertSameListEntries(Arrays.asList("1", "2", "3"), Arrays.asList("1", "2", "4"));
+        assertSameEntries(Arrays.asList("1", "2", "3"), Arrays.asList("1", "2", "4"));
     }
 
     @Test(expected = AssertionError.class)
     public void shouldFailWhenListsHaveMultipleDifferentEntry() {
-        assertSameListEntries(Arrays.asList("a", "b", "c"), Arrays.asList("1", "2", "3"));
+        assertSameEntries(Arrays.asList("a", "b", "c"), Arrays.asList("1", "2", "3"));
     }
 
     @Test(expected = AssertionError.class)
     public void shouldFailWhenListSameSizeButDifferentNumberOfEachEntry() {
-        assertSameListEntries(Arrays.asList("2", "2", "2"), Arrays.asList("2", "2", "1"));
+        assertSameEntries(Arrays.asList("2", "2", "2"), Arrays.asList("2", "2", "1"));
     }
 }

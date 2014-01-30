@@ -6,8 +6,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
-import org.mockserver.mappers.HttpServletRequestMapper;
-import org.mockserver.mappers.HttpServletResponseMapper;
+import org.mockserver.mappers.HttpServletToMockServerRequestMapper;
+import org.mockserver.mappers.MockServerToHttpServletResponseMapper;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.MockServer;
@@ -32,9 +32,9 @@ public class MockServerServletTest {
     @Mock
     private MockServer mockServer;
     @Mock
-    private HttpServletRequestMapper httpServletRequestMapper;
+    private HttpServletToMockServerRequestMapper httpServletToMockServerRequestMapper;
     @Mock
-    private HttpServletResponseMapper httpServletResponseMapper;
+    private MockServerToHttpServletResponseMapper mockServerToHttpServletResponseMapper;
     @Mock
     private ExpectationSerializer expectationSerializer;
     @Mock
@@ -58,19 +58,19 @@ public class MockServerServletTest {
         MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("GET", "somepath");
 
         when(mockServer.handle(httpRequest)).thenReturn(httpResponse);
-        when(httpServletRequestMapper.mapHttpServletRequestToHttpRequest(httpServletRequest)).thenReturn(httpRequest);
+        when(httpServletToMockServerRequestMapper.mapHttpServletRequestToMockServerRequest(httpServletRequest)).thenReturn(httpRequest);
 
         // when
         mockServerServlet.doGet(httpServletRequest, httpServletResponse);
 
         // then
-        verify(httpServletResponseMapper).mapHttpResponseToHttpServletResponse(httpResponse, httpServletResponse);
+        verify(mockServerToHttpServletResponseMapper).mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
     }
 
     @Test
     public void setupExpectation() throws IOException {
         // given
-        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest();
+        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/expectation");
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
         HttpRequest httpRequest = mock(HttpRequest.class);
         Times times = mock(Times.class);
@@ -93,7 +93,7 @@ public class MockServerServletTest {
     public void setupExpectationFromJSONWithAllDefault() throws IOException {
         // given
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest();
+        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/expectation");
         String jsonExpectation = "{" +
                 "    \"httpRequest\": {" +
                 "        \"method\": \"\", " +
@@ -130,7 +130,7 @@ public class MockServerServletTest {
     public void setupExpectationFromJSONWithAllEmpty() throws IOException {
         // given
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest();
+        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/expectation");
         String jsonExpectation = "{" +
                 "    \"httpRequest\": { }," +
                 "    \"httpResponse\": { }," +
@@ -149,7 +149,7 @@ public class MockServerServletTest {
     public void setupExpectationFromJSONWithPartiallyEmptyFields() throws IOException {
         // given
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest();
+        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/expectation");
         String jsonExpectation = "{" +
                 "    \"httpRequest\": {" +
                 "        \"path\": \"\"" +
@@ -187,7 +187,7 @@ public class MockServerServletTest {
 
         // then
         verify(mockServer).clear(httpRequest);
-        verifyNoMoreInteractions(httpServletRequestMapper);
+        verifyNoMoreInteractions(httpServletToMockServerRequestMapper);
     }
 
     @Test
@@ -206,7 +206,7 @@ public class MockServerServletTest {
 
         // then
         verify(mockServer).reset();
-        verifyNoMoreInteractions(httpServletRequestMapper);
+        verifyNoMoreInteractions(httpServletToMockServerRequestMapper);
     }
 
     @Test
@@ -226,6 +226,6 @@ public class MockServerServletTest {
         // then
         verify(httpRequestSerializer).deserialize(requestBytes);
         verify(mockServer).dumpToLog(httpRequest);
-        verifyNoMoreInteractions(httpServletRequestMapper);
+        verifyNoMoreInteractions(httpServletToMockServerRequestMapper);
     }
 }

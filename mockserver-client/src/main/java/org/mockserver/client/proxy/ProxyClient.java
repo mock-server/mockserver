@@ -11,7 +11,7 @@ import org.mockserver.model.HttpRequest;
  * @author jamesdbloom
  */
 public class ProxyClient {
-    private final String uri;
+    private final String uriBase;
     private ApacheHttpClient apacheHttpClient;
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
@@ -25,7 +25,7 @@ public class ProxyClient {
      * @param port the port for the proxy to communicate with
      */
     public ProxyClient(String host, int port) {
-        uri = "http://" + host + ":" + port;
+        uriBase = "http://" + host + ":" + port;
         apacheHttpClient = new ApacheHttpClient();
     }
 
@@ -44,7 +44,7 @@ public class ProxyClient {
      * @param httpRequest the http request that is matched against when deciding what to log if null all requests are logged
      */
     public ProxyClient dumpToLogAsJSON(HttpRequest httpRequest) {
-        apacheHttpClient.sendPUTRequest(uri, "/dumpToLog", httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "");
+        apacheHttpClient.sendPUTRequest(uriBase, "/dumpToLog", httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "");
         return this;
     }
 
@@ -63,7 +63,7 @@ public class ProxyClient {
      * @param httpRequest the http request that is matched against when deciding what to log if null all requests are logged
      */
     public ProxyClient dumpToLogAsJava(HttpRequest httpRequest) {
-        apacheHttpClient.sendPUTRequest(uri, "/dumpToLog?type=java", httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "");
+        apacheHttpClient.sendPUTRequest(uriBase, "/dumpToLog?type=java", httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "");
         return this;
     }
 
@@ -71,7 +71,7 @@ public class ProxyClient {
      * Reset the proxy by clearing recorded requests
      */
     public ProxyClient reset() {
-        apacheHttpClient.sendPUTRequest(uri, "/reset", "");
+        apacheHttpClient.sendPUTRequest(uriBase, "/reset", "");
         return this;
     }
 
@@ -81,7 +81,7 @@ public class ProxyClient {
      * @param httpRequest the http request that is matched against when deciding whether to clear recorded requests
      */
     public ProxyClient clear(HttpRequest httpRequest) {
-        apacheHttpClient.sendPUTRequest(uri, "/clear", httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "");
+        apacheHttpClient.sendPUTRequest(uriBase, "/clear", httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "");
         return this;
     }
 
@@ -137,7 +137,7 @@ public class ProxyClient {
     }
 
     private String butFoundAssertionErrorMessage() {
-        String allRequests = apacheHttpClient.sendPUTRequest(uri, "/retrieve", "");
+        String allRequests = apacheHttpClient.sendPUTRequest(uriBase, "/retrieve", "");
         return " but " + (StringUtils.isNotEmpty(allRequests) ? "only found " + allRequests : "found no requests");
     }
 
@@ -148,7 +148,7 @@ public class ProxyClient {
      * @return an array of all expectations that have been recorded by the proxy
      */
     public Expectation[] retrieveAsExpectations(HttpRequest httpRequest) {
-        return expectationSerializer.deserializeArray(apacheHttpClient.sendPUTRequest(uri, "/retrieve", (httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "")));
+        return expectationSerializer.deserializeArray(apacheHttpClient.sendPUTRequest(uriBase, "/retrieve", (httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "")));
     }
 
     /**
@@ -158,6 +158,6 @@ public class ProxyClient {
      * @return a JSON array of all expectations that have been recorded by the proxy
      */
     public String retrieveAsJSON(HttpRequest httpRequest) {
-        return apacheHttpClient.sendPUTRequest(uri, "/retrieve", (httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : ""));
+        return apacheHttpClient.sendPUTRequest(uriBase, "/retrieve", (httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : ""));
     }
 }

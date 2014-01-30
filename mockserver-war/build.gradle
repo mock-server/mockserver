@@ -4,18 +4,19 @@ dependencies {
     // http
     providedCompile "javax.servlet:javax.servlet-api:$servletVersion"
 
-    // commons & guava
-    compile "com.google.guava:guava:$guavaVersion"
-
     // logging
     compile "org.slf4j:slf4j-api:$slf4jVersion"
     runtime "ch.qos.logback:logback-classic:$logbackClassicVersion"
 
+    // Tomcat Server (integration testing)
+    testCompile "org.apache.tomcat.embed:tomcat-embed-core:$tomcatVersion"
+    testCompile "org.apache.tomcat.embed:tomcat-embed-logging-juli:$tomcatVersion"
+
     // test
     testCompile "junit:junit:$junitVersion"
     testCompile "org.mockito:mockito-all:$mockitoAllVersion"
+
+    // integration testing
     testCompile "org.springframework:spring-test:$springVersion"
-    testCompile "org.apache.tomcat.embed:tomcat-embed-core:$tomcatVersion"
-    testCompile "org.apache.tomcat.embed:tomcat-embed-logging-juli:$tomcatVersion"
 }
 

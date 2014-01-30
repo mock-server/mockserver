@@ -1,10 +1,7 @@
 package org.mockserver.matchers;
 
 import org.junit.Test;
-import org.mockserver.model.Cookie;
-import org.mockserver.model.Header;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.Parameter;
+import org.mockserver.model.*;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -31,89 +28,161 @@ public class HttpRequestMatcherTest {
 
     @Test
     public void doesNotMatchIncorrectPathRegex() {
-        assertFalse(new HttpRequestMatcher().withQueryString("someP[a-z]{2}").matches(new HttpRequest().withQueryString("somePath")));
+        assertFalse(new HttpRequestMatcher().withPath("someP[a-z]{2}").matches(new HttpRequest().withPath("somePath")));
     }
 
     @Test
     public void matchesMatchingQueryString() {
-        assertTrue(new HttpRequestMatcher().withQueryString("someQueryString").matches(new HttpRequest().withQueryString("someQueryString")));
+        assertTrue(new HttpRequestMatcher().withQueryStringParameters(new Parameter("someKey", "someValue")).matches(new HttpRequest().withQueryStringParameter(new Parameter("someKey", "someValue"))));
     }
 
     @Test
-    public void matchesMatchingQueryStringRegex() {
-        assertTrue(new HttpRequestMatcher().withQueryString("someQueryS[a-z]{5}").matches(new HttpRequest().withQueryString("someQueryString")));
+    public void matchesMatchingQueryStringRegexKeyAndValue() {
+        assertTrue(new HttpRequestMatcher().withQueryStringParameters(new Parameter("someK[a-z]{2}", "someV[a-z]{4}")).matches(new HttpRequest().withQueryStringParameter(new Parameter("someKey", "someValue"))));
     }
 
     @Test
-    public void doesNotMatchIncorrectQueryString() {
-        assertFalse(new HttpRequestMatcher().withQueryString("someQueryString").matches(new HttpRequest().withQueryString("someStringQuery")));
+    public void matchesMatchingQueryStringRegexKey() {
+        assertTrue(new HttpRequestMatcher().withQueryStringParameters(new Parameter("someK[a-z]{2}", "someValue")).matches(new HttpRequest().withQueryStringParameter(new Parameter("someKey", "someValue"))));
     }
 
     @Test
-    public void doesNotMatchIncorrectQueryStringRegex() {
-        assertFalse(new HttpRequestMatcher().withQueryString("someQueryS[a-z]{4}").matches(new HttpRequest().withQueryString("someStringQuery")));
+    public void matchesMatchingQueryStringRegexValue() {
+        assertTrue(new HttpRequestMatcher().withQueryStringParameters(new Parameter("someKey", "someV[a-z]{4}")).matches(new HttpRequest().withQueryStringParameter(new Parameter("someKey", "someValue"))));
     }
 
     @Test
-    public void matchesMatchingParameters() {
-        assertTrue(new HttpRequestMatcher().withParameters(new Parameter("name", "value")).matches(new HttpRequest().withParameters(new Parameter("name", "value"))));
+    public void doesNotMatchIncorrectQueryStringName() {
+        assertFalse(new HttpRequestMatcher().withQueryStringParameters(new Parameter("someKey", "someValue")).matches(new HttpRequest().withQueryStringParameter(new Parameter("someOtherKey", "someValue"))));
     }
 
     @Test
-    public void matchesMatchingParametersWithRegex() {
-        assertTrue(new HttpRequestMatcher().withParameters(new Parameter("name", "v[a-z]{4}")).matches(new HttpRequest().withParameters(new Parameter("name", "value"))));
+    public void doesNotMatchIncorrectQueryStringValue() {
+        assertFalse(new HttpRequestMatcher().withQueryStringParameters(new Parameter("someKey", "someValue")).matches(new HttpRequest().withQueryStringParameter(new Parameter("someKey", "someOtherValue"))));
     }
 
     @Test
-    public void parametersMatchesMatchingQueryString() {
-        assertTrue(new HttpRequestMatcher().withParameters(new Parameter("nameOne", "valueOne")).matches(new HttpRequest().withQueryString("nameOne=valueOne&nameTwo=valueTwo")));
-        assertTrue(new HttpRequestMatcher().withParameters(new Parameter("nameTwo", "valueTwo")).matches(new HttpRequest().withQueryString("nameOne=valueOne&nameTwo=valueTwo")));
-        assertTrue(new HttpRequestMatcher().withParameters(new Parameter("nameTwo", "valueTwo", "valueThree")).matches(new HttpRequest().withQueryString("nameOne=valueOne&nameTwo=valueTwo&nameTwo=valueThree")));
-        assertTrue(new HttpRequestMatcher().withParameters(new Parameter("nameTwo", "valueTwo")).matches(new HttpRequest().withQueryString("nameOne=valueOne&nameTwo=valueTwo&nameTwo=valueThree")));
-        assertTrue(new HttpRequestMatcher().withParameters(new Parameter("nameTwo", "valueThree")).matches(new HttpRequest().withQueryString("nameOne=valueOne&nameTwo=valueTwo&nameTwo=valueThree")));
-        assertTrue(new HttpRequestMatcher().withParameters(new Parameter("nameTwo", "valueT[a-z]{0,10}")).matches(new HttpRequest().withQueryString("nameOne=valueOne&nameTwo=valueTwo&nameTwo=valueThree")));
+    public void doesNotMatchIncorrectQueryStringRegexKeyAndValue() {
+        assertFalse(new HttpRequestMatcher().withQueryStringParameters(new Parameter("someK[a-z]{5}", "someV[a-z]{2}")).matches(new HttpRequest().withQueryStringParameter(new Parameter("someKey", "someValue"))));
     }
 
     @Test
-    public void parametersDoNotMatchIncorrectMatchingQueryString() {
-        assertFalse(new HttpRequestMatcher().withParameters(new Parameter("nameOne", "valueOne", "valueTwo")).matches(new HttpRequest().withQueryString("nameOne=valueOne&nameTwo=valueTwo")));
-        assertFalse(new HttpRequestMatcher().withParameters(new Parameter("nameOne", "valueOne")).matches(new HttpRequest().withQueryString("nameOne=otherValue&nameTwo=valueTwo")));
-        assertFalse(new HttpRequestMatcher().withParameters(new Parameter("nameTwo", "valueTwo")).matches(new HttpRequest().withQueryString("nameOne=valueOne")));
+    public void doesNotMatchIncorrectQueryStringRegexKey() {
+        assertFalse(new HttpRequestMatcher().withQueryStringParameters(new Parameter("someK[a-z]{5}", "someValue")).matches(new HttpRequest().withQueryStringParameter(new Parameter("someKey", "someValue"))));
+    }
+
+    @Test
+    public void doesNotMatchIncorrectQueryStringRegexValue() {
+        assertFalse(new HttpRequestMatcher().withQueryStringParameters(new Parameter("someKey", "someV[a-z]{2}")).matches(new HttpRequest().withQueryStringParameter(new Parameter("someKey", "someValue"))));
+    }
+
+    @Test
+    public void matchesMatchingQueryStringParameters() {
+        assertTrue(new HttpRequestMatcher().withQueryStringParameters(new Parameter("name", "value")).matches(new HttpRequest().withQueryStringParameters(new Parameter("name", "value"))));
+    }
+
+    @Test
+    public void matchesMatchingQueryStringParametersWithRegex() {
+        assertTrue(new HttpRequestMatcher().withQueryStringParameters(new Parameter("name", "v[a-z]{4}")).matches(new HttpRequest().withQueryStringParameters(new Parameter("name", "value"))));
+    }
+
+    @Test
+    public void queryStringParametersMatchesMatchingQueryString() {
+        assertTrue(new HttpRequestMatcher().withQueryStringParameters(new Parameter("nameOne", "valueOne")).matches(new HttpRequest().withQueryStringParameters(
+                new Parameter("nameOne", "valueOne"),
+                new Parameter("nameTwo", "valueTwo")
+        )));
+        assertTrue(new HttpRequestMatcher().withQueryStringParameters(new Parameter("nameTwo", "valueTwo")).matches(new HttpRequest().withQueryStringParameters(
+                new Parameter("nameOne", "valueOne"),
+                new Parameter("nameTwo", "valueTwo")
+        )));
+        assertTrue(new HttpRequestMatcher().withQueryStringParameters(new Parameter("nameTwo", "valueTwo", "valueThree")).matches(new HttpRequest().withQueryStringParameters(
+                new Parameter("nameOne", "valueOne"),
+                new Parameter("nameTwo", "valueTwo"),
+                new Parameter("nameTwo", "valueThree")
+        )));
+        assertTrue(new HttpRequestMatcher().withQueryStringParameters(new Parameter("nameTwo", "valueTwo")).matches(new HttpRequest().withQueryStringParameters(
+                new Parameter("nameOne", "valueOne"),
+                new Parameter("nameTwo", "valueTwo"),
+                new Parameter("nameTwo", "valueThree")
+        )));
+        assertTrue(new HttpRequestMatcher().withQueryStringParameters(new Parameter("nameTwo", "valueThree")).matches(new HttpRequest().withQueryStringParameters(
+                new Parameter("nameOne", "valueOne"),
+                new Parameter("nameTwo", "valueTwo"),
+                new Parameter("nameTwo", "valueThree")
+        )));
+        assertTrue(new HttpRequestMatcher().withQueryStringParameters(new Parameter("nameTwo", "valueT[a-z]{0,10}")).matches(new HttpRequest().withQueryStringParameters(
+                new Parameter("nameOne", "valueOne"),
+                new Parameter("nameTwo", "valueTwo"),
+                new Parameter("nameTwo", "valueThree")
+        )));
+    }
+
+    @Test
+    public void bodyMatchesMatchingBodyParameters() {
+        assertTrue(new HttpRequestMatcher().withBody(new ParameterBody(new Parameter("nameOne", "valueOne"))).matches(new HttpRequest().withBody(new ParameterBody(
+                new Parameter("nameOne", "valueOne"),
+                new Parameter("nameTwo", "valueTwo")
+        ))));
+        assertTrue(new HttpRequestMatcher().withBody(new ParameterBody(new Parameter("nameTwo", "valueTwo"))).matches(new HttpRequest().withBody(new ParameterBody(
+                new Parameter("nameOne", "valueOne"),
+                new Parameter("nameTwo", "valueTwo")
+        ))));
+        assertTrue(new HttpRequestMatcher().withBody(new ParameterBody(new Parameter("nameTwo", "valueTwo", "valueThree"))).matches(new HttpRequest().withBody(new ParameterBody(
+                new Parameter("nameOne", "valueOne"),
+                new Parameter("nameTwo", "valueTwo"),
+                new Parameter("nameTwo", "valueThree")
+        ))));
+        assertTrue(new HttpRequestMatcher().withBody(new ParameterBody(new Parameter("nameTwo", "valueTwo"))).matches(new HttpRequest().withBody(new ParameterBody(
+                new Parameter("nameOne", "valueOne"),
+                new Parameter("nameTwo", "valueTwo"),
+                new Parameter("nameTwo", "valueThree")
+        ))));
+        assertTrue(new HttpRequestMatcher().withBody(new ParameterBody(new Parameter("nameTwo", "valueThree"))).matches(new HttpRequest().withBody(new ParameterBody(
+                new Parameter("nameOne", "valueOne"),
+                new Parameter("nameTwo", "valueTwo"),
+                new Parameter("nameTwo", "valueThree")
+        ))));
+        assertTrue(new HttpRequestMatcher().withBody(new ParameterBody(new Parameter("nameTwo", "valueT[a-z]{0,10}"))).matches(new HttpRequest().withBody(new ParameterBody(
+                new Parameter("nameOne", "valueOne"),
+                new Parameter("nameTwo", "valueTwo"),
+                new Parameter("nameTwo", "valueThree")
+        ))));
     }
 
     @Test
     public void doesNotMatchIncorrectParameterName() {
-        assertFalse(new HttpRequestMatcher().withParameters(new Parameter("name", "value")).matches(new HttpRequest().withParameters(new Parameter("name1", "value"))));
+        assertFalse(new HttpRequestMatcher().withBody(new ParameterBody(new Parameter("name", "value"))).matches(new HttpRequest().withBody(new ParameterBody(new Parameter("name1", "value")))));
     }
 
     @Test
     public void doesNotMatchIncorrectParameterValue() {
-        assertFalse(new HttpRequestMatcher().withParameters(new Parameter("name", "value")).matches(new HttpRequest().withParameters(new Parameter("name", "value1"))));
+        assertFalse(new HttpRequestMatcher().withBody(new ParameterBody(new Parameter("name", "value"))).matches(new HttpRequest().withBody(new ParameterBody(new Parameter("name", "value1")))));
     }
 
     @Test
     public void doesNotMatchIncorrectParameterValueRegex() {
-        assertFalse(new HttpRequestMatcher().withParameters(new Parameter("name", "va[0-9]{1}ue")).matches(new HttpRequest().withParameters(new Parameter("name", "value1"))));
+        assertFalse(new HttpRequestMatcher().withBody(new ParameterBody(new Parameter("name", "va[0-9]{1}ue"))).matches(new HttpRequest().withBody(new ParameterBody(new Parameter("name", "value1")))));
     }
 
     @Test
     public void matchesMatchingBody() {
-        assertTrue(new HttpRequestMatcher().withBody("somebody").matches(new HttpRequest().withBody("somebody")));
+        assertTrue(new HttpRequestMatcher().withBody(new StringBody("somebody", Body.Type.EXACT)).matches(new HttpRequest().withBody(new StringBody("somebody", Body.Type.EXACT))));
     }
 
     @Test
     public void matchesMatchingBodyRegex() {
-        assertTrue(new HttpRequestMatcher().withBody("some[a-z]{4}").matches(new HttpRequest().withBody("somebody")));
+        assertTrue(new HttpRequestMatcher().withBody(new StringBody("some[a-z]{4}", Body.Type.REGEX)).matches(new HttpRequest().withBody(new StringBody("somebody", Body.Type.EXACT))));
     }
 
     @Test
     public void doesNotMatchIncorrectBody() {
-        assertFalse(new HttpRequestMatcher().withBody("somebody").matches(new HttpRequest().withBody("bodysome")));
+        assertFalse(new HttpRequestMatcher().withBody(new StringBody("somebody", Body.Type.REGEX)).matches(new HttpRequest().withBody(new StringBody("bodysome", Body.Type.EXACT))));
     }
 
     @Test
     public void doesNotMatchIncorrectBodyRegex() {
-        assertFalse(new HttpRequestMatcher().withBody("some[a-z]{3}").matches(new HttpRequest().withBody("bodysome")));
+        assertFalse(new HttpRequestMatcher().withBody(new StringBody("some[a-z]{3}", Body.Type.REGEX)).matches(new HttpRequest().withBody(new StringBody("bodysome", Body.Type.EXACT))));
     }
 
     @Test
