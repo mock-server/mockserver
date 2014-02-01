@@ -93,6 +93,7 @@ public class ApacheHttpClient {
 
     public HttpResponse sendRequest(HttpRequest httpRequest) {
         try {
+            // url & method
             URI url = buildUrl(httpRequest);
             HttpMethod httpMethod = HttpMethod.parseString(httpRequest.getMethod());
             if (logger.isDebugEnabled()) {
@@ -100,6 +101,7 @@ public class ApacheHttpClient {
             }
             HttpUriRequest proxiedRequest = createHttpUriRequest(httpMethod, url);
 
+            // headers
             for (Header header : httpRequest.getHeaders()) {
                 String headerName = header.getName();
                 if (!headerName.equalsIgnoreCase(HTTP.CONTENT_LEN) && !headerName.equalsIgnoreCase(HTTP.TRANSFER_ENCODING)) {
@@ -108,11 +110,8 @@ public class ApacheHttpClient {
                     }
                 }
             }
-            if (httpMethod == HttpMethod.POST && proxiedRequest.getHeaders(HttpHeaders.CONTENT_TYPE).length == 0) {
-                // handle missing header which causes error with IIS
-                proxiedRequest.addHeader(HttpHeaders.CONTENT_TYPE, URLEncodedUtils.CONTENT_TYPE);
-            }
 
+            // cookies
             BrowserCompatSpec browserCompatSpec = new BrowserCompatSpec();
             List<org.apache.http.cookie.Cookie> cookies = new ArrayList<org.apache.http.cookie.Cookie>();
             for (Cookie cookie : httpRequest.getCookies()) {
@@ -125,6 +124,17 @@ public class ApacheHttpClient {
                     proxiedRequest.addHeader(header);
                 }
             }
+
+            // body
+            String body = httpRequest.getBody() != null ? httpRequest.getBody().toString() : "";
+            if (proxiedRequest.containsHeader(HTTP.CONTENT_LEN)) {
+                proxiedRequest.setHeader(HTTP.CONTENT_LEN, "" + body.length());
+            }
+            if (proxiedRequest instanceof HttpEntityEnclosingRequest) {
+                ((HttpEntityEnclosingRequest) proxiedRequest).setEntity(new StringEntity(body));
+            }
+
+            // logging
             if (logger.isTraceEnabled()) {
                 logger.trace("Proxy sending request:\n" + new ObjectMapper()
                         .setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT)
@@ -135,9 +145,6 @@ public class ApacheHttpClient {
                         .writeValueAsString(httpRequest));
             }
 
-            if (proxiedRequest instanceof HttpEntityEnclosingRequest) {
-                ((HttpEntityEnclosingRequest) proxiedRequest).setEntity(new StringEntity((httpRequest.getBody() != null ? httpRequest.getBody().toString() : "")));
-            }
             return APACHE_TO_MOCK_SERVER_RESPONSE_MAPPER.mapApacheHttpClientResponseToMockServerResponse(this.httpClient.execute(proxiedRequest));
         } catch (IOException ioe) {
             if (ioe.getCause() instanceof CircularRedirectException) {
@@ -213,7 +220,7 @@ public class ApacheHttpClient {
             try {
                 return valueOf(string);
             } catch (IllegalArgumentException iae) {
-                logger.trace("Not match found for http method [" + string + "]", iae);
+                logger.trace("Not match found for http method [" + string + "]");
             }
             return GET;
         }

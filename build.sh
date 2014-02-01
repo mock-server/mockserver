@@ -4,9 +4,9 @@
 export JAVA_HOME=/System/Library/Java/JavaVirtualMachines/1.6.0.jdk/Contents/Home
 if [ -z "$1" ]
 then
-    mvn clean install -Pit
+    mvn clean install -U -Pit
 else
-    mvn clean $1
+    mvn clean $1 -U
 fi
 
 if [ $? -eq 0 ]; then
@@ -14,8 +14,8 @@ if [ $? -eq 0 ]; then
     export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.7.0_17.jdk/Contents/Home
     if [ -z "$1" ]
     then
-        gradle clean test && mvn clean install -Pit
+        gradle clean test && mvn clean install -U -Pit
     else
-        mvn clean $1
+        mvn clean $1 -U
     fi
 fi

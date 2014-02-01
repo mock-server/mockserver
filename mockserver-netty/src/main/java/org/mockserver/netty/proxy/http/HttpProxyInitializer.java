@@ -20,7 +20,6 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.ssl.SslHandler;
-import org.mockserver.netty.mockserver.NettyMockServer;
 import org.mockserver.proxy.filters.LogFilter;
 import org.mockserver.socket.SSLFactory;
 
@@ -30,13 +29,13 @@ public class HttpProxyInitializer extends ChannelInitializer<SocketChannel> {
 
     private final LogFilter logFilter;
     private final HttpProxy server;
-    private final int securePort;
+    private final int connectPort;
     private final boolean secure;
 
-    public HttpProxyInitializer(LogFilter logFilter, HttpProxy server, int securePort, boolean secure) {
+    public HttpProxyInitializer(LogFilter logFilter, HttpProxy server, Integer connectPort, boolean secure) {
         this.logFilter = logFilter;
         this.server = server;
-        this.securePort = securePort;
+        this.connectPort = connectPort;
         this.secure = secure;
     }
 
@@ -47,8 +46,9 @@ public class HttpProxyInitializer extends ChannelInitializer<SocketChannel> {
 
         // add HTTPS support
         if (secure) {
-            SSLEngine engine = SSLFactory.sslContext().createSSLEngine();
+            SSLEngine engine = SSLFactory.getServerContext().createSSLEngine();
             engine.setUseClientMode(false);
+//            engine.setEnabledProtocols(new String[]{"TLSv1"});
             pipeline.addLast("ssl", new SslHandler(engine));
         }
 
@@ -59,6 +59,6 @@ public class HttpProxyInitializer extends ChannelInitializer<SocketChannel> {
         pipeline.addLast("decoder-encoder", new HttpServerCodec());
 
         // add handler
-        pipeline.addLast("handler", new HttpProxyHandler(logFilter, server, securePort, secure));
+        pipeline.addLast("handler", new HttpProxyHandler(logFilter, server, connectPort, secure));
     }
 }

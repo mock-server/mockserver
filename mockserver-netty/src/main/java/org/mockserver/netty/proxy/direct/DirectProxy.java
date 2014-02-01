@@ -21,30 +21,38 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 
+import java.util.concurrent.TimeUnit;
+
 public class DirectProxy {
 
+    private final EventLoopGroup bossGroup = new NioEventLoopGroup();
+    private final EventLoopGroup workerGroup = new NioEventLoopGroup();
 
-    public DirectProxy(int localPort, String remoteHost, int remotePort) throws Exception {
-        System.err.println("Proxying *:" + localPort + " to " + remoteHost + ':' + remotePort + " ...");
+    public DirectProxy(final int localPort, final String remoteHost, final int remotePort) throws Exception {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                System.err.println("Proxying *:" + localPort + " to " + remoteHost + ':' + remotePort + " ...");
 
-        // Configure the bootstrap.
-        EventLoopGroup bossGroup = new NioEventLoopGroup();
-        EventLoopGroup workerGroup = new NioEventLoopGroup();
-        try {
-            ServerBootstrap serverBootstrap = new ServerBootstrap();
-            serverBootstrap.group(bossGroup, workerGroup)
-                    .channel(NioServerSocketChannel.class)
-                    .childHandler(new DirectProxyInitializer(remoteHost, remotePort, false, 1048576)) // 1048576
-                    .childOption(ChannelOption.AUTO_READ, false)
-                    .bind(localPort)
-                    .sync()
-                    .channel()
-                    .closeFuture()
-                    .sync();
-        } finally {
-            bossGroup.shutdownGracefully();
-            workerGroup.shutdownGracefully();
-        }
+                try {
+                    ServerBootstrap serverBootstrap = new ServerBootstrap();
+                    serverBootstrap.group(bossGroup, workerGroup)
+                            .channel(NioServerSocketChannel.class)
+                            .childHandler(new DirectProxyInitializer(remoteHost, remotePort, false, 1048576)) // 1048576
+                            .childOption(ChannelOption.AUTO_READ, false)
+                            .bind(localPort)
+                            .sync()
+                            .channel()
+                            .closeFuture()
+                            .sync();
+                } catch (Exception e) {
+                    throw new RuntimeException("Exception running direct proxy", e);
+                } finally {
+                    bossGroup.shutdownGracefully();
+                    workerGroup.shutdownGracefully();
+                }
+            }
+        }).start();
     }
 
     public static void main(String[] args) throws Exception {
@@ -62,5 +70,14 @@ public class DirectProxy {
         int remotePort = Integer.parseInt(args[2]);
 
         new DirectProxy(localPort, remoteHost, remotePort);
+    }
+
+    public void stop() {
+        if (!bossGroup.isShutdown()) {
+            bossGroup.shutdownGracefully(1, 5, TimeUnit.SECONDS);
+        }
+        if (!workerGroup.isShutdown()) {
+            workerGroup.shutdownGracefully(1, 5, TimeUnit.SECONDS);
+        }
     }
 }

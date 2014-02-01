@@ -48,7 +48,7 @@ public class ServerRunner {
         logger.trace("Loading key store from file [" + new File(SSLFactory.KEY_STORE_FILENAME).getAbsoluteFile() + "]");
         httpsConnector.setAttribute("keystoreFile", new File(SSLFactory.KEY_STORE_FILENAME).getAbsoluteFile());
         httpsConnector.setAttribute("clientAuth", "false");
-        httpsConnector.setAttribute("sslProtocol", "TLS");
+        httpsConnector.setAttribute("sslProtocol", "TLSv1");
         httpsConnector.setAttribute("SSLEnabled", true);
 
         Service service = tomcat.getService();

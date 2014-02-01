@@ -1,18 +1,12 @@
 package org.mockserver.integration.proxy;
 
 import org.apache.commons.io.Charsets;
-import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.conn.ssl.AllowAllHostnameVerifier;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
 import org.apache.http.util.EntityUtils;
 import org.junit.Test;
-import org.mockserver.client.proxy.ProxyClient;
-import org.mockserver.client.proxy.Times;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.socket.SSLFactory;
 import org.mockserver.streams.IOStreamUtils;
@@ -22,7 +16,6 @@ import java.io.OutputStream;
 import java.net.Socket;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.test.Assert.assertContains;
 
 /**
@@ -41,7 +34,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest extends AbstractC
             // when
             output.write(("" +
                     "CONNECT localhost:666 HTTP/1.1\r\n" +
-                    "Host: localhost:666\r\n" +
+                    "Host: localhost:" + getServerSecurePort() + "\r\n" +
                     "\r\n"
             ).getBytes(Charsets.UTF_8));
             output.flush();
@@ -67,7 +60,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest extends AbstractC
             // - send CONNECT request
             output.write(("" +
                     "CONNECT localhost:666 HTTP/1.1\r\n" +
-                    "Host: localhost:666\r\n" +
+                    "Host: localhost:" + getServerSecurePort() + "\r\n" +
                     "\r\n"
             ).getBytes(Charsets.UTF_8));
             output.flush();
@@ -86,6 +79,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest extends AbstractC
                 output.write(("" +
                         "GET /test_headers_only HTTP/1.1\r\n" +
                         "Host: localhost:" + getServerSecurePort() + "\r\n" +
+                        "Connection: keep-alive\r\n" +
                         "\r\n"
                 ).getBytes(Charsets.UTF_8));
                 output.flush();
@@ -151,7 +145,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest extends AbstractC
             // - send CONNECT request
             output.write(("" +
                     "CONNECT localhost:666 HTTP/1.1\r\n" +
-                    "Host: localhost:666\r\n" +
+                    "Host: localhost:" + getServerSecurePort() + "\r\n" +
                     "\r\n"
             ).getBytes(Charsets.UTF_8));
             output.flush();

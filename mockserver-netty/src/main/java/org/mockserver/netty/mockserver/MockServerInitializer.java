@@ -21,7 +21,6 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.ssl.SslHandler;
 import org.mockserver.mock.MockServer;
-import org.mockserver.netty.proxy.LoggingHandler;
 import org.mockserver.proxy.filters.LogFilter;
 import org.mockserver.socket.SSLFactory;
 
@@ -48,7 +47,7 @@ public class MockServerInitializer extends ChannelInitializer<SocketChannel> {
 
         // add HTTPS support
         if (secure) {
-            SSLEngine engine = SSLFactory.sslContext().createSSLEngine();
+            SSLEngine engine = SSLFactory.getServerContext().createSSLEngine();
             engine.setUseClientMode(false);
             pipeline.addLast("ssl", new SslHandler(engine));
         }

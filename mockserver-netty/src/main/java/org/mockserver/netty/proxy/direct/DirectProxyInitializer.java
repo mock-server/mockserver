@@ -44,7 +44,7 @@ public class DirectProxyInitializer extends ChannelInitializer<SocketChannel> {
 
         // add HTTPS support
         if (secure) {
-            SSLEngine engine = SSLFactory.sslContext().createSSLEngine();
+            SSLEngine engine = SSLFactory.getServerContext().createSSLEngine();
             engine.setUseClientMode(false);
             pipeline.addLast("ssl", new SslHandler(engine));
         }

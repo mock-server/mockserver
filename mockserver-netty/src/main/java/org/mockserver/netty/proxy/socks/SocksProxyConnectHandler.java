@@ -29,7 +29,7 @@ import io.netty.util.concurrent.Promise;
 @ChannelHandler.Sharable
 public final class SocksProxyConnectHandler extends SimpleChannelInboundHandler<SocksCmdRequest> {
     private static final String name = "SOCKS_SERVER_CONNECT_HANDLER";
-    private final Bootstrap b = new Bootstrap();
+    private final Bootstrap bootstrap = new Bootstrap();
 
     public static String getName() {
         return name;
@@ -64,21 +64,20 @@ public final class SocksProxyConnectHandler extends SimpleChannelInboundHandler<
                 });
 
         final Channel inboundChannel = ctx.channel();
-        b.group(inboundChannel.eventLoop())
+        bootstrap.group(inboundChannel.eventLoop())
                 .channel(NioSocketChannel.class)
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
                 .option(ChannelOption.SO_KEEPALIVE, true)
                 .handler(new DirectClientInitializer(promise));
 
-        b.connect(request.host(), request.port()).addListener(new ChannelFutureListener() {
+        bootstrap.connect(request.host(), request.port()).addListener(new ChannelFutureListener() {
             @Override
             public void operationComplete(ChannelFuture future) throws Exception {
                 if (future.isSuccess()) {
                     // Connection established use handler provided results
                 } else {
                     // Close the connection if the connection attempt has failed.
-                    ctx.channel().writeAndFlush(
-                            new SocksCmdResponse(SocksCmdStatus.FAILURE, request.addressType()));
+                    ctx.channel().writeAndFlush(new SocksCmdResponse(SocksCmdStatus.FAILURE, request.addressType()));
                     Channel ch = ctx.channel();
                     if (ch.isActive()) {
                         ch.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(CLOSE);

@@ -20,7 +20,6 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.handler.codec.http.*;
 import io.netty.util.CharsetUtil;
-import org.apache.commons.io.Charsets;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.client.http.ApacheHttpClient;
 import org.mockserver.client.serialization.ExpectationSerializer;
@@ -30,8 +29,7 @@ import org.mockserver.mappers.NettyToMockServerRequestMapper;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.NettyHttpRequest;
-import org.mockserver.netty.mockserver.NettyMockServer;
-import org.mockserver.netty.proxy.http.connect.HexDumpProxyFrontendHandler;
+import org.mockserver.netty.proxy.http.connect.ProxyConnectHandler;
 import org.mockserver.proxy.filters.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +44,7 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<Object> {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     // mockserver
-    private final int securePort;
+    private final Integer connectPort;
     private final boolean secure;
     private final HttpProxy server;
     private final LogFilter logFilter;
@@ -63,10 +61,10 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<Object> {
     private HttpRequest request = null;
 
 
-    public HttpProxyHandler(LogFilter logFilter, HttpProxy server, int securePort, boolean secure) {
+    public HttpProxyHandler(LogFilter logFilter, HttpProxy server, Integer connectPort, boolean secure) {
         this.logFilter = logFilter;
         this.server = server;
-        this.securePort = securePort;
+        this.connectPort = connectPort;
         this.secure = secure;
         filters.withFilter(new org.mockserver.model.HttpRequest(), new HopByHopHeaderFilter());
         filters.withFilter(new org.mockserver.model.HttpRequest(), logFilter);
@@ -126,19 +124,12 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<Object> {
                         mockServerHttpRequest.headers().entries().addAll(trailer.trailingHeaders().entries());
                     }
 
-                    if (mockServerHttpRequest.getMethod() == HttpMethod.CONNECT) {
+                    if (connectPort != null && mockServerHttpRequest.getMethod() == HttpMethod.CONNECT) {
 
-                        ctx.channel().writeAndFlush(Unpooled.copiedBuffer("HTTP/1.1 200 OK", Charsets.UTF_8)).addListeners(
-                                new ChannelFutureListener() {
-                                    @Override
-                                    public void operationComplete(ChannelFuture future) throws Exception {
-                                        ChannelPipeline pipeline = ctx.channel().pipeline();
-                                        pipeline.addAfter(ctx.name(), "connect", new HexDumpProxyFrontendHandler("127.0.0.1", securePort));
-                                        pipeline.remove(HttpProxyHandler.this);
-                                        ctx.fireChannelRead(request);
-                                    }
-                                }
-                        );
+                        ProxyConnectHandler handler = new ProxyConnectHandler(connectPort);
+                        ctx.pipeline().addAfter(ctx.name(), ProxyConnectHandler.class.getSimpleName(), handler);
+                        ctx.pipeline().remove(this);
+                        ctx.fireChannelRead(request);
 
                     } else {
 

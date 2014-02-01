@@ -1,11 +1,13 @@
-package org.mockserver.netty.proxy;
+package org.mockserver.netty.logging;
 
-import com.google.common.base.Charsets;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufHolder;
-import io.netty.buffer.Unpooled;
-import io.netty.channel.*;
+import io.netty.channel.ChannelDuplexHandler;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandler.Sharable;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPromise;
+import io.netty.handler.ssl.SslHandshakeCompletionEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -115,7 +117,13 @@ public class LoggingHandler extends ChannelDuplexHandler {
 
     @Override
     public void userEventTriggered(final ChannelHandlerContext ctx, Object evt) throws Exception {
-        logger.warn(format(ctx, "USER_EVENT: " + evt));
+        if (evt instanceof SslHandshakeCompletionEvent) {
+            logger.warn(format(ctx, "SslHandshakeCompletionEvent: "), ((SslHandshakeCompletionEvent) evt).cause());
+        } else if (evt instanceof Exception) {
+            logger.warn(format(ctx, "Exception: "), (Exception) evt);
+        } else {
+            logger.warn(format(ctx, "USER_EVENT: " + evt));
+        }
         super.userEventTriggered(ctx, evt);
     }
 
@@ -164,7 +172,9 @@ public class LoggingHandler extends ChannelDuplexHandler {
     @Override
     public void flush(ChannelHandlerContext ctx) throws Exception {
         logger.warn(format(ctx, "FLUSH"));
-        ctx.flush();
+        if (ctx != null) {
+            ctx.flush();
+        }
     }
 
     private void logMessage(ChannelHandlerContext ctx, String eventName, Object msg) {

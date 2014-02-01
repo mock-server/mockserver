@@ -36,7 +36,7 @@ public abstract class AbstractClientProxyIntegrationTest {
         return HttpClients
                 .custom()
                 .setRoutePlanner(defaultProxyRoutePlanner)
-                .setSslcontext(SSLFactory.sslContext())
+                .setSslcontext(SSLFactory.getClientContext())
                 .setHostnameVerifier(new AllowAllHostnameVerifier())
                 .build();
     }
@@ -122,6 +122,7 @@ public abstract class AbstractClientProxyIntegrationTest {
             output.write(("" +
                     "GET /unknown HTTP/1.1\r\n" +
                     "Host: localhost:" + getServerPort() + "\r\n" +
+                    "Connection: close\r\n" +
                     "\r\n"
             ).getBytes(Charsets.UTF_8));
             output.flush();
