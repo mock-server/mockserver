@@ -17,17 +17,6 @@
                         <enabled>true</enabled>
                     </snapshots>
                 </repository>
-                <repository>
-                    <id>sonatype-nexus-snapshots</id>
-                    <name>Sonatype Nexus Snapshots</name>
-                    <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-                    <releases>
-                        <enabled>false</enabled>
-                    </releases>
-                    <snapshots>
-                        <enabled>true</enabled>
-                    </snapshots>
-                </repository>
             </repositories>
             <pluginRepositories>
                 <pluginRepository>
@@ -35,17 +24,6 @@
                     <url>@localRepositoryUrl@</url>
                     <releases>
                         <enabled>true</enabled>
-                    </releases>
-                    <snapshots>
-                        <enabled>true</enabled>
-                    </snapshots>
-                </pluginRepository>
-                <pluginRepository>
-                    <id>sonatype-nexus-snapshots</id>
-                    <name>Sonatype Nexus Snapshots</name>
-                    <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-                    <releases>
-                        <enabled>false</enabled>
                     </releases>
                     <snapshots>
                         <enabled>true</enabled>
