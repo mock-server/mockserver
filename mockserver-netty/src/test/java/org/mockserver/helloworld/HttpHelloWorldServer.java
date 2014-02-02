@@ -89,10 +89,10 @@ public class HttpHelloWorldServer {
                                 public void initChannel(SocketChannel ch) throws Exception {
                                     ChannelPipeline pipeline = ch.pipeline();
 
-                                    SSLEngine engine = SSLFactory.getServerContext().createSSLEngine();
+                                    SSLEngine engine = SSLFactory.sslContext().createSSLEngine();
                                     engine.setUseClientMode(false);
                                     pipeline.addLast("ssl", new SslHandler(engine));
-                                    pipeline.addLast("logger", new LoggingHandler("TEST_SERVER"));
+                                    pipeline.addLast("logger", new LoggingHandler("TEST_SERVER_SSL"));
                                     pipeline.addLast("codec", new HttpServerCodec());
                                     pipeline.addLast("handler", new HttpHelloWorldServerHandler());
                                 }

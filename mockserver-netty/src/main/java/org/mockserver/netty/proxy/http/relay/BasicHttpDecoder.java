@@ -1,4 +1,4 @@
-package org.mockserver.netty.proxy.direct;
+package org.mockserver.netty.proxy.http.relay;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.HttpHeaders;

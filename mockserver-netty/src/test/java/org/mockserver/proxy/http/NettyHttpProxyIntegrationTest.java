@@ -5,16 +5,11 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.mockserver.client.proxy.ProxyClient;
 import org.mockserver.helloworld.HttpHelloWorldServer;
-import org.mockserver.integration.proxy.AbstractClientProxyIntegrationTest;
 import org.mockserver.integration.proxy.AbstractClientSecureProxyIntegrationTest;
-import org.mockserver.integration.proxy.ServerRunner;
 import org.mockserver.netty.proxy.http.HttpProxy;
 import org.mockserver.socket.PortFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author jamesdbloom
@@ -27,8 +22,11 @@ public class NettyHttpProxyIntegrationTest extends AbstractClientSecureProxyInte
     private final static int SERVER_HTTPS_PORT = PortFactory.findFreePort();
     private final static int PROXY_HTTP_PORT = PortFactory.findFreePort();
     private final static int PROXY_HTTPS_PORT = PortFactory.findFreePort();
+    private final static int PROXY_SOCKS_PORT = PortFactory.findFreePort();
+    private final static int PROXY_DIRECT_PORT = PortFactory.findFreePort();
+    private final static int PROXY_DIRECT_SECURE_PORT = PortFactory.findFreePort();
     private static HttpHelloWorldServer httpHelloWorldServer;
-    private static HttpProxy proxyRunner;
+    private static HttpProxy httpProxy;
     private static ProxyClient proxyClient;
 
     @BeforeClass
@@ -42,7 +40,7 @@ public class NettyHttpProxyIntegrationTest extends AbstractClientSecureProxyInte
         httpHelloWorldServer = new HttpHelloWorldServer(SERVER_HTTP_PORT, SERVER_HTTPS_PORT);
 
         // start proxy
-        proxyRunner = new HttpProxy(PROXY_HTTP_PORT, PROXY_HTTPS_PORT).run();
+        httpProxy = new HttpProxy(PROXY_HTTP_PORT, PROXY_HTTPS_PORT, PROXY_SOCKS_PORT, PROXY_DIRECT_PORT, PROXY_DIRECT_SECURE_PORT, "127.0.0.1", SERVER_HTTP_PORT);
 
         // start client
         proxyClient = new ProxyClient("localhost", PROXY_HTTP_PORT);
@@ -54,7 +52,7 @@ public class NettyHttpProxyIntegrationTest extends AbstractClientSecureProxyInte
         httpHelloWorldServer.stop();
 
         // stop proxy
-        proxyRunner.stop();
+        httpProxy.stop();
     }
 
     @Before

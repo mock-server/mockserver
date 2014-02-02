@@ -1,37 +1,35 @@
-package org.mockserver.netty.proxy;
+package org.mockserver.netty.proxy.http.relay;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
-import org.mockserver.netty.proxy.direct.BasicHttpDecoder;
 import org.mockserver.netty.proxy.interceptor.Interceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ProxyRelayHandler extends ChannelDuplexHandler {
 
-    protected final Logger logger;
+    private final Logger logger;
     private final Interceptor interceptor;
     private final int bufferedCapacity;
     private volatile Channel relayChannel;
-    private ByteBuf channelBuffer;
-    private boolean bufferedMode;
-    private boolean flushedBuffer;
-    private Integer contentLength;
-    private int contentSoFar;
-    private boolean flushContent;
+    private volatile ByteBuf channelBuffer;
+    private volatile boolean bufferedMode;
+    private volatile boolean flushedBuffer;
+    private volatile Integer contentLength;
+    private volatile int contentSoFar;
+    private volatile boolean flushContent;
 
     public ProxyRelayHandler(Channel relayChannel, int bufferedCapacity, Interceptor interceptor, String loggerName) {
         this.relayChannel = relayChannel;
         this.bufferedCapacity = bufferedCapacity;
         this.interceptor = interceptor;
-        logger = LoggerFactory.getLogger(loggerName);
+        this.logger = LoggerFactory.getLogger(loggerName);
         bufferedMode = bufferedCapacity > 0;
         flushedBuffer = false;
         contentLength = null;
         contentSoFar = 0;
         flushContent = false;
-        this.channelBuffer = Unpooled.directBuffer(bufferedCapacity);
     }
 
     @Override
@@ -50,14 +48,12 @@ public class ProxyRelayHandler extends ChannelDuplexHandler {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        logger.warn("ACTIVE");
         ctx.read();
         ctx.write(Unpooled.EMPTY_BUFFER);
     }
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        logger.warn("INACTIVE");
         if (relayChannel.isActive()) {
             if (bufferedMode) {
                 flushedBuffer = true;
@@ -83,14 +79,7 @@ public class ProxyRelayHandler extends ChannelDuplexHandler {
     }
 
     @Override
-    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
-        logger.warn("EVENT: " + evt);
-        super.userEventTriggered(ctx, evt);
-    }
-
-    @Override
     public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
-        logger.warn("CHANNEL-READ-COMPLETE: " + ctx);
         if (bufferedMode && relayChannel.isActive() && channelBuffer.isReadable()) {
             flushedBuffer = true;
             relayChannel.writeAndFlush(channelBuffer).addListener(new ChannelFutureListener() {
@@ -110,7 +99,6 @@ public class ProxyRelayHandler extends ChannelDuplexHandler {
 
     @Override
     public void channelRead(final ChannelHandlerContext ctx, final Object msg) throws Exception {
-        logger.warn("CHANNEL-READ");
         if (msg instanceof ByteBuf) {
             final ByteBuf chunk = (ByteBuf) msg;
             if (flushedBuffer) {
@@ -185,7 +173,6 @@ public class ProxyRelayHandler extends ChannelDuplexHandler {
                 }
             }
         } else {
-            logger.warn("CHANNEL-READ-WARNING:" + msg);
             if (relayChannel.isActive()) {
                 relayChannel.writeAndFlush(msg).addListener(new ChannelFutureListener() {
                     @Override
@@ -201,20 +188,8 @@ public class ProxyRelayHandler extends ChannelDuplexHandler {
     }
 
     @Override
-    public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
-        logger.warn("WRITE");
-        super.write(ctx, msg, promise);
-    }
-
-    @Override
-    public void flush(ChannelHandlerContext ctx) throws Exception {
-        logger.warn("FLUSH");
-        super.flush(ctx);
-    }
-
-    @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        logger.warn("EXCEPTION CAUGHT", cause);
+        logger.warn("Exception caught", cause);
         Channel ch = ctx.channel();
         if (ch.isActive()) {
             ch.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);

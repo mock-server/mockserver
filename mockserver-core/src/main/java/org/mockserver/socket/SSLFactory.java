@@ -8,7 +8,10 @@ import javax.net.ssl.*;
 import java.io.*;
 import java.math.BigInteger;
 import java.net.Socket;
-import java.security.*;
+import java.security.GeneralSecurityException;
+import java.security.KeyStore;
+import java.security.PrivateKey;
+import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
@@ -18,16 +21,10 @@ import java.util.concurrent.TimeUnit;
  */
 public class SSLFactory {
 
-    private final static Logger logger = LoggerFactory.getLogger(SSLFactory.class);
     public static final String KEY_STORE_ALIAS = "certAlias";
     public static final String KEY_STORE_PASSWORD = "changeit";
     public static final String KEY_STORE_FILENAME = "keystore.jks";
-    private static KeyStore keystore;
-
-    private static final String PROTOCOL = "TLS";
-    private static final SSLContext SERVER_CONTEXT;
-    private static final SSLContext CLIENT_CONTEXT;
-
+    private final static Logger logger = LoggerFactory.getLogger(SSLFactory.class);
     private static final TrustManager DUMMY_TRUST_MANAGER = new X509TrustManager() {
         @Override
         public X509Certificate[] getAcceptedIssuers() {
@@ -36,93 +33,40 @@ public class SSLFactory {
 
         @Override
         public void checkClientTrusted(X509Certificate[] chain, String authType) {
-            // Always trust - it is an example.
-            // You should do something in the real world.
-            // You will reach here only if you enabled client certificate auth,
-            // as described in SecureChatSslContextFactory.
-            System.err.println("UNKNOWN CLIENT CERTIFICATE: " + chain[0].getSubjectDN());
+            logger.trace("Approving client certificate for: " + chain[0].getSubjectDN());
         }
 
         @Override
         public void checkServerTrusted(X509Certificate[] chain, String authType) {
-            // Always trust - it is an example.
-            // You should do something in the real world.
-            System.err.println("UNKNOWN SERVER CERTIFICATE: " + chain[0].getSubjectDN());
+            logger.trace("Approving server certificate for: " + chain[0].getSubjectDN());
         }
     };
-
-    public static TrustManager[] getTrustManagers() {
-        return new TrustManager[] { DUMMY_TRUST_MANAGER };
-    }
-
-    static {
-        String algorithm = Security.getProperty("ssl.KeyManagerFactory.algorithm");
-        if (algorithm == null) {
-            algorithm = "SunX509";
-        }
-
-        SSLContext serverContext;
-        SSLContext clientContext;
-        try {
-            KeyStore ks = buildKeyStore();
-
-            // Set up key manager factory to use our key store
-            KeyManagerFactory kmf = KeyManagerFactory.getInstance(algorithm);
-            kmf.init(ks, KEY_STORE_PASSWORD.toCharArray());
-
-            // Initialize the SSLContext to work with our key managers.
-            serverContext = SSLContext.getInstance(PROTOCOL);
-            serverContext.init(kmf.getKeyManagers(), null, null);
-        } catch (Exception e) {
-            throw new Error(
-                    "Failed to initialize the server-side SSLContext", e);
-        }
-
-        try {
-            clientContext = SSLContext.getInstance(PROTOCOL);
-            clientContext.init(null, getTrustManagers(), null);
-        } catch (Exception e) {
-            throw new Error(
-                    "Failed to initialize the client-side SSLContext", e);
-        }
-
-        SERVER_CONTEXT = serverContext;
-        CLIENT_CONTEXT = clientContext;
-    }
-
-    public static SSLContext getServerContext() {
-        return SERVER_CONTEXT;
-    }
-
-    public static SSLContext getClientContext() {
-        return CLIENT_CONTEXT;
-    }
+    private static KeyStore keystore;
 
     public static SSLSocket wrapSocket(Socket socket) throws Exception {
         // ssl socket factory
-        SSLSocketFactory sslSocketFactory = getClientContext().getSocketFactory();
+        SSLSocketFactory sslSocketFactory = sslContext().getSocketFactory();
 
         // ssl socket
         SSLSocket sslSocket = (SSLSocket) sslSocketFactory.createSocket(socket, socket.getInetAddress().getHostAddress(), socket.getPort(), true);
         sslSocket.setUseClientMode(true);
-        sslSocket.setEnabledProtocols(new String[]{"TLSv1"});
         sslSocket.startHandshake();
         return sslSocket;
     }
 
-    public static SSLContext sslContext() throws Exception {
-        // trust manager
-        TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-        trustManagerFactory.init(buildKeyStore());
+    public static SSLContext sslContext() {
+        try {
+            // key manager
+            KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+            keyManagerFactory.init(buildKeyStore(), KEY_STORE_PASSWORD.toCharArray());
 
-        // key manager
-        KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-        keyManagerFactory.init(buildKeyStore(), KEY_STORE_PASSWORD.toCharArray());
-
-        // ssl context
-        SSLContext sslContext = SSLContext.getInstance("TLSv1");
-        sslContext.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), null);
-        return sslContext;
+            // ssl context
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(keyManagerFactory.getKeyManagers(), new TrustManager[]{DUMMY_TRUST_MANAGER}, null);
+            return sslContext;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to initialize the SSLContext", e);
+        }
     }
 
     public static KeyStore buildKeyStore() {

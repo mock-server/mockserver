@@ -4,11 +4,9 @@ import io.netty.handler.codec.http.QueryStringDecoder;
 import org.apache.commons.io.Charsets;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntityEnclosingRequest;
-import org.apache.http.HttpHeaders;
 import org.apache.http.client.CircularRedirectException;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.*;
-import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.conn.ssl.AllowAllHostnameVerifier;
 import org.apache.http.conn.ssl.SSLContexts;
 import org.apache.http.conn.ssl.TrustStrategy;
@@ -44,8 +42,8 @@ import static org.mockserver.configuration.SystemProperties.maxTimeout;
 public class ApacheHttpClient {
 
     private static final Logger logger = LoggerFactory.getLogger(ApacheHttpClient.class);
-    private static final ApacheHttpClientToMockServerResponseMapper APACHE_TO_MOCK_SERVER_RESPONSE_MAPPER = new ApacheHttpClientToMockServerResponseMapper();
-    private final CloseableHttpClient httpClient;
+    private ApacheHttpClientToMockServerResponseMapper apacheHttpClientToMockServerResponseMapper = new ApacheHttpClientToMockServerResponseMapper();
+    private CloseableHttpClient httpClient;
 
     public ApacheHttpClient() {
         try {
@@ -145,7 +143,7 @@ public class ApacheHttpClient {
                         .writeValueAsString(httpRequest));
             }
 
-            return APACHE_TO_MOCK_SERVER_RESPONSE_MAPPER.mapApacheHttpClientResponseToMockServerResponse(this.httpClient.execute(proxiedRequest));
+            return apacheHttpClientToMockServerResponseMapper.mapApacheHttpClientResponseToMockServerResponse(this.httpClient.execute(proxiedRequest));
         } catch (IOException ioe) {
             if (ioe.getCause() instanceof CircularRedirectException) {
                 logger.debug("Circular redirect aborting request", ioe);

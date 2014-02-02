@@ -15,36 +15,76 @@
  */
 package org.mockserver.netty.proxy.direct;
 
+import com.google.common.util.concurrent.SettableFuture;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.ssl.SslHandler;
+import org.mockserver.netty.logging.LoggingHandler;
+import org.mockserver.netty.proxy.http.direct.DirectProxyUpstreamHandler;
+import org.mockserver.netty.proxy.interceptor.RequestInterceptor;
+import org.mockserver.socket.SSLFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.net.ssl.SSLEngine;
+import java.net.InetSocketAddress;
 import java.util.concurrent.TimeUnit;
 
 public class DirectProxy {
 
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final EventLoopGroup bossGroup = new NioEventLoopGroup();
     private final EventLoopGroup workerGroup = new NioEventLoopGroup();
 
-    public DirectProxy(final int localPort, final String remoteHost, final int remotePort) throws Exception {
+    public DirectProxy(final int localPort, final String remoteHost, final int remotePort, final boolean secure) throws Exception {
+        final SettableFuture<String> hasConnected = SettableFuture.create();
         new Thread(new Runnable() {
             @Override
             public void run() {
                 System.err.println("Proxying *:" + localPort + " to " + remoteHost + ':' + remotePort + " ...");
 
                 try {
-                    ServerBootstrap serverBootstrap = new ServerBootstrap();
-                    serverBootstrap.group(bossGroup, workerGroup)
-                            .channel(NioServerSocketChannel.class)
-                            .childHandler(new DirectProxyInitializer(remoteHost, remotePort, false, 1048576)) // 1048576
-                            .childOption(ChannelOption.AUTO_READ, false)
-                            .bind(localPort)
-                            .sync()
-                            .channel()
-                            .closeFuture()
-                            .sync();
+                    ChannelFuture directChannel =
+                            new ServerBootstrap()
+                                    .group(bossGroup, workerGroup)
+                                    .channel(NioServerSocketChannel.class)
+                                    .childHandler(new ChannelInitializer<SocketChannel>() {
+                                        @Override
+                                        public void initChannel(SocketChannel ch) throws Exception {
+                                            // Create a default pipeline implementation.
+                                            ChannelPipeline pipeline = ch.pipeline();
+
+                                            // add HTTPS support
+                                            if (secure) {
+                                                SSLEngine engine = SSLFactory.sslContext().createSSLEngine();
+                                                engine.setUseClientMode(false);
+                                                pipeline.addLast("ssl", new SslHandler(engine));
+                                            }
+
+                                            if (logger.isDebugEnabled()) {
+                                                // add logging
+                                                pipeline.addLast("logger", new LoggingHandler());
+                                            }
+
+                                            // add handler
+                                            pipeline.addLast(new DirectProxyUpstreamHandler(new InetSocketAddress(remoteHost, remotePort), secure, 1048576, new RequestInterceptor(), "<--- "));
+                                        }
+                                    })
+                                    .childOption(ChannelOption.AUTO_READ, false)
+                                    .bind(localPort).addListener(new ChannelFutureListener() {
+                                @Override
+                                public void operationComplete(ChannelFuture future) throws Exception {
+                                    if (future.isSuccess()) {
+                                        hasConnected.set("CONNECTED");
+                                    } else {
+                                        hasConnected.setException(future.cause());
+                                    }
+                                }
+                            });
+                    directChannel.channel().closeFuture().sync();
                 } catch (Exception e) {
                     throw new RuntimeException("Exception running direct proxy", e);
                 } finally {
@@ -53,23 +93,11 @@ public class DirectProxy {
                 }
             }
         }).start();
+        hasConnected.get();
     }
 
     public static void main(String[] args) throws Exception {
-        // Validate command line options.
-        if (args.length != 3) {
-            System.err.println(
-                    "Usage: " + DirectProxy.class.getSimpleName() +
-                            " <local port> <remote host> <remote port>");
-            return;
-        }
-
-        // Parse command line options.
-        int localPort = Integer.parseInt(args[0]);
-        String remoteHost = args[1];
-        int remotePort = Integer.parseInt(args[2]);
-
-        new DirectProxy(localPort, remoteHost, remotePort);
+        new DirectProxy(9090, "www.london-squash-league.com", 443, true);
     }
 
     public void stop() {

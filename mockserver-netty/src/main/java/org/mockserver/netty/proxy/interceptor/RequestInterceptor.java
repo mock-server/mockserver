@@ -30,7 +30,7 @@ public class RequestInterceptor implements Interceptor {
                 if (httpChunk instanceof HttpRequest) {
                     HttpRequest httpRequest = (HttpRequest) httpChunk;
                     httpRequest.headers().remove(HttpHeaders.Names.ACCEPT_ENCODING);
-                    httpRequest.headers().set(HttpHeaders.Names.HOST, "www.mock-server.com");
+//                    httpRequest.headers().set(HttpHeaders.Names.HOST, "www.mock-server.com");
                     httpRequest.headers().set(HttpHeaders.Names.CONNECTION, HttpHeaders.Values.CLOSE);
                 }
                 logger.warn("HTTP-FORMATTED -- " + httpChunk.getClass().getSimpleName() + " -- " + httpChunk);

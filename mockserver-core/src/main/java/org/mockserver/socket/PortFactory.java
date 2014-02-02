@@ -8,7 +8,7 @@ import java.net.ServerSocket;
  */
 public class PortFactory {
     public static int findFreePort() {
-        int port = -1;
+        int port;
         try {
             ServerSocket server = new ServerSocket(0);
             port = server.getLocalPort();

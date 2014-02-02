@@ -172,9 +172,7 @@ public class LoggingHandler extends ChannelDuplexHandler {
     @Override
     public void flush(ChannelHandlerContext ctx) throws Exception {
         logger.warn(format(ctx, "FLUSH"));
-        if (ctx != null) {
-            ctx.flush();
-        }
+        ctx.flush();
     }
 
     private void logMessage(ChannelHandlerContext ctx, String eventName, Object msg) {

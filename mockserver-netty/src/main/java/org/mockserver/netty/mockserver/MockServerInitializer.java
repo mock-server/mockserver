@@ -21,13 +21,17 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.ssl.SslHandler;
 import org.mockserver.mock.MockServer;
+import org.mockserver.netty.logging.LoggingHandler;
 import org.mockserver.proxy.filters.LogFilter;
 import org.mockserver.socket.SSLFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLEngine;
 
 public class MockServerInitializer extends ChannelInitializer<SocketChannel> {
 
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final MockServer mockServer;
     private final LogFilter logFilter;
     private final NettyMockServer server;
@@ -47,13 +51,15 @@ public class MockServerInitializer extends ChannelInitializer<SocketChannel> {
 
         // add HTTPS support
         if (secure) {
-            SSLEngine engine = SSLFactory.getServerContext().createSSLEngine();
+            SSLEngine engine = SSLFactory.sslContext().createSSLEngine();
             engine.setUseClientMode(false);
             pipeline.addLast("ssl", new SslHandler(engine));
         }
 
         // add logging
-//        pipeline.addLast("logger", new LoggingHandler());
+        if (logger.isDebugEnabled()) {
+            pipeline.addLast("logger", new LoggingHandler());
+        }
 
         // add msg <-> HTTP
         pipeline.addLast("decoder-encoder", new HttpServerCodec());

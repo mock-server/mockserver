@@ -17,7 +17,6 @@ import org.mockserver.model.HttpStatusCode;
 import org.mockserver.socket.SSLFactory;
 import org.mockserver.streams.IOStreamUtils;
 
-import javax.net.ssl.SSLSocket;
 import java.io.OutputStream;
 import java.net.Socket;
 
@@ -36,7 +35,7 @@ public abstract class AbstractClientProxyIntegrationTest {
         return HttpClients
                 .custom()
                 .setRoutePlanner(defaultProxyRoutePlanner)
-                .setSslcontext(SSLFactory.getClientContext())
+                .setSslcontext(SSLFactory.sslContext())
                 .setHostnameVerifier(new AllowAllHostnameVerifier())
                 .build();
     }

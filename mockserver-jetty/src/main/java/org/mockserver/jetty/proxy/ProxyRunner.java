@@ -7,7 +7,7 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.proxy.ProxyServlet;
 import org.mockserver.proxy.filters.ProxyRequestFilter;
 import org.mockserver.proxy.filters.ProxyResponseFilter;
-import org.mockserver.proxy.socks.SocksProxy;
+//import org.mockserver.proxy.socks.SocksProxy;
 import org.mockserver.jetty.runner.AbstractRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,7 +70,7 @@ public class ProxyRunner extends AbstractRunner<ProxyRunner> {
 
         int socksPort = socksPort();
         if (socksPort != -1) {
-            new SocksProxy(socksPort, new InetSocketAddress("127.0.0.1", port), new InetSocketAddress("127.0.0.1", securePort));
+//            new SocksProxy(socksPort, new InetSocketAddress("127.0.0.1", port), new InetSocketAddress("127.0.0.1", securePort));
             System.setProperty("http.proxyPort", "" + socksPort);
             java.net.ProxySelector.setDefault(proxySelector());
         } else {

@@ -13,26 +13,30 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package org.mockserver.netty.proxy.http.connect;
+package org.mockserver.netty.proxy.http.relay;
 
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelPipeline;
-import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.util.concurrent.Promise;
 
 
-public final class DirectClientInitializer extends ChannelInitializer<SocketChannel> {
-
+public final class DirectClientHandler extends ChannelInboundHandlerAdapter {
     private final Promise<Channel> promise;
 
-    public DirectClientInitializer(Promise<Channel> promise) {
+    public DirectClientHandler(Promise<Channel> promise) {
         this.promise = promise;
     }
 
     @Override
-    public void initChannel(SocketChannel socketChannel) throws Exception {
-        ChannelPipeline channelPipeline = socketChannel.pipeline();
-        channelPipeline.addLast(DirectClientHandler.class.getSimpleName(), new DirectClientHandler(promise));
+    public void channelActive(ChannelHandlerContext ctx) {
+        ctx.pipeline().remove(this);
+        ctx.pipeline().remove("direct client logger");
+        promise.setSuccess(ctx.channel());
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable throwable) throws Exception {
+        promise.setFailure(throwable);
     }
 }

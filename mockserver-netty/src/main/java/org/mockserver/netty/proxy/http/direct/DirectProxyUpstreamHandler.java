@@ -1,34 +1,40 @@
-package org.mockserver.netty.proxy.direct;
+package org.mockserver.netty.proxy.http.direct;
 
-import com.google.common.base.Charsets;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
-import io.netty.handler.codec.http.*;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.handler.ssl.SslHandler;
+import org.mockserver.netty.logging.LoggingHandler;
+import org.mockserver.netty.proxy.http.relay.ProxyRelayHandler;
+import org.mockserver.netty.proxy.interceptor.Interceptor;
+import org.mockserver.netty.proxy.interceptor.RequestInterceptor;
+import org.mockserver.socket.SSLFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
+import javax.net.ssl.SSLEngine;
+import java.net.InetSocketAddress;
 
 public class DirectProxyUpstreamHandler extends ChannelDuplexHandler {
 
-    protected static final Logger logger = LoggerFactory.getLogger(" <- ");
-    private final String remoteHost;
-    private final int remotePort;
+    private final Logger logger;
+    private final InetSocketAddress remoteSocketAddress;
     private final boolean secure;
+    private final int bufferedCapacity;
+    private final Interceptor interceptor;
     private volatile Channel outboundChannel;
-    private ByteBuf channelBuffer;
-    private int bufferedCapacity;
-    private boolean bufferedMode;
-    private boolean flushedBuffer;
+    private volatile ByteBuf channelBuffer;
+    private volatile boolean bufferedMode;
+    private volatile boolean flushedBuffer;
 
-    public DirectProxyUpstreamHandler(String remoteHost, int remotePort, boolean secure, int bufferedCapacity) {
-        this.remoteHost = remoteHost;
-        this.remotePort = remotePort;
+    public DirectProxyUpstreamHandler(InetSocketAddress remoteSocketAddress, boolean secure, int bufferedCapacity, Interceptor interceptor, String loggerName) {
+        this.remoteSocketAddress = remoteSocketAddress;
         this.secure = secure;
         this.bufferedCapacity = bufferedCapacity;
+        this.interceptor = interceptor;
+        this.logger = LoggerFactory.getLogger(loggerName);
     }
 
     @Override
@@ -47,16 +53,36 @@ public class DirectProxyUpstreamHandler extends ChannelDuplexHandler {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        logger.warn("ACTIVE");
         final Channel inboundChannel = ctx.channel();
 
         // Start the connection attempt.
         Bootstrap bootstrap = new Bootstrap();
         bootstrap.group(inboundChannel.eventLoop())
                 .channel(ctx.channel().getClass())
-                .handler(new DirectProxyDownstreamInitializer(inboundChannel, secure, bufferedCapacity))
+                .handler(new ChannelInitializer<SocketChannel>() {
+                    @Override
+                    public void initChannel(SocketChannel ch) throws Exception {
+                        // Create a default pipeline implementation.
+                        ChannelPipeline pipeline = ch.pipeline();
+
+                        // add HTTPS support
+                        if (secure) {
+                            SSLEngine engine = SSLFactory.sslContext().createSSLEngine();
+                            engine.setUseClientMode(true);
+                            pipeline.addLast("ssl", new SslHandler(engine));
+                        }
+
+                        // add logging
+                        if (logger.isDebugEnabled()) {
+                            pipeline.addLast("logger", new LoggingHandler());
+                        }
+
+                        // add handler
+                        pipeline.addLast(new ProxyRelayHandler(inboundChannel, bufferedCapacity, new RequestInterceptor(), "                -->"));
+                    }
+                })
                 .option(ChannelOption.AUTO_READ, false);
-        ChannelFuture channelFuture = bootstrap.connect(remoteHost, remotePort);
+        ChannelFuture channelFuture = bootstrap.connect(remoteSocketAddress);
         outboundChannel = channelFuture.channel();
         channelFuture.addListener(new ChannelFutureListener() {
             @Override
@@ -77,24 +103,16 @@ public class DirectProxyUpstreamHandler extends ChannelDuplexHandler {
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        logger.warn("INACTIVE");
         if (outboundChannel.isActive()) {
             outboundChannel.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
         }
     }
 
     @Override
-    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
-        logger.warn("EVENT: " + evt);
-        super.userEventTriggered(ctx, evt);
-    }
-
-    @Override
     public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
-        logger.warn("CHANNEL-READ-COMPLETE");
         if (bufferedMode && outboundChannel.isActive()) {
             flushedBuffer = true;
-            outboundChannel.writeAndFlush(requestInterceptor(ctx, channelBuffer)).addListener(new ChannelFutureListener() {
+            outboundChannel.writeAndFlush(interceptor.intercept(ctx, channelBuffer, logger)).addListener(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(ChannelFuture future) throws Exception {
                     if (future.isSuccess()) {
@@ -108,64 +126,11 @@ public class DirectProxyUpstreamHandler extends ChannelDuplexHandler {
         super.channelReadComplete(ctx);
     }
 
-    private ByteBuf requestInterceptor(ChannelHandlerContext ctx, ByteBuf channelBuffer) throws Exception {
-        ByteBuf channelBufferCopy = Unpooled.copiedBuffer(channelBuffer);
-        try {
-            List<ByteBuf> allRequestRawChunks = new ArrayList<ByteBuf>();
-            List<Object> requestHttpFormattedChunks = new ArrayList<Object>();
-            new HttpRequestDecoder() {
-                public void callDecode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
-                    super.callDecode(ctx, in, out);
-                }
-            }.callDecode(ctx, channelBufferCopy, requestHttpFormattedChunks);
-
-            for (Object httpChunk : requestHttpFormattedChunks) {
-                if (httpChunk instanceof HttpRequest) {
-                    HttpRequest httpRequest = (HttpRequest) httpChunk;
-                    httpRequest.headers().remove(HttpHeaders.Names.ACCEPT_ENCODING);
-//                    httpRequest.headers().set(HttpHeaders.Names.HOST, "www.mock-server.com");
-                    httpRequest.headers().set(HttpHeaders.Names.CONNECTION, HttpHeaders.Values.CLOSE);
-                }
-                logger.warn("HTTP-FORMATTED -- " + httpChunk.getClass().getSimpleName() + " -- " + httpChunk);
-                if (!(httpChunk instanceof LastHttpContent)) {
-                    List<Object> requestRawChunks = new ArrayList<Object>();
-                    new HttpRequestEncoder() {
-                        public void encode(ChannelHandlerContext ctx, Object msg, List<Object> out) throws Exception {
-                            super.encode(ctx, msg, out);
-                        }
-                    }.encode(ctx, httpChunk, requestRawChunks);
-                    for (Object rawChunk : requestRawChunks) {
-                        if (rawChunk instanceof ByteBuf) {
-                            allRequestRawChunks.add((ByteBuf) rawChunk);
-                        }
-                    }
-                }
-            }
-
-            return Unpooled.copiedBuffer(allRequestRawChunks.toArray(new ByteBuf[allRequestRawChunks.size()]));
-        } finally {
-            channelBufferCopy.release();
-        }
-    }
-
     @Override
     public void channelRead(final ChannelHandlerContext ctx, final Object msg) throws Exception {
-        if (msg instanceof HttpRequest) {
-            // handle CONNECT request
-            HttpRequest httpRequest = (HttpRequest) msg;
-            logger.warn("CONNECT" + httpRequest);
-            channelActive(ctx);
-            ctx.channel().writeAndFlush(Unpooled.copiedBuffer("HTTP/1.1 200 OK", Charsets.UTF_8)).addListeners(
-                    new ChannelFutureListener() {
-                        @Override
-                        public void operationComplete(ChannelFuture future) throws Exception {
-                            logger.warn("WRITE_AND_FLUSH_COMPLETE");
-                        }
-                    }
-            );
-        } else if (msg instanceof ByteBuf) {
+        if (msg instanceof ByteBuf) {
+            // handle normal request
             final ByteBuf chunk = (ByteBuf) msg;
-            logger.warn("CHANNEL-READ");
             if (flushedBuffer) {
                 bufferedMode = false;
             }
@@ -208,18 +173,6 @@ public class DirectProxyUpstreamHandler extends ChannelDuplexHandler {
                 }
             }
         }
-    }
-
-    @Override
-    public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
-        logger.warn("WRITE");
-        super.write(ctx, msg, promise);
-    }
-
-    @Override
-    public void flush(ChannelHandlerContext ctx) throws Exception {
-        logger.warn("FLUSH");
-        super.flush(ctx);
     }
 
     @Override

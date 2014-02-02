@@ -71,8 +71,7 @@ public class NettyMockServer {
                                 .group(bossGroup, workerGroup)
                                 .channel(NioServerSocketChannel.class)
                                 .childHandler(new MockServerInitializer(mockServer, logFilter, NettyMockServer.this, false))
-                                .option(ChannelOption.SO_BACKLOG, 128)
-                                .childOption(ChannelOption.SO_KEEPALIVE, true)
+                                .option(ChannelOption.SO_BACKLOG, 1024)
                                 .bind(port)
                                 .sync()
                                 .channel();
@@ -83,8 +82,7 @@ public class NettyMockServer {
                                 .group(bossGroup, workerGroup)
                                 .channel(NioServerSocketChannel.class)
                                 .childHandler(new MockServerInitializer(mockServer, logFilter, NettyMockServer.this, true))
-                                .option(ChannelOption.SO_BACKLOG, 128)
-                                .childOption(ChannelOption.SO_KEEPALIVE, true)
+                                .option(ChannelOption.SO_BACKLOG, 1024)
                                 .bind(securePort)
                                 .sync()
                                 .channel();
@@ -96,7 +94,7 @@ public class NettyMockServer {
                         httpsChannel.closeFuture().sync();
                     }
                 } catch (InterruptedException ie) {
-                    logger.error("MockServer Netty Channel receive InterruptedException", ie);
+                    logger.error("MockServer receive InterruptedException", ie);
                 } finally {
                     bossGroup.shutdownGracefully();
                     workerGroup.shutdownGracefully();

@@ -1,195 +1,150 @@
 package org.mockserver.client.http;
 
+import org.apache.commons.io.Charsets;
+import org.apache.http.Header;
+import org.apache.http.client.methods.*;
+import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.message.BasicHeader;
+import org.apache.http.util.EntityUtils;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockserver.mappers.ApacheHttpClientToMockServerResponseMapper;
+import org.mockserver.model.HttpRequest;
+import org.mockserver.model.Parameter;
 
-import java.util.concurrent.ExecutionException;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.initMocks;
 
 /**
  * @author jamesdbloom
  */
 public class HttpRequestClientTest {
 
+    ArgumentCaptor<HttpUriRequest> requestArgumentCaptor;
     @Mock
-    private CloseableHttpClient mockHttpClient;
-    //    @Mock
-//    private Request mockRequest;
+    private CloseableHttpResponse closeableHttpResponse;
+    @Mock
+    private ApacheHttpClientToMockServerResponseMapper apacheHttpClientToMockServerResponseMapper;
+    @Mock
+    private CloseableHttpClient httpClient;
     @InjectMocks
     private ApacheHttpClient apacheHttpClient;
 
     @Before
     public void setupTestFixture() throws Exception {
-//        apacheHttpClient = new ApacheHttpClient();
-//        initMocks(this);
-//
-//        // - an http client that can create a request
-//        when(mockHttpClient.newRequest(anyString())).thenReturn(mockRequest);
-//        // - a request that has a fluent API
-//        when(mockRequest.method(any(HttpMethod.class))).thenReturn(mockRequest);
-//        when(mockRequest.header(anyString(), anyString())).thenReturn(mockRequest);
-//        when(mockRequest.content(any(StringContentProvider.class))).thenReturn(mockRequest);
+        apacheHttpClient = new ApacheHttpClient();
+        initMocks(this);
+
+        requestArgumentCaptor = ArgumentCaptor.forClass(HttpUriRequest.class);
+        when(httpClient.execute(requestArgumentCaptor.capture())).thenReturn(closeableHttpResponse);
+
     }
 
-    @Ignore
     @Test
     public void shouldSendPUTRequest() throws Exception {
-//        // when
-//        apacheHttpClient.sendPUTRequest("baseUri", "/path", "body");
-//        // then
-//        verify(mockHttpClient).newRequest("baseUri/path");
-//        verify(mockRequest).method(HttpMethod.PUT);
-//        verify(mockRequest).header("Content-Type", "application/json; charset=utf-8");
-//        verify(mockRequest).content(new ComparableStringContentProvider("body", Charsets.UTF_8));
-//        verify(mockRequest).send();
+        // given
+        when(closeableHttpResponse.getEntity()).thenReturn(new StringEntity("bodyContent"));
+
+        // when
+        String response = apacheHttpClient.sendPUTRequest("baseUri", "/path", "body");
+
+        // then
+        assertEquals("baseUri/path", requestArgumentCaptor.getValue().getURI().toString());
+        assertEquals("body", new String(EntityUtils.toByteArray(((HttpPut) requestArgumentCaptor.getValue()).getEntity()), Charsets.UTF_8));
+        assertEquals("bodyContent", response);
     }
 
-    @Ignore
     @Test
-    public void shouldRemoveExtraSlashesFromURL() throws Exception {
-//        // when
-//        apacheHttpClient.sendPUTRequest("baseUri/", "/path", "");
-//        // then
-//        verify(mockHttpClient).newRequest("baseUri/path");
+    public void shouldHandleSlashesInUrl() throws Exception {
+        // given
+        when(closeableHttpResponse.getEntity()).thenReturn(new ByteArrayEntity("bodyContent".getBytes(Charsets.UTF_8)));
+
+        // when
+        apacheHttpClient.sendPUTRequest("baseUri/", "/path", "body");
+
+        // then
+        assertEquals("baseUri/path", requestArgumentCaptor.getValue().getURI().toString());
+
+        // when
+        apacheHttpClient.sendPUTRequest("baseUri/", "/path", "body");
+
+        // then
+        assertEquals("baseUri/path", requestArgumentCaptor.getValue().getURI().toString());
+
+        // when
+        apacheHttpClient.sendPUTRequest("baseUri/", "path", "body");
+
+        // then
+        assertEquals("baseUri/path", requestArgumentCaptor.getValue().getURI().toString());
     }
 
-    @Ignore
     @Test
-    public void shouldAddMissingSlashesToURL() throws Exception {
-//        // when
-//        apacheHttpClient.sendPUTRequest("baseUri", "path", "");
-//        // then
-//        verify(mockHttpClient).newRequest("baseUri/path");
+    public void shouldSendPOSTRequest() throws Exception {
+        // when
+        apacheHttpClient.sendRequest(new HttpRequest()
+                .withMethod("POST")
+                .withURL("http://host:8080/path")
+                .withPath("/path")
+                .withQueryStringParameters(
+                        new Parameter("paramOneName", "paramOneValueOne", "paramOneValueTwo"),
+                        new Parameter("paramTwoName", "paramTwoValue")
+                )
+                .withHeaders(
+                        new org.mockserver.model.Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
+                        new org.mockserver.model.Header("headerTwoName", "headerTwoValue")
+                )
+                .withBody("bodyContent")
+        );
+
+        // then
+        HttpPost httpPost = (HttpPost) requestArgumentCaptor.getValue();
+        assertEquals("http://host:8080/path?paramOneName=paramOneValueOne&paramOneName=paramOneValueTwo&paramTwoName=paramTwoValue", httpPost.getURI().toString());
+        assertEquals("bodyContent", EntityUtils.toString(httpPost.getEntity()));
+        assertEquals("POST", httpPost.getMethod());
+        assertEquals("headerOneName", httpPost.getAllHeaders()[0].getName());
+        assertEquals("headerOneValueOne", httpPost.getAllHeaders()[0].getValue());
+        assertEquals("headerOneName", httpPost.getAllHeaders()[1].getName());
+        assertEquals("headerOneValueTwo", httpPost.getAllHeaders()[1].getValue());
+        assertEquals("headerTwoName", httpPost.getAllHeaders()[2].getName());
+        assertEquals("headerTwoValue", httpPost.getAllHeaders()[2].getValue());
+        verify(apacheHttpClientToMockServerResponseMapper).mapApacheHttpClientResponseToMockServerResponse(closeableHttpResponse);
     }
 
-    @Ignore
     @Test
-    public void shouldSendHttpRequest() throws Exception {
-//        // given
-//        when(mockRequest.getHeaders()).thenReturn(new HttpFields());
-//        ArgumentCaptor<Response.ContentListener> contentListenerArgumentCaptor = ArgumentCaptor.forClass(Response.ContentListener.class);
-//        ArgumentCaptor<Response.CompleteListener> completeListenerArgumentCaptor = ArgumentCaptor.forClass(Response.CompleteListener.class);
-//        CloseableHttpResponse mockResponse = mock(CloseableHttpResponse.class);
-//
-//        // when
-//        Thread thread = new Thread(new Runnable() {
-//            @Override
-//            public void run() {
-//                apacheHttpClient.sendRequest(
-//                        new HttpRequest()
-//                                .withURL("http://www.example.com")
-//                                .withMethod("POST")
-//                                .withBody("body")
-//                                .withHeaders(
-//                                        new Header("header_name_one", "header_value_one_one", "header_value_one_two"),
-//                                        new Header("header_name_two", "header_value_two")
-//                                )
-//                                .withCookies(
-//                                        new Cookie("cookie_name_one", "cookie_value_one_one", "cookie_value_one_two"),
-//                                        new Cookie("cookie_name_two", "cookie_value_two")
-//                                )
-//                );
-//            }
-//        });
-//        thread.start();
-//        thread.join(TimeUnit.SECONDS.toMillis(1));
-//
-//        // then
-//        // - basic request building
-//        verify(mockHttpClient).newRequest("http://www.example.com");
-//        verify(mockRequest).method(HttpMethod.POST);
-//        verify(mockRequest).content(new ComparableStringContentProvider("body", Charsets.UTF_8));
-//        verify(mockRequest).header("header_name_one", "header_value_one_one");
-//        verify(mockRequest).header("header_name_one", "header_value_one_two");
-//        verify(mockRequest).header("header_name_two", "header_value_two");
-//        verify(mockRequest).header("Cookie", "cookie_name_one=cookie_value_one_one; cookie_name_one=cookie_value_one_two; cookie_name_two=cookie_value_two; ");
-//        verify(mockRequest).header(HttpHeader.CONTENT_TYPE, "application/x-www-form-urlencoded");
-//        verify(mockRequest).send();
-//        // - response listener
-//        verify(mockRequest).onResponseContent(contentListenerArgumentCaptor.capture());
-//        contentListenerArgumentCaptor.getValue().onContent(null, IOStreamUtils.createBasicByteBuffer("chunk"));
-//        // - complete listener
-//        verify(mockRequest).onComplete(completeListenerArgumentCaptor.capture());
-//        completeListenerArgumentCaptor.getValue().onComplete(new Result(mockRequest, mockResponse));
-//        // - reading result
-//        TimeUnit.SECONDS.sleep(1);
-//        verify(httpClientResponseMapper).mapHttpClientResponseToHttpResponse(same(mockResponse), aryEq("chunk".getBytes()));
-    }
+    public void shouldSendGETRequest() throws Exception {
+        // when
+        apacheHttpClient.sendRequest(new HttpRequest()
+                .withMethod("GET")
+                .withURL("http://host:8080/path")
+                .withPath("/path")
+                .withQueryStringParameters(
+                        new Parameter("paramOneName", "paramOneValueOne", "paramOneValueTwo"),
+                        new Parameter("paramTwoName", "paramTwoValue")
+                )
+                .withHeaders(
+                        new org.mockserver.model.Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
+                        new org.mockserver.model.Header("headerTwoName", "headerTwoValue")
+                )
+        );
 
-    @Ignore
-    @Test(expected = ExecutionException.class)
-    public void shouldHandleExceptionResponseWhenSendingHttpRequest() throws Exception {
-//        // given
-//        ArgumentCaptor<Response.CompleteListener> completeListenerArgumentCaptor = ArgumentCaptor.forClass(Response.CompleteListener.class);
-//        Response mockResponse = mock(Response.class);
-//
-//        // when
-//        final SettableFuture<HttpResponse> responseFuture = SettableFuture.create();
-//        Thread thread = new Thread(new Runnable() {
-//            @Override
-//            public void run() {
-//                try {
-//                    responseFuture.set(apacheHttpClient.sendRequest(
-//                            new HttpRequest()
-//                                    .withURL("http://www.example.com")
-//                                    .withMethod("GET")
-//                    ));
-//                } catch (Throwable t) {
-//                    responseFuture.setException(t);
-//                }
-//            }
-//        });
-//        thread.start();
-//        thread.join(TimeUnit.SECONDS.toMillis(1));
-//
-//        // then
-//        // - complete listener
-//        verify(mockRequest).onComplete(completeListenerArgumentCaptor.capture());
-//        completeListenerArgumentCaptor.getValue().onComplete(new Result(mockRequest, new EOFException(), mockResponse));
-//        // - reading result
-//        responseFuture.get(1, TimeUnit.SECONDS);
-    }
-
-    @Ignore
-    @Test(expected = RuntimeException.class)
-    public void shouldHandleExceptionResponseWhenStartingHttpClient() throws Exception {
-//        // given
-//        ApacheHttpClient apacheHttpClient = spy(new ApacheHttpClient());
-//        when(apacheHttpClient.newHttpClient()).thenReturn(mockHttpClient);
-//        doThrow(new RuntimeException("TEST EXCEPTION")).when(mockHttpClient).setConnectTimeout(maxTimeout());
-//
-//        // when
-//        apacheHttpClient.sendRequest(
-//                new HttpRequest()
-//                        .withURL("http://www.example.com")
-//                        .withMethod("GET")
-//        );
-    }
-
-    @Ignore
-    @Test(expected = RuntimeException.class)
-    public void shouldHandleExceptionWhenSendingHttpRequest() throws Exception {
-//        // given
-//        when(mockRequest.send()).thenThrow(new TimeoutException("TEST EXCEPTION"));
-//
-//        // when
-//        apacheHttpClient.sendRequest(
-//                new HttpRequest()
-//                        .withURL("http://www.example.com")
-//                        .withMethod("GET")
-//        );
-    }
-
-    @Ignore
-    @Test(expected = RuntimeException.class)
-    public void shouldHandleExceptionWhenSendingExpectationRequest() throws Exception {
-//        // given
-//        when(mockRequest.send()).thenThrow(new TimeoutException("TEST EXCEPTION"));
-//
-//        // when
-//        apacheHttpClient.sendPUTRequest("baseUri", "/path", "body");
+        // then
+        HttpGet httpPost = (HttpGet) requestArgumentCaptor.getValue();
+        assertEquals("http://host:8080/path?paramOneName=paramOneValueOne&paramOneName=paramOneValueTwo&paramTwoName=paramTwoValue", httpPost.getURI().toString());
+        assertEquals("GET", httpPost.getMethod());
+        assertEquals("headerOneName", httpPost.getAllHeaders()[0].getName());
+        assertEquals("headerOneValueOne", httpPost.getAllHeaders()[0].getValue());
+        assertEquals("headerOneName", httpPost.getAllHeaders()[1].getName());
+        assertEquals("headerOneValueTwo", httpPost.getAllHeaders()[1].getValue());
+        assertEquals("headerTwoName", httpPost.getAllHeaders()[2].getName());
+        assertEquals("headerTwoValue", httpPost.getAllHeaders()[2].getValue());
+        verify(apacheHttpClientToMockServerResponseMapper).mapApacheHttpClientResponseToMockServerResponse(closeableHttpResponse);
     }
 }

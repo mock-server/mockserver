@@ -17,8 +17,10 @@ package org.mockserver.netty.proxy.http;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.*;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.socks.*;
 import io.netty.util.CharsetUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.client.http.ApacheHttpClient;
@@ -29,11 +31,13 @@ import org.mockserver.mappers.NettyToMockServerRequestMapper;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.NettyHttpRequest;
-import org.mockserver.netty.proxy.http.connect.ProxyConnectHandler;
+import org.mockserver.netty.proxy.http.connect.HttpConnectHandler;
+import org.mockserver.netty.proxy.http.socks.SocksConnectHandler;
 import org.mockserver.proxy.filters.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.InetSocketAddress;
 import java.util.List;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONNECTION;
@@ -44,7 +48,7 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<Object> {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     // mockserver
-    private final Integer connectPort;
+    private final InetSocketAddress connectSocket;
     private final boolean secure;
     private final HttpProxy server;
     private final LogFilter logFilter;
@@ -61,10 +65,10 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<Object> {
     private HttpRequest request = null;
 
 
-    public HttpProxyHandler(LogFilter logFilter, HttpProxy server, Integer connectPort, boolean secure) {
+    public HttpProxyHandler(LogFilter logFilter, HttpProxy server, InetSocketAddress connectSocket, boolean secure) {
         this.logFilter = logFilter;
         this.server = server;
-        this.connectPort = connectPort;
+        this.connectSocket = connectSocket;
         this.secure = secure;
         filters.withFilter(new org.mockserver.model.HttpRequest(), new HopByHopHeaderFilter());
         filters.withFilter(new org.mockserver.model.HttpRequest(), logFilter);
@@ -124,10 +128,9 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<Object> {
                         mockServerHttpRequest.headers().entries().addAll(trailer.trailingHeaders().entries());
                     }
 
-                    if (connectPort != null && mockServerHttpRequest.getMethod() == HttpMethod.CONNECT) {
+                    if (connectSocket != null && mockServerHttpRequest.getMethod() == HttpMethod.CONNECT) {
 
-                        ProxyConnectHandler handler = new ProxyConnectHandler(connectPort);
-                        ctx.pipeline().addAfter(ctx.name(), ProxyConnectHandler.class.getSimpleName(), handler);
+                        ctx.pipeline().addAfter(ctx.name(), HttpConnectHandler.class.getSimpleName(), new HttpConnectHandler(connectSocket));
                         ctx.pipeline().remove(this);
                         ctx.fireChannelRead(request);
 
@@ -137,6 +140,44 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<Object> {
 
                     }
                 }
+
+            }
+        } else if (msg instanceof SocksRequest) {
+            SocksRequest socksRequest = (SocksRequest) msg;
+            switch (socksRequest.requestType()) {
+
+                case INIT:
+
+                    ctx.pipeline().addFirst(SocksCmdRequestDecoder.getName(), new SocksCmdRequestDecoder());
+                    ctx.write(new SocksInitResponse(SocksAuthScheme.NO_AUTH));
+                    break;
+
+                case AUTH:
+
+                    ctx.pipeline().addFirst(SocksCmdRequestDecoder.getName(), new SocksCmdRequestDecoder());
+                    ctx.write(new SocksAuthResponse(SocksAuthStatus.SUCCESS));
+                    break;
+
+                case CMD:
+
+                    SocksCmdRequest req = (SocksCmdRequest) socksRequest;
+                    if (req.cmdType() == SocksCmdType.CONNECT) {
+
+                        ctx.pipeline().addLast(SocksConnectHandler.class.getSimpleName(), new SocksConnectHandler(connectSocket));
+                        ctx.pipeline().remove(this);
+                        ctx.fireChannelRead(socksRequest);
+
+                    } else {
+
+                        ctx.close();
+
+                    }
+                    break;
+
+                case UNKNOWN:
+
+                    ctx.close();
+                    break;
 
             }
         } else {

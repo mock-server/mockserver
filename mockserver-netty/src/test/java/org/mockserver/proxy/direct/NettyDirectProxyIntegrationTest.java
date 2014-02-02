@@ -2,7 +2,6 @@ package org.mockserver.proxy.direct;
 
 import org.apache.commons.io.Charsets;
 import org.junit.AfterClass;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.proxy.ProxyClient;
@@ -20,14 +19,17 @@ import static org.mockserver.test.Assert.assertContains;
 /**
  * @author jamesdbloom
  */
-public class NettyHttpProxyIntegrationTest {
+public class NettyDirectProxyIntegrationTest {
 
     private final static int SERVER_HTTP_PORT = PortFactory.findFreePort();
     private final static int SERVER_HTTPS_PORT = PortFactory.findFreePort();
     private final static int PROXY_HTTP_PORT = PortFactory.findFreePort();
+    private final static int PROXY_HTTPS_PORT = PortFactory.findFreePort();
+    private final static int PROXY_SOCKS_PORT = PortFactory.findFreePort();
+    private final static int PROXY_DIRECT_PORT = PortFactory.findFreePort();
+    private final static int PROXY_DIRECT_SECURE_PORT = PortFactory.findFreePort();
     private static HttpHelloWorldServer httpHelloWorldServer;
-    private static DirectProxy directProxy;
-    private static ProxyClient proxyClient;
+    private static HttpProxy httpProxy;
 
     @BeforeClass
     public static void setupFixture() throws Exception {
@@ -35,10 +37,7 @@ public class NettyHttpProxyIntegrationTest {
         httpHelloWorldServer = new HttpHelloWorldServer(SERVER_HTTP_PORT, SERVER_HTTPS_PORT);
 
         // start proxy
-        directProxy = new DirectProxy(PROXY_HTTP_PORT, "127.0.0.1", SERVER_HTTP_PORT);
-
-        // start client
-        proxyClient = new ProxyClient("localhost", PROXY_HTTP_PORT);
+        httpProxy = new HttpProxy(PROXY_HTTP_PORT, PROXY_HTTPS_PORT, PROXY_SOCKS_PORT, PROXY_DIRECT_PORT, PROXY_DIRECT_SECURE_PORT, "127.0.0.1", SERVER_HTTP_PORT);
     }
 
     @AfterClass
@@ -47,19 +46,14 @@ public class NettyHttpProxyIntegrationTest {
         httpHelloWorldServer.stop();
 
         // stop proxy
-        directProxy.stop();
-    }
-
-    @Before
-    public void resetProxy() {
-        proxyClient.reset();
+        httpProxy.stop();
     }
 
     @Test
-    public void shouldForwardRequestsUsingSocketDirectly() throws Exception {
+    public void shouldForwardRequestsUsingSocketDirectlyHeadersOnly() throws Exception {
         Socket socket = null;
         try {
-            socket = new Socket("localhost", PROXY_HTTP_PORT);
+            socket = new Socket("localhost", PROXY_DIRECT_PORT);
 
             // given
             OutputStream output = socket.getOutputStream();
@@ -75,11 +69,22 @@ public class NettyHttpProxyIntegrationTest {
 
             // then
             assertContains(IOStreamUtils.readInputStreamToString(socket), "X-Test: test_headers_only");
+        } finally {
+            if (socket != null) {
+                socket.close();
+            }
+        }
+    }
 
-            socket = new Socket("localhost", PROXY_HTTP_PORT);
+    @Test
+    public void shouldForwardRequestsUsingSocketDirectlyHeadersAndBody() throws Exception {
+        Socket socket = null;
+        try {
+
+            socket = new Socket("localhost", PROXY_DIRECT_PORT);
 
             // given
-            output = socket.getOutputStream();
+            OutputStream output = socket.getOutputStream();
 
             // - send GET request for headers and body
             output.write(("" +
@@ -93,6 +98,33 @@ public class NettyHttpProxyIntegrationTest {
             String response = IOStreamUtils.readInputStreamToString(socket);
             assertContains(response, "X-Test: test_headers_and_body");
             assertContains(response, "an_example_body");
+        } finally {
+            if (socket != null) {
+                socket.close();
+            }
+        }
+    }
+
+    @Test
+    public void shouldForwardRequestsUsingSocketDirectlyNotFound() throws Exception {
+        Socket socket = null;
+        try {
+
+            socket = new Socket("localhost", PROXY_DIRECT_PORT);
+
+            // given
+            OutputStream output = socket.getOutputStream();
+
+            // - send GET request for headers and body
+            output.write(("" +
+                    "GET /unknown HTTP/1.1\r\n" +
+                    "Host: localhost:" + SERVER_HTTP_PORT + "\r\n" +
+                    "\r\n"
+            ).getBytes(Charsets.UTF_8));
+            output.flush();
+
+            // then
+            assertContains(IOStreamUtils.readInputStreamToString(socket), "HTTP/1.1 404 Not Found");
         } finally {
             if (socket != null) {
                 socket.close();
