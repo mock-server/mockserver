@@ -32,6 +32,10 @@ var mockServerClient = function (mockServerUrl) {
                 httpResponse: {
                     statusCode: statusCode || 200,
                     body: JSON.stringify(responseBody),
+//                    body: {
+//                        type: "REGEX",
+//                        value: JSON.stringify(responseBody)
+//                    },
                     cookies: [],
                     headers: defaultResponseHeaders,
                     delay: {

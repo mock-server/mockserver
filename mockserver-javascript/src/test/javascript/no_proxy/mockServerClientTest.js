@@ -21,7 +21,10 @@ describe("mockServerClient client:", function () {
                             'values': [ 'true' ]
                         }
                     ],
-                    'body': 'someBody'
+                    'body': {
+                        'type': "EXACT",
+                        'value': 'someBody'
+                    }
                 },
                 'httpResponse': {
                     'statusCode': 200,
@@ -56,6 +59,77 @@ describe("mockServerClient client:", function () {
         xmlhttp.send("someBody");
 
         expect(xmlhttp.status).toEqual(404);
+    });
+
+    it("should match on body only", function () {
+        // when
+        var client = mockServerClient("http://localhost:1080");
+        client.mockAnyResponse(
+            {
+                'httpRequest': {
+                    'path': '/somePath',
+                    'body': {
+                        'type': "EXACT",
+                        'value': 'someBody'
+                    }
+                },
+                'httpResponse': {
+                    'statusCode': 200,
+                    'body': JSON.stringify({ name: 'first_body' }),
+                    'delay': {
+                        'timeUnit': 'MILLISECONDS',
+                        'value': 250
+                    }
+                },
+                'times': {
+                    'remainingTimes': 1,
+                    'unlimited': false
+                }
+            }
+        );
+        client.mockAnyResponse(
+            {
+                'httpRequest': {
+                    'path': '/somePath',
+                    'body': {
+                        'type': "REGEX",
+                        'value': 'someOtherBody'
+                    }
+                },
+                'httpResponse': {
+                    'statusCode': 200,
+                    'body': JSON.stringify({ name: 'second_body' }),
+                    'delay': {
+                        'timeUnit': 'MILLISECONDS',
+                        'value': 250
+                    }
+                },
+                'times': {
+                    'remainingTimes': 1,
+                    'unlimited': false
+                }
+            }
+        );
+
+        // then - non matching request
+        xmlhttp.open("POST", "http://localhost:1080/somePath", false);
+        xmlhttp.send("someIncorrectBody");
+
+        expect(xmlhttp.status).toEqual(404);
+
+        // then - matching request
+        xmlhttp.open("POST", "http://localhost:1080/somePath", false);
+        xmlhttp.send("someBody");
+
+        expect(xmlhttp.status).toEqual(200);
+        expect(xmlhttp.responseText).toEqual('{"name":"first_body"}');
+
+        // then - matching request, but no times remaining
+        xmlhttp.open("POST", "http://localhost:1080/somePath", false);
+        xmlhttp.send("someOtherBody");
+
+        expect(xmlhttp.status).toEqual(200);
+        expect(xmlhttp.responseText).toEqual('{"name":"second_body"}');
     });
 
     it("should create simple response expectation", function () {
