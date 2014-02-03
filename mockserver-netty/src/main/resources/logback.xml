@@ -33,7 +33,6 @@
     </appender>
 
     <logger name="org.mockserver" level="TRACE"/>
-    <logger name="org.eclipse.jetty.client" level="TRACE"/>
 
     <root level="WARN">
         <appender-ref ref="FILE"/>
