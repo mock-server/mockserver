@@ -57,12 +57,6 @@ public class MockServerRunForkedMojo extends MockServerAbstractMojo {
         } else {
             getLog().info("Starting MockServer on port " + serverPort);
             List<String> arguments = new ArrayList<String>(Arrays.asList(getJavaBin(), "-Dmockserver.logLevel=" + logLevel));
-            if (serverStopPort != -1) {
-                arguments.add("-Dmockserver.serverStopPort=" + serverStopPort);
-            }
-            if (proxyStopPort != -1) {
-                arguments.add("-Dmockserver.proxyStopPort=" + proxyStopPort);
-            }
             // arguments.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5006");
             arguments.add("-jar");
             arguments.add(jarWithDependencies());
@@ -84,7 +78,7 @@ public class MockServerRunForkedMojo extends MockServerAbstractMojo {
             }
             ProcessBuilder processBuilder = newProcessBuilder(arguments);
             if (pipeLogToConsole) {
-                processBuilder.inheritIO();
+                processBuilder.redirectErrorStream(true);
             }
             try {
                 processBuilder.start();
@@ -123,7 +117,7 @@ public class MockServerRunForkedMojo extends MockServerAbstractMojo {
 
     @VisibleForTesting
     String jarWithDependencies() {
-        Artifact jarWithDependencies = repositorySystem.createArtifactWithClassifier("org.mock-server", "mockserver-jetty", "2.5-SNAPSHOT", "jar", "jar-with-dependencies");
+        Artifact jarWithDependencies = repositorySystem.createArtifactWithClassifier("org.mock-server", "mockserver-netty", "2.5-SNAPSHOT", "jar", "jar-with-dependencies");
         artifactResolver.resolve(new ArtifactResolutionRequest().setArtifact(jarWithDependencies));
         getLog().debug("Running MockServer using " + jarWithDependencies.getFile().getAbsolutePath());
         return jarWithDependencies.getFile().getAbsolutePath();

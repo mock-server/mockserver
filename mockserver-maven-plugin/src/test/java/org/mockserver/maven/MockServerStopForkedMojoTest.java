@@ -15,7 +15,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class MockServerStopForkedMojoTest {
 
     @Mock
-    private EmbeddedJettyHolder mockEmbeddedJettyHolder;
+    private InstanceHolder mockEmbeddedJettyHolder;
     @InjectMocks
     private MockServerStopForkedMojo mockServerStopForkedMojo;
 
@@ -27,33 +27,15 @@ public class MockServerStopForkedMojoTest {
     @Test
     public void shouldStopMockServerAndProxySuccessfully() throws MojoExecutionException {
         // given
-        mockServerStopForkedMojo.serverStopPort = 1;
-        mockServerStopForkedMojo.proxyStopPort = 2;
-        mockServerStopForkedMojo.stopWait = 3;
+        mockServerStopForkedMojo.serverPort = 1;
+        mockServerStopForkedMojo.proxyPort = 2;
         mockServerStopForkedMojo.logLevel = "LEVEL";
-        when(mockEmbeddedJettyHolder.stop(1, 2, 3, "LEVEL")).thenReturn(true);
 
         // when
         mockServerStopForkedMojo.execute();
 
         // then
-        verify(mockEmbeddedJettyHolder).stop(1, 2, 3, "LEVEL");
-    }
-
-    @Test
-    public void shouldStopMockServerAndProxyUnsuccessfully() throws MojoExecutionException {
-        // given
-        mockServerStopForkedMojo.serverStopPort = 1;
-        mockServerStopForkedMojo.proxyStopPort = 2;
-        mockServerStopForkedMojo.stopWait = 3;
-        mockServerStopForkedMojo.logLevel = "LEVEL";
-        when(mockEmbeddedJettyHolder.stop(1, 2, 3, "LEVEL")).thenReturn(false);
-
-        // when
-        mockServerStopForkedMojo.execute();
-
-        // then
-        verify(mockEmbeddedJettyHolder).stop(1, 2, 3, "LEVEL");
+        verify(mockEmbeddedJettyHolder).stop(1, 2, "LEVEL");
     }
 
     @Test

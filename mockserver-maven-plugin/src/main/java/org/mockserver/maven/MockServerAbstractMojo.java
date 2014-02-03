@@ -49,29 +49,14 @@ public abstract class MockServerAbstractMojo extends AbstractMojo {
     @Parameter(property = "mockserver.pipeLogToConsole", defaultValue = "false")
     protected boolean pipeLogToConsole;
     /**
-     * The port to stop MockServer
-     */
-    @Parameter(property = "mockserver.serverStopPort", defaultValue = "-1")
-    protected int serverStopPort = -1;
-    /**
-     * The port to stop the proxy
-     */
-    @Parameter(property = "mockserver.proxyStopPort", defaultValue = "-1")
-    protected int proxyStopPort = -1;
-    /**
-     * Max time in seconds to wait for the MockServer to stop
-     */
-    @Parameter(property = "mockserver.stopWait")
-    protected int stopWait;
-    /**
      * Holds reference to jetty across plugin execution
      */
-    private EmbeddedJettyHolder embeddedJettyHolder;
+    private InstanceHolder embeddedJettyHolder;
 
-    protected EmbeddedJettyHolder getEmbeddedJettyHolder() {
+    protected InstanceHolder getEmbeddedJettyHolder() {
         if (embeddedJettyHolder == null) {
             // create on demand to avoid log creation for skipped plugins
-            embeddedJettyHolder = new EmbeddedJettyHolder();
+            embeddedJettyHolder = new InstanceHolder();
         }
         return embeddedJettyHolder;
     }
