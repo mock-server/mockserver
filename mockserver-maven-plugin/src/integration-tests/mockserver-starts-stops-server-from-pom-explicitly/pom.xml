@@ -36,8 +36,8 @@
                 <artifactId>mockserver-maven-plugin</artifactId>
                 <version>${mockserver.version}</version>
                 <configuration>
-                    <serverPort>8080</serverPort>
-                    <serverSecurePort>8082</serverSecurePort>
+                    <serverPort>1081</serverPort>
+                    <serverSecurePort>1082</serverSecurePort>
                 </configuration>
                 <executions>
                     <execution>

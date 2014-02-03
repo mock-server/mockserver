@@ -14,6 +14,8 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.configuration.SystemProperties.bufferSize;
 import static org.mockserver.configuration.SystemProperties.maxTimeout;
+import static org.mockserver.model.ParameterBody.params;
+import static org.mockserver.model.StringBody.exact;
 
 /**
  * @author jamesdbloom
@@ -819,7 +821,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         "&queryStringParameterOneName=queryStringParameterOneValueTwo" +
                                         "&queryStringParameterTwoName=queryStringParameterTwoValue")
                                 .withPath("/some_path")
-                                .withBody(new ParameterBody(new Parameter("bodyParameterName", "bodyParameterValue"))))
+                                .withBody(params(new Parameter("bodyParameterName", "bodyParameterValue"))))
         );
         // - in https - query string parameter objects
         assertEquals(
@@ -835,7 +837,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValueOne", "queryStringParameterOneValueTwo"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
                                 )
-                                .withBody(new ParameterBody(new Parameter("bodyParameterName=bodyParameterValue")))
+                                .withBody(params(new Parameter("bodyParameterName=bodyParameterValue")))
                 )
         );
     }
@@ -944,7 +946,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withMethod("POST")
                                 .withPath("/some_pathRequest")
-                                .withBody(new ParameterBody(
+                                .withBody(params(
                                         new Parameter("bodyParameterOneName", "Parameter One Value One", "Parameter One Value Two"),
                                         new Parameter("bodyParameterTwoName", "Parameter Two")
                                 ))
@@ -995,7 +997,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withMethod("POST")
                                 .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest")
                                 .withPath("/some_pathRequest")
-                                .withBody(new ParameterBody(
+                                .withBody(params(
                                         new Parameter("bodyParameterOneName", "Parameter One Value One", "Parameter One Value Two"),
                                         new Parameter("bodyParameterTwoName", "Parameter Two")
                                 ))
@@ -1021,7 +1023,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         "&bodyParameterOneName=bodyParameterOneValueTwo" +
                                         "&bodyParameterTwoName=bodyParameterTwoValue")
                                 .withPath("/some_pathRequest")
-                                .withBody(new ParameterBody(
+                                .withBody(params(
                                         new Parameter("bodyParameterOneName", "Parameter One Value One", "Parameter One Value Two"),
                                         new Parameter("bodyParameterTwoName", "Parameter Two")
                                 ))
@@ -1092,7 +1094,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withMethod("PUT")
                                 .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest")
                                 .withPath("/some_pathRequest")
-                                .withBody(new ParameterBody(
+                                .withBody(params(
                                         new Parameter("bodyParameterOneName", "Parameter One Value One", "Parameter One Value Two"),
                                         new Parameter("bodyParameterTwoName", "Parameter Two")
                                 ))
@@ -1114,7 +1116,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
                                 )
-                                .withBody(new StringBody("some_body", Body.Type.EXACT))
+                                .withBody(exact("some_body"))
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
                 )
@@ -1140,7 +1142,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
                                 )
-                                .withBody(new StringBody("some_other_body", Body.Type.EXACT))
+                                .withBody(exact("some_other_body"))
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
                 )
@@ -1158,7 +1160,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
                                 )
-                                .withBody(new StringBody("some_other_body", Body.Type.EXACT))
+                                .withBody(exact("some_other_body"))
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
                 )
@@ -1255,7 +1257,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
                                 )
-                                .withBody(new StringBody("some_body", Body.Type.EXACT))
+                                .withBody(exact("some_body"))
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
                 )
@@ -1281,7 +1283,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
                                 )
-                                .withBody(new StringBody("some_body", Body.Type.EXACT))
+                                .withBody(exact("some_body"))
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
                 )
@@ -1299,7 +1301,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
                                 )
-                                .withBody(new StringBody("some_body", Body.Type.EXACT))
+                                .withBody(exact("some_body"))
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
                 )
@@ -1356,7 +1358,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withMethod("POST")
                                 .withPath("/some_pathRequest")
-                                .withBody(new ParameterBody(
+                                .withBody(params(
                                         new Parameter("bodyParameterOneName", "Parameter One Value One", "Parameter One Value Two"),
                                         new Parameter("bodyParameterTwoName", "Parameter Two")
                                 ))
@@ -1379,7 +1381,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withMethod("POST")
                                 .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest")
                                 .withPath("/some_pathRequest")
-                                .withBody(new ParameterBody(
+                                .withBody(params(
                                         new Parameter("OTHERBodyParameterOneName", "Parameter One Value One", "Parameter One Value Two"),
                                         new Parameter("bodyParameterTwoName", "Parameter Two")
                                 ))
@@ -1456,7 +1458,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withMethod("POST")
                                 .withPath("/some_pathRequest")
-                                .withBody(new ParameterBody(
+                                .withBody(params(
                                         new Parameter("bodyParameterOneName", "Parameter One Value One", "Parameter One Value Two"),
                                         new Parameter("bodyParameterTwoName", "Parameter Two")
                                 ))
@@ -1479,7 +1481,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withMethod("POST")
                                 .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest")
                                 .withPath("/some_pathRequest")
-                                .withBody(new ParameterBody(
+                                .withBody(params(
                                         new Parameter("bodyParameterOneName", "Other Parameter One Value One", "Parameter One Value Two"),
                                         new Parameter("bodyParameterTwoName", "Parameter Two")
                                 ))
@@ -1517,7 +1519,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
                                 )
-                                .withBody(new StringBody("some_body", Body.Type.EXACT))
+                                .withBody(exact("some_body"))
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
                 )
@@ -1543,7 +1545,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
                                 )
-                                .withBody(new StringBody("some_body", Body.Type.EXACT))
+                                .withBody(exact("some_body"))
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieOtherName", "cookieValue"))
                 )
@@ -1561,7 +1563,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
                                 )
-                                .withBody(new StringBody("some_body", Body.Type.EXACT))
+                                .withBody(exact("some_body"))
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieOtherName", "cookieValue"))
                 )
@@ -1580,7 +1582,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
                                 )
-                                .withBody(new StringBody("some_body", Body.Type.EXACT))
+                                .withBody(exact("some_body"))
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
                 )
@@ -1606,7 +1608,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
                                 )
-                                .withBody(new StringBody("some_body", Body.Type.EXACT))
+                                .withBody(exact("some_body"))
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieOtherValue"))
                 )
@@ -1624,7 +1626,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
                                 )
-                                .withBody(new StringBody("some_body", Body.Type.EXACT))
+                                .withBody(exact("some_body"))
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieOtherValue"))
                 )
@@ -1643,7 +1645,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
                                 )
-                                .withBody(new StringBody("some_body", Body.Type.EXACT))
+                                .withBody(exact("some_body"))
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
                 )
@@ -1669,7 +1671,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
                                 )
-                                .withBody(new StringBody("some_body", Body.Type.EXACT))
+                                .withBody(exact("some_body"))
                                 .withHeaders(new Header("headerOtherName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
                 )
@@ -1687,7 +1689,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
                                 )
-                                .withBody(new StringBody("some_body", Body.Type.EXACT))
+                                .withBody(exact("some_body"))
                                 .withHeaders(new Header("headerOtherName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
                 )
@@ -1706,7 +1708,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
                                 )
-                                .withBody(new StringBody("some_body", Body.Type.EXACT))
+                                .withBody(exact("some_body"))
                                 .withHeaders(new Header("headerName", "headerValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
                 )
@@ -1732,7 +1734,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
                                 )
-                                .withBody(new StringBody("some_body", Body.Type.EXACT))
+                                .withBody(exact("some_body"))
                                 .withHeaders(new Header("headerName", "headerOtherValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
                 )
@@ -1750,7 +1752,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
                                 )
-                                .withBody(new StringBody("some_body", Body.Type.EXACT))
+                                .withBody(exact("some_body"))
                                 .withHeaders(new Header("headerName", "headerOtherValue"))
                                 .withCookies(new Cookie("cookieName", "cookieValue"))
                 )

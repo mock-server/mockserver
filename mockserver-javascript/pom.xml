@@ -30,22 +30,20 @@
                     <logLevel>DEBUG</logLevel>
                     <serverPort>1080</serverPort>
                     <serverSecurePort>1082</serverSecurePort>
-                    <serverStopPort>1085</serverStopPort>
                     <proxyPort>1090</proxyPort>
                     <proxySecurePort>1092</proxySecurePort>
-                    <proxyStopPort>1095</proxyStopPort>
                 </configuration>
                 <executions>
                     <execution>
                         <id>pre-integration-test</id>
-                        <phase>pre-integration-test</phase>
+                        <phase>generate-test-sources</phase>
                         <goals>
                             <goal>start</goal>
                         </goals>
                     </execution>
                     <execution>
                         <id>post-integration-test</id>
-                        <phase>post-integration-test</phase>
+                        <phase>verify</phase>
                         <goals>
                             <goal>stop</goal>
                         </goals>

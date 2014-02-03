@@ -16,7 +16,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class MockServerAbstractMojoTest {
 
     @Mock
-    private EmbeddedJettyHolder embeddedJettyHolder;
+    private InstanceHolder embeddedJettyHolder;
 
     @InjectMocks
     private MockServerAbstractMojo mockServerAbstractMojo;

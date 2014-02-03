@@ -5,6 +5,7 @@ import org.mockserver.model.*;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockserver.model.StringBody.regex;
 
 /**
  * @author jamesdbloom
@@ -172,17 +173,17 @@ public class HttpRequestMatcherTest {
 
     @Test
     public void matchesMatchingBodyRegex() {
-        assertTrue(new HttpRequestMatcher().withBody(new StringBody("some[a-z]{4}", Body.Type.REGEX)).matches(new HttpRequest().withBody(new StringBody("somebody", Body.Type.EXACT))));
+        assertTrue(new HttpRequestMatcher().withBody(regex("some[a-z]{4}")).matches(new HttpRequest().withBody(new StringBody("somebody", Body.Type.EXACT))));
     }
 
     @Test
     public void doesNotMatchIncorrectBody() {
-        assertFalse(new HttpRequestMatcher().withBody(new StringBody("somebody", Body.Type.REGEX)).matches(new HttpRequest().withBody(new StringBody("bodysome", Body.Type.EXACT))));
+        assertFalse(new HttpRequestMatcher().withBody(regex("somebody")).matches(new HttpRequest().withBody(new StringBody("bodysome", Body.Type.EXACT))));
     }
 
     @Test
     public void doesNotMatchIncorrectBodyRegex() {
-        assertFalse(new HttpRequestMatcher().withBody(new StringBody("some[a-z]{3}", Body.Type.REGEX)).matches(new HttpRequest().withBody(new StringBody("bodysome", Body.Type.EXACT))));
+        assertFalse(new HttpRequestMatcher().withBody(regex("some[a-z]{3}")).matches(new HttpRequest().withBody(new StringBody("bodysome", Body.Type.EXACT))));
     }
 
     @Test

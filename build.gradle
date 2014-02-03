@@ -74,10 +74,10 @@ project(':mockserver-jetty') {
     }
 }
 
-project(':mockserver-tomcat') {
+project(':mockserver-netty') {
     dependencies {
-        compile project(':mockserver-core'), project(':mockserver-war'), project(':mockserver-proxy-war')
-        testCompile project(':mockserver-client'), project(':mockserver-integration-testing')
+        compile project(':mockserver-core'), project(':mockserver-client')
+        testCompile project(':mockserver-integration-testing')
     }
 }
 
@@ -90,7 +90,7 @@ project(':mockserver-vertx') {
 
 project(':mockserver-examples') {
     dependencies {
-        compile project(':mockserver-jetty'), project(':mockserver-client'), project(':mockserver-core')
+        compile project(':mockserver-netty'), project(':mockserver-client'), project(':mockserver-core')
     }
 }
 

@@ -5,7 +5,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.mockserver.integration.proxy.AbstractClientSecureProxyIntegrationTest;
-import org.mockserver.integration.proxy.ServerRunner;
+import org.mockserver.integration.testserver.TestServer;
 import org.mockserver.socket.PortFactory;
 
 import java.util.concurrent.ExecutionException;
@@ -19,7 +19,7 @@ public class ProxyRunnerIntegrationTest extends AbstractClientSecureProxyIntegra
     private final static int SERVER_HTTPS_PORT = PortFactory.findFreePort();
     private final static int PROXY_HTTP_PORT = PortFactory.findFreePort();
     private final static int PROXY_HTTPS_PORT = PortFactory.findFreePort();
-    private final static ServerRunner serverRunner = new ServerRunner();
+    private static TestServer testServer = new TestServer();
     private ProxyRunner proxyRunner;
 
     @Override
@@ -39,7 +39,7 @@ public class ProxyRunnerIntegrationTest extends AbstractClientSecureProxyIntegra
 
     @BeforeClass
     public static void startServer() throws Exception {
-        serverRunner.startServer(SERVER_HTTP_PORT, SERVER_HTTPS_PORT);
+        testServer.startServer(SERVER_HTTP_PORT, SERVER_HTTPS_PORT);
     }
 
     @Before
@@ -54,6 +54,6 @@ public class ProxyRunnerIntegrationTest extends AbstractClientSecureProxyIntegra
 
     @AfterClass
     public static void stopServer() throws Exception {
-        serverRunner.stopServer();
+        testServer.stop();
     }
 }

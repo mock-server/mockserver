@@ -206,6 +206,16 @@ public class HttpRequest extends EqualsHashCodeToString {
     }
 
     /**
+     * Returns true if a header with the specified name has been added
+     *
+     * @param name the Header name
+     * @return true if a header has been added with that name otherwise false
+     */
+    public boolean containsHeader(String name) {
+        return headers.containsKey(name);
+    }
+
+    /**
      * The cookies to match on as a list of Cookie objects where the values or keys of each cookie can be either a string or a regex
      * (for more details of the supported regex syntax see http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html)
      *

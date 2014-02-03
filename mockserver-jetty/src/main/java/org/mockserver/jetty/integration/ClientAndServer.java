@@ -27,8 +27,4 @@ public class ClientAndServer extends MockServerClient {
     public static ClientAndServer startClientAndServer(Integer port, Integer securePort) {
         return new ClientAndServer(port, securePort);
     }
-
-    public void stop() {
-        mockServerRunner.stop();
-    }
 }

@@ -14,6 +14,14 @@ public class ParameterBody extends Body {
 
     private final List<Parameter> parameters;
 
+    public static ParameterBody params(Parameter... parameters) {
+        return new ParameterBody(parameters);
+    }
+
+    public static ParameterBody params(List<Parameter> parameters) {
+        return new ParameterBody(parameters);
+    }
+
     public ParameterBody(Parameter... parameters) {
         this(Arrays.asList(parameters));
     }

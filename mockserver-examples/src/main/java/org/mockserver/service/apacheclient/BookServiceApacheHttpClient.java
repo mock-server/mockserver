@@ -65,7 +65,7 @@ public class BookServiceApacheHttpClient implements BookService {
             DefaultProxyRoutePlanner defaultProxyRoutePlanner = new DefaultProxyRoutePlanner(httpHost);
             return HttpClients.custom().setRoutePlanner(defaultProxyRoutePlanner).build();
 //            todo - need to support SOCKS protocol for this solution to work - jamesdbloom 12/01/2014
-//            return HttpClients.custom().setRoutePlanner(new SystemDefaultRoutePlanner(PROXY_SELECTOR.getDefault())).build();
+//            return HttpClients.custom().setRoutePlanner(new SystemDefaultRoutePlanner(ProxySelector.getDefault())).build();
         } else {
             return HttpClients.custom().build();
         }

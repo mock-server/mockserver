@@ -28,10 +28,6 @@ public class ClientAndProxy extends ProxyClient {
         return new ClientAndProxy(port, securePort);
     }
 
-    public void stop() {
-        proxyRunner.stop();
-    }
-
     public boolean isRunning() {
         return proxyRunner.isRunning();
     }

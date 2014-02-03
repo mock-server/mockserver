@@ -2,10 +2,10 @@ package org.mockserver.jetty.proxy;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.mockserver.integration.testserver.TestServer;
 import org.mockserver.jetty.cli.Main;
 import org.mockserver.configuration.SystemProperties;
 import org.mockserver.integration.proxy.AbstractClientSecureProxyIntegrationTest;
-import org.mockserver.integration.proxy.ServerRunner;
 import org.mockserver.jetty.server.MockServerRunner;
 import org.mockserver.socket.PortFactory;
 
@@ -20,35 +20,27 @@ public class ProxyCommandLineIntegrationTest extends AbstractClientSecureProxyIn
     private final static int SERVER_HTTPS_PORT = PortFactory.findFreePort();
     private final static int PROXY_HTTP_PORT = PortFactory.findFreePort();
     private final static int PROXY_HTTPS_PORT = PortFactory.findFreePort();
-    private final static ServerRunner serverRunner = new ServerRunner();
+    private static TestServer testServer = new TestServer();
 
     @BeforeClass
-    public static void startServer() throws Exception {
-        serverRunner.startServer(SERVER_HTTP_PORT, SERVER_HTTPS_PORT);
-        // wait for server to start up
-        Thread.sleep(TimeUnit.MILLISECONDS.toMillis(500));
-    }
+    public static void setupFixture() throws Exception {
+        // start server
+        testServer.startServer(SERVER_HTTP_PORT, SERVER_HTTPS_PORT);
 
-    @BeforeClass
-    public static void startProxy() throws InterruptedException {
+        // start proxy
         Main.reset();
         Main.main("-proxyPort", "" + PROXY_HTTP_PORT, "-proxySecurePort", "" + PROXY_HTTPS_PORT);
-        // wait for proxy server to start up
-        Thread.sleep(TimeUnit.SECONDS.toMillis(1));
+        TimeUnit.MILLISECONDS.sleep(500);
     }
 
     @AfterClass
-    public static void stopProxy() throws Exception {
+    public static void stopFixture() throws Exception {
+        // stop server
+        testServer.stop();
+
+        // stop proxy
         new MockServerRunner().stop("127.0.0.1", SystemProperties.serverStopPort(PROXY_HTTP_PORT, PROXY_HTTPS_PORT), 5);
-        // wait for proxy server to shutdown
-        Thread.sleep(TimeUnit.SECONDS.toMillis(1));
-    }
-
-    @AfterClass
-    public static void stopServer() throws Exception {
-        serverRunner.stopServer();
-        // wait for server to shutdown
-        Thread.sleep(TimeUnit.SECONDS.toMillis(1));
+        TimeUnit.MILLISECONDS.sleep(500);
     }
 
     @Override

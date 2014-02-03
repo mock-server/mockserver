@@ -2,13 +2,13 @@ package org.mockserver.proxy.direct;
 
 import org.apache.commons.io.Charsets;
 import org.junit.*;
-import org.mockserver.client.proxy.ProxyClient;
-import org.mockserver.helloworld.HttpHelloWorldServer;
-import org.mockserver.netty.proxy.direct.DirectProxy;
-import org.mockserver.netty.proxy.http.HttpProxy;
+import org.mockserver.integration.testserver.TestServer;
+import org.mockserver.proxy.http.HttpProxy;
 import org.mockserver.socket.PortFactory;
 import org.mockserver.socket.SSLFactory;
 import org.mockserver.streams.IOStreamUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.OutputStream;
 import java.net.Socket;
@@ -20,29 +20,38 @@ import static org.mockserver.test.Assert.assertContains;
  */
 public class NettyDirectSecureProxyIntegrationTest {
 
-    private final static int SERVER_HTTP_PORT = PortFactory.findFreePort();
-    private final static int SERVER_HTTPS_PORT = PortFactory.findFreePort();
-    private final static int PROXY_HTTP_PORT = PortFactory.findFreePort();
-    private final static int PROXY_HTTPS_PORT = PortFactory.findFreePort();
-    private final static int PROXY_SOCKS_PORT = PortFactory.findFreePort();
-    private final static int PROXY_DIRECT_PORT = PortFactory.findFreePort();
-    private final static int PROXY_DIRECT_SECURE_PORT = PortFactory.findFreePort();
-    private static HttpHelloWorldServer httpHelloWorldServer;
+    private final static Logger logger = LoggerFactory.getLogger(NettyDirectSecureProxyIntegrationTest.class);
+
+    private final static Integer SERVER_HTTP_PORT = PortFactory.findFreePort();
+    private final static Integer SERVER_HTTPS_PORT = PortFactory.findFreePort();
+    private final static Integer PROXY_HTTP_PORT = PortFactory.findFreePort();
+    private final static Integer PROXY_HTTPS_PORT = PortFactory.findFreePort();
+    private final static Integer PROXY_SOCKS_PORT = null;
+    private final static Integer PROXY_DIRECT_PORT = PortFactory.findFreePort();
+    private final static Integer PROXY_DIRECT_SECURE_PORT = PortFactory.findFreePort();
+    private static TestServer testServer = new TestServer();
     private static HttpProxy httpProxy;
 
     @BeforeClass
     public static void setupFixture() throws Exception {
+        logger.warn("SERVER_HTTP_PORT = " + SERVER_HTTP_PORT);
+        logger.warn("SERVER_HTTPS_PORT = " + SERVER_HTTPS_PORT);
+        logger.warn("PROXY_HTTP_PORT = " + PROXY_HTTP_PORT);
+        logger.warn("PROXY_SOCKS_PORT = " + PROXY_SOCKS_PORT);
+        logger.warn("PROXY_DIRECT_PORT = " + PROXY_DIRECT_PORT);
+        logger.warn("PROXY_DIRECT_SECURE_PORT = " + PROXY_DIRECT_SECURE_PORT);
+
         // start server
-        httpHelloWorldServer = new HttpHelloWorldServer(SERVER_HTTP_PORT, SERVER_HTTPS_PORT);
+        testServer.startServer(SERVER_HTTP_PORT, SERVER_HTTPS_PORT);
 
         // start proxy
-        httpProxy = new HttpProxy(PROXY_HTTP_PORT, PROXY_HTTPS_PORT, PROXY_SOCKS_PORT, PROXY_DIRECT_PORT, PROXY_DIRECT_SECURE_PORT, "127.0.0.1", SERVER_HTTPS_PORT);
+        httpProxy = new HttpProxy().startProxy(PROXY_HTTP_PORT, PROXY_HTTPS_PORT, PROXY_SOCKS_PORT, PROXY_DIRECT_PORT, PROXY_DIRECT_SECURE_PORT, "127.0.0.1", SERVER_HTTPS_PORT);
     }
 
     @AfterClass
     public static void shutdownFixture() {
         // stop server
-        httpHelloWorldServer.stop();
+        testServer.stop();
 
         // stop proxy
         httpProxy.stop();

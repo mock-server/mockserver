@@ -7,11 +7,15 @@ import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author jamesdbloom
  */
 public class MockServerClient {
+    private static final Logger logger = LoggerFactory.getLogger(MockServerClient.class);
+
     private final String uriBase;
     private ApacheHttpClient apacheHttpClient;
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
@@ -122,6 +126,18 @@ public class MockServerClient {
      */
     public MockServerClient reset() {
         apacheHttpClient.sendPUTRequest(uriBase, "/reset", "");
+        return this;
+    }
+
+    /**
+     * Stop MockServer gracefully (only support for Netty and Vert.X versions, not supported for WAR version)
+     */
+    public MockServerClient stop() {
+        try {
+            apacheHttpClient.sendPUTRequest(uriBase, "/stop", "");
+        } catch (Exception e) {
+            logger.debug("Failed to send stop request to proxy " + e.getMessage());
+        }
         return this;
     }
 

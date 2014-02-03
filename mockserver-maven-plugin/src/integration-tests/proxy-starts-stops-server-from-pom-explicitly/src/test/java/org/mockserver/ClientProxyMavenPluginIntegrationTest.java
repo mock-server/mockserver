@@ -3,10 +3,8 @@ package org.mockserver;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.mockserver.integration.proxy.AbstractClientProxyIntegrationTest;
-import org.mockserver.integration.proxy.ServerRunner;
+import org.mockserver.integration.testserver.TestServer;
 import org.mockserver.socket.PortFactory;
-
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author jamesdbloom
@@ -17,20 +15,16 @@ public class ClientProxyMavenPluginIntegrationTest extends AbstractClientProxyIn
     private final static int SERVER_HTTPS_PORT = PortFactory.findFreePort();
     private final static int PROXY_HTTP_PORT = 9090;
     private final static int PROXY_HTTPS_PORT = 9092;
-    private final static ServerRunner serverRunner = new ServerRunner();
+    private static TestServer testServer = new TestServer();
 
     @BeforeClass
     public static void startServer() throws Exception {
-        serverRunner.startServer(SERVER_HTTP_PORT, SERVER_HTTPS_PORT);
-        // wait for server to start up
-        Thread.sleep(TimeUnit.MILLISECONDS.toMillis(500));
+        testServer.startServer(SERVER_HTTP_PORT, SERVER_HTTPS_PORT);
     }
 
     @AfterClass
     public static void stopServer() throws Exception {
-        serverRunner.stopServer();
-        // wait for server to shutdown
-        Thread.sleep(TimeUnit.SECONDS.toMillis(1));
+        testServer.stop();
     }
 
     @Override

@@ -38,7 +38,9 @@ public class MockServerServlet extends HttpServlet {
 
     public void doPut(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
         String requestPath = httpServletRequest.getPathInfo() != null && httpServletRequest.getContextPath() != null ? httpServletRequest.getPathInfo() : httpServletRequest.getRequestURI();
-        if (requestPath.equals("/dumpToLog")) {
+        if (requestPath.equals("/stop")) {
+            httpServletResponse.setStatus(HttpStatusCode.NOT_IMPLEMENTED_501.code());
+        } else if (requestPath.equals("/dumpToLog")) {
             mockServer.dumpToLog(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
             httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
         } else if (requestPath.equals("/reset")) {

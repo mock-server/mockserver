@@ -38,7 +38,7 @@ public class Main {
             "        -proxySecurePort <path>    specifies the HTTPS port for the proxy          \n" +
             "                                   if neither proxyPort or proxySecurePort         \n" +
             "                                   are provide the MockServer is not started       \n";
-    private static final Logger logger = LoggerFactory.getLogger(MockServerRunner.class);
+    private static final Logger logger = LoggerFactory.getLogger(Main.class);
     @VisibleForTesting
     static ProxyRunner proxyRunner = new ProxyRunner();
     @VisibleForTesting

@@ -76,7 +76,9 @@ public class ProxyServlet extends HttpServlet {
     @Override
     protected void doPut(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws ServletException, IOException {
         String requestPath = httpServletRequest.getPathInfo() != null && httpServletRequest.getContextPath() != null ? httpServletRequest.getPathInfo() : httpServletRequest.getRequestURI();
-        if (requestPath.equals("/dumpToLog")) {
+        if (requestPath.equals("/stop")) {
+            httpServletResponse.setStatus(HttpStatusCode.NOT_IMPLEMENTED_501.code());
+        } else if (requestPath.equals("/dumpToLog")) {
             logFilter.dumpToLog(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)), "java".equals(httpServletRequest.getParameter("type")));
             httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
         } else if (requestPath.equals("/retrieve")) {

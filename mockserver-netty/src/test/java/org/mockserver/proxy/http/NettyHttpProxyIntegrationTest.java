@@ -4,9 +4,8 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.mockserver.client.proxy.ProxyClient;
-import org.mockserver.helloworld.HttpHelloWorldServer;
+import org.mockserver.integration.testserver.TestServer;
 import org.mockserver.integration.proxy.AbstractClientSecureProxyIntegrationTest;
-import org.mockserver.netty.proxy.http.HttpProxy;
 import org.mockserver.socket.PortFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,14 +17,14 @@ public class NettyHttpProxyIntegrationTest extends AbstractClientSecureProxyInte
 
     private final static Logger logger = LoggerFactory.getLogger(NettyHttpProxyIntegrationTest.class);
 
-    private final static int SERVER_HTTP_PORT = PortFactory.findFreePort();
-    private final static int SERVER_HTTPS_PORT = PortFactory.findFreePort();
-    private final static int PROXY_HTTP_PORT = PortFactory.findFreePort();
-    private final static int PROXY_HTTPS_PORT = PortFactory.findFreePort();
-    private final static int PROXY_SOCKS_PORT = PortFactory.findFreePort();
-    private final static int PROXY_DIRECT_PORT = PortFactory.findFreePort();
-    private final static int PROXY_DIRECT_SECURE_PORT = PortFactory.findFreePort();
-    private static HttpHelloWorldServer httpHelloWorldServer;
+    private final static Integer SERVER_HTTP_PORT = PortFactory.findFreePort();
+    private final static Integer SERVER_HTTPS_PORT = PortFactory.findFreePort();
+    private final static Integer PROXY_HTTP_PORT = PortFactory.findFreePort();
+    private final static Integer PROXY_HTTPS_PORT = PortFactory.findFreePort();
+    private final static Integer PROXY_SOCKS_PORT = null;
+    private final static Integer PROXY_DIRECT_PORT = PortFactory.findFreePort();
+    private final static Integer PROXY_DIRECT_SECURE_PORT = PortFactory.findFreePort();
+    private static TestServer testServer = new TestServer();
     private static HttpProxy httpProxy;
     private static ProxyClient proxyClient;
 
@@ -34,13 +33,15 @@ public class NettyHttpProxyIntegrationTest extends AbstractClientSecureProxyInte
         logger.warn("SERVER_HTTP_PORT = " + SERVER_HTTP_PORT);
         logger.warn("SERVER_HTTPS_PORT = " + SERVER_HTTPS_PORT);
         logger.warn("PROXY_HTTP_PORT = " + PROXY_HTTP_PORT);
-        logger.warn("PROXY_HTTPS_PORT = " + PROXY_HTTPS_PORT);
+        logger.warn("PROXY_SOCKS_PORT = " + PROXY_SOCKS_PORT);
+        logger.warn("PROXY_DIRECT_PORT = " + PROXY_DIRECT_PORT);
+        logger.warn("PROXY_DIRECT_SECURE_PORT = " + PROXY_DIRECT_SECURE_PORT);
 
         // start server
-        httpHelloWorldServer = new HttpHelloWorldServer(SERVER_HTTP_PORT, SERVER_HTTPS_PORT);
+        testServer.startServer(SERVER_HTTP_PORT, SERVER_HTTPS_PORT);
 
         // start proxy
-        httpProxy = new HttpProxy(PROXY_HTTP_PORT, PROXY_HTTPS_PORT, PROXY_SOCKS_PORT, PROXY_DIRECT_PORT, PROXY_DIRECT_SECURE_PORT, "127.0.0.1", SERVER_HTTP_PORT);
+        httpProxy = new HttpProxy().startProxy(PROXY_HTTP_PORT, PROXY_HTTPS_PORT, PROXY_SOCKS_PORT, PROXY_DIRECT_PORT, PROXY_DIRECT_SECURE_PORT, "127.0.0.1", SERVER_HTTP_PORT);
 
         // start client
         proxyClient = new ProxyClient("localhost", PROXY_HTTP_PORT);
@@ -49,7 +50,7 @@ public class NettyHttpProxyIntegrationTest extends AbstractClientSecureProxyInte
     @AfterClass
     public static void shutdownFixture() {
         // stop server
-        httpHelloWorldServer.stop();
+        testServer.stop();
 
         // stop proxy
         httpProxy.stop();

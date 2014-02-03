@@ -7,15 +7,19 @@ import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.client.CircularRedirectException;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.*;
+import org.apache.http.config.SocketConfig;
+import org.apache.http.conn.ConnectionKeepAliveStrategy;
 import org.apache.http.conn.ssl.AllowAllHostnameVerifier;
 import org.apache.http.conn.ssl.SSLContexts;
 import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.impl.cookie.BrowserCompatSpec;
 import org.apache.http.protocol.HTTP;
+import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
@@ -33,6 +37,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static org.mockserver.configuration.SystemProperties.maxTimeout;
 
@@ -47,7 +52,8 @@ public class ApacheHttpClient {
 
     public ApacheHttpClient() {
         try {
-            this.httpClient = HttpClients
+
+            HttpClientBuilder httpClientBuilder = HttpClients
                     .custom()
                     .setSslcontext(
                             SSLContexts
@@ -59,16 +65,29 @@ public class ApacheHttpClient {
                                     })
                                     .build()
                     )
+//                    .setKeepAliveStrategy(new ConnectionKeepAliveStrategy() {
+//                        public long getKeepAliveDuration(org.apache.http.HttpResponse response, HttpContext context) {
+//                            return 0;
+//                        }
+//                    })
                     .setHostnameVerifier(new AllowAllHostnameVerifier())
-                    .setDefaultRequestConfig(
-                            RequestConfig
-                                    .custom()
-                                    .setConnectionRequestTimeout(new Long(maxTimeout()).intValue())
-                                    .setConnectTimeout(new Long(maxTimeout()).intValue())
-                                    .build()
-                    )
-                    .disableCookieManagement()
-                    .build();
+//                    .setDefaultRequestConfig(
+//                            RequestConfig
+//                                    .custom()
+//                                    .setConnectionRequestTimeout(new Long(maxTimeout()).intValue())
+//                                    .setConnectTimeout(new Long(maxTimeout()).intValue())
+//                                    .build()
+//                    )
+//                    .setDefaultSocketConfig(
+//                            SocketConfig
+//                                    .custom()
+//                                    .setSoTimeout((int) TimeUnit.SECONDS.toMillis(10))
+//                                    .setSoLinger((int) TimeUnit.SECONDS.toMillis(10))
+//                                    .setSoKeepAlive(true)
+//                                    .build()
+//                    )
+                    .disableCookieManagement();
+            this.httpClient = httpClientBuilder.build();
         } catch (Exception e) {
             throw new RuntimeException("Exception creating http client", e);
         }
@@ -103,8 +122,12 @@ public class ApacheHttpClient {
             for (Header header : httpRequest.getHeaders()) {
                 String headerName = header.getName();
                 if (!headerName.equalsIgnoreCase(HTTP.CONTENT_LEN) && !headerName.equalsIgnoreCase(HTTP.TRANSFER_ENCODING)) {
-                    for (String headerValue : header.getValues()) {
-                        proxiedRequest.addHeader(headerName, headerValue);
+                    if (!header.getValues().isEmpty()) {
+                        for (String headerValue : header.getValues()) {
+                            proxiedRequest.addHeader(headerName, headerValue);
+                        }
+                    } else {
+                        proxiedRequest.addHeader(headerName, "");
                     }
                 }
             }
@@ -113,8 +136,12 @@ public class ApacheHttpClient {
             BrowserCompatSpec browserCompatSpec = new BrowserCompatSpec();
             List<org.apache.http.cookie.Cookie> cookies = new ArrayList<org.apache.http.cookie.Cookie>();
             for (Cookie cookie : httpRequest.getCookies()) {
-                for (String value : cookie.getValues()) {
-                    cookies.add(new BasicClientCookie(cookie.getName(), value));
+                if (!cookie.getValues().isEmpty()) {
+                    for (String value : cookie.getValues()) {
+                        cookies.add(new BasicClientCookie(cookie.getName(), value));
+                    }
+                } else {
+                    cookies.add(new BasicClientCookie(cookie.getName(), ""));
                 }
             }
             if (cookies.size() > 0) {
@@ -125,9 +152,6 @@ public class ApacheHttpClient {
 
             // body
             String body = httpRequest.getBody() != null ? httpRequest.getBody().toString() : "";
-            if (proxiedRequest.containsHeader(HTTP.CONTENT_LEN)) {
-                proxiedRequest.setHeader(HTTP.CONTENT_LEN, "" + body.length());
-            }
             if (proxiedRequest instanceof HttpEntityEnclosingRequest) {
                 ((HttpEntityEnclosingRequest) proxiedRequest).setEntity(new StringEntity(body));
             }

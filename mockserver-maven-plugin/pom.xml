@@ -22,7 +22,7 @@
         <!-- mockserver -->
         <dependency>
             <groupId>org.mock-server</groupId>
-            <artifactId>mockserver-jetty</artifactId>
+            <artifactId>mockserver-netty</artifactId>
             <classifier>jar-with-dependencies</classifier>
             <version>${project.version}</version>
             <scope>compile</scope>

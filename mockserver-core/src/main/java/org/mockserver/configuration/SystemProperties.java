@@ -62,38 +62,9 @@ public class SystemProperties {
         System.setProperty("mockserver.socksPort", "" + port);
     }
 
-    public static List<Integer> extraHTTPPorts() {
-        return SystemProperties.readIntegerListProperty("mockserver.extraHTTPPorts", -1);
-    }
-
-    public static void extraHTTPPorts(List<Integer> port) {
-        System.setProperty("mockserver.extraHTTPPorts", "" + Joiner.on(",").join(port));
-    }
-
-    public static List<Integer> extraHTTPSPorts() {
-        return SystemProperties.readIntegerListProperty("mockserver.extraHTTPSPorts", -1);
-    }
-
-    public static void extraHTTPSPorts(List<Integer> port) {
-        System.setProperty("mockserver.extraHTTPSPorts", "" + Joiner.on(",").join(port));
-    }
-
     private static Integer readIntegerProperty(String key, int defaultValue) {
         try {
             return Integer.parseInt(System.getProperty(key, "" + defaultValue));
-        } catch (NumberFormatException nfe) {
-            logger.error("NumberFormatException converting " + key + " with value [" + System.getProperty(key) + "]", nfe);
-            throw new RuntimeException("NumberFormatException converting " + key + " with value [" + System.getProperty(key) + "]", nfe);
-        }
-    }
-
-    private static List<Integer> readIntegerListProperty(String key, int defaultValue) {
-        try {
-            List<Integer> integers = new ArrayList<Integer>();
-            for (String value : Splitter.on(",").split(System.getProperty(key, "" + defaultValue))) {
-                integers.add(Integer.parseInt(value));
-            }
-            return integers;
         } catch (NumberFormatException nfe) {
             logger.error("NumberFormatException converting " + key + " with value [" + System.getProperty(key) + "]", nfe);
             throw new RuntimeException("NumberFormatException converting " + key + " with value [" + System.getProperty(key) + "]", nfe);

@@ -6,11 +6,15 @@ import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author jamesdbloom
  */
 public class ProxyClient {
+    private static final Logger logger = LoggerFactory.getLogger(ProxyClient.class);
+
     private final String uriBase;
     private ApacheHttpClient apacheHttpClient;
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
@@ -25,7 +29,11 @@ public class ProxyClient {
      * @param port the port for the proxy to communicate with
      */
     public ProxyClient(String host, int port) {
-        uriBase = "http://" + host + ":" + port;
+        if (Boolean.parseBoolean(System.getProperty("defaultProxySet"))) {
+            uriBase = "https://" + host + ":" + port;
+        } else {
+            uriBase = "http://" + host + ":" + port;
+        }
         apacheHttpClient = new ApacheHttpClient();
     }
 
@@ -72,6 +80,18 @@ public class ProxyClient {
      */
     public ProxyClient reset() {
         apacheHttpClient.sendPUTRequest(uriBase, "/reset", "");
+        return this;
+    }
+
+    /**
+     * Stop the proxy gracefully (only support for Netty and Vert.X versions, not supported for WAR version)
+     */
+    public ProxyClient stop() {
+        try {
+            apacheHttpClient.sendPUTRequest(uriBase, "/stop", "");
+        } catch (Exception e) {
+            logger.debug("Failed to send stop request to proxy " + e.getMessage());
+        }
         return this;
     }
 

@@ -61,8 +61,8 @@
                 <jdk>1.6</jdk>
             </activation>
             <properties>
-                <!--<maven.compiler.source>1.6</maven.compiler.source>-->
-                <!--<maven.compiler.target>1.6</maven.compiler.target>-->
+                <maven.compiler.source>1.6</maven.compiler.source>
+                <maven.compiler.target>1.6</maven.compiler.target>
             </properties>
             <modules>
                 <module>mockserver-client</module>
@@ -71,6 +71,8 @@
                 <module>mockserver-proxy-war</module>
                 <module>mockserver-integration-testing</module>
                 <module>mockserver-netty</module>
+                <module>mockserver-maven-plugin</module>
+                <module>mockserver-javascript</module>
             </modules>
         </profile>
         <profile>
@@ -79,16 +81,13 @@
                 <jdk>1.7</jdk>
             </activation>
             <properties>
-                <!--<maven.compiler.source>1.7</maven.compiler.source>-->
-                <!--<maven.compiler.target>1.7</maven.compiler.target>-->
+                <maven.compiler.source>1.7</maven.compiler.source>
+                <maven.compiler.target>1.7</maven.compiler.target>
             </properties>
             <modules>
                 <module>mockserver-jetty</module>
                 <module>mockserver-vertx</module>
-                <module>mockserver-maven-plugin</module>
                 <module>mockserver-examples</module>
-                <!-- requires mockserver plugin for tests -->
-                <module>mockserver-javascript</module>
             </modules>
         </profile>
     </profiles>
@@ -124,12 +123,12 @@
             </dependency>
             <dependency>
                 <groupId>org.mock-server</groupId>
-                <artifactId>mockserver-jetty</artifactId>
+                <artifactId>mockserver-netty</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.mock-server</groupId>
-                <artifactId>mockserver-jetty</artifactId>
+                <artifactId>mockserver-netty</artifactId>
                 <classifier>jar-with-dependencies</classifier>
                 <version>${project.version}</version>
             </dependency>

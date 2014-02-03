@@ -8,7 +8,7 @@ import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.mockserver.model.Book;
-import org.mockserver.jetty.proxy.ProxyRunner;
+import org.mockserver.proxy.http.HttpProxy;
 import org.mockserver.service.BookService;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
@@ -59,7 +59,7 @@ public class BookServiceGrizzlyHttpClient implements BookService {
     private AsyncHttpClient createHttpClient() {
         AsyncHttpClientConfig.Builder clientConfigBuilder = new AsyncHttpClientConfig.Builder();
         if (Boolean.parseBoolean(System.getProperty("proxySet"))) {
-            clientConfigBuilder.setProxyServerSelector(ProxyUtils.createProxyServerSelector(ProxyRunner.proxySelector()));
+            clientConfigBuilder.setProxyServerSelector(ProxyUtils.createProxyServerSelector(HttpProxy.proxySelector()));
         }
         return new AsyncHttpClient(clientConfigBuilder.build());
     }

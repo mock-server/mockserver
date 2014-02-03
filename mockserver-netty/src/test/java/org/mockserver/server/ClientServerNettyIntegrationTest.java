@@ -2,9 +2,12 @@ package org.mockserver.server;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Test;
 import org.mockserver.client.server.MockServerClient;
 import org.mockserver.integration.server.AbstractClientServerIntegrationTest;
-import org.mockserver.netty.mockserver.NettyMockServer;
+import org.mockserver.mockserver.NettyMockServer;
+import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpResponse;
 import org.mockserver.socket.PortFactory;
 
 /**
@@ -19,7 +22,7 @@ public class ClientServerNettyIntegrationTest extends AbstractClientServerIntegr
     @BeforeClass
     public static void startServer() throws Exception {
         // start server
-        mockServer = new NettyMockServer(serverPort, serverSecurePort).run();
+        mockServer = new NettyMockServer().start(serverPort, serverSecurePort);
 
         // start client
         mockServerClient = new MockServerClient("localhost", serverPort, servletContext);

@@ -1,13 +1,12 @@
 package org.mockserver.client.proxy;
 
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.entity.StringEntity;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.http.ApacheHttpClient;
 import org.mockserver.client.serialization.ExpectationSerializer;
+import org.mockserver.client.serialization.model.ExpectationDTO;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.Body;
 import org.mockserver.model.HttpRequest;
@@ -27,8 +26,6 @@ import static org.mockito.MockitoAnnotations.initMocks;
  */
 public class ProxyClientTest {
 
-    @Mock
-    private CloseableHttpResponse mockHttpResponse;
     @Mock
     private ApacheHttpClient mockApacheHttpClient;
     @Mock
@@ -71,6 +68,15 @@ public class ProxyClientTest {
     }
 
     @Test
+    public void shouldSendStopRequest() throws Exception {
+        // when
+        proxyClient.stop();
+
+        // then
+        verify(mockApacheHttpClient).sendPUTRequest("http://localhost:8080", "/stop", "");
+    }
+
+    @Test
     public void shouldSendClearRequest() throws Exception {
         // when
         proxyClient
@@ -95,7 +101,6 @@ public class ProxyClientTest {
     public void shouldReceiveExpectationsAsObjects() throws UnsupportedEncodingException {
         // given
         Expectation[] expectations = {};
-        when(mockHttpResponse.getEntity()).thenReturn(new StringEntity("body"));
         when(mockApacheHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn("body");
         when(expectationSerializer.deserializeArray("body")).thenReturn(expectations);
 
@@ -123,7 +128,6 @@ public class ProxyClientTest {
     public void shouldReceiveExpectationsAsObjectsWithNullRequest() throws UnsupportedEncodingException {
         // given
         Expectation[] expectations = {};
-        when(mockHttpResponse.getEntity()).thenReturn(new StringEntity("body"));
         when(mockApacheHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn("body");
         when(expectationSerializer.deserializeArray("body")).thenReturn(expectations);
 
@@ -139,7 +143,6 @@ public class ProxyClientTest {
     public void shouldReceiveExpectationsAsJSON() throws UnsupportedEncodingException {
         // given
         String expectations = "body";
-        when(mockHttpResponse.getEntity()).thenReturn(new StringEntity("body"));
         when(mockApacheHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn("body");
 
         // when
@@ -165,7 +168,6 @@ public class ProxyClientTest {
     public void shouldReceiveExpectationsAsJSONWithNullRequest() throws UnsupportedEncodingException {
         // given
         String expectations = "body";
-        when(mockHttpResponse.getEntity()).thenReturn(new StringEntity("body"));
         when(mockApacheHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn("body");
 
         // when
@@ -173,5 +175,178 @@ public class ProxyClientTest {
 
         // then
         verify(mockApacheHttpClient).sendPUTRequest("http://localhost:8080", "/retrieve", "");
+    }
+
+    @Test
+    public void shouldVerify() throws UnsupportedEncodingException {
+        // given
+        when(mockApacheHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn("body");
+        when(expectationSerializer.deserializeArray(anyString())).thenReturn(new Expectation[]{
+                new ExpectationDTO().buildObject(),
+                new ExpectationDTO().buildObject()
+        });
+
+        // when
+        proxyClient
+                .verify(
+                        new HttpRequest()
+                                .withPath("/some_path")
+                                .withBody(new StringBody("some_request_body", Body.Type.EXACT))
+                );
+
+        // no assertion exception thrown
+    }
+
+    @Test(expected = AssertionError.class)
+    public void shouldVerifyNoMatch() throws UnsupportedEncodingException {
+        // given
+        when(mockApacheHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn("body");
+        when(expectationSerializer.deserializeArray(anyString())).thenReturn(new Expectation[]{});
+
+        // when
+        proxyClient
+                .verify(
+                        new HttpRequest()
+                                .withPath("/some_path")
+                                .withBody(new StringBody("some_request_body", Body.Type.EXACT))
+                );
+    }
+
+    @Test
+    public void shouldVerifyOneRequestCount() throws UnsupportedEncodingException {
+        // given
+        when(mockApacheHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn("body");
+        when(expectationSerializer.deserializeArray(anyString())).thenReturn(new Expectation[]{
+                new ExpectationDTO().buildObject()
+        });
+
+        // when
+        proxyClient
+                .verify(
+                        new HttpRequest()
+                                .withPath("/some_path")
+                                .withBody(new StringBody("some_request_body", Body.Type.EXACT)),
+                        Times.once()
+                );
+
+        // no assertion exception thrown
+    }
+
+    @Test(expected = AssertionError.class)
+    public void shouldVerifyNotOneRequestCount() throws UnsupportedEncodingException {
+        // given
+        when(mockApacheHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn("body");
+        when(expectationSerializer.deserializeArray(anyString())).thenReturn(new Expectation[]{
+                new ExpectationDTO().buildObject(),
+                new ExpectationDTO().buildObject()
+        });
+
+        // when
+        proxyClient
+                .verify(
+                        new HttpRequest()
+                                .withPath("/some_path")
+                                .withBody(new StringBody("some_request_body", Body.Type.EXACT)),
+                        Times.once()
+                );
+    }
+
+    @Test
+    public void shouldVerifyExactRequestCount() throws UnsupportedEncodingException {
+        // given
+        when(mockApacheHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn("body");
+        when(expectationSerializer.deserializeArray(anyString())).thenReturn(new Expectation[]{
+                new ExpectationDTO().buildObject()
+        });
+
+        // when
+        proxyClient
+                .verify(
+                        new HttpRequest()
+                                .withPath("/some_path")
+                                .withBody(new StringBody("some_request_body", Body.Type.EXACT)),
+                        Times.exactly(1)
+                );
+
+        // no assertion exception thrown
+    }
+
+    @Test(expected = AssertionError.class)
+    public void shouldVerifyNotExactRequestCount() throws UnsupportedEncodingException {
+        // given
+        when(mockApacheHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn("body");
+        when(expectationSerializer.deserializeArray(anyString())).thenReturn(new Expectation[]{
+                new ExpectationDTO().buildObject(),
+                new ExpectationDTO().buildObject()
+        });
+
+        // when
+        proxyClient
+                .verify(
+                        new HttpRequest()
+                                .withPath("/some_path")
+                                .withBody(new StringBody("some_request_body", Body.Type.EXACT)),
+                        Times.exactly(1)
+                );
+    }
+
+    @Test
+    public void shouldVerifyAtLeastRequestCountAllowExactMatch() throws UnsupportedEncodingException {
+        // given
+        when(mockApacheHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn("body");
+        when(expectationSerializer.deserializeArray(anyString())).thenReturn(new Expectation[]{
+                new ExpectationDTO().buildObject()
+        });
+
+        // when
+        proxyClient
+                .verify(
+                        new HttpRequest()
+                                .withPath("/some_path")
+                                .withBody(new StringBody("some_request_body", Body.Type.EXACT)),
+                        Times.atLeast(1)
+                );
+
+        // no assertion exception thrown
+    }
+
+    @Test
+    public void shouldVerifyAtLeastRequestCountAllowsMoreThen() throws UnsupportedEncodingException {
+        // given
+        when(mockApacheHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn("body");
+        when(expectationSerializer.deserializeArray(anyString())).thenReturn(new Expectation[]{
+                new ExpectationDTO().buildObject(),
+                new ExpectationDTO().buildObject(),
+                new ExpectationDTO().buildObject()
+        });
+
+        // when
+        proxyClient
+                .verify(
+                        new HttpRequest()
+                                .withPath("/some_path")
+                                .withBody(new StringBody("some_request_body", Body.Type.EXACT)),
+                        Times.atLeast(1)
+                );
+
+        // no assertion exception thrown
+    }
+
+    @Test(expected = AssertionError.class)
+    public void shouldVerifyNotAtLeastRequestCount() throws UnsupportedEncodingException {
+        // given
+        when(mockApacheHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn("body");
+        when(expectationSerializer.deserializeArray(anyString())).thenReturn(new Expectation[]{
+                new ExpectationDTO().buildObject()
+        });
+
+        // when
+        proxyClient
+                .verify(
+                        new HttpRequest()
+                                .withPath("/some_path")
+                                .withBody(new StringBody("some_request_body", Body.Type.EXACT)),
+                        Times.exactly(2)
+                );
     }
 }
