@@ -24,23 +24,99 @@ import java.io.IOException;
 import java.net.*;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 /**
- * An HTTP server that sends back the content of the received HTTP request
- * in a pretty plaintext form.
+ * This class should not be constructed directly instead use HttpProxyBuilder to build and configure this class
+ *
+ * @see org.mockserver.proxy.http.HttpProxyBuilder
+ *
+ * @author jamesdbloom
  */
 public class HttpProxy {
 
     private static final Logger logger = LoggerFactory.getLogger(HttpProxy.class);
     // mockserver
     private final LogFilter logFilter = new LogFilter();
-    private boolean hasBeenStarted = false;
+    private SettableFuture<String> hasStarted;
     // jvm
     private ProxySelector previousProxySelector;
     // netty
     private EventLoopGroup bossGroup = new NioEventLoopGroup();
     private EventLoopGroup workerGroup = new NioEventLoopGroup();
+
+    /**
+     * Start the instance using the ports provided, this method should not be used directly, instead use HttpProxyBuilder
+     *
+     * @param port the HTTP port to use
+     * @param securePort the HTTP/SSL (HTTPS) port to use
+     * @param socksPort the SOCKS port to use
+     * @param directLocalPort the local proxy port for direct forwarding
+     * @param directLocalSecurePort the local proxy port for direct forwarding over SSL
+     * @param directRemoteHost the destination hostname for direct forwarding
+     * @param directRemotePort the destination port for direct forwarding
+     *
+     * @see org.mockserver.proxy.http.HttpProxyBuilder
+     */
+    HttpProxy(final Integer port,
+              final Integer securePort,
+              final Integer socksPort,
+              final Integer directLocalPort,
+              final Integer directLocalSecurePort,
+              final String directRemoteHost,
+              final Integer directRemotePort) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("HTTP proxy & HTTPS CONNECT port [" + port + "]");
+            logger.debug("HTTPS proxy port [" + securePort + "]");
+            logger.debug("SOCKS proxy port [" + socksPort + "]");
+            logger.debug("Direct proxy from port [" + directLocalPort + "] to host [" + directRemoteHost + ":" + directRemotePort + "]");
+            logger.debug("Direct SSL proxy from port [" + directLocalSecurePort + "] to host [" + directRemoteHost + ":" + directRemotePort + "]");
+        }
+
+        hasStarted = SettableFuture.create();
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    ChannelFuture httpChannel = createHTTPChannel(port, securePort);
+                    ChannelFuture httpsChannel = createHTTPSChannel(securePort);
+                    ChannelFuture socksChannel = createSOCKSChannel(socksPort, port);
+                    ChannelFuture directChannel = createDirectChannel(directLocalPort, directRemoteHost, directRemotePort);
+                    ChannelFuture directSecureChannel = createDirectSecureChannel(directLocalSecurePort, directRemoteHost, directRemotePort);
+
+                    if (httpChannel != null) {
+                        // create system wide proxy settings for HTTP CONNECT
+                        proxyStarted(port, false);
+                    }
+                    if (socksChannel != null) {
+                        // create system wide proxy settings for SOCKS
+                        proxyStarted(socksPort, true);
+                    }
+                    hasStarted.set("STARTED");
+
+                    waitForClose(httpChannel);
+                    waitForClose(httpsChannel);
+                    waitForClose(socksChannel);
+                    waitForClose(directChannel);
+                    waitForClose(directSecureChannel);
+                } catch (Exception ie) {
+                    logger.error("Exception while running proxy channels", ie);
+                } finally {
+                    bossGroup.shutdownGracefully();
+                    workerGroup.shutdownGracefully();
+                }
+            }
+        }).start();
+
+        try {
+            // wait for proxy to start all channels
+            hasStarted.get();
+        } catch (Exception e) {
+            logger.debug("Exception while waiting for proxy to complete starting up", e);
+        }
+    }
 
     public static ProxySelector proxySelector() {
         if (Boolean.parseBoolean(System.getProperty("defaultProxySet"))) {
@@ -78,227 +154,146 @@ public class HttpProxy {
         }
     }
 
-    /**
-     * Start the instance using the ports provided
-     *
-     * @param port the http port to use
-     * @param securePort the secure https port to use
-     */
-    public HttpProxy startHttpProxy(final Integer port, final Integer securePort) {
-        return startProxy(port, securePort, null, null, null, null, null);
+    private void waitForClose(ChannelFuture httpChannel) throws InterruptedException {
+        if (httpChannel != null) {
+            httpChannel.channel().closeFuture().sync();
+        }
     }
 
-    public HttpProxy startProxy(final Integer port,
-                                final Integer securePort,
-                                final Integer socksPort,
-                                final Integer directLocalPort,
-                                final Integer directLocalSecurePort,
-                                final String directRemoteHost,
-                                final Integer directRemotePort) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("HTTP proxy & HTTPS CONNECT port [" + port + "]");
-            logger.debug("HTTPS proxy port [" + securePort + "]");
-            logger.debug("SOCKS proxy port [" + socksPort + "]");
-            logger.debug("Direct proxy from port [" + directLocalPort + "] to host [" + directRemoteHost + ":" + directRemotePort + "]");
-            logger.debug("Direct SSL proxy from port [" + directLocalSecurePort + "] to host [" + directRemoteHost + ":" + directRemotePort + "]");
-        }
-
-        if (port == null && securePort == null) throw new IllegalStateException("You must specify a port or a secure port");
-        hasBeenStarted = true;
-
-        final SettableFuture<String> hasConnected = SettableFuture.create();
-        final SettableFuture<String> hasSecureConnected = SettableFuture.create();
-        final SettableFuture<String> hasSOCKSConnected = SettableFuture.create();
-        final SettableFuture<String> hasDirectConnected = SettableFuture.create();
-        final SettableFuture<String> hasDirectSecureConnected = SettableFuture.create();
-
-        new Thread(new Runnable() {
+    private ChannelFuture createHTTPChannel(Integer port, final Integer securePort) throws ExecutionException, InterruptedException {
+        return createBootstrap(port != null, new ChannelInitializer<SocketChannel>() {
             @Override
-            public void run() {
-                try {
-                    ChannelFuture httpChannel = null;
-                    if (port != null) {
+            protected void initChannel(SocketChannel ch) throws Exception {
+                // Create a default pipeline implementation.
+                final ChannelPipeline pipeline = ch.pipeline();
 
-                        httpChannel = createBootstrap(new ChannelInitializer<SocketChannel>() {
-                            @Override
-                            protected void initChannel(SocketChannel ch) throws Exception {
-                                // Create a default pipeline implementation.
-                                final ChannelPipeline pipeline = ch.pipeline();
-
-                                // add logging
-                                if (logger.isDebugEnabled()) {
-                                    pipeline.addLast("logger", new LoggingHandler("RAW HTTP"));
-                                }
-
-                                // add HTTP decoder and encoder
-                                pipeline.addLast(HttpServerCodec.class.getSimpleName(), new HttpServerCodec());
-
-                                // add handler
-                                pipeline.addLast(HttpProxyHandler.class.getSimpleName(), new HttpProxyHandler(logFilter, HttpProxy.this, securePort != null ? new InetSocketAddress(securePort) : null, false));
-                            }
-                        }, port, true, hasConnected);
-
-                        // create system wide proxy settings (this covers HTTP and HTTPS CONNECT)
-                        proxyStarted(port, false);
-                    } else {
-                        hasConnected.set("NOT CONNECTED");
-                    }
-                    ChannelFuture httpsChannel = null;
-                    if (securePort != null) {
-
-                        httpsChannel = createBootstrap(new ChannelInitializer<SocketChannel>() {
-                            @Override
-                            protected void initChannel(SocketChannel ch) throws Exception {
-                                // Create a default pipeline implementation.
-                                final ChannelPipeline pipeline = ch.pipeline();
-
-                                // add HTTPS support
-                                SSLEngine engine = SSLFactory.sslContext().createSSLEngine();
-                                engine.setUseClientMode(false);
-                                pipeline.addLast(SslHandler.class.getSimpleName(), new SslHandler(engine));
-
-                                // add logging
-                                if (logger.isDebugEnabled()) {
-                                    pipeline.addLast("logger", new LoggingHandler("RAW HTTPS"));
-                                }
-
-                                // add HTTP decoder and encoder
-                                pipeline.addLast(HttpServerCodec.class.getSimpleName(), new HttpServerCodec());
-
-                                // add handler
-                                pipeline.addLast(HttpProxyHandler.class.getSimpleName(), new HttpProxyHandler(logFilter, HttpProxy.this, new InetSocketAddress(securePort), true));
-                            }
-                        }, securePort, true, hasSecureConnected);
-                    } else {
-                        hasSecureConnected.set("NOT CONNECTED");
-                    }
-                    ChannelFuture socksChannel = null;
-                    if (socksPort != null && port != null) {
-                        socksChannel = createBootstrap(new ChannelInitializer<SocketChannel>() {
-                            @Override
-                            protected void initChannel(SocketChannel ch) throws Exception {
-                                // Create a default pipeline implementation.
-                                final ChannelPipeline pipeline = ch.pipeline();
-
-                                // add logging
-                                if (logger.isDebugEnabled()) {
-                                    pipeline.addLast("logger", new LoggingHandler("RAW SOCKS"));
-                                }
-
-                                // add SOCKS decoder and encoder
-                                pipeline.addLast(SocksInitRequestDecoder.class.getSimpleName(), new SocksInitRequestDecoder());
-                                pipeline.addLast(SocksMessageEncoder.class.getSimpleName(), new SocksMessageEncoder());
-
-                                // add handler
-                                pipeline.addLast(HttpProxyHandler.class.getSimpleName(), new HttpProxyHandler(logFilter, HttpProxy.this, new InetSocketAddress(port), false));
-                            }
-                        }, socksPort, true, hasSOCKSConnected);
-
-                        // create system wide proxy settings (this covers SOCKS - assuming if SOCK port is set this overrides HTTP and HTTPS CONNECT)
-                        proxyStarted(socksPort, true);
-                    } else {
-                        hasSOCKSConnected.set("NOT CONNECTED");
-                    }
-                    ChannelFuture directChannel = null;
-                    if (directLocalPort != null && directRemoteHost != null && directRemotePort != null) {
-                        directChannel = createBootstrap(new ChannelInitializer<SocketChannel>() {
-                            @Override
-                            protected void initChannel(SocketChannel ch) throws Exception {
-                                // Create a default pipeline implementation.
-                                ChannelPipeline pipeline = ch.pipeline();
-
-                                // add logging
-                                if (logger.isDebugEnabled()) {
-                                    pipeline.addLast("logger", new LoggingHandler("RAW DIRECT HTTP"));
-                                }
-
-                                // add handler
-                                pipeline.addLast(new DirectProxyUpstreamHandler(new InetSocketAddress(directRemoteHost, directRemotePort), false, 1048576, new RequestInterceptor(), "<--- "));
-                            }
-                        }, directLocalPort, false, hasDirectConnected);
-                    } else {
-                        hasDirectConnected.set("NOT CONNECTED");
-                    }
-                    ChannelFuture directSecureChannel = null;
-                    if (directLocalSecurePort != null && directRemoteHost != null && directRemotePort != null) {
-
-                        directSecureChannel = createBootstrap(new ChannelInitializer<SocketChannel>() {
-                            @Override
-                            protected void initChannel(SocketChannel ch) throws Exception {
-                                // Create a default pipeline implementation.
-                                ChannelPipeline pipeline = ch.pipeline();
-
-                                // add HTTPS support
-                                SSLEngine engine = SSLFactory.sslContext().createSSLEngine();
-                                engine.setUseClientMode(false);
-                                pipeline.addLast("ssl", new SslHandler(engine));
-
-                                // add logging
-                                if (logger.isDebugEnabled()) {
-                                    pipeline.addLast("logger", new LoggingHandler("RAW DIRECT HTTPS"));
-                                }
-
-                                // add handler
-                                pipeline.addLast(new DirectProxyUpstreamHandler(new InetSocketAddress(directRemoteHost, directRemotePort), true, 1048576, new RequestInterceptor(), "<--- "));
-                            }
-                        }, directLocalSecurePort, false, hasDirectSecureConnected);
-                    } else {
-                        hasDirectSecureConnected.set("NOT CONNECTED");
-                    }
-                    if (httpChannel != null) {
-                        httpChannel.channel().closeFuture().sync();
-                    }
-                    if (httpsChannel != null) {
-                        httpsChannel.channel().closeFuture().sync();
-                    }
-                    if (socksChannel != null) {
-                        socksChannel.channel().closeFuture().sync();
-                    }
-                    if (directChannel != null) {
-                        directChannel.channel().closeFuture().sync();
-                    }
-                    if (directSecureChannel != null) {
-                        directSecureChannel.channel().closeFuture().sync();
-                    }
-                } catch (InterruptedException ie) {
-                    logger.error("Proxy receive InterruptedException", ie);
-                } finally {
-                    bossGroup.shutdownGracefully();
-                    workerGroup.shutdownGracefully();
+                // add logging
+                if (logger.isDebugEnabled()) {
+                    pipeline.addLast("logger", new LoggingHandler("RAW HTTP"));
                 }
-            }
-        }).start();
 
-        try {
-            // wait for connection
-            hasConnected.get();
-            hasSecureConnected.get();
-            hasSOCKSConnected.get();
-            hasDirectConnected.get();
-            hasDirectSecureConnected.get();
-        } catch (Exception e) {
-            logger.debug("Exception while waiting for proxy to complete starting up", e);
-        }
-        return this;
+                // add HTTP decoder and encoder
+                pipeline.addLast(HttpServerCodec.class.getSimpleName(), new HttpServerCodec());
+
+                // add handler
+                pipeline.addLast(HttpProxyHandler.class.getSimpleName(), new HttpProxyHandler(logFilter, HttpProxy.this, securePort != null ? new InetSocketAddress(securePort) : null, false));
+            }
+        }, port, true);
     }
 
-    private ChannelFuture createBootstrap(final ChannelInitializer<SocketChannel> childHandler, final Integer port, boolean autoRead, final SettableFuture<String> hasConnected) throws InterruptedException {
-        return new ServerBootstrap()
-                .group(bossGroup, workerGroup)
-                .channel(NioServerSocketChannel.class)
-                .childHandler(childHandler)
-                .option(ChannelOption.SO_BACKLOG, 1024)
-                .childOption(ChannelOption.AUTO_READ, autoRead)
-                .bind(port).addListener(new ChannelFutureListener() {
-                    @Override
-                    public void operationComplete(ChannelFuture future) throws Exception {
-                        if (future.isSuccess()) {
-                            hasConnected.set("CONNECTED");
-                        } else {
-                            hasConnected.setException(future.cause());
-                        }
+    private ChannelFuture createHTTPSChannel(final Integer securePort) throws ExecutionException, InterruptedException {
+        return createBootstrap(securePort != null, new ChannelInitializer<SocketChannel>() {
+            @Override
+            protected void initChannel(SocketChannel ch) throws Exception {
+                // Create a default pipeline implementation.
+                final ChannelPipeline pipeline = ch.pipeline();
+
+                // add HTTPS support
+                SSLEngine engine = SSLFactory.sslContext().createSSLEngine();
+                engine.setUseClientMode(false);
+                pipeline.addLast(SslHandler.class.getSimpleName(), new SslHandler(engine));
+
+                // add logging
+                if (logger.isDebugEnabled()) {
+                    pipeline.addLast("logger", new LoggingHandler("RAW HTTPS"));
+                }
+
+                // add HTTP decoder and encoder
+                pipeline.addLast(HttpServerCodec.class.getSimpleName(), new HttpServerCodec());
+
+                // add handler
+                pipeline.addLast(HttpProxyHandler.class.getSimpleName(), new HttpProxyHandler(logFilter, HttpProxy.this, new InetSocketAddress(securePort), true));
+            }
+        }, securePort, true);
+    }
+
+    private ChannelFuture createSOCKSChannel(Integer socksPort, final Integer port) throws ExecutionException, InterruptedException {
+        return createBootstrap(socksPort != null && port != null, new ChannelInitializer<SocketChannel>() {
+            @Override
+            protected void initChannel(SocketChannel ch) throws Exception {
+                // Create a default pipeline implementation.
+                final ChannelPipeline pipeline = ch.pipeline();
+
+                // add logging
+                if (logger.isDebugEnabled()) {
+                    pipeline.addLast("logger", new LoggingHandler("RAW SOCKS"));
+                }
+
+                // add SOCKS decoder and encoder
+                pipeline.addLast(SocksInitRequestDecoder.class.getSimpleName(), new SocksInitRequestDecoder());
+                pipeline.addLast(SocksMessageEncoder.class.getSimpleName(), new SocksMessageEncoder());
+
+                // add handler
+                pipeline.addLast(HttpProxyHandler.class.getSimpleName(), new HttpProxyHandler(logFilter, HttpProxy.this, new InetSocketAddress(port), false));
+            }
+        }, socksPort, true);
+    }
+
+    private ChannelFuture createDirectChannel(Integer directLocalPort, final String directRemoteHost, final Integer directRemotePort) throws ExecutionException, InterruptedException {
+        return createBootstrap(directLocalPort != null && directRemoteHost != null && directRemotePort != null, new ChannelInitializer<SocketChannel>() {
+            @Override
+            protected void initChannel(SocketChannel ch) throws Exception {
+                // Create a default pipeline implementation.
+                ChannelPipeline pipeline = ch.pipeline();
+
+                // add logging
+                if (logger.isDebugEnabled()) {
+                    pipeline.addLast("logger", new LoggingHandler("RAW DIRECT HTTP"));
+                }
+
+                // add handler
+                pipeline.addLast(new DirectProxyUpstreamHandler(new InetSocketAddress(directRemoteHost, directRemotePort), false, 1048576, new RequestInterceptor(), "<--- "));
+            }
+        }, directLocalPort, false);
+    }
+
+    private ChannelFuture createDirectSecureChannel(Integer directLocalSecurePort, final String directRemoteHost, final Integer directRemotePort) throws ExecutionException, InterruptedException {
+        return createBootstrap(directLocalSecurePort != null && directRemoteHost != null && directRemotePort != null, new ChannelInitializer<SocketChannel>() {
+            @Override
+            protected void initChannel(SocketChannel ch) throws Exception {
+                // Create a default pipeline implementation.
+                ChannelPipeline pipeline = ch.pipeline();
+
+                // add HTTPS client -> proxy support
+                SSLEngine engine = SSLFactory.sslContext().createSSLEngine();
+                engine.setUseClientMode(false);
+                pipeline.addLast("ssl inbound", new SslHandler(engine));
+
+                // add logging
+                if (logger.isDebugEnabled()) {
+                    pipeline.addLast("logger", new LoggingHandler("RAW DIRECT HTTPS"));
+                }
+
+                // add handler
+                pipeline.addLast(new DirectProxyUpstreamHandler(new InetSocketAddress(directRemoteHost, directRemotePort), true, 1048576, new RequestInterceptor(), "<--- "));
+
+            }
+        }, directLocalSecurePort, false);
+    }
+
+    private ChannelFuture createBootstrap(boolean condition, final ChannelInitializer<SocketChannel> childHandler, final Integer port, boolean autoRead) throws ExecutionException, InterruptedException {
+        final SettableFuture<ChannelFuture> hasConnected = SettableFuture.create();
+        if (condition) {
+            new ServerBootstrap()
+                    .group(bossGroup, workerGroup)
+                    .channel(NioServerSocketChannel.class)
+                    .childHandler(childHandler)
+                    .option(ChannelOption.SO_BACKLOG, 1024)
+                    .childOption(ChannelOption.AUTO_READ, autoRead)
+                    .bind(port).addListener(new ChannelFutureListener() {
+                @Override
+                public void operationComplete(ChannelFuture future) throws Exception {
+                    if (future.isSuccess()) {
+                        hasConnected.set(future);
+                    } else {
+                        hasConnected.setException(future.cause());
                     }
-                });
+                }
+            });
+        } else {
+            hasConnected.set(null);
+        }
+        return hasConnected.get();
     }
 
     protected void proxyStarted(final Integer port, boolean socksProxy) {
@@ -324,6 +319,7 @@ public class HttpProxy {
 
     public void stop() {
         try {
+            proxyStopping();
             workerGroup.shutdownGracefully(2, 15, TimeUnit.SECONDS);
             bossGroup.shutdownGracefully(2, 15, TimeUnit.SECONDS);
         } catch (Exception ie) {
@@ -332,7 +328,7 @@ public class HttpProxy {
     }
 
     public boolean isRunning() {
-        if (hasBeenStarted) {
+        if (hasStarted.isDone()) {
             try {
                 TimeUnit.SECONDS.sleep(3);
             } catch (InterruptedException e) {

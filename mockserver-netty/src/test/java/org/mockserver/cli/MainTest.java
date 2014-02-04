@@ -3,13 +3,14 @@ package org.mockserver.cli;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockserver.mockserver.NettyMockServer;
-import org.mockserver.proxy.http.HttpProxy;
+import org.mockserver.mockserver.MockServerBuilder;
+import org.mockserver.proxy.http.HttpProxyBuilder;
+import org.mockserver.socket.PortFactory;
 
 import java.io.PrintStream;
 
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 /**
@@ -17,68 +18,97 @@ import static org.mockito.MockitoAnnotations.initMocks;
  */
 public class MainTest {
 
+    private final static Integer SERVER_HTTP_PORT = PortFactory.findFreePort();
+    private final static Integer SERVER_HTTPS_PORT = PortFactory.findFreePort();
+    private final static Integer PROXY_HTTP_PORT = PortFactory.findFreePort();
+    private final static Integer PROXY_HTTPS_PORT = PortFactory.findFreePort();
+
     @Mock
-    private HttpProxy mockProxy;
+    private HttpProxyBuilder mockProxyBuilder;
     @Mock
-    private NettyMockServer mockMockServer;
+    private MockServerBuilder mockMockServerBuilder;
     @Mock
     private PrintStream mockPrintStream;
 
     @Before
     public void setupMocks() {
         initMocks(this);
-        Main.proxy = mockProxy;
-        Main.mockServer = mockMockServer;
+        Main.mockServerBuilder = mockMockServerBuilder;
+        Main.httpProxyBuilder = mockProxyBuilder;
         Main.outputPrintStream = mockPrintStream;
         Main.shutdownOnUsage = false;
+
+        when(mockMockServerBuilder.withHTTPPort(anyInt())).thenReturn(mockMockServerBuilder);
+        when(mockMockServerBuilder.withHTTPSPort(anyInt())).thenReturn(mockMockServerBuilder);
+        when(mockProxyBuilder.withHTTPPort(anyInt())).thenReturn(mockProxyBuilder);
+        when(mockProxyBuilder.withHTTPSPort(anyInt())).thenReturn(mockProxyBuilder);
     }
 
     @Test
     public void shouldParseArgumentsForAllFourPorts() {
-        Main.main("-serverPort", "1", "-serverSecurePort", "2", "-proxyPort", "3", "-proxySecurePort", "4");
+        Main.main("-serverPort", SERVER_HTTP_PORT.toString(), "-serverSecurePort", SERVER_HTTPS_PORT.toString(), "-proxyPort", PROXY_HTTP_PORT.toString(), "-proxySecurePort", PROXY_HTTPS_PORT.toString());
 
-        verify(mockMockServer).start(1, 2);
-        verify(mockProxy).startHttpProxy(3, 4);
+        verify(mockMockServerBuilder).withHTTPPort(SERVER_HTTP_PORT);
+        verify(mockMockServerBuilder).withHTTPSPort(SERVER_HTTPS_PORT);
+        verify(mockMockServerBuilder).build();
+        verify(mockProxyBuilder).withHTTPPort(PROXY_HTTP_PORT);
+        verify(mockProxyBuilder).withHTTPSPort(PROXY_HTTPS_PORT);
+        verify(mockProxyBuilder).build();
     }
 
     @Test
     public void shouldParseArgumentsForAllFourPortsInReverseOrder() {
-        Main.main("-proxySecurePort", "4", "-proxyPort", "3", "-serverSecurePort", "2", "-serverPort", "1");
+        Main.main("-proxySecurePort", PROXY_HTTPS_PORT.toString(), "-proxyPort", PROXY_HTTP_PORT.toString(), "-serverSecurePort", SERVER_HTTPS_PORT.toString(), "-serverPort", SERVER_HTTP_PORT.toString());
 
-        verify(mockMockServer).start(1, 2);
-        verify(mockProxy).startHttpProxy(3, 4);
+        verify(mockMockServerBuilder).withHTTPPort(SERVER_HTTP_PORT);
+        verify(mockMockServerBuilder).withHTTPSPort(SERVER_HTTPS_PORT);
+        verify(mockMockServerBuilder).build();
+        verify(mockProxyBuilder).withHTTPPort(PROXY_HTTP_PORT);
+        verify(mockProxyBuilder).withHTTPSPort(PROXY_HTTPS_PORT);
+        verify(mockProxyBuilder).build();
     }
 
     @Test
     public void shouldParseArgumentsForProxyAndServerOnlyNonSecurePorts() {
-        Main.main("-serverPort", "1", "-proxyPort", "2");
+        Main.main("-serverPort", SERVER_HTTP_PORT.toString(), "-proxyPort", PROXY_HTTP_PORT.toString());
 
-        verify(mockMockServer).start(1, null);
-        verify(mockProxy).startHttpProxy(2, null);
+        verify(mockMockServerBuilder).withHTTPPort(SERVER_HTTP_PORT);
+        verify(mockMockServerBuilder).withHTTPSPort(null);
+        verify(mockMockServerBuilder).build();
+        verify(mockProxyBuilder).withHTTPPort(PROXY_HTTP_PORT);
+        verify(mockProxyBuilder).withHTTPSPort(null);
+        verify(mockProxyBuilder).build();
     }
 
     @Test
     public void shouldParseArgumentsForProxyAndServerOnlySecurePorts() {
-        Main.main("-serverSecurePort", "1", "-proxySecurePort", "2");
+        Main.main("-serverSecurePort", SERVER_HTTPS_PORT.toString(), "-proxySecurePort", PROXY_HTTPS_PORT.toString());
 
-        verify(mockMockServer).start(null, 1);
-        verify(mockProxy).startHttpProxy(null, 2);
+        verify(mockMockServerBuilder).withHTTPPort(null);
+        verify(mockMockServerBuilder).withHTTPSPort(SERVER_HTTPS_PORT);
+        verify(mockMockServerBuilder).build();
+        verify(mockProxyBuilder).withHTTPPort(null);
+        verify(mockProxyBuilder).withHTTPSPort(PROXY_HTTPS_PORT);
+        verify(mockProxyBuilder).build();
     }
 
     @Test
     public void shouldParseArgumentsForServerOnlyBothPorts() {
-        Main.main("-serverPort", "1", "-serverSecurePort", "2");
+        Main.main("-serverPort", SERVER_HTTP_PORT.toString(), "-serverSecurePort", SERVER_HTTPS_PORT.toString());
 
-        verify(mockMockServer).start(1, 2);
-        verifyZeroInteractions(mockProxy);
+        verify(mockMockServerBuilder).withHTTPPort(SERVER_HTTP_PORT);
+        verify(mockMockServerBuilder).withHTTPSPort(SERVER_HTTPS_PORT);
+        verify(mockMockServerBuilder).build();
+        verifyZeroInteractions(mockProxyBuilder);
     }
 
     @Test
     public void shouldParseArgumentsForProxyOnlyBothPorts() {
-        Main.main("-proxyPort", "1", "-proxySecurePort", "2");
+        Main.main("-proxyPort", PROXY_HTTP_PORT.toString(), "-proxySecurePort", PROXY_HTTPS_PORT.toString());
 
-        verifyZeroInteractions(mockMockServer);
-        verify(mockProxy).startHttpProxy(1, 2);
+        verifyZeroInteractions(mockMockServerBuilder);
+        verify(mockProxyBuilder).withHTTPPort(PROXY_HTTP_PORT);
+        verify(mockProxyBuilder).withHTTPSPort(PROXY_HTTPS_PORT);
     }
 
     @Test
@@ -108,7 +138,7 @@ public class MainTest {
         new Main().main();
 
         verify(mockPrintStream).println(Main.USAGE);
-        verifyZeroInteractions(mockMockServer);
-        verifyZeroInteractions(mockProxy);
+        verifyZeroInteractions(mockMockServerBuilder);
+        verifyZeroInteractions(mockProxyBuilder);
     }
 }

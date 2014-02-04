@@ -1,13 +1,19 @@
 package org.mockserver.maven;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.proxy.ProxyClient;
 import org.mockserver.client.server.MockServerClient;
-import org.mockserver.mockserver.NettyMockServer;
+import org.mockserver.mockserver.MockServer;
+import org.mockserver.mockserver.MockServerBuilder;
 import org.mockserver.proxy.http.HttpProxy;
+import org.mockserver.proxy.http.HttpProxyBuilder;
 
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -16,67 +22,89 @@ import static org.mockito.MockitoAnnotations.initMocks;
  */
 public class InstanceHolderTest {
 
+    @Mock
+    private HttpProxyBuilder mockProxyBuilder;
+    @Mock
+    private MockServerBuilder mockMockServerBuilder;
+
+    @Mock
     private HttpProxy mockProxy;
-    private NettyMockServer mockMockServer;
+    @Mock
+    private MockServer mockMockServer;
 
     @Mock
     private MockServerClient mockServerClient;
     @Mock
     private ProxyClient proxyClient;
 
+    @InjectMocks
+    private InstanceHolder instanceHolder;
+
     @Before
     public void setupMock() {
-        mockMockServer = mock(NettyMockServer.class);
-        InstanceHolder.mockServer = mockMockServer;
-
-        mockProxy = mock(HttpProxy.class);
-        InstanceHolder.proxy = mockProxy;
+        instanceHolder = new InstanceHolder();
 
         initMocks(this);
+
+        InstanceHolder.mockServerBuilder = mockMockServerBuilder;
+        InstanceHolder.proxyBuilder = mockProxyBuilder;
+
+        when(mockMockServerBuilder.withHTTPPort(anyInt())).thenReturn(mockMockServerBuilder);
+        when(mockMockServerBuilder.withHTTPSPort(anyInt())).thenReturn(mockMockServerBuilder);
+        when(mockProxyBuilder.withHTTPPort(anyInt())).thenReturn(mockProxyBuilder);
+        when(mockProxyBuilder.withHTTPSPort(anyInt())).thenReturn(mockProxyBuilder);
+
+        when(mockProxy.isRunning()).thenReturn(false);
+        when(mockMockServer.isRunning()).thenReturn(false);
+    }
+
+    @After
+    public void shutdownProxyAndMockServer() {
+        instanceHolder.stop();
     }
 
     @Test
     public void shouldStartServerAndProxyOnBothPorts() {
         // when
-        new InstanceHolder().start(1, 2, 3, 4, "LEVEL");
+        instanceHolder.start(1, 2, 3, 4);
 
         // then
-        verify(mockMockServer).overrideLogLevel("LEVEL");
-        verify(mockMockServer).start(1, 2);
-        verify(mockProxy).startHttpProxy(3, 4);
+        verify(mockMockServerBuilder).withHTTPPort(1);
+        verify(mockMockServerBuilder).withHTTPSPort(2);
+        verify(mockProxyBuilder).withHTTPPort(3);
+        verify(mockProxyBuilder).withHTTPSPort(4);
     }
 
     @Test
     public void shouldStartOnlyServerOnBothPorts() {
         // when
-        new InstanceHolder().start(1, 2, -1, -1, "LEVEL");
+        instanceHolder.start(1, 2, -1, -1);
 
         // then
-        verify(mockMockServer).overrideLogLevel("LEVEL");
-        verify(mockMockServer).start(1, 2);
-        verify((mockProxy), times(0)).startHttpProxy(anyInt(), anyInt());
+        verify(mockMockServerBuilder).withHTTPPort(1);
+        verify(mockMockServerBuilder).withHTTPSPort(2);
+        verifyNoMoreInteractions(mockProxyBuilder);
     }
 
     @Test
     public void shouldStartOnlyProxyOnBothPorts() {
         // when
-        new InstanceHolder().start(-1, -1, 3, 4, "LEVEL");
+        instanceHolder.start(-1, -1, 3, 4);
 
         // then
-        verify(mockMockServer).overrideLogLevel("LEVEL");
-        verify((mockMockServer), times(0)).start(anyInt(), anyInt());
-        verify(mockProxy).startHttpProxy(3, 4);
+        verifyNoMoreInteractions(mockMockServerBuilder);
+        verify(mockProxyBuilder).withHTTPPort(3);
+        verify(mockProxyBuilder).withHTTPSPort(4);
     }
 
     @Test
     public void shouldNotStartServerOrProxy() {
         // when
-        new InstanceHolder().start(-1, -1, -1, -1, "LEVEL");
+        instanceHolder.start(-1, -1, -1, -1);
 
         // then
-        verify(mockMockServer).overrideLogLevel("LEVEL");
-        verify((mockMockServer), times(0)).start(anyInt(), anyInt());
-        verify((mockProxy), times(0)).startHttpProxy(anyInt(), anyInt());
+        verifyNoMoreInteractions(mockMockServerBuilder);
+        verifyNoMoreInteractions(mockProxyBuilder);
     }
 
     @Test(expected = IllegalStateException.class)
@@ -85,7 +113,7 @@ public class InstanceHolderTest {
         when(mockMockServer.isRunning()).thenReturn(true);
 
         // when
-        new InstanceHolder().start(1, 2, 3, 4, "LEVEL");
+        instanceHolder.start(1, 2, 3, 4);
     }
 
     @Test(expected = IllegalStateException.class)
@@ -94,7 +122,7 @@ public class InstanceHolderTest {
         when(mockProxy.isRunning()).thenReturn(true);
 
         // when
-        new InstanceHolder().start(1, 2, 3, 4, "LEVEL");
+        instanceHolder.start(1, 2, 3, 4);
     }
 
     @Test
@@ -104,7 +132,7 @@ public class InstanceHolderTest {
         when(mockProxy.isRunning()).thenReturn(true);
 
         // when
-        new InstanceHolder().stop();
+        instanceHolder.stop();
 
         // then
         verify(mockMockServer).stop();
@@ -114,15 +142,14 @@ public class InstanceHolderTest {
     @Test
     public void shouldStopMockServerAndProxyRemotely() {
         // given
-        InstanceHolder embeddedJettyHolder = spy(new InstanceHolder());
+        InstanceHolder embeddedJettyHolder = spy(instanceHolder);
         when(embeddedJettyHolder.newMockServerClient(1)).thenReturn(mockServerClient);
         when(embeddedJettyHolder.newProxyClient(2)).thenReturn(proxyClient);
 
         // when
-        embeddedJettyHolder.stop(1, 2, "LEVEL");
+        embeddedJettyHolder.stop(1, 2);
 
         // then
-        verify(mockMockServer).overrideLogLevel("LEVEL");
         verify(mockServerClient).stop();
         verify(proxyClient).stop();
     }
@@ -130,15 +157,14 @@ public class InstanceHolderTest {
     @Test
     public void shouldStopMockServerOnlyRemotely() {
         // given
-        InstanceHolder embeddedJettyHolder = spy(new InstanceHolder());
+        InstanceHolder embeddedJettyHolder = spy(instanceHolder);
         when(embeddedJettyHolder.newMockServerClient(1)).thenReturn(mockServerClient);
         when(embeddedJettyHolder.newProxyClient(2)).thenReturn(proxyClient);
 
         // when
-        embeddedJettyHolder.stop(1, -1, "LEVEL");
+        embeddedJettyHolder.stop(1, -1);
 
         // then
-        verify(mockMockServer).overrideLogLevel("LEVEL");
         verify(mockServerClient).stop();
         verify(proxyClient, times(0)).stop();
     }
@@ -146,15 +172,14 @@ public class InstanceHolderTest {
     @Test
     public void shouldStopProxyOnlyRemotely() {
         // given
-        InstanceHolder embeddedJettyHolder = spy(new InstanceHolder());
+        InstanceHolder embeddedJettyHolder = spy(instanceHolder);
         when(embeddedJettyHolder.newMockServerClient(1)).thenReturn(mockServerClient);
         when(embeddedJettyHolder.newProxyClient(2)).thenReturn(proxyClient);
 
         // when
-        embeddedJettyHolder.stop(-1, 2, "LEVEL");
+        embeddedJettyHolder.stop(-1, 2);
 
         // then
-        verify(mockMockServer).overrideLogLevel("LEVEL");
         verify(mockServerClient, times(0)).stop();
         verify(proxyClient).stop();
     }

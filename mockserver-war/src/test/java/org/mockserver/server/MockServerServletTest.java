@@ -10,7 +10,7 @@ import org.mockserver.mappers.HttpServletToMockServerRequestMapper;
 import org.mockserver.mappers.MockServerToHttpServletResponseMapper;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
-import org.mockserver.mock.MockServer;
+import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -30,7 +30,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class MockServerServletTest {
 
     @Mock
-    private MockServer mockServer;
+    private MockServerMatcher mockServerMatcher;
     @Mock
     private HttpServletToMockServerRequestMapper httpServletToMockServerRequestMapper;
     @Mock
@@ -57,7 +57,7 @@ public class MockServerServletTest {
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
         MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("GET", "somepath");
 
-        when(mockServer.handle(httpRequest)).thenReturn(httpResponse);
+        when(mockServerMatcher.handle(httpRequest)).thenReturn(httpResponse);
         when(httpServletToMockServerRequestMapper.mapHttpServletRequestToMockServerRequest(httpServletRequest)).thenReturn(httpRequest);
 
         // when
@@ -79,13 +79,13 @@ public class MockServerServletTest {
         String requestBytes = "requestBytes";
         httpServletRequest.setContent(requestBytes.getBytes());
         when(expectationSerializer.deserialize(requestBytes)).thenReturn(expectation);
-        when(mockServer.when(same(httpRequest), same(times))).thenReturn(expectation);
+        when(mockServerMatcher.when(same(httpRequest), same(times))).thenReturn(expectation);
 
         // when
         mockServerServlet.doPut(httpServletRequest, httpServletResponse);
 
         // then
-        verify(mockServer).when(same(httpRequest), same(times));
+        verify(mockServerMatcher).when(same(httpRequest), same(times));
         assertEquals(HttpServletResponse.SC_CREATED, httpServletResponse.getStatus());
     }
 
@@ -186,7 +186,7 @@ public class MockServerServletTest {
         mockServerServlet.doPut(httpServletRequest, httpServletResponse);
 
         // then
-        verify(mockServer).clear(httpRequest);
+        verify(mockServerMatcher).clear(httpRequest);
         verifyNoMoreInteractions(httpServletToMockServerRequestMapper);
     }
 
@@ -205,7 +205,7 @@ public class MockServerServletTest {
         mockServerServlet.doPut(httpServletRequest, httpServletResponse);
 
         // then
-        verify(mockServer).reset();
+        verify(mockServerMatcher).reset();
         verifyNoMoreInteractions(httpServletToMockServerRequestMapper);
     }
 
@@ -225,7 +225,7 @@ public class MockServerServletTest {
 
         // then
         verify(httpRequestSerializer).deserialize(requestBytes);
-        verify(mockServer).dumpToLog(httpRequest);
+        verify(mockServerMatcher).dumpToLog(httpRequest);
         verifyNoMoreInteractions(httpServletToMockServerRequestMapper);
     }
 }

@@ -11,7 +11,7 @@ import org.mockserver.mappers.VertXToMockServerRequestMapper;
 import org.mockserver.mappers.MockServerToVertXResponseMapper;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
-import org.mockserver.mock.MockServer;
+import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpStatusCode;
@@ -30,7 +30,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class MockServerVerticalTest {
 
     @Mock
-    private MockServer mockServer;
+    private MockServerMatcher mockServerMatcher;
     @Mock
     private Expectation expectation;
     @Mock
@@ -62,7 +62,7 @@ public class MockServerVerticalTest {
         when(vertXToMockServerRequestMapper.mapVertXRequestToMockServerRequest(httpServerRequest, "".getBytes())).thenReturn(httpRequest);
         // - an expectation that does match
         HttpResponse httpResponse = new HttpResponse();
-        when(mockServer.handle(httpRequest)).thenReturn(httpResponse);
+        when(mockServerMatcher.handle(httpRequest)).thenReturn(httpResponse);
 
         // when - receive http http
         mockServerVertical.getRequestHandler().handle(httpServerRequest);
@@ -81,7 +81,7 @@ public class MockServerVerticalTest {
                         .withMethod("GET");
         when(vertXToMockServerRequestMapper.mapVertXRequestToMockServerRequest(httpServerRequest, "".getBytes())).thenReturn(httpRequest);
         // - an expectation that does not match
-        when(mockServer.handle(httpRequest)).thenReturn(null);
+        when(mockServerMatcher.handle(httpRequest)).thenReturn(null);
 
         // when - receive http http
         mockServerVertical.getRequestHandler().handle(httpServerRequest);
@@ -105,14 +105,14 @@ public class MockServerVerticalTest {
         Expectation expectation = spy(new Expectation(httpRequest, times).thenRespond(new HttpResponse()));
         when(expectationSerializer.deserialize(new String(httpServerRequest.body(), Charsets.UTF_8))).thenReturn(expectation);
         // - an MockServer that returns the deserialized expectation
-        when(mockServer.when(same(httpRequest), same(times))).thenReturn(expectation);
+        when(mockServerMatcher.when(same(httpRequest), same(times))).thenReturn(expectation);
 
         // when - receive an expectation http
         mockServerVertical.getRequestHandler().handle(httpServerRequest);
 
         // then
         // - expectation is added to MockServer
-        verify(mockServer).when(same(httpRequest), same(times));
+        verify(mockServerMatcher).when(same(httpRequest), same(times));
         verify(expectation).thenRespond(expectation.getHttpResponse());
         // - and response code is set
         assertEquals(HttpStatusCode.CREATED_201.code(), httpServerRequest.response().getStatusCode());
@@ -229,7 +229,7 @@ public class MockServerVerticalTest {
         mockServerVertical.getRequestHandler().handle(httpServerRequest);
 
         // then
-        verify(mockServer).clear(httpRequest);
+        verify(mockServerMatcher).clear(httpRequest);
         verifyNoMoreInteractions(vertXToMockServerRequestMapper);
     }
 
@@ -252,7 +252,7 @@ public class MockServerVerticalTest {
         mockServerVertical.getRequestHandler().handle(httpServerRequest);
 
         // then
-        verify(mockServer).reset();
+        verify(mockServerMatcher).reset();
         verifyNoMoreInteractions(vertXToMockServerRequestMapper);
     }
 
@@ -276,7 +276,7 @@ public class MockServerVerticalTest {
 
         // then
         verify(httpRequestSerializer).deserialize(requestBytes);
-        verify(mockServer).dumpToLog(httpRequest);
+        verify(mockServerMatcher).dumpToLog(httpRequest);
         verifyNoMoreInteractions(vertXToMockServerRequestMapper);
     }
 }

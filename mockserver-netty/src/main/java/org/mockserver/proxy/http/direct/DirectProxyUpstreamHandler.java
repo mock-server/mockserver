@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLEngine;
 import java.net.InetSocketAddress;
+import java.util.concurrent.TimeUnit;
 
 public class DirectProxyUpstreamHandler extends ChannelDuplexHandler {
 
@@ -65,16 +66,16 @@ public class DirectProxyUpstreamHandler extends ChannelDuplexHandler {
                         // Create a default pipeline implementation.
                         ChannelPipeline pipeline = ch.pipeline();
 
-                        // add HTTPS support
+                        // add logging
+                        if (logger.isDebugEnabled()) {
+                            pipeline.addLast("logger", new LoggingHandler("                -->"));
+                        }
+
+                        // add HTTPS proxy -> server support
                         if (secure) {
                             SSLEngine engine = SSLFactory.sslContext().createSSLEngine();
                             engine.setUseClientMode(true);
-                            pipeline.addLast("ssl", new SslHandler(engine));
-                        }
-
-                        // add logging
-                        if (logger.isDebugEnabled()) {
-                            pipeline.addLast("logger", new LoggingHandler());
+                            pipeline.addLast("proxy -> server ssl", new SslHandler(engine));
                         }
 
                         // add handler

@@ -1,10 +1,8 @@
 package org.mockserver.server;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.server.MockServerClient;
-import org.mockserver.mockserver.NettyMockServer;
+import org.mockserver.mockserver.MockServer;
 import org.mockserver.socket.PortFactory;
 
 import static org.junit.Assert.assertFalse;
@@ -20,12 +18,8 @@ public class StopClientServerNettyIntegrationTest {
 
     @Test
     public void clientCanClearServerExpectations() {
-        NettyMockServer mockServer = new NettyMockServer();
-
-        assertFalse(mockServer.isRunning());
-
         // start server
-        mockServer.start(serverPort, serverSecurePort);
+        MockServer mockServer = new MockServer(serverPort, serverSecurePort);
 
         // start client
         MockServerClient mockServerClient = new MockServerClient("localhost", serverPort);
@@ -37,7 +31,7 @@ public class StopClientServerNettyIntegrationTest {
 
             // then
             assertFalse(mockServer.isRunning());
-            mockServer = new NettyMockServer().start(serverPort, serverSecurePort);
+            mockServer = new MockServer(serverPort, serverSecurePort);
             assertTrue(mockServer.isRunning());
         }
 

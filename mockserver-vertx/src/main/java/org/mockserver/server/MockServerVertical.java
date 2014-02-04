@@ -3,18 +3,12 @@ package org.mockserver.server;
 import ch.qos.logback.classic.Level;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-import io.netty.buffer.Unpooled;
-import io.netty.handler.codec.http.DefaultFullHttpResponse;
-import io.netty.handler.codec.http.HttpMethod;
-import io.netty.handler.codec.http.HttpResponseStatus;
-import io.netty.handler.codec.http.HttpVersion;
-import io.netty.util.CharsetUtil;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.mappers.VertXToMockServerRequestMapper;
 import org.mockserver.mappers.MockServerToVertXResponseMapper;
 import org.mockserver.mock.Expectation;
-import org.mockserver.mock.MockServer;
+import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpStatusCode;
@@ -27,8 +21,6 @@ import org.vertx.java.core.VoidHandler;
 import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.platform.Verticle;
-
-import java.nio.charset.Charset;
 
 /**
  * @author jamesdbloom
@@ -58,26 +50,26 @@ public class MockServerVertical extends Verticle {
 
                         } else if (request.method().equals("PUT") && request.path().equals("/dumpToLog")) {
 
-                            mockServer.dumpToLog(httpRequestSerializer.deserialize(new String(body.getBytes(), Charsets.UTF_8)));
+                            mockServerMatcher.dumpToLog(httpRequestSerializer.deserialize(new String(body.getBytes(), Charsets.UTF_8)));
                             setStatusAndEnd(request, HttpStatusCode.ACCEPTED_202);
 
                         } else if (request.method().equals("PUT") && request.path().equals("/reset")) {
 
                             logFilter.reset();
-                            mockServer.reset();
+                            mockServerMatcher.reset();
                             setStatusAndEnd(request, HttpStatusCode.ACCEPTED_202);
 
                         } else if (request.method().equals("PUT") && request.path().equals("/clear")) {
 
                             HttpRequest httpRequest = httpRequestSerializer.deserialize(new String(body.getBytes(), Charsets.UTF_8));
                             logFilter.clear(httpRequest);
-                            mockServer.clear(httpRequest);
+                            mockServerMatcher.clear(httpRequest);
                             setStatusAndEnd(request, HttpStatusCode.ACCEPTED_202);
 
                         } else if (request.method().equals("PUT") && request.path().equals("/expectation")) {
 
                             Expectation expectation = expectationSerializer.deserialize(new String(body.getBytes(), Charsets.UTF_8));
-                            mockServer.when(expectation.getHttpRequest(), expectation.getTimes()).thenRespond(expectation.getHttpResponse());
+                            mockServerMatcher.when(expectation.getHttpRequest(), expectation.getTimes()).thenRespond(expectation.getHttpResponse());
                             setStatusAndEnd(request, HttpStatusCode.CREATED_201);
 
                         } else if (request.method().equals("PUT") && request.path().equals("/retrieve")) {
@@ -93,7 +85,7 @@ public class MockServerVertical extends Verticle {
                         } else {
 
                             HttpRequest httpRequest = vertXToMockServerRequestMapper.mapVertXRequestToMockServerRequest(request, body.getBytes());
-                            HttpResponse httpResponse = mockServer.handle(httpRequest);
+                            HttpResponse httpResponse = mockServerMatcher.handle(httpRequest);
                             logFilter.onResponse(httpRequest, httpResponse);
                             if (httpResponse != null) {
                                 mockServerToVertXResponseMapper.mapMockServerResponseToVertXResponse(httpResponse, request.response());
@@ -111,7 +103,7 @@ public class MockServerVertical extends Verticle {
             });
         }
     };
-    private MockServer mockServer = new MockServer();
+    private MockServerMatcher mockServerMatcher = new MockServerMatcher();
     private VertXToMockServerRequestMapper vertXToMockServerRequestMapper = new VertXToMockServerRequestMapper();
     private MockServerToVertXResponseMapper mockServerToVertXResponseMapper = new MockServerToVertXResponseMapper();
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer();

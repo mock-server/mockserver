@@ -69,6 +69,7 @@ public class TestServer {
                                 public void initChannel(SocketChannel ch) throws Exception {
                                     ChannelPipeline pipeline = ch.pipeline();
 
+                                    pipeline.addLast("raw logger", new LoggingHandler("RAW TEST_SERVER_SSL"));
                                     SSLEngine engine = SSLFactory.sslContext().createSSLEngine();
                                     engine.setUseClientMode(false);
                                     pipeline.addLast("ssl", new SslHandler(engine));
@@ -111,11 +112,7 @@ public class TestServer {
     }
 
     public void stop() {
-        if (!bossGroup.isShuttingDown()) {
-            bossGroup.shutdownGracefully(1, 5, TimeUnit.MILLISECONDS);
-        }
-        if (!workerGroup.isShuttingDown()) {
-            workerGroup.shutdownGracefully(1, 5, TimeUnit.MILLISECONDS);
-        }
+        workerGroup.shutdownGracefully(2, 15, TimeUnit.SECONDS);
+        bossGroup.shutdownGracefully(2, 15, TimeUnit.SECONDS);
     }
 }

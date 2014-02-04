@@ -17,7 +17,7 @@ import java.util.List;
 /**
  * @author jamesdbloom
  */
-public class MockServer extends EqualsHashCodeToString {
+public class MockServerMatcher extends EqualsHashCodeToString {
 
     protected final List<Expectation> expectations = new ArrayList<Expectation>();
     private Logger requestLogger = LoggerFactory.getLogger("REQUEST");

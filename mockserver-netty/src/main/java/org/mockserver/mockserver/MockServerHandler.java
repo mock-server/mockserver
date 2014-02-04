@@ -11,7 +11,7 @@ import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.mappers.MockServerToNettyResponseMapper;
 import org.mockserver.mappers.NettyToMockServerRequestMapper;
 import org.mockserver.mock.Expectation;
-import org.mockserver.mock.MockServer;
+import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.NettyHttpRequest;
 import org.mockserver.proxy.filters.LogFilter;
@@ -23,11 +23,11 @@ import static io.netty.handler.codec.http.HttpHeaders.isKeepAlive;
 public class MockServerHandler extends SimpleChannelInboundHandler<Object> {
 
     // mockserver
-    private final MockServer mockServer;
+    private final MockServerMatcher mockServerMatcher;
     private final LogFilter logFilter;
     // netty
     private final boolean secure;
-    private final NettyMockServer server;
+    private final MockServer server;
     // mappers
     private NettyToMockServerRequestMapper nettyToMockServerRequestMapper = new NettyToMockServerRequestMapper();
     private MockServerToNettyResponseMapper mockServerToNettyResponseMapper = new MockServerToNettyResponseMapper();
@@ -38,8 +38,8 @@ public class MockServerHandler extends SimpleChannelInboundHandler<Object> {
     private NettyHttpRequest mockServerHttpRequest = null;
     private HttpRequest request = null;
 
-    public MockServerHandler(MockServer mockServer, LogFilter logFilter, NettyMockServer server, boolean secure) {
-        this.mockServer = mockServer;
+    public MockServerHandler(MockServerMatcher mockServerMatcher, LogFilter logFilter, MockServer server, boolean secure) {
+        this.mockServerMatcher = mockServerMatcher;
         this.logFilter = logFilter;
         this.server = server;
         this.secure = secure;
@@ -108,26 +108,26 @@ public class MockServerHandler extends SimpleChannelInboundHandler<Object> {
 
         if (nettyHttpRequest.matches(HttpMethod.PUT, "/dumpToLog")) {
 
-            mockServer.dumpToLog(httpRequestSerializer.deserialize(nettyHttpRequest.content().toString(CharsetUtil.UTF_8)));
+            mockServerMatcher.dumpToLog(httpRequestSerializer.deserialize(nettyHttpRequest.content().toString(CharsetUtil.UTF_8)));
             return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.ACCEPTED);
 
         } else if (nettyHttpRequest.matches(HttpMethod.PUT, "/reset")) {
 
             logFilter.reset();
-            mockServer.reset();
+            mockServerMatcher.reset();
             return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.ACCEPTED);
 
         } else if (nettyHttpRequest.matches(HttpMethod.PUT, "/clear")) {
 
             org.mockserver.model.HttpRequest httpRequest = httpRequestSerializer.deserialize(nettyHttpRequest.content().toString(CharsetUtil.UTF_8));
             logFilter.clear(httpRequest);
-            mockServer.clear(httpRequest);
+            mockServerMatcher.clear(httpRequest);
             return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.ACCEPTED);
 
         } else if (nettyHttpRequest.matches(HttpMethod.PUT, "/expectation")) {
 
             Expectation expectation = expectationSerializer.deserialize(nettyHttpRequest.content().toString(CharsetUtil.UTF_8));
-            mockServer.when(expectation.getHttpRequest(), expectation.getTimes()).thenRespond(expectation.getHttpResponse());
+            mockServerMatcher.when(expectation.getHttpRequest(), expectation.getTimes()).thenRespond(expectation.getHttpResponse());
             return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.CREATED);
 
         } else if (nettyHttpRequest.matches(HttpMethod.PUT, "/retrieve")) {
@@ -138,7 +138,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<Object> {
         } else {
 
             org.mockserver.model.HttpRequest httpRequest = nettyToMockServerRequestMapper.mapNettyRequestToMockServerRequest(nettyHttpRequest);
-            HttpResponse httpResponse = mockServer.handle(httpRequest);
+            HttpResponse httpResponse = mockServerMatcher.handle(httpRequest);
             logFilter.onResponse(httpRequest, httpResponse);
             return mockServerToNettyResponseMapper.mapMockServerResponseToNettyResponse(httpResponse);
 

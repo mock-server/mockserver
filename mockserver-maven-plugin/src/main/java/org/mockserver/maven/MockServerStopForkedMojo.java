@@ -2,6 +2,7 @@ package org.mockserver.maven;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
+import org.mockserver.logging.Logging;
 
 
 /**
@@ -13,10 +14,11 @@ import org.apache.maven.plugins.annotations.Mojo;
 public class MockServerStopForkedMojo extends MockServerAbstractMojo {
 
     public void execute() throws MojoExecutionException {
+        Logging.overrideLogLevel(logLevel);
         if (skip) {
             getLog().info("Skipping plugin execution");
         } else {
-            getEmbeddedJettyHolder().stop(serverPort, proxyPort, logLevel);
+            getEmbeddedJettyHolder().stop(serverPort, proxyPort);
             if (serverPort != -1) {
                 getLog().info("Stopped MockServer running on port [" + serverPort + "]");
             }

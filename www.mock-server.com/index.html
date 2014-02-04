@@ -533,10 +533,9 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 	<li><strong>url</strong> - regex or plain text</li>
 	<li><strong>path</strong> - regex or plain text</li>
 	<li><strong>query string</strong> - regex or plain text</li>
-	<li><strong>parameters (query string or body)</strong> - regex or plain text</li>
 	<li><strong>headers</strong> - regex or plain text</li>
 	<li><strong>cookies</strong> - regex or plain text</li>
-	<li><strong>body</strong> - XPath, regex or plain text</li>
+	<li><strong>body</strong> - XPath, regex, plain text (exact match), or body parameters</li>
 </ul>
 
 <p>The body can be matched using plain text, an XPath expression or a regular expression, see <a href="http://saxon.sourceforge.net/saxon6.5.3/expressions.html">XPath Expression Syntax</a> for supported XPath syntax.</p>
@@ -612,7 +611,10 @@ Hides the menu at `767px`, but modify this based on your app's needs.
         <span class="string_literal">"method"</span>: <span class="string_literal">"POST"</span>,
         <span class="string_literal">"url"</span>: <span class="string_literal">"http://localhost:2021/login"</span>,
         <span class="string_literal">"path"</span>: <span class="string_literal">"/login"</span>,
-        <span class="string_literal">"body"</span>: <span class="string_literal">"{username: 'foo', password: 'bar'}"</span>,
+        <span class="string_literal">"body"</span>: {
+            <span class="string_literal">"type"</span>: <span class="string_literal">"EXACT"</span>,
+            <span class="string_literal">"value"</span>: <span class="string_literal">"{username: 'foo', password: 'bar'}"</span>,
+        },
         <span class="string_literal">"cookies"</span>: [
             {
                 <span class="string_literal">"name"</span>: <span class="string_literal">"sid"</span>,
@@ -833,7 +835,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 <pre><code class="code xml">&lt;<span class="element">plugin</span>&gt;
     &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;
     &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-maven-plugin</span>&lt;/<span class="element">artifactId</span>&gt;
-    &lt;<span class="element">version</span>&gt;<span class="element_value">2.1</span>&lt;/<span class="element">version</span>&gt;
+    &lt;<span class="element">version</span>&gt;<span class="element_value">2.5</span>&lt;/<span class="element">version</span>&gt;
     &lt;<span class="element">configuration</span>&gt;
         &lt;<span class="element">port</span>&gt;<span class="element_value">9090</span>&lt;/<span class="element">port</span>&gt;
         &lt;<span class="element">logLevel</span>&gt;<span class="element_value">TRACE</span>&lt;/<span class="element">logLevel</span>&gt;
@@ -868,7 +870,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 <pre><code class="code xml"> &lt;<span class="element">plugin</span>&gt;
      &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;
      &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-maven-plugin</span>&lt;/<span class="element">artifactId</span>&gt;
-     &lt;<span class="element">version</span>&gt;<span class="element_value">2.1</span>&lt;/<span class="element">version</span>&gt;
+     &lt;<span class="element">version</span>&gt;<span class="element_value">2.5</span>&lt;/<span class="element">version</span>&gt;
      &lt;<span class="element">configuration</span>&gt;
          &lt;<span class="element">port</span>&gt;<span class="element_value">9090</span>&lt;/<span class="element">port</span>&gt;
          &lt;<span class="element">logLevel</span>&gt;<span class="element_value">TRACE</span>&lt;/<span class="element">logLevel</span>&gt;
@@ -967,8 +969,8 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 <pre><code class="code xml">&lt;!-- mockserver --&gt;
 &lt;<span class="element">dependency</span>&gt;
      &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;<span class="element">/groupId</span>&gt;
-     &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-jetty</span>&lt;<span class="element">/artifactId</span>&gt;
-     &lt;<span class="element">version</span>&gt;<span class="element_value">2.1</span>&lt;<span class="element">/version</span>&gt;
+     &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-netty</span>&lt;<span class="element">/artifactId</span>&gt;
+     &lt;<span class="element">version</span>&gt;<span class="element_value">2.5</span>&lt;<span class="element">/version</span>&gt;
 &lt;<span class="element">/dependency</span>&gt;</code></pre>
 
 <p>To start the server and create a client the simplest way is to the start factory methods ClientAndServer.startClientAndServer or ClientAndProxy.startClientAndProxy as follows:</p>
@@ -1011,9 +1013,9 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 <p>MockServer can be run directly from the command line and using Embedded Jetty as follow:</p>
 
 <ol>
-	<li><p>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-jetty/2.1/mockserver-jetty-2.1-jar-with-dependencies.jar">mockserver-jetty-2.1-jar-with-dependencies.jar</a> from Maven Central</p></li>
+	<li><p>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/2.5/mockserver-netty-2.5-jar-with-dependencies.jar">mockserver-netty-2.5-jar-with-dependencies.jar</a> from Maven Central</p></li>
 	<li>
-		<code class="code inline">java -jar &lt;path to mockserver-jetty-2.1-jar-with-dependencies.jar&gt; -serverPort &lt;port&gt;</code>
+		<code class="code inline">java -jar &lt;path to mockserver-netty-2.5-jar-with-dependencies.jar&gt; -serverPort &lt;port&gt;</code>
 	</li>
 </ol>
 
@@ -1041,7 +1043,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p>For example:</p>
 
-<pre><code class="code">java -jar ~/Downloads/mockserver-jetty-2.1-jar-with-dependencies.jar -serverPort 8080 -proxyPort 9090</code></pre>
+<pre><code class="code">java -jar ~/Downloads/mockserver-netty-2.5-jar-with-dependencies.jar -serverPort 8080 -proxyPort 9090</code></pre>
 
 <a name="vertx-module" class="anchor" href="#vertx-module">&nbsp;</a>
 
@@ -1072,8 +1074,8 @@ vertx runmod org.mock-server~mockserver-vertx~2.0</code></pre>
 <p>To run as a WAR deployed on any JEE web server:</p>
 
 <ol>
-	<li>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-war/2.1/mockserver-war-2.1.war">mockserver-war-2.1.war</a> from Maven Central</li>
-	<li>deploy <strong>mockserver-war-2.1.war</strong> to any JEE web server</li>
+	<li>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-war/2.5/mockserver-war-2.5.war">mockserver-war-2.5.war</a> from Maven Central</li>
+	<li>deploy <strong>mockserver-war-2.5.war</strong> to any JEE web server</li>
 </ol>
 
 <p><strong>WAR Context Path</strong></p>
@@ -1107,7 +1109,7 @@ cd mockserver</code></pre>
 
 <p>This will produce a jar file under the target directory called, as follows:</p>
 
-<pre><code class="code">mockserver-jetty/target/mockserver-jetty-2.1-jar-with-dependencies.jar</code></pre>
+<pre><code class="code">mockserver-netty/target/mockserver-netty-2.5-jar-with-dependencies.jar</code></pre>
 
 <p>Run the MockServer then using the executable jar as per the instruction above in <a href="#running-from-command-line">Running From The Command Line</a></p>
 
@@ -1357,7 +1359,7 @@ cd mockserver</code></pre>
                         .withCookies(
                                 <span class="keyword">new</span> Cookie(<span class="string_literal">"sessionId"</span>, <span class="string_literal">"2By8LOhBmaW5nZXJwcmludCIlMDAzMW"</span>)
                         )
-                        .withBody(<span class="string_literal">"{username: 'foo', password: 'bar'}"</span>),
+                        .withBody(exact(<span class="string_literal">"{username: 'foo', password: 'bar'}"</span>)),
                 Times.exactly(<span class="numeric_literal">1</span>)
         )
         .respond(
@@ -1389,7 +1391,10 @@ xmlHttpRequest.send(JSON.stringify({
                 <span class="string_literal">"values"</span>: [<span class="string_literal">"2By8LOhBmaW5nZXJwcmludCIlMDAzMW"</span>]
             }
         ],
-        <span class="string_literal">"body"</span>: JSON.stringify({ username: <span class="string_literal">"foo"</span>, password: <span class="string_literal">"bar"</span> })
+        <span class="string_literal">"body"</span>: {
+            <span class="string_literal">"type"</span>: <span class="string_literal">"EXACT"</span>
+            <span class="string_literal">"value"</span>: JSON.stringify({ username: <span class="string_literal">"foo"</span>, password: <span class="string_literal">"bar"</span> })
+        }
     },
     <span class="string_literal">"httpResponse"</span>: {
         <span class="string_literal">"statusCode"</span>: <span class="numeric_literal">401</span>,
@@ -1430,10 +1435,9 @@ xmlHttpRequest.send(JSON.stringify({
 	<li><strong>url</strong> - regex or plain text</li>
 	<li><strong>path</strong> - regex or plain text</li>
 	<li><strong>query string</strong> - regex or plain text</li>
-	<li><strong>parameters (query string or body)</strong> - regex or plain text</li>
 	<li><strong>headers</strong> - regex or plain text</li>
 	<li><strong>cookies</strong> - regex or plain text</li>
-	<li><strong>body</strong> - XPath, regex or plain text</li>
+	<li><strong>body</strong> - XPath, regex, plain text (exact match), or body parameters</li>
 </ul>
 
 <p>The body can be matched using plain text, an XPath expression or a regular expression, see <a href="http://saxon.sourceforge.net/saxon6.5.3/expressions.html">XPath Expression Syntax</a> for supported XPath syntax.</p>
@@ -1478,21 +1482,6 @@ xmlHttpRequest.send(JSON.stringify({
      * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">queryString</span> the query string such as <span class="string_literal">"someParameter=someValue&someOtherParameter=someOtherValue"</span> or a regex
      */</span>
     <span class="keyword">public</span> HttpRequest withQueryString(String queryString);
-
-    <span class="comment">/**
-     * The parameters (in the query string or body) to match on as a list of Parameter objects where the values or keys of each parameter can be either a string or a regex
-     * (for more details of the supported regex syntax see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>)
-     *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">parameters</span> the list of Parameter objects where the values or keys of each parameter can be either a string or a regex
-     */</span>
-    <span class="keyword">public</span> HttpRequest withParameters(List&lt;Parameter&gt; parameters) {
-    <span class="comment">/**
-     * The parameters (in the query string or body) to match on as a varags Parameter objects where the values or keys of each parameter can be either a string or a regex
-     * (for more details of the supported regex syntax see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>)
-     *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">parameters</span> the varags Parameter objects where the values or keys of each parameter can be either a string or a regex
-     */</span>
-    <span class="keyword">public</span> HttpRequest withParameters(Parameter... parameters) {
 
     <span class="comment">/**
      * The body to match on such as <span class="string_literal">"{username: 'foo', password: 'bar'}"</span> or a regex (see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>)
@@ -1553,8 +1542,11 @@ xmlHttpRequest.send(JSON.stringify({
 <pre><code class="code"><span class="string_literal">"httpRequest"</span>: {
     <span class="string_literal">"method"</span>: <span class="string_literal">""</span>,
     <span class="string_literal">"path"</span>: <span class="string_literal">""</span>,
-    <span class="string_literal">"parameters"</span>: []
-    <span class="string_literal">"body"</span>: <span class="string_literal">""</span>,
+    <span class="string_literal">"queryParameters"</span>: []
+    <span class="string_literal">"body"</span>: {
+       <span class="string_literal">"type"</span>: <span class="annotation">&lt;</span><span class="string_literal">"REGEX"</span> <span class="annotation">or</span> <span class="string_literal">"EXACT"</span> <span class="annotation">or</span> <span class="string_literal">"XPATH"</span> <span class="annotation">or</span> <span class="string_literal">"PARAMETERS"</span><span class="annotation">&gt;</span>,
+       <span class="string_literal">"value"</span>: <span class="string_literal">""</span> <span class="annotation">( or</span> <span class="string_literal">"parameters"</span> <span class="annotation">as shown in more detail below )</span>
+    },
     <span class="string_literal">"cookies"</span>: [],
     <span class="string_literal">"headers"</span>: [],
 }</code></pre>
@@ -1573,7 +1565,51 @@ xmlHttpRequest.send(JSON.stringify({
 <pre><code class="code"><span class="string_literal">"httpRequest"</span>: {
     <span class="string_literal">"method"</span>: <span class="string_literal">"POST"</span>,
     <span class="string_literal">"path"</span>: <span class="string_literal">"/login"</span>,
-    <span class="string_literal">"body"</span>: <span class="string_literal">"{username: 'foo', password: 'bar'}"</span>,
+    <span class="string_literal">"body"</span>: {
+        <span class="string_literal">"type"</span>: <span class="string_literal">"EXACT"</span>,
+        <span class="string_literal">"value"</span>: <span class="string_literal">"{username: 'foo', password: 'bar'}"</span>
+    },
+    <span class="string_literal">"cookies"</span>: [
+        {
+            <span class="string_literal">"name"</span>: <span class="string_literal">"sessionId"</span>,
+            <span class="string_literal">"values"</span>: [<span class="string_literal">"2By8LOhBmaW5nZXJwcmludCIlMDAzMW"</span>]
+        }
+    ]
+}</code></pre>
+
+<p>The <span class="string_literal">"type"</span> value in <span class="string_literal">"body"</span> can be:</p>
+
+<pre><code class="code"><span class="string_literal">"EXACT"</span>
+<span class="string_literal">"REGEX"</span>
+<span class="string_literal">"XPATH"</span>
+<span class="string_literal">"PARAMETERS"</span></code></pre>
+
+<p>When the <span class="string_literal">"type"</span> field has a value of <span class="string_literal">"EXACT"</span>, <span class="string_literal">"REGEX"</span> or <span class="string_literal">"XPATH"</span> the other field of <span class="string_literal">"body"</span>" should be <span class="string_literal">"value"</span> and it should provide a string to perform the match against, as shown in the example above.</p>
+<p>When the <span class="string_literal">"type"</span> field has a value of <span class="string_literal">"PARAMETERS"</span> the other field of <span class="string_literal">"body"</span>" should be <span class="string_literal">"parameters"</span> and it should provide a list of body parameters using the following syntax:</p>
+
+<pre><code class="code">{
+    <span class="string_literal">"name"</span>: <span class="string_literal">"someName"</span>,
+    <span class="string_literal">"values"</span>: [<span class="string_literal">"someValueOne"</span>, <span class="string_literal">"someValueTwo"</span>, ...]
+}</code></pre>
+
+<p>For example:</p>
+
+<pre><code class="code"><span class="string_literal">"httpRequest"</span>: {
+    <span class="string_literal">"method"</span>: <span class="string_literal">"POST"</span>,
+    <span class="string_literal">"path"</span>: <span class="string_literal">"/login"</span>,
+    <span class="string_literal">"body"</span>: {
+        <span class="string_literal">"type"</span>: <span class="string_literal">"PARAMETERS"</span>,
+        <span class="string_literal">"parameters"</span>: [
+            {
+                <span class="string_literal">"name"</span>: <span class="string_literal">"username"</span>,
+                <span class="string_literal">"values"</span>: [<span class="string_literal">"foo"</span>]
+            },
+            {
+                <span class="string_literal">"name"</span>: <span class="string_literal">"password"</span>,
+                <span class="string_literal">"values"</span>: [<span class="string_literal">"bar"</span>]
+            }
+        ]
+    },
     <span class="string_literal">"cookies"</span>: [
         {
             <span class="string_literal">"name"</span>: <span class="string_literal">"sessionId"</span>,
@@ -1769,7 +1805,7 @@ HttpClient httpClient = HttpClients.custom().setRoutePlanner(defaultProxyRoutePl
         request()
                 .withMethod(<span class="string_literal">"POST"</span>)
                 .withPath(<span class="string_literal">"/login"</span>)
-                .withBody(<span class="string_literal">"{username: 'foo', password: 'bar'}"</span>)
+                .withBody(exact(<span class="string_literal">"{username: 'foo', password: 'bar'}"</span>))
                 .withCookies(
                         new Cookie(<span class="string_literal">"sessionId"</span>, <span class="string_literal">".*"</span>)
                 ),
@@ -2085,7 +2121,8 @@ xmlHttpRequest.send(JSON.stringify({
 <h2>Requirements</h2>
 
 <ul>
-	<li><strong>Java 7+</strong>&nbsp;&nbsp;&nbsp;because MockServer uses Jetty 9 (to increase reliability, simplicity and flexibility) which in turn requires Java 7</li>
+	<li><strong>Java 6+</strong>&nbsp;&nbsp;&nbsp;to use the Netty version, the Maven Plugin and MockServer WAR and proxy WAR</li>
+	<li><strong>Java 7+</strong>&nbsp;&nbsp;&nbsp;to use the Vert.X module or the Embedded Jetty version as both Jetty 9 and Vert.X in turn require Java 7 (<strong>Note:</strong> all features provided in the Embedded Jetty version are also available using the Netty version)</li>
 </ul>
 
 <a name="downloads" class="anchor" href="#versions">&nbsp;</a>
@@ -2095,9 +2132,9 @@ xmlHttpRequest.send(JSON.stringify({
 <p>The simplest way to run and download MockServer is by using the fully stand alone web server embedded with all dependencies that mocks HTTP and HTTPS requests, as follows:</p>
 
 <ol>
-	<li><p>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-jetty/2.1/mockserver-jetty-2.1-jar-with-dependencies.jar">mockserver-jetty-2.1-jar-with-dependencies.jar</a> from Maven Central</p></li>
+	<li><p>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/2.5/mockserver-netty-2.5-jar-with-dependencies.jar">mockserver-netty-2.5-jar-with-dependencies.jar</a> from Maven Central</p></li>
 	<li>
-		<code class="code inline">java -jar &lt;path to mockserver-jetty-2.1-jar-with-dependencies.jar&gt; -serverPort &lt;port&gt;</code>
+		<code class="code inline">java -jar &lt;path to mockserver-netty-2.5-jar-with-dependencies.jar&gt; -serverPort &lt;port&gt;</code>
 	</li>
 </ol>
 
@@ -2124,8 +2161,10 @@ xmlHttpRequest.send(JSON.stringify({
 <p>Maven Central contains the following MockServer artifacts:</p>
 
 <ul>
+	<li><a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver-netty">mockserver-netty</a> - a web server for mocking and proxying using Netty</li>
+	<li><a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver-netty">mockserver-netty:jar-with-dependencies</a> - as above using Netty that includes all dependencies are bundled into the jar file</li>
 	<li><a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver-jetty">mockserver-jetty</a> - a web server for mocking and proxying using Embedded Jetty</li>
-	<li><a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver-jetty">mockserver-jetty:jar-with-dependencies</a> - as above except that all dependencies are bundled into the jar file</li>
+	<li><a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver-jetty">mockserver-jetty:jar-with-dependencies</a> - as above using Jetty that includes all dependencies are bundled into the jar file</li>
 	<li><a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver-vertx">mockserver-vertx</a> - a Vert.X module for mocking and proxying</li>
 	<li><a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver-war">mockserver-war</a> - a deployable WAR for mocking and proxying that can be deployed to any JEE web server</li>
 	<li><a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver-maven-plugin">mockserver-maven-plugin</a> - a set of maven plugins to start, stop and fork MockServer using maven</li>

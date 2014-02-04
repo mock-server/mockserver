@@ -8,6 +8,7 @@ import org.mockserver.client.proxy.ProxyClient;
 import org.mockserver.integration.testserver.TestServer;
 import org.mockserver.integration.proxy.AbstractClientProxyIntegrationTest;
 import org.mockserver.proxy.http.HttpProxy;
+import org.mockserver.proxy.http.HttpProxyBuilder;
 import org.mockserver.socket.PortFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +45,13 @@ public class NettySocksProxyIntegrationTest extends AbstractClientProxyIntegrati
         testServer.startServer(SERVER_HTTP_PORT, SERVER_HTTPS_PORT);
 
         // start proxy
-        httpProxy = new HttpProxy().startProxy(PROXY_HTTP_PORT, PROXY_HTTPS_PORT, PROXY_SOCKS_PORT, PROXY_DIRECT_PORT, PROXY_DIRECT_SECURE_PORT, "127.0.0.1", SERVER_HTTP_PORT);
+        httpProxy = new HttpProxyBuilder()
+                .withHTTPPort(PROXY_HTTP_PORT)
+                .withHTTPSPort(PROXY_HTTPS_PORT)
+                .withSOCKSPort(PROXY_SOCKS_PORT)
+                .withDirect(PROXY_DIRECT_PORT, "127.0.0.1", SERVER_HTTP_PORT)
+                .withDirectSSL(PROXY_DIRECT_SECURE_PORT, "127.0.0.1", SERVER_HTTPS_PORT)
+                .build();
 
         // start client
         proxyClient = new ProxyClient("localhost", PROXY_HTTP_PORT);

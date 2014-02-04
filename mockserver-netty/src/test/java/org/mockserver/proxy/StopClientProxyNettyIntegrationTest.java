@@ -4,6 +4,7 @@ import org.junit.Test;
 import org.mockserver.client.proxy.ProxyClient;
 import org.mockserver.client.server.MockServerClient;
 import org.mockserver.proxy.http.HttpProxy;
+import org.mockserver.proxy.http.HttpProxyBuilder;
 import org.mockserver.socket.PortFactory;
 
 import static org.junit.Assert.assertFalse;
@@ -19,12 +20,8 @@ public class StopClientProxyNettyIntegrationTest {
 
     @Test
     public void clientCanClearServerExpectations() {
-        HttpProxy httpProxy = new HttpProxy();
-
-        assertFalse(httpProxy.isRunning());
-
         // start server
-        httpProxy.startHttpProxy(serverPort, serverSecurePort);
+        HttpProxy httpProxy = new HttpProxyBuilder().withHTTPPort(serverPort).withHTTPSPort(serverSecurePort).build();
 
         // start client
         ProxyClient proxyClient = new ProxyClient("localhost", serverPort);
@@ -36,7 +33,7 @@ public class StopClientProxyNettyIntegrationTest {
 
             // then
             assertFalse(httpProxy.isRunning());
-            httpProxy = new HttpProxy().startHttpProxy(serverPort, serverSecurePort);
+            httpProxy = new HttpProxyBuilder().withHTTPPort(serverPort).withHTTPSPort(serverSecurePort).build();
             assertTrue(httpProxy.isRunning());
         }
 

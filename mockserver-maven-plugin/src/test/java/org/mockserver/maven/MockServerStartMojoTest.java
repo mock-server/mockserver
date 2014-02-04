@@ -32,13 +32,12 @@ public class MockServerStartMojoTest {
         mockServerStartMojo.serverSecurePort = 2;
         mockServerStartMojo.proxyPort = 3;
         mockServerStartMojo.proxySecurePort = 4;
-        mockServerStartMojo.logLevel = "LEVEL";
 
         // when
         mockServerStartMojo.execute();
 
         // then
-        verify(mockEmbeddedJettyHolder).start(1, 2, 3, 4, "LEVEL");
+        verify(mockEmbeddedJettyHolder).start(1, 2, 3, 4);
     }
 
     @Test

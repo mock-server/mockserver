@@ -2,6 +2,7 @@ package org.mockserver.integration;
 
 import org.mockserver.client.proxy.ProxyClient;
 import org.mockserver.proxy.http.HttpProxy;
+import org.mockserver.proxy.http.HttpProxyBuilder;
 
 /**
  * @author jamesdbloom
@@ -12,12 +13,12 @@ public class ClientAndProxy extends ProxyClient {
 
     public ClientAndProxy(Integer port) {
         super("localhost", port);
-        httpProxy = new HttpProxy().startHttpProxy(port, null);
+        httpProxy = new HttpProxyBuilder().withHTTPPort(port).build();
     }
 
     public ClientAndProxy(Integer port, Integer securePort) {
         super("localhost", port);
-        httpProxy = new HttpProxy().startHttpProxy(port, securePort);
+        httpProxy = new HttpProxyBuilder().withHTTPPort(port).withHTTPSPort(securePort).build();
     }
 
     public static ClientAndProxy startClientAndProxy(Integer port) {

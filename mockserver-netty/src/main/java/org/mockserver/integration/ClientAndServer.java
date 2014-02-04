@@ -1,23 +1,23 @@
 package org.mockserver.integration;
 
 import org.mockserver.client.server.MockServerClient;
-import org.mockserver.mockserver.NettyMockServer;
+import org.mockserver.mockserver.MockServer;
 
 /**
  * @author jamesdbloom
  */
 public class ClientAndServer extends MockServerClient {
 
-    private NettyMockServer mockServer;
+    private MockServer mockServer;
 
     public ClientAndServer(Integer port) {
         super("localhost", port);
-        mockServer = new NettyMockServer().start(port, null);
+        mockServer = new MockServer(port, null);
     }
 
     public ClientAndServer(Integer port, Integer securePort) {
         super("localhost", port);
-        mockServer = new NettyMockServer().start(port, securePort);
+        mockServer = new MockServer(port, securePort);
     }
 
     public static ClientAndServer startClientAndServer(Integer port) {

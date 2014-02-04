@@ -15,23 +15,23 @@ import static org.mockito.MockitoAnnotations.initMocks;
 /**
  * @author jamesdbloom
  */
-public class MockServerDumpTest {
+public class MockServerMatcherDumpTest {
 
     @Mock
     private Logger requestLogger;
     @InjectMocks
-    private MockServer mockServer;
+    private MockServerMatcher mockServerMatcher;
 
     @Before
     public void prepareTestFixture() {
-        mockServer = new MockServer();
+        mockServerMatcher = new MockServerMatcher();
         initMocks(this);
     }
 
     @Test
     public void shouldWriteAllExpectationsToTheLog() {
         // given
-        mockServer
+        mockServerMatcher
                 .when(
                         new HttpRequest()
                                 .withPath("some_path"))
@@ -39,7 +39,7 @@ public class MockServerDumpTest {
                         new HttpResponse()
                                 .withBody("some_response_body")
                 );
-        mockServer
+        mockServerMatcher
                 .when(
                         new HttpRequest()
                                 .withPath("some_other_path"))
@@ -49,7 +49,7 @@ public class MockServerDumpTest {
                 );
 
         // when
-        mockServer.dumpToLog(null);
+        mockServerMatcher.dumpToLog(null);
 
         // then
         verify(requestLogger).warn("{\n" +
@@ -83,7 +83,7 @@ public class MockServerDumpTest {
     @Test
     public void shouldWriteOnlyMatchingExpectationsToTheLog() {
         // given
-        mockServer
+        mockServerMatcher
                 .when(
                         new HttpRequest()
                                 .withPath("some_path"))
@@ -91,7 +91,7 @@ public class MockServerDumpTest {
                         new HttpResponse()
                                 .withBody("some_response_body")
                 );
-        mockServer
+        mockServerMatcher
                 .when(
                         new HttpRequest()
                                 .withPath("some_other_path"))
@@ -101,7 +101,7 @@ public class MockServerDumpTest {
                 );
 
         // when
-        mockServer.dumpToLog(new HttpRequest().withPath("some_path"));
+        mockServerMatcher.dumpToLog(new HttpRequest().withPath("some_path"));
 
         // then
         verify(requestLogger).warn("{\n" +

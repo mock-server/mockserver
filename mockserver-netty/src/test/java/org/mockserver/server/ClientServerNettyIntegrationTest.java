@@ -2,12 +2,9 @@ package org.mockserver.server;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Test;
 import org.mockserver.client.server.MockServerClient;
 import org.mockserver.integration.server.AbstractClientServerIntegrationTest;
-import org.mockserver.mockserver.NettyMockServer;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
+import org.mockserver.mockserver.MockServer;
 import org.mockserver.socket.PortFactory;
 
 /**
@@ -17,12 +14,12 @@ public class ClientServerNettyIntegrationTest extends AbstractClientServerIntegr
 
     private final static int serverPort = PortFactory.findFreePort();
     private final static int serverSecurePort = PortFactory.findFreePort();
-    private static NettyMockServer mockServer;
+    private static MockServer mockServer;
 
     @BeforeClass
     public static void startServer() throws Exception {
         // start server
-        mockServer = new NettyMockServer().start(serverPort, serverSecurePort);
+        mockServer = new MockServer(serverPort, serverSecurePort);
 
         // start client
         mockServerClient = new MockServerClient("localhost", serverPort, servletContext);
