@@ -3,31 +3,35 @@ package org.mockserver.maven;
 import com.google.common.annotations.VisibleForTesting;
 import org.mockserver.client.proxy.ProxyClient;
 import org.mockserver.client.server.MockServerClient;
-import org.mockserver.mockserver.NettyMockServer;
+import org.mockserver.mockserver.MockServer;
+import org.mockserver.mockserver.MockServerBuilder;
 import org.mockserver.proxy.http.HttpProxy;
+import org.mockserver.proxy.http.HttpProxyBuilder;
 
 /**
  * @author jamesdbloom
  */
 public class InstanceHolder {
 
-    @VisibleForTesting
-    static HttpProxy proxy = new HttpProxy();
-    @VisibleForTesting
-    static NettyMockServer mockServer = new NettyMockServer();
+    private HttpProxy proxy;
+    private MockServer mockServer;
 
-    public void start(final int mockServerPort, final int mockServerSecurePort, final int proxyPort, final int proxySecurePort, final String logLevel) {
-        mockServer.overrideLogLevel(logLevel);
-        if (!mockServer.isRunning()) {
+    @VisibleForTesting
+    static HttpProxyBuilder proxyBuilder = new HttpProxyBuilder();
+    @VisibleForTesting
+    static MockServerBuilder mockServerBuilder = new MockServerBuilder();
+
+    public void start(final int mockServerPort, final int mockServerSecurePort, final int proxyPort, final int proxySecurePort) {
+        if (mockServer == null || !mockServer.isRunning()) {
             if (mockServerPort != -1 || mockServerSecurePort != -1) {
-                mockServer.start((mockServerPort != -1 ? mockServerPort : null), (mockServerSecurePort != -1 ? mockServerSecurePort : null));
+                mockServer = mockServerBuilder.withHTTPPort(mockServerPort).withHTTPSPort(mockServerSecurePort).build();
             }
         } else {
             throw new IllegalStateException("MockServer is already running!");
         }
-        if (!proxy.isRunning()) {
+        if (proxy == null || !proxy.isRunning()) {
             if (proxyPort != -1 || proxySecurePort != -1) {
-                proxy.startHttpProxy((proxyPort != -1 ? proxyPort : null), (proxySecurePort != -1 ? proxySecurePort : null));
+                proxy = proxyBuilder.withHTTPPort(proxyPort).withHTTPSPort(proxySecurePort).build();
             }
         } else {
             throw new IllegalStateException("Proxy is already running!");
@@ -35,8 +39,7 @@ public class InstanceHolder {
 
     }
 
-    public void stop(final int mockServerPort, final int proxyPort, final String logLevel) {
-        mockServer.overrideLogLevel(logLevel);
+    public void stop(final int mockServerPort, final int proxyPort) {
         if (mockServerPort != -1) {
             newMockServerClient(mockServerPort).stop();
         }
@@ -56,10 +59,10 @@ public class InstanceHolder {
     }
 
     public void stop() {
-        if (mockServer.isRunning()) {
+        if (mockServer != null && mockServer.isRunning()) {
             mockServer.stop();
         }
-        if (proxy.isRunning()) {
+        if (proxy != null && proxy.isRunning()) {
             proxy.stop();
         }
     }

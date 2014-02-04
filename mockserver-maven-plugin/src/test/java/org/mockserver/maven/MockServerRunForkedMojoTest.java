@@ -48,7 +48,7 @@ public class MockServerRunForkedMojoTest {
         initMocks(this);
 
         when(mockServerRunForkedMojo.getJavaBin()).thenReturn(javaBinaryPath);
-        when(mockRepositorySystem.createArtifactWithClassifier("org.mock-server", "mockserver-netty", "2.5-SNAPSHOT", "jar", "jar-with-dependencies")).thenReturn(mockArtifact);
+        when(mockRepositorySystem.createArtifactWithClassifier("org.mock-server", "mockserver-netty", "2.5", "jar", "jar-with-dependencies")).thenReturn(mockArtifact);
         when(mockArtifact.getFile()).thenReturn(new File(jarWithDependenciesPath));
         mockServerRunForkedMojo.logLevel = level;
     }

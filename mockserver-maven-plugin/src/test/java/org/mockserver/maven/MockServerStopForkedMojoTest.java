@@ -29,13 +29,12 @@ public class MockServerStopForkedMojoTest {
         // given
         mockServerStopForkedMojo.serverPort = 1;
         mockServerStopForkedMojo.proxyPort = 2;
-        mockServerStopForkedMojo.logLevel = "LEVEL";
 
         // when
         mockServerStopForkedMojo.execute();
 
         // then
-        verify(mockEmbeddedJettyHolder).stop(1, 2, "LEVEL");
+        verify(mockEmbeddedJettyHolder).stop(1, 2);
     }
 
     @Test
