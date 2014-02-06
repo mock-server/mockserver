@@ -9,6 +9,7 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
+import org.mockserver.cli.Main;
 
 import java.io.File;
 import java.io.IOException;
@@ -48,7 +49,7 @@ public class MockServerRunForkedMojoTest {
         initMocks(this);
 
         when(mockServerRunForkedMojo.getJavaBin()).thenReturn(javaBinaryPath);
-        when(mockRepositorySystem.createArtifactWithClassifier("org.mock-server", "mockserver-netty", "2.5", "jar", "jar-with-dependencies")).thenReturn(mockArtifact);
+        when(mockRepositorySystem.createArtifactWithClassifier("org.mock-server", "mockserver-netty", mockServerRunForkedMojo.getVersion(), "jar", "jar-with-dependencies")).thenReturn(mockArtifact);
         when(mockArtifact.getFile()).thenReturn(new File(jarWithDependenciesPath));
         mockServerRunForkedMojo.logLevel = level;
     }
@@ -63,6 +64,7 @@ public class MockServerRunForkedMojoTest {
         mockServerRunForkedMojo.pipeLogToConsole = true;
         when(mockServerRunForkedMojo.newProcessBuilder(Arrays.asList(
                 javaBinaryPath,
+                "-Dfile.encoding=UTF-8",
                 "-Dmockserver.logLevel=" + level,
                 "-jar", jarWithDependenciesPath, "-serverPort", "1", "-serverSecurePort", "2", "-proxyPort", "3", "-proxySecurePort", "4"
         ))).thenReturn(processBuilder);
@@ -72,8 +74,10 @@ public class MockServerRunForkedMojoTest {
         mockServerRunForkedMojo.execute();
 
         // then
+        verify(mockRepositorySystem).createArtifactWithClassifier("org.mock-server", "mockserver-netty", mockServerRunForkedMojo.getVersion(), "jar", "jar-with-dependencies");
         verify(mockServerRunForkedMojo).newProcessBuilder(Arrays.asList(
                 javaBinaryPath,
+                "-Dfile.encoding=UTF-8",
                 "-Dmockserver.logLevel=" + level,
                 "-jar", jarWithDependenciesPath, "-serverPort", "1", "-serverSecurePort", "2", "-proxyPort", "3", "-proxySecurePort", "4"
         ));
@@ -90,6 +94,7 @@ public class MockServerRunForkedMojoTest {
         mockServerRunForkedMojo.pipeLogToConsole = true;
         when(mockServerRunForkedMojo.newProcessBuilder(Arrays.asList(
                 javaBinaryPath,
+                "-Dfile.encoding=UTF-8",
                 "-Dmockserver.logLevel=" + level,
                 "-jar", jarWithDependenciesPath, "-serverPort", "1", "-proxyPort", "3"
         ))).thenReturn(processBuilder);
@@ -99,8 +104,10 @@ public class MockServerRunForkedMojoTest {
         mockServerRunForkedMojo.execute();
 
         // then
+        verify(mockRepositorySystem).createArtifactWithClassifier("org.mock-server", "mockserver-netty", mockServerRunForkedMojo.getVersion(), "jar", "jar-with-dependencies");
         verify(mockServerRunForkedMojo).newProcessBuilder(Arrays.asList(
                 javaBinaryPath,
+                "-Dfile.encoding=UTF-8",
                 "-Dmockserver.logLevel=" + level,
                 "-jar", jarWithDependenciesPath, "-serverPort", "1", "-proxyPort", "3"
         ));
@@ -117,6 +124,7 @@ public class MockServerRunForkedMojoTest {
         mockServerRunForkedMojo.pipeLogToConsole = true;
         when(mockServerRunForkedMojo.newProcessBuilder(Arrays.asList(
                 javaBinaryPath,
+                "-Dfile.encoding=UTF-8",
                 "-Dmockserver.logLevel=" + level,
                 "-jar", jarWithDependenciesPath, "-serverSecurePort", "2", "-proxySecurePort", "4"
         ))).thenReturn(processBuilder);
@@ -126,8 +134,10 @@ public class MockServerRunForkedMojoTest {
         mockServerRunForkedMojo.execute();
 
         // then
+        verify(mockRepositorySystem).createArtifactWithClassifier("org.mock-server", "mockserver-netty", mockServerRunForkedMojo.getVersion(), "jar", "jar-with-dependencies");
         verify(mockServerRunForkedMojo).newProcessBuilder(Arrays.asList(
                 javaBinaryPath,
+                "-Dfile.encoding=UTF-8",
                 "-Dmockserver.logLevel=" + level,
                 "-jar", jarWithDependenciesPath, "-serverSecurePort", "2", "-proxySecurePort", "4"
         ));
@@ -143,6 +153,7 @@ public class MockServerRunForkedMojoTest {
         mockServerRunForkedMojo.pipeLogToConsole = true;
         when(mockServerRunForkedMojo.newProcessBuilder(Arrays.asList(
                 javaBinaryPath,
+                "-Dfile.encoding=UTF-8",
                 "-Dmockserver.logLevel=" + level,
                 "-jar", jarWithDependenciesPath, "-serverPort", "1", "-serverSecurePort", "2"
         ))).thenReturn(processBuilder);
@@ -154,6 +165,7 @@ public class MockServerRunForkedMojoTest {
         // then
         verify(mockServerRunForkedMojo).newProcessBuilder(Arrays.asList(
                 javaBinaryPath,
+                "-Dfile.encoding=UTF-8",
                 "-Dmockserver.logLevel=" + level,
                 "-jar", jarWithDependenciesPath, "-serverPort", "1", "-serverSecurePort", "2"
         ));
@@ -169,6 +181,7 @@ public class MockServerRunForkedMojoTest {
         mockServerRunForkedMojo.pipeLogToConsole = true;
         when(mockServerRunForkedMojo.newProcessBuilder(Arrays.asList(
                 javaBinaryPath,
+                "-Dfile.encoding=UTF-8",
                 "-Dmockserver.logLevel=" + level,
                 "-jar", jarWithDependenciesPath, "-serverPort", "1"
         ))).thenReturn(processBuilder);
@@ -178,8 +191,10 @@ public class MockServerRunForkedMojoTest {
         mockServerRunForkedMojo.execute();
 
         // then
+        verify(mockRepositorySystem).createArtifactWithClassifier("org.mock-server", "mockserver-netty", mockServerRunForkedMojo.getVersion(), "jar", "jar-with-dependencies");
         verify(mockServerRunForkedMojo).newProcessBuilder(Arrays.asList(
                 javaBinaryPath,
+                "-Dfile.encoding=UTF-8",
                 "-Dmockserver.logLevel=" + level,
                 "-jar", jarWithDependenciesPath, "-serverPort", "1"
         ));
@@ -195,6 +210,7 @@ public class MockServerRunForkedMojoTest {
         mockServerRunForkedMojo.pipeLogToConsole = true;
         when(mockServerRunForkedMojo.newProcessBuilder(Arrays.asList(
                 javaBinaryPath,
+                "-Dfile.encoding=UTF-8",
                 "-Dmockserver.logLevel=" + level,
                 "-jar", jarWithDependenciesPath, "-serverSecurePort", "2"
         ))).thenReturn(processBuilder);
@@ -204,8 +220,10 @@ public class MockServerRunForkedMojoTest {
         mockServerRunForkedMojo.execute();
 
         // then
+        verify(mockRepositorySystem).createArtifactWithClassifier("org.mock-server", "mockserver-netty", mockServerRunForkedMojo.getVersion(), "jar", "jar-with-dependencies");
         verify(mockServerRunForkedMojo).newProcessBuilder(Arrays.asList(
                 javaBinaryPath,
+                "-Dfile.encoding=UTF-8",
                 "-Dmockserver.logLevel=" + level,
                 "-jar", jarWithDependenciesPath, "-serverSecurePort", "2"
         ));
@@ -221,6 +239,7 @@ public class MockServerRunForkedMojoTest {
         mockServerRunForkedMojo.pipeLogToConsole = true;
         when(mockServerRunForkedMojo.newProcessBuilder(Arrays.asList(
                 javaBinaryPath,
+                "-Dfile.encoding=UTF-8",
                 "-Dmockserver.logLevel=" + level,
                 "-jar", jarWithDependenciesPath, "-proxyPort", "1", "-proxySecurePort", "2"
         ))).thenReturn(processBuilder);
@@ -230,8 +249,10 @@ public class MockServerRunForkedMojoTest {
         mockServerRunForkedMojo.execute();
 
         // then
+        verify(mockRepositorySystem).createArtifactWithClassifier("org.mock-server", "mockserver-netty", mockServerRunForkedMojo.getVersion(), "jar", "jar-with-dependencies");
         verify(mockServerRunForkedMojo).newProcessBuilder(Arrays.asList(
                 javaBinaryPath,
+                "-Dfile.encoding=UTF-8",
                 "-Dmockserver.logLevel=" + level,
                 "-jar", jarWithDependenciesPath, "-proxyPort", "1", "-proxySecurePort", "2"
         ));
@@ -247,6 +268,7 @@ public class MockServerRunForkedMojoTest {
         mockServerRunForkedMojo.pipeLogToConsole = true;
         when(mockServerRunForkedMojo.newProcessBuilder(Arrays.asList(
                 javaBinaryPath,
+                "-Dfile.encoding=UTF-8",
                 "-Dmockserver.logLevel=" + level,
                 "-jar", jarWithDependenciesPath, "-proxyPort", "1"
         ))).thenReturn(processBuilder);
@@ -256,8 +278,10 @@ public class MockServerRunForkedMojoTest {
         mockServerRunForkedMojo.execute();
 
         // then
+        verify(mockRepositorySystem).createArtifactWithClassifier("org.mock-server", "mockserver-netty", mockServerRunForkedMojo.getVersion(), "jar", "jar-with-dependencies");
         verify(mockServerRunForkedMojo).newProcessBuilder(Arrays.asList(
                 javaBinaryPath,
+                "-Dfile.encoding=UTF-8",
                 "-Dmockserver.logLevel=" + level,
                 "-jar", jarWithDependenciesPath, "-proxyPort", "1"
         ));
@@ -273,6 +297,7 @@ public class MockServerRunForkedMojoTest {
         mockServerRunForkedMojo.pipeLogToConsole = true;
         when(mockServerRunForkedMojo.newProcessBuilder(Arrays.asList(
                 javaBinaryPath,
+                "-Dfile.encoding=UTF-8",
                 "-Dmockserver.logLevel=" + level,
                 "-jar", jarWithDependenciesPath, "-proxySecurePort", "2"
         ))).thenReturn(processBuilder);
@@ -282,8 +307,10 @@ public class MockServerRunForkedMojoTest {
         mockServerRunForkedMojo.execute();
 
         // then
+        verify(mockRepositorySystem).createArtifactWithClassifier("org.mock-server", "mockserver-netty", mockServerRunForkedMojo.getVersion(), "jar", "jar-with-dependencies");
         verify(mockServerRunForkedMojo).newProcessBuilder(Arrays.asList(
                 javaBinaryPath,
+                "-Dfile.encoding=UTF-8",
                 "-Dmockserver.logLevel=" + level,
                 "-jar", jarWithDependenciesPath, "-proxySecurePort", "2"
         ));
@@ -296,6 +323,7 @@ public class MockServerRunForkedMojoTest {
         // given
         when(mockServerRunForkedMojo.newProcessBuilder(Arrays.asList(
                 javaBinaryPath,
+                "-Dfile.encoding=UTF-8",
                 "-Dmockserver.logLevel=" + level,
                 "-jar", jarWithDependenciesPath, "-serverPort", "0", "-serverSecurePort", "0"
         ))).thenReturn(new ProcessBuilder("fail"));
@@ -315,6 +343,7 @@ public class MockServerRunForkedMojoTest {
         mockServerRunForkedMojo.pipeLogToConsole = false;
         when(mockServerRunForkedMojo.newProcessBuilder(Arrays.asList(
                 javaBinaryPath,
+                "-Dfile.encoding=UTF-8",
                 "-Dmockserver.logLevel=" + level,
                 "-jar", jarWithDependenciesPath, "-serverPort", "0", "-serverSecurePort", "0"
         ))).thenReturn(processBuilder);
@@ -323,6 +352,7 @@ public class MockServerRunForkedMojoTest {
         mockServerRunForkedMojo.execute();
 
         // then
+        verify(mockRepositorySystem).createArtifactWithClassifier("org.mock-server", "mockserver-netty", mockServerRunForkedMojo.getVersion(), "jar", "jar-with-dependencies");
         assertEquals(false, processBuilder.redirectErrorStream());
 
     }

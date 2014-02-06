@@ -12,9 +12,11 @@ import org.apache.maven.repository.RepositorySystem;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -56,8 +58,9 @@ public class MockServerRunForkedMojo extends MockServerAbstractMojo {
             getLog().info("Skipping plugin execution");
         } else {
             getLog().info("Starting MockServer on port " + serverPort);
-            List<String> arguments = new ArrayList<String>(Arrays.asList(getJavaBin(), "-Dmockserver.logLevel=" + logLevel));
-            // arguments.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5006");
+            List<String> arguments = new ArrayList<String>(Arrays.asList(getJavaBin()));
+            arguments.add("-Dfile.encoding=UTF-8");
+            arguments.add("-Dmockserver.logLevel=" + logLevel);
             arguments.add("-jar");
             arguments.add(jarWithDependencies());
             if (serverPort != -1) {
@@ -117,9 +120,26 @@ public class MockServerRunForkedMojo extends MockServerAbstractMojo {
 
     @VisibleForTesting
     String jarWithDependencies() {
-        Artifact jarWithDependencies = repositorySystem.createArtifactWithClassifier("org.mock-server", "mockserver-netty", "2.5", "jar", "jar-with-dependencies");
+        Artifact jarWithDependencies = repositorySystem.createArtifactWithClassifier("org.mock-server", "mockserver-netty", getVersion(), "jar", "jar-with-dependencies");
         artifactResolver.resolve(new ArtifactResolutionRequest().setArtifact(jarWithDependencies));
         getLog().debug("Running MockServer using " + jarWithDependencies.getFile().getAbsolutePath());
         return jarWithDependencies.getFile().getAbsolutePath();
+    }
+
+    @VisibleForTesting
+    String getVersion() {
+        String version = "2.6";
+        try {
+            Properties p = new Properties();
+            InputStream is = getClass().getResourceAsStream("/META-INF/maven/org.mock-server/mockserver-maven-plugin/pom.properties");
+            if (is != null) {
+                p.load(is);
+                version = p.getProperty("version", "2.6");
+            }
+        } catch (Exception e) {
+            // ignore
+        }
+        getLog().info("Using org.mock-server:mockserver-netty:" + version + ":jar-with-dependencies");
+        return version;
     }
 }
