@@ -99,7 +99,8 @@ public class HttpProxyBuilder {
      * Build an instance of the HttpProxy
      */
     public HttpProxy build() {
-        return new HttpProxy(
+        HttpProxy httpProxy = new HttpProxy();
+        httpProxy.start(
                 port,
                 securePort,
                 socksPort,
@@ -108,5 +109,22 @@ public class HttpProxyBuilder {
                 directRemoteHost,
                 directRemotePort
         );
+        return httpProxy;
+    }
+
+    /**
+     * Build an instance of the HttpProxy
+     */
+    public Thread buildAndReturnThread() {
+        return new HttpProxy()
+                .start(
+                        port,
+                        securePort,
+                        socksPort,
+                        directLocalPort,
+                        directLocalSecurePort,
+                        directRemoteHost,
+                        directRemotePort
+                );
     }
 }

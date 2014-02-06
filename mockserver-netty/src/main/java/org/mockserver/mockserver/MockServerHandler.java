@@ -106,9 +106,11 @@ public class MockServerHandler extends SimpleChannelInboundHandler<Object> {
 
     private FullHttpResponse mockResponse(NettyHttpRequest nettyHttpRequest) {
 
+        String content = (nettyHttpRequest.content() != null ? nettyHttpRequest.content().toString(CharsetUtil.UTF_8) : "");
+
         if (nettyHttpRequest.matches(HttpMethod.PUT, "/dumpToLog")) {
 
-            mockServerMatcher.dumpToLog(httpRequestSerializer.deserialize(nettyHttpRequest.content().toString(CharsetUtil.UTF_8)));
+            mockServerMatcher.dumpToLog(httpRequestSerializer.deserialize(content));
             return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.ACCEPTED);
 
         } else if (nettyHttpRequest.matches(HttpMethod.PUT, "/reset")) {
@@ -119,20 +121,20 @@ public class MockServerHandler extends SimpleChannelInboundHandler<Object> {
 
         } else if (nettyHttpRequest.matches(HttpMethod.PUT, "/clear")) {
 
-            org.mockserver.model.HttpRequest httpRequest = httpRequestSerializer.deserialize(nettyHttpRequest.content().toString(CharsetUtil.UTF_8));
+            org.mockserver.model.HttpRequest httpRequest = httpRequestSerializer.deserialize(content);
             logFilter.clear(httpRequest);
             mockServerMatcher.clear(httpRequest);
             return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.ACCEPTED);
 
         } else if (nettyHttpRequest.matches(HttpMethod.PUT, "/expectation")) {
 
-            Expectation expectation = expectationSerializer.deserialize(nettyHttpRequest.content().toString(CharsetUtil.UTF_8));
+            Expectation expectation = expectationSerializer.deserialize(content);
             mockServerMatcher.when(expectation.getHttpRequest(), expectation.getTimes()).thenRespond(expectation.getHttpResponse());
             return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.CREATED);
 
         } else if (nettyHttpRequest.matches(HttpMethod.PUT, "/retrieve")) {
 
-            Expectation[] expectations = logFilter.retrieve(httpRequestSerializer.deserialize((nettyHttpRequest.content() != null ? nettyHttpRequest.content().toString(CharsetUtil.UTF_8) : "")));
+            Expectation[] expectations = logFilter.retrieve(httpRequestSerializer.deserialize(content));
             return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.copiedBuffer(expectationSerializer.serialize(expectations).getBytes()));
 
         } else {

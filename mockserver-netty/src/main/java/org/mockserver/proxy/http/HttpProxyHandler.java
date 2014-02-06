@@ -115,7 +115,7 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<Object> {
 
                     if (connectSocket != null && mockServerHttpRequest.getMethod() == HttpMethod.CONNECT) {
 
-                        ctx.pipeline().addAfter(ctx.name(), HttpConnectHandler.class.getSimpleName(), new HttpConnectHandler(connectSocket, secure));
+                        ctx.pipeline().addAfter(ctx.name(), HttpConnectHandler.class.getSimpleName(), new HttpConnectHandler(connectSocket, true));
                         ctx.pipeline().remove(this);
                         ctx.fireChannelRead(request);
 
@@ -123,7 +123,11 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<Object> {
 
                         writeResponse(ctx, new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.ACCEPTED), isKeepAlive(request));
                         ctx.close();
-                        server.stop();
+                        if (server != null) {
+                            server.stop();
+                        } else {
+                            System.exit(0);
+                        }
 
                     } else {
 

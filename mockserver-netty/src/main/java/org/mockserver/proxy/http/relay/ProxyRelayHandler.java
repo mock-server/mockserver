@@ -1,8 +1,10 @@
 package org.mockserver.proxy.http.relay;
 
+import com.google.common.base.Charsets;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
+import io.netty.handler.ssl.SslHandler;
 import org.mockserver.proxy.interceptor.Interceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,11 +22,11 @@ public class ProxyRelayHandler extends ChannelDuplexHandler {
     private volatile int contentSoFar;
     private volatile boolean flushContent;
 
-    public ProxyRelayHandler(Channel relayChannel, int bufferedCapacity, Interceptor interceptor, String loggerName) {
+    public ProxyRelayHandler(Channel relayChannel, int bufferedCapacity, Interceptor interceptor, Logger logger) {
         this.relayChannel = relayChannel;
         this.bufferedCapacity = bufferedCapacity;
         this.interceptor = interceptor;
-        this.logger = LoggerFactory.getLogger(loggerName);
+        this.logger = logger;
         bufferedMode = bufferedCapacity > 0;
         flushedBuffer = false;
         contentLength = null;
@@ -55,9 +57,9 @@ public class ProxyRelayHandler extends ChannelDuplexHandler {
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         if (relayChannel.isActive()) {
-            if (bufferedMode) {
+            if (bufferedMode && channelBuffer.isReadable()) {
                 flushedBuffer = true;
-
+                logger.debug("CHANNEL INACTIVE: " + channelBuffer.toString(Charsets.UTF_8));
                 relayChannel.writeAndFlush(interceptor.intercept(ctx, channelBuffer, logger)).addListener(new ChannelFutureListener() {
                     @Override
                     public void operationComplete(ChannelFuture future) throws Exception {
@@ -82,7 +84,7 @@ public class ProxyRelayHandler extends ChannelDuplexHandler {
     public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
         if (bufferedMode && relayChannel.isActive() && channelBuffer.isReadable()) {
             flushedBuffer = true;
-            relayChannel.writeAndFlush(channelBuffer).addListener(new ChannelFutureListener() {
+            relayChannel.writeAndFlush(interceptor.intercept(ctx, channelBuffer, logger)).addListener(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(ChannelFuture future) throws Exception {
                     if (future.isSuccess()) {
@@ -139,7 +141,8 @@ public class ProxyRelayHandler extends ChannelDuplexHandler {
                 }
                 if (flushContent) {
                     flushedBuffer = true;
-                    if (relayChannel.isActive()) {
+                    if (relayChannel.isActive() && channelBuffer.isReadable()) {
+                        logger.debug("CHANNEL READ EX: " + chunk.toString(Charsets.UTF_8));
                         relayChannel.writeAndFlush(channelBuffer).addListener(new ChannelFutureListener() {
                             @Override
                             public void operationComplete(ChannelFuture future) throws Exception {
@@ -158,6 +161,7 @@ public class ProxyRelayHandler extends ChannelDuplexHandler {
             } else {
                 bufferedMode = false;
                 if (relayChannel.isActive()) {
+                    logger.debug("CHANNEL READ NOT-BUFFERING: " + chunk.toString(Charsets.UTF_8));
                     relayChannel.writeAndFlush(chunk).addListener(new ChannelFutureListener() {
                         @Override
                         public void operationComplete(ChannelFuture future) throws Exception {

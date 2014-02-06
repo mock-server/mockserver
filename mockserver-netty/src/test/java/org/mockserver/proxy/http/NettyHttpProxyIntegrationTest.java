@@ -4,8 +4,8 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.mockserver.client.proxy.ProxyClient;
-import org.mockserver.integration.testserver.TestServer;
 import org.mockserver.integration.proxy.AbstractClientSecureProxyIntegrationTest;
+import org.mockserver.integration.testserver.TestServer;
 import org.mockserver.socket.PortFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +25,7 @@ public class NettyHttpProxyIntegrationTest extends AbstractClientSecureProxyInte
     private final static Integer PROXY_DIRECT_PORT = PortFactory.findFreePort();
     private final static Integer PROXY_DIRECT_SECURE_PORT = PortFactory.findFreePort();
     private static TestServer testServer = new TestServer();
-    private static HttpProxy httpProxy;
+    private static HttpProxy httpProxy = new HttpProxy();
     private static ProxyClient proxyClient;
 
     @BeforeClass
@@ -41,7 +41,7 @@ public class NettyHttpProxyIntegrationTest extends AbstractClientSecureProxyInte
         testServer.startServer(SERVER_HTTP_PORT, SERVER_HTTPS_PORT);
 
         // start proxy
-        httpProxy = new HttpProxy(PROXY_HTTP_PORT, PROXY_HTTPS_PORT, PROXY_SOCKS_PORT, PROXY_DIRECT_PORT, PROXY_DIRECT_SECURE_PORT, "127.0.0.1", SERVER_HTTP_PORT);
+        httpProxy.start(PROXY_HTTP_PORT, PROXY_HTTPS_PORT, PROXY_SOCKS_PORT, PROXY_DIRECT_PORT, PROXY_DIRECT_SECURE_PORT, "127.0.0.1", SERVER_HTTP_PORT);
 
         // start client
         proxyClient = new ProxyClient("localhost", PROXY_HTTP_PORT);

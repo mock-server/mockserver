@@ -7,6 +7,9 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.compression.ZlibCodecFactory;
+import io.netty.handler.codec.compression.ZlibWrapper;
+import io.netty.handler.codec.http.HttpContentCompressor;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.socks.SocksInitRequestDecoder;
 import io.netty.handler.codec.socks.SocksMessageEncoder;
@@ -46,6 +49,30 @@ public class HttpProxy {
     private EventLoopGroup bossGroup = new NioEventLoopGroup();
     private EventLoopGroup workerGroup = new NioEventLoopGroup();
 
+    public static ProxySelector proxySelector() {
+        if (Boolean.parseBoolean(System.getProperty("defaultProxySet"))) {
+            return java.net.ProxySelector.getDefault();
+        } else if (Boolean.parseBoolean(System.getProperty("proxySet"))) {
+            return createProxySelector(Proxy.Type.HTTP);
+        } else {
+            throw new IllegalStateException("ProxySelector can not be returned proxy has not been started yet");
+        }
+    }
+
+    private static ProxySelector createProxySelector(final Proxy.Type http) {
+        return new ProxySelector() {
+            @Override
+            public List<Proxy> select(URI uri) {
+                return Arrays.asList(new Proxy(http, new InetSocketAddress(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort")))));
+            }
+
+            @Override
+            public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {
+                logger.error("Connection could not be established to proxy at socket [" + sa + "]", ioe);
+            }
+        };
+    }
+
     /**
      * Start the instance using the ports provided, this method should not be used directly, instead use HttpProxyBuilder
      *
@@ -59,13 +86,13 @@ public class HttpProxy {
      *
      * @see org.mockserver.proxy.http.HttpProxyBuilder
      */
-    HttpProxy(final Integer port,
-              final Integer securePort,
-              final Integer socksPort,
-              final Integer directLocalPort,
-              final Integer directLocalSecurePort,
-              final String directRemoteHost,
-              final Integer directRemotePort) {
+    Thread start(final Integer port,
+                 final Integer securePort,
+                 final Integer socksPort,
+                 final Integer directLocalPort,
+                 final Integer directLocalSecurePort,
+                 final String directRemoteHost,
+                 final Integer directRemotePort) {
         if (logger.isDebugEnabled()) {
             logger.debug("HTTP proxy & HTTPS CONNECT port [" + port + "]");
             logger.debug("HTTPS proxy port [" + securePort + "]");
@@ -76,7 +103,7 @@ public class HttpProxy {
 
         hasStarted = SettableFuture.create();
 
-        new Thread(new Runnable() {
+        Thread proxyThread = new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -108,7 +135,8 @@ public class HttpProxy {
                     workerGroup.shutdownGracefully();
                 }
             }
-        }).start();
+        });
+        proxyThread.start();
 
         try {
             // wait for proxy to start all channels
@@ -116,30 +144,8 @@ public class HttpProxy {
         } catch (Exception e) {
             logger.debug("Exception while waiting for proxy to complete starting up", e);
         }
-    }
 
-    public static ProxySelector proxySelector() {
-        if (Boolean.parseBoolean(System.getProperty("defaultProxySet"))) {
-            return java.net.ProxySelector.getDefault();
-        } else if (Boolean.parseBoolean(System.getProperty("proxySet"))) {
-            return createProxySelector(Proxy.Type.HTTP);
-        } else {
-            throw new IllegalStateException("ProxySelector can not be returned proxy has not been started yet");
-        }
-    }
-
-    private static ProxySelector createProxySelector(final Proxy.Type http) {
-        return new ProxySelector() {
-            @Override
-            public List<Proxy> select(URI uri) {
-                return Arrays.asList(new Proxy(http, new InetSocketAddress(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort")))));
-            }
-
-            @Override
-            public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {
-                logger.error("Connection could not be established to proxy at socket [" + sa + "]", ioe);
-            }
-        };
+        return proxyThread;
     }
 
     /**
@@ -165,12 +171,7 @@ public class HttpProxy {
             @Override
             protected void initChannel(SocketChannel ch) throws Exception {
                 // Create a default pipeline implementation.
-                final ChannelPipeline pipeline = ch.pipeline();
-
-                // add logging
-                if (logger.isDebugEnabled()) {
-                    pipeline.addLast("logger", new LoggingHandler("RAW HTTP"));
-                }
+                ChannelPipeline pipeline = ch.pipeline();
 
                 // add HTTP decoder and encoder
                 pipeline.addLast(HttpServerCodec.class.getSimpleName(), new HttpServerCodec());
@@ -186,23 +187,18 @@ public class HttpProxy {
             @Override
             protected void initChannel(SocketChannel ch) throws Exception {
                 // Create a default pipeline implementation.
-                final ChannelPipeline pipeline = ch.pipeline();
+                ChannelPipeline pipeline = ch.pipeline();
 
                 // add HTTPS support
                 SSLEngine engine = SSLFactory.sslContext().createSSLEngine();
                 engine.setUseClientMode(false);
                 pipeline.addLast(SslHandler.class.getSimpleName(), new SslHandler(engine));
 
-                // add logging
-                if (logger.isDebugEnabled()) {
-                    pipeline.addLast("logger", new LoggingHandler("RAW HTTPS"));
-                }
-
                 // add HTTP decoder and encoder
                 pipeline.addLast(HttpServerCodec.class.getSimpleName(), new HttpServerCodec());
 
                 // add handler
-                pipeline.addLast(HttpProxyHandler.class.getSimpleName(), new HttpProxyHandler(logFilter, HttpProxy.this, new InetSocketAddress(securePort), true));
+                pipeline.addLast(HttpProxyHandler.class.getSimpleName(), new HttpProxyHandler(logFilter, HttpProxy.this, securePort != null ? new InetSocketAddress(securePort) : null, true));
             }
         }, securePort, true);
     }
@@ -212,12 +208,7 @@ public class HttpProxy {
             @Override
             protected void initChannel(SocketChannel ch) throws Exception {
                 // Create a default pipeline implementation.
-                final ChannelPipeline pipeline = ch.pipeline();
-
-                // add logging
-                if (logger.isDebugEnabled()) {
-                    pipeline.addLast("logger", new LoggingHandler("RAW SOCKS"));
-                }
+                ChannelPipeline pipeline = ch.pipeline();
 
                 // add SOCKS decoder and encoder
                 pipeline.addLast(SocksInitRequestDecoder.class.getSimpleName(), new SocksInitRequestDecoder());
@@ -236,13 +227,9 @@ public class HttpProxy {
                 // Create a default pipeline implementation.
                 ChannelPipeline pipeline = ch.pipeline();
 
-                // add logging
-                if (logger.isDebugEnabled()) {
-                    pipeline.addLast("logger", new LoggingHandler("RAW DIRECT HTTP"));
-                }
-
                 // add handler
-                pipeline.addLast(new DirectProxyUpstreamHandler(new InetSocketAddress(directRemoteHost, directRemotePort), false, 1048576, new RequestInterceptor(), "<--- "));
+                InetSocketAddress remoteSocketAddress = new InetSocketAddress(directRemoteHost, directRemotePort);
+                pipeline.addLast(new DirectProxyUpstreamHandler(remoteSocketAddress, false, 1048576, new RequestInterceptor(remoteSocketAddress), "                -->"));
             }
         }, directLocalPort, false);
     }
@@ -259,13 +246,9 @@ public class HttpProxy {
                 engine.setUseClientMode(false);
                 pipeline.addLast("ssl inbound", new SslHandler(engine));
 
-                // add logging
-                if (logger.isDebugEnabled()) {
-                    pipeline.addLast("logger", new LoggingHandler("RAW DIRECT HTTPS"));
-                }
-
                 // add handler
-                pipeline.addLast(new DirectProxyUpstreamHandler(new InetSocketAddress(directRemoteHost, directRemotePort), true, 1048576, new RequestInterceptor(), "<--- "));
+                InetSocketAddress remoteSocketAddress = new InetSocketAddress(directRemoteHost, directRemotePort);
+                pipeline.addLast(new DirectProxyUpstreamHandler(remoteSocketAddress, true, 1048576, new RequestInterceptor(remoteSocketAddress), "                -->"));
 
             }
         }, directLocalSecurePort, false);
@@ -304,6 +287,8 @@ public class HttpProxy {
         if (socksProxy) {
             previousProxySelector = java.net.ProxySelector.getDefault();
             System.setProperty("defaultProxySet", "true");
+            System.setProperty("socksProxyHost", "127.0.0.1");
+            System.setProperty("socksProxyPort", port.toString());
             java.net.ProxySelector.setDefault(createProxySelector(Proxy.Type.SOCKS));
         }
     }

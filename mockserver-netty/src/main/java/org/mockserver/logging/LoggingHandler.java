@@ -1,5 +1,6 @@
 package org.mockserver.logging;
 
+import com.google.common.base.Charsets;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufHolder;
 import io.netty.channel.ChannelDuplexHandler;
@@ -73,6 +74,10 @@ public class LoggingHandler extends ChannelDuplexHandler {
 
     public LoggingHandler(String loggerName) {
         logger = LoggerFactory.getLogger(loggerName);
+    }
+
+    public LoggingHandler(Logger logger) {
+        this.logger = logger;
     }
 
     protected String format(ChannelHandlerContext ctx, String message) {
@@ -215,8 +220,12 @@ public class LoggingHandler extends ChannelDuplexHandler {
             dump.append(BYTE2HEX[buf.getUnsignedByte(i)]);
             if (relIdxMod16 == 15) {
                 dump.append(" |");
-                for (int j = i - 15; j <= i; j++) {
-                    dump.append(BYTE2CHAR[buf.getUnsignedByte(j)]);
+                if (i > 15 && buf.readableBytes() > i) {
+                    dump.append(buf.toString(i - 15, 16, Charsets.UTF_8).replaceAll("\n", "/").replaceAll("\r", "/"));
+                } else {
+                    for (int j = i - 15; j <= i; j++) {
+                        dump.append(BYTE2CHAR[buf.getUnsignedByte(j)]);
+                    }
                 }
                 dump.append('|');
             }

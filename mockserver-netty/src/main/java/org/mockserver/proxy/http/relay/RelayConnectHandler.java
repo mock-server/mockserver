@@ -1,10 +1,12 @@
 package org.mockserver.proxy.http.relay;
 
 import io.netty.bootstrap.Bootstrap;
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.http.HttpContentCompressor;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
@@ -53,20 +55,24 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
                                                 clientEngine.setUseClientMode(true);
                                                 outboundChannel.pipeline().addLast("outbound relay ssl", new SslHandler(clientEngine));
                                             }
+                                            Logger outboundLogger = LoggerFactory.getLogger("                -->");
                                             if (logger.isDebugEnabled()) {
-                                                outboundChannel.pipeline().addLast("outbound relay logger", new LoggingHandler("                -->"));
+                                                outboundChannel.pipeline().addLast("outbound relay logger", new LoggingHandler(outboundLogger));
                                             }
-                                            outboundChannel.pipeline().addLast(new ProxyRelayHandler(ctx.channel(), 1048576, new RequestInterceptor(), "                -->"));
+                                            outboundChannel.pipeline().addLast(new ProxyRelayHandler(ctx.channel(), 1048576, new RequestInterceptor(null), outboundLogger));
+
+
                                             // upstream
                                             if (secure) {
                                                 SSLEngine serverEngine = SSLFactory.sslContext().createSSLEngine();
                                                 serverEngine.setUseClientMode(false);
                                                 ctx.channel().pipeline().addLast("upstream relay ssl", new SslHandler(serverEngine));
                                             }
+                                            Logger inboundLogger = LoggerFactory.getLogger("<-- ");
                                             if (logger.isDebugEnabled()) {
-                                                ctx.channel().pipeline().addLast("upstream relay logger", new LoggingHandler("<-- "));
+                                                ctx.channel().pipeline().addLast("upstream relay logger", new LoggingHandler(inboundLogger));
                                             }
-                                            ctx.channel().pipeline().addLast(new ProxyRelayHandler(outboundChannel, 1048576, new ResponseInterceptor(), "<-- "));
+                                            ctx.channel().pipeline().addLast(new ProxyRelayHandler(outboundChannel, 1048576, new ResponseInterceptor(), inboundLogger));
                                         }
                                     });
                         } else {
@@ -81,11 +87,7 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     public void initChannel(SocketChannel socketChannel) throws Exception {
-                        ChannelPipeline channelPipeline = socketChannel.pipeline();
-                        if (logger.isDebugEnabled()) {
-                            channelPipeline.addLast("direct client logger", new LoggingHandler("<-->"));
-                        }
-                        channelPipeline.addLast(DirectClientHandler.class.getSimpleName(), new DirectClientHandler(promise));
+                        socketChannel.pipeline().addLast(DirectClientHandler.class.getSimpleName(), new DirectClientHandler(promise));
                     }
                 });
 
