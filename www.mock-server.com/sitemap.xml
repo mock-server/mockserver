@@ -4,14 +4,14 @@
         xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
     <url>
         <loc>http://www.mock-server.com/index.html</loc>
-        <lastmod>2013-05-11</lastmod>
-        <changefreq>monthly</changefreq>
+        <lastmod>2014-02-09</lastmod>
+        <changefreq>weekly</changefreq>
         <priority>1.0</priority>
         <image:image>
-            <image:loc>http://www.mock-server.com/SystemInProduction.png</image:loc>
+            <image:loc>http://www.mock-server.com/images/SystemInProduction.png</image:loc>
         </image:image>
         <image:image>
-            <image:loc>http://www.mock-server.com/SystemUnderTest.png</image:loc>
+            <image:loc>http://www.mock-server.com/images/SystemUnderTest.png</image:loc>
         </image:image>
     </url>
 </urlset>
