@@ -6,7 +6,7 @@ if [ -z "$1" ]
 then
     mvn clean install -Pit
 else
-    mvn clean $1
+    mvn clean $1 -Pit
 fi
 
 if [ $? -eq 0 ]; then
