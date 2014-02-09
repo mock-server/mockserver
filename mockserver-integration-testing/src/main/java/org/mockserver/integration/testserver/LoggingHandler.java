@@ -82,25 +82,25 @@ public class LoggingHandler extends ChannelDuplexHandler {
 
     @Override
     public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
-        logger.warn(format(ctx, "REGISTERED"));
+        logger.debug(format(ctx, "REGISTERED"));
         super.channelRegistered(ctx);
     }
 
     @Override
     public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
-        logger.warn(format(ctx, "UNREGISTERED"));
+        logger.debug(format(ctx, "UNREGISTERED"));
         super.channelUnregistered(ctx);
     }
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        logger.warn(format(ctx, "ACTIVE"));
+        logger.debug(format(ctx, "ACTIVE"));
         super.channelActive(ctx);
     }
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        logger.warn(format(ctx, "INACTIVE"));
+        logger.debug(format(ctx, "INACTIVE"));
         super.channelInactive(ctx);
     }
 
@@ -113,42 +113,42 @@ public class LoggingHandler extends ChannelDuplexHandler {
     @Override
     public void userEventTriggered(final ChannelHandlerContext ctx, Object evt) throws Exception {
         if (evt instanceof SslHandshakeCompletionEvent) {
-            logger.warn(format(ctx, "SslHandshakeCompletionEvent: "), ((SslHandshakeCompletionEvent) evt).cause());
+            logger.debug(format(ctx, "SslHandshakeCompletionEvent: "), ((SslHandshakeCompletionEvent) evt).cause());
         } else if (evt instanceof Exception) {
             logger.warn(format(ctx, "Exception: "), (Exception) evt);
         } else {
-            logger.warn(format(ctx, "USER_EVENT: " + evt));
+            logger.debug(format(ctx, "USER_EVENT: " + evt));
         }
         super.userEventTriggered(ctx, evt);
     }
 
     @Override
     public void bind(ChannelHandlerContext ctx, SocketAddress localAddress, ChannelPromise promise) throws Exception {
-        logger.warn(format(ctx, "BIND(" + localAddress + ')'));
+        logger.debug(format(ctx, "BIND(" + localAddress + ')'));
         super.bind(ctx, localAddress, promise);
     }
 
     @Override
     public void connect(ChannelHandlerContext ctx, SocketAddress remoteAddress, SocketAddress localAddress, ChannelPromise promise) throws Exception {
-        logger.warn(format(ctx, "CONNECT(" + remoteAddress + ", " + localAddress + ')'));
+        logger.debug(format(ctx, "CONNECT(" + remoteAddress + ", " + localAddress + ')'));
         super.connect(ctx, remoteAddress, localAddress, promise);
     }
 
     @Override
     public void disconnect(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception {
-        logger.warn(format(ctx, "DISCONNECT()"));
+        logger.debug(format(ctx, "DISCONNECT()"));
         super.disconnect(ctx, promise);
     }
 
     @Override
     public void close(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception {
-        logger.warn(format(ctx, "CLOSE()"));
+        logger.debug(format(ctx, "CLOSE()"));
         super.close(ctx, promise);
     }
 
     @Override
     public void deregister(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception {
-        logger.warn(format(ctx, "DEREGISTER()"));
+        logger.debug(format(ctx, "DEREGISTER()"));
         super.deregister(ctx, promise);
     }
 
@@ -166,12 +166,12 @@ public class LoggingHandler extends ChannelDuplexHandler {
 
     @Override
     public void flush(ChannelHandlerContext ctx) throws Exception {
-        logger.warn(format(ctx, "FLUSH"));
+        logger.debug(format(ctx, "FLUSH"));
         ctx.flush();
     }
 
     private void logMessage(ChannelHandlerContext ctx, String eventName, Object msg) {
-        logger.warn(format(ctx, formatMessage(eventName, msg)));
+        logger.debug(format(ctx, formatMessage(eventName, msg)));
     }
 
     private String formatMessage(String eventName, Object msg) {

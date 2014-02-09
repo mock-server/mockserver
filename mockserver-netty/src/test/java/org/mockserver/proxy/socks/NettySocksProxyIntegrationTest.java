@@ -34,12 +34,12 @@ public class NettySocksProxyIntegrationTest extends AbstractClientProxyIntegrati
 
     @BeforeClass
     public static void setupFixture() throws Exception {
-        logger.warn("SERVER_HTTP_PORT = " + SERVER_HTTP_PORT);
-        logger.warn("SERVER_HTTPS_PORT = " + SERVER_HTTPS_PORT);
-        logger.warn("PROXY_HTTP_PORT = " + PROXY_HTTP_PORT);
-        logger.warn("PROXY_SOCKS_PORT = " + PROXY_SOCKS_PORT);
-        logger.warn("PROXY_DIRECT_PORT = " + PROXY_DIRECT_PORT);
-        logger.warn("PROXY_DIRECT_SECURE_PORT = " + PROXY_DIRECT_SECURE_PORT);
+        logger.debug("SERVER_HTTP_PORT = " + SERVER_HTTP_PORT);
+        logger.debug("SERVER_HTTPS_PORT = " + SERVER_HTTPS_PORT);
+        logger.debug("PROXY_HTTP_PORT = " + PROXY_HTTP_PORT);
+        logger.debug("PROXY_SOCKS_PORT = " + PROXY_SOCKS_PORT);
+        logger.debug("PROXY_DIRECT_PORT = " + PROXY_DIRECT_PORT);
+        logger.debug("PROXY_DIRECT_SECURE_PORT = " + PROXY_DIRECT_SECURE_PORT);
 
         // start server
         testServer.startServer(SERVER_HTTP_PORT, SERVER_HTTPS_PORT);

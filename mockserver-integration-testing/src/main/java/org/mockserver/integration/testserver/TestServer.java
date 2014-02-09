@@ -33,7 +33,7 @@ public class TestServer {
             @Override
             public void run() {
                 try {
-                    logger.warn("STARTING SERVER FOR HTTP ON PORT: " + port);
+                    logger.debug("STARTING SERVER FOR HTTP ON PORT: " + port);
                     ChannelFuture channelFutureHTTP = new ServerBootstrap()
                             .option(ChannelOption.SO_BACKLOG, 1024)
                             .group(bossGroup, workerGroup)
@@ -59,7 +59,7 @@ public class TestServer {
                                 }
                             });
 
-                    logger.warn("STARTING SERVER FOR HTTPS ON PORT: " + securePort);
+                    logger.debug("STARTING SERVER FOR HTTPS ON PORT: " + securePort);
                     ChannelFuture channelFutureHTTPS = new ServerBootstrap()
                             .option(ChannelOption.SO_BACKLOG, 1024)
                             .group(bossGroup, workerGroup)

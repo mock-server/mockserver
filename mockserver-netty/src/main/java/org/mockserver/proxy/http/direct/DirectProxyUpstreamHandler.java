@@ -11,7 +11,6 @@ import org.mockserver.logging.LoggingHandler;
 import org.mockserver.proxy.http.relay.BasicHttpDecoder;
 import org.mockserver.proxy.http.relay.ProxyRelayHandler;
 import org.mockserver.proxy.interceptor.Interceptor;
-import org.mockserver.proxy.interceptor.RequestInterceptor;
 import org.mockserver.proxy.interceptor.ResponseInterceptor;
 import org.mockserver.socket.SSLFactory;
 import org.slf4j.Logger;
@@ -19,7 +18,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLEngine;
 import java.net.InetSocketAddress;
-import java.util.concurrent.TimeUnit;
 
 public class DirectProxyUpstreamHandler extends ChannelDuplexHandler {
 
@@ -180,14 +178,16 @@ public class DirectProxyUpstreamHandler extends ChannelDuplexHandler {
                     contentSoFar = (chunk.readableBytes() - basicHttpDecoder.getContentStart());
                 }
 
-//            logger.warn("CHUNK:                     ---\n-\n" + Unpooled.copiedBuffer(chunk).toString(Charsets.UTF_8) + "\n-\n");
-//                logger.warn("CONTENT-SO-FAR-PRE-CHUNK:  --- " + (contentSoFar - Unpooled.copiedBuffer(chunk).toString(Charsets.UTF_8).length()));
-//                logger.warn("CHUNK-SIZE:                --- " + chunk.readableBytes());
-//                logger.warn("CONTENT-SO-FAR-PRE-CHUNK:  --- " + contentSoFar);
-//                if (contentLength != null) {
-//                    logger.warn("CONTENT-REMAINING:         --- " + (contentLength - contentSoFar));
-//                    logger.warn("CONTENT-LENGTH:            --- " + contentLength);
-//                }
+                if (logger.isTraceEnabled()) {
+                    logger.trace("CHUNK:                     ---\n-\n" + Unpooled.copiedBuffer(chunk).toString(Charsets.UTF_8) + "\n-\n");
+                    logger.trace("CONTENT-SO-FAR-PRE-CHUNK:  --- " + (contentSoFar - Unpooled.copiedBuffer(chunk).toString(Charsets.UTF_8).length()));
+                    logger.trace("CHUNK-SIZE:                --- " + chunk.readableBytes());
+                    logger.trace("CONTENT-SO-FAR-PRE-CHUNK:  --- " + contentSoFar);
+                    if (contentLength != null) {
+                        logger.trace("CONTENT-REMAINING:         --- " + (contentLength - contentSoFar));
+                        logger.trace("CONTENT-LENGTH:            --- " + contentLength);
+                    }
+                }
 
                 if (contentLength != null) {
                     logger.trace("Flushing buffer as all content received");

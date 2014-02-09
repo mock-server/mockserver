@@ -24,7 +24,7 @@ public class ResponseInterceptor implements Interceptor {
             return channelBuffer;
         }
         ByteBuf channelBufferCopy = Unpooled.copiedBuffer(channelBuffer);
-        logger.warn("INTERCEPTING - RESPONSE: " + channelBuffer.toString(Charsets.UTF_8));
+        logger.debug("INTERCEPTING - RESPONSE: " + channelBuffer.toString(Charsets.UTF_8));
         try {
             List<ByteBuf> allResponseRawChunks = new ArrayList<ByteBuf>();
             List<Object> responseHttpFormattedChunks = new ArrayList<Object>();
@@ -36,7 +36,7 @@ public class ResponseInterceptor implements Interceptor {
                     httpResponse.headers().remove(HttpHeaders.Names.ACCEPT_ENCODING);
                     httpResponse.headers().set(HttpHeaders.Names.CONNECTION, HttpHeaders.Values.CLOSE);
                 }
-                logger.warn("HTTP-FORMATTED -RESPONSE- " + httpChunk.getClass().getSimpleName() + " -- " + httpChunk);
+                logger.debug("HTTP-FORMATTED -RESPONSE- " + httpChunk.getClass().getSimpleName() + " -- " + httpChunk);
                 if (!(httpChunk instanceof LastHttpContent)) {
                     List<Object> responseRawChunks = new ArrayList<Object>();
 //                    if(httpChunk instanceof DefaultHttpContent) {

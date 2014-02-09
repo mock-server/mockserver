@@ -33,9 +33,9 @@ public class NettyDirectSecureProxyIntegrationTest {
 
     @BeforeClass
     public static void setupFixture() throws Exception {
-        logger.warn("SERVER_HTTP_PORT = " + SERVER_HTTP_PORT);
-        logger.warn("SERVER_HTTPS_PORT = " + SERVER_HTTPS_PORT);
-        logger.warn("PROXY_DIRECT_SECURE_PORT = " + PROXY_DIRECT_SECURE_PORT);
+        logger.debug("SERVER_HTTP_PORT = " + SERVER_HTTP_PORT);
+        logger.debug("SERVER_HTTPS_PORT = " + SERVER_HTTPS_PORT);
+        logger.debug("PROXY_DIRECT_SECURE_PORT = " + PROXY_DIRECT_SECURE_PORT);
 
         // start server
         testServer.startServer(SERVER_HTTP_PORT, SERVER_HTTPS_PORT);

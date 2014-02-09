@@ -41,14 +41,11 @@ public class BasicHttpDecoder {
     private void readContentLength() {
         while (byteBuf.isReadable()) {
             String line = readLine();
-//            logger.warn("LINE: " + line);
             if (line.startsWith(HttpHeaders.Names.CONTENT_LENGTH)) {
                 contentLength = Integer.parseInt(line.split(":")[1].trim());
-                logger.warn("CONTENT-LENGTH: --- " + contentLength + " ----");
             }
             if (contentLength != null && line.isEmpty()) {
                 contentStart = byteBuf.readerIndex();
-                logger.warn("CONTENT-START: --- " + contentStart + " ----");
                 break;
             }
         }

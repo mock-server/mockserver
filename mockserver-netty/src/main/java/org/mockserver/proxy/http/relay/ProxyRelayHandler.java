@@ -4,10 +4,8 @@ import com.google.common.base.Charsets;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
-import io.netty.handler.ssl.SslHandler;
 import org.mockserver.proxy.interceptor.Interceptor;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ProxyRelayHandler extends ChannelDuplexHandler {
 
@@ -119,14 +117,16 @@ public class ProxyRelayHandler extends ChannelDuplexHandler {
                     contentSoFar = (chunk.readableBytes() - basicHttpDecoder.getContentStart());
                 }
 
-//            logger.warn("CHUNK:                     ---\n-\n" + Unpooled.copiedBuffer(chunk).toString(Charsets.UTF_8) + "\n-\n");
-//                logger.warn("CONTENT-SO-FAR-PRE-CHUNK:  --- " + (contentSoFar - Unpooled.copiedBuffer(chunk).toString(Charsets.UTF_8).length()));
-//                logger.warn("CHUNK-SIZE:                --- " + chunk.readableBytes());
-//                logger.warn("CONTENT-SO-FAR-PRE-CHUNK:  --- " + contentSoFar);
-//                if (contentLength != null) {
-//                    logger.warn("CONTENT-REMAINING:         --- " + (contentLength - contentSoFar));
-//                    logger.warn("CONTENT-LENGTH:            --- " + contentLength);
-//                }
+                if (logger.isTraceEnabled()) {
+                    logger.trace("CHUNK:                     ---\n-\n" + Unpooled.copiedBuffer(chunk).toString(Charsets.UTF_8) + "\n-\n");
+                    logger.trace("CONTENT-SO-FAR-PRE-CHUNK:  --- " + (contentSoFar - Unpooled.copiedBuffer(chunk).toString(Charsets.UTF_8).length()));
+                    logger.trace("CHUNK-SIZE:                --- " + chunk.readableBytes());
+                    logger.trace("CONTENT-SO-FAR-PRE-CHUNK:  --- " + contentSoFar);
+                    if (contentLength != null) {
+                        logger.trace("CONTENT-REMAINING:         --- " + (contentLength - contentSoFar));
+                        logger.trace("CONTENT-LENGTH:            --- " + contentLength);
+                    }
+                }
 
                 if (contentLength != null) {
                     logger.trace("Flushing buffer as all content received");

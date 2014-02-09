@@ -28,7 +28,7 @@ public class RequestInterceptor implements Interceptor {
     @Override
     public ByteBuf intercept(ChannelHandlerContext ctx, ByteBuf channelBuffer, Logger logger) throws Exception {
         ByteBuf channelBufferCopy = Unpooled.copiedBuffer(channelBuffer);
-        logger.warn("INTERCEPTING - REQUEST: " + channelBuffer.toString(Charsets.UTF_8));
+        logger.debug("INTERCEPTING - REQUEST: " + channelBuffer.toString(Charsets.UTF_8));
         try {
             List<ByteBuf> allRequestRawChunks = new ArrayList<ByteBuf>();
             List<Object> requestHttpFormattedChunks = new ArrayList<Object>();
@@ -43,7 +43,7 @@ public class RequestInterceptor implements Interceptor {
                     }
                     httpRequest.headers().set(HttpHeaders.Names.CONNECTION, HttpHeaders.Values.CLOSE);
                 }
-                logger.warn("HTTP-FORMATTED -REQUEST- " + httpChunk.getClass().getSimpleName() + " -- " + httpChunk);
+                logger.debug("HTTP-FORMATTED -REQUEST- " + httpChunk.getClass().getSimpleName() + " -- " + httpChunk);
                 if (!(httpChunk instanceof LastHttpContent)) {
                     List<Object> requestRawChunks = new ArrayList<Object>();
                     httpRequestEncoder.encode(ctx, httpChunk, requestRawChunks);
