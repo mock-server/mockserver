@@ -32,7 +32,7 @@
         </filter>
     </appender>
 
-    <logger name="org.mockserver" level="TRACE"/>
+    <logger name="org.mockserver" level="WARN"/>
 
     <root level="WARN">
         <appender-ref ref="FILE"/>

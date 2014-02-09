@@ -13,9 +13,9 @@
         </encoder>
     </appender>
 
-    <logger name="org.jamesdbloom" level="TRACE"/>
+    <logger name="org.jamesdbloom" level="WARN"/>
 
-    <root level="INFO">
+    <root level="WARN">
         <appender-ref ref="FILE"/>
         <appender-ref ref="STDOUT"/>
     </root>
