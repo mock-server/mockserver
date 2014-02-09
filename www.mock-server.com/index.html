@@ -470,6 +470,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 			<li><a href="#github">GitHub</a></li>
 			<li><a href="#maven-central">Maven Central</a></li>
 			<li><a href="#vertx-registry">Vert.X Registry</a></li>
+			<li><a href="#travis-ci">Travis CI</a></li>
 		</ul>
 	</div>
 </div>
@@ -483,6 +484,9 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <a name="what-is-mockserver" class="anchor" href="#what-is-mockserver">&nbsp;</a>
 
+<div style="width: 100%">
+	<a  style="float: right; margin-top: 0em; margin-right: 5%;" href="https://travis-ci.org/jamesdbloom/mockserver"><img src="https://github-camo.global.ssl.fastly.net/2e2b9deeda5c745f167e2cabcd787322df06688f/68747470733a2f2f7472617669732d63692e6f72672f6a616d657364626c6f6f6d2f6d6f636b7365727665722e706e673f6272616e63683d6d6173746572" alt="Build Status" data-canonical-src="https://travis-ci.org/jamesdbloom/mockserver.png?branch=master" style="max-width:100%;"></a>
+</div>
 <h2>What is MockServer</h2>
 
 <p>MockServer is for mocking of any system you integrate with via HTTP or HTTPS (i.e. services, web sites, etc).</p>
@@ -835,7 +839,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 <pre><code class="code xml">&lt;<span class="element">plugin</span>&gt;
     &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;
     &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-maven-plugin</span>&lt;/<span class="element">artifactId</span>&gt;
-    &lt;<span class="element">version</span>&gt;<span class="element_value">2.5</span>&lt;/<span class="element">version</span>&gt;
+    &lt;<span class="element">version</span>&gt;<span class="element_value">2.6</span>&lt;/<span class="element">version</span>&gt;
     &lt;<span class="element">configuration</span>&gt;
         &lt;<span class="element">port</span>&gt;<span class="element_value">9090</span>&lt;/<span class="element">port</span>&gt;
         &lt;<span class="element">logLevel</span>&gt;<span class="element_value">TRACE</span>&lt;/<span class="element">logLevel</span>&gt;
@@ -870,7 +874,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 <pre><code class="code xml"> &lt;<span class="element">plugin</span>&gt;
      &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;
      &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-maven-plugin</span>&lt;/<span class="element">artifactId</span>&gt;
-     &lt;<span class="element">version</span>&gt;<span class="element_value">2.5</span>&lt;/<span class="element">version</span>&gt;
+     &lt;<span class="element">version</span>&gt;<span class="element_value">2.6</span>&lt;/<span class="element">version</span>&gt;
      &lt;<span class="element">configuration</span>&gt;
          &lt;<span class="element">port</span>&gt;<span class="element_value">9090</span>&lt;/<span class="element">port</span>&gt;
          &lt;<span class="element">logLevel</span>&gt;<span class="element_value">TRACE</span>&lt;/<span class="element">logLevel</span>&gt;
@@ -970,7 +974,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 &lt;<span class="element">dependency</span>&gt;
      &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;<span class="element">/groupId</span>&gt;
      &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-netty</span>&lt;<span class="element">/artifactId</span>&gt;
-     &lt;<span class="element">version</span>&gt;<span class="element_value">2.5</span>&lt;<span class="element">/version</span>&gt;
+     &lt;<span class="element">version</span>&gt;<span class="element_value">2.6</span>&lt;<span class="element">/version</span>&gt;
 &lt;<span class="element">/dependency</span>&gt;</code></pre>
 
 <p>To start the server and create a client the simplest way is to the start factory methods ClientAndServer.startClientAndServer or ClientAndProxy.startClientAndProxy as follows:</p>
@@ -1013,9 +1017,9 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 <p>MockServer can be run directly from the command line and using Embedded Jetty as follow:</p>
 
 <ol>
-	<li><p>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/2.5/mockserver-netty-2.5-jar-with-dependencies.jar">mockserver-netty-2.5-jar-with-dependencies.jar</a> from Maven Central</p></li>
+	<li><p>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/2.6/mockserver-netty-2.6-jar-with-dependencies.jar">mockserver-netty-2.6-jar-with-dependencies.jar</a> from Maven Central</p></li>
 	<li>
-		<code class="code inline">java -jar &lt;path to mockserver-netty-2.5-jar-with-dependencies.jar&gt; -serverPort &lt;port&gt;</code>
+		<code class="code inline">java -jar &lt;path to mockserver-netty-2.6-jar-with-dependencies.jar&gt; -serverPort &lt;port&gt;</code>
 	</li>
 </ol>
 
@@ -1043,7 +1047,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p>For example:</p>
 
-<pre><code class="code">java -jar ~/Downloads/mockserver-netty-2.5-jar-with-dependencies.jar -serverPort 8080 -proxyPort 9090</code></pre>
+<pre><code class="code">java -jar ~/Downloads/mockserver-netty-2.6-jar-with-dependencies.jar -serverPort 8080 -proxyPort 9090</code></pre>
 
 <a name="vertx-module" class="anchor" href="#vertx-module">&nbsp;</a>
 
@@ -1074,8 +1078,8 @@ vertx runmod org.mock-server~mockserver-vertx~2.0</code></pre>
 <p>To run as a WAR deployed on any JEE web server:</p>
 
 <ol>
-	<li>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-war/2.5/mockserver-war-2.5.war">mockserver-war-2.5.war</a> from Maven Central</li>
-	<li>deploy <strong>mockserver-war-2.5.war</strong> to any JEE web server</li>
+	<li>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-war/2.6/mockserver-war-2.6.war">mockserver-war-2.6.war</a> from Maven Central</li>
+	<li>deploy <strong>mockserver-war-2.6.war</strong> to any JEE web server</li>
 </ol>
 
 <p><strong>WAR Context Path</strong></p>
@@ -1109,7 +1113,7 @@ cd mockserver</code></pre>
 
 <p>This will produce a jar file under the target directory called, as follows:</p>
 
-<pre><code class="code">mockserver-netty/target/mockserver-netty-2.5-jar-with-dependencies.jar</code></pre>
+<pre><code class="code">mockserver-netty/target/mockserver-netty-2.6-jar-with-dependencies.jar</code></pre>
 
 <p>Run the MockServer then using the executable jar as per the instruction above in <a href="#running-from-command-line">Running From The Command Line</a></p>
 
@@ -2122,9 +2126,9 @@ xmlHttpRequest.send(JSON.stringify({
 <p>The simplest way to run and download MockServer is by using the fully stand alone web server embedded with all dependencies that mocks HTTP and HTTPS requests, as follows:</p>
 
 <ol>
-	<li><p>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/2.5/mockserver-netty-2.5-jar-with-dependencies.jar">mockserver-netty-2.5-jar-with-dependencies.jar</a> from Maven Central</p></li>
+	<li><p>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/2.6/mockserver-netty-2.6-jar-with-dependencies.jar">mockserver-netty-2.6-jar-with-dependencies.jar</a> from Maven Central</p></li>
 	<li>
-		<code class="code inline">java -jar &lt;path to mockserver-netty-2.5-jar-with-dependencies.jar&gt; -serverPort &lt;port&gt;</code>
+		<code class="code inline">java -jar &lt;path to mockserver-netty-2.6-jar-with-dependencies.jar&gt; -serverPort &lt;port&gt;</code>
 	</li>
 </ol>
 
@@ -2178,6 +2182,14 @@ xmlHttpRequest.send(JSON.stringify({
 <ul>
 	<li><a href="http://modulereg.vertx.io/">org.mock-server~mockserver-vertx-proxy~2.0</a> - a Vert.X module that proxies HTTP and HTTPS allowing the recording and querying of requests and responses</li>
 </ul>
+
+<a name="travis-ci" class="anchor" href="#travis-ci">&nbsp;</a>
+
+<h2>Travis CI</h2>
+
+<p><a href="https://travis-ci.org/jamesdbloom/mockserver">Travis CI</a> is used for the continuous integration.  The build uses both Java 1.6 and Java 1.7 to build the different modules in their appropriate java version, the latest SNAPSHOT is also deployed to <a href="https://oss.sonatype.org/index.html#nexus-search;quick%7Emockserver">Sonatype</a>.</p>
+<p>The status of the build is shown at the top of this page and on the github project using the Travis CI logo &nbsp;&nbsp;<a href="https://travis-ci.org/jamesdbloom/mockserver"><img src="https://github-camo.global.ssl.fastly.net/2e2b9deeda5c745f167e2cabcd787322df06688f/68747470733a2f2f7472617669732d63692e6f72672f6a616d657364626c6f6f6d2f6d6f636b7365727665722e706e673f6272616e63683d6d6173746572" alt="Build Status" data-canonical-src="https://travis-ci.org/jamesdbloom/mockserver.png?branch=master" style="max-width:100%;"></a></p>
+
 
 <p><br><a href="https://plus.google.com/110954472544793839756?rel=author">James D Bloom</a> - <a href="http://blog.jamesdbloom.com">Blog</a></p>
 <span itemprop="author" itemscope itemtype="http://schema.org/Person">
