@@ -3,6 +3,8 @@ MockServer
 
 For information on how to use the MockServer please see http://www.mock-server.com/
 
+# Travis CI
+
 [![Build Status](https://travis-ci.org/jamesdbloom/mockserver.png?branch=master)](https://travis-ci.org/jamesdbloom/mockserver)
 
 # Versions
