@@ -7,10 +7,15 @@
         </encoder>
     </appender>
 
+    <!-- application console log (errors and warnings) -->
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <target>System.err</target>
         <encoder>
-            <pattern>%date %level [%thread] %logger{35} %msg%n</pattern>
+            <pattern>%date %level %logger{20} %msg%n</pattern>
         </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>WARN</level>
+        </filter>
     </appender>
 
     <logger name="org.jamesdbloom" level="WARN"/>
