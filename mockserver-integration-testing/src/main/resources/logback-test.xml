@@ -7,13 +7,6 @@
         </encoder>
     </appender>
 
-    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-        <target>System.out</target>
-        <encoder>
-            <pattern>%date %level %logger{20} %msg%n</pattern>
-        </encoder>
-    </appender>
-
     <logger name="org.mockserver" level="WARN"/>
 
     <root level="WARN">
