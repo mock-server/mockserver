@@ -1,7 +1,11 @@
 language: java
 notifications:
   email:
-    - jamesdbloom@gmail.com
+  - jamesdbloom@gmail.com
 jdk:
-  - oraclejdk7
-  - openjdk6
+- oraclejdk7
+- openjdk6
+env:
+  global:
+  - secure: PyWvj9186/GCqQXC+rYK9YlEB8wyZf0tsT9b2jkGXmLK99DZ7pK0BAU6OxdgO9XrQvdjvCzqnvG2+CxzyiqsvRFMk1uNkZ3toxwIWvIVUNTi2NBSlILA2z/dsGV89rilno/ldqMB9c9Bp49GPrh3xSC64x4iFzfDkLPyROGq7Rc=
+  - secure: JCKXr6PTQ+WZ9bHe3lCPT/ib42ZvPKf+MrE3CR3dPjG/bFwONxG23WCpO71zed7SrUdZWnk3UCZJeSIpeeQXC70mmxx2qgDnEWVkpsQCDvqLJCEVEBBJc6z3kKzW/twNlF7V6O92LUz64uqCh6lZrOT1VdSn5Ne8cM7PpgyhsMc=
