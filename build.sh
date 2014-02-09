@@ -14,7 +14,7 @@ if [ $? -eq 0 ]; then
     export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.7.0_17.jdk/Contents/Home
     if [ -z "$1" ]
     then
-        gradle clean test && mvn clean install
+        mvn clean install
     else
         mvn clean $1
     fi

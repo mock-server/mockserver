@@ -1088,18 +1088,18 @@ vertx runmod org.mock-server~mockserver-vertx~2.0</code></pre>
 
 <pre><code class="code"><span class="keyword">public</span> MockServerClient(String host, <span class="keyword">int</span> port, String contextPath)</code></pre>
 
-<a name="build-and-run-from-source" class="anchor" href="#build-from-source">&nbsp;</a>
+<a name="build-and-run-from-source" class="anchor" href="#build-and-run-from-source">&nbsp;</a>
 
 <h4>Build & Run From Source</h4>
 
-<p>A build script in maven and a build script in gradle has been provided so the project can be built using either maven or gradle.</p>
+<p>MockServer is now only built using maven as the use of gradle caused problems with the Travis CI environment so the gradle build was removed.</p>
 
 <p>First clone the repository as follows:</p>
 
 <pre><code class="code">git clone https://github.com/jamesdbloom/mockservice.git
 cd mockserver</code></pre>
 
-<p>Next build and run the project using either maven or gradle.</p>
+<p>Next build and run the project using maven.</p>
 
 <p><strong><em>Maven</em></strong></p>
 
@@ -1112,16 +1112,6 @@ cd mockserver</code></pre>
 <pre><code class="code">mockserver-netty/target/mockserver-netty-2.5-jar-with-dependencies.jar</code></pre>
 
 <p>Run the MockServer then using the executable jar as per the instruction above in <a href="#running-from-command-line">Running From The Command Line</a></p>
-
-<p><strong><em>Gradle</em></strong></p>
-
-<p>In gradle the project can be built and run in a single command as follows:</p>
-
-<pre><code class="code">gradle run [-<strong>P</strong>serverPort=&lt;port&gt;] [-<strong>P</strong>serverSecurePort=&lt;port&gt;] [-<strong>P</strong>proxyPort=&lt;port&gt;] [-<strong>P</strong>proxySecurePort=&lt;port&gt;] </code></pre>
-
-<p>For example to run the MockServer on port 8080 for HTTP and 1443 for HTTPS and the proxy on port 9090 for HTTP only:</p>
-
-<pre><code class="code">gradle run -<strong>P</strong>serverPort=8080 -<strong>P</strong>serverSecurePort=1443 -<strong>P</strong>proxyPort=9090</code></pre>
 
 <p><strong>Create Client For Existing MockServer or Proxy</strong></p>
 
