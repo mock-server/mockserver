@@ -1,1 +1,9 @@
 language: java
+notifications:
+  email:
+    - jamesdbloom@gmail.com
+#jdk:
+#  - oraclejdk7
+#  - openjdk7
+#  - oraclejdk6
+#  - openjdk6
