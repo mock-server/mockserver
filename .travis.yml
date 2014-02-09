@@ -4,5 +4,4 @@ notifications:
     - jamesdbloom@gmail.com
 jdk:
   - oraclejdk7
-  - openjdk7
   - openjdk6
