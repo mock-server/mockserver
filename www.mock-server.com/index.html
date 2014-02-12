@@ -507,13 +507,16 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p>To mock an HTTP / HTTPS interaction an expectation is setup specifying how a request should be matched and what response the MockServer should reply with when the request has been matched.</p>
 
-<p>For example to create an expectation:</p>
+<p>For example to create an expectation using <strong>Java</strong>:</p>
 
 <pre><code class="code"><span class="keyword">new</span> MockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">9999</span>)
         .when(
                 request()
                         .withMethod(<span class="string_literal">"POST"</span>)
                         .withPath(<span class="string_literal">"/login"</span>)
+                        .withQueryStringParameters(
+                                <span class="keyword">new</span> Parameter(<span class="string_literal">"returnUrl"</span>, <span class="string_literal">"/account"</span>)
+                        )
                         .withCookies(
                                 <span class="keyword">new</span> Cookie(<span class="string_literal">"sessionId"</span>, <span class="string_literal">"2By8LOhBmaW5nZXJwcmludCIlMDAzMW"</span>)
                         )
@@ -530,6 +533,54 @@ Hides the menu at `767px`, but modify this based on your app's needs.
                         .withBody(<span class="string_literal">"{ message: 'incorrect username and password combination' }"</span>)
                         .withDelay(new Delay(TimeUnit.<span class="constant">SECONDS</span>, <span class="numeric_literal">1</span>))
         );</code></pre>
+
+<p style="margin-top: 2em;">Or to create an expectation using <strong>JavaScript</strong>:</p>
+
+<pre><code class="code">mockServerClient(<span class="string_literal">"http://localhost:9999"</span>).mockAnyResponse({
+    <span class="string_literal">"httpRequest"</span>: {
+        <span class="string_literal">"method"</span>: <span class="string_literal">"POST"</span>,
+        <span class="string_literal">"path"</span>: <span class="string_literal">"/login"</span>,
+        <span class="string_literal">"queryStringParameters"</span>: [
+            {
+                <span class="string_literal">"name"</span>: <span class="string_literal">"returnUrl"</span>,
+                <span class="string_literal">"values"</span>: [<span class="string_literal">"/account"</span>]
+            }
+        ],
+        <span class="string_literal">"cookies"</span>: [
+            {
+                <span class="string_literal">"name"</span>: <span class="string_literal">"sessionId"</span>,
+                <span class="string_literal">"values"</span>: [<span class="string_literal">"2By8LOhBmaW5nZXJwcmludCIlMDAzMW"</span>]
+            }
+        ],
+        <span class="string_literal">"body"</span>: {
+            <span class="string_literal">"type"</span>: <span class="string_literal">"EXACT"</span>
+            <span class="string_literal">"value"</span>: JSON.stringify({ username: <span class="string_literal">"foo"</span>, password: <span class="string_literal">"bar"</span> })
+        }
+    },
+    <span class="string_literal">"httpResponse"</span>: {
+        <span class="string_literal">"statusCode"</span>: <span class="numeric_literal">401</span>,
+        <span class="string_literal">"headers"</span>: [
+            {
+                <span class="string_literal">"name"</span>: <span class="string_literal">"Content-Type"</span>,
+                <span class="string_literal">"values"</span>: [<span class="string_literal">"application/json; charset=utf-8"</span>]
+            },
+            {
+                <span class="string_literal">"name"</span>: <span class="string_literal">"Cache-Control"</span>,
+                <span class="string_literal">"values"</span>: [<span class="string_literal">"public, max-age=86400"</span>]
+            }
+        ],
+        <span class="string_literal">"body"</span>: JSON.stringify({ message: <span class="string_literal">"incorrect username and password combination"</span> }),
+        <span class="string_literal">"delay"</span>: {
+            <span class="string_literal">"timeUnit"</span>: <span class="string_literal">"SECONDS"</span>,
+            <span class="string_literal">"value"</span>: <span class="numeric_literal">1</span>
+        }
+    },
+    <span class="string_literal">"times"</span>: {
+        <span class="string_literal">"remainingTimes"</span>: <span class="numeric_literal">1</span>,
+        <span class="string_literal">"unlimited"</span>: <span class="keyword">false</span>
+    }
+});
+</code></pre>
 
 <p>Requests can be matched on:</p>
 
@@ -841,8 +892,11 @@ Hides the menu at `767px`, but modify this based on your app's needs.
     &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-maven-plugin</span>&lt;/<span class="element">artifactId</span>&gt;
     &lt;<span class="element">version</span>&gt;<span class="element_value">2.6</span>&lt;/<span class="element">version</span>&gt;
     &lt;<span class="element">configuration</span>&gt;
-        &lt;<span class="element">port</span>&gt;<span class="element_value">9090</span>&lt;/<span class="element">port</span>&gt;
-        &lt;<span class="element">logLevel</span>&gt;<span class="element_value">TRACE</span>&lt;/<span class="element">logLevel</span>&gt;
+        &lt;<span class="element">serverPort</span>&gt;<span class="element_value">1080</span>&lt;/<span class="element">serverPort</span>&gt;
+        &lt;<span class="element">serverSecurePort</span>&gt;<span class="element_value">1082</span>&lt;/<span class="element">serverSecurePort</span>&gt;
+        &lt;<span class="element">proxyPort</span>&gt;<span class="element_value">1090</span>&lt;/<span class="element">proxyPort</span>&gt;
+        &lt;<span class="element">proxySecurePort</span>&gt;<span class="element_value">1092</span>&lt;/<span class="element">proxySecurePort</span>&gt;
+        &lt;<span class="element">logLevel</span>&gt;<span class="element_value">DEBUG</span>&lt;/<span class="element">logLevel</span>&gt;
     &lt;/<span class="element">configuration</span>&gt;
     &lt;<span class="element">executions</span>&gt;
         &lt;<span class="element">execution</span>&gt;
@@ -876,10 +930,11 @@ Hides the menu at `767px`, but modify this based on your app's needs.
      &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-maven-plugin</span>&lt;/<span class="element">artifactId</span>&gt;
      &lt;<span class="element">version</span>&gt;<span class="element_value">2.6</span>&lt;/<span class="element">version</span>&gt;
      &lt;<span class="element">configuration</span>&gt;
-         &lt;<span class="element">port</span>&gt;<span class="element_value">9090</span>&lt;/<span class="element">port</span>&gt;
-         &lt;<span class="element">logLevel</span>&gt;<span class="element_value">TRACE</span>&lt;/<span class="element">logLevel</span>&gt;
-         &lt;<span class="element">stopPort</span>&gt;<span class="element_value">9091</span>&lt;/<span class="element">stopPort</span>&gt;
-         &lt;<span class="element">stopKey</span>&gt;<span class="element_value">STOP_KEY</span>&lt;/<span class="element">stopKey</span>&gt;
+        &lt;<span class="element">serverPort</span>&gt;<span class="element_value">1080</span>&lt;/<span class="element">serverPort</span>&gt;
+        &lt;<span class="element">serverSecurePort</span>&gt;<span class="element_value">1082</span>&lt;/<span class="element">serverSecurePort</span>&gt;
+        &lt;<span class="element">proxyPort</span>&gt;<span class="element_value">1090</span>&lt;/<span class="element">proxyPort</span>&gt;
+        &lt;<span class="element">proxySecurePort</span>&gt;<span class="element_value">1092</span>&lt;/<span class="element">proxySecurePort</span>&gt;
+        &lt;<span class="element">logLevel</span>&gt;<span class="element_value">DEBUG</span>&lt;/<span class="element">logLevel</span>&gt;
      &lt;/<span class="element">configuration</span>&gt;
      &lt;<span class="element">executions</span>&gt;
          &lt;<span class="element">execution</span>&gt;
@@ -943,19 +998,22 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <ul>
 	<li>
-		<strong>port</strong> - The port to listen to incoming HTTP requests (required: false, default: 9090)
+		<strong>serverPort</strong> - The port the MockServer listens to incoming HTTP requests (required: false - but at least one of the four ports must be specified)
+	</li>
+	<li>
+		<strong>serverSecurePort</strong> - The port the MockServer listens to incoming HTTPS requests (required: false - but at least one of the four ports must be specified)
+	</li>
+	<li>
+		<strong>proxyPort</strong> - The port the proxy listens to incoming HTTP (and HTTP -> HTTPS CONNECT) requests (required: false - but at least one of the four ports must be specified)
+	</li>
+	<li>
+		<strong>proxySecurePort</strong> - The port the proxy listens to incoming HTTPS requests (required: false - but at least one of the four ports must be specified)
 	</li>
 	<li>
 		<strong>timeout</strong> - How long to block waiting for MockServer, used by <strong>run</strong> goal, 0 means wait indefinitely (required: false, default: 0)
 	</li>
 	<li>
 		<strong>logLevel</strong> - The logging level (required: false, default: WARN)
-	</li>
-	<li>
-		<strong>stopPort</strong> - The port to listen to stop requests (required: false, default: port + 1)
-	</li>
-	<li>
-		<strong>stopKey</strong> - The key to use for stop requests (required: false, default: STOP_KEY)
 	</li>
 	<li>
 		<strong>skip</strong> - Prevent the plugin from running (required: false, default: false)
@@ -1350,6 +1408,9 @@ cd mockserver</code></pre>
                 request()
                         .withMethod(<span class="string_literal">"POST"</span>)
                         .withPath(<span class="string_literal">"/login"</span>)
+                        .withQueryStringParameters(
+                                <span class="keyword">new</span> Parameter(<span class="string_literal">"returnUrl"</span>, <span class="string_literal">"/account"</span>)
+                        )
                         .withCookies(
                                 <span class="keyword">new</span> Cookie(<span class="string_literal">"sessionId"</span>, <span class="string_literal">"2By8LOhBmaW5nZXJwcmludCIlMDAzMW"</span>)
                         )
@@ -1379,6 +1440,12 @@ xmlHttpRequest.send(JSON.stringify({
     <span class="string_literal">"httpRequest"</span>: {
         <span class="string_literal">"method"</span>: <span class="string_literal">"POST"</span>,
         <span class="string_literal">"path"</span>: <span class="string_literal">"/login"</span>,
+        <span class="string_literal">"queryStringParameters"</span>: [
+            {
+                <span class="string_literal">"name"</span>: <span class="string_literal">"returnUrl"</span>,
+                <span class="string_literal">"values"</span>: [<span class="string_literal">"/account"</span>]
+            }
+        ],
         <span class="string_literal">"cookies"</span>: [
             {
                 <span class="string_literal">"name"</span>: <span class="string_literal">"sessionId"</span>,
@@ -1525,8 +1592,11 @@ xmlHttpRequest.send(JSON.stringify({
                 .withMethod(<span class="string_literal">"POST"</span>)
                 .withPath(<span class="string_literal">"/login"</span>)
                 .withBody(<span class="string_literal">"{username: 'foo', password: 'bar'}"</span>)
+                .withQueryStringParameters(
+                        <span class="keyword">new</span> Parameter(<span class="string_literal">"returnUrl"</span>, <span class="string_literal">"/account"</span>)
+                )
                 .withCookies(
-                        new Cookie(<span class="string_literal">"sessionId"</span>, <span class="string_literal">"2By8LOhBmaW5nZXJwcmludCIlMDAzMW"</span>)
+                        <span class="keyword">new</span> Cookie(<span class="string_literal">"sessionId"</span>, <span class="string_literal">"2By8LOhBmaW5nZXJwcmludCIlMDAzMW"</span>)
                 );</code></pre>
 
 <p><strong>JavaScript</strong></p>
@@ -1559,16 +1629,22 @@ xmlHttpRequest.send(JSON.stringify({
 <pre><code class="code"><span class="string_literal">"httpRequest"</span>: {
     <span class="string_literal">"method"</span>: <span class="string_literal">"POST"</span>,
     <span class="string_literal">"path"</span>: <span class="string_literal">"/login"</span>,
-    <span class="string_literal">"body"</span>: {
-        <span class="string_literal">"type"</span>: <span class="string_literal">"EXACT"</span>,
-        <span class="string_literal">"value"</span>: <span class="string_literal">"{username: 'foo', password: 'bar'}"</span>
-    },
+    <span class="string_literal">"queryStringParameters"</span>: [
+        {
+            <span class="string_literal">"name"</span>: <span class="string_literal">"returnUrl"</span>,
+            <span class="string_literal">"values"</span>: [<span class="string_literal">"/account"</span>]
+        }
+    ],
     <span class="string_literal">"cookies"</span>: [
         {
             <span class="string_literal">"name"</span>: <span class="string_literal">"sessionId"</span>,
             <span class="string_literal">"values"</span>: [<span class="string_literal">"2By8LOhBmaW5nZXJwcmludCIlMDAzMW"</span>]
         }
-    ]
+    ],
+    <span class="string_literal">"body"</span>: {
+        <span class="string_literal">"type"</span>: <span class="string_literal">"EXACT"</span>,
+        <span class="string_literal">"value"</span>: <span class="string_literal">"{username: 'foo', password: 'bar'}"</span>
+    }
 }</code></pre>
 
 <p>The <span class="string_literal">"type"</span> value in <span class="string_literal">"body"</span> can be:</p>
@@ -1591,6 +1667,18 @@ xmlHttpRequest.send(JSON.stringify({
 <pre><code class="code"><span class="string_literal">"httpRequest"</span>: {
     <span class="string_literal">"method"</span>: <span class="string_literal">"POST"</span>,
     <span class="string_literal">"path"</span>: <span class="string_literal">"/login"</span>,
+    <span class="string_literal">"queryStringParameters"</span>: [
+        {
+            <span class="string_literal">"name"</span>: <span class="string_literal">"returnUrl"</span>,
+            <span class="string_literal">"values"</span>: [<span class="string_literal">"/account"</span>]
+        }
+    ],
+    <span class="string_literal">"cookies"</span>: [
+        {
+            <span class="string_literal">"name"</span>: <span class="string_literal">"sessionId"</span>,
+            <span class="string_literal">"values"</span>: [<span class="string_literal">"2By8LOhBmaW5nZXJwcmludCIlMDAzMW"</span>]
+        }
+    ],
     <span class="string_literal">"body"</span>: {
         <span class="string_literal">"type"</span>: <span class="string_literal">"PARAMETERS"</span>,
         <span class="string_literal">"parameters"</span>: [
@@ -1603,13 +1691,7 @@ xmlHttpRequest.send(JSON.stringify({
                 <span class="string_literal">"values"</span>: [<span class="string_literal">"bar"</span>]
             }
         ]
-    },
-    <span class="string_literal">"cookies"</span>: [
-        {
-            <span class="string_literal">"name"</span>: <span class="string_literal">"sessionId"</span>,
-            <span class="string_literal">"values"</span>: [<span class="string_literal">"2By8LOhBmaW5nZXJwcmludCIlMDAzMW"</span>]
-        }
-    ]
+    }
 }</code></pre>
 
 <p><strong>Times</strong></p>

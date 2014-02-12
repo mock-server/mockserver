@@ -1,7 +1,4 @@
 <configuration>
-    <!-- include request log configuration -->
-    <include resource="logbackRequests.xml"/>
-
     <!-- application log -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>mockserver.log</file>
@@ -32,7 +29,22 @@
         </filter>
     </appender>
 
+    <!-- request log configuration -->
+    <appender name="REQUEST_LOG" class="ch.qos.logback.core.FileAppender">
+        <file>mockserver_request.log</file>
+
+        <encoder>
+            <pattern>%date %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="REQUEST" level="INFO" additivity="false">
+        <appender-ref ref="REQUEST_LOG"/>
+    </logger>
+
     <logger name="org.mockserver" level="WARN"/>
+    <logger name="org.mockserver.proxy.http.HttpProxy" level="INFO"/>
+    <logger name="org.mockserver.mockserver.MockServer" level="INFO"/>
 
     <root level="WARN">
         <appender-ref ref="FILE"/>

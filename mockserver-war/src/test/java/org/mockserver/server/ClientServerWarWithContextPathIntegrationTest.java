@@ -12,7 +12,6 @@ import org.mockserver.socket.PortFactory;
 import org.mockserver.socket.SSLFactory;
 
 import java.io.File;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author jamesdbloom
@@ -34,11 +33,11 @@ public class ClientServerWarWithContextPathIntegrationTest extends AbstractClien
         tomcat.setPort(serverPort);
 
         // add https connector
-        SSLFactory.buildKeyStore();
+        SSLFactory.getInstance().buildKeyStore();
         Connector httpsConnector = new Connector();
         httpsConnector.setPort(serverSecurePort);
         httpsConnector.setSecure(true);
-        httpsConnector.setAttribute("keyAlias", SSLFactory.KEY_STORE_ALIAS);
+        httpsConnector.setAttribute("keyAlias", SSLFactory.KEY_STORE_CERT_ALIAS);
         httpsConnector.setAttribute("keystorePass", SSLFactory.KEY_STORE_PASSWORD);
         httpsConnector.setAttribute("keystoreFile", new File(SSLFactory.KEY_STORE_FILENAME).getAbsoluteFile());
         httpsConnector.setAttribute("sslProtocol", "TLS");

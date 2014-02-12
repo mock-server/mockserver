@@ -71,7 +71,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest extends AbstractC
             // Upgrade the socket to SSL
             SSLSocket sslSocket = null;
             try {
-                sslSocket = SSLFactory.wrapSocket(socket);
+                sslSocket = SSLFactory.getInstance().wrapSocket(socket);
 
                 output = sslSocket.getOutputStream();
 
@@ -156,7 +156,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest extends AbstractC
             // Upgrade the socket to SSL
             SSLSocket sslSocket = null;
             try {
-                sslSocket = SSLFactory.wrapSocket(socket);
+                sslSocket = SSLFactory.getInstance().wrapSocket(socket);
 
                 // - send GET request
                 output = sslSocket.getOutputStream();

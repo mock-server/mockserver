@@ -82,7 +82,7 @@ public class DirectProxyUpstreamHandler extends ChannelDuplexHandler {
 
                         // add HTTPS proxy -> server support
                         if (secure) {
-                            SSLEngine engine = SSLFactory.sslContext().createSSLEngine();
+                            SSLEngine engine = SSLFactory.getInstance().sslContext().createSSLEngine();
                             engine.setUseClientMode(true);
                             pipeline.addLast("proxy -> server ssl", new SslHandler(engine));
                         }

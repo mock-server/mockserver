@@ -162,7 +162,7 @@ public class ConnectHandlerTest {
             // Upgrade the socket to SSL
             SSLSocket sslSocket = null;
             try {
-                sslSocket = SSLFactory.wrapSocket(socket);
+                sslSocket = SSLFactory.getInstance().wrapSocket(socket);
                 output = sslSocket.getOutputStream();
 
                 // - send GET request for headers only
@@ -246,7 +246,7 @@ public class ConnectHandlerTest {
             // Upgrade the socket to SSL
             SSLSocket sslSocket = null;
             try {
-                sslSocket = SSLFactory.wrapSocket(socket);
+                sslSocket = SSLFactory.getInstance().wrapSocket(socket);
 
                 // - send GET request
                 output = sslSocket.getOutputStream();

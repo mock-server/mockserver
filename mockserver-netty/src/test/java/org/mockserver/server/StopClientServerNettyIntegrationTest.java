@@ -17,7 +17,7 @@ public class StopClientServerNettyIntegrationTest {
     private final static int serverSecurePort = PortFactory.findFreePort();
 
     @Test
-    public void clientCanClearServerExpectations() {
+    public void canStartAndStopMultipleTimes() {
         // start server
         MockServer mockServer = new MockServer(serverPort, serverSecurePort);
 

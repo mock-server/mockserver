@@ -8,15 +8,29 @@
     <artifactId>proxy-run-stop-forked-from-command-line</artifactId>
     <version>1.0-SNAPSHOT</version>
 
+    <properties>
+        <mockserver.version>2.7-SNAPSHOT</mockserver.version>
+    </properties>
+
+    <dependencies>
+        <!-- mockserver -->
+        <dependency>
+            <groupId>org.mock-server</groupId>
+            <artifactId>mockserver-integration-testing</artifactId>
+            <version>${mockserver.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 
     <build>
         <plugins>
             <plugin>
                 <groupId>org.mock-server</groupId>
                 <artifactId>mockserver-maven-plugin</artifactId>
-                <version>2.5-SNAPSHOT</version>
+                <version>${mockserver.version}</version>
                 <configuration>
-                    <proxyPort>8080</proxyPort>
+                    <proxyPort>9090</proxyPort>
+                    <proxySecurePort>9092</proxySecurePort>
                 </configuration>
             </plugin>
         </plugins>

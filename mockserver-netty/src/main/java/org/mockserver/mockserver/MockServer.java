@@ -45,6 +45,10 @@ public class MockServer {
             public void run() {
                 try {
                     Channel httpChannel = null;
+                    logger.info("Starting MockServer on"
+                            + (port != null ? " serverPort " + port : "")
+                            + (securePort != null ? " secureServerPort " + securePort : "")
+                    );
                     if (port != null) {
                         httpChannel = new ServerBootstrap()
                                 .group(bossGroup, workerGroup)

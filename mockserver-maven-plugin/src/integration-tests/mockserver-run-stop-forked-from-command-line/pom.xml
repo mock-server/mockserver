@@ -8,15 +8,30 @@
     <artifactId>mockserver-run-stop-forked-from-command-line</artifactId>
     <version>1.0-SNAPSHOT</version>
 
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <mockserver.version>2.7-SNAPSHOT</mockserver.version>
+    </properties>
+
+    <dependencies>
+        <!-- MockServer -->
+        <dependency>
+            <groupId>org.mock-server</groupId>
+            <artifactId>mockserver-integration-testing</artifactId>
+            <version>${mockserver.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 
     <build>
         <plugins>
             <plugin>
                 <groupId>org.mock-server</groupId>
                 <artifactId>mockserver-maven-plugin</artifactId>
-                <version>2.5-SNAPSHOT</version>
+                <version>${mockserver.version}</version>
                 <configuration>
                     <serverPort>8080</serverPort>
+                    <serverSecurePort>8082</serverSecurePort>
                 </configuration>
             </plugin>
         </plugins>

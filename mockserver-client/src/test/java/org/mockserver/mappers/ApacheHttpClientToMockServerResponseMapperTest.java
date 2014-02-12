@@ -1,4 +1,4 @@
-package org.mockserver.mappers.jetty;
+package org.mockserver.mappers;
 
 import org.apache.commons.io.Charsets;
 import org.apache.http.ProtocolVersion;
@@ -7,7 +7,6 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicStatusLine;
 import org.junit.Test;
-import org.mockserver.mappers.ApacheHttpClientToMockServerResponseMapper;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpResponse;

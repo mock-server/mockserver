@@ -7,14 +7,10 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.codec.compression.ZlibCodecFactory;
-import io.netty.handler.codec.compression.ZlibWrapper;
-import io.netty.handler.codec.http.HttpContentCompressor;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.socks.SocksInitRequestDecoder;
 import io.netty.handler.codec.socks.SocksMessageEncoder;
 import io.netty.handler.ssl.SslHandler;
-import org.mockserver.logging.LoggingHandler;
 import org.mockserver.proxy.filters.LogFilter;
 import org.mockserver.proxy.http.direct.DirectProxyUpstreamHandler;
 import org.mockserver.proxy.interceptor.RequestInterceptor;
@@ -93,13 +89,7 @@ public class HttpProxy {
                  final Integer directLocalSecurePort,
                  final String directRemoteHost,
                  final Integer directRemotePort) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("HTTP proxy & HTTPS CONNECT port [" + port + "]");
-            logger.debug("HTTPS proxy port [" + securePort + "]");
-            logger.debug("SOCKS proxy port [" + socksPort + "]");
-            logger.debug("Direct proxy from port [" + directLocalPort + "] to host [" + directRemoteHost + ":" + directRemotePort + "]");
-            logger.debug("Direct SSL proxy from port [" + directLocalSecurePort + "] to host [" + directRemoteHost + ":" + directRemotePort + "]");
-        }
+
 
         hasStarted = SettableFuture.create();
 
@@ -166,8 +156,10 @@ public class HttpProxy {
         }
     }
 
-    private ChannelFuture createHTTPChannel(Integer port, final Integer securePort) throws ExecutionException, InterruptedException {
-        return createBootstrap(port != null, new ChannelInitializer<SocketChannel>() {
+    private ChannelFuture createHTTPChannel(final Integer port, final Integer securePort) throws ExecutionException, InterruptedException {
+        boolean condition = port != null;
+        if (condition) logger.info("Starting HTTP proxy & HTTPS CONNECT port [" + port + "]");
+        return createBootstrap(condition, new ChannelInitializer<SocketChannel>() {
             @Override
             protected void initChannel(SocketChannel ch) throws Exception {
                 // Create a default pipeline implementation.
@@ -183,14 +175,16 @@ public class HttpProxy {
     }
 
     private ChannelFuture createHTTPSChannel(final Integer securePort) throws ExecutionException, InterruptedException {
-        return createBootstrap(securePort != null, new ChannelInitializer<SocketChannel>() {
+        boolean condition = securePort != null;
+        if (condition) logger.info("Starting HTTPS proxy port [" + securePort + "]");
+        return createBootstrap(condition, new ChannelInitializer<SocketChannel>() {
             @Override
             protected void initChannel(SocketChannel ch) throws Exception {
                 // Create a default pipeline implementation.
                 ChannelPipeline pipeline = ch.pipeline();
 
                 // add HTTPS support
-                SSLEngine engine = SSLFactory.sslContext().createSSLEngine();
+                SSLEngine engine = SSLFactory.getInstance().sslContext().createSSLEngine();
                 engine.setUseClientMode(false);
                 pipeline.addLast(SslHandler.class.getSimpleName(), new SslHandler(engine));
 
@@ -203,8 +197,10 @@ public class HttpProxy {
         }, securePort, true);
     }
 
-    private ChannelFuture createSOCKSChannel(Integer socksPort, final Integer port) throws ExecutionException, InterruptedException {
-        return createBootstrap(socksPort != null && port != null, new ChannelInitializer<SocketChannel>() {
+    private ChannelFuture createSOCKSChannel(final Integer socksPort, final Integer port) throws ExecutionException, InterruptedException {
+        boolean condition = socksPort != null && port != null;
+        if (condition) logger.info("Starting SOCKS proxy port [" + socksPort + "]");
+        return createBootstrap(condition, new ChannelInitializer<SocketChannel>() {
             @Override
             protected void initChannel(SocketChannel ch) throws Exception {
                 // Create a default pipeline implementation.
@@ -220,8 +216,10 @@ public class HttpProxy {
         }, socksPort, true);
     }
 
-    private ChannelFuture createDirectChannel(Integer directLocalPort, final String directRemoteHost, final Integer directRemotePort) throws ExecutionException, InterruptedException {
-        return createBootstrap(directLocalPort != null && directRemoteHost != null && directRemotePort != null, new ChannelInitializer<SocketChannel>() {
+    private ChannelFuture createDirectChannel(final Integer directLocalPort, final String directRemoteHost, final Integer directRemotePort) throws ExecutionException, InterruptedException {
+        boolean condition = directLocalPort != null && directRemoteHost != null && directRemotePort != null;
+        if (condition) logger.info("Starting Direct proxy from port [" + directLocalPort + "] to host [" + directRemoteHost + ":" + directRemotePort + "]");
+        return createBootstrap(condition, new ChannelInitializer<SocketChannel>() {
             @Override
             protected void initChannel(SocketChannel ch) throws Exception {
                 // Create a default pipeline implementation.
@@ -234,15 +232,17 @@ public class HttpProxy {
         }, directLocalPort, false);
     }
 
-    private ChannelFuture createDirectSecureChannel(Integer directLocalSecurePort, final String directRemoteHost, final Integer directRemotePort) throws ExecutionException, InterruptedException {
-        return createBootstrap(directLocalSecurePort != null && directRemoteHost != null && directRemotePort != null, new ChannelInitializer<SocketChannel>() {
+    private ChannelFuture createDirectSecureChannel(final Integer directLocalSecurePort, final String directRemoteHost, final Integer directRemotePort) throws ExecutionException, InterruptedException {
+        boolean condition = directLocalSecurePort != null && directRemoteHost != null && directRemotePort != null;
+        if (condition) logger.info("Starting Direct SSL proxy from port [" + directLocalSecurePort + "] to host [" + directRemoteHost + ":" + directRemotePort + "]");
+        return createBootstrap(condition, new ChannelInitializer<SocketChannel>() {
             @Override
             protected void initChannel(SocketChannel ch) throws Exception {
                 // Create a default pipeline implementation.
                 ChannelPipeline pipeline = ch.pipeline();
 
                 // add HTTPS client -> proxy support
-                SSLEngine engine = SSLFactory.sslContext().createSSLEngine();
+                SSLEngine engine = SSLFactory.getInstance().sslContext().createSSLEngine();
                 engine.setUseClientMode(false);
                 pipeline.addLast("ssl inbound", new SslHandler(engine));
 

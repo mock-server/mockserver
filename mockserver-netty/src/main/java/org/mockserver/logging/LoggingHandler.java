@@ -204,11 +204,9 @@ public class LoggingHandler extends ChannelDuplexHandler {
 
         final int startIndex = buf.readerIndex();
         final int endIndex = buf.writerIndex();
-//        final int ninetyPercent = (endIndex > 0 ? (endIndex - startIndex)/90 : 0);
 
         int i;
         for (i = startIndex; i < endIndex; i++) {
-//        for (i = startIndex + ninetyPercent; i < endIndex; i++) {
             int relIdx = i - startIndex;
             int relIdxMod16 = relIdx & 15;
             if (relIdxMod16 == 0) {

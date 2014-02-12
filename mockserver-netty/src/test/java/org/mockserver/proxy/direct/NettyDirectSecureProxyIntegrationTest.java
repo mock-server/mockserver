@@ -1,6 +1,7 @@
 package org.mockserver.proxy.direct;
 
 import org.apache.commons.io.Charsets;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -15,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.OutputStream;
 import java.net.Socket;
+import java.security.Security;
 
 import static org.mockserver.test.Assert.assertContains;
 
@@ -22,6 +24,10 @@ import static org.mockserver.test.Assert.assertContains;
  * @author jamesdbloom
  */
 public class NettyDirectSecureProxyIntegrationTest {
+
+    static {
+        Security.addProvider(new BouncyCastleProvider());
+    }
 
     private final static Logger logger = LoggerFactory.getLogger(NettyDirectSecureProxyIntegrationTest.class);
 
@@ -59,7 +65,7 @@ public class NettyDirectSecureProxyIntegrationTest {
     public void shouldForwardRequestsUsingSocketDirectlyHeadersOnly() throws Exception {
         Socket socket = null;
         try {
-            socket = SSLFactory.wrapSocket(new Socket("localhost", PROXY_DIRECT_SECURE_PORT));
+            socket = SSLFactory.getInstance().wrapSocket(new Socket("localhost", PROXY_DIRECT_SECURE_PORT));
 
             // given
             OutputStream output = socket.getOutputStream();
@@ -87,7 +93,7 @@ public class NettyDirectSecureProxyIntegrationTest {
         Socket socket = null;
         try {
 
-            socket = SSLFactory.wrapSocket(new Socket("localhost", PROXY_DIRECT_SECURE_PORT));
+            socket = SSLFactory.getInstance().wrapSocket(new Socket("localhost", PROXY_DIRECT_SECURE_PORT));
 
             // given
             OutputStream output = socket.getOutputStream();
@@ -116,7 +122,7 @@ public class NettyDirectSecureProxyIntegrationTest {
         Socket socket = null;
         try {
 
-            socket = SSLFactory.wrapSocket(new Socket("localhost", PROXY_DIRECT_SECURE_PORT));
+            socket = SSLFactory.getInstance().wrapSocket(new Socket("localhost", PROXY_DIRECT_SECURE_PORT));
 
             // given
             OutputStream output = socket.getOutputStream();

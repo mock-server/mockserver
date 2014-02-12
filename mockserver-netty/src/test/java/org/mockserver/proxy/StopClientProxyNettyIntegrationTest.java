@@ -19,7 +19,7 @@ public class StopClientProxyNettyIntegrationTest {
     private final static int serverSecurePort = PortFactory.findFreePort();
 
     @Test
-    public void clientCanClearServerExpectations() {
+    public void canStartAndStopMultipleTimes() {
         // start server
         HttpProxy httpProxy = new HttpProxyBuilder().withHTTPPort(serverPort).withHTTPSPort(serverSecurePort).build();
 

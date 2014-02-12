@@ -51,7 +51,7 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
 
                                             // downstream
                                             if (secure) {
-                                                SSLEngine clientEngine = SSLFactory.sslContext().createSSLEngine();
+                                                SSLEngine clientEngine = SSLFactory.getInstance().sslContext().createSSLEngine();
                                                 clientEngine.setUseClientMode(true);
                                                 outboundChannel.pipeline().addLast("outbound relay ssl", new SslHandler(clientEngine));
                                             }
@@ -64,7 +64,7 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
 
                                             // upstream
                                             if (secure) {
-                                                SSLEngine serverEngine = SSLFactory.sslContext().createSSLEngine();
+                                                SSLEngine serverEngine = SSLFactory.getInstance().sslContext().createSSLEngine();
                                                 serverEngine.setUseClientMode(false);
                                                 ctx.channel().pipeline().addLast("upstream relay ssl", new SslHandler(serverEngine));
                                             }

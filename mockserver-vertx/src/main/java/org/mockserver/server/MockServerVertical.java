@@ -147,7 +147,7 @@ public class MockServerVertical extends Verticle {
         }
         if (securePort != -1) {
             startedMessage += " secure port " + securePort;
-            SSLFactory.buildKeyStore();
+            SSLFactory.getInstance().buildKeyStore();
             vertx.createHttpServer().requestHandler(requestHandler).setSSL(true).setKeyStorePath(SSLFactory.KEY_STORE_FILENAME).setKeyStorePassword(SSLFactory.KEY_STORE_PASSWORD).listen(securePort, "localhost");
         }
 

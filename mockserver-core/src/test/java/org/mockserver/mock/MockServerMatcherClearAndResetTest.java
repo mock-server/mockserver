@@ -79,7 +79,7 @@ public class MockServerMatcherClearAndResetTest {
     }
 
     @Test
-    public void shouldClearOnlyMatchingExpectations() {
+    public void shouldClearMatchingExpectationsByPath() {
         // given
         HttpResponse httpResponse = new HttpResponse().withBody("somebody");
         mockServerMatcher.when(new HttpRequest().withPath("abc"), Times.unlimited()).thenRespond(httpResponse);
@@ -87,6 +87,21 @@ public class MockServerMatcherClearAndResetTest {
 
         // when
         mockServerMatcher.clear(new HttpRequest().withPath("abc"));
+
+        // then
+        assertArrayEquals(new Expectation[]{expectation}, mockServerMatcher.expectations.toArray());
+    }
+
+    @Test
+    public void shouldClearMatchingExpectationsByMethod() {
+        // given
+        HttpResponse httpResponse = new HttpResponse().withBody("somebody");
+        mockServerMatcher.when(new HttpRequest().withMethod("GET").withPath("abc"), Times.unlimited()).thenRespond(httpResponse);
+        mockServerMatcher.when(new HttpRequest().withMethod("GET").withPath("def"), Times.unlimited()).thenRespond(httpResponse);
+        Expectation expectation = mockServerMatcher.when(new HttpRequest().withMethod("POST").withPath("def"), Times.unlimited()).thenRespond(httpResponse);
+
+        // when
+        mockServerMatcher.clear(new HttpRequest().withMethod("GET"));
 
         // then
         assertArrayEquals(new Expectation[]{expectation}, mockServerMatcher.expectations.toArray());

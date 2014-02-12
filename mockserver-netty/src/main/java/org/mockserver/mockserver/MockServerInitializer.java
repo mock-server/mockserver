@@ -36,7 +36,7 @@ public class MockServerInitializer extends ChannelInitializer<SocketChannel> {
 
         // add HTTPS support
         if (secure) {
-            SSLEngine engine = SSLFactory.sslContext().createSSLEngine();
+            SSLEngine engine = SSLFactory.getInstance().sslContext().createSSLEngine();
             engine.setUseClientMode(false);
             pipeline.addLast("ssl", new SslHandler(engine));
         }

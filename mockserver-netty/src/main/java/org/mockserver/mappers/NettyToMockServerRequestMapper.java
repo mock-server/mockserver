@@ -36,7 +36,7 @@ public class NettyToMockServerRequestMapper {
 
     private void setUrl(HttpRequest httpRequest, NettyHttpRequest mockServerHttpRequest) {
         String hostAndPort = mockServerHttpRequest.headers().get(HttpHeaders.Names.HOST);
-        httpRequest.withURL("http" + (mockServerHttpRequest.isSecure() ? "s" : "") + "://" + hostAndPort + mockServerHttpRequest.getUri());
+        httpRequest.withURL("http" + (mockServerHttpRequest.isSecure() ? "s" : "") + "://" + (hostAndPort != null ? hostAndPort : "localhost") + mockServerHttpRequest.getUri());
     }
 
     private void setPath(HttpRequest httpRequest, NettyHttpRequest mockServerHttpRequest) {
@@ -63,10 +63,12 @@ public class NettyToMockServerRequestMapper {
     private void setCookies(HttpRequest httpRequest, NettyHttpRequest mockServerHttpRequest) {
         for (String cookieHeader : mockServerHttpRequest.headers().getAll(COOKIE)) {
             for (String cookie : Splitter.on(";").split(cookieHeader)) {
-                httpRequest.withCookie(new Cookie(
-                        StringUtils.substringBefore(cookie, "=").trim(),
-                        StringUtils.substringAfter(cookie, "=").trim()
-                ));
+                if (!cookie.trim().isEmpty()) {
+                    httpRequest.withCookie(new Cookie(
+                            StringUtils.substringBefore(cookie, "=").trim(),
+                            StringUtils.substringAfter(cookie, "=").trim()
+                    ));
+                }
             }
         }
     }

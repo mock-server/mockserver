@@ -35,7 +35,7 @@ public abstract class AbstractClientProxyIntegrationTest {
     protected HttpClient createHttpClient() throws Exception {
         HttpClientBuilder httpClientBuilder = HttpClients
                 .custom()
-                .setSslcontext(SSLFactory.sslContext())
+                .setSslcontext(SSLFactory.getInstance().sslContext())
                 .setHostnameVerifier(new AllowAllHostnameVerifier());
         if (Boolean.parseBoolean(System.getProperty("defaultProxySet"))) {
             httpClientBuilder.setRoutePlanner(new SystemDefaultRoutePlanner(ProxySelector.getDefault())).build();

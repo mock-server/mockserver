@@ -105,7 +105,7 @@ public class ProxyUnificationHandler extends ByteToMessageDecoder {
 
     private void enableSsl(ChannelHandlerContext ctx) {
         ChannelPipeline pipeline = ctx.pipeline();
-        SSLEngine engine = SSLFactory.sslContext().createSSLEngine();
+        SSLEngine engine = SSLFactory.getInstance().sslContext().createSSLEngine();
         engine.setUseClientMode(false);
         pipeline.addLast("ssl", new SslHandler(engine));
 

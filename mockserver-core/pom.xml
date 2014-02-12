@@ -27,6 +27,12 @@
             <artifactId>netty-all</artifactId>
         </dependency>
 
+        <!-- SSL X509 -->
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpkix-jdk15on</artifactId>
+        </dependency>
+
         <!-- json (object serialisation) -->
         <dependency>
             <groupId>org.codehaus.jackson</groupId>
@@ -45,6 +51,10 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>

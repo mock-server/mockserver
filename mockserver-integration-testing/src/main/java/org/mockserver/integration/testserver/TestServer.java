@@ -70,7 +70,7 @@ public class TestServer {
                                     ChannelPipeline pipeline = ch.pipeline();
 
                                     pipeline.addLast("raw logger", new LoggingHandler("RAW TEST_SERVER_SSL"));
-                                    SSLEngine engine = SSLFactory.sslContext().createSSLEngine();
+                                    SSLEngine engine = SSLFactory.getInstance().sslContext().createSSLEngine();
                                     engine.setUseClientMode(false);
                                     pipeline.addLast("ssl", new SslHandler(engine));
                                     pipeline.addLast("logger", new LoggingHandler("TEST_SERVER_SSL"));

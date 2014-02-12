@@ -13,10 +13,10 @@ public class SSLContextFactory {
     public static SslContextFactory createSSLContextFactory() {
         if (sslContextFactory == null) {
             sslContextFactory = new SslContextFactory();
-            sslContextFactory.setKeyStore(SSLFactory.buildKeyStore());
+            sslContextFactory.setKeyStore(SSLFactory.getInstance().buildKeyStore());
             sslContextFactory.setKeyStorePassword(SSLFactory.KEY_STORE_PASSWORD);
             sslContextFactory.checkKeyStore();
-            sslContextFactory.setTrustStore(SSLFactory.buildKeyStore());
+            sslContextFactory.setTrustStore(SSLFactory.getInstance().buildKeyStore());
         }
         return sslContextFactory;
     }

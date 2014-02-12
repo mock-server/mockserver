@@ -58,7 +58,7 @@ public class ApacheHttpClient {
                     .setSslcontext(
                             SSLContexts
                                     .custom()
-                                    .loadTrustMaterial(SSLFactory.buildKeyStore(), new TrustStrategy() {
+                                    .loadTrustMaterial(SSLFactory.getInstance().buildKeyStore(), new TrustStrategy() {
                                         public boolean isTrusted(X509Certificate[] chain, String authType) throws CertificateException {
                                             return true;
                                         }
