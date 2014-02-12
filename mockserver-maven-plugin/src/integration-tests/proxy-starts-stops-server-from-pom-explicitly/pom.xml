@@ -9,7 +9,7 @@
     <version>1.0-SNAPSHOT</version>
 
     <properties>
-        <mockserver.version>2.5-SNAPSHOT</mockserver.version>
+        <mockserver.version>2.7-SNAPSHOT</mockserver.version>
     </properties>
 
     <dependencies>
