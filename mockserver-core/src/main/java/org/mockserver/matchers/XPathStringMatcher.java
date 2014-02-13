@@ -3,7 +3,10 @@ package org.mockserver.matchers;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -32,7 +35,7 @@ public class XPathStringMatcher extends BodyMatcher implements Matcher<String> {
         }
     }
 
-    public boolean matches(String matched) {
+    public boolean matches(final String matched) {
         if (xpathExpression == null) {
             logger.warn("Attempting match against null XPath Expression for [" + matched + "]" + new RuntimeException("Attempting match against null XPath Expression for [" + matched + "]"));
         } else if (matched != null) {
@@ -40,7 +43,22 @@ public class XPathStringMatcher extends BodyMatcher implements Matcher<String> {
             try {
                 DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
                 DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
-                documentBuilder.setErrorHandler(null);
+                documentBuilder.setErrorHandler(new ErrorHandler() {
+                    @Override
+                    public void warning(SAXParseException exception) throws SAXException {
+                        logger.warn("SAXParseException while performing match between [" + matcher + "] and [" + matched + "]", exception);
+                    }
+
+                    @Override
+                    public void error(SAXParseException exception) throws SAXException {
+                        logger.warn("SAXParseException while performing match between [" + matcher + "] and [" + matched + "]", exception);
+                    }
+
+                    @Override
+                    public void fatalError(SAXParseException exception) throws SAXException {
+                        logger.warn("SAXParseException while performing match between [" + matcher + "] and [" + matched + "]", exception);
+                    }
+                });
                 return (Boolean) xpathExpression.evaluate(documentBuilder.parse(new InputSource(new StringReader(matched))), XPathConstants.BOOLEAN);
             } catch (Exception e) {
                 logger.trace("Error while matching xpath [" + matcher + "] against string [" + matched + "] assuming no match - " + e.getMessage());
