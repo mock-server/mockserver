@@ -1,5 +1,7 @@
 package org.mockserver.proxy.http;
 
+import com.google.common.annotations.VisibleForTesting;
+
 /**
  * This class should be used to configure the HttpProxy, using this class is the simplest way to create an HttpProxy instance
  *
@@ -99,7 +101,7 @@ public class HttpProxyBuilder {
      * Build an instance of the HttpProxy
      */
     public HttpProxy build() {
-        HttpProxy httpProxy = new HttpProxy();
+        HttpProxy httpProxy = newHttpProxy();
         httpProxy.start(
                 port,
                 securePort,
@@ -116,7 +118,7 @@ public class HttpProxyBuilder {
      * Build an instance of the HttpProxy
      */
     public Thread buildAndReturnThread() {
-        return new HttpProxy()
+        return newHttpProxy()
                 .start(
                         port,
                         securePort,
@@ -126,5 +128,10 @@ public class HttpProxyBuilder {
                         directRemoteHost,
                         directRemotePort
                 );
+    }
+
+    @VisibleForTesting
+    HttpProxy newHttpProxy() {
+        return new HttpProxy();
     }
 }

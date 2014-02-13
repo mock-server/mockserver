@@ -15,6 +15,8 @@ import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.NettyHttpRequest;
 import org.mockserver.proxy.filters.LogFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONNECTION;
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH;
@@ -22,6 +24,7 @@ import static io.netty.handler.codec.http.HttpHeaders.isKeepAlive;
 
 public class MockServerHandler extends SimpleChannelInboundHandler<Object> {
 
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     // mockserver
     private final MockServerMatcher mockServerMatcher;
     private final LogFilter logFilter;
@@ -149,7 +152,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<Object> {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        cause.printStackTrace();
+        logger.warn("Exception caught by MockServer handler closing pipeline", cause);
         ctx.close();
     }
 }

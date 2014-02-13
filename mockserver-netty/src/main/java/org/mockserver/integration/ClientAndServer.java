@@ -8,16 +8,16 @@ import org.mockserver.mockserver.MockServer;
  */
 public class ClientAndServer extends MockServerClient {
 
-    private MockServer mockServer;
+    private MockServer mockServer = new MockServer();
 
     public ClientAndServer(Integer port) {
         super("localhost", port);
-        mockServer = new MockServer(port, null);
+        mockServer.start(port, null);
     }
 
     public ClientAndServer(Integer port, Integer securePort) {
         super("localhost", port);
-        mockServer = new MockServer(port, securePort);
+        mockServer.start(port, securePort);
     }
 
     public static ClientAndServer startClientAndServer(Integer port) {

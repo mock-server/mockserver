@@ -103,7 +103,7 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        failure("Exception caught", cause, ctx, failureResponse(null));
+        failure("Exception caught by http proxy CONNECT handler closing pipeline", cause, ctx, failureResponse(null));
     }
 
     private void failure(String message, Throwable cause, ChannelHandlerContext ctx, Object response) {

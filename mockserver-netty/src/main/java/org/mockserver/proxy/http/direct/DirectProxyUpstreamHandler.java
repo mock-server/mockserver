@@ -239,7 +239,7 @@ public class DirectProxyUpstreamHandler extends ChannelDuplexHandler {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        cause.printStackTrace();
+        logger.warn("Exception caught by http direct proxy handler closing pipeline", cause);
         Channel ch = ctx.channel();
         if (ch.isActive()) {
             ch.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);

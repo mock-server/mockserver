@@ -3,6 +3,7 @@ package org.mockserver.mock;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.matchers.Times;
+import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
@@ -79,7 +80,7 @@ public class MockServerMatcherClearAndResetTest {
     }
 
     @Test
-    public void shouldClearMatchingExpectationsByPath() {
+    public void shouldClearMatchingExpectationsByPathOnly() {
         // given
         HttpResponse httpResponse = new HttpResponse().withBody("somebody");
         mockServerMatcher.when(new HttpRequest().withPath("abc"), Times.unlimited()).thenRespond(httpResponse);
@@ -93,7 +94,7 @@ public class MockServerMatcherClearAndResetTest {
     }
 
     @Test
-    public void shouldClearMatchingExpectationsByMethod() {
+    public void shouldClearMatchingExpectationsByMethodOnly() {
         // given
         HttpResponse httpResponse = new HttpResponse().withBody("somebody");
         mockServerMatcher.when(new HttpRequest().withMethod("GET").withPath("abc"), Times.unlimited()).thenRespond(httpResponse);
@@ -102,6 +103,21 @@ public class MockServerMatcherClearAndResetTest {
 
         // when
         mockServerMatcher.clear(new HttpRequest().withMethod("GET"));
+
+        // then
+        assertArrayEquals(new Expectation[]{expectation}, mockServerMatcher.expectations.toArray());
+    }
+
+    @Test
+    public void shouldClearMatchingExpectationsByHeaderOnly() {
+        // given
+        HttpResponse httpResponse = new HttpResponse().withBody("somebody");
+        mockServerMatcher.when(new HttpRequest().withMethod("GET").withPath("abc").withHeader(new Header("headerOneName", "headerOneValue")), Times.unlimited()).thenRespond(httpResponse);
+        mockServerMatcher.when(new HttpRequest().withMethod("PUT").withPath("def").withHeaders(new Header("headerOneName", "headerOneValue")), Times.unlimited()).thenRespond(httpResponse);
+        Expectation expectation = mockServerMatcher.when(new HttpRequest().withMethod("POST").withPath("def"), Times.unlimited()).thenRespond(httpResponse);
+
+        // when
+        mockServerMatcher.clear(new HttpRequest().withHeader(new Header("headerOneName", "headerOneValue")));
 
         // then
         assertArrayEquals(new Expectation[]{expectation}, mockServerMatcher.expectations.toArray());

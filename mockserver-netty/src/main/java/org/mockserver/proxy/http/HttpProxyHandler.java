@@ -241,7 +241,7 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<Object> {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        cause.printStackTrace();
+        logger.warn("Exception caught by http proxy handler closing pipeline", cause);
         ctx.close();
     }
 }

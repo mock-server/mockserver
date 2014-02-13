@@ -1,6 +1,6 @@
 package org.mockserver.mockserver;
 
-import org.mockserver.proxy.http.HttpProxy;
+import com.google.common.annotations.VisibleForTesting;
 
 /**
  * @author jamesdbloom
@@ -43,6 +43,24 @@ public class MockServerBuilder {
      * Build an instance of the HttpProxy
      */
     public MockServer build() {
-        return new MockServer(port, securePort);
+        MockServer mockServer = newMockServer();
+        mockServer.start(port, securePort);
+        return mockServer;
+    }
+
+    /**
+     * Build an instance of the HttpProxy
+     */
+    public Thread buildAndReturnThread() {
+        return newMockServer()
+                .start(
+                        port,
+                        securePort
+                );
+    }
+
+    @VisibleForTesting
+    MockServer newMockServer() {
+        return new MockServer();
     }
 }

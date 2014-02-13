@@ -26,8 +26,8 @@ public class MockServer {
     private final LogFilter logFilter = new LogFilter();
     private SettableFuture<String> hasStarted;
     // netty
-    private EventLoopGroup bossGroup = new NioEventLoopGroup();
-    private EventLoopGroup workerGroup = new NioEventLoopGroup();
+    private EventLoopGroup bossGroup;
+    private EventLoopGroup workerGroup;
 
     /**
      * Start the instance using the ports provided
@@ -35,12 +35,14 @@ public class MockServer {
      * @param port the http port to use
      * @param securePort the secure https port to use
      */
-    public MockServer(final Integer port, final Integer securePort) {
+    public Thread start(final Integer port, final Integer securePort) {
         if (port == null && securePort == null) throw new IllegalStateException("You must specify a port or a secure port");
 
         hasStarted = SettableFuture.create();
+        bossGroup = new NioEventLoopGroup();
+        workerGroup = new NioEventLoopGroup();
 
-        new Thread(new Runnable() {
+        Thread mockServerThread = new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -86,7 +88,8 @@ public class MockServer {
                     workerGroup.shutdownGracefully();
                 }
             }
-        }).start();
+        });
+        mockServerThread.start();
 
         try {
             // wait for proxy to start all channels
@@ -94,6 +97,8 @@ public class MockServer {
         } catch (Exception e) {
             logger.debug("Exception while waiting for proxy to complete starting up", e);
         }
+
+        return mockServerThread;
     }
 
     public void stop() {

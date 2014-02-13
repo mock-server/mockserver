@@ -18,12 +18,14 @@ public class MockServerStartMojo extends MockServerAbstractMojo {
         if (skip) {
             getLog().info("Skipping plugin execution");
         } else {
-            getLog().info("Starting MockServer on"
-                    + (serverPort != -1 ? " serverPort " + serverPort : "")
-                    + (serverSecurePort != -1 ? " serverSecurePort " + serverSecurePort : "")
-                    + (proxyPort != -1 ? " proxyPort " + proxyPort : "")
-                    + (proxySecurePort != -1 ? " proxySecurePort " + proxySecurePort : "")
-            );
+            if (getLog().isInfoEnabled()) {
+                getLog().info("Starting MockServer on"
+                        + (serverPort != -1 ? " serverPort " + serverPort : "")
+                        + (serverSecurePort != -1 ? " serverSecurePort " + serverSecurePort : "")
+                        + (proxyPort != -1 ? " proxyPort " + proxyPort : "")
+                        + (proxySecurePort != -1 ? " proxySecurePort " + proxySecurePort : "")
+                );
+            }
             getEmbeddedJettyHolder().start(serverPort, serverSecurePort, proxyPort, proxySecurePort);
         }
 

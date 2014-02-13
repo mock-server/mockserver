@@ -57,12 +57,14 @@ public class MockServerRunForkedMojo extends MockServerAbstractMojo {
         if (skip) {
             getLog().info("Skipping plugin execution");
         } else {
-            getLog().info("Starting MockServer on"
-                    + (serverPort != -1 ? " serverPort " + serverPort : "")
-                    + (serverSecurePort != -1 ? " serverSecurePort " + serverSecurePort : "")
-                    + (proxyPort != -1 ? " proxyPort " + proxyPort : "")
-                    + (proxySecurePort != -1 ? " proxySecurePort " + proxySecurePort : "")
-            );
+            if (getLog().isInfoEnabled()) {
+                getLog().info("Starting MockServer on"
+                        + (serverPort != -1 ? " serverPort " + serverPort : "")
+                        + (serverSecurePort != -1 ? " serverSecurePort " + serverSecurePort : "")
+                        + (proxyPort != -1 ? " proxyPort " + proxyPort : "")
+                        + (proxySecurePort != -1 ? " proxySecurePort " + proxySecurePort : "")
+                );
+            }
             List<String> arguments = new ArrayList<String>(Arrays.asList(getJavaBin()));
             arguments.add("-Dfile.encoding=UTF-8");
             arguments.add("-Dmockserver.logLevel=" + logLevel);

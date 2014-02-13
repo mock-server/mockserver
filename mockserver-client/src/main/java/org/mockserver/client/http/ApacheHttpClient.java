@@ -52,7 +52,7 @@ public class ApacheHttpClient {
 
     public ApacheHttpClient() {
         try {
-
+//            System.getProperty("http.keepAlive", "false");
             HttpClientBuilder httpClientBuilder = HttpClients
                     .custom()
                     .setSslcontext(

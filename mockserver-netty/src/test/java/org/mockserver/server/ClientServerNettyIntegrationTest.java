@@ -14,12 +14,12 @@ public class ClientServerNettyIntegrationTest extends AbstractClientServerIntegr
 
     private final static int serverPort = PortFactory.findFreePort();
     private final static int serverSecurePort = PortFactory.findFreePort();
-    private static MockServer mockServer;
+    private static MockServer mockServer = new MockServer();
 
     @BeforeClass
     public static void startServer() throws Exception {
         // start server
-        mockServer = new MockServer(serverPort, serverSecurePort);
+        mockServer.start(serverPort, serverSecurePort);
 
         // start client
         mockServerClient = new MockServerClient("localhost", serverPort, servletContext);

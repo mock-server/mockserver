@@ -36,7 +36,7 @@ public class ClientAndServerIntegrationTest extends AbstractClientServerIntegrat
     @AfterClass
     public static void stopServer() {
         if (mockServerClient instanceof ClientAndServer) {
-            ((ClientAndServer) mockServerClient).stop();
+            mockServerClient.stop();
         }
     }
 }

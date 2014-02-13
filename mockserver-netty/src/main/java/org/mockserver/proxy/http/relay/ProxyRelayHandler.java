@@ -193,7 +193,7 @@ public class ProxyRelayHandler extends ChannelDuplexHandler {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        logger.warn("Exception caught", cause);
+        logger.warn("Exception caught by http proxy relay handler closing pipeline", cause);
         Channel ch = ctx.channel();
         if (ch.isActive()) {
             ch.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);

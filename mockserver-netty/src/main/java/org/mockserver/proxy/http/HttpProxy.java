@@ -307,6 +307,8 @@ public class HttpProxy {
             proxyStopping();
             workerGroup.shutdownGracefully(2, 15, TimeUnit.SECONDS);
             bossGroup.shutdownGracefully(2, 15, TimeUnit.SECONDS);
+            // wait for shutdown
+            TimeUnit.SECONDS.sleep(3);
         } catch (Exception ie) {
             logger.trace("Exception while waiting for MockServer to stop", ie);
         }
@@ -317,7 +319,7 @@ public class HttpProxy {
             try {
                 TimeUnit.SECONDS.sleep(3);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                logger.trace("Exception while waiting for MockServer to confirm running status", e);
             }
             return !bossGroup.isShuttingDown() && !workerGroup.isShuttingDown();
         } else {
