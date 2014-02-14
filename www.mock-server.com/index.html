@@ -1434,7 +1434,7 @@ cd mockserver</code></pre>
 <p><strong>JavaScript</strong></p>
 
 <pre><code class="code"><span class="keyword">var</span> xmlHttpRequest = <span class="keyword">new</span> XMLHttpRequest();
-xmlHttpRequest.open(<span class="string_literal">"PUT"</span>, <span class="string_literal">"http://localhost:8080"</span>, <span class="keyword">false</span>);
+xmlHttpRequest.open(<span class="string_literal">"PUT"</span>, <span class="string_literal">"http://localhost:8080/expectation"</span>, <span class="keyword">false</span>);
 xmlHttpRequest.setRequestHeader(<span class="string_literal">"Content-Type"</span>, <span class="string_literal">"application/json; charset=utf-8"</span>);
 xmlHttpRequest.send(JSON.stringify({
     <span class="string_literal">"httpRequest"</span>: {
