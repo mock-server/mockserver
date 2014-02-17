@@ -7,21 +7,19 @@
 # Pull base image
 FROM dockerfile/java
 
-# Attach volumes
-RUN mkdir -p /opt/mockserver
-VOLUME /opt/mockserver
+# Maintainer details
+MAINTAINER James Bloom "jamesdbloom@gmail.com"
 
 # Set working directory
+RUN mkdir -p /opt/mockserver
 WORKDIR /opt/mockserver
 
 # Download MockServer
-RUN wget http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/2.6/mockserver-netty-2.6-jar-with-dependencies.jar
-RUN wget https://github.com/jamesdbloom/mockserver/blob/master/run_mockserver.sh
+RUN (cd /opt/mockserver && wget -O mockserver-netty-2.6-jar-with-dependencies.jar http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/2.6/mockserver-netty-2.6-jar-with-dependencies.jar)
+RUN (cd /opt/mockserver && wget https://raw.github.com/jamesdbloom/mockserver/master/docker/run_mockserver.sh && chmod +x /opt/mockserver/run_mockserver.sh)
 
 # Expose ports.
 EXPOSE 8080 8090 9080 9090
 
 # Define default command.
-CMD ["run_mockserver", "-serverPort", "8080", "-serverSecurePort", "8090", "-proxyPort", "9080", "-proxySecurePort", "9090"]
-
-
+CMD ["/opt/mockserver/run_mockserver.sh", "-serverPort", "8080", "-serverSecurePort", "8090", "-proxyPort", "9080", "-proxySecurePort", "9090"]
