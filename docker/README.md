@@ -11,8 +11,6 @@
 
 2. Download [trusted build](https://index.docker.io/u/jamesdbloom/mockserver/) from public [Docker Registry](https://index.docker.io/): `docker pull jamesdbloom/mockserver`
 
-   ( or build image directly from Dockerfile: `docker build -t="jamesdbloom/mockserver" http://raw.github.com/jamesdbloom/mockserver/master/docker/Dockerfile` )
-
 ### Usage
 
     docker run -d jamesdbloom/mockserver
