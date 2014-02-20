@@ -23,21 +23,9 @@ MockServer is for mocking of any system you integrate with via HTTP or HTTPS (i.
 
 MockServer supports:
 
-* mocking of any HTTP / HTTPS response when any request is matched (<a href="#mocking">see more below</a>)
-* recording requests and responses to analyse how a system behaves (<a href="#proxying">see more below</a>)
-* verifying which requests and responses have been sent as part of a test (<a href="#proxying">see more below</a>)
-
-MockServer also provides an HTTP / HTTPS proxy that can be used to record requests / responses.
-
-Once requests / responses have been recorded:
-
-* They can be queried pragmatically to confirm what requests have been sent and what responses have been received.
- * This supports test assertions that confirm what requests the system-under-test has been sending during a test.
-* They can be output in JSON format to log what request the system under has sent and what responses it received.
- * This is useful for analysing an existing system prior to writing automated tests.
- * This is also useful to simplify the creation of test setup code as the JSON output is in the MockServer expectation format.
-* They can be output in human readable Java code format that can be pasted directly into a test setup method.
- * This is useful to simplify the creation of expectations in test setup methods as the code can be easily pasted directly into a test setup method and then modified as appropriate for the needs of the test scenario.
+* mocking of any HTTP / HTTPS response when any request is matched ([learn more](http://www.mock-server.com/#mocking))
+* recording requests and responses to analyse how a system behaves ([learn more](http://www.mock-server.com/#proxying))
+* verifying which requests and responses have been sent as part of a test ([learn more](http://www.mock-server.com/#proxying))
 
 This docker container will run an instance of the MockServer on the following ports:
 
