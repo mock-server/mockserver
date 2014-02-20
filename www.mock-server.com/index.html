@@ -897,6 +897,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
         &lt;<span class="element">proxyPort</span>&gt;<span class="element_value">1090</span>&lt;/<span class="element">proxyPort</span>&gt;
         &lt;<span class="element">proxySecurePort</span>&gt;<span class="element_value">1092</span>&lt;/<span class="element">proxySecurePort</span>&gt;
         &lt;<span class="element">logLevel</span>&gt;<span class="element_value">DEBUG</span>&lt;/<span class="element">logLevel</span>&gt;
+        &lt;<span class="element">initializationClass</span>&gt;<span class="element_value">org.mockserver.maven.ExampleInitializationClass</span>&lt;/<span class="element">initializationClass</span>&gt;
     &lt;/<span class="element">configuration</span>&gt;
     &lt;<span class="element">executions</span>&gt;
         &lt;<span class="element">execution</span>&gt;
@@ -935,6 +936,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
         &lt;<span class="element">proxyPort</span>&gt;<span class="element_value">1090</span>&lt;/<span class="element">proxyPort</span>&gt;
         &lt;<span class="element">proxySecurePort</span>&gt;<span class="element_value">1092</span>&lt;/<span class="element">proxySecurePort</span>&gt;
         &lt;<span class="element">logLevel</span>&gt;<span class="element_value">DEBUG</span>&lt;/<span class="element">logLevel</span>&gt;
+        &lt;<span class="element">initializationClass</span>&gt;<span class="element_value">org.mockserver.maven.ExampleInitializationClass</span>&lt;/<span class="element">initializationClass</span>&gt;
      &lt;/<span class="element">configuration</span>&gt;
      &lt;<span class="element">executions</span>&gt;
          &lt;<span class="element">execution</span>&gt;
@@ -1017,6 +1019,9 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 	</li>
 	<li>
 		<strong>skip</strong> - Prevent the plugin from running (required: false, default: false)
+	</li>
+	<li>
+		<strong>initializationClass</strong> - To enable the creation of default expectations that are generic across all tests or mocking scenarios a class can be specified to initialize expectations in the MockServer, this class must implement <span class="annotation">org.mockserver.initialize.ExpectationInitializer</span> interface, the <span class="annotation">initializeExpectations(MockServerClient mockServerClient)</span> method will be called once the MockServer has been started (but ONLY if <strong>serverPort</strong> has been set), however it should be noted that it is generally better practice to create all expectations locally in each test (or test class) for clarity, simplicity and to avoid brittle tests (required: false, default: false)
 	</li>
 </ul>
 

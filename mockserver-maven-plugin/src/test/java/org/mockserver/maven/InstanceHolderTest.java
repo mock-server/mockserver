@@ -1,5 +1,6 @@
 package org.mockserver.maven;
 
+import org.apache.maven.plugin.MojoExecutionException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -12,6 +13,7 @@ import org.mockserver.mockserver.MockServerBuilder;
 import org.mockserver.proxy.http.HttpProxy;
 import org.mockserver.proxy.http.HttpProxyBuilder;
 
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
@@ -66,7 +68,7 @@ public class InstanceHolderTest {
     @Test
     public void shouldStartServerAndProxyOnBothPorts() {
         // when
-        instanceHolder.start(1, 2, 3, 4);
+        instanceHolder.start(1, 2, 3, 4, null);
 
         // then
         verify(mockMockServerBuilder).withHTTPPort(1);
@@ -78,7 +80,7 @@ public class InstanceHolderTest {
     @Test
     public void shouldStartOnlyServerOnBothPorts() {
         // when
-        instanceHolder.start(1, 2, -1, -1);
+        instanceHolder.start(1, 2, -1, -1, null);
 
         // then
         verify(mockMockServerBuilder).withHTTPPort(1);
@@ -87,24 +89,66 @@ public class InstanceHolderTest {
     }
 
     @Test
+    public void shouldStartOnlyServerOnHttpPort() {
+        // when
+        ExampleInitializationClass.mockServerClient = null;
+        instanceHolder.start(1, -1, -1, -1, new ExampleInitializationClass());
+
+        // then
+        verify(mockMockServerBuilder).withHTTPPort(1);
+        verify(mockMockServerBuilder).withHTTPSPort(-1);
+        verifyNoMoreInteractions(mockProxyBuilder);
+        assertNotNull(ExampleInitializationClass.mockServerClient);
+    }
+
+    @Test
+    public void shouldStartOnlyServerOnHttpsPort() {
+        // when
+        ExampleInitializationClass.mockServerClient = null;
+        instanceHolder.start(-1, 1, -1, -1, new ExampleInitializationClass());
+
+        // then
+        verify(mockMockServerBuilder).withHTTPPort(-1);
+        verify(mockMockServerBuilder).withHTTPSPort(1);
+        verifyNoMoreInteractions(mockProxyBuilder);
+        assertNull(ExampleInitializationClass.mockServerClient);
+    }
+
+    @Test
     public void shouldStartOnlyProxyOnBothPorts() {
         // when
-        instanceHolder.start(-1, -1, 3, 4);
+        ExampleInitializationClass.mockServerClient = null;
+        instanceHolder.start(-1, -1, 3, 4, new ExampleInitializationClass());
 
         // then
         verifyNoMoreInteractions(mockMockServerBuilder);
         verify(mockProxyBuilder).withHTTPPort(3);
         verify(mockProxyBuilder).withHTTPSPort(4);
+        assertNull(ExampleInitializationClass.mockServerClient);
+    }
+
+    @Test
+    public void shouldRunInitializationClass() {
+        // given
+        ExampleInitializationClass.mockServerClient = null;
+
+        // when
+        instanceHolder.start(1, 2, -1, -1, new ExampleInitializationClass());
+
+        // then
+        assertNotNull(ExampleInitializationClass.mockServerClient);
     }
 
     @Test
     public void shouldNotStartServerOrProxy() {
         // when
-        instanceHolder.start(-1, -1, -1, -1);
+        ExampleInitializationClass.mockServerClient = null;
+        instanceHolder.start(-1, -1, -1, -1, new ExampleInitializationClass());
 
         // then
         verifyNoMoreInteractions(mockMockServerBuilder);
         verifyNoMoreInteractions(mockProxyBuilder);
+        assertNull(ExampleInitializationClass.mockServerClient);
     }
 
     @Test(expected = IllegalStateException.class)
@@ -113,7 +157,7 @@ public class InstanceHolderTest {
         when(mockMockServer.isRunning()).thenReturn(true);
 
         // when
-        instanceHolder.start(1, 2, 3, 4);
+        instanceHolder.start(1, 2, 3, 4, null);
     }
 
     @Test(expected = IllegalStateException.class)
@@ -122,7 +166,7 @@ public class InstanceHolderTest {
         when(mockProxy.isRunning()).thenReturn(true);
 
         // when
-        instanceHolder.start(1, 2, 3, 4);
+        instanceHolder.start(1, 2, 3, 4, null);
     }
 
     @Test
