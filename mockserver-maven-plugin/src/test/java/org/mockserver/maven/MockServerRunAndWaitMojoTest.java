@@ -12,6 +12,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -45,12 +46,13 @@ public class MockServerRunAndWaitMojoTest {
         mockServerRunAndWaitMojo.proxyPort = 3;
         mockServerRunAndWaitMojo.proxySecurePort = 4;
         mockServerRunAndWaitMojo.timeout = 0;
+        mockServerRunAndWaitMojo.initializationClass = "org.mockserver.maven.ExampleInitializationClass";
 
         // when
         mockServerRunAndWaitMojo.execute();
 
         // then
-        verify(mockEmbeddedJettyHolder).start(1, 2, 3, 4);
+        verify(mockEmbeddedJettyHolder).start(eq(1), eq(2), eq(3), eq(4), any(ExampleInitializationClass.class));
         verify(objectSettableFuture).get();
     }
 
@@ -76,12 +78,13 @@ public class MockServerRunAndWaitMojoTest {
         mockServerRunAndWaitMojo.proxyPort = 3;
         mockServerRunAndWaitMojo.proxySecurePort = 4;
         mockServerRunAndWaitMojo.timeout = 2;
+        mockServerRunAndWaitMojo.initializationClass = "org.mockserver.maven.ExampleInitializationClass";
 
         // when
         mockServerRunAndWaitMojo.execute();
 
         // then
-        verify(mockEmbeddedJettyHolder).start(1, 2, 3, 4);
+        verify(mockEmbeddedJettyHolder).start(eq(1), eq(2), eq(3), eq(4), any(ExampleInitializationClass.class));
         verify(objectSettableFuture).get(2, TimeUnit.SECONDS);
     }
 

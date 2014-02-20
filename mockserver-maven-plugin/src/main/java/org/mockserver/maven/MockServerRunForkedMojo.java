@@ -100,6 +100,7 @@ public class MockServerRunForkedMojo extends MockServerAbstractMojo {
             } catch (InterruptedException e) {
                 throw new RuntimeException("Exception while waiting for mock server JVM to start", e);
             }
+            InstanceHolder.runInitializationClass(serverPort, createInitializer());
         }
 
     }

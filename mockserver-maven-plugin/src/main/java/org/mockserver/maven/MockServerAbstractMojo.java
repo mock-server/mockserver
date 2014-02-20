@@ -1,10 +1,25 @@
 package org.mockserver.maven;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.mockserver.initialize.ExpectationInitializer;
+
+import java.io.File;
+import java.lang.reflect.Constructor;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.List;
 
 /**
  * @author jamesdbloom
+ *
+ * @plexus.component role="org.codehaus.plexus.component.configurator.ComponentConfigurator"
+ *                   role-hint="include-project-dependencies"
+ * @plexus.requirement role="org.codehaus.plexus.component.configurator.converters.lookup.ConverterLookup"
+ *                     role-hint="default"
+ * @requiresDependencyCollection
+ * @requiresDependencyResolution
  */
 public abstract class MockServerAbstractMojo extends AbstractMojo {
 
@@ -44,10 +59,26 @@ public abstract class MockServerAbstractMojo extends AbstractMojo {
     @Parameter(property = "mockserver.skip", defaultValue = "false")
     protected boolean skip;
     /**
-     * Logging level
+     * If true the console of the forked JVM will be piped to the Maven console
      */
     @Parameter(property = "mockserver.pipeLogToConsole", defaultValue = "false")
     protected boolean pipeLogToConsole;
+    /**
+     * To enable the creation of default expectations that are generic across all tests or mocking scenarios a class can be specified
+     * to initialize expectations in the MockServer, this class must implement org.mockserver.initialize.ExpectationInitializer interface,
+     * the initializeExpectations(MockServerClient mockServerClient) method will be called once the MockServer has been started (but ONLY
+     * if serverPort has been set), however it should be noted that it is generally better practice to create all expectations locally in
+     * each test (or test class) for clarity, simplicity and to avoid brittle tests
+     */
+    @Parameter(property = "mockserver.initializationClass")
+    protected String initializationClass;
+
+    /**
+     * The classpath location of the project using this plugin
+     */
+    @Parameter(property = "project.compileClasspathElements", required = true, readonly = true)
+    protected List<String> classpath;
+
     /**
      * Holds reference to jetty across plugin execution
      */
@@ -59,5 +90,27 @@ public abstract class MockServerAbstractMojo extends AbstractMojo {
             embeddedJettyHolder = new InstanceHolder();
         }
         return embeddedJettyHolder;
+    }
+
+    protected ExpectationInitializer createInitializer() {
+        if (classpath != null && StringUtils.isNotEmpty(initializationClass)) {
+            try {
+                URL[] urls = new URL[classpath.size()];
+                for (int i = 0; i < classpath.size(); i++) {
+                    urls[i] = new File(classpath.get(i)).toURI().toURL();
+                }
+
+                ClassLoader contextClassLoader = URLClassLoader.newInstance(urls, Thread.currentThread().getContextClassLoader());
+                Thread.currentThread().setContextClassLoader(contextClassLoader);
+                Constructor<?> initializerClassConstructor = contextClassLoader.loadClass(initializationClass).getDeclaredConstructor();
+                Object expectationInitializer = initializerClassConstructor.newInstance();
+                if (expectationInitializer instanceof ExpectationInitializer) {
+                    return (ExpectationInitializer) expectationInitializer;
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return null;
     }
 }
