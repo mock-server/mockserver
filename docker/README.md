@@ -11,7 +11,7 @@
 
 2. Download [trusted build](https://index.docker.io/u/jamesdbloom/mockserver/) from public [Docker Registry](https://index.docker.io/): `docker pull jamesdbloom/mockserver`
 
-   (or build image from Dockerfile: `docker build -t="jamesdbloom/mockserver" http://raw.github.com/jamesdbloom/mockserver/master/docker/Dockerfile`)
+   ( or build image directly from Dockerfile: `docker build -t="jamesdbloom/mockserver" http://raw.github.com/jamesdbloom/mockserver/master/docker/Dockerfile` )
 
 ### Usage
 
@@ -29,10 +29,10 @@ MockServer supports:
 
 This docker container will run an instance of the MockServer on the following ports:
 
-* serverPort 8080
-* serverSecurePort 8090
-* proxyPort 9080
-* proxySecurePort 9090
+* serverPort **8080**
+* serverSecurePort **8090**
+* proxyPort **9080**
+* proxySecurePort **9090**
 
 For information on how to use the MockServer please see http://www.mock-server.com
 
