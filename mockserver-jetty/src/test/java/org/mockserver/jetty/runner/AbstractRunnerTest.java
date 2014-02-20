@@ -9,6 +9,7 @@ import org.mockserver.socket.PortFactory;
 
 import javax.servlet.http.HttpServlet;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.concurrent.ExecutionException;
 
@@ -104,7 +105,7 @@ public class AbstractRunnerTest {
             runner.start(port, null);
 
             // then
-            assertTrue(new MockServerRunner().stop("127.0.0.1", stopPort, 30));
+            assertTrue(new MockServerRunner().stop(InetAddress.getLocalHost().getHostAddress(), stopPort, 30));
         } finally {
             try {
                 runner.stop();
@@ -121,7 +122,7 @@ public class AbstractRunnerTest {
             runner.start(port, null);
 
             // then
-            assertTrue(new MockServerRunner().stop("127.0.0.1", stopPort, 0));
+            assertTrue(new MockServerRunner().stop(InetAddress.getLocalHost().getHostAddress(), stopPort, 0));
         } finally {
             try {
                 runner.stop();
@@ -135,14 +136,14 @@ public class AbstractRunnerTest {
     public void shouldIndicateIfCanNotStopRemoteServer() throws InterruptedException, ExecutionException, UnknownHostException {
         // when
         runner.start(port, null);
-        new MockServerRunner().stop("127.0.0.1", stopPort, 5);
+        new MockServerRunner().stop(InetAddress.getLocalHost().getHostAddress(), stopPort, 5);
 
         // then
-        assertFalse(new MockServerRunner().stop("127.0.0.1", stopPort, 3));
+        assertFalse(new MockServerRunner().stop(InetAddress.getLocalHost().getHostAddress(), stopPort, 3));
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void shouldValidatePortArgument() {
-        new MockServerRunner().stop("127.0.0.1", -1, 5);
+    public void shouldValidatePortArgument() throws UnknownHostException {
+        new MockServerRunner().stop(InetAddress.getLocalHost().getHostAddress(), -1, 5);
     }
 }
