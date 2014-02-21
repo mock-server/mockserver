@@ -10,6 +10,8 @@
 
     <properties>
         <mockserver.version>2.9-SNAPSHOT</mockserver.version>
+        <maven.compiler.source>1.6</maven.compiler.source>
+        <maven.compiler.target>1.6</maven.compiler.target>
     </properties>
 
     <dependencies>
