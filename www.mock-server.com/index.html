@@ -2289,6 +2289,12 @@ xmlHttpRequest.send(JSON.stringify({
 <p><a href="https://travis-ci.org/jamesdbloom/mockserver">Travis CI</a> is used for the continuous integration.  The build uses both Java 1.6 and Java 1.7 to build the different modules in their appropriate java version, the latest SNAPSHOT is also deployed to <a href="https://oss.sonatype.org/index.html#nexus-search;quick%7Emockserver">Sonatype</a>.</p>
 <p>The status of the build is shown at the top of this page and on the github project using the Travis CI logo &nbsp;&nbsp;<a href="https://travis-ci.org/jamesdbloom/mockserver"><img src="https://github-camo.global.ssl.fastly.net/2e2b9deeda5c745f167e2cabcd787322df06688f/68747470733a2f2f7472617669732d63692e6f72672f6a616d657364626c6f6f6d2f6d6f636b7365727665722e706e673f6272616e63683d6d6173746572" alt="Build Status" data-canonical-src="https://travis-ci.org/jamesdbloom/mockserver.png?branch=master" style="max-width:100%;"></a></p>
 
+<p><strong>Unfortunately both Travis CI and drone.io don't seem to be stable enough for MockServer. The MockServer uses
+    lots of socket connections to complete its integration tests. The same build with no code or configuration changes
+    run multiple times fails randomly on both Travis CI and drone.io. It is likely due to the server infrastructure
+    using either a hypervisor or containers that is causing issues with the heavy socket use in the integration tests.
+    As a result the build status will not be displayed at the top of this page or on github.</strong></p>
+
 <a name="drone-io" class="anchor" href="#drone-io">&nbsp;</a>
 
 <h2>drone.io</h2>
