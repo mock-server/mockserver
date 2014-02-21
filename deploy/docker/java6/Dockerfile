@@ -14,8 +14,8 @@ MAINTAINER James Bloom "jamesdbloom@gmail.com"
 # set working directory
 RUN git clone https://github.com/jamesdbloom/mockserver.git
 
-# run build (download maven dependencies)
-RUN mvn clean install
+# download maven dependencies
+RUN mvn clean install -DskipTests
 
 # open terminal
 CMD ["/bin/bash"]
