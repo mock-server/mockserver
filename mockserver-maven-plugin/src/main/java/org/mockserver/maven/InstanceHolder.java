@@ -6,13 +6,14 @@ import org.mockserver.client.server.MockServerClient;
 import org.mockserver.initialize.ExpectationInitializer;
 import org.mockserver.mockserver.MockServer;
 import org.mockserver.mockserver.MockServerBuilder;
+import org.mockserver.model.EqualsHashCodeToString;
 import org.mockserver.proxy.http.HttpProxy;
 import org.mockserver.proxy.http.HttpProxyBuilder;
 
 /**
  * @author jamesdbloom
  */
-public class InstanceHolder {
+public class InstanceHolder extends EqualsHashCodeToString {
 
     @VisibleForTesting
     static HttpProxyBuilder proxyBuilder = new HttpProxyBuilder();

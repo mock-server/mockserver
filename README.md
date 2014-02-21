@@ -3,7 +3,7 @@ MockServer
 
 For information on how to use the MockServer please see http://www.mock-server.com/
 
-**Note:** This project no longer running on Travis due to the unreliable / unrepeatable nature of integration tests running on Travis CI, unfortunately numerous tests that ran completely reliably on multiple other environments where not reliable on Travis CI
+[![Build Status](https://travis-ci.org/jamesdbloom/mockserver.png?branch=master)](https://travis-ci.org/jamesdbloom/mockserver)
 
 # Versions
 
