@@ -6,7 +6,7 @@
 #
 
 # pull base image
-FROM jamesdbloom/docker_java7_maven
+FROM jamesdbloom/docker-java7-maven
 
 # maintainer details
 MAINTAINER James Bloom "jamesdbloom@gmail.com"
@@ -21,4 +21,4 @@ RUN mvn clean install
 CMD ["/bin/bash"]
 
 # to build container run:
-# docker build -t="jamesdbloom/build_java7_mockserver" raw.github.com/jamesdbloom/mockserver/master/build/docker/java7
+# docker build -t="jamesdbloom/build_java7_mockserver" https://raw.github.com/jamesdbloom/mockserver/master/deploy/docker/java7/Dockerfile
