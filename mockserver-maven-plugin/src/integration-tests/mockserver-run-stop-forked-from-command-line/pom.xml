@@ -10,7 +10,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <mockserver.version>2.8-SNAPSHOT</mockserver.version>
+        <mockserver.version>2.9-SNAPSHOT</mockserver.version>
     </properties>
 
     <dependencies>
