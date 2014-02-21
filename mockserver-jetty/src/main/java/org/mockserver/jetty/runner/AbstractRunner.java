@@ -62,6 +62,7 @@ public abstract class AbstractRunner<T extends AbstractRunner<T>> {
         final String startedMessage = "Started " + this.getClass().getSimpleName().replace("Runner", "") + " listening on:" + (port != null ? " standard port " + port : "") + (securePort != null ? " secure port " + securePort : "");
 
         try {
+            TimeUnit.MILLISECONDS.sleep(200);
             server = new Server();
 
             // add connectors
@@ -204,6 +205,7 @@ public abstract class AbstractRunner<T extends AbstractRunner<T>> {
         try {
             Socket socket = null;
             try {
+                TimeUnit.MILLISECONDS.sleep(200);
                 socket = new Socket(InetAddress.getByName(ipAddress), stopPort);
 
                 if (socket.isConnected() && socket.isBound()) {
