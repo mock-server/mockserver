@@ -11,7 +11,7 @@ FROM jamesdbloom/docker-java7-maven
 # maintainer details
 MAINTAINER James Bloom "jamesdbloom@gmail.com"
 
-# set working directory
+# pull mockserver from git
 RUN git clone https://github.com/jamesdbloom/mockserver.git
 
 # download maven dependencies
