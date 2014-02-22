@@ -15,7 +15,7 @@ MAINTAINER James Bloom "jamesdbloom@gmail.com"
 RUN git clone https://github.com/jamesdbloom/mockserver.git
 
 # download maven dependencies
-RUN mvn compile test-compile clean
+RUN cd mockserver && mvn compile test-compile clean
 
 # open terminal
 CMD ["/bin/bash"]
