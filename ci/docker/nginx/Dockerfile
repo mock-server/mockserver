@@ -85,3 +85,13 @@ EXPOSE 80
 
 # to build container run:
 # docker build -t="mockserver/nginx" https://raw.github.com/jamesdbloom/mockserver/master/ci/docker/nginx/Dockerfile
+
+############
+# NOTES... #
+############
+
+# The following files locations are used
+# service: /etc/init.d/nginx
+# config: /etc/nginx/nginx.conf
+# access_logs: /var/log/nginx/access.log
+# error_logs: /var/log/nginx/error.log

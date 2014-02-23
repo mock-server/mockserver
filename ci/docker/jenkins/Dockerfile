@@ -27,6 +27,8 @@ RUN apt-get update
 # install jenkins:
 RUN apt-get install -y jenkins
 
+# for more details see: https://wiki.jenkins-ci.org/display/JENKINS/Installing+Jenkins+on+Ubuntu
+
 ########################
 # CONFIGURE SUPERVISOR #
 ########################
@@ -49,3 +51,12 @@ EXPOSE 8080
 
 # to build container run:
 # docker build -t="mockserver/jenkins" https://raw.github.com/jamesdbloom/mockserver/master/ci/docker/jenkins/Dockerfile
+
+############
+# NOTES... #
+############
+
+# The following files locations are used
+# service: /etc/init.d/jenkins
+# config: /etc/default/jenkins
+# logs: /var/log/jenkins/jenkins.log
