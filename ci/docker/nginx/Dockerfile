@@ -68,7 +68,7 @@ RUN ln -s /etc/nginx/sites-available/jenkins /etc/nginx/sites-enabled/
 ########################
 
 # add to supervisor
-echo "[program:nginx]
+RUN echo "[program:nginx]
 command=service nginx restart
 redirect_stderr=true" > /etc/supervisor/conf.d/nginx
 

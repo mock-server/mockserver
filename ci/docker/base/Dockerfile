@@ -40,7 +40,7 @@ RUN mkdir -p /var/log/supervisor
 RUN mkdir -p /etc/supervisor/conf.d
 
 # add supervisor config
-echo "[supervisord]
+RUN echo "[supervisord]
 nodaemon=true
 
 [include]
