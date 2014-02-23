@@ -40,11 +40,11 @@ RUN mkdir -p /var/log/supervisor
 RUN mkdir -p /etc/supervisor/conf.d
 
 # add supervisor config
-RUN echo "[supervisord]
-nodaemon=true
-
-[include]
-files = /etc/supervisor/conf.d/*" > /etc/supervisor
+RUN echo -e '[supervisord] \n\
+nodaemon=true \n\
+\n\
+[include] \n\
+files = /etc/supervisor/conf.d/*' > /etc/supervisor
 
 # to build container run:
 # docker build -t="mockserver/base" https://raw.github.com/jamesdbloom/mockserver/master/ci/docker/base/Dockerfile
