@@ -32,10 +32,7 @@ RUN apt-get install -y jenkins
 ########################
 
 # add to supervisor
-RUN echo "[program:jenkins]
-#command=java -jar /var/lib/jenkins/jenkins.war
-command=service jenkins restart
-redirect_stderr=true" > /etc/supervisor/conf.d/jenkins
+RUN echo -e '[program:jenkins]\n#command=java -jar /var/lib/jenkins/jenkins.war\ncommand=service jenkins restart\nredirect_stderr=true' > /etc/supervisor/conf.d/jenkins
 
 # start supervisor daemon
 CMD ["supervisord", "-c", "/etc/supervisor"]
