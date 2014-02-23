@@ -35,7 +35,7 @@ RUN apt-get install -y jenkins
 RUN echo -e '[program:jenkins]\n#command=java -jar /var/lib/jenkins/jenkins.war\ncommand=service jenkins restart\nredirect_stderr=true' > /etc/supervisor/conf.d/jenkins
 
 # start supervisor daemon
-CMD ["supervisord", "-c", "/etc/supervisor"]
+CMD ["supervisord", "-c", "/etc/supervisor/supervisor.conf"]
 
 ################
 # EXPORT PORTS #

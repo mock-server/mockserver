@@ -71,7 +71,7 @@ RUN ln -s /etc/nginx/sites-available/jenkins /etc/nginx/sites-enabled/
 RUN echo -e '[program:nginx]\ncommand=service nginx restart\nredirect_stderr=true' > /etc/supervisor/conf.d/nginx
 
 # start supervisor daemon
-CMD ["supervisord", "-c", "/etc/supervisor"]
+CMD ["supervisord", "-c", "/etc/supervisor/supervisor.conf"]
 
 ################
 # EXPORT PORTS #
