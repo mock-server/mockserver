@@ -36,7 +36,7 @@ WORKDIR /etc/nginx/sites-available
 RUN rm -rf default ../sites-enabled/default
 
 # create new configuration for jenkins
-RUN echo -e 'upstream app_server { \n\
+RUN echo 'upstream app_server { \n\
     server 127.0.0.1:8080 fail_timeout=0; \n\
 } \n\
   \n\
