@@ -1,0 +1,3 @@
+---
+- name: create java 1.7 image
+  command: /usr/bin/docker build -t="mockserver/java7" https://raw.github.com/jamesdbloom/mockserver/master/ci/docker/java7/Dockerfile

@@ -1,0 +1,12 @@
+---
+# This playbook deploys jenkins and nginx
+
+- hosts: aws
+  sudo: true
+  user: ubuntu
+
+  roles:
+    - base
+    - java7
+    - jenkins
+    - nginx
