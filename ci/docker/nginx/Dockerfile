@@ -6,7 +6,7 @@
 #
 
 # pull base image
-FROM mockserver/jenkins
+FROM mockserver/base
 
 # maintainer details
 MAINTAINER James Bloom "jamesdbloom@gmail.com"
@@ -83,8 +83,10 @@ EXPOSE 80
 # TO BUILD... #
 ###############
 
-# to build container run:
+# to build container:
 # docker build -t="mockserver/nginx" https://raw.github.com/jamesdbloom/mockserver/master/ci/docker/nginx/Dockerfile
+# to run container:
+# docker run -name nginx -link jenkins -p 80:80 -d mockserver/nginx
 
 ############
 # NOTES... #

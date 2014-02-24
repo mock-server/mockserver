@@ -49,8 +49,10 @@ EXPOSE 8080
 # TO BUILD... #
 ###############
 
-# to build container run:
+# to build container:
 # docker build -t="mockserver/jenkins" https://raw.github.com/jamesdbloom/mockserver/master/ci/docker/jenkins/Dockerfile
+# to run container:
+# docker run -name jenkins -p 8080:8080 -d mockserver/jenkins
 
 ############
 # NOTES... #
