@@ -69,8 +69,7 @@ RUN ln -s /etc/nginx/sites-available/jenkins /etc/nginx/sites-enabled/
 
 # add to supervisor
 RUN echo '[program:nginx]' > /etc/supervisor/conf.d/nginx && \
-    echo 'command=sed "s/CI_PORT_8080_TCP_ADDR/$CI_PORT_8080_TCP_ADDR/g" /etc/nginx/tmp/jenkins | sed "s/CI_PORT_8080_TCP_PORT/$CI_PORT_8080_TCP_PORT/g" > /etc/nginx/sites-available/jenkins' >> /etc/supervisor/conf.d/nginx && \
-    echo 'command=service nginx restart' >> /etc/supervisor/conf.d/nginx && \
+    echo 'command=sed "s/CI_PORT_8080_TCP_ADDR/$CI_PORT_8080_TCP_ADDR/g" /etc/nginx/tmp/jenkins | sed "s/CI_PORT_8080_TCP_PORT/$CI_PORT_8080_TCP_PORT/g" > /etc/nginx/sites-available/jenkins && command=service nginx restart' >> /etc/supervisor/conf.d/nginx && \
     echo 'redirect_stderr=true' >> /etc/supervisor/conf.d/nginx
 
 # start supervisor daemon
