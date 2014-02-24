@@ -1,5 +1,5 @@
 #
-# MockServer Jenkins Dockerfile
+# MockServer Nginx Dockerfile
 #
 # https://github.com/jamesdbloom/mockserver
 # http://www.mock-server.com
