@@ -34,7 +34,9 @@ RUN apt-get install -y jenkins
 ########################
 
 # add to supervisor
-RUN echo '[program:jenkins]\n#command=java -jar /var/lib/jenkins/jenkins.war\ncommand=service jenkins restart\nredirect_stderr=true' > /etc/supervisor/conf.d/jenkins
+RUN echo '[program:jenkins]' > /etc/supervisor/conf.d/jenkins && \
+    echo 'command=service jenkins restart' >> /etc/supervisor/conf.d/jenkins && \
+    echo 'redirect_stderr=true' >> /etc/supervisor/conf.d/jenkins
 
 # start supervisor daemon
 CMD ["supervisord", "-c", "/etc/supervisor/supervisor.conf"]
@@ -52,7 +54,7 @@ EXPOSE 8080
 # to build container:
 # docker build -t="mockserver/jenkins" https://raw.github.com/jamesdbloom/mockserver/master/ci/docker/jenkins/Dockerfile
 # to run container:
-# docker run -name jenkins -p 8080:8080 -d mockserver/jenkins
+# docker run -name jenkins -p 127.0.0.1:8080:8080 -d mockserver/jenkins
 
 ############
 # NOTES... #
