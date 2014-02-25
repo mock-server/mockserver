@@ -1,0 +1,23 @@
+---
+# This playbook deploys jenkins and nginx
+
+- hosts: aws
+  sudo: true
+  user: ubuntu
+
+  tasks:
+  - name: stop any existing nginx container (ignore failure i.e. first run)
+    command: /usr/bin/docker stop nginx
+    ignore_errors: yes
+
+  - name: rm any existing nginx container (ignore failure i.e. first run)
+    command: /usr/bin/docker rm nginx
+    ignore_errors: yes
+
+  - name: stop any existing jenkins container (ignore failure i.e. first run)
+    command: /usr/bin/docker stop jenkins
+    ignore_errors: yes
+
+  - name: rm any existing jenkins container (ignore failure i.e. first run)
+    command: /usr/bin/docker rm jenkins
+    ignore_errors: yes
