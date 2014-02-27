@@ -21,3 +21,9 @@
   - name: rm any existing jenkins container (ignore failure i.e. first run)
     command: /usr/bin/docker rm jenkins
     ignore_errors: yes
+
+  - name: remove docker containers with exit status
+    command: /usr/bin/docker ps -a -notrunc | grep 'Exit' | awk '{print $1}' | xargs -r /usr/bin/docker rm
+
+  - name: remove temporary docker build images
+    command: /usr/bin/docker images -notrunc| grep none | awk '{print $3}' | xargs -r /usr/bin/docker rmi
