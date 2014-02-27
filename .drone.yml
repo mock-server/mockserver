@@ -1,0 +1,7 @@
+image: bradrydzewski/java:oraclejdk7
+script:
+  - mvn test
+notify:
+  email:
+    recipients:
+      - jamesdbloom@gmail.com
