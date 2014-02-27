@@ -33,53 +33,57 @@ RUN apt-get install -y jenkins
 # UPDATE PLUGINS #
 ##################
 
+WORKDIR /var/lib/jenkins/plugins
+
 ## security updates ##
 
 # credentials
-RUN wget http://updates.jenkins-ci.org/latest/credentials.hpi && mv credentials.hpi /var/lib/jenkins/plugins
+RUN wget http://updates.jenkins-ci.org/latest/credentials.hpi
 # ldap
-RUN wget http://updates.jenkins-ci.org/latest/ldap.hpi && mv ldap.hpi /var/lib/jenkins/plugins
+RUN wget http://updates.jenkins-ci.org/latest/ldap.hpi
 # ssh-credentials
-RUN wget http://updates.jenkins-ci.org/latest/ssh-credentials.hpi && mv ssh-credentials.hpi /var/lib/jenkins/plugins
+RUN wget http://updates.jenkins-ci.org/latest/ssh-credentials.hpi
 # ssh-slaves
-RUN wget http://updates.jenkins-ci.org/latest/ssh-slaves.hpi && mv ssh-slaves.hpi /var/lib/jenkins/plugins
+RUN wget http://updates.jenkins-ci.org/latest/ssh-slaves.hpi
 # ssh-agent
-RUN wget http://updates.jenkins-ci.org/latest/ssh-agent.hpi && mv ssh-agent.hpi /var/lib/jenkins/plugins
+RUN wget http://updates.jenkins-ci.org/latest/ssh-agent.hpi
 # hsts-filter-plugin
-RUN wget http://updates.jenkins-ci.org/latest/hsts-filter-plugin.hpi && mv hsts-filter-plugin.hpi /var/lib/jenkins/plugins
+RUN wget http://updates.jenkins-ci.org/latest/hsts-filter-plugin.hpi
 
 ## source control & github ##
 
 # parameterized-trigger
-RUN wget http://updates.jenkins-ci.org/latest/parameterized-trigger.hpi && mv parameterized-trigger.hpi /var/lib/jenkins/plugins
+RUN wget http://updates.jenkins-ci.org/latest/parameterized-trigger.hpi
 # git-client
-RUN wget http://updates.jenkins-ci.org/latest/git-client.hpi && mv git-client.hpi /var/lib/jenkins/plugins
+RUN wget http://updates.jenkins-ci.org/latest/git-client.hpi
 # token-macro
-RUN wget http://updates.jenkins-ci.org/latest/token-macro.hpi && mv token-macro.hpi /var/lib/jenkins/plugins
+RUN wget http://updates.jenkins-ci.org/latest/token-macro.hpi
 # multiple-scms
-RUN wget http://updates.jenkins-ci.org/latest/multiple-scms.hpi && mv multiple-scms.hpi /var/lib/jenkins/plugins
+RUN wget http://updates.jenkins-ci.org/latest/multiple-scms.hpi
 # scm-api
-RUN wget http://updates.jenkins-ci.org/latest/scm-api.hpi && mv scm-api.hpi /var/lib/jenkins/plugins
+RUN wget http://updates.jenkins-ci.org/latest/scm-api.hpi
 # promoted-builds
-RUN wget http://updates.jenkins-ci.org/latest/promoted-builds.hpi && mv promoted-builds.hpi /var/lib/jenkins/plugins
+RUN wget http://updates.jenkins-ci.org/latest/promoted-builds.hpi
 # git
-RUN wget http://updates.jenkins-ci.org/latest/git.hpi && mv git.hpi /var/lib/jenkins/plugins
+RUN wget http://updates.jenkins-ci.org/latest/git.hpi
 # github-api
-RUN wget http://updates.jenkins-ci.org/latest/github-api.hpi && mv github-api.hpi /var/lib/jenkins/plugins
+RUN wget http://updates.jenkins-ci.org/latest/github-api.hpi
 # github
-RUN wget http://updates.jenkins-ci.org/latest/github.hpi && mv github.hpi /var/lib/jenkins/plugins
+RUN wget http://updates.jenkins-ci.org/latest/github.hpi
 # project-description-setter
-RUN wget http://updates.jenkins-ci.org/latest/project-description-setter.hpi && mv project-description-setter.hpi /var/lib/jenkins/plugins
+RUN wget http://updates.jenkins-ci.org/latest/project-description-setter.hpi
 
 ## emails ##
 
 # mailer
-RUN wget http://updates.jenkins-ci.org/latest/mailer.hpi && mv mailer.hpi /var/lib/jenkins/plugins
+RUN wget http://updates.jenkins-ci.org/latest/mailer.hpi
 
 ## releases ##
 
 # m2release
-RUN wget http://updates.jenkins-ci.org/latest/m2release.hpi && mv m2release.hpi /var/lib/jenkins/plugins
+RUN wget http://updates.jenkins-ci.org/latest/m2release.hpi
+
+WORKDIR /root
 
 ########################
 # CONFIGURE SUPERVISOR #
