@@ -62,7 +62,7 @@ public class MockServerClient {
      *                           .withBody("some_request_body")
      *           )
      *           .respond(
-     *                   request()
+     *                   response()
      *                           .withBody("some_response_body")
      *                           .withHeaders(
      *                                   new Header("responseName", "responseValue")
