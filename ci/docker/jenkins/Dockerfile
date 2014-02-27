@@ -35,6 +35,8 @@ RUN apt-get install -y jenkins
 
 WORKDIR /var/lib/jenkins/plugins
 
+# FIX PERMISSIONS!!!
+
 ## security updates ##
 
 # credentials
