@@ -25,7 +25,7 @@
                 <artifactId>mockserver-maven-plugin</artifactId>
                 <version>${project.version}</version>
                 <configuration>
-                    <logLevel>DEBUG</logLevel>
+                    <logLevel>INFO</logLevel>
                     <serverPort>1080</serverPort>
                     <serverSecurePort>1082</serverSecurePort>
                     <proxyPort>1090</proxyPort>

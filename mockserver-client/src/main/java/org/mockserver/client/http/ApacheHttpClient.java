@@ -5,10 +5,7 @@ import org.apache.commons.io.Charsets;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.client.CircularRedirectException;
-import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.*;
-import org.apache.http.config.SocketConfig;
-import org.apache.http.conn.ConnectionKeepAliveStrategy;
 import org.apache.http.conn.ssl.AllowAllHostnameVerifier;
 import org.apache.http.conn.ssl.SSLContexts;
 import org.apache.http.conn.ssl.TrustStrategy;
@@ -19,7 +16,6 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.impl.cookie.BrowserCompatSpec;
 import org.apache.http.protocol.HTTP;
-import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
@@ -37,9 +33,6 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import static org.mockserver.configuration.SystemProperties.maxTimeout;
 
 /**
  * @author jamesdbloom
@@ -113,9 +106,7 @@ public class ApacheHttpClient {
             // url & method
             URI url = buildUrl(httpRequest);
             HttpMethod httpMethod = HttpMethod.parseString(httpRequest.getMethod());
-            if (logger.isDebugEnabled()) {
-                System.out.println(httpMethod + " => " + url);
-            }
+            logger.debug(httpMethod + " => " + url);
             HttpUriRequest proxiedRequest = createHttpUriRequest(httpMethod, url);
 
             // headers

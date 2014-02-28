@@ -1,4 +1,4 @@
-<configuration debug="true">
+<configuration>
     <appender name="FILE" class="ch.qos.logback.core.FileAppender">
         <file>mockserver_example.log</file>
 

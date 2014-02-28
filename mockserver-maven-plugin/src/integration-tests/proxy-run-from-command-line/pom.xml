@@ -23,7 +23,7 @@
                 <version>2.9-SNAPSHOT</version>
                 <configuration>
                     <proxyPort>9090</proxyPort>
-                    <logLevel>DEBUG</logLevel>
+                    <logLevel>INFO</logLevel>
                     <timeout>${mockserver.timeout}</timeout>
                 </configuration>
             </plugin>
