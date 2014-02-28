@@ -104,7 +104,6 @@ public class Main {
                 parsedArguments.put(key, Integer.parseInt(argumentValue));
                 return true;
             } catch (NumberFormatException nfe) {
-                System.out.println("Please provide a value integer for -" + key + ", [" + argumentValue + "] is not a valid integer");
                 logger.error("Please provide a value integer for -" + key + ", [" + argumentValue + "] is not a valid integer", nfe);
             }
         }

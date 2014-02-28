@@ -124,7 +124,6 @@ public class ProxyVertical extends Verticle {
         ProxyVertical.overrideLogLevel(System.getProperty("mockserver.logLevel"));
 
         logger.info("Starting MockServer proxy listening on " + port);
-        System.out.println("Starting MockServer proxy listening on " + port);
 
         vertx.createHttpServer().requestHandler(requestHandler).listen(port, "localhost");
     }

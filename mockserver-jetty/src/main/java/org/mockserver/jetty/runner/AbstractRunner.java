@@ -91,7 +91,6 @@ public abstract class AbstractRunner<T extends AbstractRunner<T>> {
             serverStarted(port, securePort);
 
             logger.info(startedMessage);
-            System.out.println(startedMessage);
         } catch (Throwable t) {
             logger.error("Exception while starting server", t);
         }

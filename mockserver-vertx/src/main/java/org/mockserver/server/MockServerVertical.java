@@ -152,7 +152,6 @@ public class MockServerVertical extends Verticle {
         }
 
         logger.info(startedMessage);
-        System.out.println(startedMessage);
     }
 
     private void setStatusAndEnd(HttpServerRequest request, HttpStatusCode httpStatusCode) {
