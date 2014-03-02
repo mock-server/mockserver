@@ -1,2 +1,0 @@
-[aws]
-ec2-54-200-56-94.us-west-2.compute.amazonaws.com    ansible_connection=ssh    ansible_ssh_user=ubuntu

@@ -1,3 +1,0 @@
----
-- name: create base image
-  command: /usr/bin/docker build -t="mockserver/base" https://raw.github.com/jamesdbloom/mockserver/master/ci/docker/base/Dockerfile
