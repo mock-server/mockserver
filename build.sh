@@ -11,7 +11,7 @@ fi
 
 if [ $? -eq 0 ]; then
     # java 1.7 build
-    export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.7.0_17.jdk/Contents/Home
+    export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.7.0_45.jdk/Contents/Home
     if [ -z "$1" ]
     then
         mvn clean install

@@ -275,7 +275,9 @@ public abstract class AbstractRunner<T extends AbstractRunner<T>> {
                         }
                     }
                 } finally {
-                    serverSocket.close();
+                    if (serverSocket != null) {
+                        serverSocket.close();
+                    }
                 }
             } catch (Exception e) {
                 logger.trace("Exception while creating " + this.getClass().getSimpleName().replace("Runner", "") + " shutdown thread", e);

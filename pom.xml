@@ -447,6 +447,15 @@
                     </filesets>
                 </configuration>
             </plugin>
+            <!-- debug tests -->
+            <!--<plugin>-->
+                <!--<groupId>org.apache.maven.plugins</groupId>-->
+                <!--<artifactId>maven-surefire-plugin</artifactId>-->
+                <!--<version>2.17</version>-->
+                <!--<configuration>-->
+                    <!--<forkMode>never</forkMode>-->
+                <!--</configuration>-->
+            <!--</plugin>-->
         </plugins>
     </build>
 

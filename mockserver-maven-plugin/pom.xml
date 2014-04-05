@@ -167,12 +167,8 @@
                             <settingsFile>src/integration-tests/settings.xml</settingsFile>
                             <!--<mavenOpts>-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005</mavenOpts>-->
                             <pomIncludes>
-                                <pomInclude>*/pom.xml</pomInclude>
+                                <pomInclude>**/pom.xml</pomInclude>
                             </pomIncludes>
-                            <goals>
-                                <goal>clean</goal>
-                                <goal>process-sources</goal>
-                            </goals>
                         </configuration>
                         <executions>
                             <execution>
@@ -180,6 +176,7 @@
                                 <goals>
                                     <goal>install</goal>
                                     <goal>integration-test</goal>
+                                    <goal>run</goal>
                                     <goal>verify</goal>
                                 </goals>
                             </execution>

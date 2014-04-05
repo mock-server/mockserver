@@ -619,6 +619,8 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 	<li>the number of times the response is sent (including unlimited)</li>
 </ul>
 
+<p>For more details see the section below on <a href="#create-expectations">creating expectations</a>.</p>
+
 <a name="proxying" class="anchor" href="#proxying">&nbsp;</a>
 
 <h3>Proxying</h3>
@@ -907,15 +909,15 @@ Hides the menu at `767px`, but modify this based on your app's needs.
     &lt;/<span class="element">configuration</span>&gt;
     &lt;<span class="element">executions</span>&gt;
         &lt;<span class="element">execution</span>&gt;
-            &lt;<span class="element">id</span>&gt;<span class="element_value">pre-integration-test</span>&lt;/<span class="element">id</span>&gt;
-            &lt;<span class="element">phase</span>&gt;<span class="element_value">pre-integration-test</span>&lt;/<span class="element">phase</span>&gt;
+            &lt;<span class="element">id</span>&gt;<span class="element_value">process-test-classes</span>&lt;/<span class="element">id</span>&gt;
+            &lt;<span class="element">phase</span>&gt;<span class="element_value">process-test-classes</span>&lt;/<span class="element">phase</span>&gt;
             &lt;<span class="element">goals</span>&gt;
                 &lt;<span class="element">goal</span>&gt;<span class="element_value">start</span>&lt;/<span class="element">goal</span>&gt;
             &lt;/<span class="element">goals</span>&gt;
         &lt;/<span class="element">execution</span>&gt;
         &lt;<span class="element">execution</span>&gt;
-            &lt;<span class="element">id</span>&gt;<span class="element_value">post-integration-test</span>&lt;/<span class="element">id</span>&gt;
-            &lt;<span class="element">phase</span>&gt;<span class="element_value">post-integration-test</span>&lt;/<span class="element">phase</span>&gt;
+            &lt;<span class="element">id</span>&gt;<span class="element_value">verify</span>&lt;/<span class="element">id</span>&gt;
+            &lt;<span class="element">phase</span>&gt;<span class="element_value">verify</span>&lt;/<span class="element">phase</span>&gt;
             &lt;<span class="element">goals</span>&gt;
                 &lt;<span class="element">goal</span>&gt;<span class="element_value">stop</span>&lt;/<span class="element">goal</span>&gt;
             &lt;/<span class="element">goals</span>&gt;
@@ -923,12 +925,10 @@ Hides the menu at `767px`, but modify this based on your app's needs.
     &lt;/<span class="element">executions</span>&gt;
 &lt;/<span class="element">plugin</span>&gt;</code></pre>
 
-<p>This will start the MockServer during the <strong>pre-integration-test</strong> phase and will stop the MockServer during the <strong>post-integration-test</strong> phase. For more details about Maven build phases see:
+<p>This will start the MockServer during the <strong>process-test-classes</strong> phase and will stop the MockServer during the <strong>verify</strong> phase. For more details about Maven build phases see:
 	<a href="http://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html">Introduction to the Build Lifecycle</a>.</p>
 
-<p>This ensures that any integration tests you run during the <strong>integration-test</strong> phase can use the MockServer on the port specified.</p>
-
-<p>If any unit tests, that run in the <strong>test</strong> phase, use the MockServer modify the <span class="annotation">start</span> goal execution so that the MockServer is started during the <strong>test</strong> phase.</p>
+<p>This ensures that any integration tests you run during the <strong>test</strong> or <strong>integration-test</strong> phases can use the MockServer on the port specified.</p>
 
 <p>It is also possible to run the MockServer as a forked JVM using the <span class="annotation">runForked</span> and <span class="annotation">stopForked</span> goals as follows:</p>
 
@@ -946,15 +946,15 @@ Hides the menu at `767px`, but modify this based on your app's needs.
      &lt;/<span class="element">configuration</span>&gt;
      &lt;<span class="element">executions</span>&gt;
          &lt;<span class="element">execution</span>&gt;
-             &lt;<span class="element">id</span>&gt;<span class="element_value">pre-integration-test</span>&lt;/<span class="element">id</span>&gt;
-             &lt;<span class="element">phase</span>&gt;<span class="element_value">pre-integration-test</span>&lt;/<span class="element">phase</span>&gt;
+             &lt;<span class="element">id</span>&gt;<span class="element_value">process-test-classes</span>&lt;/<span class="element">id</span>&gt;
+             &lt;<span class="element">phase</span>&gt;<span class="element_value">process-test-classes</span>&lt;/<span class="element">phase</span>&gt;
              &lt;<span class="element">goals</span>&gt;
                  &lt;<span class="element">goal</span>&gt;<span class="element_value">runForked</span>&lt;/<span class="element">goal</span>&gt;
              &lt;/<span class="element">goals</span>&gt;
          &lt;/<span class="element">execution</span>&gt;
          &lt;<span class="element">execution</span>&gt;
-             &lt;<span class="element">id</span>&gt;<span class="element_value">post-integration-test</span>&lt;/<span class="element">id</span>&gt;
-             &lt;<span class="element">phase</span>&gt;<span class="element_value">post-integration-test</span>&lt;/<span class="element">phase</span>&gt;
+             &lt;<span class="element">id</span>&gt;<span class="element_value">verify</span>&lt;/<span class="element">id</span>&gt;
+             &lt;<span class="element">phase</span>&gt;<span class="element_value">verify</span>&lt;/<span class="element">phase</span>&gt;
              &lt;<span class="element">goals</span>&gt;
                  &lt;<span class="element">goal</span>&gt;<span class="element_value">stopForked</span>&lt;/<span class="element">goal</span>&gt;
              &lt;/<span class="element">goals</span>&gt;
@@ -964,7 +964,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p>
 	<strong>Note:</strong> If you use the <span class="annotation">runForked</span> goal as above and the <strong>test</strong> phase fails (because a test has failed) the MockServer will not be stopped as Maven does not run any more phases after a phase has failed. In the case above the
-	<strong>post-integration-test</strong> phase is not run if a test fails so the forked MockServer will not be stopped. If you want to ensure the MockServer is stopped even when there are test failures make sure you use <span class="annotation">start</span> and
+	<strong>verify</strong> phase is not run if a test fails so the forked MockServer will not be stopped. If you want to ensure the MockServer is stopped even when there are test failures make sure you use <span class="annotation">start</span> and
 	<span class="annotation">stop</span> goals as these run the MockServer on a separate thread that is stopped however maven exits (even if a test fails). </p>
 
 <p>These goals can be used from the command line as well to start and stop MockServer, as follows:</p>
@@ -1027,7 +1027,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 		<strong>skip</strong> - Prevent the plugin from running (required: false, default: false)
 	</li>
 	<li>
-		<strong>initializationClass</strong> - To enable the creation of default expectations that are generic across all tests or mocking scenarios a class can be specified to initialize expectations in the MockServer, this class must implement <span class="annotation">org.mockserver.initialize.ExpectationInitializer</span> interface, the <span class="annotation">initializeExpectations(MockServerClient mockServerClient)</span> method will be called once the MockServer has been started (but ONLY if <strong>serverPort</strong> has been set), however it should be noted that it is generally better practice to create all expectations locally in each test (or test class) for clarity, simplicity and to avoid brittle tests (required: false, default: false)
+		<strong>initializationClass</strong> - To enable the creation of default expectations that are generic across all tests or mocking scenarios a class can be specified to initialize expectations in the MockServer, this class must implement <span class="annotation">org.mockserver.initialize.ExpectationInitializer</span> interface, the <span class="annotation">initializeExpectations(MockServerClient mockServerClient)</span> method will be called once the MockServer has been started (but ONLY if <strong>serverPort</strong> has been set), however it should be noted that it is generally better practice to create all expectations locally in each test (or test class) for clarity, simplicity and to avoid brittle tests.  Note: that the plugin must be started during the <strong>process-test-classes</strong> to ensure that the initialization class has been compiled from either <strong>src/main/java</strong> or <strong>src/test/java</strong> locations. (required: false, default: false)
 	</li>
 </ul>
 
@@ -1426,7 +1426,7 @@ cd mockserver</code></pre>
                                 <span class="keyword">new</span> Cookie(<span class="string_literal">"sessionId"</span>, <span class="string_literal">"2By8LOhBmaW5nZXJwcmludCIlMDAzMW"</span>)
                         )
                         .withBody(exact(<span class="string_literal">"{username: 'foo', password: 'bar'}"</span>)),
-                Times.exactly(<span class="numeric_literal">1</span>)
+                exactly(<span class="numeric_literal">1</span>)
         )
         .respond(
                 response()
@@ -1436,8 +1436,14 @@ cd mockserver</code></pre>
                                 <span class="keyword">new</span> Header(<span class="string_literal">"Cache-Control"</span>, <span class="string_literal">"public, max-age=86400"</span>)
                         )
                         .withBody(<span class="string_literal">"{ message: 'incorrect username and password combination' }"</span>)
-                        .withDelay(new Delay(TimeUnit.<span class="constant">SECONDS</span>, <span class="numeric_literal">1</span>))
+                        .withDelay(new Delay(<span class="constant">SECONDS</span>, <span class="numeric_literal">1</span>))
         );</code></pre>
+
+<p><strong>Note:</strong> this requires the use of these static imports as follows:</p>
+<code class="code"><span class="keyword">import static</span> org.mockserver.model.HttpRequest.request;
+<span class="keyword">import static</span> org.mockserver.model.HttpResponse.response;
+<span class="keyword">import static</span> org.mockserver.matchers.Times.exactly;
+<span class="keyword">import static</span> java.util.concurrent.TimeUnit.SECONDS;</code>
 
 <p>The <a href="https://github.com/jamesdbloom/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example test called
 	<a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-examples/src/test/java/org/mockserver/web/controller/BooksPageIntegrationTest.java">BookPageIntegrationTest</a> that demonstrates a fully working example.</p>

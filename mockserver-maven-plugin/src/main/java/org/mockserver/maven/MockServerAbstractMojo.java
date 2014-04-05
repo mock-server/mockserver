@@ -74,10 +74,16 @@ public abstract class MockServerAbstractMojo extends AbstractMojo {
     protected String initializationClass;
 
     /**
-     * The classpath location of the project using this plugin
+     * The main classpath location of the project using this plugin
      */
     @Parameter(property = "project.compileClasspathElements", required = true, readonly = true)
-    protected List<String> classpath;
+    protected List<String> compileClasspath;
+
+    /**
+     * The test classpath location of the project using this plugin
+     */
+    @Parameter(property = "project.testClasspathElements", required = true, readonly = true)
+    protected List<String> testClasspath;
 
     /**
      * Holds reference to jetty across plugin execution
@@ -93,11 +99,14 @@ public abstract class MockServerAbstractMojo extends AbstractMojo {
     }
 
     protected ExpectationInitializer createInitializer() {
-        if (classpath != null && StringUtils.isNotEmpty(initializationClass)) {
+        if (compileClasspath != null && StringUtils.isNotEmpty(initializationClass)) {
             try {
-                URL[] urls = new URL[classpath.size()];
-                for (int i = 0; i < classpath.size(); i++) {
-                    urls[i] = new File(classpath.get(i)).toURI().toURL();
+                URL[] urls = new URL[compileClasspath.size() + testClasspath.size()];
+                for (int i = 0; i < compileClasspath.size(); i++) {
+                    urls[i] = new File(compileClasspath.get(i)).toURI().toURL();
+                }
+                for (int i = compileClasspath.size(); i < compileClasspath.size() + testClasspath.size(); i++) {
+                    urls[i] = new File(testClasspath.get(i - compileClasspath.size())).toURI().toURL();
                 }
 
                 ClassLoader contextClassLoader = URLClassLoader.newInstance(urls, Thread.currentThread().getContextClassLoader());
