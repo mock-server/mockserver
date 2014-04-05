@@ -9,7 +9,6 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import org.mockserver.cli.Main;
 
 import java.io.File;
 import java.io.IOException;
@@ -153,7 +152,8 @@ public class MockServerRunForkedMojoTest {
         mockServerRunForkedMojo.pipeLogToConsole = true;
         mockServerRunForkedMojo.initializationClass = "org.mockserver.maven.ExampleInitializationClass";
         String classLocation = "org/mockserver/maven/ExampleInitializationClass.class";
-        mockServerRunForkedMojo.classpath = Arrays.asList(ExampleInitializationClass.class.getClassLoader().getResource(classLocation).getFile().replaceAll(classLocation, ""));
+        mockServerRunForkedMojo.compileClasspath = Arrays.asList(ExampleInitializationClass.class.getClassLoader().getResource(classLocation).getFile().replaceAll(classLocation, ""));
+        mockServerRunForkedMojo.testClasspath = Arrays.asList();
         when(mockServerRunForkedMojo.newProcessBuilder(Arrays.asList(
                 javaBinaryPath,
                 "-Dfile.encoding=UTF-8",
@@ -185,7 +185,8 @@ public class MockServerRunForkedMojoTest {
         mockServerRunForkedMojo.pipeLogToConsole = true;
         mockServerRunForkedMojo.initializationClass = "org.mockserver.maven.ExampleInitializationClass";
         String classLocation = "org/mockserver/maven/ExampleInitializationClass.class";
-        mockServerRunForkedMojo.classpath = Arrays.asList(ExampleInitializationClass.class.getClassLoader().getResource(classLocation).getFile().replaceAll(classLocation, ""));
+        mockServerRunForkedMojo.compileClasspath = Arrays.asList(ExampleInitializationClass.class.getClassLoader().getResource(classLocation).getFile().replaceAll(classLocation, ""));
+        mockServerRunForkedMojo.testClasspath = Arrays.asList();
         when(mockServerRunForkedMojo.newProcessBuilder(Arrays.asList(
                 javaBinaryPath,
                 "-Dfile.encoding=UTF-8",
