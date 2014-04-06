@@ -176,7 +176,6 @@
                                 <goals>
                                     <goal>install</goal>
                                     <goal>integration-test</goal>
-                                    <goal>run</goal>
                                     <goal>verify</goal>
                                 </goals>
                             </execution>

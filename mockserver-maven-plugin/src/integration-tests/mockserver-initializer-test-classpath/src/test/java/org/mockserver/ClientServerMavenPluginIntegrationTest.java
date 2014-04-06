@@ -1,10 +1,7 @@
 package org.mockserver;
 
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.http.ApacheHttpClient;
-import org.mockserver.client.server.MockServerClient;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -31,7 +28,7 @@ public class ClientServerMavenPluginIntegrationTest {
     public ClientServerMavenPluginIntegrationTest() {
         bufferSize(1024);
         maxTimeout(TimeUnit.SECONDS.toMillis(10));
-        apacheHttpClient = new ApacheHttpClient();
+        apacheHttpClient = new ApacheHttpClient(true);
     }
 
     @Test
