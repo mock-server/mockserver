@@ -47,7 +47,7 @@ public class ClientServerVertxIntegrationTest extends AbstractClientServerIntegr
 
     @AfterClass
     public static void stopServer() {
-        new ApacheHttpClient().sendRequest(
+        new ApacheHttpClient(true).sendRequest(
                 new HttpRequest()
                         .withMethod("PUT")
                         .withURL("http://localhost:" + port + "/stop")

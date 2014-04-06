@@ -43,27 +43,32 @@ public class ApacheHttpClient {
     private ApacheHttpClientToMockServerResponseMapper apacheHttpClientToMockServerResponseMapper = new ApacheHttpClientToMockServerResponseMapper();
     private CloseableHttpClient httpClient;
 
-    public ApacheHttpClient() {
+    public ApacheHttpClient(boolean isSecure) {
         try {
+            HttpClientBuilder httpClientBuilder = HttpClients.custom().disableCookieManagement();
+            if (isSecure) {
+                httpClientBuilder
+                        .setSslcontext(
+                                SSLContexts
+                                        .custom()
+                                        .loadTrustMaterial(SSLFactory.getInstance().buildKeyStore(), new TrustStrategy() {
+                                            public boolean isTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+                                                return true;
+                                            }
+                                        })
+                                        .build()
+                        )
+                        .setHostnameVerifier(new AllowAllHostnameVerifier());
+            }
+
+            // TODO the section below if commented out as it is still experimental
 //            System.getProperty("http.keepAlive", "false");
-            HttpClientBuilder httpClientBuilder = HttpClients
-                    .custom()
-                    .setSslcontext(
-                            SSLContexts
-                                    .custom()
-                                    .loadTrustMaterial(SSLFactory.getInstance().buildKeyStore(), new TrustStrategy() {
-                                        public boolean isTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-                                            return true;
-                                        }
-                                    })
-                                    .build()
-                    )
+//            httpClientBuilder
 //                    .setKeepAliveStrategy(new ConnectionKeepAliveStrategy() {
 //                        public long getKeepAliveDuration(org.apache.http.HttpResponse response, HttpContext context) {
 //                            return 0;
 //                        }
 //                    })
-                    .setHostnameVerifier(new AllowAllHostnameVerifier())
 //                    .setDefaultRequestConfig(
 //                            RequestConfig
 //                                    .custom()
@@ -78,8 +83,7 @@ public class ApacheHttpClient {
 //                                    .setSoLinger((int) TimeUnit.SECONDS.toMillis(10))
 //                                    .setSoKeepAlive(true)
 //                                    .build()
-//                    )
-                    .disableCookieManagement();
+//                    );
             this.httpClient = httpClientBuilder.build();
         } catch (Exception e) {
             throw new RuntimeException("Exception creating http client", e);

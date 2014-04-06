@@ -31,10 +31,11 @@ public class ProxyClient {
     public ProxyClient(String host, int port) {
         if (Boolean.parseBoolean(System.getProperty("defaultProxySet"))) {
             uriBase = "https://" + host + ":" + port;
+            apacheHttpClient = new ApacheHttpClient(true);
         } else {
             uriBase = "http://" + host + ":" + port;
+            apacheHttpClient = new ApacheHttpClient(false);
         }
-        apacheHttpClient = new ApacheHttpClient();
     }
 
     /**

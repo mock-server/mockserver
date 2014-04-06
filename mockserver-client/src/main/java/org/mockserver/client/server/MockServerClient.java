@@ -48,7 +48,7 @@ public class MockServerClient {
         if (StringUtils.isEmpty(host)) throw new IllegalArgumentException("Host can not be null or empty");
         if (contextPath == null) throw new IllegalArgumentException("ContextPath can not be null");
         uriBase = "http://" + host + ":" + port + (contextPath.length() > 0 && !contextPath.startsWith("/") ? "/" : "") + contextPath;
-        apacheHttpClient = new ApacheHttpClient();
+        apacheHttpClient = new ApacheHttpClient(false);
     }
 
     /**

@@ -27,7 +27,7 @@ public class ProxyServlet extends HttpServlet {
     private MockServerToHttpServletResponseMapper mockServerToHttpServletResponseMapper = new MockServerToHttpServletResponseMapper();
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
-    private ApacheHttpClient apacheHttpClient = new ApacheHttpClient();
+    private ApacheHttpClient apacheHttpClient = new ApacheHttpClient(true);
     private LogFilter logFilter = new LogFilter();
     private Filters filters = new Filters();
 

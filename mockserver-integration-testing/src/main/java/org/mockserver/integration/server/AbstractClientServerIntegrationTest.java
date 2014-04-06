@@ -29,7 +29,7 @@ public abstract class AbstractClientServerIntegrationTest {
     public AbstractClientServerIntegrationTest() {
         bufferSize(1024);
         maxTimeout(TimeUnit.SECONDS.toMillis(10));
-        apacheHttpClient = new ApacheHttpClient();
+        apacheHttpClient = new ApacheHttpClient(true);
     }
 
     public abstract int getPort();

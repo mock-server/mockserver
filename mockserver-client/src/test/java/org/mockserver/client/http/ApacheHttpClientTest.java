@@ -20,7 +20,6 @@ import org.mockserver.model.HttpResponse;
 import org.mockserver.model.Parameter;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
@@ -46,7 +45,7 @@ public class ApacheHttpClientTest {
 
     @Before
     public void setupTestFixture() throws Exception {
-        apacheHttpClient = new ApacheHttpClient();
+        apacheHttpClient = new ApacheHttpClient(true);
         initMocks(this);
 
         requestArgumentCaptor = ArgumentCaptor.forClass(HttpUriRequest.class);

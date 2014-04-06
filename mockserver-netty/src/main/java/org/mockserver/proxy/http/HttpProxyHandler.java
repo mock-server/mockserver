@@ -38,7 +38,7 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<Object> {
     private final HttpProxy server;
     private final LogFilter logFilter;
     private final Filters filters = new Filters();
-    private final ApacheHttpClient apacheHttpClient = new ApacheHttpClient();
+    private final ApacheHttpClient apacheHttpClient = new ApacheHttpClient(true);
     // mappers
     private NettyToMockServerRequestMapper nettyToMockServerRequestMapper = new NettyToMockServerRequestMapper();
     private MockServerToNettyResponseMapper mockServerToNettyResponseMapper = new MockServerToNettyResponseMapper();
