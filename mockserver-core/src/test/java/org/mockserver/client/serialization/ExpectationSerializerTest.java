@@ -11,6 +11,7 @@ import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 
+import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
@@ -57,13 +58,15 @@ public class ExpectationSerializerTest {
             .setHttpResponse(
                     new HttpResponseDTO()
                             .setStatusCode(304)
-                            .setBody("someBody")
+                            .setBody(DatatypeConverter.printBase64Binary("someBody".getBytes()))
                             .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("headerName", Arrays.asList("headerValue")))))
                             .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("cookieName", Arrays.asList("cookieValue")))))
                             .setDelay(
                                     new DelayDTO()
                                             .setTimeUnit(TimeUnit.MICROSECONDS)
-                                            .setValue(1)))
+                                            .setValue(1)
+                            )
+            )
             .setTimes(new TimesDTO(Times.once()));
     @Mock
     private ObjectMapper objectMapper;

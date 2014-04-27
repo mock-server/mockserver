@@ -165,11 +165,14 @@ public class MockServerClient {
      *                           .withBody("some_request_body")
      *           );
      *
-     * @param httpRequest the http request that must be matched for this verification to pass
+     * @param httpRequests the http requests that must be matched for this verification to pass
      * @throws AssertionError if the request has not been found
      */
-    public MockServerClient verify(HttpRequest httpRequest) throws AssertionError {
-        return verify(httpRequest, org.mockserver.client.proxy.Times.atLeast(1));
+    public MockServerClient verify(HttpRequest... httpRequests) throws AssertionError {
+        for (HttpRequest httpRequest : httpRequests) {
+            verify(httpRequest, org.mockserver.client.proxy.Times.atLeast(1));
+        }
+        return this;
     }
 
     /**

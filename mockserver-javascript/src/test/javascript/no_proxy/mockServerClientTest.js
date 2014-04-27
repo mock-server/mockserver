@@ -28,7 +28,7 @@ describe("mockServerClient client:", function () {
                 },
                 'httpResponse': {
                     'statusCode': 200,
-                    'body': JSON.stringify({ name: 'value' }),
+                    'body': Base64.encode(JSON.stringify({ name: 'value' })),
                     'delay': {
                         'timeUnit': 'MILLISECONDS',
                         'value': 250
@@ -75,7 +75,7 @@ describe("mockServerClient client:", function () {
                 },
                 'httpResponse': {
                     'statusCode': 200,
-                    'body': JSON.stringify({ name: 'first_body' }),
+                    'body': Base64.encode(JSON.stringify({ name: 'first_body' })),
                     'delay': {
                         'timeUnit': 'MILLISECONDS',
                         'value': 250
@@ -98,7 +98,7 @@ describe("mockServerClient client:", function () {
                 },
                 'httpResponse': {
                     'statusCode': 200,
-                    'body': JSON.stringify({ name: 'second_body' }),
+                    'body': Base64.encode(JSON.stringify({ name: 'second_body' })),
                     'delay': {
                         'timeUnit': 'MILLISECONDS',
                         'value': 250

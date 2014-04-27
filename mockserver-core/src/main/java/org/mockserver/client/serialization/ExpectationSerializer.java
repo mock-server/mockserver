@@ -46,13 +46,13 @@ public class ExpectationSerializer {
                     "        .when(\n" +
                     "                request()");
             if (StringUtils.isNotEmpty(httpRequest.getMethod())) {
-                output.append("\n                        .withMethod(\"" + httpRequest.getMethod() + "\")");
+                output.append("\n                        .withMethod(\"").append(httpRequest.getMethod()).append("\")");
             }
             if (StringUtils.isNotEmpty(httpRequest.getURL())) {
-                output.append("\n                        .withURL(\"" + httpRequest.getURL() + "\")");
+                output.append("\n                        .withURL(\"").append(httpRequest.getURL()).append("\")");
             }
             if (StringUtils.isNotEmpty(httpRequest.getPath())) {
-                output.append("\n                        .withPath(\"" + httpRequest.getPath() + "\")");
+                output.append("\n                        .withPath(\"").append(httpRequest.getPath()).append("\")");
             }
             if (httpRequest.getHeaders().size() > 0) {
                 serializeAsJavaKeyToMultiValue(output, "Header", new ArrayList<KeyToMultiValue>(httpRequest.getHeaders()));
@@ -65,11 +65,11 @@ public class ExpectationSerializer {
             }
             if (httpRequest.getBody() != null) {
                 if (httpRequest.getBody() instanceof StringBody) {
-                    output.append("\n                        .withBody(new StringBody(\"" + StringEscapeUtils.escapeJava(((StringBody) httpRequest.getBody()).getValue()) + "\", Body.Type." + httpRequest.getBody().getType() + "))");
+                    output.append("\n                        .withBody(new StringBody(\"").append(StringEscapeUtils.escapeJava(((StringBody) httpRequest.getBody()).getValue())).append("\", Body.Type.").append(httpRequest.getBody().getType()).append("))");
                 } else if (httpRequest.getBody() instanceof ParameterBody) {
                     output.append("\n                        .withBody(new ParameterBody(Arrays.asList(");
                     serializeAsJavaKeyToMultiValueList(output, "Parameter", new ArrayList<KeyToMultiValue>(((ParameterBody) httpRequest.getBody()).getParameters()));
-                    output.append("), Body.Type." + httpRequest.getBody().getType() + "))");
+                    output.append("), Body.Type.").append(httpRequest.getBody().getType()).append("))");
                 }
             }
             output.append(",\n" +
@@ -78,7 +78,7 @@ public class ExpectationSerializer {
                     "        .thenRespond(\n" +
                     "                response()\n");
             if (httpResponse.getStatusCode() != null) {
-                output.append("                        .withStatusCode(" + httpResponse.getStatusCode() + ")");
+                output.append("                        .withStatusCode(").append(httpResponse.getStatusCode()).append(")");
             }
             if (httpResponse.getHeaders().size() > 0) {
                 serializeAsJavaKeyToMultiValue(output, "Header", new ArrayList<KeyToMultiValue>(httpResponse.getHeaders()));
@@ -87,7 +87,7 @@ public class ExpectationSerializer {
                 serializeAsJavaKeyToMultiValue(output, "Cookie", new ArrayList<KeyToMultiValue>(httpResponse.getCookies()));
             }
             if (httpResponse.getBody() != null && httpResponse.getBody().length > 0) {
-                output.append("\n                        .withBody(\"" + StringEscapeUtils.escapeJava(new String(httpResponse.getBody(), Charsets.UTF_8)) + "\")");
+                output.append("\n                        .withBody(\"").append(StringEscapeUtils.escapeJava(new String(httpResponse.getBody(), Charsets.UTF_8))).append("\")");
             }
             output.append("\n        );");
         }
@@ -96,7 +96,7 @@ public class ExpectationSerializer {
     }
 
     private void serializeAsJavaKeyToMultiValue(StringBuffer output, String name, List<KeyToMultiValue> keyToMultiValues) {
-        output.append("\n                        .with" + name + "s(\n");
+        output.append("\n                        .with").append(name).append("s(\n");
         serializeAsJavaKeyToMultiValueList(output, name, keyToMultiValues);
         output.append("                        )");
     }
@@ -104,9 +104,9 @@ public class ExpectationSerializer {
     private void serializeAsJavaKeyToMultiValueList(StringBuffer output, String name, List<KeyToMultiValue> keyToMultiValues) {
         for (int i = 0; i < keyToMultiValues.size(); i++) {
             KeyToMultiValue keyToMultiValue = keyToMultiValues.get(i);
-            output.append("                                new " + name + "(\"" + keyToMultiValue.getName() + "\"");
+            output.append("                                new ").append(name).append("(\"").append(keyToMultiValue.getName()).append("\"");
             for (String value : keyToMultiValue.getValues()) {
-                output.append(", \"" + value + "\"");
+                output.append(", \"").append(value).append("\"");
             }
             output.append(")");
             if (i < (keyToMultiValues.size() - 1)) {

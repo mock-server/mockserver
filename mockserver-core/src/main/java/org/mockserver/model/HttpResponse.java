@@ -3,6 +3,7 @@ package org.mockserver.model;
 import org.apache.commons.io.Charsets;
 import org.mockserver.client.serialization.ObjectMapperFactory;
 
+import javax.xml.bind.DatatypeConverter;
 import java.util.*;
 
 /**
@@ -45,20 +46,20 @@ public class HttpResponse extends EqualsHashCodeToString {
      */
     public HttpResponse withBody(String body) {
         if (body != null) {
-            this.body = body.getBytes();
+            withBody(body.getBytes());
         } else {
-            this.body = new byte[0];
+            withBody(new byte[0]);
         }
         return this;
     }
 
     public HttpResponse withBody(byte[] body) {
-        this.body = body;
+        this.body = body != null ? DatatypeConverter.printBase64Binary(body).getBytes() : null;
         return this;
     }
 
     public byte[] getBody() {
-        return body;
+        return DatatypeConverter.parseBase64Binary(new String(body));
     }
 
     public int getContentLength() {

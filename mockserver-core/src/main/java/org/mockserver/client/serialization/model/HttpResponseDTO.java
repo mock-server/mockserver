@@ -7,6 +7,7 @@ import org.mockserver.model.EqualsHashCodeToString;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpResponse;
 
+import javax.xml.bind.DatatypeConverter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,7 +43,7 @@ public class HttpResponseDTO extends EqualsHashCodeToString {
     public HttpResponse buildObject() {
         return new HttpResponse()
                 .withStatusCode(statusCode)
-                .withBody(body)
+                .withBody(body != null ? DatatypeConverter.parseBase64Binary(body) : null)
                 .withHeaders(Lists.transform(headers, new Function<HeaderDTO, Header>() {
                     public Header apply(HeaderDTO header) {
                         return header.buildObject();

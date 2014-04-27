@@ -1,5 +1,6 @@
 package org.mockserver.mock;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import org.mockserver.client.serialization.ExpectationSerializer;
@@ -12,9 +13,12 @@ import org.mockserver.model.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.xml.bind.DatatypeConverter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author jamesdbloom
@@ -90,14 +94,25 @@ public class MockServerMatcher extends EqualsHashCodeToString {
             ExpectationSerializer expectationSerializer = new ExpectationSerializer();
             for (Expectation expectation : new ArrayList<Expectation>(expectations)) {
                 if (expectation.matches(httpRequest)) {
-                    requestLogger.warn(expectationSerializer.serialize(expectation));
+                    requestLogger.warn(cleanBase64Response(expectationSerializer.serialize(expectation)));
                 }
             }
         } else {
             ExpectationSerializer expectationSerializer = new ExpectationSerializer();
             for (Expectation expectation : new ArrayList<Expectation>(expectations)) {
-                requestLogger.warn(expectationSerializer.serialize(expectation));
+                requestLogger.warn(cleanBase64Response(expectationSerializer.serialize(expectation)));
             }
+        }
+    }
+
+    @VisibleForTesting
+    String cleanBase64Response(String serializedExpectation) {
+        Pattern base64ResponseBodyPattern = Pattern.compile("[\\s\\S]*\\\"httpResponse\\\"\\s*\\:\\s*\\{[\\s\\S]*\\\"body\\\"\\s*\\:\\s*\\\"(([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==))\\\"[\\s\\S]*");
+        Matcher matcher = base64ResponseBodyPattern.matcher(serializedExpectation);
+        if(matcher.find()) {
+            return serializedExpectation.replace(matcher.group(1), new String(DatatypeConverter.parseBase64Binary(matcher.group(1))));
+        } else {
+            return serializedExpectation;
         }
     }
 }

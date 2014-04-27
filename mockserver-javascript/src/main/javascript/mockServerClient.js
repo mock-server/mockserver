@@ -31,7 +31,7 @@ var mockServerClient = function (mockServerUrl) {
                 httpRequest: createResponseMatcher(path),
                 httpResponse: {
                     statusCode: statusCode || 200,
-                    body: JSON.stringify(responseBody),
+                    body: Base64.encode(JSON.stringify(responseBody)),
                     cookies: [],
                     headers: defaultResponseHeaders,
                     delay: {

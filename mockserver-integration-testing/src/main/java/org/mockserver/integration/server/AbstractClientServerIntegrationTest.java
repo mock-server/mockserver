@@ -1,12 +1,19 @@
 package org.mockserver.integration.server;
 
+import com.google.common.io.Files;
+import com.google.common.net.HttpHeaders;
+import com.google.common.net.MediaType;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.client.http.ApacheHttpClient;
 import org.mockserver.client.server.MockServerClient;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.*;
+import sun.misc.IOUtils;
 
+import javax.xml.bind.DatatypeConverter;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -14,6 +21,8 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.configuration.SystemProperties.bufferSize;
 import static org.mockserver.configuration.SystemProperties.maxTimeout;
+import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.ParameterBody.params;
 import static org.mockserver.model.StringBody.exact;
 
@@ -55,7 +64,8 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "")
-                ));
+                )
+        );
         // - in https
         assertEquals(
                 new HttpResponse()
@@ -64,7 +74,8 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : ""))
-                ));
+                )
+        );
     }
 
     @Test
@@ -99,7 +110,8 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path2")
                                 .withPath("/some_path2")
-                ));
+                )
+        );
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
@@ -108,7 +120,8 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path1")
                                 .withPath("/some_path1")
-                ));
+                )
+        );
         // - in https
         assertEquals(
                 new HttpResponse()
@@ -118,7 +131,8 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path2")
                                 .withPath("/some_path2")
-                ));
+                )
+        );
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
@@ -127,7 +141,8 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path1")
                                 .withPath("/some_path1")
-                ));
+                )
+        );
     }
 
     @Test
@@ -145,7 +160,8 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
                                 .withPath("/some_path")
-                ));
+                )
+        );
         // - in https
         assertEquals(
                 new HttpResponse()
@@ -155,7 +171,8 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
                                 .withPath("/some_path")
-                ));
+                )
+        );
         // - in http
         assertEquals(
                 new HttpResponse()
@@ -164,7 +181,8 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
                                 .withPath("/some_path")
-                ));
+                )
+        );
         // - in https
         assertEquals(
                 new HttpResponse()
@@ -173,7 +191,8 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
                                 .withPath("/some_path")
-                ));
+                )
+        );
     }
 
     @Test
@@ -191,7 +210,8 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
                                 .withPath("/some_path")
-                ));
+                )
+        );
         mockServerClient.verify(new HttpRequest()
                 .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
                 .withPath("/some_path"));
@@ -208,7 +228,8 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
                                 .withPath("/some_path")
-                ));
+                )
+        );
         mockServerClient.verify(new HttpRequest()
                 .withURL("https{0,1}\\:\\/\\/localhost\\:\\d*\\/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("\\/") ? "\\/" : "") + "some_path")
                 .withPath("/some_path"), org.mockserver.client.proxy.Times.atLeast(1));
@@ -231,7 +252,8 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
                                 .withPath("/some_path")
-                ));
+                )
+        );
         mockServerClient.verify(new HttpRequest()
                 .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
                 .withPath("/some_path"), org.mockserver.client.proxy.Times.atLeast(2));
@@ -251,7 +273,8 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
                                 .withPath("/some_path")
-                ));
+                )
+        );
         mockServerClient.verify(new HttpRequest()
                 .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
                 .withPath("/some_path"), org.mockserver.client.proxy.Times.exactly(0));
@@ -271,7 +294,8 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
                                 .withPath("/some_path")
-                ));
+                )
+        );
         mockServerClient.verify(new HttpRequest()
                 .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_other_path")
                 .withPath("/some_other_path"), org.mockserver.client.proxy.Times.exactly(2));
@@ -290,7 +314,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body"),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
                                 .withMethod("POST")
                                 .withBody(new StringBody("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n" +
                                         "\n" +
@@ -318,7 +342,8 @@ public abstract class AbstractClientServerIntegrationTest {
                                         "</book>\n" +
                                         "\n" +
                                         "</bookstore>", Body.Type.EXACT))
-                ));
+                )
+        );
         // - in https
         assertEquals(
                 new HttpResponse()
@@ -354,7 +379,115 @@ public abstract class AbstractClientServerIntegrationTest {
                                         "</book>\n" +
                                         "\n" +
                                         "</bookstore>", Body.Type.EXACT))
-                ));
+                )
+        );
+    }
+
+    @Test
+    public void clientCanSetupExpectationForPDF() throws IOException {
+        // when
+        byte[] pdfBytes = IOUtils.readFully(getClass().getClassLoader().getResourceAsStream("test.pdf"), -1, true);
+        mockServerClient
+                .when(
+                        request()
+                                .withPath("/ws/rest/user/[0-9]+/document/[0-9]+\\.pdf")
+                )
+                .respond(
+                        response()
+                                .withStatusCode(HttpStatusCode.OK_200.code())
+                                .withHeaders(
+                                        new Header(HttpHeaders.CONTENT_TYPE, MediaType.PDF.toString()),
+                                        new Header(HttpHeaders.CONTENT_DISPOSITION, "form-data; name=\"test.pdf\"; filename=\"test.pdf\""),
+                                        new Header(HttpHeaders.CACHE_CONTROL, "must-revalidate, post-check=0, pre-check=0")
+                                )
+                                .withBody(pdfBytes)
+                );
+
+        // then
+        // - in http
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withHeaders(
+                                new Header(HttpHeaders.CONTENT_TYPE, MediaType.PDF.toString()),
+                                new Header(HttpHeaders.CONTENT_DISPOSITION, "form-data; name=\"test.pdf\"; filename=\"test.pdf\""),
+                                new Header(HttpHeaders.CACHE_CONTROL, "must-revalidate, post-check=0, pre-check=0")
+                        )
+                        .withBody(pdfBytes),
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "/ws/rest/user/1/document/2.pdf")
+                                .withMethod("GET")
+                )
+        );
+        // - in https
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withHeaders(
+                                new Header(HttpHeaders.CONTENT_TYPE, MediaType.PDF.toString()),
+                                new Header(HttpHeaders.CONTENT_DISPOSITION, "form-data; name=\"test.pdf\"; filename=\"test.pdf\""),
+                                new Header(HttpHeaders.CACHE_CONTROL, "must-revalidate, post-check=0, pre-check=0")
+                        )
+                        .withBody(pdfBytes),
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "/ws/rest/user/1/document/2.pdf")
+                                .withMethod("GET")
+                )
+        );
+    }
+
+    @Test
+    public void clientCanSetupExpectationForJPG() throws IOException {
+        // when
+        byte[] pngBytes = IOUtils.readFully(getClass().getClassLoader().getResourceAsStream("test.png"), -1, true);
+        mockServerClient
+                .when(
+                        request()
+                                .withPath("/ws/rest/user/[0-9]+/icon/[0-9]+\\.png")
+                )
+                .respond(
+                        response()
+                                .withStatusCode(HttpStatusCode.OK_200.code())
+                                .withHeaders(
+                                        new Header(HttpHeaders.CONTENT_TYPE, MediaType.PNG.toString()),
+                                        new Header(HttpHeaders.CONTENT_DISPOSITION, "form-data; name=\"test.png\"; filename=\"test.png\"")
+                                )
+                                .withBody(pngBytes)
+                );
+
+        // then
+        // - in http
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withHeaders(
+                                new Header(HttpHeaders.CONTENT_TYPE, MediaType.PNG.toString()),
+                                new Header(HttpHeaders.CONTENT_DISPOSITION, "form-data; name=\"test.png\"; filename=\"test.png\"")
+                        )
+                        .withBody(pngBytes),
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "/ws/rest/user/1/icon/1.png")
+                                .withMethod("GET")
+                )
+        );
+        // - in https
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withHeaders(
+                                new Header(HttpHeaders.CONTENT_TYPE, MediaType.PNG.toString()),
+                                new Header(HttpHeaders.CONTENT_DISPOSITION, "form-data; name=\"test.png\"; filename=\"test.png\"")
+                        )
+                        .withBody(pngBytes),
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "/ws/rest/user/1/icon/1.png")
+                                .withMethod("GET")
+                )
+        );
     }
 
     @Test
@@ -387,7 +520,8 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path2")
                                 .withPath("/some_path2")
-                ));
+                )
+        );
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
@@ -396,7 +530,8 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path1")
                                 .withPath("/some_path1")
-                ));
+                )
+        );
         // - in https
         assertEquals(
                 new HttpResponse()
@@ -406,7 +541,8 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path2")
                                 .withPath("/some_path2")
-                ));
+                )
+        );
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
@@ -415,7 +551,8 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path1")
                                 .withPath("/some_path1")
-                ));
+                )
+        );
     }
 
     @Test
@@ -821,7 +958,8 @@ public abstract class AbstractClientServerIntegrationTest {
                                         "&queryStringParameterOneName=queryStringParameterOneValueTwo" +
                                         "&queryStringParameterTwoName=queryStringParameterTwoValue")
                                 .withPath("/some_path")
-                                .withBody(params(new Parameter("bodyParameterName", "bodyParameterValue"))))
+                                .withBody(params(new Parameter("bodyParameterName", "bodyParameterValue")))
+                )
         );
         // - in https - query string parameter objects
         assertEquals(
@@ -885,7 +1023,8 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withPath("/some_pathRequest")
                                 .withBody("some_bodyRequest")
                                 .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
-                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest")))
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
+                )
         );
         // - in http - query string parameter objects
         assertEquals(
@@ -908,7 +1047,8 @@ public abstract class AbstractClientServerIntegrationTest {
                                 )
                                 .withBody("some_bodyRequest")
                                 .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
-                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest")))
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
+                )
         );
         // - in https - url string and query string parameter objects
         assertEquals(
@@ -934,7 +1074,8 @@ public abstract class AbstractClientServerIntegrationTest {
                                 )
                                 .withBody("some_bodyRequest")
                                 .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
-                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest")))
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
+                )
         );
     }
 
@@ -1045,7 +1186,8 @@ public abstract class AbstractClientServerIntegrationTest {
                                         "&bodyParameterOneName=Parameter+One+Value+Two" +
                                         "&bodyParameterTwoName=Parameter+Two", Body.Type.EXACT))
                                 .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
-                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest")))
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
+                )
                 .respond(
                         new HttpResponse()
                                 .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
@@ -1207,7 +1349,8 @@ public abstract class AbstractClientServerIntegrationTest {
                                         "</book>\n" +
                                         "\n" +
                                         "</bookstore>", Body.Type.EXACT))
-                ));
+                )
+        );
         // - in https
         assertEquals(
                 new HttpResponse()
@@ -1242,7 +1385,8 @@ public abstract class AbstractClientServerIntegrationTest {
                                         "</book>\n" +
                                         "\n" +
                                         "</bookstore>", Body.Type.EXACT))
-                ));
+                )
+        );
     }
 
     @Test
@@ -1798,7 +1942,8 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path2")
                                 .withPath("/some_path2")
-                ));
+                )
+        );
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
@@ -1806,7 +1951,8 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path1")
                                 .withPath("/some_path1")
-                ));
+                )
+        );
         // - in https
         assertEquals(
                 new HttpResponse()
@@ -1816,7 +1962,8 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path2")
                                 .withPath("/some_path2")
-                ));
+                )
+        );
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
@@ -1824,7 +1971,8 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path1")
                                 .withPath("/some_path1")
-                ));
+                )
+        );
     }
 
     @Test
@@ -1861,7 +2009,8 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path1")
                                 .withPath("/some_path1")
-                ));
+                )
+        );
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
@@ -1869,7 +2018,8 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path2")
                                 .withPath("/some_path2")
-                ));
+                )
+        );
         // - in https
         assertEquals(
                 new HttpResponse()
@@ -1878,7 +2028,8 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path1")
                                 .withPath("/some_path1")
-                ));
+                )
+        );
         assertEquals(
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
@@ -1886,7 +2037,8 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path2")
                                 .withPath("/some_path2")
-                ));
+                )
+        );
     }
 
     protected HttpResponse makeRequest(HttpRequest httpRequest) {

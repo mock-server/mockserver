@@ -11,9 +11,11 @@ import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpResponse;
 
+import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.util.Arrays;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -47,7 +49,8 @@ public class ApacheHttpClientToMockServerResponseMapperTest {
                 new Cookie("cookie_name", "cookie_value")
         ));
         assertEquals(new String(httpResponse.getBody(), Charsets.UTF_8), "somebody");
-        assertEquals(httpResponse.getBodyAsString(), "somebody");
+        assertEquals(httpResponse.getBodyAsString(), DatatypeConverter.printBase64Binary("somebody".getBytes()));
+        assertArrayEquals(httpResponse.getBody(), "somebody".getBytes());
     }
 
     @Test

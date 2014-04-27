@@ -2,8 +2,10 @@ package org.mockserver.model;
 
 import org.junit.Test;
 
+import javax.xml.bind.DatatypeConverter;
 import java.util.concurrent.TimeUnit;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 import static org.mockito.Mockito.*;
@@ -26,7 +28,8 @@ public class HttpResponseTest {
 
     @Test
     public void returnsBody() {
-        assertEquals("somebody", new HttpResponse().withBody("somebody").getBodyAsString());
+        assertEquals(DatatypeConverter.printBase64Binary("somebody".getBytes()), new HttpResponse().withBody("somebody").getBodyAsString());
+        assertArrayEquals("somebody".getBytes(), new HttpResponse().withBody("somebody").getBody());
     }
 
     @Test

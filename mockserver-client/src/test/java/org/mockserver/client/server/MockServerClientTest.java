@@ -250,7 +250,7 @@ public class MockServerClientTest {
     }
 
     @Test
-    public void shouldVerify() throws UnsupportedEncodingException {
+    public void shouldVerifyMultipleRequest() throws UnsupportedEncodingException {
         // given
         when(mockApacheHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn("body");
         when(expectationSerializer.deserializeArray(anyString())).thenReturn(new Expectation[]{
@@ -263,6 +263,32 @@ public class MockServerClientTest {
                 .verify(
                         new HttpRequest()
                                 .withPath("/some_path")
+                                .withBody(new StringBody("some_request_body", Body.Type.EXACT))
+                );
+
+        // no assertion exception thrown
+    }
+
+    @Test
+    public void shouldVerify() throws UnsupportedEncodingException {
+        // given
+        when(mockApacheHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn("body");
+        when(expectationSerializer.deserializeArray(anyString())).thenReturn(new Expectation[]{
+                new ExpectationDTO().buildObject(),
+                new ExpectationDTO().buildObject()
+        });
+
+        // when
+        mockServerClient
+                .verify(
+                        new HttpRequest()
+                                .withPath("/some_path_one")
+                                .withBody(new StringBody("some_request_body", Body.Type.EXACT)),
+                        new HttpRequest()
+                                .withPath("/some_path_two")
+                                .withBody(new StringBody("some_request_body", Body.Type.EXACT)),
+                        new HttpRequest()
+                                .withPath("/some_path_three")
                                 .withBody(new StringBody("some_request_body", Body.Type.EXACT))
                 );
 
