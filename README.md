@@ -7,6 +7,8 @@ MockServer
 
 Unfortunately both Travis CI and drone.io don't seem to be stable enough for MockServer.  The MockServer uses lots of socket connections to complete its integration tests.  The same build with no code or configuration changes run multiple times fails randomly on both Travis CI and drone.io.  It is likely due to the server infrastructure using either a hypervisor or containers that is causing issues with the heavy socket use in the integration tests.  As a result the build status will not be displayed any longer on github or at the top of the homepage.
 
+[![Stories in Backlog](https://badge.waffle.io/jamesdbloom/mockserver.png?label=backlog&title=Backlog)](https://waffle.io/jamesdbloom/mockserver)
+
 # Versions
 
 ### Maven Central
