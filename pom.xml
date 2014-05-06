@@ -10,7 +10,7 @@
 
     <groupId>org.mock-server</groupId>
     <artifactId>mockserver</artifactId>
-    <version>2.10-SNAPSHOT</version>
+    <version>2.9-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>MockServer</name>
@@ -93,40 +93,40 @@
             <dependency>
                 <groupId>org.mock-server</groupId>
                 <artifactId>mockserver-core</artifactId>
-                <version>${project.version}</version>
+                <version>2.9</version>
             </dependency>
             <dependency>
                 <groupId>org.mock-server</groupId>
                 <artifactId>mockserver-war</artifactId>
                 <classifier>classes</classifier>
-                <version>${project.version}</version>
+                <version>2.9</version>
             </dependency>
             <dependency>
                 <groupId>org.mock-server</groupId>
                 <artifactId>mockserver-proxy-war</artifactId>
                 <classifier>classes</classifier>
-                <version>${project.version}</version>
+                <version>2.9</version>
             </dependency>
             <dependency>
                 <groupId>org.mock-server</groupId>
                 <artifactId>mockserver-netty</artifactId>
-                <version>${project.version}</version>
+                <version>2.9</version>
             </dependency>
             <dependency>
                 <groupId>org.mock-server</groupId>
                 <artifactId>mockserver-netty</artifactId>
                 <classifier>jar-with-dependencies</classifier>
-                <version>${project.version}</version>
+                <version>2.9</version>
             </dependency>
             <dependency>
                 <groupId>org.mock-server</groupId>
                 <artifactId>mockserver-client</artifactId>
-                <version>${project.version}</version>
+                <version>2.9</version>
             </dependency>
             <dependency>
                 <groupId>org.mock-server</groupId>
                 <artifactId>mockserver-integration-testing</artifactId>
-                <version>${project.version}</version>
+                <version>2.9</version>
                 <!-- TODO why is mockserver-client not transitively included for tests in intelliJ but works from mvn directly -->
                 <scope>test</scope>
             </dependency>
