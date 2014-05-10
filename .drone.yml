@@ -1,7 +1,7 @@
 image: bradrydzewski/java:oraclejdk7
 
 script:
-  - mvn test
+  - mvn test -Pit
 
 notify:
   email:
