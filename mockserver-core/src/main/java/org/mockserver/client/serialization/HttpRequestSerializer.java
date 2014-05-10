@@ -37,7 +37,7 @@ public class HttpRequestSerializer {
                     httpRequest = httpRequestDTO.buildObject();
                 }
             } catch (IOException ioe) {
-                logger.info("Exception while parsing response [" + new String(jsonHttpRequest) + "] for http response httpRequest", ioe);
+                logger.info("Exception while parsing response [" + jsonHttpRequest + "] for http response httpRequest", ioe);
             }
         }
         return httpRequest;

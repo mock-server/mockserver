@@ -1,9 +1,9 @@
 package org.mockserver.model;
 
 import org.apache.commons.io.Charsets;
+import org.mockserver.client.serialization.Base64Converter;
 import org.mockserver.client.serialization.ObjectMapperFactory;
 
-import javax.xml.bind.DatatypeConverter;
 import java.util.*;
 
 /**
@@ -54,12 +54,12 @@ public class HttpResponse extends EqualsHashCodeToString {
     }
 
     public HttpResponse withBody(byte[] body) {
-        this.body = body != null ? DatatypeConverter.printBase64Binary(body).getBytes() : null;
+        this.body = body != null ? Base64Converter.printBase64Binary(body).getBytes() : null;
         return this;
     }
 
     public byte[] getBody() {
-        return DatatypeConverter.parseBase64Binary(new String(body));
+        return Base64Converter.parseBase64Binary(new String(body));
     }
 
     public int getContentLength() {

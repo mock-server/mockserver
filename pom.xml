@@ -40,52 +40,27 @@
         </developer>
     </developers>
 
-    <profiles>
-        <profile>
-            <id>jdk16</id>
-            <activation>
-                <jdk>1.6</jdk>
-            </activation>
-            <properties>
-                <!--<maven.compiler.source>1.6</maven.compiler.source>-->
-                <!--<maven.compiler.target>1.6</maven.compiler.target>-->
-            </properties>
-            <modules>
-                <module>mockserver-client</module>
-                <module>mockserver-core</module>
-                <module>mockserver-war</module>
-                <module>mockserver-proxy-war</module>
-                <module>mockserver-integration-testing</module>
-                <module>mockserver-netty</module>
-                <module>mockserver-maven-plugin</module>
-                <module>mockserver-javascript</module>
-            </modules>
-        </profile>
-        <profile>
-            <id>jdk17</id>
-            <activation>
-                <jdk>1.7</jdk>
-            </activation>
-            <properties>
-                <!--<maven.compiler.source>1.7</maven.compiler.source>-->
-                <!--<maven.compiler.target>1.7</maven.compiler.target>-->
-            </properties>
-            <modules>
-                <module>mockserver-jetty</module>
-                <module>mockserver-vertx</module>
-                <module>mockserver-examples</module>
-            </modules>
-        </profile>
-    </profiles>
-
     <properties>
+        <maven.compiler.source>1.6</maven.compiler.source>
+        <maven.compiler.target>1.6</maven.compiler.target>
         <project.build.sourceEncoding>UTF8</project.build.sourceEncoding>
-        <jetty.version>9.1.0.v20131115</jetty.version>
-        <vertx.version>2.1M2</vertx.version>
+        <jetty.version>8.1.13.v20130916</jetty.version>
         <slf4j.version>1.7.5</slf4j.version>
         <tomcat.version>7.0.47</tomcat.version>
         <jackson.version>1.9.13</jackson.version>
     </properties>
+
+    <modules>
+        <module>mockserver-client</module>
+        <module>mockserver-core</module>
+        <module>mockserver-war</module>
+        <module>mockserver-proxy-war</module>
+        <module>mockserver-integration-testing</module>
+        <module>mockserver-netty</module>
+        <module>mockserver-maven-plugin</module>
+        <module>mockserver-javascript</module>
+        <module>mockserver-examples</module>
+    </modules>
 
     <dependencyManagement>
         <dependencies>
@@ -93,40 +68,40 @@
             <dependency>
                 <groupId>org.mock-server</groupId>
                 <artifactId>mockserver-core</artifactId>
-                <version>2.9</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.mock-server</groupId>
                 <artifactId>mockserver-war</artifactId>
                 <classifier>classes</classifier>
-                <version>2.9</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.mock-server</groupId>
                 <artifactId>mockserver-proxy-war</artifactId>
                 <classifier>classes</classifier>
-                <version>2.9</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.mock-server</groupId>
                 <artifactId>mockserver-netty</artifactId>
-                <version>2.9</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.mock-server</groupId>
                 <artifactId>mockserver-netty</artifactId>
                 <classifier>jar-with-dependencies</classifier>
-                <version>2.9</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.mock-server</groupId>
                 <artifactId>mockserver-client</artifactId>
-                <version>2.9</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.mock-server</groupId>
                 <artifactId>mockserver-integration-testing</artifactId>
-                <version>2.9</version>
+                <version>${project.version}</version>
                 <!-- TODO why is mockserver-client not transitively included for tests in intelliJ but works from mvn directly -->
                 <scope>test</scope>
             </dependency>
@@ -219,26 +194,6 @@
                 <groupId>org.bouncycastle</groupId>
                 <artifactId>bcprov-jdk15on</artifactId>
                 <version>1.50</version>
-            </dependency>
-
-            <!-- Vert.X -->
-            <dependency>
-                <groupId>io.vertx</groupId>
-                <artifactId>vertx-core</artifactId>
-                <version>${vertx.version}</version>
-                <scope>provided</scope>
-                <exclusions>
-                    <exclusion>
-                        <groupId>log4j</groupId>
-                        <artifactId>log4j</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>io.vertx</groupId>
-                <artifactId>vertx-platform</artifactId>
-                <version>${vertx.version}</version>
-                <scope>provided</scope>
             </dependency>
 
             <!-- json (object serialisation) -->
@@ -449,12 +404,12 @@
             </plugin>
             <!-- debug tests -->
             <!--<plugin>-->
-                <!--<groupId>org.apache.maven.plugins</groupId>-->
-                <!--<artifactId>maven-surefire-plugin</artifactId>-->
-                <!--<version>2.17</version>-->
-                <!--<configuration>-->
-                    <!--<forkMode>never</forkMode>-->
-                <!--</configuration>-->
+            <!--<groupId>org.apache.maven.plugins</groupId>-->
+            <!--<artifactId>maven-surefire-plugin</artifactId>-->
+            <!--<version>2.17</version>-->
+            <!--<configuration>-->
+            <!--<forkMode>never</forkMode>-->
+            <!--</configuration>-->
             <!--</plugin>-->
         </plugins>
     </build>

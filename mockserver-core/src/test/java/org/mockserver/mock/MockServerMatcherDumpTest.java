@@ -4,11 +4,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockserver.client.serialization.Base64Converter;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.slf4j.Logger;
-
-import javax.xml.bind.DatatypeConverter;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -138,7 +137,7 @@ public class MockServerMatcherDumpTest {
                 "  },\n" +
                 "  \"httpResponse\" : {\n" +
                 "    \"statusCode\" : 200,\n" +
-                "    \"body\" : \"" + DatatypeConverter.printBase64Binary("some_response_body".getBytes()) + "\"\n" +
+                "    \"body\" : \"" + Base64Converter.printBase64Binary("some_response_body".getBytes()) + "\"\n" +
                 "  },\n" +
                 "  \"times\" : {\n" +
                 "    \"remainingTimes\" : 0,\n" +
@@ -170,7 +169,7 @@ public class MockServerMatcherDumpTest {
                 "        \"path\": \"somePath\"\n" +
                 "    },\n" +
                 "    \"httpResponse\": {\n" +
-                "        \"body\": \"" + DatatypeConverter.printBase64Binary("someBody".getBytes()) + "\",\n" +
+                "        \"body\": \"" + Base64Converter.printBase64Binary("someBody".getBytes()) + "\",\n" +
                 "        \"delay\": {\n" +
                 "            \"timeUnit\": null,\n" +
                 "            \"value\": null\n" +
@@ -223,7 +222,7 @@ public class MockServerMatcherDumpTest {
                 "  },\n" +
                 "  \"httpResponse\" : {\n" +
                 "    \"statusCode\" : 304,\n" +
-                "    \"body\" : \"" + DatatypeConverter.printBase64Binary("someBody".getBytes()) + "\",\n" +
+                "    \"body\" : \"" + Base64Converter.printBase64Binary("someBody".getBytes()) + "\",\n" +
                 "    \"cookies\" : [ {\n" +
                 "      \"name\" : \"someCookieName\",\n" +
                 "      \"values\" : [ \"someCookieValue\" ]\n" +

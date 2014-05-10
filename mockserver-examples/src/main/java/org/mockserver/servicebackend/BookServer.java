@@ -1,23 +1,32 @@
 package org.mockserver.servicebackend;
 
+import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.*;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.http.*;
+import io.netty.handler.logging.LoggingHandler;
+import io.netty.handler.ssl.SslHandler;
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.server.handler.AbstractHandler;
-import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.mockserver.model.Book;
+import org.mockserver.socket.SSLFactory;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
+import javax.net.ssl.SSLEngine;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH;
+import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
+import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
+import static io.netty.handler.codec.http.HttpResponseStatus.OK;
+import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 /**
  * @author jamesdbloom
@@ -26,50 +35,53 @@ public class BookServer {
 
     private final Map<String, Book> booksDB = createBookData();
     private final ObjectMapper objectMapper = createObjectMapper();
-    private Server server;
     private final int httpPort;
+    private final boolean secure;
+    private NioEventLoopGroup bossGroup;
+    private NioEventLoopGroup workerGroup;
 
-    public BookServer(int httpPort) {
+    public BookServer(int httpPort, boolean secure) {
         this.httpPort = httpPort;
+        this.secure = secure;
     }
 
     @PostConstruct
     public void startServer() {
-        try {
-            server = new Server();
-            addServerConnector(server, httpPort, null);
-            server.setHandler(new AbstractHandler() {
-                public void handle(String target, Request request, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws IOException, ServletException {
-                    String uri = httpServletRequest.getRequestURI();
-                    if ("/get_books".equals(uri)) {
-                        request.setHandled(true);
-                        httpServletResponse.setStatus(200);
-                        httpServletResponse.setHeader("Content-Type", "application/json");
-                        httpServletResponse.getOutputStream().print(
-                                objectMapper
-                                        .writerWithDefaultPrettyPrinter()
-                                        .writeValueAsString(booksDB.values())
-                        );
-                    } else if ("/get_book".equals(uri)) {
-                        request.setHandled(true);
-                        httpServletResponse.setStatus(200);
-                        httpServletResponse.setHeader("Content-Type", "application/json");
-                        Book book = booksDB.get(request.getParameter("id"));
-                        if (book != null) {
-                            httpServletResponse.getOutputStream().print(
-                                    objectMapper
-                                            .writerWithDefaultPrettyPrinter()
-                                            .writeValueAsString(book)
-                            );
-                        }
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                bossGroup = new NioEventLoopGroup();
+                workerGroup = new NioEventLoopGroup();
+                try {
+                    new ServerBootstrap()
+                            .group(bossGroup, workerGroup)
+                            .channel(NioServerSocketChannel.class)
+                            .childHandler(new ChannelInitializer<SocketChannel>() {
+                                @Override
+                                public void initChannel(SocketChannel ch) throws Exception {
+                                    ChannelPipeline pipeline = ch.pipeline();
 
-                    }
+                                    // add HTTPS support
+                                    if (secure) {
+                                        SSLEngine engine = SSLFactory.getInstance().sslContext().createSSLEngine();
+                                        engine.setUseClientMode(false);
+                                        pipeline.addLast("ssl", new SslHandler(engine));
+                                    }
+
+                                    pipeline.addLast("logger", new LoggingHandler("BOOK_HANDLER"));
+                                    pipeline.addLast("http_codec", new HttpServerCodec());
+                                    pipeline.addLast("simple_test_handler", new BookHandler());
+                                }
+                            })
+                            .bind(httpPort).channel().closeFuture().sync();
+                } catch (Exception e) {
+                    throw new RuntimeException("Exception starting BookServer", e);
+                } finally {
+                    bossGroup.shutdownGracefully();
+                    workerGroup.shutdownGracefully();
                 }
-            });
-            server.start();
-        } catch (Exception e) {
-            throw new RuntimeException("Exception starting BookServer", e);
-        }
+            }
+        }).start();
     }
 
     private ObjectMapper createObjectMapper() {
@@ -103,21 +115,67 @@ public class BookServer {
         return booksDB;
     }
 
-    private void addServerConnector(Server server, int port, SslContextFactory sslContextFactory) throws Exception {
-        ServerConnector serverConnector = new ServerConnector(server);
-        if (sslContextFactory != null) {
-            serverConnector = new ServerConnector(server, sslContextFactory);
-        }
-        serverConnector.setPort(port);
-        server.addConnector(serverConnector);
-    }
-
     public Map<String, Book> getBooksDB() {
         return booksDB;
     }
 
     @PreDestroy
     public void stopServer() throws Exception {
-        server.stop();
+        bossGroup.shutdownGracefully();
+        workerGroup.shutdownGracefully();
+    }
+
+    private class BookHandler extends SimpleChannelInboundHandler<Object> {
+
+        @Override
+        public void channelReadComplete(ChannelHandlerContext ctx) {
+            ctx.flush();
+        }
+
+        @Override
+        public void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
+            if (msg instanceof HttpRequest) {
+                HttpRequest req = (HttpRequest) msg;
+
+                FullHttpResponse response = null;
+                if (req.getUri().startsWith("/get_books")) {
+                    response = new DefaultFullHttpResponse(HTTP_1_1, OK,
+                            Unpooled.wrappedBuffer(
+                                    objectMapper
+                                            .writerWithDefaultPrettyPrinter()
+                                            .writeValueAsBytes(booksDB.values())
+                            )
+                    );
+                    response.headers().set(CONTENT_TYPE, "application/json");
+                    response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
+                } else if (req.getUri().startsWith("/get_book")) {
+                    List<String> id = new QueryStringDecoder(req.getUri()).parameters().get("id");
+                    if (id != null && !id.isEmpty()) {
+                        Book book = booksDB.get(id.get(0));
+                        if (book != null) {
+                            response = new DefaultFullHttpResponse(HTTP_1_1, OK,
+                                    Unpooled.wrappedBuffer(
+                                            objectMapper
+                                                    .writerWithDefaultPrettyPrinter()
+                                                    .writeValueAsBytes(book)
+                                    )
+                            );
+                            response.headers().set(CONTENT_TYPE, "application/json");
+                            response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
+                        }
+                    }
+                }
+                if (response == null) {
+                    response = new DefaultFullHttpResponse(HTTP_1_1, NOT_FOUND);
+                }
+                ctx.write(response).addListener(ChannelFutureListener.CLOSE);
+            }
+        }
+
+        @Override
+        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+            cause.printStackTrace();
+            ctx.close();
+        }
     }
 }

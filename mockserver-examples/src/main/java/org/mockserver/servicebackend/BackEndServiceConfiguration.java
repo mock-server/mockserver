@@ -26,7 +26,7 @@ public class BackEndServiceConfiguration {
 
     @Bean
     public BookServer bookServer() {
-        return new BookServer(environment.getProperty("bookService.port", Integer.class));
+        return new BookServer(environment.getProperty("bookService.port", Integer.class), false);
     }
 
 }

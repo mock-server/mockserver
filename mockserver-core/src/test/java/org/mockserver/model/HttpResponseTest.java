@@ -1,8 +1,8 @@
 package org.mockserver.model;
 
 import org.junit.Test;
+import org.mockserver.client.serialization.Base64Converter;
 
-import javax.xml.bind.DatatypeConverter;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -28,7 +28,7 @@ public class HttpResponseTest {
 
     @Test
     public void returnsBody() {
-        assertEquals(DatatypeConverter.printBase64Binary("somebody".getBytes()), new HttpResponse().withBody("somebody").getBodyAsString());
+        assertEquals(Base64Converter.printBase64Binary("somebody".getBytes()), new HttpResponse().withBody("somebody").getBodyAsString());
         assertArrayEquals("somebody".getBytes(), new HttpResponse().withBody("somebody").getBody());
     }
 

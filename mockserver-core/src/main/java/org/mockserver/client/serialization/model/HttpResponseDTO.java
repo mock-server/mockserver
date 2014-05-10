@@ -2,12 +2,12 @@ package org.mockserver.client.serialization.model;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
+import org.mockserver.client.serialization.Base64Converter;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.EqualsHashCodeToString;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpResponse;
 
-import javax.xml.bind.DatatypeConverter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,7 +43,7 @@ public class HttpResponseDTO extends EqualsHashCodeToString {
     public HttpResponse buildObject() {
         return new HttpResponse()
                 .withStatusCode(statusCode)
-                .withBody(body != null ? DatatypeConverter.parseBase64Binary(body) : null)
+                .withBody(body != null ? Base64Converter.parseBase64Binary(body) : null)
                 .withHeaders(Lists.transform(headers, new Function<HeaderDTO, Header>() {
                     public Header apply(HeaderDTO header) {
                         return header.buildObject();

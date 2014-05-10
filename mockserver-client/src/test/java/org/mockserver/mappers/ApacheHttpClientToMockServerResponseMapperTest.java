@@ -7,6 +7,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicStatusLine;
 import org.junit.Test;
+import org.mockserver.client.serialization.Base64Converter;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpResponse;
@@ -49,7 +50,7 @@ public class ApacheHttpClientToMockServerResponseMapperTest {
                 new Cookie("cookie_name", "cookie_value")
         ));
         assertEquals(new String(httpResponse.getBody(), Charsets.UTF_8), "somebody");
-        assertEquals(httpResponse.getBodyAsString(), DatatypeConverter.printBase64Binary("somebody".getBytes()));
+        assertEquals(httpResponse.getBodyAsString(), Base64Converter.printBase64Binary("somebody".getBytes()));
         assertArrayEquals(httpResponse.getBody(), "somebody".getBytes());
     }
 

@@ -3,6 +3,7 @@ package org.mockserver.mock;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
+import org.mockserver.client.serialization.Base64Converter;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatcherBuilder;
@@ -13,7 +14,6 @@ import org.mockserver.model.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.bind.DatatypeConverter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -110,7 +110,7 @@ public class MockServerMatcher extends EqualsHashCodeToString {
         Pattern base64ResponseBodyPattern = Pattern.compile("[\\s\\S]*\\\"httpResponse\\\"\\s*\\:\\s*\\{[\\s\\S]*\\\"body\\\"\\s*\\:\\s*\\\"(([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==))\\\"[\\s\\S]*");
         Matcher matcher = base64ResponseBodyPattern.matcher(serializedExpectation);
         if(matcher.find()) {
-            return serializedExpectation.replace(matcher.group(1), new String(DatatypeConverter.parseBase64Binary(matcher.group(1))));
+            return serializedExpectation.replace(matcher.group(1), new String(Base64Converter.parseBase64Binary(matcher.group(1))));
         } else {
             return serializedExpectation;
         }

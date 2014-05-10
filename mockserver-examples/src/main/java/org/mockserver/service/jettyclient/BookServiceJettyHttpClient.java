@@ -3,11 +3,10 @@ package org.mockserver.service.jettyclient;
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
+import org.eclipse.jetty.client.Address;
+import org.eclipse.jetty.client.ContentExchange;
 import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.HttpProxy;
-import org.eclipse.jetty.client.api.ContentResponse;
-import org.eclipse.jetty.http.HttpMethod;
-import org.eclipse.jetty.http.HttpScheme;
+import org.eclipse.jetty.client.HttpExchange;
 import org.mockserver.model.Book;
 import org.mockserver.service.BookService;
 import org.springframework.core.env.Environment;
@@ -62,7 +61,7 @@ public class BookServiceJettyHttpClient implements BookService {
         HttpClient httpClient = new HttpClient();
         try {
             if (Boolean.parseBoolean(System.getProperty("proxySet"))) {
-                httpClient.getProxyConfiguration().getProxies().add(new HttpProxy(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort"))));
+                httpClient.setProxy(new Address(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort"))));
             }
             httpClient.start();
         } catch (Exception e) {
@@ -83,12 +82,16 @@ public class BookServiceJettyHttpClient implements BookService {
     @Override
     public Book[] getAllBooks() {
         try {
-            ContentResponse response = httpClient.newRequest(host, port)
-                    .scheme(HttpScheme.HTTP.asString())
-                    .method(HttpMethod.GET)
-                    .path("/get_books")
-                    .send();
-            return objectMapper.readValue(response.getContent(), Book[].class);
+            ContentExchange contentExchange = new ContentExchange(true);
+            contentExchange.setMethod("GET");
+            contentExchange.setURL("http://" + host + ":" + port + "/get_books");
+            httpClient.send(contentExchange);
+
+            if (contentExchange.waitForDone() == HttpExchange.STATUS_COMPLETED) {
+                return objectMapper.readValue(contentExchange.getResponseContent(), Book[].class);
+            } else {
+                throw new RuntimeException("Exception making request to retrieve all books");
+            }
         } catch (Exception e) {
             throw new RuntimeException("Exception making request to retrieve all books", e);
         }
@@ -97,13 +100,17 @@ public class BookServiceJettyHttpClient implements BookService {
     @Override
     public Book getBook(String id) {
         try {
-            ContentResponse response = httpClient.newRequest(host, port)
-                    .scheme(HttpScheme.HTTP.asString())
-                    .method(HttpMethod.GET)
-                    .path("/get_book")
-                    .param("id", id)
-                    .send();
-            return objectMapper.readValue(response.getContent(), Book.class);
+            ContentExchange contentExchange = new ContentExchange(true);
+            contentExchange.setMethod("GET");
+            contentExchange.setURL("http://" + host + ":" + port + "/get_book" + "?id=" + id);
+            httpClient.send(contentExchange);
+
+            if (contentExchange.waitForDone() == HttpExchange.STATUS_COMPLETED) {
+                return objectMapper.readValue(contentExchange.getResponseContent(), Book.class);
+            } else {
+                throw new RuntimeException("Exception making request to retrieve all books");
+            }
+
         } catch (Exception e) {
             throw new RuntimeException("Exception making request to retrieve a book with id [" + id + "]", e);
         }

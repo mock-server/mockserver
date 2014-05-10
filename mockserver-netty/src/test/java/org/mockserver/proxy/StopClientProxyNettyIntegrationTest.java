@@ -40,4 +40,27 @@ public class StopClientProxyNettyIntegrationTest {
         httpProxy.stop();
         assertFalse(httpProxy.isRunning());
     }
+
+    @Test
+    public void canStartAndStopMultipleTimesWithNewProcess() {
+        // start server
+        HttpProxy httpProxy = new HttpProxyBuilder().withHTTPPort(serverPort).withHTTPSPort(serverSecurePort).build();
+
+        // start client
+        MockServerClient mockServerClient = new MockServerClient("localhost", serverPort);
+
+        for (int i = 0; i < 3; i++) {
+            // when
+            mockServerClient.stop();
+
+            // then
+            assertFalse(httpProxy.isRunning());
+            httpProxy = new HttpProxyBuilder().withHTTPPort(serverPort).withHTTPSPort(serverSecurePort).build();
+            assertTrue(httpProxy.isRunning());
+        }
+
+        assertTrue(httpProxy.isRunning());
+        httpProxy.stop();
+        assertFalse(httpProxy.isRunning());
+    }
 }

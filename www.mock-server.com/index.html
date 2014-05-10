@@ -898,7 +898,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 <pre><code class="code xml">&lt;<span class="element">plugin</span>&gt;
     &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;
     &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-maven-plugin</span>&lt;/<span class="element">artifactId</span>&gt;
-    &lt;<span class="element">version</span>&gt;<span class="element_value">2.8</span>&lt;/<span class="element">version</span>&gt;
+    &lt;<span class="element">version</span>&gt;<span class="element_value">2.9</span>&lt;/<span class="element">version</span>&gt;
     &lt;<span class="element">configuration</span>&gt;
         &lt;<span class="element">serverPort</span>&gt;<span class="element_value">1080</span>&lt;/<span class="element">serverPort</span>&gt;
         &lt;<span class="element">serverSecurePort</span>&gt;<span class="element_value">1082</span>&lt;/<span class="element">serverSecurePort</span>&gt;
@@ -935,7 +935,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 <pre><code class="code xml"> &lt;<span class="element">plugin</span>&gt;
      &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;
      &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-maven-plugin</span>&lt;/<span class="element">artifactId</span>&gt;
-     &lt;<span class="element">version</span>&gt;<span class="element_value">2.8</span>&lt;/<span class="element">version</span>&gt;
+     &lt;<span class="element">version</span>&gt;<span class="element_value">2.9</span>&lt;/<span class="element">version</span>&gt;
      &lt;<span class="element">configuration</span>&gt;
         &lt;<span class="element">serverPort</span>&gt;<span class="element_value">1080</span>&lt;/<span class="element">serverPort</span>&gt;
         &lt;<span class="element">serverSecurePort</span>&gt;<span class="element_value">1082</span>&lt;/<span class="element">serverSecurePort</span>&gt;
@@ -1043,7 +1043,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 &lt;<span class="element">dependency</span>&gt;
      &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;<span class="element">/groupId</span>&gt;
      &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-netty</span>&lt;<span class="element">/artifactId</span>&gt;
-     &lt;<span class="element">version</span>&gt;<span class="element_value">2.8</span>&lt;<span class="element">/version</span>&gt;
+     &lt;<span class="element">version</span>&gt;<span class="element_value">2.9</span>&lt;<span class="element">/version</span>&gt;
 &lt;<span class="element">/dependency</span>&gt;</code></pre>
 
 <p>To start the server and create a client the simplest way is to the start factory methods ClientAndServer.startClientAndServer or ClientAndProxy.startClientAndProxy as follows:</p>
@@ -1086,9 +1086,9 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 <p>MockServer can be run directly from the command line and using Embedded Jetty as follow:</p>
 
 <ol>
-	<li><p>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/2.8/mockserver-netty-2.8-jar-with-dependencies.jar">mockserver-netty-2.8-jar-with-dependencies.jar</a> from Maven Central</p></li>
+	<li><p>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/2.9/mockserver-netty-2.9-jar-with-dependencies.jar">mockserver-netty-2.9-jar-with-dependencies.jar</a> from Maven Central</p></li>
 	<li>
-		<code class="code inline">java -jar &lt;path to mockserver-netty-2.8-jar-with-dependencies.jar&gt; -serverPort &lt;port&gt;</code>
+		<code class="code inline">java -jar &lt;path to mockserver-netty-2.9-jar-with-dependencies.jar&gt; -serverPort &lt;port&gt;</code>
 	</li>
 </ol>
 
@@ -1116,7 +1116,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p>For example:</p>
 
-<pre><code class="code">java -jar ~/Downloads/mockserver-netty-2.8-jar-with-dependencies.jar -serverPort 8080 -proxyPort 9090</code></pre>
+<pre><code class="code">java -jar ~/Downloads/mockserver-netty-2.9-jar-with-dependencies.jar -serverPort 8080 -proxyPort 9090</code></pre>
 
 <a name="vertx-module" class="anchor" href="#vertx-module">&nbsp;</a>
 
@@ -1128,9 +1128,9 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p>Then to run MockServer as Vert.X module run the following command:</p>
 
-<pre><code class="code">vertx install org.mock-server~mockserver-vertx~2.0
+<pre><code class="code">vertx install org.mock-server~mockserver-vertx~2.9
 export VERTX_OPTS=<span class="string_literal">"-Dmockserver.serverPort=8080 -Dmockserver.serverSecurePort=1443 -Dmockserver.logLevel=TRACE"</span>
-vertx runmod org.mock-server~mockserver-vertx~2.0</code></pre>
+vertx runmod org.mock-server~mockserver-vertx~2.9</code></pre>
 
 <p>The specify the HTTP port and / or HTTPS port the <strong>VERTX_OPTS</strong> environment variable must be set specifying the system property <strong>mockserver.serverPort</strong> for the HTTP port and <strong>mockserver.serverSecurePort</strong> for the HTTPS port.</p>
 
@@ -1147,8 +1147,8 @@ vertx runmod org.mock-server~mockserver-vertx~2.0</code></pre>
 <p>To run as a WAR deployed on any JEE web server:</p>
 
 <ol>
-	<li>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-war/2.8/mockserver-war-2.8.war">mockserver-war-2.8.war</a> from Maven Central</li>
-	<li>deploy <strong>mockserver-war-2.8.war</strong> to any JEE web server</li>
+	<li>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-war/2.9/mockserver-war-2.9.war">mockserver-war-2.9.war</a> from Maven Central</li>
+	<li>deploy <strong>mockserver-war-2.9.war</strong> to any JEE web server</li>
 </ol>
 
 <p><strong>WAR Context Path</strong></p>
@@ -1182,7 +1182,7 @@ cd mockserver</code></pre>
 
 <p>This will produce a jar file under the target directory called, as follows:</p>
 
-<pre><code class="code">mockserver-netty/target/mockserver-netty-2.8-jar-with-dependencies.jar</code></pre>
+<pre><code class="code">mockserver-netty/target/mockserver-netty-2.9-jar-with-dependencies.jar</code></pre>
 
 <p>Run the MockServer then using the executable jar as per the instruction above in <a href="#running-from-command-line">Running From The Command Line</a></p>
 
@@ -1868,9 +1868,9 @@ Times.exactly(<span class="keyword">int</span> count);</code></pre>
 
 <h2>Verifying Behaviour</h2>
 
-<p>To verify that the system under test has sent a request it must be configured to use the MockServer proxy.</p>
+<p>To verify that the system under test has sent a request it must be configured to use the MockServer proxy.  The following examples show how to do this with different HTTP clients.</p>
 
-<p>Do this with a Jetty HttpClient, as follows:</p>
+<h4>Jetty HttpClient 9.x</h4>
 
 <pre><code class="code">HttpClient httpClient = <span class="keyword">new</span> HttpClient();
 <span class="keyword">try</span> {
@@ -1880,17 +1880,57 @@ Times.exactly(<span class="keyword">int</span> count);</code></pre>
     <span class="keyword">throw new</span> RuntimeException(<span class="string_literal">"Exception creating HttpClient"</span>, e);
 }</code></pre>
 
-<p>The <a href="https://github.com/jamesdbloom/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example of using the proxy with Apache HttpClient called
-	<a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-examples/src/main/java/org/mockserver/service/apacheclient/BookServiceApacheHttpClient.java">BookServiceApacheHttpClient</a> that demonstrates a fully working example.</p>
+<h4>Jetty HttpClient 8.x</h4>
 
-<p>Do this with an Apache HttpClient, as follows:</p>
+<pre><code class="code">HttpClient httpClient = <span class="keyword">new</span> HttpClient();
+<span class="keyword">try</span> {
+    httpClient.setProxy(<span class="keyword">new</span> Address(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">9090</span>));
+    httpClient.start();
+} <span class="keyword">catch</span> (Exception e) {
+    <span class="keyword">throw new</span> RuntimeException(<span class="string_literal">"Exception creating HttpClient"</span>, e);
+}</code></pre>
+
+<p>The <a href="https://github.com/jamesdbloom/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example of using the proxy with Jetty HttpClient called
+	<a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-examples/src/main/java/org/mockserver/service/jettyclient/BookServiceJettyHttpClient.java">BookServiceJettyHttpClient</a> that demonstrates a fully working example.</p>
+
+<h4>Apache HttpClient</h4>
 
 <pre><code class="code">HttpHost httpHost = <span class="keyword">new</span> HttpHost(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">9090</span>);
 DefaultProxyRoutePlanner defaultProxyRoutePlanner = <span class="keyword">new</span> DefaultProxyRoutePlanner(httpHost);
 HttpClient httpClient = HttpClients.custom().setRoutePlanner(defaultProxyRoutePlanner).build();</code></pre>
 
-<p>The <a href="https://github.com/jamesdbloom/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example of using the proxy with Jetty HttpClient called
-	<a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-examples/src/main/java/org/mockserver/service/jettyclient/BookServiceJettyHttpClient.java">BookServiceJettyHttpClient</a> that demonstrates a fully working example.</p>
+<p>The <a href="https://github.com/jamesdbloom/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example of using the proxy with Apache HttpClient called
+	<a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-examples/src/main/java/org/mockserver/service/apacheclient/BookServiceApacheHttpClient.java">BookServiceApacheHttpClient</a> that demonstrates a fully working example.</p>
+
+<h4>Jersey</h4>
+
+<pre><code class="code">ClientConfig clientConfig = <span class="keyword">new</span> ClientConfig().register(<span class="keyword">new</span> JacksonFeature())
+                                              .connectorProvider(<span class="keyword">new</span> ApacheConnectorProvider());
+clientConfig.property(ClientProperties.<span class="constant">PROXY_URI</span>, <span class="string_literal">"http://localhost:9090"</span>);
+Client client = ClientBuilder.newClient(clientConfig);</code></pre>
+
+<p>The <a href="https://github.com/jamesdbloom/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example of using the proxy with Jersey called
+	<a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-examples/src/main/java/org/mockserver/service/jerseyclient/BookServiceJerseyClient.java">BookServiceJerseyClient</a> that demonstrates a fully working example.</p>
+
+<h4>Spring Rest Template</h4>
+
+<pre><code class="code">RestTemplate restTemplate = <span class="keyword">new</span> RestTemplate();
+HttpHost httpHost = <span class="keyword">new</span> HttpHost(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">9090</span>);
+DefaultProxyRoutePlanner defaultProxyRoutePlanner = <span class="keyword">new</span> DefaultProxyRoutePlanner(httpHost);
+HttpClient httpClient = HttpClients.custom().setRoutePlanner(defaultProxyRoutePlanner).build();
+restTemplate.setRequestFactory(new HttpComponentsClientHttpRequestFactory(httpClient));</code></pre>
+
+<p>The <a href="https://github.com/jamesdbloom/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example of using the proxy with Spring Rest Template called
+	<a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-examples/src/main/java/org/mockserver/service/springclient/BookServiceSpringRestTemplateClient.java">BookServiceSpringRestTemplateClient</a> that demonstrates a fully working example.</p>
+
+<h4>Grizzly</h4>
+
+<pre><code class="code">AsyncHttpClientConfig.Builder clientConfigBuilder = <span class="keyword">new</span> AsyncHttpClientConfig.Builder();
+clientConfigBuilder.setProxyServerSelector(ProxyUtils.createProxyServerSelector(HttpProxy.proxySelector()));
+AsyncHttpClient asyncHttpClient = <span class="keyword">new</span> AsyncHttpClient(clientConfigBuilder.build());</code></pre>
+
+<p>The <a href="https://github.com/jamesdbloom/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example of using the proxy with Grizzly Http Client called
+	<a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-examples/src/main/java/org/mockserver/service/grizzlyclient/BookServiceGrizzlyHttpClient.java">BookServiceGrizzlyHttpClient</a> that demonstrates a fully working example.</p>
 
 <p>To verify that a request has been sent use the verify method of the ProxyClient as follows:</p>
 
@@ -2063,7 +2103,7 @@ Times.atLeast(<span class="keyword">int</span> count);</code></pre>
                         .withHeaders(
                                 new Header(<span class="string_literal">"Accept-Encoding"</span>, <span class="string_literal">"gzip"</span>),
                                 new Header(<span class="string_literal">"Host"</span>, <span class="string_literal">"localhost:1090"</span>),
-                                new Header(<span class="string_literal">"User-Agent"</span>, <span class="string_literal">"Jetty/9.1.0.v20131115"</span>)
+                                new Header(<span class="string_literal">"User-Agent"</span>, <span class="string_literal">"Jetty/8.1.13.v20130916"</span>)
                         ),
                 Times.once()
         )
@@ -2071,7 +2111,7 @@ Times.atLeast(<span class="keyword">int</span> count);</code></pre>
                 response()
                         .withStatusCode(<span class="numeric_literal">200</span>)
                         .withHeaders(
-                                new Header(<span class="string_literal">"Server"</span>, <span class="string_literal">"Jetty(9.1.0.v20131115)"</span>)
+                                new Header(<span class="string_literal">"Server"</span>, <span class="string_literal">"Jetty(8.1.13.v20130916)"</span>)
                         )
                         .withBody(<span class="string_literal">"{\n        \"id\": \"1\",\n        \"title\": \"Xenophon's imperial fiction : on the education of Cyrus\",\n        \"author\": \"James Tatum\",\n        \"isbn\": \"0691067570\",\n        \"publicationDate\": \"1989\"\n    }"</span>)
         );</code></pre>
@@ -2103,7 +2143,7 @@ Times.atLeast(<span class="keyword">int</span> count);</code></pre>
             },
             {
                 <span class="string_literal">"name"</span> : <span class="string_literal">"User-Agent"</span>,
-                <span class="string_literal">"values"</span> : [ <span class="string_literal">"Jetty/9.1.0.v20131115"</span> ]
+                <span class="string_literal">"values"</span> : [ <span class="string_literal">"Jetty/8.1.13.v20130916"</span> ]
             } ]
     },
     <span class="string_literal">"httpResponse"</span> : {
@@ -2111,7 +2151,7 @@ Times.atLeast(<span class="keyword">int</span> count);</code></pre>
         <span class="string_literal">"body"</span> : <span class="string_literal">"{\n    \"id\": \"1\",\n    \"title\": \"Xenophon's imperial fiction : on the education of Cyrus\",\n    \"author\": \"James Tatum\",\n    \"isbn\": \"0691067570\",\n    \"publicationDate\": \"1989\"\n}"</span>,
         <span class="string_literal">"headers"</span> : [ {
             <span class="string_literal">"name"</span> : <span class="string_literal">"Server"</span>,
-            <span class="string_literal">"values"</span> : [ <span class="string_literal">"Jetty(9.1.0.v20131115)"</span> ]
+            <span class="string_literal">"values"</span> : [ <span class="string_literal">"Jetty(8.1.13.v20130916)"</span> ]
         } ]
     },
     <span class="string_literal">"times"</span> : {
@@ -2160,10 +2200,8 @@ xmlHttpRequest.send();</code></pre>
 xmlHttpRequest.open(<span class="string_literal">"PUT"</span>, <span class="string_literal">"http://localhost:9999/clear"</span>, <span class="keyword">false</span>);
 xmlHttpRequest.setRequestHeader(<span class="string_literal">"Content-Type"</span>, <span class="string_literal">"application/json; charset=utf-8"</span>);
 xmlHttpRequest.send(JSON.stringify({
-    <span class="string_literal">"httpRequest"</span>: {
-        <span class="string_literal">"method"</span>: <span class="string_literal">"POST"</span>,
-        <span class="string_literal">"path"</span>: <span class="string_literal">"/login"</span>,
-    }
+    <span class="string_literal">"method"</span>: <span class="string_literal">"POST"</span>,
+    <span class="string_literal">"path"</span>: <span class="string_literal">"/login"</span>,
 }));</code></pre>
 
 <p>The example above clears all expectations that will match incoming requests with a <strong>POST</strong> method on the path <strong>/login</strong>.</p>
@@ -2201,10 +2239,8 @@ xmlHttpRequest.send();</code></pre>
 <pre><code class="code"><span class="keyword">var</span> xmlHttpRequest = <span class="keyword">new</span> XMLHttpRequest();
 xmlHttpRequest.open(<span class="string_literal">"PUT"</span>, <span class="string_literal">"http://localhost:9999/dumpToLog"</span>, <span class="keyword">false</span>);
 xmlHttpRequest.send(JSON.stringify({
-    <span class="string_literal">"httpRequest"</span>: {
-        <span class="string_literal">"method"</span>: <span class="string_literal">"POST"</span>,
-        <span class="string_literal">"path"</span>: <span class="string_literal">"/login"</span>,
-    }
+    <span class="string_literal">"method"</span>: <span class="string_literal">"POST"</span>,
+    <span class="string_literal">"path"</span>: <span class="string_literal">"/login"</span>,
 }));</code></pre>
 
 <p>The example above dumps all expectations that match incoming requests with a <strong>POST</strong> method on the path <strong>/login</strong>.</p>
@@ -2225,9 +2261,9 @@ xmlHttpRequest.send(JSON.stringify({
 <p>The simplest way to run and download MockServer is by using the fully stand alone web server embedded with all dependencies that mocks HTTP and HTTPS requests, as follows:</p>
 
 <ol>
-	<li><p>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/2.8/mockserver-netty-2.8-jar-with-dependencies.jar">mockserver-netty-2.8-jar-with-dependencies.jar</a> from Maven Central</p></li>
+	<li><p>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/2.9/mockserver-netty-2.9-jar-with-dependencies.jar">mockserver-netty-2.9-jar-with-dependencies.jar</a> from Maven Central</p></li>
 	<li>
-		<code class="code inline">java -jar &lt;path to mockserver-netty-2.8-jar-with-dependencies.jar&gt; -serverPort &lt;port&gt;</code>
+		<code class="code inline">java -jar &lt;path to mockserver-netty-2.9-jar-with-dependencies.jar&gt; -serverPort &lt;port&gt;</code>
 	</li>
 </ol>
 
@@ -2273,13 +2309,13 @@ xmlHttpRequest.send(JSON.stringify({
 <p>Vert.X Module Registry contains the following artifacts:</p>
 
 <ul>
-	<li><a href="http://modulereg.vertx.io/">org.mock-server~mockserver-vertx~2.0</a> - a Vert.X module that mocks HTTP and HTTPS requests</li>
+	<li><a href="http://modulereg.vertx.io/">org.mock-server~mockserver-vertx~2.9</a> - a Vert.X module that mocks HTTP and HTTPS requests</li>
 </ul>
 
 <p>Vert.X Module Registry will shortly also have the following artifacts:</p>
 
 <ul>
-	<li><a href="http://modulereg.vertx.io/">org.mock-server~mockserver-vertx-proxy~2.0</a> - a Vert.X module that proxies HTTP and HTTPS allowing the recording and querying of requests and responses</li>
+	<li><a href="http://modulereg.vertx.io/">org.mock-server~mockserver-vertx-proxy~2.9</a> - a Vert.X module that proxies HTTP and HTTPS allowing the recording and querying of requests and responses</li>
 </ul>
 
 <a name="docker" class="anchor" href="#docker">&nbsp;</a>

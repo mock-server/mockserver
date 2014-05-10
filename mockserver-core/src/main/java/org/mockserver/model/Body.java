@@ -19,6 +19,7 @@ public abstract class Body extends EqualsHashCodeToString {
         PARAMETERS,
         XPATH,
         REGEX,
-        EXACT
+        EXACT,
+        BINARY
     }
 }
