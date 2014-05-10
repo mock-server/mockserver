@@ -43,7 +43,7 @@ public class HttpResponseDTO extends EqualsHashCodeToString {
     public HttpResponse buildObject() {
         return new HttpResponse()
                 .withStatusCode(statusCode)
-                .withBody(body != null ? Base64Converter.parseBase64Binary(body) : null)
+                .withBody(body != null ? Base64Converter.base64StringToBytes(body) : null)
                 .withHeaders(Lists.transform(headers, new Function<HeaderDTO, Header>() {
                     public Header apply(HeaderDTO header) {
                         return header.buildObject();

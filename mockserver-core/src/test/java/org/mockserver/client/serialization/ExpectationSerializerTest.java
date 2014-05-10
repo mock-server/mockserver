@@ -39,7 +39,7 @@ public class ExpectationSerializerTest {
             Times.once()
     ).thenRespond(new HttpResponse()
             .withStatusCode(304)
-            .withBody("someBody")
+            .withBody("responseBody")
             .withHeaders(new Header("headerName", "headerValue"))
             .withCookies(new Cookie("cookieName", "cookieValue"))
             .withDelay(new Delay(TimeUnit.MICROSECONDS, 1)));
@@ -57,7 +57,7 @@ public class ExpectationSerializerTest {
             .setHttpResponse(
                     new HttpResponseDTO()
                             .setStatusCode(304)
-                            .setBody(Base64Converter.printBase64Binary("someBody".getBytes()))
+                            .setBody(Base64Converter.stringToBase64Bytes("responseBody".getBytes()))
                             .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("headerName", Arrays.asList("headerValue")))))
                             .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("cookieName", Arrays.asList("cookieValue")))))
                             .setDelay(
@@ -130,7 +130,7 @@ public class ExpectationSerializerTest {
                 "                                new Cookie(\"responseCookieNameOne\", \"responseCookieValueOneOne\", \"responseCookieValueOneTwo\"),\n" +
                 "                                new Cookie(\"responseCookieNameTwo\", \"responseCookieValueTwo\")\n" +
                 "                        )\n" +
-                "                        .withBody(\"someBody\")\n" +
+                "                        .withBody(\"responseBody\")\n" +
                 "        );",
                 expectationSerializer.serializeAsJava(
                         new Expectation(
@@ -163,7 +163,7 @@ public class ExpectationSerializerTest {
                                                 new Cookie("responseCookieNameOne", "responseCookieValueOneOne", "responseCookieValueOneTwo"),
                                                 new Cookie("responseCookieNameTwo", "responseCookieValueTwo")
                                         )
-                                        .withBody("someBody")
+                                        .withBody("responseBody")
                         )
                 )
         );
@@ -252,7 +252,7 @@ public class ExpectationSerializerTest {
                 "        .when(\n" +
                 "                request()\n" +
                 "                        .withPath(\"somePath\")\n" +
-                "                        .withBody(new StringBody(\"someBody\", Body.Type.EXACT)),\n" +
+                "                        .withBody(new StringBody(\"responseBody\", Body.Type.EXACT)),\n" +
                 "                Times.once()\n" +
                 "        )\n" +
                 "        .thenRespond(\n" +
@@ -263,7 +263,7 @@ public class ExpectationSerializerTest {
                         new Expectation(
                                 new HttpRequest()
                                         .withPath("somePath")
-                                        .withBody(new StringBody("someBody", Body.Type.EXACT)),
+                                        .withBody(new StringBody("responseBody", Body.Type.EXACT)),
                                 Times.once()
                         ).thenRespond(
                                 new HttpResponse()

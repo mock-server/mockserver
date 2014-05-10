@@ -54,12 +54,12 @@ public class HttpResponse extends EqualsHashCodeToString {
     }
 
     public HttpResponse withBody(byte[] body) {
-        this.body = body != null ? Base64Converter.printBase64Binary(body).getBytes() : null;
+        this.body = body != null ? Base64Converter.stringToBase64Bytes(body).getBytes() : null;
         return this;
     }
 
     public byte[] getBody() {
-        return Base64Converter.parseBase64Binary(new String(body));
+        return Base64Converter.base64StringToBytes(new String(body));
     }
 
     public int getContentLength() {

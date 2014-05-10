@@ -75,6 +75,21 @@ public class HttpRequestSerializerTest {
     }
 
     @Test
+    public void deserializeHttpRequestAsField() throws IOException {
+        // given
+        String input = "{\n" +
+                "    \"httpRequest\": \"requestBytes\",\n" +
+                "}";
+        when(objectMapper.readValue(eq(input), same(ExpectationDTO.class))).thenReturn(new ExpectationDTO().setHttpRequest(fullHttpRequestDTO));
+
+        // when
+        HttpRequest httpRequest = httpRequestSerializer.deserialize(input);
+
+        // then
+        assertEquals(fullHttpRequest, httpRequest);
+    }
+
+    @Test
     public void deserializeHandleException() throws IOException {
         // given
         when(objectMapper.readValue(eq("requestBytes"), same(HttpRequestDTO.class))).thenThrow(new IOException("TEST EXCEPTION"));

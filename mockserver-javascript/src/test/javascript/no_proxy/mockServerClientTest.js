@@ -7,7 +7,7 @@ describe("mockServerClient client:", function () {
         proxyClient("http://localhost:1090").reset();
     });
 
-    it("should create full expectation", function () {
+    it("should create full expectation with Base64 encoded body", function () {
         // when
         mockServerClient("http://localhost:1080").mockAnyResponse(
             {
@@ -29,6 +29,60 @@ describe("mockServerClient client:", function () {
                 'httpResponse': {
                     'statusCode': 200,
                     'body': Base64.encode(JSON.stringify({ name: 'value' })),
+                    'delay': {
+                        'timeUnit': 'MILLISECONDS',
+                        'value': 250
+                    }
+                },
+                'times': {
+                    'remainingTimes': 1,
+                    'unlimited': false
+                }
+            }
+        );
+
+        // then - non matching request
+        xmlhttp.open("GET", "http://localhost:1080/otherPath", false);
+        xmlhttp.send();
+
+        expect(xmlhttp.status).toEqual(404);
+
+        // then - matching request
+        xmlhttp.open("POST", "http://localhost:1080/somePath?test=true", false);
+        xmlhttp.send("someBody");
+
+        expect(xmlhttp.status).toEqual(200);
+        expect(xmlhttp.responseText).toEqual('{"name":"value"}');
+
+        // then - matching request, but no times remaining
+        xmlhttp.open("POST", "http://localhost:1080/somePath?test=true", false);
+        xmlhttp.send("someBody");
+
+        expect(xmlhttp.status).toEqual(404);
+    });
+
+    it("should create full expectation with string body", function () {
+        // when
+        mockServerClient("http://localhost:1080").mockAnyResponse(
+            {
+                'httpRequest': {
+                    'method': 'POST',
+                    'path': '/somePath',
+                    'queryString': 'test=true',
+                    'parameters': [
+                        {
+                            'name': 'test',
+                            'values': [ 'true' ]
+                        }
+                    ],
+                    'body': {
+                        'type': "EXACT",
+                        'value': 'someBody'
+                    }
+                },
+                'httpResponse': {
+                    'statusCode': 200,
+                    'body': JSON.stringify({ name: 'value' }),
                     'delay': {
                         'timeUnit': 'MILLISECONDS',
                         'value': 250

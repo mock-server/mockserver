@@ -12,7 +12,6 @@ import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpResponse;
 
-import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.util.Arrays;
 
@@ -27,7 +26,7 @@ import static org.mockito.Mockito.when;
 public class ApacheHttpClientToMockServerResponseMapperTest {
 
     @Test
-    public void shouldMapHttpClientResponseToHttpResponse() throws IOException {
+    public void shouldMapHttpClientResponseToHttpResponseForBase64() throws IOException {
         // given
         CloseableHttpResponse httpClientResponse = mock(CloseableHttpResponse.class);
         when(httpClientResponse.getStatusLine()).thenReturn(new BasicStatusLine(new ProtocolVersion("HTTP", 1, 1), 500, "Server Error"));
@@ -50,8 +49,36 @@ public class ApacheHttpClientToMockServerResponseMapperTest {
                 new Cookie("cookie_name", "cookie_value")
         ));
         assertEquals(new String(httpResponse.getBody(), Charsets.UTF_8), "somebody");
-        assertEquals(httpResponse.getBodyAsString(), Base64Converter.printBase64Binary("somebody".getBytes()));
+        assertEquals(httpResponse.getBodyAsString(), Base64Converter.stringToBase64Bytes("somebody".getBytes()));
         assertArrayEquals(httpResponse.getBody(), "somebody".getBytes());
+    }
+
+    @Test
+    public void shouldMapHttpClientResponseToHttpResponse() throws IOException {
+        // given
+        CloseableHttpResponse httpClientResponse = mock(CloseableHttpResponse.class);
+        when(httpClientResponse.getStatusLine()).thenReturn(new BasicStatusLine(new ProtocolVersion("HTTP", 1, 1), 500, "Server Error"));
+        when(httpClientResponse.getAllHeaders()).thenReturn(new org.apache.http.Header[]{
+                new BasicHeader("header_name", "header_value"),
+                new BasicHeader("Set-Cookie", "cookie_name=cookie_value")
+        });
+        when(httpClientResponse.getEntity()).thenReturn(new StringEntity("some_other_body"));
+
+        // when
+        HttpResponse httpResponse = new ApacheHttpClientToMockServerResponseMapper().mapApacheHttpClientResponseToMockServerResponse(httpClientResponse);
+
+        // then
+        assertEquals(httpResponse.getStatusCode(), new Integer(500));
+        assertEquals(httpResponse.getHeaders(), Arrays.asList(
+                new Header("header_name", "header_value"),
+                new Header("Set-Cookie", "cookie_name=cookie_value")
+        ));
+        assertEquals(httpResponse.getCookies(), Arrays.asList(
+                new Cookie("cookie_name", "cookie_value")
+        ));
+        assertEquals(new String(httpResponse.getBody(), Charsets.UTF_8), "some_other_body");
+        assertEquals(httpResponse.getBodyAsString(), Base64Converter.stringToBase64Bytes("some_other_body".getBytes()));
+        assertArrayEquals(httpResponse.getBody(), "some_other_body".getBytes());
     }
 
     @Test

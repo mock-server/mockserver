@@ -1,8 +1,7 @@
 package org.mockserver.client.serialization;
 
-import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+import org.mockserver.client.serialization.model.ExpectationDTO;
 import org.mockserver.client.serialization.model.HttpRequestDTO;
 import org.mockserver.model.HttpRequest;
 import org.slf4j.Logger;
@@ -32,9 +31,16 @@ public class HttpRequestSerializer {
         HttpRequest httpRequest = null;
         if (jsonHttpRequest != null && !jsonHttpRequest.isEmpty()) {
             try {
-                HttpRequestDTO httpRequestDTO = objectMapper.readValue(jsonHttpRequest, HttpRequestDTO.class);
-                if (httpRequestDTO != null) {
-                    httpRequest = httpRequestDTO.buildObject();
+                if (!jsonHttpRequest.contains("\"httpRequest\"")) {
+                    HttpRequestDTO httpRequestDTO = objectMapper.readValue(jsonHttpRequest, HttpRequestDTO.class);
+                    if (httpRequestDTO != null) {
+                        httpRequest = httpRequestDTO.buildObject();
+                    }
+                } else {
+                    ExpectationDTO expectationDTO = objectMapper.readValue(jsonHttpRequest, ExpectationDTO.class);
+                    if (expectationDTO != null) {
+                        httpRequest = expectationDTO.buildObject().getHttpRequest();
+                    }
                 }
             } catch (IOException ioe) {
                 logger.info("Exception while parsing response [" + jsonHttpRequest + "] for http response httpRequest", ioe);

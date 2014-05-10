@@ -72,11 +72,6 @@ public class HttpRequestSerializerIntegrationTest {
                 .buildObject(), expectation);
     }
 
-    /*
-    expected: org.mockserver.model.HttpRequest<HttpRequest[method=someMethod,url=http://www.example.com,path=somePath,queryStringParameters={queryParameterName=Parameter[name=queryParameterName,values=[queryParameterValue]]},body=somebody,headers=[Header[name=someHeaderName,values=[someHeaderValue]]],cookies=[Cookie[name=someCookieName,values=[someCookieValue]]]]>
-     but was: org.mockserver.model.HttpRequest<HttpRequest[method=someMethod,url=http://www.example.com,path=somePath,queryStringParameters={queryParameterName=Parameter[name=queryParameterName,values=[queryParameterValue]]},body=somebody,headers=[Header[name=someHeaderName,values=[someHeaderValue]]],cookies=[Cookie[name=someCookieName,values=[someCookieValue]]]]>
-     */
-
     @Test
     public void shouldDeserializePartialObject() throws IOException {
         // given
@@ -90,6 +85,29 @@ public class HttpRequestSerializerIntegrationTest {
         // then
         assertEquals(new HttpRequestDTO()
                 .setPath("somePath")
+                .buildObject(), expectation);
+    }
+
+    @Test
+    public void shouldDeserializeAsHttpRequestField() throws IOException {
+        // given
+        String requestBytes = ("{\n" +
+                "    \"httpRequest\": {\n" +
+                "        \"path\": \"somePath\",\n" +
+                "        \"queryStringParameters\" : [ {\n" +
+                "            \"name\" : \"queryParameterName\",\n" +
+                "            \"values\" : [ \"queryParameterValue\" ]\n" +
+                "        } ]\n" +
+                "    }\n" +
+                "}");
+
+        // when
+        HttpRequest expectation = new HttpRequestSerializer().deserialize(requestBytes);
+
+        // then
+        assertEquals(new HttpRequestDTO()
+                .setPath("somePath")
+                .setQueryStringParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")))))
                 .buildObject(), expectation);
     }
 

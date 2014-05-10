@@ -137,7 +137,7 @@ public class MockServerMatcherDumpTest {
                 "  },\n" +
                 "  \"httpResponse\" : {\n" +
                 "    \"statusCode\" : 200,\n" +
-                "    \"body\" : \"" + Base64Converter.printBase64Binary("some_response_body".getBytes()) + "\"\n" +
+                "    \"body\" : \"" + Base64Converter.stringToBase64Bytes("some_response_body".getBytes()) + "\"\n" +
                 "  },\n" +
                 "  \"times\" : {\n" +
                 "    \"remainingTimes\" : 0,\n" +
@@ -169,7 +169,7 @@ public class MockServerMatcherDumpTest {
                 "        \"path\": \"somePath\"\n" +
                 "    },\n" +
                 "    \"httpResponse\": {\n" +
-                "        \"body\": \"" + Base64Converter.printBase64Binary("someBody".getBytes()) + "\",\n" +
+                "        \"body\": \"" + Base64Converter.stringToBase64Bytes("someBody".getBytes()) + "\",\n" +
                 "        \"delay\": {\n" +
                 "            \"timeUnit\": null,\n" +
                 "            \"value\": null\n" +
@@ -222,7 +222,7 @@ public class MockServerMatcherDumpTest {
                 "  },\n" +
                 "  \"httpResponse\" : {\n" +
                 "    \"statusCode\" : 304,\n" +
-                "    \"body\" : \"" + Base64Converter.printBase64Binary("someBody".getBytes()) + "\",\n" +
+                "    \"body\" : \"" + Base64Converter.stringToBase64Bytes("someBody".getBytes()) + "\",\n" +
                 "    \"cookies\" : [ {\n" +
                 "      \"name\" : \"someCookieName\",\n" +
                 "      \"values\" : [ \"someCookieValue\" ]\n" +
