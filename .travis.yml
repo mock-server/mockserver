@@ -2,13 +2,8 @@ language: java
 before_install: "git clone -b travis `git config --get remote.origin.url` target/travis"
 script: "mvn deploy --settings target/travis/settings.xml -Pit"
 
-# TODO how do you ensure the oraclejdk7 build doesn't start until the openjdk6 finishes?
-# TODO otherwise this causes a failure due to maven dependencies not being available,
-# TODO perhaps you could enable java6 build to run as part of java7 build
-
 jdk:
 - openjdk6
-- oraclejdk7
 
 # whitelist
 branches:
