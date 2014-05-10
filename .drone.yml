@@ -1,7 +1,8 @@
-image: bradrydzewski/java:oraclejdk7
+image: bradrydzewski/java:openjdk6
 
 script:
-  - mvn test -Pit
+  - git clone -b travis `git config --get remote.origin.url` target/travis
+  - mvn deploy --settings target/travis/settings.xml -Pit
 
 notify:
   email:
