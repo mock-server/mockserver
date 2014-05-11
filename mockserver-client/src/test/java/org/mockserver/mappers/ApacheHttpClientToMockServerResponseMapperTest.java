@@ -15,6 +15,8 @@ import org.mockserver.model.HttpResponse;
 import java.io.IOException;
 import java.util.Arrays;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -41,7 +43,7 @@ public class ApacheHttpClientToMockServerResponseMapperTest {
 
         // then
         assertEquals(httpResponse.getStatusCode(), new Integer(500));
-        assertEquals(httpResponse.getHeaders(), Arrays.asList(
+        assertThat(httpResponse.getHeaders(), containsInAnyOrder(
                 new Header("header_name", "header_value"),
                 new Header("Set-Cookie", "cookie_name=cookie_value")
         ));
@@ -69,7 +71,7 @@ public class ApacheHttpClientToMockServerResponseMapperTest {
 
         // then
         assertEquals(httpResponse.getStatusCode(), new Integer(500));
-        assertEquals(httpResponse.getHeaders(), Arrays.asList(
+        assertThat(httpResponse.getHeaders(), containsInAnyOrder(
                 new Header("header_name", "header_value"),
                 new Header("Set-Cookie", "cookie_name=cookie_value")
         ));

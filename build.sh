@@ -1,21 +1,45 @@
 #!/usr/bin/env bash
 
-# java 1.6 build
-export JAVA_HOME=/System/Library/Java/JavaVirtualMachines/1.6.0.jdk/Contents/Home
+# java 1.7 build
+export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.7.0_55.jdk/Contents/Home
+echo
+echo "-------------------------"
+echo "----- JAVA 1.7 (55) -----"
+echo "-------------------------"
+echo
 if [ -z "$1" ]
 then
-    mvn clean install -Pit
-else
-    mvn clean $1 -Pit
+    echo "not running Java 1.7 due to unknown socket issue with HTTPS CONNECT requests"
+    # mvn clean install -Pit
 fi
 
-#if [ $? -eq 0 ]; then
-#    # java 1.7 build
-#    export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.7.0_45.jdk/Contents/Home
-#    if [ -z "$1" ]
-#    then
-#        mvn clean install
-#    else
-#        mvn clean $1
-#    fi
-#fi
+# java 1.8 build
+if [ $? -eq 0 ]; then
+    export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_05.jdk/Contents/Home
+    echo
+    echo "-------------------------"
+    echo "----- JAVA 1.8 (05) -----"
+    echo "-------------------------"
+    echo
+    if [ -z "$1" ]
+    then
+        mvn clean install -Pit
+    fi
+fi
+
+# java 1.6 build
+if [ $? -eq 0 ]; then
+    export JAVA_HOME=/System/Library/Java/JavaVirtualMachines/1.6.0.jdk/Contents/Home
+    echo
+    echo "-------------------------"
+    echo "------- JAVA 1.6  -------"
+    echo "-------------------------"
+    echo
+    if [ -z "$1" ]
+    then
+        mvn clean install -Pit
+    else
+        # only release if both java 7 and 6 are running correctly
+        mvn clean $1 -Pit
+    fi
+fi

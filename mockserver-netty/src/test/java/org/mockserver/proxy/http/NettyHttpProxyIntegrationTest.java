@@ -33,6 +33,7 @@ public class NettyHttpProxyIntegrationTest extends AbstractClientSecureProxyInte
         logger.debug("SERVER_HTTP_PORT = " + SERVER_HTTP_PORT);
         logger.debug("SERVER_HTTPS_PORT = " + SERVER_HTTPS_PORT);
         logger.debug("PROXY_HTTP_PORT = " + PROXY_HTTP_PORT);
+        logger.debug("PROXY_HTTPS_PORT = " + PROXY_HTTPS_PORT);
         logger.debug("PROXY_SOCKS_PORT = " + PROXY_SOCKS_PORT);
         logger.debug("PROXY_DIRECT_PORT = " + PROXY_DIRECT_PORT);
         logger.debug("PROXY_DIRECT_SECURE_PORT = " + PROXY_DIRECT_SECURE_PORT);
