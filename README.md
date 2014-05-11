@@ -5,7 +5,7 @@ MockServer
 
 # Build Status
 
-[![drone.io Build Status](https://drone.io/github.com/jamesdbloom/mockserver/status.png)](https://drone.io/github.com/jamesdbloom/mockserver/latest) [![Travis Build Status](https://travis-ci.org/jamesdbloom/mockserver.svg?branch=master)](https://travis-ci.org/jamesdbloom/mockserver) ![Codeship](https://www.codeship.io/projects/cdab0090-bafb-0131-c1a3-166904770eb2/status) [![Stories in Backlog](https://badge.waffle.io/jamesdbloom/mockserver.png?label=backlog&title=Backlog)](https://waffle.io/jamesdbloom/mockserver) [![Still Maintained](http://stillmaintained.com/jamesdbloom/mockserver.png)](http://stillmaintained.com/jamesdbloom/mockserver)
+[![drone.io Build Status](https://drone.io/github.com/jamesdbloom/mockserver/status.png)](https://drone.io/github.com/jamesdbloom/mockserver/latest) [![Travis Build Status](https://travis-ci.org/jamesdbloom/mockserver.svg?branch=master)](https://travis-ci.org/jamesdbloom/mockserver) [![Stories in Backlog](https://badge.waffle.io/jamesdbloom/mockserver.png?label=backlog&title=Backlog)](https://waffle.io/jamesdbloom/mockserver) [![Still Maintained](http://stillmaintained.com/jamesdbloom/mockserver.png)](http://stillmaintained.com/jamesdbloom/mockserver)
 
 # Versions
 
