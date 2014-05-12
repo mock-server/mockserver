@@ -471,7 +471,8 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 			<li><a href="#maven-central">Maven Central</a></li>
 			<li><a href="#vertx-registry">Vert.X Registry</a></li>
 			<li><a href="#docker">Docker</a></li>
-			<li><a href="#travis-ci">Travis CI</a></li>
+			<li><a href="#continuous-integration">Continuous Integration</a></li>
+			<li><a href="#backlog">Backlog</a></li>
 		</ul>
 	</div>
 </div>
@@ -487,12 +488,14 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <a name="what-is-mockserver" class="anchor" href="#what-is-mockserver">&nbsp;</a>
 
-<!-- <div style="width: 100%">
-    <a style="float: right; margin-top: 0em; margin-right: 5%;" href="https://travis-ci.org/jamesdbloom/mockserver"><img
+<div style="width: 100%">
+    <a style="float: right; margin-top: 0; margin-right: 4%;" href="https://travis-ci.org/jamesdbloom/mockserver"><img
             src="https://github-camo.global.ssl.fastly.net/2e2b9deeda5c745f167e2cabcd787322df06688f/68747470733a2f2f7472617669732d63692e6f72672f6a616d657364626c6f6f6d2f6d6f636b7365727665722e706e673f6272616e63683d6d6173746572"
             alt="Build Status" data-canonical-src="https://travis-ci.org/jamesdbloom/mockserver.png?branch=master"
             style="max-width:100%;"></a>
-</div> -->
+    <a style="float: right; margin-top: 0; margin-right: 2%;" href="https://drone.io/github.com/jamesdbloom/mockserver"><img
+            src="https://drone.io/github.com/jamesdbloom/mockserver/status.png" alt="Build Status"></a>
+</div>
 <h2>What is MockServer</h2>
 
 <p>MockServer is for mocking of any system you integrate with via HTTP or HTTPS (i.e. services, web sites, etc).</p>
@@ -2326,30 +2329,29 @@ xmlHttpRequest.send(JSON.stringify({
 
 <p>The MockServer docker container can be found at <a href="https://index.docker.io/u/jamesdbloom/mockserver/">MockServer Docker</a></p>
 
-<a name="travis-ci" class="anchor" href="#travis-ci">&nbsp;</a>
+<a name="continuous-integration" class="anchor" href="#continuous-integration">&nbsp;</a>
 
 <h2>Travis CI</h2>
 
 <p><a href="https://travis-ci.org/jamesdbloom/mockserver">Travis CI</a> is used for the continuous integration.  The build uses both Java 1.6 and Java 1.7 to build the different modules in their appropriate java version, the latest SNAPSHOT is also deployed to <a href="https://oss.sonatype.org/index.html#nexus-search;quick%7Emockserver">Sonatype</a>.</p>
 <p>The status of the build is shown at the top of this page and on the github project using the Travis CI logo &nbsp;&nbsp;<a href="https://travis-ci.org/jamesdbloom/mockserver"><img src="https://github-camo.global.ssl.fastly.net/2e2b9deeda5c745f167e2cabcd787322df06688f/68747470733a2f2f7472617669732d63692e6f72672f6a616d657364626c6f6f6d2f6d6f636b7365727665722e706e673f6272616e63683d6d6173746572" alt="Build Status" data-canonical-src="https://travis-ci.org/jamesdbloom/mockserver.png?branch=master" style="max-width:100%;"></a></p>
 
-<p><strong>Unfortunately both Travis CI and drone.io don't seem to be stable enough for MockServer. The MockServer uses
-    lots of socket connections to complete its integration tests. The same build with no code or configuration changes
-    run multiple times fails randomly on both Travis CI and drone.io. It is likely due to the server infrastructure
-    using either a hypervisor or containers that is causing issues with the heavy socket use in the integration tests.
-    As a result the build status will not be displayed any longer on github or at the top of the homepage.</strong></p>
-
-<a name="drone-io" class="anchor" href="#drone-io">&nbsp;</a>
-
 <h2>drone.io</h2>
 
 <p><a href="https://drone.io/github.com/jamesdbloom/mockserver">drone.io</a> is an alternative continuous integration
     platform also being used. Currently both Travis CI and drone.io are being used to determine which platform works
     better for MockServer.</p>
-
 <p>The status of the drone.io build is as follows: <a href="https://drone.io/github.com/jamesdbloom/mockserver"><img
         src="https://drone.io/github.com/jamesdbloom/mockserver/status.png" alt="Build Status"></a></p>
 
+<a name="backlog" class="anchor" href="#backlog">&nbsp;</a>
+
+<h2>Backlog</h2>
+
+<p><a href="https://waffle.io/jamesdbloom/mockserver">Waffle</a> is used to visualise the backlog, although all the items are stored in <a href="https://github.com/jamesdbloom/mockserver/issues?milestone=&page=1&state=open">Github</a>.</p>
+<p>The following icons shows the status of the backlog:     <a href="https://waffle.io/jamesdbloom/mockserver"><img src="https://camo.githubusercontent.com/7cb4115a381b12f2730184fd28e238e98450b98c/68747470733a2f2f62616467652e776166666c652e696f2f6a616d657364626c6f6f6d2f6d6f636b7365727665722e706e673f6c6162656c3d70726f706f73616c267469746c653d50726f706f73616c73" alt="Stories in Backlog" data-canonical-src="https://badge.waffle.io/jamesdbloom/mockserver.png?label=proposal&amp;title=Proposals" style="max-width:100%;"></a>
+    <a href="https://waffle.io/jamesdbloom/mockserver"><img src="https://camo.githubusercontent.com/0c25a2c44f691aa43b5fec8c8b3617f3eb16740b/68747470733a2f2f62616467652e776166666c652e696f2f6a616d657364626c6f6f6d2f6d6f636b7365727665722e706e673f6c6162656c3d7265616479267469746c653d5265616479" alt="Stories in Backlog" data-canonical-src="https://badge.waffle.io/jamesdbloom/mockserver.png?label=ready&amp;title=Ready" style="max-width:100%;"></a>
+    <a href="https://waffle.io/jamesdbloom/mockserver"><img src="https://camo.githubusercontent.com/6cb0a7e54cd194e04a1ee2ae891c1e295969d152/68747470733a2f2f62616467652e776166666c652e696f2f6a616d657364626c6f6f6d2f6d6f636b7365727665722e706e673f6c6162656c3d696e25323070726f6772657373267469746c653d496e25323050726f6772657373" alt="Stories in Backlog" data-canonical-src="https://badge.waffle.io/jamesdbloom/mockserver.png?label=in%20progress&amp;title=In%20Progress" style="max-width:100%;"></a></p>
 
 <p><br><a href="https://plus.google.com/110954472544793839756?rel=author">James D Bloom</a> - <a href="http://blog.jamesdbloom.com">Blog</a></p>
 <span itemprop="author" itemscope itemtype="http://schema.org/Person">
