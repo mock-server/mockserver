@@ -3,6 +3,7 @@ package org.mockserver.client.serialization.model;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.EqualsHashCodeToString;
+import org.mockserver.model.HttpForward;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
@@ -13,6 +14,7 @@ public class ExpectationDTO extends EqualsHashCodeToString {
 
     private HttpRequestDTO httpRequest;
     private HttpResponseDTO httpResponse;
+    private HttpForwardDTO httpForward;
     private TimesDTO times;
 
     public ExpectationDTO(Expectation expectation) {
@@ -21,6 +23,9 @@ public class ExpectationDTO extends EqualsHashCodeToString {
         }
         if (expectation.getHttpResponse() != null) {
             httpResponse = new HttpResponseDTO(expectation.getHttpResponse());
+        }
+        if (expectation.getHttpForward() != null) {
+            httpForward = new HttpForwardDTO(expectation.getHttpForward());
         }
         if (expectation.getTimes() != null) {
             times = new TimesDTO(expectation.getTimes());
@@ -33,6 +38,7 @@ public class ExpectationDTO extends EqualsHashCodeToString {
     public Expectation buildObject() {
         HttpRequest httpRequest = null;
         HttpResponse httpResponse = null;
+        HttpForward httpForward = null;
         Times times;
         if (this.httpRequest != null) {
             httpRequest = this.httpRequest.buildObject();
@@ -40,12 +46,15 @@ public class ExpectationDTO extends EqualsHashCodeToString {
         if (this.httpResponse != null) {
             httpResponse = this.httpResponse.buildObject();
         }
+        if (this.httpForward != null) {
+            httpForward = this.httpForward.buildObject();
+        }
         if (this.times != null) {
             times = this.times.buildObject();
         } else {
             times = Times.once();
         }
-        return new Expectation(httpRequest, times).thenRespond(httpResponse);
+        return new Expectation(httpRequest, times).thenRespond(httpResponse).thenForward(httpForward);
     }
 
     public HttpRequestDTO getHttpRequest() {
@@ -72,6 +81,15 @@ public class ExpectationDTO extends EqualsHashCodeToString {
 
     public ExpectationDTO setHttpResponse(HttpResponseDTO httpResponse) {
         this.httpResponse = httpResponse;
+        return this;
+    }
+
+    public HttpForwardDTO getHttpForward() {
+        return httpForward;
+    }
+
+    public ExpectationDTO setHttpForward(HttpForwardDTO httpForward) {
+        this.httpForward = httpForward;
         return this;
     }
 }

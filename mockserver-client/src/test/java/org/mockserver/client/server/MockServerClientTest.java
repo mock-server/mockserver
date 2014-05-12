@@ -6,10 +6,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.http.ApacheHttpClient;
 import org.mockserver.client.serialization.ExpectationSerializer;
-import org.mockserver.client.serialization.model.ExpectationDTO;
-import org.mockserver.client.serialization.model.HttpRequestDTO;
-import org.mockserver.client.serialization.model.HttpResponseDTO;
-import org.mockserver.client.serialization.model.TimesDTO;
+import org.mockserver.client.serialization.model.*;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
@@ -42,7 +39,7 @@ public class MockServerClientTest {
     }
 
     @Test
-    public void shouldSetupExpectation() {
+    public void shouldSetupExpectationWithResponse() {
         // given
         HttpRequest httpRequest =
                 new HttpRequest()
@@ -61,6 +58,30 @@ public class MockServerClientTest {
         Expectation expectation = forwardChainExpectation.getExpectation();
         assertTrue(expectation.matches(httpRequest));
         assertSame(httpResponse, expectation.getHttpResponse());
+        assertEquals(Times.unlimited(), expectation.getTimes());
+    }
+
+    @Test
+    public void shouldSetupExpectationWithForward() {
+        // given
+        HttpRequest httpRequest =
+                new HttpRequest()
+                        .withPath("/some_path")
+                        .withBody(new StringBody("some_request_body", Body.Type.EXACT));
+        HttpForward httpForward =
+                new HttpForward()
+                        .withHost("some_host")
+                        .withPort(9090)
+                        .withScheme(HttpForward.Scheme.HTTPS);
+
+        // when
+        ForwardChainExpectation forwardChainExpectation = mockServerClient.when(httpRequest);
+        forwardChainExpectation.forward(httpForward);
+
+        // then
+        Expectation expectation = forwardChainExpectation.getExpectation();
+        assertTrue(expectation.matches(httpRequest));
+        assertSame(httpForward, expectation.getHttpForward());
         assertEquals(Times.unlimited(), expectation.getTimes());
     }
 
@@ -89,6 +110,38 @@ public class MockServerClientTest {
                         .setHttpResponse(new HttpResponseDTO(new HttpResponse()
                                 .withBody("some_response_body")
                                 .withHeaders(new Header("responseName", "responseValue"))))
+                        .setTimes(new TimesDTO(Times.exactly(3)))
+                        .buildObject()
+        );
+    }
+
+    @Test
+    public void shouldSendExpectationWithForward() throws Exception {
+        // when
+        mockServerClient
+                .when(
+                        new HttpRequest()
+                                .withPath("/some_path")
+                                .withBody(new StringBody("some_request_body", Body.Type.EXACT)),
+                        Times.exactly(3)
+                )
+                .forward(
+                        new HttpForward()
+                                .withHost("some_host")
+                                .withPort(9090)
+                                .withScheme(HttpForward.Scheme.HTTPS)
+                );
+
+        // then
+        verify(expectationSerializer).serialize(
+                new ExpectationDTO()
+                        .setHttpRequest(new HttpRequestDTO(new HttpRequest()
+                                .withPath("/some_path")
+                                .withBody(new StringBody("some_request_body", Body.Type.EXACT))))
+                        .setHttpForward(new HttpForwardDTO(new HttpForward()
+                                .withHost("some_host")
+                                .withPort(9090)
+                                .withScheme(HttpForward.Scheme.HTTPS)))
                         .setTimes(new TimesDTO(Times.exactly(3)))
                         .buildObject());
     }

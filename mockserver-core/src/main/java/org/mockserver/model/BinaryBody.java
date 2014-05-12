@@ -18,8 +18,8 @@ public class BinaryBody extends Body {
         this.value = value;
     }
 
-    public String getValue() {
-        return DatatypeConverter.printBase64Binary(value);
+    public byte[] getValue() {
+        return value;
     }
 
     @Override

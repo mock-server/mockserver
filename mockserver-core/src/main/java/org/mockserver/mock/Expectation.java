@@ -3,9 +3,7 @@ package org.mockserver.mock;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.matchers.Times;
-import org.mockserver.model.EqualsHashCodeToString;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
+import org.mockserver.model.*;
 
 /**
  * @author jamesdbloom
@@ -16,6 +14,7 @@ public class Expectation extends EqualsHashCodeToString {
     private final Times times;
     private final HttpRequestMatcher httpRequestMatcher;
     private HttpResponse httpResponse;
+    private HttpForward httpForward;
 
     public Expectation(HttpRequest httpRequest, Times times) {
         this.httpRequest = httpRequest;
@@ -35,12 +34,35 @@ public class Expectation extends EqualsHashCodeToString {
         }
     }
 
+    public HttpForward getHttpForward() {
+        return httpForward;
+    }
+
+    public Action getAction() {
+        if (httpResponse != null) {
+            return getHttpResponse();
+        } else {
+            return getHttpForward();
+        }
+    }
+
     public Times getTimes() {
         return times;
     }
 
     public Expectation thenRespond(HttpResponse httpResponse) {
-        this.httpResponse = httpResponse;
+        if (httpResponse != null) {
+            if (httpForward != null) throw new IllegalArgumentException("It is not possible to set a response once a forward has been set");
+            this.httpResponse = httpResponse;
+        }
+        return this;
+    }
+
+    public Expectation thenForward(HttpForward httpForward) {
+        if (httpForward != null) {
+            if (httpResponse != null) throw new IllegalArgumentException("It is not possible to set a forward once a response has been set");
+            this.httpForward = httpForward;
+        }
         return this;
     }
 

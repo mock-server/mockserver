@@ -84,7 +84,7 @@ public class CaseInsensitiveRegexMultiMap extends EqualsHashCodeToString impleme
 
     public synchronized List<String> getAll(Object key) {
         List<String> all = new ArrayList<String>();
-        for(List<String> subList : backingMap.getAll(key)) {
+        for (List<String> subList : backingMap.getAll(key)) {
             all.addAll(subList);
         }
         return all;
@@ -92,13 +92,12 @@ public class CaseInsensitiveRegexMultiMap extends EqualsHashCodeToString impleme
 
     @Override
     public synchronized String put(String key, String value) {
+        List<String> list = Collections.synchronizedList(new ArrayList<String>());
         if (containsKey(key)) {
-            backingMap.get(key).add(value);
-        } else {
-            List<String> list = Collections.synchronizedList(new ArrayList<String>());
-            list.add(value);
-            backingMap.put(key, list);
+            list.addAll(backingMap.get(key));
         }
+        list.add(value);
+        backingMap.put(key, list);
         return value;
     }
 
@@ -113,7 +112,7 @@ public class CaseInsensitiveRegexMultiMap extends EqualsHashCodeToString impleme
         return values;
     }
 
-    public void putNewKeys(CaseInsensitiveRegexMultiMap multiMap) {
+    public void putValuesForNewKeys(CaseInsensitiveRegexMultiMap multiMap) {
         for (String key : multiMap.keySet()) {
             if (!containsKey(key)) {
                 backingMap.put(key, multiMap.getAll(key));

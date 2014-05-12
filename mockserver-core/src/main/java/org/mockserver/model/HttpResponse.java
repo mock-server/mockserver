@@ -9,7 +9,7 @@ import java.util.*;
 /**
  * @author jamesdbloom
  */
-public class HttpResponse extends EqualsHashCodeToString {
+public class HttpResponse extends Action {
     private Integer statusCode = 200;
     private byte[] body = new byte[0];
     private Map<String, Header> headers = new LinkedHashMap<String, Header>();

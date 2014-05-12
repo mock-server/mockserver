@@ -1,11 +1,9 @@
 package org.mockserver.matchers;
 
-import com.google.common.collect.Multimap;
 import org.mockserver.collections.CaseInsensitiveRegexMultiMap;
 import org.mockserver.model.EqualsHashCodeToString;
 import org.mockserver.model.KeyToMultiValue;
 
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -19,7 +17,7 @@ public class MapMatcher extends EqualsHashCodeToString implements Matcher<List<K
     }
 
     public void addAll(CaseInsensitiveRegexMultiMap multiMap) {
-        this.multiMap.putNewKeys(multiMap);
+        this.multiMap.putValuesForNewKeys(multiMap);
     }
 
     public boolean matches(List<KeyToMultiValue> values) {

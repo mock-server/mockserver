@@ -64,6 +64,48 @@ public class CaseInsensitiveRegexMultiMapTest {
     }
 
     @Test
+    public void shouldSupportPuttingValuesForNewKeysOnly() {
+        // given
+        CaseInsensitiveRegexMultiMap circularMultiMap = new CaseInsensitiveRegexMultiMap();
+
+        // when
+        circularMultiMap.put("one", "one_one");
+        circularMultiMap.putValuesForNewKeys(new CaseInsensitiveRegexMultiMap() {{
+            put("one", "one_two");
+            put("two", "two");
+        }});
+        circularMultiMap.put("one", "one_three");
+
+        // then
+        assertEquals(Arrays.asList("one_one", "one_three", "two"), circularMultiMap.getAll("[a-z]{3}"));
+        assertEquals(Arrays.asList("one_one", "one_three"), circularMultiMap.getAll("o[a-z]{2}"));
+        assertEquals(Arrays.asList("one_one", "one_three"), circularMultiMap.getAll("one"));
+        assertEquals(Arrays.asList("one_one", "one_three"), circularMultiMap.getAll("ONE"));
+        assertEquals(Arrays.asList("one_one", "one_three"), circularMultiMap.getAll("One"));
+        assertEquals(Arrays.asList("one_one", "one_three"), circularMultiMap.getAll("oNE"));
+        assertEquals(Arrays.asList("two"), circularMultiMap.getAll("two"));
+        assertEquals(Arrays.asList("two"), circularMultiMap.getAll("TWO"));
+    }
+
+    @Test
+    public void shouldSupportPuttingMultipleValuesInAList() {
+        // given
+        CaseInsensitiveRegexMultiMap circularMultiMap = new CaseInsensitiveRegexMultiMap();
+
+        // when
+        circularMultiMap.put("one", Arrays.asList("one_one"));
+        circularMultiMap.put("one", Arrays.asList("one_two", "one_three"));
+
+        // then
+        assertEquals(Arrays.asList("one_one", "one_two", "one_three"), circularMultiMap.getAll("[a-z]{3}"));
+        assertEquals(Arrays.asList("one_one", "one_two", "one_three"), circularMultiMap.getAll("o[a-z]{2}"));
+        assertEquals(Arrays.asList("one_one", "one_two", "one_three"), circularMultiMap.getAll("one"));
+        assertEquals(Arrays.asList("one_one", "one_two", "one_three"), circularMultiMap.getAll("ONE"));
+        assertEquals(Arrays.asList("one_one", "one_two", "one_three"), circularMultiMap.getAll("One"));
+        assertEquals(Arrays.asList("one_one", "one_two", "one_three"), circularMultiMap.getAll("oNE"));
+    }
+
+    @Test
 
     public void shouldIndicateWhenEmpty() {
         assertTrue(new CaseInsensitiveRegexMultiMap().isEmpty());
@@ -109,7 +151,8 @@ public class CaseInsensitiveRegexMultiMapTest {
                         circularMultiMap.new ImmutableEntry("one", "one_two"),
                         circularMultiMap.new ImmutableEntry("one", "one_three"),
                         circularMultiMap.new ImmutableEntry("two", "two")
-                }), circularMultiMap.entrySet());
+                }
+        ), circularMultiMap.entrySet());
     }
 
     @Test

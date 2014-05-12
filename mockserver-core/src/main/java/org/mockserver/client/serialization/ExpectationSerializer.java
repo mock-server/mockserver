@@ -3,10 +3,7 @@ package org.mockserver.client.serialization;
 import org.apache.commons.io.Charsets;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.mockserver.client.serialization.model.ExpectationDTO;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
@@ -41,6 +38,7 @@ public class ExpectationSerializer {
         if (expectation != null) {
             HttpRequest httpRequest = expectation.getHttpRequest();
             HttpResponse httpResponse = expectation.getHttpResponse();
+            HttpForward httpForward = expectation.getHttpForward();
             output.append("\n" +
                     "new MockServerClient()\n" +
                     "        .when(\n" +
@@ -74,22 +72,38 @@ public class ExpectationSerializer {
             }
             output.append(",\n" +
                     "                Times.once()\n" +
-                    "        )\n" +
-                    "        .thenRespond(\n" +
-                    "                response()\n");
-            if (httpResponse.getStatusCode() != null) {
-                output.append("                        .withStatusCode(").append(httpResponse.getStatusCode()).append(")");
+                    "        )\n");
+            if (httpResponse != null) {
+                output.append("        .thenRespond(\n" +
+                        "                response()\n");
+                if (httpResponse.getStatusCode() != null) {
+                    output.append("                        .withStatusCode(").append(httpResponse.getStatusCode()).append(")");
+                }
+                if (httpResponse.getHeaders().size() > 0) {
+                    serializeAsJavaKeyToMultiValue(output, "Header", new ArrayList<KeyToMultiValue>(httpResponse.getHeaders()));
+                }
+                if (httpResponse.getCookies().size() > 0) {
+                    serializeAsJavaKeyToMultiValue(output, "Cookie", new ArrayList<KeyToMultiValue>(httpResponse.getCookies()));
+                }
+                if (httpResponse.getBody() != null && httpResponse.getBody().length > 0) {
+                    output.append("\n                        .withBody(\"").append(StringEscapeUtils.escapeJava(new String(httpResponse.getBody(), Charsets.UTF_8))).append("\")");
+                }
+                output.append("\n        );");
             }
-            if (httpResponse.getHeaders().size() > 0) {
-                serializeAsJavaKeyToMultiValue(output, "Header", new ArrayList<KeyToMultiValue>(httpResponse.getHeaders()));
+            if (httpForward != null) {
+                output.append("        .thenForward(\n" +
+                        "                forward()\n");
+                if (httpForward.getHost() != null) {
+                    output.append("                        .withHost(").append(httpForward.getHost()).append(")");
+                }
+                if (httpForward.getPort() != null) {
+                    output.append("                        .withPort(").append(httpForward.getPort()).append(")");
+                }
+                if (httpForward.getScheme() != null) {
+                    output.append("                        .withScheme(").append(httpForward.getScheme()).append(")");
+                }
+                output.append("\n        );");
             }
-            if (httpResponse.getCookies().size() > 0) {
-                serializeAsJavaKeyToMultiValue(output, "Cookie", new ArrayList<KeyToMultiValue>(httpResponse.getCookies()));
-            }
-            if (httpResponse.getBody() != null && httpResponse.getBody().length > 0) {
-                output.append("\n                        .withBody(\"").append(StringEscapeUtils.escapeJava(new String(httpResponse.getBody(), Charsets.UTF_8))).append("\")");
-            }
-            output.append("\n        );");
         }
 
         return output.toString();

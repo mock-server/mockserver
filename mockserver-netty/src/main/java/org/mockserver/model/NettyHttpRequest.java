@@ -16,7 +16,7 @@ import java.util.Map;
 public class NettyHttpRequest extends DefaultHttpRequest {
     private final String path;
     private final Map<String, List<String>> parameters;
-    private final boolean secure;
+    private boolean secure;
     private ByteBuf content;
 
     public NettyHttpRequest(HttpVersion httpVersion, HttpMethod method, String uri, boolean secure) {
@@ -45,6 +45,10 @@ public class NettyHttpRequest extends DefaultHttpRequest {
 
     public Map<String, List<String>> parameters() {
         return parameters;
+    }
+
+    public void setSecure(boolean secure) {
+        this.secure = secure;
     }
 
     public boolean isSecure() {

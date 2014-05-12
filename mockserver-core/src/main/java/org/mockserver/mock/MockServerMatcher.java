@@ -8,6 +8,7 @@ import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.matchers.Times;
+import org.mockserver.model.Action;
 import org.mockserver.model.EqualsHashCodeToString;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -55,7 +56,7 @@ public class MockServerMatcher extends EqualsHashCodeToString {
         return expectation;
     }
 
-    public synchronized HttpResponse handle(HttpRequest httpRequest) {
+    public synchronized Action handle(HttpRequest httpRequest) {
         ArrayList<Expectation> expectations = new ArrayList<Expectation>(this.expectations);
         for (Expectation expectation : expectations) {
             if (expectation.matches(httpRequest)) {
@@ -64,7 +65,7 @@ public class MockServerMatcher extends EqualsHashCodeToString {
                         this.expectations.remove(expectation);
                     }
                 }
-                return expectation.getHttpResponse();
+                return expectation.getAction();
             }
         }
         return null;

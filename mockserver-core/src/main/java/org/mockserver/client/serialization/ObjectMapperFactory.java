@@ -3,17 +3,18 @@ package org.mockserver.client.serialization;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.JsonToken;
 import org.codehaus.jackson.Version;
-import org.codehaus.jackson.map.*;
+import org.codehaus.jackson.map.DeserializationConfig;
+import org.codehaus.jackson.map.DeserializationContext;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.SerializationConfig;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.deser.std.StdDeserializer;
 import org.codehaus.jackson.map.module.SimpleModule;
+import org.mockserver.client.serialization.model.BinaryBodyDTO;
 import org.mockserver.client.serialization.model.BodyDTO;
 import org.mockserver.client.serialization.model.ParameterBodyDTO;
 import org.mockserver.client.serialization.model.StringBodyDTO;
-import org.mockserver.model.Body;
-import org.mockserver.model.Parameter;
-import org.mockserver.model.ParameterBody;
-import org.mockserver.model.StringBody;
+import org.mockserver.model.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -69,57 +70,74 @@ public class ObjectMapperFactory {
                     if (jp.getCurrentToken() == JsonToken.VALUE_STRING) {
                         Body.Type type = Body.Type.valueOf(jp.getText());
                         jp.nextToken();
-                        if (type != Body.Type.PARAMETERS) {
-                            if (jp.getCurrentToken() == JsonToken.FIELD_NAME && jp.getText().equals("value")) {
-                                jp.nextToken();
-                                if (jp.getCurrentToken() == JsonToken.VALUE_STRING) {
-                                    String value = jp.getText();
+                        switch (type) {
+                            case EXACT:
+                            case REGEX:
+                            case XPATH:
+                                if (jp.getCurrentToken() == JsonToken.FIELD_NAME && jp.getText().equals("value")) {
                                     jp.nextToken();
-                                    if (jp.getCurrentToken() == JsonToken.END_OBJECT) {
-                                        return new StringBodyDTO(new StringBody(value, type));
-                                    }
-                                }
-                            }
-                        } else {
-                            if (jp.getCurrentToken() == JsonToken.FIELD_NAME && jp.getText().equals("parameters")) {
-                                jp.nextToken();
-                                if (jp.isExpectedStartArrayToken()) {
-                                    List<Parameter> parameters = new ArrayList<Parameter>();
-                                    boolean inObject = false;
-                                    while (inObject || jp.getCurrentToken() != JsonToken.END_ARRAY) {
-                                        JsonToken token = jp.nextToken();
-                                        switch (token) {
-                                            case START_OBJECT:
-                                                inObject = true;
-                                                break;
-                                            case END_OBJECT:
-                                                inObject = false;
-                                                break;
-                                            case FIELD_NAME:
-                                                if (jp.getText().equals("name")) {
-                                                    if (jp.nextToken() == JsonToken.VALUE_STRING) {
-                                                        String name = jp.getText();
-                                                        jp.nextToken();
-                                                        if (jp.nextToken() == JsonToken.START_ARRAY) {
-                                                            List<String> values = new ArrayList<String>();
-                                                            while (jp.nextToken() != null && jp.getCurrentToken() != JsonToken.END_ARRAY) {
-                                                                if (jp.getCurrentToken() == JsonToken.VALUE_STRING) {
-                                                                    values.add(jp.getText());
-                                                                }
-                                                            }
-                                                            parameters.add(new Parameter(name, values));
-                                                        }
-                                                    }
-                                                }
-                                                break;
+                                    if (jp.getCurrentToken() == JsonToken.VALUE_STRING) {
+                                        String value = jp.getText();
+                                        jp.nextToken();
+                                        if (jp.getCurrentToken() == JsonToken.END_OBJECT) {
+                                            return new StringBodyDTO(new StringBody(value, type));
                                         }
                                     }
+                                }
+                                break;
+                            case BINARY:
+                                if (jp.getCurrentToken() == JsonToken.FIELD_NAME && jp.getText().equals("value")) {
                                     jp.nextToken();
-                                    if (jp.getCurrentToken() == JsonToken.END_OBJECT) {
-                                        return new ParameterBodyDTO(new ParameterBody(parameters));
+                                    if (jp.getCurrentToken() == JsonToken.VALUE_STRING) {
+                                        String value = jp.getText();
+                                        jp.nextToken();
+                                        if (jp.getCurrentToken() == JsonToken.END_OBJECT) {
+                                            return new BinaryBodyDTO(new BinaryBody(value.getBytes()));
+                                        }
                                     }
                                 }
-                            }
+                                break;
+                            case PARAMETERS:
+                                if (jp.getCurrentToken() == JsonToken.FIELD_NAME && jp.getText().equals("parameters")) {
+                                    jp.nextToken();
+                                    if (jp.isExpectedStartArrayToken()) {
+                                        List<Parameter> parameters = new ArrayList<Parameter>();
+                                        boolean inObject = false;
+                                        while (inObject || jp.getCurrentToken() != JsonToken.END_ARRAY) {
+                                            JsonToken token = jp.nextToken();
+                                            switch (token) {
+                                                case START_OBJECT:
+                                                    inObject = true;
+                                                    break;
+                                                case END_OBJECT:
+                                                    inObject = false;
+                                                    break;
+                                                case FIELD_NAME:
+                                                    if (jp.getText().equals("name")) {
+                                                        if (jp.nextToken() == JsonToken.VALUE_STRING) {
+                                                            String name = jp.getText();
+                                                            jp.nextToken();
+                                                            if (jp.nextToken() == JsonToken.START_ARRAY) {
+                                                                List<String> values = new ArrayList<String>();
+                                                                while (jp.nextToken() != null && jp.getCurrentToken() != JsonToken.END_ARRAY) {
+                                                                    if (jp.getCurrentToken() == JsonToken.VALUE_STRING) {
+                                                                        values.add(jp.getText());
+                                                                    }
+                                                                }
+                                                                parameters.add(new Parameter(name, values));
+                                                            }
+                                                        }
+                                                    }
+                                                    break;
+                                            }
+                                        }
+                                        jp.nextToken();
+                                        if (jp.getCurrentToken() == JsonToken.END_OBJECT) {
+                                            return new ParameterBodyDTO(new ParameterBody(parameters));
+                                        }
+                                    }
+                                }
+                                break;
                         }
                     }
                 }

@@ -44,16 +44,18 @@ public class Times extends EqualsHashCodeToString {
         }
     }
 
-    public void decrement() {
+    public Times decrement() {
         if (!unlimited) {
             remainingTimes--;
         }
+        return this;
     }
 
-    public void setNotUnlimitedResponses() {
+    public Times setNotUnlimitedResponses() {
         if (unlimited) {
             remainingTimes = 1;
             unlimited = false;
         }
+        return this;
     }
 }
