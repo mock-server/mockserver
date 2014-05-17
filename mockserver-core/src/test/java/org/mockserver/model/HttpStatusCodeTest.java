@@ -18,4 +18,10 @@ public class HttpStatusCodeTest {
         assertEquals(HttpStatusCode.INSUFFICIENT_STORAGE_507, HttpStatusCode.code(507));
         assertNull(HttpStatusCode.code(600));
     }
+
+    @Test
+    public void shouldReturnCorrectValues() {
+        assertEquals(HttpStatusCode.FOUND_302.reasonPhrase(), "Moved Temporarily");
+        assertEquals(HttpStatusCode.FOUND_302.code(), 302);
+    }
 }

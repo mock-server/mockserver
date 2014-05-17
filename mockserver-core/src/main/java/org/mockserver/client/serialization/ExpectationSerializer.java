@@ -1,5 +1,6 @@
 package org.mockserver.client.serialization;
 
+import com.google.common.base.Strings;
 import org.apache.commons.io.Charsets;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -65,9 +66,13 @@ public class ExpectationSerializer {
                 if (httpRequest.getBody() instanceof StringBody) {
                     output.append("\n                        .withBody(new StringBody(\"").append(StringEscapeUtils.escapeJava(((StringBody) httpRequest.getBody()).getValue())).append("\", Body.Type.").append(httpRequest.getBody().getType()).append("))");
                 } else if (httpRequest.getBody() instanceof ParameterBody) {
-                    output.append("\n                        .withBody(new ParameterBody(Arrays.asList(");
-                    serializeAsJavaKeyToMultiValueList(output, "Parameter", new ArrayList<KeyToMultiValue>(((ParameterBody) httpRequest.getBody()).getParameters()));
-                    output.append("), Body.Type.").append(httpRequest.getBody().getType()).append("))");
+                    output.append("\n                        .withBody(");
+                    output.append("\n                                new ParameterBody(\n");
+                    serializeAsJavaKeyToMultiValueList(output, "Parameter", new ArrayList<KeyToMultiValue>(((ParameterBody) httpRequest.getBody()).getParameters()), 40);
+                    output.append("                                )");
+                    output.append("\n                        )");
+                } else if (httpRequest.getBody() instanceof BinaryBody) {
+                    output.append("\n                        .withBody(new byte[0]) /* note: not possible to generate code for binary data */");
                 }
             }
             output.append(",\n" +
@@ -94,15 +99,15 @@ public class ExpectationSerializer {
                 output.append("        .thenForward(\n" +
                         "                forward()\n");
                 if (httpForward.getHost() != null) {
-                    output.append("                        .withHost(").append(httpForward.getHost()).append(")");
+                    output.append("                        .withHost(\"").append(httpForward.getHost()).append("\")\n");
                 }
                 if (httpForward.getPort() != null) {
-                    output.append("                        .withPort(").append(httpForward.getPort()).append(")");
+                    output.append("                        .withPort(").append(httpForward.getPort()).append(")\n");
                 }
                 if (httpForward.getScheme() != null) {
-                    output.append("                        .withScheme(").append(httpForward.getScheme()).append(")");
+                    output.append("                        .withScheme(HttpForward.Scheme.").append(httpForward.getScheme()).append(")\n");
                 }
-                output.append("\n        );");
+                output.append("        );");
             }
         }
 
@@ -111,14 +116,15 @@ public class ExpectationSerializer {
 
     private void serializeAsJavaKeyToMultiValue(StringBuffer output, String name, List<KeyToMultiValue> keyToMultiValues) {
         output.append("\n                        .with").append(name).append("s(\n");
-        serializeAsJavaKeyToMultiValueList(output, name, keyToMultiValues);
+        serializeAsJavaKeyToMultiValueList(output, name, keyToMultiValues, 32);
         output.append("                        )");
     }
 
-    private void serializeAsJavaKeyToMultiValueList(StringBuffer output, String name, List<KeyToMultiValue> keyToMultiValues) {
+    private void serializeAsJavaKeyToMultiValueList(StringBuffer output, String name, List<KeyToMultiValue> keyToMultiValues, int indent) {
         for (int i = 0; i < keyToMultiValues.size(); i++) {
             KeyToMultiValue keyToMultiValue = keyToMultiValues.get(i);
-            output.append("                                new ").append(name).append("(\"").append(keyToMultiValue.getName()).append("\"");
+            output.append(Strings.padStart("", indent, ' '));
+            output.append("new ").append(name).append("(\"").append(keyToMultiValue.getName()).append("\"");
             for (String value : keyToMultiValue.getValues()) {
                 output.append(", \"").append(value).append("\"");
             }

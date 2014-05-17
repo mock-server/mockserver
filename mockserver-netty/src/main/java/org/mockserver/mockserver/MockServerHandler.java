@@ -1,5 +1,6 @@
 package org.mockserver.mockserver;
 
+import com.google.common.annotations.VisibleForTesting;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
@@ -37,8 +38,8 @@ public class MockServerHandler extends SimpleChannelInboundHandler<Object> {
     private final boolean secure;
     private final MockServer server;
     // request forwarding
-    private final Filters filters = new Filters();
-    private final ApacheHttpClient apacheHttpClient = new ApacheHttpClient(true);
+    private Filters filters = new Filters();
+    private ApacheHttpClient apacheHttpClient = new ApacheHttpClient(true);
     // mappers
     private NettyToMockServerRequestMapper nettyToMockServerRequestMapper = new NettyToMockServerRequestMapper();
     private MockServerToNettyResponseMapper mockServerToNettyResponseMapper = new MockServerToNettyResponseMapper();
@@ -117,7 +118,8 @@ public class MockServerHandler extends SimpleChannelInboundHandler<Object> {
         ctx.flush();
     }
 
-    private FullHttpResponse mockResponse(NettyHttpRequest nettyHttpRequest) {
+    @VisibleForTesting
+    FullHttpResponse mockResponse(NettyHttpRequest nettyHttpRequest) {
 
         String content = (nettyHttpRequest.content() != null ? nettyHttpRequest.content().toString(CharsetUtil.UTF_8) : "");
 
@@ -168,11 +170,13 @@ public class MockServerHandler extends SimpleChannelInboundHandler<Object> {
         }
     }
 
-    private FullHttpResponse forwardRequest(NettyHttpRequest request) {
+    @VisibleForTesting
+    FullHttpResponse forwardRequest(NettyHttpRequest request) {
         return sendRequest(filters.applyFilters(nettyToMockServerRequestMapper.mapNettyRequestToMockServerRequest(request)));
     }
 
-    private FullHttpResponse sendRequest(final org.mockserver.model.HttpRequest httpRequest) {
+    @VisibleForTesting
+    FullHttpResponse sendRequest(final org.mockserver.model.HttpRequest httpRequest) {
         // if HttpRequest was set to null by a filter don't send request
         if (httpRequest != null) {
             HttpResponse httpResponse = filters.applyFilters(httpRequest, apacheHttpClient.sendRequest(httpRequest));

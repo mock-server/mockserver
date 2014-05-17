@@ -95,43 +95,43 @@ public class ExpectationSerializerTest {
     }
 
     @Test
-    public void shouldSerializeFullObjectAsJava() throws IOException {
+    public void shouldSerializeFullObjectWithResponseAsJava() throws IOException {
         // when
         assertEquals("\n" +
-                "new MockServerClient()\n" +
-                "        .when(\n" +
-                "                request()\n" +
-                "                        .withMethod(\"GET\")\n" +
-                "                        .withURL(\"http://www.example.com\")\n" +
-                "                        .withPath(\"somePath\")\n" +
-                "                        .withHeaders(\n" +
-                "                                new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\"),\n" +
-                "                                new Header(\"requestHeaderNameTwo\", \"requestHeaderValueTwo\")\n" +
-                "                        )\n" +
-                "                        .withCookies(\n" +
-                "                                new Cookie(\"requestCookieNameOne\", \"requestCookieValueOneOne\", \"requestCookieValueOneTwo\"),\n" +
-                "                                new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")\n" +
-                "                        )\n" +
-                "                        .withQueryStringParameters(\n" +
-                "                                new QueryStringParameter(\"requestQueryStringParameterNameOne\", \"requestQueryStringParameterValueOneOne\", \"requestQueryStringParameterValueOneTwo\"),\n" +
-                "                                new QueryStringParameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")\n" +
-                "                        )\n" +
-                "                        .withBody(new StringBody(\"somebody\", Body.Type.EXACT)),\n" +
-                "                Times.once()\n" +
-                "        )\n" +
-                "        .thenRespond(\n" +
-                "                response()\n" +
-                "                        .withStatusCode(304)\n" +
-                "                        .withHeaders(\n" +
-                "                                new Header(\"responseHeaderNameOne\", \"responseHeaderValueOneOne\", \"responseHeaderValueOneTwo\"),\n" +
-                "                                new Header(\"responseHeaderNameTwo\", \"responseHeaderValueTwo\")\n" +
-                "                        )\n" +
-                "                        .withCookies(\n" +
-                "                                new Cookie(\"responseCookieNameOne\", \"responseCookieValueOneOne\", \"responseCookieValueOneTwo\"),\n" +
-                "                                new Cookie(\"responseCookieNameTwo\", \"responseCookieValueTwo\")\n" +
-                "                        )\n" +
-                "                        .withBody(\"responseBody\")\n" +
-                "        );",
+                        "new MockServerClient()\n" +
+                        "        .when(\n" +
+                        "                request()\n" +
+                        "                        .withMethod(\"GET\")\n" +
+                        "                        .withURL(\"http://www.example.com\")\n" +
+                        "                        .withPath(\"somePath\")\n" +
+                        "                        .withHeaders(\n" +
+                        "                                new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\"),\n" +
+                        "                                new Header(\"requestHeaderNameTwo\", \"requestHeaderValueTwo\")\n" +
+                        "                        )\n" +
+                        "                        .withCookies(\n" +
+                        "                                new Cookie(\"requestCookieNameOne\", \"requestCookieValueOneOne\", \"requestCookieValueOneTwo\"),\n" +
+                        "                                new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")\n" +
+                        "                        )\n" +
+                        "                        .withQueryStringParameters(\n" +
+                        "                                new QueryStringParameter(\"requestQueryStringParameterNameOne\", \"requestQueryStringParameterValueOneOne\", \"requestQueryStringParameterValueOneTwo\"),\n" +
+                        "                                new QueryStringParameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")\n" +
+                        "                        )\n" +
+                        "                        .withBody(new StringBody(\"somebody\", Body.Type.EXACT)),\n" +
+                        "                Times.once()\n" +
+                        "        )\n" +
+                        "        .thenRespond(\n" +
+                        "                response()\n" +
+                        "                        .withStatusCode(304)\n" +
+                        "                        .withHeaders(\n" +
+                        "                                new Header(\"responseHeaderNameOne\", \"responseHeaderValueOneOne\", \"responseHeaderValueOneTwo\"),\n" +
+                        "                                new Header(\"responseHeaderNameTwo\", \"responseHeaderValueTwo\")\n" +
+                        "                        )\n" +
+                        "                        .withCookies(\n" +
+                        "                                new Cookie(\"responseCookieNameOne\", \"responseCookieValueOneOne\", \"responseCookieValueOneTwo\"),\n" +
+                        "                                new Cookie(\"responseCookieNameTwo\", \"responseCookieValueTwo\")\n" +
+                        "                        )\n" +
+                        "                        .withBody(\"responseBody\")\n" +
+                        "        );",
                 expectationSerializer.serializeAsJava(
                         new Expectation(
                                 new HttpRequest()
@@ -170,21 +170,150 @@ public class ExpectationSerializerTest {
     }
 
     @Test
+    public void shouldSerializeFullObjectWithParameterBodyResponseAsJava() throws IOException {
+        // when
+        assertEquals("\n" +
+                        "new MockServerClient()\n" +
+                        "        .when(\n" +
+                        "                request()\n" +
+                        "                        .withBody(\n" +
+                        "                                new ParameterBody(\n" +
+                        "                                        new Parameter(\"requestBodyParameterNameOne\", \"requestBodyParameterValueOneOne\", \"requestBodyParameterValueOneTwo\"),\n" +
+                        "                                        new Parameter(\"requestBodyParameterNameTwo\", \"requestBodyParameterValueTwo\")\n" +
+                        "                                )\n" +
+                        "                        ),\n" +
+                        "                Times.once()\n" +
+                        "        )\n" +
+                        "        .thenRespond(\n" +
+                        "                response()\n" +
+                        "                        .withStatusCode(200)\n" +
+                        "                        .withBody(\"responseBody\")\n" +
+                        "        );",
+                expectationSerializer.serializeAsJava(
+                        new Expectation(
+                                new HttpRequest()
+                                        .withBody(
+                                                new ParameterBody(
+                                                        new Parameter("requestBodyParameterNameOne", "requestBodyParameterValueOneOne", "requestBodyParameterValueOneTwo"),
+                                                        new Parameter("requestBodyParameterNameTwo", "requestBodyParameterValueTwo")
+                                                )
+                                        ),
+                                Times.once()
+                        ).thenRespond(
+                                new HttpResponse()
+                                        .withBody("responseBody")
+                        )
+                )
+        );
+    }
+
+    @Test
+    public void shouldSerializeFullObjectWithBinaryBodyResponseAsJava() throws IOException {
+        // when
+        assertEquals("\n" +
+                        "new MockServerClient()\n" +
+                        "        .when(\n" +
+                        "                request()\n" +
+                        "                        .withBody(new byte[0]) /* note: not possible to generate code for binary data */,\n" +
+                        "                Times.once()\n" +
+                        "        )\n" +
+                        "        .thenRespond(\n" +
+                        "                response()\n" +
+                        "                        .withStatusCode(200)\n" +
+                        "                        .withBody(\"responseBody\")\n" +
+                        "        );",
+                expectationSerializer.serializeAsJava(
+                        new Expectation(
+                                new HttpRequest()
+                                        .withBody(
+                                                new BinaryBody(new byte[0])
+                                        ),
+                                Times.once()
+                        ).thenRespond(
+                                new HttpResponse()
+                                        .withBody("responseBody")
+                        )
+                )
+        );
+    }
+
+    @Test
+    public void shouldSerializeFullObjectWithForwardAsJava() throws IOException {
+        // when
+        assertEquals("\n" +
+                        "new MockServerClient()\n" +
+                        "        .when(\n" +
+                        "                request()\n" +
+                        "                        .withMethod(\"GET\")\n" +
+                        "                        .withURL(\"http://www.example.com\")\n" +
+                        "                        .withPath(\"somePath\")\n" +
+                        "                        .withHeaders(\n" +
+                        "                                new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\"),\n" +
+                        "                                new Header(\"requestHeaderNameTwo\", \"requestHeaderValueTwo\")\n" +
+                        "                        )\n" +
+                        "                        .withCookies(\n" +
+                        "                                new Cookie(\"requestCookieNameOne\", \"requestCookieValueOneOne\", \"requestCookieValueOneTwo\"),\n" +
+                        "                                new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")\n" +
+                        "                        )\n" +
+                        "                        .withQueryStringParameters(\n" +
+                        "                                new QueryStringParameter(\"requestQueryStringParameterNameOne\", \"requestQueryStringParameterValueOneOne\", \"requestQueryStringParameterValueOneTwo\"),\n" +
+                        "                                new QueryStringParameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")\n" +
+                        "                        )\n" +
+                        "                        .withBody(new StringBody(\"somebody\", Body.Type.EXACT)),\n" +
+                        "                Times.once()\n" +
+                        "        )\n" +
+                        "        .thenForward(\n" +
+                        "                forward()\n" +
+                        "                        .withHost(\"some_host\")\n" +
+                        "                        .withPort(9090)\n" +
+                        "                        .withScheme(HttpForward.Scheme.HTTPS)\n" +
+                        "        );",
+                expectationSerializer.serializeAsJava(
+                        new Expectation(
+                                new HttpRequest()
+                                        .withMethod("GET")
+                                        .withURL("http://www.example.com")
+                                        .withPath("somePath")
+                                        .withQueryStringParameters(
+                                                new Parameter("requestQueryStringParameterNameOne", "requestQueryStringParameterValueOneOne", "requestQueryStringParameterValueOneTwo"),
+                                                new Parameter("requestQueryStringParameterNameTwo", "requestQueryStringParameterValueTwo")
+                                        )
+                                        .withHeaders(
+                                                new Header("requestHeaderNameOne", "requestHeaderValueOneOne", "requestHeaderValueOneTwo"),
+                                                new Header("requestHeaderNameTwo", "requestHeaderValueTwo")
+                                        )
+                                        .withCookies(
+                                                new Cookie("requestCookieNameOne", "requestCookieValueOneOne", "requestCookieValueOneTwo"),
+                                                new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
+                                        )
+                                        .withBody(new StringBody("somebody", Body.Type.EXACT)),
+                                Times.once()
+                        ).thenForward(
+                                new HttpForward()
+                                        .withHost("some_host")
+                                        .withPort(9090)
+                                        .withScheme(HttpForward.Scheme.HTTPS)
+                        )
+                )
+        );
+    }
+
+    @Test
     public void shouldEscapeJSONBodies() throws IOException {
         // when
         assertEquals("\n" +
-                "new MockServerClient()\n" +
-                "        .when(\n" +
-                "                request()\n" +
-                "                        .withPath(\"somePath\")\n" +
-                "                        .withBody(new StringBody(\"[\\n    {\\n        \\\"id\\\": \\\"1\\\",\\n        \\\"title\\\": \\\"Xenophon's imperial fiction : on the education of Cyrus\\\",\\n        \\\"author\\\": \\\"James Tatum\\\",\\n        \\\"isbn\\\": \\\"0691067570\\\",\\n        \\\"publicationDate\\\": \\\"1989\\\"\\n    },\\n    {\\n        \\\"id\\\": \\\"2\\\",\\n        \\\"title\\\": \\\"You are here : personal geographies and other maps of the imagination\\\",\\n        \\\"author\\\": \\\"Katharine A. Harmon\\\",\\n        \\\"isbn\\\": \\\"1568984308\\\",\\n        \\\"publicationDate\\\": \\\"2004\\\"\\n    },\\n    {\\n        \\\"id\\\": \\\"3\\\",\\n        \\\"title\\\": \\\"You just don't understand : women and men in conversation\\\",\\n        \\\"author\\\": \\\"Deborah Tannen\\\",\\n        \\\"isbn\\\": \\\"0345372050\\\",\\n        \\\"publicationDate\\\": \\\"1990\\\"\\n    }\\n]\", Body.Type.EXACT)),\n" +
-                "                Times.once()\n" +
-                "        )\n" +
-                "        .thenRespond(\n" +
-                "                response()\n" +
-                "                        .withStatusCode(304)\n" +
-                "                        .withBody(\"[\\n    {\\n        \\\"id\\\": \\\"1\\\",\\n        \\\"title\\\": \\\"Xenophon's imperial fiction : on the education of Cyrus\\\",\\n        \\\"author\\\": \\\"James Tatum\\\",\\n        \\\"isbn\\\": \\\"0691067570\\\",\\n        \\\"publicationDate\\\": \\\"1989\\\"\\n    },\\n    {\\n        \\\"id\\\": \\\"2\\\",\\n        \\\"title\\\": \\\"You are here : personal geographies and other maps of the imagination\\\",\\n        \\\"author\\\": \\\"Katharine A. Harmon\\\",\\n        \\\"isbn\\\": \\\"1568984308\\\",\\n        \\\"publicationDate\\\": \\\"2004\\\"\\n    },\\n    {\\n        \\\"id\\\": \\\"3\\\",\\n        \\\"title\\\": \\\"You just don't understand : women and men in conversation\\\",\\n        \\\"author\\\": \\\"Deborah Tannen\\\",\\n        \\\"isbn\\\": \\\"0345372050\\\",\\n        \\\"publicationDate\\\": \\\"1990\\\"\\n    }\\n]\")\n" +
-                "        );",
+                        "new MockServerClient()\n" +
+                        "        .when(\n" +
+                        "                request()\n" +
+                        "                        .withPath(\"somePath\")\n" +
+                        "                        .withBody(new StringBody(\"[\\n    {\\n        \\\"id\\\": \\\"1\\\",\\n        \\\"title\\\": \\\"Xenophon's imperial fiction : on the education of Cyrus\\\",\\n        \\\"author\\\": \\\"James Tatum\\\",\\n        \\\"isbn\\\": \\\"0691067570\\\",\\n        \\\"publicationDate\\\": \\\"1989\\\"\\n    },\\n    {\\n        \\\"id\\\": \\\"2\\\",\\n        \\\"title\\\": \\\"You are here : personal geographies and other maps of the imagination\\\",\\n        \\\"author\\\": \\\"Katharine A. Harmon\\\",\\n        \\\"isbn\\\": \\\"1568984308\\\",\\n        \\\"publicationDate\\\": \\\"2004\\\"\\n    },\\n    {\\n        \\\"id\\\": \\\"3\\\",\\n        \\\"title\\\": \\\"You just don't understand : women and men in conversation\\\",\\n        \\\"author\\\": \\\"Deborah Tannen\\\",\\n        \\\"isbn\\\": \\\"0345372050\\\",\\n        \\\"publicationDate\\\": \\\"1990\\\"\\n    }\\n]\", Body.Type.EXACT)),\n" +
+                        "                Times.once()\n" +
+                        "        )\n" +
+                        "        .thenRespond(\n" +
+                        "                response()\n" +
+                        "                        .withStatusCode(304)\n" +
+                        "                        .withBody(\"[\\n    {\\n        \\\"id\\\": \\\"1\\\",\\n        \\\"title\\\": \\\"Xenophon's imperial fiction : on the education of Cyrus\\\",\\n        \\\"author\\\": \\\"James Tatum\\\",\\n        \\\"isbn\\\": \\\"0691067570\\\",\\n        \\\"publicationDate\\\": \\\"1989\\\"\\n    },\\n    {\\n        \\\"id\\\": \\\"2\\\",\\n        \\\"title\\\": \\\"You are here : personal geographies and other maps of the imagination\\\",\\n        \\\"author\\\": \\\"Katharine A. Harmon\\\",\\n        \\\"isbn\\\": \\\"1568984308\\\",\\n        \\\"publicationDate\\\": \\\"2004\\\"\\n    },\\n    {\\n        \\\"id\\\": \\\"3\\\",\\n        \\\"title\\\": \\\"You just don't understand : women and men in conversation\\\",\\n        \\\"author\\\": \\\"Deborah Tannen\\\",\\n        \\\"isbn\\\": \\\"0345372050\\\",\\n        \\\"publicationDate\\\": \\\"1990\\\"\\n    }\\n]\")\n" +
+                        "        );",
                 expectationSerializer.serializeAsJava(
                         new Expectation(
                                 new HttpRequest()
@@ -248,17 +377,17 @@ public class ExpectationSerializerTest {
     public void shouldSerializeMinimalObjectAsJava() throws IOException {
         // when
         assertEquals("\n" +
-                "new MockServerClient()\n" +
-                "        .when(\n" +
-                "                request()\n" +
-                "                        .withPath(\"somePath\")\n" +
-                "                        .withBody(new StringBody(\"responseBody\", Body.Type.EXACT)),\n" +
-                "                Times.once()\n" +
-                "        )\n" +
-                "        .thenRespond(\n" +
-                "                response()\n" +
-                "                        .withStatusCode(304)\n" +
-                "        );",
+                        "new MockServerClient()\n" +
+                        "        .when(\n" +
+                        "                request()\n" +
+                        "                        .withPath(\"somePath\")\n" +
+                        "                        .withBody(new StringBody(\"responseBody\", Body.Type.EXACT)),\n" +
+                        "                Times.once()\n" +
+                        "        )\n" +
+                        "        .thenRespond(\n" +
+                        "                response()\n" +
+                        "                        .withStatusCode(304)\n" +
+                        "        );",
                 expectationSerializer.serializeAsJava(
                         new Expectation(
                                 new HttpRequest()

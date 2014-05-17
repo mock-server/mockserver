@@ -1,13 +1,16 @@
 package org.mockserver.model;
 
-import java.util.List;
-
 /**
  * @author jamesdbloom
  */
 public class StringBody extends Body {
 
     private final String value;
+
+    public StringBody(String value, Type type) {
+        super(type);
+        this.value = value;
+    }
 
     public static StringBody exact(String body) {
         return new StringBody(body, Type.EXACT);
@@ -19,11 +22,6 @@ public class StringBody extends Body {
 
     public static StringBody xpath(String body) {
         return new StringBody(body, Type.XPATH);
-    }
-
-    public StringBody(String value, Type type) {
-        super(type);
-        this.value = value;
     }
 
     public String getValue() {

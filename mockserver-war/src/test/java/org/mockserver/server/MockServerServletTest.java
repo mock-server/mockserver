@@ -1,9 +1,11 @@
 package org.mockserver.server;
 
+import io.netty.handler.codec.http.HttpResponseStatus;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockserver.client.http.ApacheHttpClient;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.mappers.HttpServletToMockServerRequestMapper;
@@ -12,14 +14,18 @@ import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.model.Header;
+import org.mockserver.model.HttpForward;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.proxy.filters.Filters;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -31,6 +37,10 @@ public class MockServerServletTest {
 
     @Mock
     private MockServerMatcher mockServerMatcher;
+    @Mock
+    private Filters filters;
+    @Mock
+    private ApacheHttpClient apacheHttpClient;
     @Mock
     private HttpServletToMockServerRequestMapper httpServletToMockServerRequestMapper;
     @Mock
@@ -65,6 +75,33 @@ public class MockServerServletTest {
 
         // then
         verify(mockServerToHttpServletResponseMapper).mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
+    }
+
+    @Test
+    public void forwardWhenPathMatches() throws IOException {
+        // given
+        HttpRequest httpRequest = new HttpRequest().withPath("somepath");
+        HttpForward httpForward = new HttpForward().withHost("some_host").withPort(1234);
+        HttpResponse httpResponse = new HttpResponse();
+        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
+        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("GET", "somepath");
+
+        when(mockServerMatcher.handle(httpRequest)).thenReturn(httpForward);
+        when(filters.applyFilters(any(HttpRequest.class))).thenReturn(httpRequest);
+        when(apacheHttpClient.sendRequest(any(HttpRequest.class))).thenReturn(httpResponse);
+        when(filters.applyFilters(any(HttpRequest.class), any(HttpResponse.class))).thenReturn(httpResponse);
+        when(httpServletToMockServerRequestMapper.mapHttpServletRequestToMockServerRequest(httpServletRequest)).thenReturn(httpRequest);
+
+        // when
+        mockServerServlet.doGet(httpServletRequest, httpServletResponse);
+
+        // then
+        verify(mockServerMatcher).handle(httpRequest);
+        verify(filters).applyFilters(httpRequest);
+        verify(apacheHttpClient).sendRequest(httpRequest);
+        verify(filters).applyFilters(httpRequest, httpResponse);
+        verify(mockServerToHttpServletResponseMapper).mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
+        assertThat(httpServletResponse.getStatus(), is(200));
     }
 
     @Test

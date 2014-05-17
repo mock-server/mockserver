@@ -24,6 +24,8 @@ import java.net.ProxySelector;
 import java.net.Socket;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockserver.client.proxy.Times.atLeast;
+import static org.mockserver.client.proxy.Times.exactly;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.test.Assert.assertContains;
 
@@ -186,25 +188,25 @@ public abstract class AbstractClientProxyIntegrationTest {
                         request()
                                 .withMethod("GET")
                                 .withPath("/test_headers_and_body"),
-                        Times.exactly(1)
+                        exactly(1)
                 );
         proxyClient
                 .verify(
                         request()
                                 .withPath("/test_headers_.*"),
-                        Times.atLeast(1)
+                        atLeast(1)
                 );
         proxyClient
                 .verify(
                         request()
                                 .withPath("/test_headers_.*"),
-                        Times.exactly(2)
+                        exactly(2)
                 );
         proxyClient
                 .verify(
                         request()
                                 .withPath("/other_path"),
-                        Times.exactly(0)
+                        exactly(0)
                 );
     }
 
@@ -232,7 +234,7 @@ public abstract class AbstractClientProxyIntegrationTest {
                         request()
                                 .withMethod("GET")
                                 .withPath("/test_headers_and_body"),
-                        Times.exactly(0)
+                        exactly(0)
                 );
     }
 
@@ -260,7 +262,7 @@ public abstract class AbstractClientProxyIntegrationTest {
                         request()
                                 .withMethod("GET")
                                 .withPath("/other_path"),
-                        Times.exactly(1)
+                        exactly(1)
                 );
     }
 
@@ -324,7 +326,7 @@ public abstract class AbstractClientProxyIntegrationTest {
                 .verify(
                         request()
                                 .withPath("/test_headers_and_body"),
-                        Times.atLeast(3)
+                        atLeast(3)
                 );
     }
 
@@ -367,13 +369,13 @@ public abstract class AbstractClientProxyIntegrationTest {
                         request()
                                 .withMethod("GET")
                                 .withPath("/test_headers_and_body"),
-                        Times.exactly(0)
+                        exactly(0)
                 );
         proxyClient
                 .verify(
                         request()
                                 .withPath("/test_headers_.*"),
-                        Times.exactly(1)
+                        exactly(1)
                 );
     }
 
@@ -412,19 +414,19 @@ public abstract class AbstractClientProxyIntegrationTest {
                         request()
                                 .withMethod("GET")
                                 .withPath("/test_headers_and_body"),
-                        Times.exactly(0)
+                        exactly(0)
                 );
         proxyClient
                 .verify(
                         request()
                                 .withPath("/test_headers_.*"),
-                        Times.atLeast(0)
+                        atLeast(0)
                 );
         proxyClient
                 .verify(
                         request()
                                 .withPath("/test_headers_.*"),
-                        Times.exactly(0)
+                        exactly(0)
                 );
     }
 }

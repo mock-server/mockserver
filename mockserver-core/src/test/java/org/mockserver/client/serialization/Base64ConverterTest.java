@@ -14,7 +14,7 @@ public class Base64ConverterTest {
 
     @Test
     public void shouldConvertToBase64Value(){
-        assertThat(Base64Converter.stringToBase64Bytes("some_value".getBytes()), is(DatatypeConverter.printBase64Binary("some_value".getBytes())));
+        assertThat(new Base64Converter().stringToBase64Bytes("some_value".getBytes()), is(DatatypeConverter.printBase64Binary("some_value".getBytes())));
     }
 
     @Test

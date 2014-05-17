@@ -8,6 +8,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
+import static org.mockserver.model.BinaryBody.binary;
 
 /**
  * @author jamesdbloom
@@ -16,8 +17,8 @@ public class BinaryBodyTest {
 
     @Test
     public void shouldAlwaysCreateNewObject() {
-        assertEquals(new BinaryBody(new byte[0]).binary(new byte[0]), BinaryBody.binary(new byte[0]));
-        assertNotSame(BinaryBody.binary(new byte[0]), BinaryBody.binary(new byte[0]));
+        assertEquals(new BinaryBody(new byte[0]).binary(new byte[0]), binary(new byte[0]));
+        assertNotSame(binary(new byte[0]), binary(new byte[0]));
     }
 
     @Test
@@ -31,5 +32,10 @@ public class BinaryBodyTest {
         // then
         assertThat(binaryBody.getValue(), is(body));
         assertThat(binaryBody.getType(), is(Body.Type.BINARY));
+    }
+
+    @Test
+    public void shouldReturnFormattedRequestInToString() {
+        assertEquals("some_body", binary("some_body".getBytes()).toString());
     }
 }

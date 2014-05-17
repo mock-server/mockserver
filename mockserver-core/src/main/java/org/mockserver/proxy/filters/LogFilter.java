@@ -26,7 +26,9 @@ public class LogFilter implements ProxyResponseFilter {
     private Logger requestLogger = LoggerFactory.getLogger("REQUEST");
 
     public synchronized HttpResponse onResponse(HttpRequest httpRequest, HttpResponse httpResponse) {
-        requestResponseLog.put(httpRequest, httpResponse);
+        if(httpRequest != null && httpResponse != null) {
+            requestResponseLog.put(httpRequest, httpResponse);
+        }
         return httpResponse;
     }
 

@@ -9,7 +9,7 @@ public class HttpForward extends Action {
 
     private String host;
     private Integer port;
-    private Scheme scheme;
+    private Scheme scheme = Scheme.HTTP;
 
     public enum Scheme {
         HTTP,

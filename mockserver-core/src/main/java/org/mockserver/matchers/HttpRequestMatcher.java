@@ -20,37 +20,40 @@ public class HttpRequestMatcher extends EqualsHashCodeToString implements Matche
     private MapMatcher headerMatcher = null;
     private MapMatcher cookieMatcher = null;
 
-    public HttpRequestMatcher withHttpRequest(HttpRequest httpRequest) {
+    public HttpRequestMatcher(HttpRequest httpRequest) {
         this.httpRequest = httpRequest;
-        return this;
+        if (httpRequest != null) {
+            withMethod(httpRequest.getMethod());
+            withURL(httpRequest.getURL());
+            withPath(httpRequest.getPath());
+            withQueryStringParameters(httpRequest.getQueryStringParameters());
+            withBody(httpRequest.getBody());
+            withHeaders(httpRequest.getHeaders());
+            withCookies(httpRequest.getCookies());
+        }
     }
 
-    public HttpRequestMatcher withMethod(String method) {
+    private HttpRequestMatcher withMethod(String method) {
         this.methodMatcher = new RegexStringMatcher(method);
         return this;
     }
 
-    public HttpRequestMatcher withURL(String url) {
+    private HttpRequestMatcher withURL(String url) {
         this.urlMatcher = new RegexStringMatcher(url);
         return this;
     }
 
-    public HttpRequestMatcher withPath(String path) {
+    private HttpRequestMatcher withPath(String path) {
         this.pathMatcher = new RegexStringMatcher(path);
         return this;
     }
 
-    public HttpRequestMatcher withQueryStringParameters(Parameter... parameters) {
+    private HttpRequestMatcher withQueryStringParameters(List<Parameter> parameters) {
         this.queryStringParameterMatcher = new MapMatcher(KeyToMultiValue.toMultiMap(parameters));
         return this;
     }
 
-    public HttpRequestMatcher withQueryStringParameters(List<Parameter> parameters) {
-        this.queryStringParameterMatcher = new MapMatcher(KeyToMultiValue.toMultiMap(parameters));
-        return this;
-    }
-
-    public HttpRequestMatcher withBody(Body body) {
+    private HttpRequestMatcher withBody(Body body) {
         if (body != null) {
             switch (body.getType()) {
                 case EXACT:
@@ -70,22 +73,22 @@ public class HttpRequestMatcher extends EqualsHashCodeToString implements Matche
         return this;
     }
 
-    public HttpRequestMatcher withHeaders(Header... headers) {
+    private HttpRequestMatcher withHeaders(Header... headers) {
         this.headerMatcher = new MapMatcher(KeyToMultiValue.toMultiMap(headers));
         return this;
     }
 
-    public HttpRequestMatcher withHeaders(List<Header> headers) {
+    private HttpRequestMatcher withHeaders(List<Header> headers) {
         this.headerMatcher = new MapMatcher(KeyToMultiValue.toMultiMap(headers));
         return this;
     }
 
-    public HttpRequestMatcher withCookies(Cookie... cookies) {
+    private HttpRequestMatcher withCookies(Cookie... cookies) {
         this.cookieMatcher = new MapMatcher(KeyToMultiValue.toMultiMap(cookies));
         return this;
     }
 
-    public HttpRequestMatcher withCookies(List<Cookie> cookies) {
+    private HttpRequestMatcher withCookies(List<Cookie> cookies) {
         this.cookieMatcher = new MapMatcher(KeyToMultiValue.toMultiMap(cookies));
         return this;
     }

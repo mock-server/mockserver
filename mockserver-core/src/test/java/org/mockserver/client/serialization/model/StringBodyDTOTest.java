@@ -6,6 +6,9 @@ import org.mockserver.model.StringBody;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.mockserver.model.StringBody.exact;
+import static org.mockserver.model.StringBody.regex;
+import static org.mockserver.model.StringBody.xpath;
 
 /**
  * @author jamesdbloom
@@ -30,6 +33,13 @@ public class StringBodyDTOTest {
         // then
         assertThat(stringBody.getValue(), is("some_body"));
         assertThat(stringBody.getType(), is(Body.Type.XPATH));
+    }
+
+    @Test
+    public void shouldReturnCorrectObjectFromStaticBuilder() {
+        assertThat(exact("some_body"), is(new StringBody("some_body", Body.Type.EXACT)));
+        assertThat(regex("some_body"), is(new StringBody("some_body", Body.Type.REGEX)));
+        assertThat(xpath("some_body"), is(new StringBody("some_body", Body.Type.XPATH)));
     }
 
     @Test

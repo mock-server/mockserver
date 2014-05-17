@@ -15,13 +15,11 @@ public class MockServerMatcherBasicResponsesTest {
 
     private MockServerMatcher mockServerMatcher;
     private HttpRequest httpRequest;
-    private HttpRequestMatcher httpRequestMatcher;
     private HttpResponse httpResponse;
 
     @Before
     public void prepareTestFixture() {
         httpRequest = new HttpRequest();
-        httpRequestMatcher = new HttpRequestMatcher();
         httpResponse = new HttpResponse();
         mockServerMatcher = new MockServerMatcher();
     }

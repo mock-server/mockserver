@@ -51,7 +51,7 @@ public class MockServerServlet extends HttpServlet {
     }
 
     public void doPut(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
-        String requestPath = httpServletRequest.getPathInfo() != null && httpServletRequest.getContextPath() != null ? httpServletRequest.getPathInfo() : httpServletRequest.getRequestURI();
+        String requestPath = retrieveRequestPath(httpServletRequest);
         if (requestPath.equals("/stop")) {
             httpServletResponse.setStatus(HttpStatusCode.NOT_IMPLEMENTED_501.code());
         } else if (requestPath.equals("/dumpToLog")) {
@@ -68,7 +68,7 @@ public class MockServerServlet extends HttpServlet {
             httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
         } else if (requestPath.equals("/expectation")) {
             Expectation expectation = expectationSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest));
-            mockServerMatcher.when(expectation.getHttpRequest(), expectation.getTimes()).thenRespond(expectation.getHttpResponse());
+            mockServerMatcher.when(expectation.getHttpRequest(), expectation.getTimes()).thenRespond(expectation.getHttpResponse()).thenForward(expectation.getHttpForward());
             httpServletResponse.setStatus(HttpStatusCode.CREATED_201.code());
         } else if (requestPath.equals("/retrieve")) {
             Expectation[] expectations = logFilter.retrieve(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
@@ -77,6 +77,10 @@ public class MockServerServlet extends HttpServlet {
         } else {
             mockResponse(httpServletRequest, httpServletResponse);
         }
+    }
+
+    private String retrieveRequestPath(HttpServletRequest httpServletRequest) {
+        return httpServletRequest.getPathInfo() != null && httpServletRequest.getContextPath() != null ? httpServletRequest.getPathInfo() : httpServletRequest.getRequestURI();
     }
 
     private void mockResponse(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
@@ -100,6 +104,7 @@ public class MockServerServlet extends HttpServlet {
     private HttpRequest updateUrl(HttpRequest httpRequest, HttpServletRequest httpServletRequest, HttpForward httpForward) {
         try {
             URIBuilder uriBuilder = new URIBuilder(httpServletRequest.getRequestURL().toString());
+            uriBuilder.setPath(retrieveRequestPath(httpServletRequest));
             uriBuilder.setHost(httpForward.getHost());
             uriBuilder.setPort(httpForward.getPort());
             uriBuilder.setScheme(httpForward.getScheme().name().toLowerCase());

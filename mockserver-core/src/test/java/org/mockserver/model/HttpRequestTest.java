@@ -1,5 +1,6 @@
 package org.mockserver.model;
 
+import junit.framework.TestCase;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -7,6 +8,7 @@ import java.util.Collection;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
+import static org.mockserver.model.HttpRequest.request;
 
 /**
  * @author jamesdbloom
@@ -26,8 +28,10 @@ public class HttpRequestTest {
 
     @Test
     public void returnsQueryStringParameters() {
-        HttpRequest httpRequest = new HttpRequest().withQueryStringParameter(new Parameter("name", "value"));
-        assertEquals(Arrays.asList(new Parameter("name", "value")), httpRequest.getQueryStringParameters());
+        assertEquals(new Parameter("name", "value"), new HttpRequest().withQueryStringParameters(new Parameter("name", "value")).getQueryStringParameters().get(0));
+        assertEquals(new Parameter("name", "value"), new HttpRequest().withQueryStringParameters(Arrays.asList(new Parameter("name", "value"))).getQueryStringParameters().get(0));
+        assertEquals(new Parameter("name", "value"), new HttpRequest().withQueryStringParameter(new Parameter("name", "value")).getQueryStringParameters().get(0));
+        assertEquals(new Parameter("name", "value_one", "value_two"), new HttpRequest().withQueryStringParameter(new Parameter("name", "value_one")).withQueryStringParameter(new Parameter("name", "value_two")).getQueryStringParameters().get(0));
     }
 
     @Test
@@ -38,6 +42,9 @@ public class HttpRequestTest {
     @Test
     public void returnsHeaders() {
         assertEquals(new Header("name", "value"), new HttpRequest().withHeaders(new Header("name", "value")).getHeaders().get(0));
+        assertEquals(new Header("name", "value"), new HttpRequest().withHeaders(Arrays.asList(new Header("name", "value"))).getHeaders().get(0));
+        assertEquals(new Header("name", "value"), new HttpRequest().withHeader(new Header("name", "value")).getHeaders().get(0));
+        assertEquals(new Header("name", "value_one", "value_two"), new HttpRequest().withHeader(new Header("name", "value_one")).withHeader(new Header("name", "value_two")).getHeaders().get(0));
         assertEquals(new Header("name", "value_one", "value_two"), new HttpRequest().withHeaders(new Header("name", "value_one", "value_two")).getHeaders().get(0));
         assertEquals(new Header("name", (Collection<String>) null), new HttpRequest().withHeaders(new Header("name")).getHeaders().get(0));
         assertEquals(new Header("name"), new HttpRequest().withHeaders(new Header("name")).getHeaders().get(0));
@@ -46,6 +53,9 @@ public class HttpRequestTest {
     @Test
     public void returnsCookies() {
         assertEquals(new Cookie("name", "value"), new HttpRequest().withCookies(new Cookie("name", "value")).getCookies().get(0));
+        assertEquals(new Cookie("name", "value"), new HttpRequest().withCookies(Arrays.asList(new Cookie("name", "value"))).getCookies().get(0));
+        assertEquals(new Cookie("name", "value"), new HttpRequest().withCookie(new Cookie("name", "value")).getCookies().get(0));
+        assertEquals(new Cookie("name", "value_one", "value_two"), new HttpRequest().withCookie(new Cookie("name", "value_one")).withCookie(new Cookie("name", "value_two")).getCookies().get(0));
         assertEquals(new Cookie("name", "value_one", "value_two"), new HttpRequest().withCookies(new Cookie("name", "value_one", "value_two")).getCookies().get(0));
         assertEquals(new Cookie("name", (Collection<String>) null), new HttpRequest().withCookies(new Cookie("name")).getCookies().get(0));
         assertEquals(new Cookie("name"), new HttpRequest().withCookies(new Cookie("name")).getCookies().get(0));
@@ -53,11 +63,36 @@ public class HttpRequestTest {
 
     @Test
     public void shouldReturnPort() {
+        assertEquals(80, new HttpRequest().withURL(null).getPort());
         assertEquals(80, new HttpRequest().withURL("http://www.host.com/some_path").getPort());
         assertEquals(90, new HttpRequest().withURL("http://www.host.com:90/some_path").getPort());
         assertEquals(443, new HttpRequest().withURL("https://www.host.com/some_path").getPort());
         assertEquals(543, new HttpRequest().withURL("https://www.host.com:543/some_path").getPort());
         assertEquals(80, new HttpRequest().withURL("incorrect_scheme://www.host.com/some_path").getPort());
+    }
+
+    @Test
+    public void shouldReturnFormattedRequestInToString() {
+        TestCase.assertEquals("{\n" +
+                        "  \"body\" : {\n" +
+                        "    \"type\" : \"EXACT\",\n" +
+                        "    \"value\" : \"some_body\"\n" +
+                        "  },\n" +
+                        "  \"headers\" : [ {\n" +
+                        "    \"name\" : \"name\",\n" +
+                        "    \"values\" : [ \"value\" ]\n" +
+                        "  } ],\n" +
+                        "  \"cookies\" : [ {\n" +
+                        "    \"name\" : \"name\",\n" +
+                        "    \"values\" : [ \"[A-Z]{0,10}\" ]\n" +
+                        "  } ]\n" +
+                        "}",
+                request()
+                        .withBody("some_body")
+                        .withHeaders(new Header("name", "value"))
+                        .withCookies(new Cookie("name", "[A-Z]{0,10}"))
+                        .toString()
+        );
     }
 
 }

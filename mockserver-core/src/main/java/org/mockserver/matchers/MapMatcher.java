@@ -16,10 +16,6 @@ public class MapMatcher extends EqualsHashCodeToString implements Matcher<List<K
         this.multiMap = multiMap;
     }
 
-    public void addAll(CaseInsensitiveRegexMultiMap multiMap) {
-        this.multiMap.putValuesForNewKeys(multiMap);
-    }
-
     public boolean matches(List<KeyToMultiValue> values) {
         boolean result = false;
 

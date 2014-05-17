@@ -14,23 +14,27 @@ import java.util.Locale;
 public class HopByHopHeaderFilter implements ProxyRequestFilter {
 
     public HttpRequest onRequest(HttpRequest httpRequest) {
-        List<String> headersToRemove = Arrays.asList(
-                "proxy-connection",
-                "connection",
-                "keep-alive",
-                "transfer-encoding",
-                "te",
-                "trailer",
-                "proxy-authorization",
-                "proxy-authenticate",
-                "upgrade"
-        );
-        List<Header> filteredHeaders = new ArrayList<Header>();
-        for (Header header : httpRequest.getHeaders()) {
-            if (!headersToRemove.contains(header.getName().toLowerCase(Locale.ENGLISH))) {
-                filteredHeaders.add(header);
+        if (httpRequest != null) {
+            List<String> headersToRemove = Arrays.asList(
+                    "proxy-connection",
+                    "connection",
+                    "keep-alive",
+                    "transfer-encoding",
+                    "te",
+                    "trailer",
+                    "proxy-authorization",
+                    "proxy-authenticate",
+                    "upgrade"
+            );
+            List<Header> filteredHeaders = new ArrayList<Header>();
+            for (Header header : httpRequest.getHeaders()) {
+                if (!headersToRemove.contains(header.getName().toLowerCase(Locale.ENGLISH))) {
+                    filteredHeaders.add(header);
+                }
             }
+            return httpRequest.withHeaders(filteredHeaders);
+        } else {
+            return null;
         }
-        return httpRequest.withHeaders(filteredHeaders);
     }
 }

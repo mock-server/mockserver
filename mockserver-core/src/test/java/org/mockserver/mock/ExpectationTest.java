@@ -28,6 +28,7 @@ public class ExpectationTest {
         assertEquals(httpRequest, expectationThatResponds.getHttpRequest());
         assertEquals(httpResponse, expectationThatResponds.getHttpResponse());
         assertNull(expectationThatResponds.getHttpForward());
+        assertEquals(httpResponse, expectationThatResponds.getAction());
         assertEquals(times, expectationThatResponds.getTimes());
 
         // when
@@ -37,6 +38,7 @@ public class ExpectationTest {
         assertEquals(httpRequest, expectationThatForwards.getHttpRequest());
         assertNull(expectationThatForwards.getHttpResponse());
         assertEquals(httpForward, expectationThatForwards.getHttpForward());
+        assertEquals(httpForward, expectationThatForwards.getAction());
         assertEquals(times, expectationThatForwards.getTimes());
     }
 
