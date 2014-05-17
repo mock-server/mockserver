@@ -77,6 +77,7 @@
                 <artifactId>maven-invoker-plugin</artifactId>
                 <version>1.8</version>
                 <configuration>
+                    <skipInvocation>${skipTests}</skipInvocation>
                     <debug>false</debug>
                     <showErrors>true</showErrors>
                     <streamLogs>true</streamLogs>
@@ -87,6 +88,18 @@
                     <addTestClassPath>true</addTestClassPath>
                     <preBuildHookScript>setup</preBuildHookScript>
                     <postBuildHookScript>verify</postBuildHookScript>
+                    <properties>
+                        <property>
+                            <name>mockserver.version</name>
+                            <value>${project.version}</value>
+                        </property>
+                    </properties>
+                    <testProperties>
+                        <property>
+                            <name>mockserver.version</name>
+                            <value>${project.version}</value>
+                        </property>
+                    </testProperties>
                     <localRepositoryPath>${project.build.directory}/local-repo</localRepositoryPath>
                     <extraArtifacts>
                         <extraArtifact>org.mock-server:mockserver:${project.version}:pom</extraArtifact>

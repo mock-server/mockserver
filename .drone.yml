@@ -2,7 +2,7 @@ image: bradrydzewski/java:openjdk6
 
 script:
   - git clone -b travis `git config --get remote.origin.url` target/travis
-  - mvn deploy --settings target/travis/settings.xml -Pit
+  - mvn deploy --settings target/travis/settings.xml
 
 notify:
   email:

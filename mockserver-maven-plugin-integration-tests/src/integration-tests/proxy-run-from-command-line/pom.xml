@@ -20,7 +20,7 @@
             <plugin>
                 <groupId>org.mock-server</groupId>
                 <artifactId>mockserver-maven-plugin</artifactId>
-                <version>2.9-SNAPSHOT</version>
+                <version>${mockserver.version}</version>
                 <configuration>
                     <proxyPort>9090</proxyPort>
                     <logLevel>INFO</logLevel>
