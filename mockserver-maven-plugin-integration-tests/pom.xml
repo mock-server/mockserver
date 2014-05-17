@@ -77,11 +77,13 @@
                 <artifactId>maven-invoker-plugin</artifactId>
                 <version>1.8</version>
                 <configuration>
-                    <debug>true</debug>
+                    <debug>false</debug>
                     <showErrors>true</showErrors>
+                    <streamLogs>true</streamLogs>
                     <projectsDirectory>${basedir}/src/integration-tests/</projectsDirectory>
                     <cloneProjectsTo>${project.build.directory}/integration-tests/</cloneProjectsTo>
                     <cloneClean>true</cloneClean>
+                    <ignoreFailures>false</ignoreFailures>
                     <addTestClassPath>true</addTestClassPath>
                     <preBuildHookScript>setup</preBuildHookScript>
                     <postBuildHookScript>verify</postBuildHookScript>
@@ -99,9 +101,8 @@
                     <execution>
                         <id>integration-test</id>
                         <goals>
+                            <goal>run</goal>
                             <goal>install</goal>
-                            <goal>integration-test</goal>
-                            <goal>verify</goal>
                         </goals>
                     </execution>
                 </executions>
