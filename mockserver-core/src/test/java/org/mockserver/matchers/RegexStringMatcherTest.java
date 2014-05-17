@@ -53,6 +53,8 @@ public class RegexStringMatcherTest {
     @Test
     public void shouldHandleIllegalRegexPatternForExpectationAndTest() {
         assertFalse(new RegexStringMatcher("/{}").matches("/{}"));
+        assertFalse(new RegexStringMatcher("/{}").matches("some_value"));
+        assertFalse(new RegexStringMatcher("some_value").matches("/{}"));
     }
 
     @Test

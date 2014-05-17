@@ -11,7 +11,6 @@ import org.mockserver.matchers.Times;
 import org.mockserver.model.Action;
 import org.mockserver.model.EqualsHashCodeToString;
 import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -110,7 +109,7 @@ public class MockServerMatcher extends EqualsHashCodeToString {
     String cleanBase64Response(String serializedExpectation) {
         Pattern base64ResponseBodyPattern = Pattern.compile("[\\s\\S]*\\\"httpResponse\\\"\\s*\\:\\s*\\{[\\s\\S]*\\\"body\\\"\\s*\\:\\s*\\\"(([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==))\\\"[\\s\\S]*");
         Matcher matcher = base64ResponseBodyPattern.matcher(serializedExpectation);
-        if(matcher.find()) {
+        if (matcher.find()) {
             return serializedExpectation.replace(matcher.group(1), new String(Base64Converter.base64StringToBytes(matcher.group(1))));
         } else {
             return serializedExpectation;

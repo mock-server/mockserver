@@ -290,4 +290,103 @@ public class MockServerMatcherDumpTest {
                 "  }\n" +
                 "}"));
     }
+
+    @Test
+    public void shouldCorrectlyMatchNotRegexForComplex() {
+        // when
+        String result = mockServerMatcher.cleanBase64Response("{\n" +
+                "  \"httpRequest\" : {\n" +
+                "    \"method\" : \"someMethod\",\n" +
+                "    \"url\" : \"http://www.example.com\",\n" +
+                "    \"path\" : \"somePath\",\n" +
+                "    \"queryStringParameters\" : [ {\n" +
+                "      \"name\" : \"queryStringParameterNameOne\",\n" +
+                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]\n" +
+                "    }, {\n" +
+                "      \"name\" : \"queryStringParameterNameTwo\",\n" +
+                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]\n" +
+                "    } ],\n" +
+                "    \"body\" : {\n" +
+                "      \"type\" : \"EXACT\",\n" +
+                "      \"value\" : \"some_body\"\n" +
+                "    },\n" +
+                "    \"cookies\" : [ {\n" +
+                "      \"name\" : \"someCookieName\",\n" +
+                "      \"values\" : [ \"someCookieValue\" ]\n" +
+                "    } ],\n" +
+                "    \"headers\" : [ {\n" +
+                "      \"name\" : \"someHeaderName\",\n" +
+                "      \"values\" : [ \"someHeaderValue\" ]\n" +
+                "    } ]\n" +
+                "  },\n" +
+                "  \"httpResponse\" : {\n" +
+                "    \"statusCode\" : 304,\n" +
+                "    \"body\" : \"some_body\",\n" +
+                "    \"cookies\" : [ {\n" +
+                "      \"name\" : \"someCookieName\",\n" +
+                "      \"values\" : [ \"someCookieValue\" ]\n" +
+                "    } ],\n" +
+                "    \"headers\" : [ {\n" +
+                "      \"name\" : \"someHeaderName\",\n" +
+                "      \"values\" : [ \"someHeaderValue\" ]\n" +
+                "    } ],\n" +
+                "    \"delay\" : {\n" +
+                "      \"timeUnit\" : \"MICROSECONDS\",\n" +
+                "      \"value\" : 1\n" +
+                "    }\n" +
+                "  },\n" +
+                "  \"times\" : {\n" +
+                "    \"remainingTimes\" : 5,\n" +
+                "    \"unlimited\" : false\n" +
+                "  }\n" +
+                "}");
+
+        // then
+        assertThat(result, is("{\n" +
+                "  \"httpRequest\" : {\n" +
+                "    \"method\" : \"someMethod\",\n" +
+                "    \"url\" : \"http://www.example.com\",\n" +
+                "    \"path\" : \"somePath\",\n" +
+                "    \"queryStringParameters\" : [ {\n" +
+                "      \"name\" : \"queryStringParameterNameOne\",\n" +
+                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]\n" +
+                "    }, {\n" +
+                "      \"name\" : \"queryStringParameterNameTwo\",\n" +
+                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]\n" +
+                "    } ],\n" +
+                "    \"body\" : {\n" +
+                "      \"type\" : \"EXACT\",\n" +
+                "      \"value\" : \"some_body\"\n" +
+                "    },\n" +
+                "    \"cookies\" : [ {\n" +
+                "      \"name\" : \"someCookieName\",\n" +
+                "      \"values\" : [ \"someCookieValue\" ]\n" +
+                "    } ],\n" +
+                "    \"headers\" : [ {\n" +
+                "      \"name\" : \"someHeaderName\",\n" +
+                "      \"values\" : [ \"someHeaderValue\" ]\n" +
+                "    } ]\n" +
+                "  },\n" +
+                "  \"httpResponse\" : {\n" +
+                "    \"statusCode\" : 304,\n" +
+                "    \"body\" : \"some_body\",\n" +
+                "    \"cookies\" : [ {\n" +
+                "      \"name\" : \"someCookieName\",\n" +
+                "      \"values\" : [ \"someCookieValue\" ]\n" +
+                "    } ],\n" +
+                "    \"headers\" : [ {\n" +
+                "      \"name\" : \"someHeaderName\",\n" +
+                "      \"values\" : [ \"someHeaderValue\" ]\n" +
+                "    } ],\n" +
+                "    \"delay\" : {\n" +
+                "      \"timeUnit\" : \"MICROSECONDS\",\n" +
+                "      \"value\" : 1\n" +
+                "    }\n" +
+                "  },\n" +
+                "  \"times\" : {\n" +
+                "    \"remainingTimes\" : 5,\n" +
+                "    \"unlimited\" : false\n" +
+                "  }\n" +
+                "}"));
+    }
 }
