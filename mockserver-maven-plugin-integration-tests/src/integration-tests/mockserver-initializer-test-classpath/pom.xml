@@ -20,7 +20,6 @@
             <groupId>org.mock-server</groupId>
             <artifactId>mockserver-integration-testing</artifactId>
             <version>${mockserver.version}</version>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 
