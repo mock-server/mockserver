@@ -1,6 +1,5 @@
 package org.mockserver.integration.server;
 
-import com.google.common.io.Files;
 import com.google.common.net.HttpHeaders;
 import com.google.common.net.MediaType;
 import org.junit.Before;
@@ -11,8 +10,6 @@ import org.mockserver.matchers.Times;
 import org.mockserver.model.*;
 import sun.misc.IOUtils;
 
-import javax.xml.bind.DatatypeConverter;
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -74,6 +71,40 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : ""))
+                )
+        );
+    }
+
+    @Test
+    public void clientCanCallServerForResponseWithNoBody() {
+        // when
+        mockServerClient
+                .when(
+                        request().withMethod("POST").withPath("/some_path")
+                )
+                .respond(
+                        response().withStatusCode(200)
+                );
+
+        // then
+        // - in http
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.OK_200.code()),
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("http://localhost:" + getPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                                .withMethod("POST")
+                )
+        );
+        // - in https
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.OK_200.code()),
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("https://localhost:" + getSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                                .withMethod("POST")
                 )
         );
     }

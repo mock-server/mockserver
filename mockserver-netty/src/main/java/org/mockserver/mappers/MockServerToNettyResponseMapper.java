@@ -21,7 +21,7 @@ public class MockServerToNettyResponseMapper {
             DefaultFullHttpResponse defaultFullHttpResponse = new DefaultFullHttpResponse(
                     HttpVersion.HTTP_1_1,
                     HttpResponseStatus.valueOf((httpResponse.getStatusCode() != null ? httpResponse.getStatusCode() : 200)),
-                    Unpooled.copiedBuffer(httpResponse.getBody())
+                    (httpResponse.getBody() != null ? Unpooled.copiedBuffer(httpResponse.getBody()) : Unpooled.buffer(0))
             );
             setHeaders(httpResponse, defaultFullHttpResponse);
             setCookies(httpResponse, defaultFullHttpResponse);

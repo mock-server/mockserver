@@ -59,7 +59,11 @@ public class HttpResponse extends Action {
     }
 
     public byte[] getBody() {
-        return Base64Converter.base64StringToBytes(new String(body));
+        if (body != null) {
+            return Base64Converter.base64StringToBytes(new String(body));
+        } else {
+            return null;
+        }
     }
 
     public int getContentLength() {
@@ -89,7 +93,9 @@ public class HttpResponse extends Action {
      * @param headers a varargs of Header objects
      */
     public HttpResponse withHeaders(Header... headers) {
-        withHeaders(Arrays.asList(headers));
+        if (headers != null) {
+            withHeaders(Arrays.asList(headers));
+        }
         return this;
     }
 
@@ -130,7 +136,9 @@ public class HttpResponse extends Action {
      * @param cookies a varargs of Cookie objects
      */
     public HttpResponse withCookies(Cookie... cookies) {
-        withCookies(Arrays.asList(cookies));
+        if (cookies != null) {
+            withCookies(Arrays.asList(cookies));
+        }
         return this;
     }
 

@@ -11,6 +11,7 @@ import org.mockserver.model.HttpStatusCode;
 import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -40,6 +41,25 @@ public class MockServerToNettyResponseMapperTest {
                 "cookieName1=cookieValue1",
                 "cookieName2=cookieValue2"
         ), defaultFullHttpResponse.headers().getAll("Set-Cookie"));
+    }
+
+    @Test
+    public void shouldMapMockServerResponseWithNullValuesToNettyResponse() {
+        // given
+        // - an HttpResponse
+        HttpResponse httpResponse = new HttpResponse();
+        httpResponse.withStatusCode(null);
+        httpResponse.withBody((byte[]) null);
+        httpResponse.withHeaders((Header[]) null);
+        httpResponse.withCookies((Cookie[]) null);
+
+        // when
+        DefaultFullHttpResponse defaultFullHttpResponse = new MockServerToNettyResponseMapper().mapMockServerResponseToNettyResponse(httpResponse);
+
+        // then
+        assertEquals(HttpStatusCode.OK_200.code(), defaultFullHttpResponse.getStatus().code());
+        assertEquals("", defaultFullHttpResponse.content().toString(Charsets.UTF_8));
+        assertTrue(defaultFullHttpResponse.headers().isEmpty());
     }
 
     @Test
