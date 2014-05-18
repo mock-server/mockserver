@@ -13,11 +13,11 @@ public class ClientProxyMavenPluginIntegrationTest {
 
     @Test(expected = RuntimeException.class)
     public void shouldNotBeAbleToReachProxy() {
-        new ProxyClient("127.0.0.1", 9090).reset();
+        new ProxyClient("127.0.0.1", 9097).reset();
     }
 
     @Test(expected = RuntimeException.class)
     public void shouldNotBeAbleToReachMockServer() {
-        new MockServerClient("127.0.0.1", 8080).reset();
+        new MockServerClient("127.0.0.1", 8091).reset();
     }
 }

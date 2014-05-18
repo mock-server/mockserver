@@ -30,8 +30,8 @@
                 <artifactId>mockserver-maven-plugin</artifactId>
                 <version>${mockserver.version}</version>
                 <configuration>
-                    <proxyPort>9090</proxyPort>
-                    <proxySecurePort>9092</proxySecurePort>
+                    <proxyPort>9095</proxyPort>
+                    <proxySecurePort>9096</proxySecurePort>
                 </configuration>
                 <executions>
                     <execution>
