@@ -18,6 +18,7 @@ import org.springframework.web.context.WebApplicationContext;
 
 import javax.annotation.Resource;
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 
 import static org.mockserver.integration.ClientAndProxy.startClientAndProxy;
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
@@ -34,9 +35,7 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppC
 public abstract class BooksPageIntegrationTest {
 
     private static ClientAndProxy proxy;
-    private ClientAndServer mockServer;
-    @Resource
-    private Environment environment;
+    private static ClientAndServer mockServer;
     @Resource
     private WebApplicationContext webApplicationContext;
     private MockMvc mockMvc;
@@ -49,17 +48,26 @@ public abstract class BooksPageIntegrationTest {
     @AfterClass
     public static void stopProxy() {
         proxy.stop();
+
+        if (mockServer != null) {
+            mockServer.stop();
+            mockServer = null;
+        }
+    }
+
+    @Before
+    public void startMockServer() throws InterruptedException {
+        if (mockServer == null) {
+            mockServer = startClientAndServer(1090);
+        } else {
+            mockServer.reset();
+        }
+        proxy.reset();
     }
 
     @Before
     public void setupFixture() {
         mockMvc = webAppContextSetup(webApplicationContext).build();
-    }
-
-    @Before
-    public void startMockServer() {
-        mockServer = startClientAndServer(environment.getProperty("bookService.port", Integer.class));
-        proxy.reset();
     }
 
     @Test
@@ -162,16 +170,6 @@ public abstract class BooksPageIntegrationTest {
                         ),
                 Times.exactly(1)
         );
-    }
-
-    @After
-    public void stopMockServer() {
-        mockServer.stop();
-
-        // for debugging test
-        proxy.dumpToLogAsJSON();
-        proxy.dumpToLogAsJava();
-
     }
 
 }

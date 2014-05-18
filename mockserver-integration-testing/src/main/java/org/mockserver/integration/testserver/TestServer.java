@@ -22,8 +22,8 @@ import java.util.concurrent.TimeUnit;
 public class TestServer {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private final NioEventLoopGroup workerGroup = new NioEventLoopGroup();
-    private final NioEventLoopGroup bossGroup = new NioEventLoopGroup();
+    private final NioEventLoopGroup workerGroup = new NioEventLoopGroup(1);
+    private final NioEventLoopGroup bossGroup = new NioEventLoopGroup(1);
 
     public TestServer startServer(final int port, final int securePort) {
         final SettableFuture<String> hasBoundToHTTPPort = SettableFuture.create();

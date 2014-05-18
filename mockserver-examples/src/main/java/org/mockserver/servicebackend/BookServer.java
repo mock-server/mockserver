@@ -50,8 +50,8 @@ public class BookServer {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                bossGroup = new NioEventLoopGroup();
-                workerGroup = new NioEventLoopGroup();
+                bossGroup = new NioEventLoopGroup(1);
+                workerGroup = new NioEventLoopGroup(1);
                 try {
                     new ServerBootstrap()
                             .group(bossGroup, workerGroup)

@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.PropertySource;
 
 import javax.annotation.PostConstruct;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This configuration contains top level beans and any configuration required by filters (as WebMvcConfiguration only loaded within Dispatcher Servlet)
@@ -30,9 +31,11 @@ import javax.annotation.PostConstruct;
 })
 public class RootConfiguration {
 
+    private static int freePort = PortFactory.findFreePort();
+
     @PostConstruct
-    public void updateServerPort() {
-        System.setProperty("bookService.port", "" + PortFactory.findFreePort());
+    public void updateServerPort() throws InterruptedException {
+        System.setProperty("bookService.port", "" + freePort);
     }
 
 }
