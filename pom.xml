@@ -370,6 +370,7 @@
                             <goal>jar</goal>
                         </goals>
                         <configuration>
+                            <skip>${skipTests}</skip>
                             <failOnError>false</failOnError>
                         </configuration>
                     </execution>
