@@ -1,7 +1,7 @@
 language: java
 
 before_install:
-  - "mvn install -q -DskipTests=true"
+  - "mvn install -T2C -q -DskipTests=true"
 script:
   - "./travis_build.sh"
 
