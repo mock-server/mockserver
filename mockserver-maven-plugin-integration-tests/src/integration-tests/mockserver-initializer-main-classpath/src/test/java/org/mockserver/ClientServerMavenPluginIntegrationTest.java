@@ -20,8 +20,8 @@ import static org.mockserver.configuration.SystemProperties.maxTimeout;
  */
 public class ClientServerMavenPluginIntegrationTest {
 
-    private final static int port = 8080;
-    private final static int serverSecurePort = 8082;
+    private final static int SERVER_HTTP_PORT = 8080;
+    private final static int SERVER_HTTPS_PORT = 8081;
     private final ApacheHttpClient apacheHttpClient;
 
     public ClientServerMavenPluginIntegrationTest() {
@@ -41,7 +41,7 @@ public class ClientServerMavenPluginIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("POST")
-                                .withURL("http://localhost:" + port + "/test_initializer_path")
+                                .withURL("http://localhost:" + SERVER_HTTP_PORT + "/test_initializer_path")
                                 .withBody("test_initializer_request_body")
                 )
         );
@@ -53,7 +53,7 @@ public class ClientServerMavenPluginIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("POST")
-                                .withURL("https://localhost:" + serverSecurePort + "/test_initializer_path")
+                                .withURL("https://localhost:" + SERVER_HTTPS_PORT + "/test_initializer_path")
                                 .withBody("test_initializer_request_body")
                 )
         );

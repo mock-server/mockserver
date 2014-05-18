@@ -32,10 +32,10 @@
                 <version>${mockserver.version}</version>
                 <configuration>
                     <skip>true</skip>
-                    <serverPort>8080</serverPort>
-                    <serverSecurePort>8082</serverSecurePort>
-                    <proxyPort>9090</proxyPort>
-                    <proxySecurePort>9092</proxySecurePort>
+                    <serverPort>8091</serverPort>
+                    <serverSecurePort>8092</serverSecurePort>
+                    <proxyPort>9097</proxyPort>
+                    <proxySecurePort>9098</proxySecurePort>
                 </configuration>
                 <executions>
                     <execution>

@@ -22,7 +22,7 @@
                 <artifactId>mockserver-maven-plugin</artifactId>
                 <version>${mockserver.version}</version>
                 <configuration>
-                    <serverPort>8080</serverPort>
+                    <serverPort>8084</serverPort>
                     <logLevel>INFO</logLevel>
                     <timeout>${mockserver.timeout}</timeout>
                 </configuration>
