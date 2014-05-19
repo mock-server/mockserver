@@ -18,17 +18,12 @@ import javax.annotation.Resource;
 @PropertySource({"classpath:application.properties"})
 public class BackEndServiceConfiguration {
 
-    private static BookServer bookServer;
-
     @Resource
     private Environment environment;
 
     @Bean
     public BookServer bookServer() {
-        if (bookServer == null) {
-            bookServer = new BookServer(environment.getProperty("bookService.port", Integer.class), false);
-        }
-        return bookServer;
+        return new BookServer(environment.getProperty("bookService.port", Integer.class), false);
     }
 
 }

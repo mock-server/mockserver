@@ -31,11 +31,9 @@ import java.util.concurrent.TimeUnit;
 })
 public class RootConfiguration {
 
-    private static int freePort = PortFactory.findFreePort();
-
     @PostConstruct
-    public void updateServerPort() throws InterruptedException {
-        System.setProperty("bookService.port", "" + freePort);
+    public void updateServerPort() {
+        System.setProperty("bookService.port", "" + PortFactory.findFreePort());
     }
 
 }

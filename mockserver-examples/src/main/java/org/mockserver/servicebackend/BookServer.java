@@ -21,6 +21,7 @@ import javax.net.ssl.SSLEngine;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH;
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
@@ -37,8 +38,7 @@ public class BookServer {
     private final ObjectMapper objectMapper = createObjectMapper();
     private final int httpPort;
     private final boolean secure;
-    private NioEventLoopGroup bossGroup;
-    private NioEventLoopGroup workerGroup;
+    private static ServerBootstrap serverBootstrap;
 
     public BookServer(int httpPort, boolean secure) {
         this.httpPort = httpPort;
@@ -46,42 +46,37 @@ public class BookServer {
     }
 
     @PostConstruct
-    public void startServer() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                bossGroup = new NioEventLoopGroup(1);
-                workerGroup = new NioEventLoopGroup(1);
-                try {
-                    new ServerBootstrap()
-                            .group(bossGroup, workerGroup)
-                            .channel(NioServerSocketChannel.class)
-                            .childHandler(new ChannelInitializer<SocketChannel>() {
-                                @Override
-                                public void initChannel(SocketChannel ch) throws Exception {
-                                    ChannelPipeline pipeline = ch.pipeline();
+    public void startServer() throws InterruptedException {
+        if(serverBootstrap == null) {
+            try {
+                serverBootstrap = new ServerBootstrap()
+                        .group(new NioEventLoopGroup(1), new NioEventLoopGroup(1))
+                        .channel(NioServerSocketChannel.class)
+                        .childHandler(new ChannelInitializer<SocketChannel>() {
+                            @Override
+                            public void initChannel(SocketChannel ch) throws Exception {
+                                ChannelPipeline pipeline = ch.pipeline();
 
-                                    // add HTTPS support
-                                    if (secure) {
-                                        SSLEngine engine = SSLFactory.getInstance().sslContext().createSSLEngine();
-                                        engine.setUseClientMode(false);
-                                        pipeline.addLast("ssl", new SslHandler(engine));
-                                    }
-
-                                    pipeline.addLast("logger", new LoggingHandler("BOOK_HANDLER"));
-                                    pipeline.addLast("http_codec", new HttpServerCodec());
-                                    pipeline.addLast("simple_test_handler", new BookHandler());
+                                // add HTTPS support
+                                if (secure) {
+                                    SSLEngine engine = SSLFactory.getInstance().sslContext().createSSLEngine();
+                                    engine.setUseClientMode(false);
+                                    pipeline.addLast("ssl", new SslHandler(engine));
                                 }
-                            })
-                            .bind(httpPort).channel().closeFuture().sync();
-                } catch (Exception e) {
-                    throw new RuntimeException("Exception starting BookServer", e);
-                } finally {
-                    bossGroup.shutdownGracefully();
-                    workerGroup.shutdownGracefully();
-                }
+
+                                // pipeline.addLast("logger", new LoggingHandler("BOOK_HANDLER"));
+                                pipeline.addLast("http_codec", new HttpServerCodec());
+                                pipeline.addLast("simple_test_handler", new BookHandler());
+                            }
+                        });
+
+            } catch (Exception e) {
+                throw new RuntimeException("Exception starting BookServer", e);
             }
-        }).start();
+        }
+        serverBootstrap.bind(httpPort);
+        System.gc();
+        TimeUnit.SECONDS.sleep(3);
     }
 
     private ObjectMapper createObjectMapper() {
@@ -121,8 +116,7 @@ public class BookServer {
 
     @PreDestroy
     public void stopServer() throws Exception {
-        bossGroup.shutdownGracefully();
-        workerGroup.shutdownGracefully();
+
     }
 
     private class BookHandler extends SimpleChannelInboundHandler<Object> {

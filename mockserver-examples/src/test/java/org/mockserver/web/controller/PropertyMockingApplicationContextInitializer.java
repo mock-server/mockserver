@@ -9,12 +9,10 @@ import org.springframework.mock.env.MockPropertySource;
 
 public class PropertyMockingApplicationContextInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
 
-    private static int freePort = PortFactory.findFreePort();
-
     @Override
     public void initialize(ConfigurableApplicationContext applicationContext) {
         MutablePropertySources propertySources = applicationContext.getEnvironment().getPropertySources();
-        MockPropertySource mockEnvVars = new MockPropertySource().withProperty("bookService.port", freePort);
+        MockPropertySource mockEnvVars = new MockPropertySource().withProperty("bookService.port", PortFactory.findFreePort());
         propertySources.replace(StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME, mockEnvVars);
     }
 }
