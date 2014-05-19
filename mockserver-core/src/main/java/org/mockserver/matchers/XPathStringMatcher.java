@@ -46,17 +46,17 @@ public class XPathStringMatcher extends BodyMatcher implements Matcher<String> {
                 documentBuilder.setErrorHandler(new ErrorHandler() {
                     @Override
                     public void warning(SAXParseException exception) throws SAXException {
-                        logger.warn("SAXParseException while performing match between [" + matcher + "] and [" + matched + "]", exception);
+                        logger.debug("SAXParseException while performing match between [" + matcher + "] and [" + matched + "]", exception);
                     }
 
                     @Override
                     public void error(SAXParseException exception) throws SAXException {
-                        logger.warn("SAXParseException while performing match between [" + matcher + "] and [" + matched + "]", exception);
+                        logger.debug("SAXParseException while performing match between [" + matcher + "] and [" + matched + "]", exception);
                     }
 
                     @Override
                     public void fatalError(SAXParseException exception) throws SAXException {
-                        logger.warn("SAXParseException while performing match between [" + matcher + "] and [" + matched + "]", exception);
+                        logger.debug("SAXParseException while performing match between [" + matcher + "] and [" + matched + "]", exception);
                     }
                 });
                 return (Boolean) xpathExpression.evaluate(documentBuilder.parse(new InputSource(new StringReader(matched))), XPathConstants.BOOLEAN);
