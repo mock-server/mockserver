@@ -26,9 +26,9 @@ public class ExpectationTest {
 
         // then
         assertEquals(httpRequest, expectationThatResponds.getHttpRequest());
-        assertEquals(httpResponse, expectationThatResponds.getHttpResponse());
+        assertEquals(httpResponse, expectationThatResponds.getHttpResponse(false));
         assertNull(expectationThatResponds.getHttpForward());
-        assertEquals(httpResponse, expectationThatResponds.getAction());
+        assertEquals(httpResponse, expectationThatResponds.getAction(false));
         assertEquals(times, expectationThatResponds.getTimes());
 
         // when
@@ -36,9 +36,9 @@ public class ExpectationTest {
 
         // then
         assertEquals(httpRequest, expectationThatForwards.getHttpRequest());
-        assertNull(expectationThatForwards.getHttpResponse());
+        assertNull(expectationThatForwards.getHttpResponse(false));
         assertEquals(httpForward, expectationThatForwards.getHttpForward());
-        assertEquals(httpForward, expectationThatForwards.getAction());
+        assertEquals(httpForward, expectationThatForwards.getAction(false));
         assertEquals(times, expectationThatForwards.getTimes());
     }
 
@@ -53,7 +53,7 @@ public class ExpectationTest {
         assertTrue(expectation.matches(new HttpRequest()));
         assertFalse(expectation.contains(null));
         assertNull(expectation.getHttpRequest());
-        assertNull(expectation.getHttpResponse());
+        assertNull(expectation.getHttpResponse(false));
         assertNull(expectation.getHttpForward());
         assertNull(expectation.getTimes());
     }

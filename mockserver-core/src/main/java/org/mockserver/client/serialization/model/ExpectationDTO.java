@@ -21,8 +21,8 @@ public class ExpectationDTO extends EqualsHashCodeToString {
         if (expectation.getHttpRequest() != null) {
             httpRequest = new HttpRequestDTO(expectation.getHttpRequest());
         }
-        if (expectation.getHttpResponse() != null) {
-            httpResponse = new HttpResponseDTO(expectation.getHttpResponse());
+        if (expectation.getHttpResponse(false) != null) {
+            httpResponse = new HttpResponseDTO(expectation.getHttpResponse(false));
         }
         if (expectation.getHttpForward() != null) {
             httpForward = new HttpForwardDTO(expectation.getHttpForward());

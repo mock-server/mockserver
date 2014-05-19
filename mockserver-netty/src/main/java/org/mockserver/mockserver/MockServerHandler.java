@@ -144,7 +144,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<Object> {
         } else if (nettyHttpRequest.matches(HttpMethod.PUT, "/expectation")) {
 
             Expectation expectation = expectationSerializer.deserialize(content);
-            mockServerMatcher.when(expectation.getHttpRequest(), expectation.getTimes()).thenRespond(expectation.getHttpResponse()).thenForward(expectation.getHttpForward());
+            mockServerMatcher.when(expectation.getHttpRequest(), expectation.getTimes()).thenRespond(expectation.getHttpResponse(false)).thenForward(expectation.getHttpForward());
             return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.CREATED);
 
         } else if (nettyHttpRequest.matches(HttpMethod.PUT, "/retrieve")) {

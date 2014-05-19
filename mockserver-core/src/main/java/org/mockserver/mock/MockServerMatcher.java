@@ -64,7 +64,7 @@ public class MockServerMatcher extends EqualsHashCodeToString {
                         this.expectations.remove(expectation);
                     }
                 }
-                return expectation.getAction();
+                return expectation.getAction(true);
             }
         }
         return null;

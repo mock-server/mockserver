@@ -38,7 +38,7 @@ public class ExpectationSerializer {
         StringBuffer output = new StringBuffer();
         if (expectation != null) {
             HttpRequest httpRequest = expectation.getHttpRequest();
-            HttpResponse httpResponse = expectation.getHttpResponse();
+            HttpResponse httpResponse = expectation.getHttpResponse(false);
             HttpForward httpForward = expectation.getHttpForward();
             output.append("\n" +
                     "new MockServerClient()\n" +

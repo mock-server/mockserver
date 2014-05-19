@@ -172,6 +172,7 @@ public class HttpResponse extends Action {
         return delay;
     }
 
+    @JsonIgnore
     public HttpResponse applyDelay() {
         if (delay != null) {
             delay.applyDelay();

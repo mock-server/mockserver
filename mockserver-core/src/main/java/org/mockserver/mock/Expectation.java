@@ -26,9 +26,13 @@ public class Expectation extends EqualsHashCodeToString {
         return httpRequest;
     }
 
-    public HttpResponse getHttpResponse() {
+    public HttpResponse getHttpResponse(boolean applyDelay) {
         if (httpResponse != null) {
-            return httpResponse.applyDelay();
+            if (applyDelay) {
+                return httpResponse.applyDelay();
+            } else {
+                return httpResponse;
+            }
         } else {
             return null;
         }
@@ -38,9 +42,9 @@ public class Expectation extends EqualsHashCodeToString {
         return httpForward;
     }
 
-    public Action getAction() {
+    public Action getAction(boolean applyDelay) {
         if (httpResponse != null) {
-            return getHttpResponse();
+            return getHttpResponse(applyDelay);
         } else {
             return getHttpForward();
         }
