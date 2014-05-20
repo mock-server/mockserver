@@ -1242,6 +1242,19 @@ cd mockserver</code></pre>
 *                           )
 *           );
 *
+* or:
+*   <span class="this_value">mockServerClient</span>
+*           .when(
+*                   request()
+*                           .withPath(<span class="string_literal">"/some_path"</span>)
+*                           .withBody(<span class="string_literal">"some_request_body"</span>)
+*           )
+*           .forward(
+*                   forward()
+*                           .withHost(<span class="string_literal">"some_host_name"</span>)
+*                           .withPort(<span class="numeric_literal">80</span>)
+*           );
+*
 * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpRequest</span> the http request that must be matched for this expectation to respond
 * <span class="javadoc_param_annotation">@return</span> an Expectation object that can be used to specify the response
 */</span>
@@ -1264,6 +1277,20 @@ cd mockserver</code></pre>
 *                           .withHeaders(
 *                                   new Header(<span class="string_literal">"responseName"</span>, <span class="string_literal">"responseValue"</span>)
 *                           )
+*           );
+*
+* or:
+*   <span class="this_value">mockServerClient</span>
+*           .when(
+*                   request()
+*                           .withPath(<span class="string_literal">"/some_path"</span>)
+*                           .withBody(<span class="string_literal">"some_request_body"</span>),
+*                   Times.once()
+*           )
+*           .forward(
+*                   forward()
+*                           .withHost(<span class="string_literal">"some_host_name"</span>)
+*                           .withPort(<span class="numeric_literal">80</span>)
 *           );
 *
 * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpRequest</span> the http request that must be matched for this expectation to respond
@@ -1408,16 +1435,21 @@ cd mockserver</code></pre>
 
 <h3>Create Expectations</h3>
 
-<p>To create an expectation you need to define the <a href="#request-matchers">request matcher</a> and what <a href="#mock-response">response</a> should be returned when the request is matched.</p>
+<p>To create an expectation you need to define:</p>
+<ul>
+	<li>the <a href="#request-matchers">request matcher</a> and</li>
+	<li>what <a href="#mock-response">response</a> should be returned or</li>
+	<li>where the request should be <a href="#mock-forward">forwarded</a>.</li>
+</ul>
 
-<p>The MockServer will play expectations in the exact order they are setup. For example, if an expectation <span class="annotation">A</span> is setup to response <strong>3</strong> times then expectation <span class="annotation">B</span> is setup to response
-	<strong>2</strong> times for the same request the MockServer will response in the following order <span class="annotation">A</span>, <span class="annotation">A</span>, <span class="annotation">A</span>, <span class="annotation">B</span>, <span class="annotation">B</span>.</p>
-
-<p>The following shows a simple expectation example:</p>
+<p>The MockServer will play expectations in the exact order they are setup. For example, if an expectation <span class="annotation">A</span> is setup to response (or forward) <strong>3</strong> times then expectation <span class="annotation">B</span> is setup to response (or forward)
+	<strong>2</strong> times for the same request the MockServer will response (or forward) in the following order <span class="annotation">A</span>, <span class="annotation">A</span>, <span class="annotation">A</span>, <span class="annotation">B</span>, <span class="annotation">B</span>.</p>
 
 <p><strong>Java</strong></p>
 
-<pre><code class="code"><span class="this_value">mockServer</span>
+<p>To setup an expectation that responds to a request:</p>
+
+<pre><code class="code"><span class="keyword">new</span> MockServerClient(<span class="string_literal">"127.0.0.1"</span>, <span class="numeric_literal">8080</span>)
         .when(
                 request()
                         .withMethod(<span class="string_literal">"POST"</span>)
@@ -1442,9 +1474,26 @@ cd mockserver</code></pre>
                         .withDelay(new Delay(<span class="constant">SECONDS</span>, <span class="numeric_literal">1</span>))
         );</code></pre>
 
+<p>To setup an expectation that forwards to a request:</p>
+
+<pre><code class="code"><span class="keyword">new</span> MockServerClient(<span class="string_literal">"127.0.0.1"</span>, <span class="numeric_literal">8080</span>)
+        .when(
+                request()
+                        .withMethod(<span class="string_literal">"GET"</span>)
+                        .withPath(<span class="string_literal">"/index.html"</span>),
+                exactly(<span class="numeric_literal">1</span>)
+        )
+        .forward(
+                forward()
+                        .withHost(<span class="string_literal">"www.mock-server.com"</span>)
+                        .withPort(<span class="numeric_literal">80</span>)
+                        .withScheme(HttpForward.Scheme.<span class="constant">HTTP</span>)
+        );</code></pre>
+
 <p><strong>Note:</strong> this requires the use of these static imports as follows:</p>
 <code class="code"><span class="keyword">import static</span> org.mockserver.model.HttpRequest.request;
 <span class="keyword">import static</span> org.mockserver.model.HttpResponse.response;
+<span class="keyword">import static</span> org.mockserver.model.HttpForward.forward;
 <span class="keyword">import static</span> org.mockserver.matchers.Times.exactly;
 <span class="keyword">import static</span> java.util.concurrent.TimeUnit.SECONDS;</code>
 
@@ -1452,6 +1501,8 @@ cd mockserver</code></pre>
 	<a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-examples/src/test/java/org/mockserver/web/controller/BooksPageIntegrationTest.java">BookPageIntegrationTest</a> that demonstrates a fully working example.</p>
 
 <p><strong>JavaScript</strong></p>
+
+<p>To setup an expectation that responds to a request:</p>
 
 <pre><code class="code"><span class="keyword">var</span> xmlHttpRequest = <span class="keyword">new</span> XMLHttpRequest();
 xmlHttpRequest.open(<span class="string_literal">"PUT"</span>, <span class="string_literal">"http://localhost:8080/expectation"</span>, <span class="keyword">false</span>);
@@ -1494,6 +1545,28 @@ xmlHttpRequest.send(JSON.stringify({
             <span class="string_literal">"timeUnit"</span>: <span class="string_literal">"SECONDS"</span>,
             <span class="string_literal">"value"</span>: <span class="numeric_literal">1</span>
         }
+    },
+    <span class="string_literal">"times"</span>: {
+        <span class="string_literal">"remainingTimes"</span>: <span class="numeric_literal">1</span>,
+        <span class="string_literal">"unlimited"</span>: <span class="keyword">false</span>
+    }
+}));
+</code></pre>
+
+<p>To setup an expectation that forwards to a request:</p>
+
+<pre><code class="code"><span class="keyword">var</span> xmlHttpRequest = <span class="keyword">new</span> XMLHttpRequest();
+xmlHttpRequest.open(<span class="string_literal">"PUT"</span>, <span class="string_literal">"http://localhost:8080/expectation"</span>, <span class="keyword">false</span>);
+xmlHttpRequest.setRequestHeader(<span class="string_literal">"Content-Type"</span>, <span class="string_literal">"application/json; charset=utf-8"</span>);
+xmlHttpRequest.send(JSON.stringify({
+    <span class="string_literal">"httpRequest"</span>: {
+        <span class="string_literal">"method"</span>: <span class="string_literal">"GET"</span>,
+        <span class="string_literal">"path"</span>: <span class="string_literal">"/index.html"</span>
+    },
+    <span class="string_literal">"httpForward"</span>: {
+        <span class="string_literal">"host"</span>: <span class="string_literal">"www.mock-server.com"</span>,
+        <span class="string_literal">"port"</span>: <span class="numeric_literal">80</span>,
+        <span class="string_literal">"scheme"</span>: <span class="string_literal">"HTTP"</span>
     },
     <span class="string_literal">"times"</span>: {
         <span class="string_literal">"remainingTimes"</span>: <span class="numeric_literal">1</span>,
@@ -1557,22 +1630,66 @@ xmlHttpRequest.send(JSON.stringify({
     <span class="keyword">public</span> HttpRequest withPath(String path);
 
     <span class="comment">/**
-     * The query string - this method only currently supports an exact match such as <span class="string_literal">"param=value&otherParam=otherValue"</span> or a regex match,
-     * see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a> for full details of the supported regex syntax
+     * The query string parameters to match on as a list of Parameter objects where the values or keys of each parameter
+     * can be either a string or a regex (for more details of the supported regex syntax
+     * see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>)
      *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">queryString</span> the query string such as <span class="string_literal">"someParameter=someValue&someOtherParameter=someOtherValue"</span> or a regex
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">parameters</span> the list of Parameter objects where the values or keys of each parameter can be either a string or a regex
      */</span>
-    <span class="keyword">public</span> HttpRequest withQueryString(String queryString);
+    <span class="keyword">public</span> HttpRequest withQueryStringParameters(List&lt;Parameter&gt; parameters);
 
     <span class="comment">/**
-     * The body to match on such as <span class="string_literal">"{username: 'foo', password: 'bar'}"</span> or a regex (see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>)
-     * or an XPath expression which returns one or more values or evaluates to true (see <a href="http://saxon.sourceforge.net/saxon6.5.3/expressions.html">http://saxon.sourceforge.net/saxon6.5.3/expressions.html</a>)
+     * The query string parameters to match on as a varags Parameter objects where the values or keys of each parameter
+     * can be either a string or a regex (for more details of the supported regex syntax
+     * see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>)
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">parameters</span> the varags Parameter objects where the values or keys of each parameter can be either a string or a regex
+     */</span>
+    <span class="keyword">public</span> HttpRequest withQueryStringParameters(Parameter... parameters);
+
+    <span class="comment">/**
+     * The query string parameters to match on as a Map&lt;String, List&lt;String&gt;&gt; where the values or keys of each parameter
+     * can be either a string or a regex (for more details of the supported regex syntax
+     * see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>)
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">parameters</span> the Map&lt;String, List&lt;String&gt;&gt; object where the values or keys of each parameter can be either a string or a regex
+     */</span>
+    <span class="keyword">public</span> HttpRequest withQueryStringParameters(Map&lt;String, List&lt;String&gt;&gt; parameters);
+
+    <span class="comment">/**
+     * Adds one query string parameter to match on as a Parameter object where the parameter values list can be a list of strings
+     * or regular expressions (for more details of the supported regex syntax
+     * see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>)
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">parameter</span> the Parameter object which can have a values list of strings or regular expressions
+     */</span>
+    <span class="keyword">public</span> HttpRequest withQueryStringParameter(Parameter parameter);
+
+    <span class="comment">/**
+     * The body to match on such as <span class="string_literal">"{username: 'foo', password: 'bar'}"</span> or a regex
+     * (see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>)
+     * or an XPath expression which returns one or more values or evaluates to true
+     * (see <a href="http://saxon.sourceforge.net/saxon6.5.3/expressions.html">http://saxon.sourceforge.net/saxon6.5.3/expressions.html</a>)
      *
      * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">body</span> the body on such as <span class="string_literal">"{username: 'foo', password: 'bar'}"</span>
      *             or a regex such as <span class="string_literal">"username[a-z]{4}"</span>
      *             or an XPath such as <span class="string_literal">"/element[key = 'some_key' and value = 'some_value']"</span>
      */</span>
     <span class="keyword">public</span> HttpRequest withBody(String body);
+
+    <span class="comment">/**
+     * The body match rules on such as using one of the Body subclasses as follows:
+     * - <span class="keyword">new</span> StringBody(<span class="string_literal">"{username: 'foo', password: 'bar'}"</span>, Body.Type.<span class="constant">EXACT</span>)
+     * - <span class="keyword">new</span> StringBody(<span class="string_literal">"username[a-z]{4}"</span>, Body.Type.<span class="constant">REGEX</span>);
+     * - <span class="keyword">new</span> StringBody(<span class="string_literal">"/element[key = 'some_key' and value = 'some_value']"</span>, Body.Type.<span class="constant">XPATH</span>);
+     * - <span class="keyword">new</span> ParameterBody(<span class="keyword">new</span> Parameter(<span class="string_literal">"name"</span>, <span class="string_literal">"value1"</span>, <span class="string_literal">"value2"</span>));
+     *
+     * for more details of the supported regex syntax see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>
+     * for more detail of XPath syntax see <a href="http://saxon.sourceforge.net/saxon6.5.3/expressions.html">http://saxon.sourceforge.net/saxon6.5.3/expressions.html</a>
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">body</span> an instance of one of the Body subclasses including StringBody or ParameterBody
+     */</span>
+    <span class="keyword">public</span> HttpRequest withBody(Body body);
 
     <span class="comment">/**
      * The headers to match on as a list of Header objects where the values or keys of each header can be either a string or a regex
@@ -1590,6 +1707,14 @@ xmlHttpRequest.send(JSON.stringify({
     <span class="keyword">public</span> HttpRequest withHeaders(Header... headers);
 
     <span class="comment">/**
+     * Adds one header to match on as a Header object where the header values list can be a list of strings or regular expressions
+     * (for more details of the supported regex syntax see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>)
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">header</span> the Header object which can have a values list of strings or regular expressions
+     */</span>
+    <span class="keyword">public</span> HttpRequest withHeader(Header header);
+
+    <span class="comment">/**
      * The cookies to match on as a list of Cookie objects  where the values or keys of each cookie can be either a string or a regex
      * (for more details of the supported regex syntax see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>)
      *
@@ -1603,6 +1728,14 @@ xmlHttpRequest.send(JSON.stringify({
      * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">cookies</span> the varags Cookie objects where the values or keys of each cookie can be either a string or a regex
      */</span>
     <span class="keyword">public</span> HttpRequest withCookies(Cookie... cookies);
+
+    <span class="comment">/**
+     * Adds one cookie to match on as a Cookie object where the cookie values list can be a list of strings or regular expressions
+     * (for more details of the supported regex syntax see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>)
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">cookie</span> the Cookie object which can have a values list of strings or regular expressions
+     */</span>
+    <span class="keyword">public</span> HttpRequest withCookie(Cookie cookie);
 }</code></pre>
 
 <p>For example:</p>
@@ -1773,6 +1906,13 @@ Times.exactly(<span class="keyword">int</span> count);</code></pre>
     <span class="keyword">public</span> HttpResponse withCookies(Cookie... cookies);
 
     <span class="comment">/**
+     * Add cookie to return as Set-Cookie header
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">cookie</span> a Cookie object
+     */</span>
+    <span class="keyword">public</span> HttpResponse withCookie(Cookie cookie);
+
+    <span class="comment">/**
      * The headers to return as a list of Header objects
      *
      * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">headers</span> a list of Header objects
@@ -1784,6 +1924,13 @@ Times.exactly(<span class="keyword">int</span> count);</code></pre>
      * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">headers</span> a varargs of Header objects
      */</span>
     <span class="keyword">public</span> HttpResponse withHeaders(Header... headers);
+
+    <span class="comment">/**
+     * A header to return as a Header objects
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">header</span> a Header objects
+     */</span>
+    <span class="keyword">public</span> HttpResponse withHeader(Header header)
 
     <span class="comment">/**
      * The response body
@@ -1866,6 +2013,86 @@ Times.exactly(<span class="keyword">int</span> count);</code></pre>
         <span class="string_literal">"value"</span>: <span class="numeric_literal">1</span>
     }
 }</code></pre>
+
+<a name="mock-forward" class="anchor" href="#mock-forward">&nbsp;</a>
+
+<h3>Mock Forward</h3>
+
+<p>Forward configuration can contain:</p>
+
+<ul>
+	<li><strong>host</strong> - the host to forward to i.e. www.mock-server.com</li>
+	<li><strong>port</strong> - the port to forward to, this defaults to 80 if not specified</li>
+	<li><strong>scheme</strong> - the scheme to use, either HTTP or HTTPS, this defaults to HTTP if not specified</li>
+</ul>
+
+<p>Forward can be further controlled using:</p>
+
+<ul>
+	<li>the number of times the request is forwarded (including unlimited)</li>
+</ul>
+
+<p><strong>Java</strong></p>
+
+<p>To setup a forward in Java use the org.mockserver.model.HttpForward class which specifies the details of each HTTP(S) forward with a fluent API:</p>
+
+<pre><code class="code"><span class="keyword">public class</span> HttpForward {
+
+    <span class="comment">/**
+     * The host or ip address to forward the request to i.e. <span class="string_literal">"www.mock-server.com"</span>
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">host</span> a hostname or ip address as a string
+     */</span>
+    <span class="keyword">public</span> HttpForward withHost(String host);
+
+    <span class="comment">/**
+     * The port to forward the request to i.e. <span class="numeric_literal">80</span>.  If not specified the port defaults to <span class="numeric_literal">80</span>.
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">port</span> a port as an integer
+     */</span>
+    <span class="keyword">public</span> HttpForward withPort(Integer port);
+
+    <span class="comment">/**
+     * The scheme to use when forwarded the request, either <span class="constant">HTTP</span> or <span class="constant">HTTPS</span>.  If not specified the scheme defaults to HTTP.
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">scheme</span> the scheme as a HttpForward.Scheme value
+     */</span>
+    <span class="keyword">public</span> HttpForward withScheme(Scheme scheme);
+}</code></pre>
+
+<p>For example:</p>
+
+<pre><code class="code">HttpForward httpForward =
+        forward()
+                .withHost(<span class="string_literal">"www.mock-server.com"</span>)
+                .withPort(<span class="numeric_literal">80</span>)
+                .withScheme(HttpForward.Scheme.<span class="constant">HTTP</span>);
+</code></pre>
+
+<p><strong>JavaScript</strong></p>
+
+<p>To mock a response in javascript use JSON to specify the details with the following format: </p>
+
+<pre><code class="code"><span class="string_literal">"httpForward"</span>: {
+    <span class="string_literal">"host"</span>: <span class="string_literal">""</span>,
+    <span class="string_literal">"port"</span>: <span class="numeric_literal">80</span>,
+    <span class="string_literal">"scheme"</span>: <span class="string_literal">"HTTP"</span>
+}
+</code></pre>
+
+<p>The "scheme" value in can be:</p>
+
+<pre><code class="code"><span class="string_literal">"HTTP"</span>
+<span class="string_literal">"HTTPS"</span></code></pre>
+
+<p>The same example as above would be:</p>
+
+<pre><code class="code"><span class="string_literal">"httpForward"</span>: {
+    <span class="string_literal">"host"</span>: <span class="string_literal">"www.mock-server.com"</span>,
+    <span class="string_literal">"port"</span>: <span class="numeric_literal">80</span>,
+    <span class="string_literal">"scheme"</span>: <span class="string_literal">"HTTP"</span>
+}
+</code></pre>
 
 <a name="verify-behaviour" class="anchor" href="#verify-behaviour">&nbsp;</a>
 

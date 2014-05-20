@@ -136,12 +136,9 @@ public class HttpRequest extends EqualsHashCodeToString {
     }
 
     /**
-     * TODO - update comments and website
+     * The exact string body to match on such as "{username: 'foo', password: 'bar'}"
      *
-     * The body to match on such as "{username: 'foo', password: 'bar'}" or a regex (for more details of the supported regex syntax see http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html)
-     * or an XPath expression which returns one or more values or evaluates to true (for more detail of XPath syntax see http://saxon.sourceforge.net/saxon6.5.3/expressions.html)
-     *
-     * @param body the body on such as "{username: 'foo', password: 'bar'}" or a regex such as "username[a-z]{4}" or an XPath such as "/element[key = 'some_key' and value = 'some_value']"
+     * @param body the body on such as "{username: 'foo', password: 'bar'}"
      */
     public HttpRequest withBody(String body) {
         this.body = new StringBody(body, Body.Type.EXACT);
@@ -149,12 +146,16 @@ public class HttpRequest extends EqualsHashCodeToString {
     }
 
     /**
-     * TODO - update comments and website
+     * The body match rules on such as using one of the Body subclasses as follows:
+     * - new StringBody("{username: 'foo', password: 'bar'}", Body.Type.EXACT)
+     * - new StringBody("username[a-z]{4}", Body.Type.REGEX);
+     * - new StringBody("/element[key = 'some_key' and value = 'some_value']", Body.Type.XPATH);
+     * - new ParameterBody(new Parameter("name", "value1", "value2"));
      *
-     * The body to match on such as "{username: 'foo', password: 'bar'}" or a regex (for more details of the supported regex syntax see http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html)
-     * or an XPath expression which returns one or more values or evaluates to true (for more detail of XPath syntax see http://saxon.sourceforge.net/saxon6.5.3/expressions.html)
+     * for more details of the supported regex syntax see http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html
+     * for more detail of XPath syntax see http://saxon.sourceforge.net/saxon6.5.3/expressions.html
      *
-     * @param body the body on such as "{username: 'foo', password: 'bar'}" or a regex such as "username[a-z]{4}" or an XPath such as "/element[key = 'some_key' and value = 'some_value']"
+     * @param body an instance of one of the Body subclasses including StringBody or ParameterBody
      */
     public HttpRequest withBody(Body body) {
         this.body = body;
