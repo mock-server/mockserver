@@ -1,6 +1,8 @@
 MockServer
 ========== 
 
+**Please note these image tags below are not accurate because github now acks as a proxy for these images; to see the acurate value click on the image.**
+
 **Build Status:** 
 
 [![drone.io Build Status](https://drone.io/github.com/jamesdbloom/mockserver/status.png)](https://drone.io/github.com/jamesdbloom/mockserver/latest) [![Travis Build Status](https://travis-ci.org/jamesdbloom/mockserver.svg?branch=master)](https://travis-ci.org/jamesdbloom/mockserver)
