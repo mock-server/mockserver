@@ -36,6 +36,12 @@
                     <verbose>true</verbose>
                     <filesets>
                         <fileset>
+                            <directory>src/integration-tests/mockserver-initializer-main-classpath/target</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>src/integration-tests/mockserver-initializer-test-classpath/target</directory>
+                        </fileset>
+                        <fileset>
                             <directory>src/integration-tests/mockserver-run-from-command-line/target</directory>
                         </fileset>
                         <fileset>
