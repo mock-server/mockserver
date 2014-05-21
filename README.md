@@ -1,7 +1,7 @@
 MockServer
 ========== 
 
-**Please note these image tags below are not accurate because github now acks as a proxy for these images; to see the acurate value click on the image.**
+**Please note these image tags below are not always accurate because github now acks as a proxy for these images; to see the acurate value click on the image.**
 
 **Build Status:** 
 
