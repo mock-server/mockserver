@@ -1340,30 +1340,30 @@ cd mockserver</code></pre>
 <span class="keyword">public</span> ProxyClient(String host, <span class="keyword">int</span> port);
 
 <span class="comment">/**
-* Pretty-print the json for all requests / responses as Expectations to the log.  
+* Pretty-print the json for all requests / responses as Expectations to the log.
 * They are printed into a dedicated log called <span class="annotation">mockserver_request.log</span>
 */</span>
 <span class="keyword">public</span> ProxyClient dumpToLogAsJSON();
 
 <span class="comment">/**
-* Pretty-print the json for matching requests and their responses as Expectations to the log.  
+* Pretty-print the json for matching requests and their responses as Expectations to the log.
 * They are printed into a dedicated log called <span class="annotation">mockserver_request.log</span>
-*	
+*
 * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpRequest</span> the http request that is matched against when deciding what to log
 *                    if <span class="keyword">null</span> all requests are logged
 */</span>
 <span class="keyword">public</span> ProxyClient dumpToLogAsJSON(HttpRequest httpRequest);
 
 <span class="comment">/**
-* Output Java code for creating all requests / responses as Expectations to the log.  
+* Output Java code for creating all requests / responses as Expectations to the log.
 * They are printed into a dedicated log called <span class="annotation">mockserver_request.log</span>
 */</span>
 <span class="keyword">public</span> ProxyClient dumpToLogAsJava();
 
 <span class="comment">/**
-* Output Java code for creating matching requests and their responses as Expectations to the log.  
+* Output Java code for creating matching requests and their responses as Expectations to the log.
 * They are printed into a dedicated log called <span class="annotation">mockserver_request.log</span>
-*	
+*
 * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpRequest</span> the http request that is matched against when deciding what to log
 *                    if <span class="keyword">null</span> all requests are logged
 */</span>
@@ -1680,10 +1680,25 @@ xmlHttpRequest.send(JSON.stringify({
 
     <span class="comment">/**
      * The body match rules on such as using one of the Body subclasses as follows:
-     * - <span class="keyword">new</span> StringBody(<span class="string_literal">"{username: 'foo', password: 'bar'}"</span>, Body.Type.<span class="constant">EXACT</span>)
-     * - <span class="keyword">new</span> StringBody(<span class="string_literal">"username[a-z]{4}"</span>, Body.Type.<span class="constant">REGEX</span>);
-     * - <span class="keyword">new</span> StringBody(<span class="string_literal">"/element[key = 'some_key' and value = 'some_value']"</span>, Body.Type.<span class="constant">XPATH</span>);
-     * - <span class="keyword">new</span> ParameterBody(<span class="keyword">new</span> Parameter(<span class="string_literal">"name"</span>, <span class="string_literal">"value1"</span>, <span class="string_literal">"value2"</span>));
+     *
+     * exact string match:
+     *   - exact(<span class="string_literal">"{username: 'foo', password: 'bar'}"</span>); or
+     *   - <span class="keyword">new</span> StringBody(<span class="string_literal">"{username: 'foo', password: 'bar'}"</span>, Body.Type.<span class="constant">EXACT</span>)
+     * exact match:
+     *   - regex(<span class="string_literal">"username[a-z]{4}"</span>); or
+     *   - <span class="keyword">new</span> StringBody(<span class="string_literal">"username[a-z]{4}"</span>, Body.Type.<span class="constant">REGEX</span>);
+     * xpath match:
+     *   - xpath(<span class="string_literal">"/element[key = 'some_key' and value = 'some_value']"</span>); or
+     *   - <span class="keyword">new</span> StringBody(<span class="string_literal">"/element[key = 'some_key' and value = 'some_value']"</span>, Body.Type.<span class="constant">XPATH</span>);
+     * body parameter match:
+     *   - params(
+     *             param(<span class="string_literal">"name_one"</span>, <span class="string_literal">"value_one_one"</span>, <span class="string_literal">"value_one_two"</span>)
+     *             param(<span class="string_literal">"name_two"</span>, <span class="string_literal">"value_two"</span>)
+     *     ); or
+     *   - <span class="keyword">new</span> ParameterBody(
+     *                        <span class="keyword">new</span> Parameter(<span class="string_literal">"name_one"</span>, <span class="string_literal">"value_one_one"</span>, <span class="string_literal">"value_one_two"</span>)
+     *                        <span class="keyword">new</span> Parameter(<span class="string_literal">"name_two"</span>, <span class="string_literal">"value_two"</span>)
+     *     );
      *
      * for more details of the supported regex syntax see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>
      * for more detail of XPath syntax see <a href="http://saxon.sourceforge.net/saxon6.5.3/expressions.html">http://saxon.sourceforge.net/saxon6.5.3/expressions.html</a>
