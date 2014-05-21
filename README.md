@@ -33,10 +33,6 @@ Vert.X Module Registry contains the following artifacts:
 
 * [org.mock-server~mockserver-vertx~2.9](http://modulereg.vertx.io/) - a Vert.X module that mocks HTTP and HTTPS requests
 
-Vert.X Module Registry will shortly also have the following artifacts:
-
-* [org.mock-server~mockserver-vertx-proxy~2.9](http://modulereg.vertx.io/) - a Vert.X module that proxies HTTP and HTTPS allowing the recording and querying of requests and responses
-
 # Issues
 
 If you have any problems, please [check the project issues](https://github.com/jamesdbloom/mockserver/issues?state=open).
