@@ -38,6 +38,8 @@ public class XPathStringMatcher extends BodyMatcher implements Matcher<String> {
     public boolean matches(final String matched) {
         if (xpathExpression == null) {
             logger.warn("Attempting match against null XPath Expression for [" + matched + "]" + new RuntimeException("Attempting match against null XPath Expression for [" + matched + "]"));
+        } else if (matcher.equals(matched)) {
+            return true;
         } else if (matched != null) {
             // match as xpath - matcher -> matched
             try {

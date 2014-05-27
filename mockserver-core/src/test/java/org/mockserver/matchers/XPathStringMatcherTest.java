@@ -25,6 +25,12 @@ public class XPathStringMatcherTest {
     }
 
     @Test
+    public void shouldMatchMatchingString() {
+        assertTrue(new XPathStringMatcher("some_value").matches("some_value"));
+        assertFalse(new XPathStringMatcher("some_value").matches("some_other_value"));
+    }
+
+    @Test
     public void shouldNotMatchNullExpectation() {
         assertFalse(new XPathStringMatcher(null).matches("some_value"));
     }
