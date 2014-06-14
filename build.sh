@@ -23,7 +23,7 @@ if [ $? -eq 0 ]; then
     echo
     if [ -z "$1" ]
     then
-        mvn clean install -Pit
+        mvn clean install
     fi
 fi
 
@@ -37,9 +37,9 @@ if [ $? -eq 0 ]; then
     echo
     if [ -z "$1" ]
     then
-        mvn clean install -Pit
+        mvn clean install
     else
         # only release if both java 7 and 6 are running correctly
-        mvn clean $1 -Pit
+        mvn clean $1
     fi
 fi
