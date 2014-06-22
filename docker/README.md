@@ -44,4 +44,4 @@ Pull requests are, of course, very welcome! Please read our [contributing to the
 
 ### Maintainers
 * [James D Bloom](http://blog.jamesdbloom.com)
-* [Samira Rabbanian](https://github.com/samirarabbanian)
+* [Samira Bloom](https://github.com/samirabloom)
