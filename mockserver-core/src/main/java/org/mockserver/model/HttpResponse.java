@@ -1,6 +1,6 @@
 package org.mockserver.model;
 
-import org.apache.commons.io.Charsets;
+import com.google.common.base.Charsets;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.mockserver.client.serialization.Base64Converter;
 import org.mockserver.client.serialization.ObjectMapperFactory;

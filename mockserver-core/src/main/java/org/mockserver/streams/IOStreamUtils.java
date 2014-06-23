@@ -1,6 +1,6 @@
 package org.mockserver.streams;
 
-import org.apache.commons.io.Charsets;
+import com.google.common.base.Charsets;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

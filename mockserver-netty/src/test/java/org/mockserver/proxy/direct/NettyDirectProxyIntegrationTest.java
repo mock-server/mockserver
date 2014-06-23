@@ -1,6 +1,6 @@
 package org.mockserver.proxy.direct;
 
-import org.apache.commons.io.Charsets;
+import com.google.common.base.Charsets;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;

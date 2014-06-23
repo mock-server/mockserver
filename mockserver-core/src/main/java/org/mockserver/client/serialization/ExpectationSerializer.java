@@ -1,7 +1,7 @@
 package org.mockserver.client.serialization;
 
 import com.google.common.base.Strings;
-import org.apache.commons.io.Charsets;
+import com.google.common.base.Charsets;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jackson.map.ObjectMapper;

@@ -1,6 +1,6 @@
 package org.mockserver.client.http;
 
-import org.apache.commons.io.Charsets;
+import com.google.common.base.Charsets;
 import org.apache.http.client.CircularRedirectException;
 import org.apache.http.client.methods.*;
 import org.apache.http.entity.ByteArrayEntity;

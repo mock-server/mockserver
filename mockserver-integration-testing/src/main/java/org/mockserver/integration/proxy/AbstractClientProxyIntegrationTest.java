@@ -1,6 +1,6 @@
 package org.mockserver.integration.proxy;
 
-import org.apache.commons.io.Charsets;
+import com.google.common.base.Charsets;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;

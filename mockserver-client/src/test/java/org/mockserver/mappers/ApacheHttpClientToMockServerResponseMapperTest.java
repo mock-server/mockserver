@@ -1,6 +1,6 @@
 package org.mockserver.mappers;
 
-import org.apache.commons.io.Charsets;
+import com.google.common.base.Charsets;
 import org.apache.http.ProtocolVersion;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.entity.StringEntity;

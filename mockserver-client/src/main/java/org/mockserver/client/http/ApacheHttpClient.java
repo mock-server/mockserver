@@ -1,7 +1,7 @@
 package org.mockserver.client.http;
 
 import io.netty.handler.codec.http.QueryStringDecoder;
-import org.apache.commons.io.Charsets;
+import com.google.common.base.Charsets;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.client.CircularRedirectException;
