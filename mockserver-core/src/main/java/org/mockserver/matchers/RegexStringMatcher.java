@@ -29,7 +29,7 @@ public class RegexStringMatcher extends BodyMatcher implements Matcher<String> {
                     result = true;
                 }
             } catch (PatternSyntaxException pse) {
-                logger.error("Error while matching regex [" + matcher + "] for string [" + matched + "] " + pse.getMessage());
+                logger.trace("Error while matching regex [" + matcher + "] for string [" + matched + "] " + pse.getMessage());
             }
             // match as regex - matched -> matcher
             try {
@@ -37,7 +37,7 @@ public class RegexStringMatcher extends BodyMatcher implements Matcher<String> {
                     result = true;
                 }
             } catch (PatternSyntaxException pse) {
-                logger.error("Error while matching regex [" + matched + "] for string [" + matcher + "] " + pse.getMessage());
+                logger.trace("Error while matching regex [" + matched + "] for string [" + matcher + "] " + pse.getMessage());
             }
             // case insensitive comparison is mainly to improve matching in web containers like Tomcat that convert header names to lower case
             if (ignoreCase) {
@@ -47,7 +47,7 @@ public class RegexStringMatcher extends BodyMatcher implements Matcher<String> {
                         result = true;
                     }
                 } catch (PatternSyntaxException pse) {
-                    logger.error("Error while matching regex [" + matcher.toLowerCase() + "] for string [" + matched.toLowerCase() + "] " + pse.getMessage());
+                    logger.trace("Error while matching regex [" + matcher.toLowerCase() + "] for string [" + matched.toLowerCase() + "] " + pse.getMessage());
                 }
                 // match as regex - matched -> matcher
                 try {
@@ -55,7 +55,7 @@ public class RegexStringMatcher extends BodyMatcher implements Matcher<String> {
                         result = true;
                     }
                 } catch (PatternSyntaxException pse) {
-                    logger.error("Error while matching regex [" + matched.toLowerCase() + "] for string [" + matcher.toLowerCase() + "] " + pse.getMessage());
+                    logger.trace("Error while matching regex [" + matched.toLowerCase() + "] for string [" + matcher.toLowerCase() + "] " + pse.getMessage());
                 }
             }
         }
