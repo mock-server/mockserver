@@ -22,6 +22,19 @@ if [ $JAVA_VER -eq 16 ]; then
         echo
         cd $current_directory;
     done
+    cd $current_directory/mockserver-ruby;
+    echo
+    echo ==== `pwd` ===;
+    echo
+    ruby --version
+    rvm --version
+    gem --version
+    bundle --version
+    export BUNDLE_GEMFILE=$PWD/Gemfile
+    bundle install
+    bundle exec rake
+    echo
+    cd $current_directory;
 fi
 
 if [ $JAVA_VER -eq 17 ]; then
@@ -39,6 +52,19 @@ if [ $JAVA_VER -eq 17 ]; then
         echo
         cd $current_directory;
     done
+    cd $current_directory/mockserver-ruby;
+    echo
+    echo ==== `pwd` ===;
+    echo
+    ruby --version
+    rvm --version
+    gem --version
+    bundle --version
+    export BUNDLE_GEMFILE=$PWD/Gemfile
+    bundle install
+    bundle exec rake
+    echo
+    cd $current_directory;
 fi
 
 if [ $JAVA_VER -eq 18 ]; then
@@ -56,4 +82,17 @@ if [ $JAVA_VER -eq 18 ]; then
         echo
         cd $current_directory;
     done
+    cd $current_directory/mockserver-ruby;
+    echo
+    echo ==== `pwd` ===;
+    echo
+    ruby --version
+    rvm --version
+    gem --version
+    bundle --version
+    export BUNDLE_GEMFILE=$PWD/Gemfile
+    bundle install
+    bundle exec rake
+    echo
+    cd $current_directory;
 fi

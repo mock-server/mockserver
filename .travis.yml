@@ -2,6 +2,7 @@ language: java
 
 before_install:
   - "mvn install -T2C -q -DskipTests=true"
+
 script:
   - "./travis_build.sh"
 
@@ -9,6 +10,9 @@ jdk:
   - openjdk6
   - oraclejdk7
   - oraclejdk8
+
+rvm:
+  - "1.9.3"
 
 # whitelist
 branches:
@@ -23,3 +27,4 @@ env:
 notifications:
   email:
   - jamesdbloom@gmail.com
+  - nayyara.samuel@gmail.com

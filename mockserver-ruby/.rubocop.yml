@@ -1,0 +1,13 @@
+Style/LineLength:
+  Max: 180
+Style/ClassAndModuleChildren:
+  EnforcedStyle: compact
+Style/CyclomaticComplexity:
+  Enabled: false
+Lint/LiteralInInterpolation:
+  Enabled: false
+Style/MethodLength:
+  Enabled: false
+Style/FileName:
+  Exclude:
+    - '**/mockserver-client.rb'

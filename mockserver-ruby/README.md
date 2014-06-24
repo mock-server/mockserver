@@ -1,7 +1,5 @@
 # Mockserver Client
 
-[![Build Status](https://travis-ci.org/nayyara-samuel/mockserver-client.svg?branch=master)](https://travis-ci.org/nayyara-samuel/mockserver-client)
-
 A Ruby client for [MockServer](http://www.mock-server.com) project. This client follows the Java client's fluent style closely by using Ruby blocks.
 
 ## Installation
