@@ -1,0 +1,20 @@
+{
+    "httpResponse": {
+        "statusCode": 401,
+        "headers": [
+            {
+                "name": "Content-Type",
+                "values": ["application/json; charset=utf-8"]
+            },
+            {
+                "name": "Cache-Control",
+                "values": ["public, max-age=86400"]
+            }
+        ],
+        "body": "incorrect username and password combination",
+        "delay": {
+            "timeUnit": "SECONDS",
+            "value": 1
+        }
+    }
+}
