@@ -9,13 +9,13 @@ public class BinaryBody extends Body {
 
     private final byte[] value;
 
-    public static BinaryBody binary(byte[] body) {
-        return new BinaryBody(body);
-    }
-
     public BinaryBody(byte[] value) {
         super(Type.BINARY);
         this.value = value;
+    }
+
+    public static BinaryBody binary(byte[] body) {
+        return new BinaryBody(body);
     }
 
     public byte[] getValue() {

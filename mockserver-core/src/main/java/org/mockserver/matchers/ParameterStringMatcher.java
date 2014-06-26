@@ -13,7 +13,7 @@ import java.util.Map;
 /**
  * @author jamesdbloom
  */
-public class ParameterStringMatcher extends BodyMatcher implements Matcher<String> {
+public class ParameterStringMatcher extends BodyMatcher<String> implements Matcher<String> {
     private static Logger logger = LoggerFactory.getLogger(ParameterStringMatcher.class);
     private final MapMatcher matcher;
 
@@ -52,6 +52,6 @@ public class ParameterStringMatcher extends BodyMatcher implements Matcher<Strin
 
     @Override
     public String[] fieldsExcludedFromEqualsAndHashCode() {
-        return new String[]{"logger", "xpathExpression"};
+        return new String[]{"logger"};
     }
 }

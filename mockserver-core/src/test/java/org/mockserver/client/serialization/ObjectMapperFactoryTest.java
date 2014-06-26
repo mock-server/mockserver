@@ -179,6 +179,29 @@ public class ObjectMapperFactoryTest {
                 ), expectationDTO);
     }
 
+    @Test
+    public void shouldParseJSONWithJsonStringBody() throws IOException {
+        // given
+        String json = ("{\n" +
+                "    \"httpRequest\": {\n" +
+                "        \"body\" : {\n" +
+                "            \"type\" : \"JSON\",\n" +
+                "            \"value\" : \"{'employees':[{'firstName':'John', 'lastName':'Doe'}]}\"\n" +
+                "        }\n" +
+                "    }\n" +
+                "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+                .setHttpRequest(
+                        new HttpRequestDTO()
+                                .setBody(new StringBodyDTO(new StringBody("{'employees':[{'firstName':'John', 'lastName':'Doe'}]}", Body.Type.JSON)))
+                ), expectationDTO);
+    }
+
 
     @Test
     public void shouldParseJSONWithXPathStringBody() throws IOException {

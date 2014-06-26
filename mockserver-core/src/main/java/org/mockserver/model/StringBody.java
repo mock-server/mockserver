@@ -24,6 +24,10 @@ public class StringBody extends Body {
         return new StringBody(body, Type.XPATH);
     }
 
+    public static StringBody json(String body) {
+        return new StringBody(body, Type.JSON);
+    }
+
     public String getValue() {
         return value;
     }

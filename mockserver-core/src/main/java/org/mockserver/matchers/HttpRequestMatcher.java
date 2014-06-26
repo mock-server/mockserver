@@ -68,6 +68,12 @@ public class HttpRequestMatcher extends EqualsHashCodeToString implements Matche
                 case XPATH:
                     this.bodyMatcher = new XPathStringMatcher(((StringBody) body).getValue());
                     break;
+                case JSON:
+                    this.bodyMatcher = new JsonStringMatcher(((StringBody) body).getValue());
+                    break;
+                case BINARY:
+                    this.bodyMatcher = new BinaryMatcher(((BinaryBody) body).getValue());
+                    break;
             }
         }
         return this;

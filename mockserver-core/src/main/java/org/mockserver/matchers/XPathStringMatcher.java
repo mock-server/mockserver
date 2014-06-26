@@ -19,7 +19,7 @@ import java.io.StringReader;
 /**
  * @author jamesdbloom
  */
-public class XPathStringMatcher extends BodyMatcher implements Matcher<String> {
+public class XPathStringMatcher extends BodyMatcher<String> implements Matcher<String> {
     private static Logger logger = LoggerFactory.getLogger(XPathStringMatcher.class);
     private final String matcher;
     private XPathExpression xpathExpression = null;

@@ -599,10 +599,10 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 	<li><strong>query string</strong> - regex or plain text</li>
 	<li><strong>headers</strong> - regex or plain text</li>
 	<li><strong>cookies</strong> - regex or plain text</li>
-	<li><strong>body</strong> - XPath, regex, plain text (exact match), or body parameters</li>
+	<li><strong>body</strong> - XPath, json, regex, plain text (exact match), or body parameters</li>
 </ul>
 
-<p>The body can be matched using plain text, an XPath expression or a regular expression, see <a href="http://saxon.sourceforge.net/saxon6.5.3/expressions.html">XPath Expression Syntax</a> for supported XPath syntax.</p>
+<p>The body can be matched using plain text, a json expression, an XPath expression or a regular expression, see <a href="http://saxon.sourceforge.net/saxon6.5.3/expressions.html">XPath Expression Syntax</a> for supported XPath syntax.</p>
 
 <p>All other matching can be done using plain text or a regular expression, see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">Pattern (Java Platform SE 7)</a> for supported regular expression syntax.</p>
 
@@ -901,7 +901,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 <pre><code class="code xml">&lt;<span class="element">plugin</span>&gt;
     &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;
     &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-maven-plugin</span>&lt;/<span class="element">artifactId</span>&gt;
-    &lt;<span class="element">version</span>&gt;<span class="element_value">3.0</span>&lt;/<span class="element">version</span>&gt;
+    &lt;<span class="element">version</span>&gt;<span class="element_value">3.1</span>&lt;/<span class="element">version</span>&gt;
     &lt;<span class="element">configuration</span>&gt;
         &lt;<span class="element">serverPort</span>&gt;<span class="element_value">1080</span>&lt;/<span class="element">serverPort</span>&gt;
         &lt;<span class="element">serverSecurePort</span>&gt;<span class="element_value">1082</span>&lt;/<span class="element">serverSecurePort</span>&gt;
@@ -938,7 +938,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 <pre><code class="code xml"> &lt;<span class="element">plugin</span>&gt;
      &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;
      &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-maven-plugin</span>&lt;/<span class="element">artifactId</span>&gt;
-     &lt;<span class="element">version</span>&gt;<span class="element_value">3.0</span>&lt;/<span class="element">version</span>&gt;
+     &lt;<span class="element">version</span>&gt;<span class="element_value">3.1</span>&lt;/<span class="element">version</span>&gt;
      &lt;<span class="element">configuration</span>&gt;
         &lt;<span class="element">serverPort</span>&gt;<span class="element_value">1080</span>&lt;/<span class="element">serverPort</span>&gt;
         &lt;<span class="element">serverSecurePort</span>&gt;<span class="element_value">1082</span>&lt;/<span class="element">serverSecurePort</span>&gt;
@@ -1046,7 +1046,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 &lt;<span class="element">dependency</span>&gt;
      &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;<span class="element">/groupId</span>&gt;
      &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-netty</span>&lt;<span class="element">/artifactId</span>&gt;
-     &lt;<span class="element">version</span>&gt;<span class="element_value">3.0</span>&lt;<span class="element">/version</span>&gt;
+     &lt;<span class="element">version</span>&gt;<span class="element_value">3.1</span>&lt;<span class="element">/version</span>&gt;
 &lt;<span class="element">/dependency</span>&gt;</code></pre>
 
 <p>To start the server and create a client the simplest way is to the start factory methods ClientAndServer.startClientAndServer or ClientAndProxy.startClientAndProxy as follows:</p>
@@ -1089,9 +1089,9 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 <p>MockServer can be run directly from the command line and using Embedded Jetty as follow:</p>
 
 <ol>
-	<li><p>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/3.0/mockserver-netty-3.0-jar-with-dependencies.jar">mockserver-netty-3.0-jar-with-dependencies.jar</a> from Maven Central</p></li>
+	<li><p>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/3.1/mockserver-netty-3.1-jar-with-dependencies.jar">mockserver-netty-3.1-jar-with-dependencies.jar</a> from Maven Central</p></li>
 	<li>
-		<code class="code inline">java -jar &lt;path to mockserver-netty-3.0-jar-with-dependencies.jar&gt; -serverPort &lt;port&gt;</code>
+		<code class="code inline">java -jar &lt;path to mockserver-netty-3.1-jar-with-dependencies.jar&gt; -serverPort &lt;port&gt;</code>
 	</li>
 </ol>
 
@@ -1119,7 +1119,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p>For example:</p>
 
-<pre><code class="code">java -jar ~/Downloads/mockserver-netty-3.0-jar-with-dependencies.jar -serverPort 8080 -proxyPort 9090</code></pre>
+<pre><code class="code">java -jar ~/Downloads/mockserver-netty-3.1-jar-with-dependencies.jar -serverPort 8080 -proxyPort 9090</code></pre>
 
 <a name="vertx-module" class="anchor" href="#vertx-module">&nbsp;</a>
 
@@ -1150,8 +1150,8 @@ vertx runmod org.mock-server~mockserver-vertx~2.9</code></pre>
 <p>To run as a WAR deployed on any JEE web server:</p>
 
 <ol>
-	<li>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-war/3.0/mockserver-war-3.0.war">mockserver-war-3.0.war</a> from Maven Central</li>
-	<li>deploy <strong>mockserver-war-3.0.war</strong> to any JEE web server</li>
+	<li>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-war/3.1/mockserver-war-3.1.war">mockserver-war-3.1.war</a> from Maven Central</li>
+	<li>deploy <strong>mockserver-war-3.1.war</strong> to any JEE web server</li>
 </ol>
 
 <p><strong>WAR Context Path</strong></p>
@@ -1185,7 +1185,7 @@ cd mockserver</code></pre>
 
 <p>This will produce a jar file under the target directory called, as follows:</p>
 
-<pre><code class="code">mockserver-netty/target/mockserver-netty-3.0-jar-with-dependencies.jar</code></pre>
+<pre><code class="code">mockserver-netty/target/mockserver-netty-3.1-jar-with-dependencies.jar</code></pre>
 
 <p>Run the MockServer then using the executable jar as per the instruction above in <a href="#running-from-command-line">Running From The Command Line</a></p>
 
@@ -1592,10 +1592,12 @@ xmlHttpRequest.send(JSON.stringify({
 	<li><strong>query string</strong> - regex or plain text</li>
 	<li><strong>headers</strong> - regex or plain text</li>
 	<li><strong>cookies</strong> - regex or plain text</li>
-	<li><strong>body</strong> - XPath, regex, plain text (exact match), or body parameters</li>
+	<li><strong>body</strong> - XPath, json, regex, plain text (exact match), or body parameters</li>
 </ul>
 
-<p>The body can be matched using plain text, an XPath expression or a regular expression, see <a href="http://saxon.sourceforge.net/saxon6.5.3/expressions.html">XPath Expression Syntax</a> for supported XPath syntax.</p>
+<p>The body can be matched using plain text, a json expression, an XPath expression or a regular expression, see <a href="http://saxon.sourceforge.net/saxon6.5.3/expressions.html">XPath Expression Syntax</a> for supported XPath syntax.</p>
+
+<p>A json expressions is a valid json object.  When a json expression is matched against a request body only fields in the json expression are matched, any extra fields in the request body not specified in the json expression will be ignored, in addition the order of fields in the body will be ignored.</p>
 
 <p>All other matching can be done using plain text or a regular expression, see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">Pattern (Java Platform SE 7)</a> for supported regular expression syntax.</p>
 
@@ -1667,13 +1669,14 @@ xmlHttpRequest.send(JSON.stringify({
     <span class="keyword">public</span> HttpRequest withQueryStringParameter(Parameter parameter);
 
     <span class="comment">/**
-     * The body to match on such as <span class="string_literal">"{username: 'foo', password: 'bar'}"</span> or a regex
+     * The body to match on such as <span class="string_literal">"this is an exact string body"</span> or a json expression such as <span class="string_literal">"{username: 'foo', password: 'bar'}"</span> or a regex
      * (see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>)
      * or an XPath expression which returns one or more values or evaluates to true
      * (see <a href="http://saxon.sourceforge.net/saxon6.5.3/expressions.html">http://saxon.sourceforge.net/saxon6.5.3/expressions.html</a>)
      *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">body</span> the body on such as <span class="string_literal">"{username: 'foo', password: 'bar'}"</span>
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">body</span> the body on such as <span class="string_literal">"this is an exact string body"</span>
      *             or a regex such as <span class="string_literal">"username[a-z]{4}"</span>
+     *             or a json expression such as <span class="string_literal">"{username: 'foo', password: 'bar'}"</span>
      *             or an XPath such as <span class="string_literal">"/element[key = 'some_key' and value = 'some_value']"</span>
      */</span>
     <span class="keyword">public</span> HttpRequest withBody(String body);
@@ -1682,11 +1685,14 @@ xmlHttpRequest.send(JSON.stringify({
      * The body match rules on such as using one of the Body subclasses as follows:
      *
      * exact string match:
-     *   - exact(<span class="string_literal">"{username: 'foo', password: 'bar'}"</span>); or
+     *   - exact(<span class="string_literal">"this is an exact string body"</span>); or
      *   - <span class="keyword">new</span> StringBody(<span class="string_literal">"{username: 'foo', password: 'bar'}"</span>, Body.Type.<span class="constant">EXACT</span>)
      * exact match:
      *   - regex(<span class="string_literal">"username[a-z]{4}"</span>); or
      *   - <span class="keyword">new</span> StringBody(<span class="string_literal">"username[a-z]{4}"</span>, Body.Type.<span class="constant">REGEX</span>);
+     * json match:
+     *   - json(<span class="string_literal">"{username: 'foo', password: 'bar'}"</span>); or
+     *   - <span class="keyword">new</span> StringBody(<span class="string_literal">"{username: 'foo', password: 'bar'}"</span>, Body.Type.<span class="constant">JSON</span>);
      * xpath match:
      *   - xpath(<span class="string_literal">"/element[key = 'some_key' and value = 'some_value']"</span>); or
      *   - <span class="keyword">new</span> StringBody(<span class="string_literal">"/element[key = 'some_key' and value = 'some_value']"</span>, Body.Type.<span class="constant">XPATH</span>);
@@ -1701,6 +1707,7 @@ xmlHttpRequest.send(JSON.stringify({
      *     );
      *
      * for more details of the supported regex syntax see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>
+     * for more details of the supported json syntax see <a href="http://jsonassert.skyscreamer.org">http://jsonassert.skyscreamer.org</a>
      * for more detail of XPath syntax see <a href="http://saxon.sourceforge.net/saxon6.5.3/expressions.html">http://saxon.sourceforge.net/saxon6.5.3/expressions.html</a>
      *
      * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">body</span> an instance of one of the Body subclasses including StringBody or ParameterBody
@@ -1777,7 +1784,7 @@ xmlHttpRequest.send(JSON.stringify({
     <span class="string_literal">"path"</span>: <span class="string_literal">""</span>,
     <span class="string_literal">"queryParameters"</span>: []
     <span class="string_literal">"body"</span>: {
-       <span class="string_literal">"type"</span>: <span class="annotation">&lt;</span><span class="string_literal">"REGEX"</span> <span class="annotation">or</span> <span class="string_literal">"EXACT"</span> <span class="annotation">or</span> <span class="string_literal">"XPATH"</span> <span class="annotation">or</span> <span class="string_literal">"PARAMETERS"</span><span class="annotation">&gt;</span>,
+       <span class="string_literal">"type"</span>: <span class="annotation">&lt;</span><span class="string_literal">"EXACT"</span> <span class="annotation">or</span> <span class="string_literal">"REGEX"</span> <span class="annotation">or</span> <span class="string_literal">"JSON"</span> <span class="annotation">or</span> <span class="string_literal">"XPATH"</span> <span class="annotation">or</span> <span class="string_literal">"PARAMETERS"</span><span class="annotation">&gt;</span>,
        <span class="string_literal">"value"</span>: <span class="string_literal">""</span> <span class="annotation">( or</span> <span class="string_literal">"parameters"</span> <span class="annotation">as shown in more detail below )</span>
     },
     <span class="string_literal">"cookies"</span>: [],
@@ -1820,10 +1827,11 @@ xmlHttpRequest.send(JSON.stringify({
 
 <pre><code class="code"><span class="string_literal">"EXACT"</span>
 <span class="string_literal">"REGEX"</span>
+<span class="string_literal">"JSON"</span>
 <span class="string_literal">"XPATH"</span>
 <span class="string_literal">"PARAMETERS"</span></code></pre>
 
-<p>When the <span class="string_literal">"type"</span> field has a value of <span class="string_literal">"EXACT"</span>, <span class="string_literal">"REGEX"</span> or <span class="string_literal">"XPATH"</span> the other field of <span class="string_literal">"body"</span>" should be <span class="string_literal">"value"</span> and it should provide a string to perform the match against, as shown in the example above.</p>
+<p>When the <span class="string_literal">"type"</span> field has a value of <span class="string_literal">"EXACT"</span>, <span class="string_literal">"REGEX"</span>, <span class="string_literal">"JSON"</span> or <span class="string_literal">"XPATH"</span> the other field of <span class="string_literal">"body"</span>" should be <span class="string_literal">"value"</span> and it should provide a string to perform the match against, as shown in the example above.</p>
 <p>When the <span class="string_literal">"type"</span> field has a value of <span class="string_literal">"PARAMETERS"</span> the other field of <span class="string_literal">"body"</span>" should be <span class="string_literal">"parameters"</span> and it should provide a list of body parameters using the following syntax:</p>
 
 <pre><code class="code">{
@@ -2114,7 +2122,31 @@ Times.exactly(<span class="keyword">int</span> count);</code></pre>
 
 <h2>Verifying Behaviour</h2>
 
-<p>To verify that the system under test has sent a request it must be configured to use the MockServer proxy.  The following examples show how to do this with different HTTP clients.</p>
+<p>Request can be verified in two ways:</p>
+
+<ul>
+	<li><strong>MockServer</strong> - the MockServer records all requests made to the MockServer and can be used to verify which requests have been made</li>
+	<li><strong>Proxy</strong> - the proxy records all requests that are proxied and can be used to verify which requests have been made</li>
+</ul>
+
+<h3>MockServer Verification</h3>
+
+<p>To verify that the system under test has sent a request to the MockServer use the verify method of the MockServerClient as follows:</p>
+
+ <pre><code class="code"><span class="keyword">new</span> MockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">9090</span>).verify(
+        request()
+                .withMethod(<span class="string_literal">"POST"</span>)
+                .withPath(<span class="string_literal">"/login"</span>)
+                .withBody(exact(<span class="string_literal">"{username: 'foo', password: 'bar'}"</span>))
+                .withCookies(
+                        new Cookie(<span class="string_literal">"sessionId"</span>, <span class="string_literal">".*"</span>)
+                ),
+        Times.exactly(<span class="numeric_literal">1</span>)
+);</code></pre>
+
+<h3>Proxy Verification</h3>
+
+<p>In addition to verifying request that are being mocked by the MockServer it is also possible to verify requests not being mocked using the proxy.  To do this the system under test must be configured to use the MockServer proxy.  The following examples show how to do this with different HTTP clients.</p>
 
 <h4>Jetty HttpClient 9.x</h4>
 
@@ -2507,9 +2539,9 @@ xmlHttpRequest.send(JSON.stringify({
 <p>The simplest way to run and download MockServer is by using the fully stand alone web server embedded with all dependencies that mocks HTTP and HTTPS requests, as follows:</p>
 
 <ol>
-	<li><p>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/3.0/mockserver-netty-3.0-jar-with-dependencies.jar">mockserver-netty-3.0-jar-with-dependencies.jar</a> from Maven Central</p></li>
+	<li><p>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/3.1/mockserver-netty-3.1-jar-with-dependencies.jar">mockserver-netty-3.1-jar-with-dependencies.jar</a> from Maven Central</p></li>
 	<li>
-		<code class="code inline">java -jar &lt;path to mockserver-netty-3.0-jar-with-dependencies.jar&gt; -serverPort &lt;port&gt;</code>
+		<code class="code inline">java -jar &lt;path to mockserver-netty-3.1-jar-with-dependencies.jar&gt; -serverPort &lt;port&gt;</code>
 	</li>
 </ol>
 

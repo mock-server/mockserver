@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 /**
  * @author jamesdbloom
  */
-public class ExactStringMatcher extends BodyMatcher implements Matcher<String> {
+public class ExactStringMatcher extends BodyMatcher<String> implements Matcher<String> {
     private static Logger logger = LoggerFactory.getLogger(ExactStringMatcher.class);
     private final String matcher;
 
@@ -51,6 +51,6 @@ public class ExactStringMatcher extends BodyMatcher implements Matcher<String> {
 
     @Override
     public String[] fieldsExcludedFromEqualsAndHashCode() {
-        return new String[]{"logger", "xpathExpression"};
+        return new String[]{"logger"};
     }
 }

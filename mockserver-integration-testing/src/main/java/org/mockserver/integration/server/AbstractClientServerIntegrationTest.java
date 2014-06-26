@@ -19,11 +19,12 @@ import static org.mockserver.configuration.SystemProperties.bufferSize;
 import static org.mockserver.configuration.SystemProperties.maxTimeout;
 import static org.mockserver.matchers.Times.exactly;
 import static org.mockserver.matchers.Times.once;
+import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.HttpForward.forward;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.ParameterBody.params;
-import static org.mockserver.model.StringBody.exact;
+import static org.mockserver.model.StringBody.*;
 
 /**
  * @author jamesdbloom
@@ -493,7 +494,7 @@ public abstract class AbstractClientServerIntegrationTest {
     @Test
     public void clientCanCallServerMatchBodyWithXPath() {
         // when
-        mockServerClient.when(new HttpRequest().withBody(new StringBody("/bookstore/book[price>35]/price", Body.Type.XPATH)), exactly(2)).respond(new HttpResponse().withBody("some_body"));
+        mockServerClient.when(new HttpRequest().withBody(xpath("/bookstore/book[price>35]/price")), exactly(2)).respond(new HttpResponse().withBody("some_body"));
 
         // then
         // - in http
@@ -573,6 +574,103 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
+    public void clientCanCallServerMatchBodyWithJson() {
+        // when
+        mockServerClient.when(new HttpRequest().withBody(json("{\n" +
+                "    \"GlossDiv\": {\n" +
+                "        \"title\": \"S\", \n" +
+                "        \"GlossList\": {\n" +
+                "            \"GlossEntry\": {\n" +
+                "                \"ID\": \"SGML\", \n" +
+                "                \"SortAs\": \"SGML\", \n" +
+                "                \"GlossTerm\": \"Standard Generalized Markup Language\", \n" +
+                "                \"Acronym\": \"SGML\", \n" +
+                "                \"Abbrev\": \"ISO 8879:1986\", \n" +
+                "                \"GlossDef\": {\n" +
+                "                    \"para\": \"A meta-markup language, used to create markup languages such as DocBook.\", \n" +
+                "                    \"GlossSeeAlso\": [\n" +
+                "                        \"GML\", \n" +
+                "                        \"XML\"\n" +
+                "                    ]\n" +
+                "                }, \n" +
+                "                \"GlossSee\": \"markup\"\n" +
+                "            }\n" +
+                "        }\n" +
+                "    }\n" +
+                "}")), exactly(2)).respond(new HttpResponse().withBody("some_body"));
+
+        // then
+        // - in http
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                                .withMethod("POST")
+                                .withBody("{\n" +
+                                        "    \"title\": \"example glossary\", \n" +
+                                        "    \"GlossDiv\": {\n" +
+                                        "        \"title\": \"S\", \n" +
+                                        "        \"GlossList\": {\n" +
+                                        "            \"GlossEntry\": {\n" +
+                                        "                \"ID\": \"SGML\", \n" +
+                                        "                \"SortAs\": \"SGML\", \n" +
+                                        "                \"GlossTerm\": \"Standard Generalized Markup Language\", \n" +
+                                        "                \"Acronym\": \"SGML\", \n" +
+                                        "                \"Abbrev\": \"ISO 8879:1986\", \n" +
+                                        "                \"GlossDef\": {\n" +
+                                        "                    \"para\": \"A meta-markup language, used to create markup languages such as DocBook.\", \n" +
+                                        "                    \"GlossSeeAlso\": [\n" +
+                                        "                        \"GML\", \n" +
+                                        "                        \"XML\"\n" +
+                                        "                    ]\n" +
+                                        "                }, \n" +
+                                        "                \"GlossSee\": \"markup\"\n" +
+                                        "            }\n" +
+                                        "        }\n" +
+                                        "    }\n" +
+                                        "}")
+                )
+        );
+        // - in https
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                                .withMethod("POST")
+                                .withBody("{\n" +
+                                        "    \"title\": \"example glossary\", \n" +
+                                        "    \"GlossDiv\": {\n" +
+                                        "        \"title\": \"S\", \n" +
+                                        "        \"GlossList\": {\n" +
+                                        "            \"GlossEntry\": {\n" +
+                                        "                \"ID\": \"SGML\", \n" +
+                                        "                \"SortAs\": \"SGML\", \n" +
+                                        "                \"GlossTerm\": \"Standard Generalized Markup Language\", \n" +
+                                        "                \"Acronym\": \"SGML\", \n" +
+                                        "                \"Abbrev\": \"ISO 8879:1986\", \n" +
+                                        "                \"GlossDef\": {\n" +
+                                        "                    \"para\": \"A meta-markup language, used to create markup languages such as DocBook.\", \n" +
+                                        "                    \"GlossSeeAlso\": [\n" +
+                                        "                        \"GML\", \n" +
+                                        "                        \"XML\"\n" +
+                                        "                    ]\n" +
+                                        "                }, \n" +
+                                        "                \"GlossSee\": \"markup\"\n" +
+                                        "            }\n" +
+                                        "        }\n" +
+                                        "    }\n" +
+                                        "}")
+                )
+        );
+    }
+
+    @Test
     public void clientCanSetupExpectationForPDF() throws IOException {
         // when
         byte[] pdfBytes = IOUtils.readFully(getClass().getClassLoader().getResourceAsStream("test.pdf"), -1, true);
@@ -635,6 +733,111 @@ public abstract class AbstractClientServerIntegrationTest {
                 .when(
                         request()
                                 .withPath("/ws/rest/user/[0-9]+/icon/[0-9]+\\.png")
+                )
+                .respond(
+                        response()
+                                .withStatusCode(HttpStatusCode.OK_200.code())
+                                .withHeaders(
+                                        new Header(HttpHeaders.CONTENT_TYPE, MediaType.PNG.toString()),
+                                        new Header(HttpHeaders.CONTENT_DISPOSITION, "form-data; name=\"test.png\"; filename=\"test.png\"")
+                                )
+                                .withBody(pngBytes)
+                );
+
+        // then
+        // - in http
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withHeaders(
+                                new Header(HttpHeaders.CONTENT_TYPE, MediaType.PNG.toString()),
+                                new Header(HttpHeaders.CONTENT_DISPOSITION, "form-data; name=\"test.png\"; filename=\"test.png\"")
+                        )
+                        .withBody(pngBytes),
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "/ws/rest/user/1/icon/1.png")
+                                .withMethod("GET")
+                )
+        );
+        // - in https
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withHeaders(
+                                new Header(HttpHeaders.CONTENT_TYPE, MediaType.PNG.toString()),
+                                new Header(HttpHeaders.CONTENT_DISPOSITION, "form-data; name=\"test.png\"; filename=\"test.png\"")
+                        )
+                        .withBody(pngBytes),
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "/ws/rest/user/1/icon/1.png")
+                                .withMethod("GET")
+                )
+        );
+    }
+
+    @Test
+    public void clientCanSetupExpectationForPDFAsBinaryBody() throws IOException {
+        // when
+        byte[] pdfBytes = IOUtils.readFully(getClass().getClassLoader().getResourceAsStream("test.pdf"), -1, true);
+        mockServerClient
+                .when(
+                        request().withBody(binary(pdfBytes))
+                )
+                .respond(
+                        response()
+                                .withStatusCode(HttpStatusCode.OK_200.code())
+                                .withHeaders(
+                                        new Header(HttpHeaders.CONTENT_TYPE, MediaType.PDF.toString()),
+                                        new Header(HttpHeaders.CONTENT_DISPOSITION, "form-data; name=\"test.pdf\"; filename=\"test.pdf\""),
+                                        new Header(HttpHeaders.CACHE_CONTROL, "must-revalidate, post-check=0, pre-check=0")
+                                )
+                                .withBody(pdfBytes)
+                );
+
+        // then
+        // - in http
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withHeaders(
+                                new Header(HttpHeaders.CONTENT_TYPE, MediaType.PDF.toString()),
+                                new Header(HttpHeaders.CONTENT_DISPOSITION, "form-data; name=\"test.pdf\"; filename=\"test.pdf\""),
+                                new Header(HttpHeaders.CACHE_CONTROL, "must-revalidate, post-check=0, pre-check=0")
+                        )
+                        .withBody(pdfBytes),
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "/ws/rest/user/1/document/2.pdf")
+                                .withMethod("GET")
+                )
+        );
+        // - in https
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withHeaders(
+                                new Header(HttpHeaders.CONTENT_TYPE, MediaType.PDF.toString()),
+                                new Header(HttpHeaders.CONTENT_DISPOSITION, "form-data; name=\"test.pdf\"; filename=\"test.pdf\""),
+                                new Header(HttpHeaders.CACHE_CONTROL, "must-revalidate, post-check=0, pre-check=0")
+                        )
+                        .withBody(pdfBytes),
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "/ws/rest/user/1/document/2.pdf")
+                                .withMethod("GET")
+                )
+        );
+    }
+
+    @Test
+    public void clientCanSetupExpectationForJPGAsBinaryBody() throws IOException {
+        // when
+        byte[] pngBytes = IOUtils.readFully(getClass().getClassLoader().getResourceAsStream("test.png"), -1, true);
+        mockServerClient
+                .when(
+                        request().withBody(binary(pngBytes))
                 )
                 .respond(
                         response()
@@ -1574,6 +1777,102 @@ public abstract class AbstractClientServerIntegrationTest {
                                         "</book>\n" +
                                         "\n" +
                                         "</bookstore>", Body.Type.EXACT))
+                )
+        );
+    }
+
+    @Test
+    public void clientCanCallServerNegativeMatchJsonBodyOnly() {
+        // when
+        mockServerClient.when(new HttpRequest().withBody(json("{\n" +
+                "    \"title\": \"example glossary\", \n" +
+                "    \"GlossDiv\": {\n" +
+                "        \"title\": \"wrong_value\", \n" +
+                "        \"GlossList\": {\n" +
+                "            \"GlossEntry\": {\n" +
+                "                \"ID\": \"SGML\", \n" +
+                "                \"SortAs\": \"SGML\", \n" +
+                "                \"GlossTerm\": \"Standard Generalized Markup Language\", \n" +
+                "                \"Acronym\": \"SGML\", \n" +
+                "                \"Abbrev\": \"ISO 8879:1986\", \n" +
+                "                \"GlossDef\": {\n" +
+                "                    \"para\": \"A meta-markup language, used to create markup languages such as DocBook.\", \n" +
+                "                    \"GlossSeeAlso\": [\n" +
+                "                        \"GML\", \n" +
+                "                        \"XML\"\n" +
+                "                    ]\n" +
+                "                }, \n" +
+                "                \"GlossSee\": \"markup\"\n" +
+                "            }\n" +
+                "        }\n" +
+                "    }\n" +
+                "}")), exactly(2)).respond(new HttpResponse().withBody("some_body"));
+
+        // then
+        // - in http
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                                .withMethod("POST")
+                                .withBody("{\n" +
+                                        "    \"title\": \"example glossary\", \n" +
+                                        "    \"GlossDiv\": {\n" +
+                                        "        \"title\": \"S\", \n" +
+                                        "        \"GlossList\": {\n" +
+                                        "            \"GlossEntry\": {\n" +
+                                        "                \"ID\": \"SGML\", \n" +
+                                        "                \"SortAs\": \"SGML\", \n" +
+                                        "                \"GlossTerm\": \"Standard Generalized Markup Language\", \n" +
+                                        "                \"Acronym\": \"SGML\", \n" +
+                                        "                \"Abbrev\": \"ISO 8879:1986\", \n" +
+                                        "                \"GlossDef\": {\n" +
+                                        "                    \"para\": \"A meta-markup language, used to create markup languages such as DocBook.\", \n" +
+                                        "                    \"GlossSeeAlso\": [\n" +
+                                        "                        \"GML\", \n" +
+                                        "                        \"XML\"\n" +
+                                        "                    ]\n" +
+                                        "                }, \n" +
+                                        "                \"GlossSee\": \"markup\"\n" +
+                                        "            }\n" +
+                                        "        }\n" +
+                                        "    }\n" +
+                                        "}")
+                )
+        );
+        // - in https
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                                .withMethod("POST")
+                                .withBody("{\n" +
+                                        "    \"title\": \"example glossary\", \n" +
+                                        "    \"GlossDiv\": {\n" +
+                                        "        \"title\": \"S\", \n" +
+                                        "        \"GlossList\": {\n" +
+                                        "            \"GlossEntry\": {\n" +
+                                        "                \"ID\": \"SGML\", \n" +
+                                        "                \"SortAs\": \"SGML\", \n" +
+                                        "                \"GlossTerm\": \"Standard Generalized Markup Language\", \n" +
+                                        "                \"Acronym\": \"SGML\", \n" +
+                                        "                \"Abbrev\": \"ISO 8879:1986\", \n" +
+                                        "                \"GlossDef\": {\n" +
+                                        "                    \"para\": \"A meta-markup language, used to create markup languages such as DocBook.\", \n" +
+                                        "                    \"GlossSeeAlso\": [\n" +
+                                        "                        \"GML\", \n" +
+                                        "                        \"XML\"\n" +
+                                        "                    ]\n" +
+                                        "                }, \n" +
+                                        "                \"GlossSee\": \"markup\"\n" +
+                                        "            }\n" +
+                                        "        }\n" +
+                                        "    }\n" +
+                                        "}")
                 )
         );
     }

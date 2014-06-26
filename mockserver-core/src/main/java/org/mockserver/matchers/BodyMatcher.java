@@ -5,5 +5,5 @@ import org.mockserver.model.EqualsHashCodeToString;
 /**
  * @author jamesdbloom
  */
-public abstract class BodyMatcher extends EqualsHashCodeToString implements Matcher<String> {
+public abstract class BodyMatcher<T> extends EqualsHashCodeToString implements Matcher<T> {
 }

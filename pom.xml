@@ -209,6 +209,11 @@
                 <artifactId>jackson-core-asl</artifactId>
                 <version>${jackson.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.skyscreamer</groupId>
+                <artifactId>jsonassert</artifactId>
+                <version>1.2.3</version>
+            </dependency>
 
             <!-- commons & guava -->
             <dependency>

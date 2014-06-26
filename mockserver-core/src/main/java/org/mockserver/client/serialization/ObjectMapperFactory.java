@@ -73,6 +73,7 @@ public class ObjectMapperFactory {
                         switch (type) {
                             case EXACT:
                             case REGEX:
+                            case JSON:
                             case XPATH:
                                 if (jp.getCurrentToken() == JsonToken.FIELD_NAME && jp.getText().equals("value")) {
                                     jp.nextToken();

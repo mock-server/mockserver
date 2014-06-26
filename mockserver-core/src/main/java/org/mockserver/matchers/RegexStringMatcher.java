@@ -9,7 +9,7 @@ import java.util.regex.PatternSyntaxException;
 /**
  * @author jamesdbloom
  */
-public class RegexStringMatcher extends BodyMatcher implements Matcher<String> {
+public class RegexStringMatcher extends BodyMatcher<String> implements Matcher<String> {
     private static Logger logger = LoggerFactory.getLogger(RegexStringMatcher.class);
     private final String matcher;
 
@@ -78,6 +78,6 @@ public class RegexStringMatcher extends BodyMatcher implements Matcher<String> {
 
     @Override
     public String[] fieldsExcludedFromEqualsAndHashCode() {
-        return new String[]{"logger", "xpathExpression"};
+        return new String[]{"logger"};
     }
 }

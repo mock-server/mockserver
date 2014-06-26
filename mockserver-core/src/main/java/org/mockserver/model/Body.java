@@ -18,6 +18,7 @@ public abstract class Body extends EqualsHashCodeToString {
     public enum Type {
         PARAMETERS,
         XPATH,
+        JSON,
         REGEX,
         EXACT,
         BINARY
