@@ -1,7 +1,7 @@
 package org.mockserver.mappers;
 
-import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import com.google.common.base.Charsets;
+import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import org.junit.Test;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
@@ -10,8 +10,9 @@ import org.mockserver.model.HttpStatusCode;
 
 import java.util.Arrays;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -26,7 +27,7 @@ public class MockServerToNettyResponseMapperTest {
         HttpResponse httpResponse = new HttpResponse();
         httpResponse.withStatusCode(HttpStatusCode.OK_200.code());
         httpResponse.withBody("somebody");
-        httpResponse.withHeaders(new Header("headerName1", "headerValue1"), new Header("headerName2", "headerValue2"));
+        httpResponse.withHeaders(new Header("headerName1", "headerValue1"), new Header("headerName2", "headerValue2_1", "headerValue2_2"));
         httpResponse.withCookies(new Cookie("cookieName1", "cookieValue1"), new Cookie("cookieName2", "cookieValue2"));
 
         // when
@@ -36,7 +37,7 @@ public class MockServerToNettyResponseMapperTest {
         assertEquals(HttpStatusCode.OK_200.code(), defaultFullHttpResponse.getStatus().code());
         assertEquals("somebody", defaultFullHttpResponse.content().toString(Charsets.UTF_8));
         assertEquals("headerValue1", defaultFullHttpResponse.headers().get("headerName1"));
-        assertEquals("headerValue2", defaultFullHttpResponse.headers().get("headerName2"));
+        assertThat(defaultFullHttpResponse.headers().getAll("headerName2"), containsInAnyOrder("headerValue2_1", "headerValue2_2"));
         assertEquals(Arrays.asList(
                 "cookieName1=cookieValue1",
                 "cookieName2=cookieValue2"

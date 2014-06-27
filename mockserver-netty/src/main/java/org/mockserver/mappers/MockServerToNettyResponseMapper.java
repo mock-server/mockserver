@@ -35,7 +35,7 @@ public class MockServerToNettyResponseMapper {
         if (httpResponse.getHeaders() != null) {
             for (Header header : httpResponse.getHeaders()) {
                 for (String value : header.getValues()) {
-                    httpServletResponse.headers().set(header.getName(), value);
+                    httpServletResponse.headers().add(header.getName(), value);
                 }
             }
         }
