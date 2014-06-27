@@ -878,6 +878,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 	<li>via a <a href="#maven-plugin"><strong>Maven Plugin</strong></a> as part of a build cycle</li>
 	<li><a href="#client-api"><strong>programmatically via an API</strong></a> in an <span class="annotation">@Before</span> or <span class="annotation">@After</span> method</li>
 	<li><a href="#running-from-command-line"><strong>from the command line</strong></a> as a stand-alone process in a test environment</li>
+	<li>as a <a href="#docker-container"><strong>Docker container</strong></a> in any Docker enabled environment</li>
 	<li>as a <a href="#vertx-module"><strong>Vert.X module</strong></a> as part of an existing Vert.X environment</li>
 	<li>as a <a href="#deployable-war"><strong>deployable WAR</strong></a> to an existing application server</li>
 </ul>
@@ -1121,11 +1122,42 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <pre><code class="code">java -jar ~/Downloads/mockserver-netty-3.1-jar-with-dependencies.jar -serverPort 8080 -proxyPort 9090</code></pre>
 
+<a name="docker-container" class="anchor" href="#docker-container">&nbsp;</a>
+
+<h4><a href="https://registry.hub.docker.com/u/jamesdbloom/mockserver/">Docker Container</a></h4>
+
+<p>MockServer can be run as a <a href="https://registry.hub.docker.com/u/jamesdbloom/mockserver/">Docker container</a>.</p>
+
+<p>First, you'll need to <a href="https://docs.docker.com/">install Docker</a>.</p>
+
+<p>Then to run MockServer as a Docker container run the following command:</p>
+
+<pre><code class="code">docker run -d -P jamesdbloom/mockserver</code></pre>
+
+<p>This command will map the ports exposed by the MockServer and Proxy to dynamic ports using the <strong>-P</strong> option.  To specify which ports are used you can specify one or more port mappings using the <strong>-p &lt;host port&gt;:&lt;container port&gt;</strong> option.  You only need to specify mapping for ports you need to use, for example, if you are not using the proxy there is no need to provide port mapping options for the proxy ports.</p>
+
+<p>To run MockServer specifying as a Docker container run the following command</p>
+
+<pre><code class="code">docker run -d -p &lt;serverPort&gt;:8080 -p &lt;serverSecurePort&gt;:8090 -p &lt;proxyPort&gt;:9080 -p &lt;proxySecurePort&gt;:9090 jamesdbloom/mockserver</code></pre>
+
+<p><strong>Note</strong>: you only need to specify mapping for ports you need to use, for example, if you are only using the MockServer to mock HTTP endpoints then only specify -p &lt;serverPort&gt;:8080 as follows:</p>
+
+<pre><code class="code">docker run -d -p &lt;serverPort&gt;:8080 jamesdbloom/mockserver</code></pre>
+
+<p>This MockServer docker container exposes the following ports:</p>
+
+<ul>
+	<li><strong>serverPort</strong> 8080</li>
+	<li><strong>serverSecurePort</strong> 8090</li>
+	<li><strong>proxyPort</strong> 9080</li>
+	<li><strong>proxySecurePort</strong> 9090</li>
+</ul>
+
 <a name="vertx-module" class="anchor" href="#vertx-module">&nbsp;</a>
 
 <h4>Vert.X Module</h4>
 
-<p>MockServer can be run as a Vert.X module.</p>
+<p>MockServer can be run as a Vert.X module.  However, support for the Vert.X module was stopped at version 2.9.  This is because Vert.X requires Java 7 and the MockServer Vert.X module was the only MockServer module that relied on Java 7 making the build and development process more complex.</p>
 
 <p>First, you'll need to <a href="http://vertx.io/install.html">install Vert.x</a>.</p>
 
