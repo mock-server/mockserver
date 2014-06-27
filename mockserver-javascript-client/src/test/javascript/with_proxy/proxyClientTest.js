@@ -3,16 +3,16 @@ describe("proxyClient client:", function () {
 
     beforeEach(function () {
         xmlhttp = new XMLHttpRequest();
-        mockServerClient("http://localhost:1080").reset();
-        proxyClient("http://localhost:1090").reset();
+        mockServerClient("localhost", 1080).reset();
+        proxyClient("localhost", 1090).reset();
     });
 
     it("should verify exact number of requests have been sent", function () {
         // given
-        var client = proxyClient("http://localhost:1090");
+        var client = proxyClient("localhost", 1090);
         xmlhttp.open("POST", "http://localhost:1080/somePath", false);
         xmlhttp.send("someBody");
-        mockServerClient("http://localhost:1080").mockSimpleResponse('/somePath', { name: 'value' }, 203);
+        mockServerClient("localhost", 1080).mockSimpleResponse('/somePath', { name: 'value' }, 203);
         xmlhttp.open("POST", "http://localhost:1080/somePath", false);
         xmlhttp.send("someBody");
 
@@ -33,7 +33,7 @@ describe("proxyClient client:", function () {
         xmlhttp.send("someBody");
 
         // when
-        proxyClient("http://localhost:1090").verify(
+        proxyClient("localhost", 1090).verify(
             {
                 'method': 'POST',
                 'path': '/somePath',
@@ -43,7 +43,7 @@ describe("proxyClient client:", function () {
 
     it("should clear proxy", function () {
         // given
-        var client = proxyClient("http://localhost:1090");
+        var client = proxyClient("localhost", 1090);
         xmlhttp.open("POST", "http://localhost:1080/somePath", false);
         xmlhttp.send("someBody");
         xmlhttp.open("POST", "http://localhost:1080/somePath", false);
@@ -77,7 +77,7 @@ describe("proxyClient client:", function () {
 
     it("should reset proxy", function () {
         // given
-        var client = proxyClient("http://localhost:1090");
+        var client = proxyClient("localhost", 1090);
         xmlhttp.open("POST", "http://localhost:1080/somePath", false);
         xmlhttp.send("someBody");
         xmlhttp.open("POST", "http://localhost:1080/somePath", false);

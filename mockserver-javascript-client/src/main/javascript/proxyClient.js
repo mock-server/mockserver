@@ -1,7 +1,8 @@
-var proxyClient = function (proxyUrl) {
+var proxyClient = function (host, port) {
     "use strict";
 
     var xmlhttp = new XMLHttpRequest(),
+        proxyUrl = "http://" + host + ":" + port,
         defaultResponseHeaders = [
             {"name": "Content-Type", "values": ["application/json; charset=utf-8"]},
             {"name": "Cache-Control", "values": ["no-cache, no-store"]}

@@ -22,12 +22,14 @@ else
     echo "Unknown operating system: {$OS}"
 fi
 
+mvn mockserver:runForked
+
 USER_DATA_DIR=google/user/data/`date +'%s'`
 echo "$GOOGLE_CHROME --user-data-dir=$USER_DATA_DIR --no-default-browser-check --no-first-run --disable-default-apps --disable-web-security --enable-extensions file://$(pwd)/SpecRunner.html?proxy=true"
 "$GOOGLE_CHROME" --user-data-dir=$USER_DATA_DIR --no-default-browser-check --no-first-run --disable-default-apps --disable-web-security --enable-extensions --proxy-server="http://localhost:1090" "file://$(pwd)/SpecRunner.html?proxy=true" &
 PID=$!
 
 trap "kill $PID" exit INT TERM
-trap "sleep 1 && rm -rf google" EXIT
+trap "sleep 1 && rm -rf google && mvn mockserver:stopForked" EXIT
 
 wait
