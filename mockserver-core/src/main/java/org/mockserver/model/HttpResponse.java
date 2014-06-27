@@ -69,6 +69,9 @@ public class HttpResponse extends Action {
 
     @JsonIgnore
     public String getBodyAsString() {
+        if (body == null) {
+            return "";
+        }
         return new String(body, Charsets.UTF_8);
     }
 
