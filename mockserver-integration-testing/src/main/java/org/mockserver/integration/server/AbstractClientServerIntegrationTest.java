@@ -428,6 +428,30 @@ public abstract class AbstractClientServerIntegrationTest {
                 .withPath("/some_path"), org.mockserver.client.proxy.Times.exactly(2));
     }
 
+    @Test
+    public void clientCanVerifyRequestsReceivedWithNoBody() {
+        // when
+        mockServerClient.when(new HttpRequest().withPath("/some_path"), exactly(2)).respond(new HttpResponse());
+
+        // then
+        // - in http
+        assertEquals(
+                new HttpResponse()
+                        .withStatusCode(HttpStatusCode.OK_200.code()),
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                                .withPath("/some_path")
+                )
+        );
+        mockServerClient.verify(new HttpRequest()
+                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                .withPath("/some_path"));
+        mockServerClient.verify(new HttpRequest()
+                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                .withPath("/some_path"), org.mockserver.client.proxy.Times.exactly(1));
+    }
+
     @Test(expected = AssertionError.class)
     public void clientCanVerifyNotEnoughRequestsReceived() {
         // when
