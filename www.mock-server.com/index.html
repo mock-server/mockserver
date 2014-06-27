@@ -1120,7 +1120,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p>For example:</p>
 
-<pre><code class="code">java -jar ~/Downloads/mockserver-netty-3.1-jar-with-dependencies.jar -serverPort 8080 -proxyPort 9090</code></pre>
+<pre><code class="code">java -jar ~/Downloads/mockserver-netty-3.1-jar-with-dependencies.jar -serverPort <span class="numeric_literal">8080</span> -proxyPort <span class="numeric_literal">9090</span></code></pre>
 
 <a name="docker-container" class="anchor" href="#docker-container">&nbsp;</a>
 
@@ -1134,15 +1134,15 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <pre><code class="code">docker run -d -P jamesdbloom/mockserver</code></pre>
 
-<p>This command will map the ports exposed by the MockServer and Proxy to dynamic ports using the <strong>-P</strong> option.  To specify which ports are used you can specify one or more port mappings using the <strong>-p &lt;host port&gt;:&lt;container port&gt;</strong> option.  You only need to specify mapping for ports you need to use, for example, if you are not using the proxy there is no need to provide port mapping options for the proxy ports.</p>
+<p>This command will map the ports exposed by the MockServer and Proxy to dynamic ports using the <strong>-P</strong> option.  To specify which ports are used you can specify one or more port mappings using the <strong>-p <span class="annotation">&lt;host port&gt;</span>:<span class="annotation">&lt;container port&gt;</span></strong> option.  You only need to specify mapping for ports you need to use, for example, if you are not using the proxy there is no need to provide port mapping options for the proxy ports.</p>
 
-<p>To run MockServer specifying as a Docker container run the following command</p>
+<p>To run MockServer specifying as a Docker container run the following command (replacing each <strong><span class="annotation">&lt; ... &gt;</span></strong> section with the appropiate port value):</p>
 
-<pre><code class="code">docker run -d -p &lt;serverPort&gt;:8080 -p &lt;serverSecurePort&gt;:8090 -p &lt;proxyPort&gt;:9080 -p &lt;proxySecurePort&gt;:9090 jamesdbloom/mockserver</code></pre>
+<pre><code class="code">docker run -d -p <span class="annotation">&lt;serverPort&gt;</span>:<span class="numeric_literal">8080</span> -p <span class="annotation">&lt;serverSecurePort&gt;</span>:<span class="numeric_literal">8090</span> -p <span class="annotation">&lt;proxyPort&gt;</span>:<span class="numeric_literal">9080</span> -p <span class="annotation">&lt;proxySecurePort&gt;</span>:<span class="numeric_literal">9090</span> jamesdbloom/mockserver</code></pre>
 
-<p><strong>Note</strong>: you only need to specify mapping for ports you need to use, for example, if you are only using the MockServer to mock HTTP endpoints then only specify -p &lt;serverPort&gt;:8080 as follows:</p>
+<p><strong>Note</strong>: you only need to specify mapping for ports you need to use, for example, if you are only using the MockServer to mock HTTP endpoints then only specify <strong>-p <span class="annotation">&lt;serverPort&gt;</span>:<span class="numeric_literal">8080</span></strong> as follows (replacing each <strong><span class="annotation">&lt; ... &gt;</span></strong> section with the appropiate port value):</p>
 
-<pre><code class="code">docker run -d -p &lt;serverPort&gt;:8080 jamesdbloom/mockserver</code></pre>
+<pre><code class="code">docker run -d -p <span class="annotation">&lt;serverPort&gt;</span>:<span class="numeric_literal">8080</span> jamesdbloom/mockserver</code></pre>
 
 <p>This MockServer docker container exposes the following ports:</p>
 
