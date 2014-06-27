@@ -215,7 +215,7 @@ describe("mockServerClient client:", function () {
         var client = mockServerClient("localhost", 1080);
         client.setDefaultHeaders([
             {"name": "Content-Type", "values": ["application/json; charset=utf-8"]},
-            {"name": "X-Test", "values": ["test-value-one", "test-value-two"]}
+            {"name": "X-Test", "values": ["test-value"]}
         ]);
         client.mockSimpleResponse('/somePath', { name: 'value' }, 203);
 
@@ -225,7 +225,7 @@ describe("mockServerClient client:", function () {
 
         expect(xmlhttp.status).toEqual(203);
         expect(xmlhttp.responseText).toEqual('{"name":"value"}');
-        expect(xmlhttp.getResponseHeader("X-Test")).toEqual("test-value-one, test-value-two");
+        expect(xmlhttp.getResponseHeader("X-Test")).toEqual("test-value");
     });
 
     it("should verify request has been received", function () {
