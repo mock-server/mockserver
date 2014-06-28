@@ -1,0 +1,22 @@
+{
+    "httpRequest": {
+        "method": "POST",
+        "path": "/login",
+        "queryParameters": [
+            {
+                "name": "returnUrl",
+                "values": ["/account"]
+            }
+        ],
+        "cookies": [
+            {
+                "name": "sessionId",
+                "values": ["2By8LOhBmaW5nZXJwcmludCIlMDAzMW"]
+            }
+        ],
+        "body": {
+            "type": "EXACT",
+            "value": "{username:'foo', password:'bar'}"
+        }
+    }
+}

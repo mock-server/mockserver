@@ -1,0 +1,52 @@
+# encoding: UTF-8
+require 'hashie'
+require_relative './parameter'
+require_relative './body'
+require_relative './enum'
+
+#
+# A class to model a request in an expectation.
+# @author:: Nayyara Samuel (mailto: nayyara.samuel@opower.com)
+#
+module MockServer::Model
+  # Enum for HTTP methods
+  class HTTPMethod < SymbolizedEnum
+    def allowed_values
+      [:GET, :POST, :PUT, :DELETE]
+    end
+  end
+
+  # Request model
+  class Request < Hashie::Dash
+    include Hashie::Extensions::MethodAccess
+    include Hashie::Extensions::IgnoreUndeclared
+    include Hashie::Extensions::Coercion
+
+    ALLOWED_METHODS = [:GET, :POST, :PUT, :DELETE]
+
+    property :method, required: true, default: :GET
+    property :path, required: true, default: ''
+    property :query_parameters, default: Parameters.new([])
+    property :cookies, default: Parameters.new([])
+    property :headers, default: Parameters.new([])
+    property :body
+
+    coerce_key :method, HTTPMethod
+    coerce_key :path, String
+    coerce_key :query_parameters, Parameters
+    coerce_key :cookies, Parameters
+    coerce_key :headers, Parameters
+    coerce_key :body, Body
+  end
+
+  # DSL methods related to requests
+  module DSL
+    def request(method, path, &_)
+      obj = Request.new(method: method, path: path)
+      yield obj if block_given?
+      obj
+    end
+
+    alias_method :http_request, :request
+  end
+end

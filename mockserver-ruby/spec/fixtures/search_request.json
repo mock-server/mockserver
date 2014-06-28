@@ -1,0 +1,6 @@
+{
+    "httpRequest": {
+        "method": "POST",
+        "path": "/login"
+    }
+}
