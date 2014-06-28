@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>mockserver</artifactId>
+        <groupId>org.mock-server</groupId>
+        <version>3.3-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>mockserver-client-ruby</artifactId>
+    <name>MockServer Ruby Client</name>
+    <description>A ruby client for the MockServer</description>
+    <url>http://www.mock-server.com</url>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.2.1</version>
+                <executions>
+                    <execution>
+                        <id>bundle_install</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>bundle</executable>
+                            <arguments>
+                                <argument>install</argument>
+                            </arguments>
+                            <environmentVariables>
+                                <BUNDLE_GEMFILE>${basedir}/Gemfile</BUNDLE_GEMFILE>
+                            </environmentVariables>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>grunt</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>bundle</executable>
+                            <arguments>
+                                <argument>exec</argument>
+                                <argument>rake</argument>
+                            </arguments>
+                            <environmentVariables>
+                                <BUNDLE_GEMFILE>${basedir}/Gemfile</BUNDLE_GEMFILE>
+                            </environmentVariables>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

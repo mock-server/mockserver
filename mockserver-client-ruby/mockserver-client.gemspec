@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.authors = ['Nayyara Samuel']
   spec.email = ['nayyara.samuel@opower.com']
   spec.summary = %q(A Ruby client for MockServer)
-  spec.required_ruby_version = '~> 1.9.3'
+  spec.required_ruby_version = '>= 1.9.3'
 
   spec.files = `git ls-files -z`.split("\x0")
   spec.executables = spec.files.grep(/^bin\//) { |f| File.basename(f) }

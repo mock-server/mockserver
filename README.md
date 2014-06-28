@@ -24,7 +24,7 @@ Maven Central contains the following MockServer artifacts:
 * [mockserver-war](http://search.maven.org/#search%7Cga%7C1%7Cmockserver-war) - a deployable WAR for mocking HTTP and HTTP requests (that runs on any JEE web server)
 * [mockserver-proxy](http://search.maven.org/#search%7Cga%7C1%7Cmockserver-proxy) - an HTTP / HTTPS proxy that allows the recording and querying of requests and response
 * [mockserver-client](http://search.maven.org/#search%7Cga%7C1%7Cmockserver-client) - a Java and JavaScript client to communicate with both the server and the proxy
-* [mockserver-ruby](https://rubygems.org/gems/mockserver-client) - a Ruby client to communicate with both the server and the proxy
+* [mockserver-client-ruby](https://rubygems.org/gems/mockserver-client) - a Ruby client to communicate with both the server and the proxy
 
 In addition MockServer SNAPSHOT artifacts can also be found on [Sonatype](https://oss.sonatype.org/index.html#nexus-search;quick~mockserver).
 

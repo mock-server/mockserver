@@ -13,28 +13,15 @@ if [ $JAVA_VER -eq 16 ]; then
     echo
     rm -rf $current_directory/target/travis
     git clone -b travis `git config --get remote.origin.url` $current_directory/target/travis
-    for module in . core client integration-testing war proxy-war netty maven-plugin maven-plugin-integration-tests javascript examples; do
+    for module in . core client-java integration-testing war proxy-war netty maven-plugin maven-plugin-integration-tests client-javascript client-ruby examples; do
         cd $current_directory/mockserver-$module;
         echo
-        echo ==== `pwd` ====;
+        echo ==== `pwd` =====;
         echo
         mvn -q deploy --settings $current_directory/target/travis/settings.xml
         echo
         cd $current_directory;
     done
-    cd $current_directory/mockserver-ruby;
-    echo
-    echo ==== `pwd` ===;
-    echo
-    ruby --version
-    rvm --version
-    gem --version
-    bundle --version
-    export BUNDLE_GEMFILE=$PWD/Gemfile
-    bundle install
-    bundle exec rake
-    echo
-    cd $current_directory;
 fi
 
 if [ $JAVA_VER -eq 17 ]; then
@@ -52,19 +39,6 @@ if [ $JAVA_VER -eq 17 ]; then
         echo
         cd $current_directory;
     done
-    cd $current_directory/mockserver-ruby;
-    echo
-    echo ==== `pwd` ===;
-    echo
-    ruby --version
-    rvm --version
-    gem --version
-    bundle --version
-    export BUNDLE_GEMFILE=$PWD/Gemfile
-    bundle install
-    bundle exec rake
-    echo
-    cd $current_directory;
 fi
 
 if [ $JAVA_VER -eq 18 ]; then
@@ -82,17 +56,4 @@ if [ $JAVA_VER -eq 18 ]; then
         echo
         cd $current_directory;
     done
-    cd $current_directory/mockserver-ruby;
-    echo
-    echo ==== `pwd` ===;
-    echo
-    ruby --version
-    rvm --version
-    gem --version
-    bundle --version
-    export BUNDLE_GEMFILE=$PWD/Gemfile
-    bundle install
-    bundle exec rake
-    echo
-    cd $current_directory;
 fi

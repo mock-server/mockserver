@@ -7,7 +7,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>mockserver-javascript-client</artifactId>
+    <artifactId>mockserver-client-javascript</artifactId>
     <name>MockServer JavaScript Client</name>
     <description>A javascript client for the MockServer</description>
     <url>http://www.mock-server.com</url>

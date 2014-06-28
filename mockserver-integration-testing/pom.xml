@@ -19,7 +19,7 @@
         </dependency>
         <dependency>
             <groupId>org.mock-server</groupId>
-            <artifactId>mockserver-client</artifactId>
+            <artifactId>mockserver-client-java</artifactId>
         </dependency>
 
         <!-- http -->
