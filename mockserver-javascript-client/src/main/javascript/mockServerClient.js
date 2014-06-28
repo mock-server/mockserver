@@ -92,6 +92,7 @@ var mockServerClient = function (host, port) {
             xmlhttp.open("PUT", mockServerUrl + "/expectation", false);
             xmlhttp.setRequestHeader("Content-Type", "application/json; charset=utf-8");
             xmlhttp.send(JSON.stringify(expectation));
+            return _this;
         },
         /**
          * Setup an expectation in the MockServer without having to specify the full expectation object
@@ -104,7 +105,7 @@ var mockServerClient = function (host, port) {
          * @param statusCode the response code to return if a request matches
          */
         mockSimpleResponse = function (path, responseBody, statusCode) {
-            mockAnyResponse(createExpectation(path, responseBody, statusCode));
+            return mockAnyResponse(createExpectation(path, responseBody, statusCode));
         },
         /**
          * Override the default headers that are used to specify the response headers in mockSimpleResponse(...)
@@ -121,6 +122,16 @@ var mockServerClient = function (host, port) {
         setDefaultHeaders = function (headers) {
             defaultResponseHeaders = headers;
         },
+        butFoundAssertionErrorMessage = function () {
+            xmlhttp.open("PUT", mockServerUrl + "/retrieve", false);
+            xmlhttp.send();
+            return " but " + (xmlhttp.responseText ? "only found " + xmlhttp.responseText : "found no requests");
+        },
+        retrieve = function (request) {
+            xmlhttp.open("PUT", mockServerUrl + "/retrieve", false);
+            xmlhttp.send(JSON.stringify(request));
+            return xmlhttp.responseText && JSON.parse(xmlhttp.responseText);
+        },
         /**
          * Verify a request has been sent for example:
          *
@@ -132,11 +143,24 @@ var mockServerClient = function (host, port) {
          *   })).toBeTruthy();
          *
          * @param request the http request that must be matched for this verification to pass
+         * @param count   the number of times this request must be matched
+         * @param exact   true if the count is matched as "equal to" or false if the count is matched as "greater than or equal to"
          */
-        verify = function (request) {
-            xmlhttp.open("PUT", mockServerUrl + "/retrieve", false);
-            xmlhttp.send(JSON.stringify(request));
-            return xmlhttp.responseText;
+        verify = function (request, count, exact) {
+            var expectations = retrieve(request);
+            if (!expectations) {
+                throw "Expected " + JSON.stringify(request) + butFoundAssertionErrorMessage();
+            }
+            if (exact) {
+                if (expectations.length !== count) {
+                    throw "Expected " + JSON.stringify(request) + butFoundAssertionErrorMessage();
+                }
+            } else {
+                if (expectations.length < count) {
+                    throw "Expected " + JSON.stringify(request) + butFoundAssertionErrorMessage();
+                }
+            }
+            return _this;
         },
         /**
          * Reset MockServer by clearing all expectations
@@ -144,6 +168,7 @@ var mockServerClient = function (host, port) {
         reset = function () {
             xmlhttp.open("PUT", mockServerUrl + "/reset", false);
             xmlhttp.send("");
+            return _this;
         },
         /**
          * Clear all expectations that match the specified path
@@ -153,6 +178,7 @@ var mockServerClient = function (host, port) {
         clear = function (path) {
             xmlhttp.open("PUT", mockServerUrl + "/clear", false);
             xmlhttp.send(JSON.stringify(createResponseMatcher(path || ".*")));
+            return _this;
         },
         /**
          * Pretty-print the json for all expectations for the specified path.
@@ -164,9 +190,10 @@ var mockServerClient = function (host, port) {
         dumpToLogs = function (path) {
             xmlhttp.open("PUT", mockServerUrl + "/dumpToLog", false);
             xmlhttp.send(JSON.stringify(createExpectation(path || ".*", "")));
+            return _this;
         };
 
-    return {
+    var _this = {
         mockAnyResponse: mockAnyResponse,
         mockSimpleResponse: mockSimpleResponse,
         setDefaultHeaders: setDefaultHeaders,
@@ -175,4 +202,5 @@ var mockServerClient = function (host, port) {
         clear: clear,
         dumpToLogs: dumpToLogs
     };
+    return  _this;
 };

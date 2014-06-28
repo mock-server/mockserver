@@ -103,14 +103,18 @@ public class LogFilter implements ProxyResponseFilter {
         List<Expectation> expectations = new ArrayList<Expectation>();
         if (httpRequest != null) {
             HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
-            for (Map.Entry<HttpRequest, HttpResponse> entry : requestResponseLog.entrySet()) {
-                if (httpRequestMatcher.matches(entry.getKey())) {
-                    expectations.add(new Expectation(entry.getKey(), Times.once()).thenRespond(entry.getValue()));
+            for (HttpRequest key : requestResponseLog.keySet()) {
+                for(HttpResponse value : requestResponseLog.getAll(key)) {
+                    if (httpRequestMatcher.matches(key)) {
+                        expectations.add(new Expectation(key, Times.once()).thenRespond(value));
+                    }
                 }
             }
         } else {
-            for (Map.Entry<HttpRequest, HttpResponse> entry : requestResponseLog.entrySet()) {
-                expectations.add(new Expectation(entry.getKey(), Times.once()).thenRespond(entry.getValue()));
+            for (HttpRequest key : requestResponseLog.keySet()) {
+                for(HttpResponse value : requestResponseLog.getAll(key)) {
+                    expectations.add(new Expectation(key, Times.once()).thenRespond(value));
+                }
             }
         }
         return expectations.toArray(new Expectation[expectations.size()]);

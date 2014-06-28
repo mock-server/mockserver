@@ -10,11 +10,15 @@ describe("proxyClient client:", function () {
     it("should verify exact number of requests have been sent", function () {
         // given
         var client = proxyClient("localhost", 1090);
+        mockServerClient("localhost", 1080).
+            mockSimpleResponse('/somePath', { name: 'value' }, 203).
+            mockSimpleResponse('/somePath', { name: 'value' }, 203);
         xmlhttp.open("POST", "http://localhost:1080/somePath", false);
         xmlhttp.send("someBody");
-        mockServerClient("localhost", 1080).mockSimpleResponse('/somePath', { name: 'value' }, 203);
+        expect(xmlhttp.status).toEqual(203);
         xmlhttp.open("POST", "http://localhost:1080/somePath", false);
         xmlhttp.send("someBody");
+        expect(xmlhttp.status).toEqual(203);
 
         // when
         client.verify(
@@ -25,15 +29,18 @@ describe("proxyClient client:", function () {
             }, 2, true);
     });
 
-    xit("should verify at least a number of requests have been sent", function () {
+    it("should verify at least a number of requests have been sent", function () {
         // given
+        var client = proxyClient("localhost", 1090);
         xmlhttp.open("POST", "http://localhost:1080/somePath", false);
         xmlhttp.send("someBody");
+        expect(xmlhttp.status).toEqual(404);
         xmlhttp.open("POST", "http://localhost:1080/somePath", false);
         xmlhttp.send("someBody");
+        expect(xmlhttp.status).toEqual(404);
 
         // when
-        proxyClient("localhost", 1090).verify(
+        client.verify(
             {
                 'method': 'POST',
                 'path': '/somePath',
@@ -41,13 +48,68 @@ describe("proxyClient client:", function () {
             }, 1);
     });
 
+
+    it("should fail when no requests have been sent", function () {
+        // given
+        var client = proxyClient("localhost", 1090);
+        xmlhttp.open("POST", "http://localhost:1080/somePath", false);
+        xmlhttp.send("someBody");
+        expect(xmlhttp.status).toEqual(404);
+
+        // when
+        expect(function () {
+            client.verify(
+                {
+                    'path': '/someOtherPath'
+                }, 1);
+        }).toThrow();
+    });
+
+    it("should fail when not enough exact requests have been sent", function () {
+        // given
+        var client = proxyClient("localhost", 1090);
+        xmlhttp.open("POST", "http://localhost:1080/somePath", false);
+        xmlhttp.send("someBody");
+        expect(xmlhttp.status).toEqual(404);
+
+        // when
+        expect(function () {
+            client.verify(
+                {
+                    'method': 'POST',
+                    'path': '/somePath',
+                    'body': 'someBody'
+                }, 2, true);
+        }).toThrow();
+    });
+
+    it("should fail when not enough at least requests have been sent", function () {
+        // given
+        var client = proxyClient("localhost", 1090);
+        xmlhttp.open("POST", "http://localhost:1080/somePath", false);
+        xmlhttp.send("someBody");
+        expect(xmlhttp.status).toEqual(404);
+
+        // when
+        expect(function () {
+            client.verify(
+                {
+                    'method': 'POST',
+                    'path': '/somePath',
+                    'body': 'someBody'
+                }, 2);
+        }).toThrow();
+    });
+
     it("should clear proxy", function () {
         // given
         var client = proxyClient("localhost", 1090);
         xmlhttp.open("POST", "http://localhost:1080/somePath", false);
         xmlhttp.send("someBody");
+        expect(xmlhttp.status).toEqual(404);
         xmlhttp.open("POST", "http://localhost:1080/somePath", false);
         xmlhttp.send("someBody");
+        expect(xmlhttp.status).toEqual(404);
 
         // then
         client.verify(
@@ -61,18 +123,14 @@ describe("proxyClient client:", function () {
         client.clear('/somePath');
 
         // then
-        var passed = false;
-        try {
+        expect(function () {
             client.verify(
                 {
                     'method': 'POST',
                     'path': '/somePath',
                     'body': 'someBody'
                 }, 1);
-        } catch (e) {
-            passed = true;
-        }
-        expect(passed).toBeTruthy();
+        }).toThrow();
     });
 
     it("should reset proxy", function () {
@@ -80,8 +138,10 @@ describe("proxyClient client:", function () {
         var client = proxyClient("localhost", 1090);
         xmlhttp.open("POST", "http://localhost:1080/somePath", false);
         xmlhttp.send("someBody");
+        expect(xmlhttp.status).toEqual(404);
         xmlhttp.open("POST", "http://localhost:1080/somePath", false);
         xmlhttp.send("someBody");
+        expect(xmlhttp.status).toEqual(404);
 
         // then
         client.verify(
@@ -95,17 +155,13 @@ describe("proxyClient client:", function () {
         client.reset();
 
         // then
-        var passed = false;
-        try {
+        expect(function () {
             client.verify(
                 {
                     'method': 'POST',
                     'path': '/somePath',
                     'body': 'someBody'
                 }, 1);
-        } catch (e) {
-            passed = true;
-        }
-        expect(passed).toBeTruthy();
+        }).toThrow();
     });
 });

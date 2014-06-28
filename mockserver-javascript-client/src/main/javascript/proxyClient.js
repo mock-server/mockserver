@@ -3,10 +3,6 @@ var proxyClient = function (host, port) {
 
     var xmlhttp = new XMLHttpRequest(),
         proxyUrl = "http://" + host + ":" + port,
-        defaultResponseHeaders = [
-            {"name": "Content-Type", "values": ["application/json; charset=utf-8"]},
-            {"name": "Cache-Control", "values": ["no-cache, no-store"]}
-        ],
         createResponseMatcher = function (path) {
             var headers = [];
             if (window.location.href.match(/testId\=.*/g)) {
@@ -26,38 +22,39 @@ var proxyClient = function (host, port) {
                 parameters: []
             }
         },
-        createExpectation = function (path, responseBody, statusCode) {
-            var headers = [];
-            return {
-                httpRequest: createResponseMatcher(path),
-                httpResponse: {
-                    statusCode: statusCode || 200,
-                    body: JSON.stringify(responseBody),
-                    cookies: [],
-                    headers: defaultResponseHeaders,
-                    delay: {
-                        timeUnit: "MICROSECONDS",
-                        value: 0
-                    }
-                },
-                times: {
-                    remainingTimes: 1,
-                    unlimited: false
-                }
-            };
-        },
         butFoundAssertionErrorMessage = function () {
             xmlhttp.open("PUT", proxyUrl + "/retrieve", false);
             xmlhttp.send();
             return " but " + (xmlhttp.responseText ? "only found" + xmlhttp.responseText : "found no requests");
         },
+        /**
+         * Retrieve the recorded requests that match the httpRequest parameter as a JSON array, use null for the parameter to retrieve all requests
+         *
+         * @param request the http request that is matched against when deciding whether to return each expectation, use null for the parameter to retrieve for all requests
+         * @return a JSON array of all expectations that have been recorded by the proxy
+         */
         retrieve = function (request) {
             xmlhttp.open("PUT", proxyUrl + "/retrieve", false);
             xmlhttp.send(JSON.stringify(request));
             return xmlhttp.responseText && JSON.parse(xmlhttp.responseText);
         },
+        /**
+         * Verify a request has been sent for example:
+         *
+         *   expect(client.verify({
+         *       'httpRequest': {
+         *           'method': 'POST',
+         *           'path': '/somePath'
+         *       }
+         *   })).toBeTruthy();
+         *
+         * @param request the http request that must be matched for this verification to pass
+         * @param count   the number of times this request must be matched
+         * @param exact   true if the count is matched as "equal to" or false if the count is matched as "greater than or equal to"
+         */
         verify = function (request, count, exact) {
             var expectations = retrieve(request);
+            debugger;
             if (!expectations) {
                 throw "Expected " + JSON.stringify(request) + butFoundAssertionErrorMessage();
             }
@@ -66,29 +63,48 @@ var proxyClient = function (host, port) {
                     throw "Expected " + JSON.stringify(request) + butFoundAssertionErrorMessage();
                 }
             } else {
-                if (expectations.size < count) {
+                if (expectations.length < count) {
                     throw "Expected " + JSON.stringify(request) + butFoundAssertionErrorMessage();
                 }
             }
+            return _this;
         },
-        reset = function (path) {
+        /**
+         * Reset the proxy by clearing all recorded requests
+         */
+        reset = function () {
             xmlhttp.open("PUT", proxyUrl + "/reset", false);
-            xmlhttp.send(JSON.stringify(createResponseMatcher(path || ".*")));
+            xmlhttp.send("");
+            return _this;
         },
+        /**
+         * Clear all recorded requests that match the specified path
+         *
+         * @param path the path to decide which expectations to cleared
+         */
         clear = function (path) {
             xmlhttp.open("PUT", proxyUrl + "/clear", false);
             xmlhttp.send(JSON.stringify(createResponseMatcher(path || ".*")));
+            return _this;
         },
+        /**
+         * Pretty-print the json for all requests / responses that match the specified path
+         * as Expectations to the log. They are printed into a dedicated log called mockserver_request.log
+         *
+         * @param path the path to decide which expectations to dump to the log
+         */
         dumpToLogs = function (path) {
             xmlhttp.open("PUT", proxyUrl + "/dumpToLog", false);
-            xmlhttp.send(JSON.stringify(createExpectation(path || ".*", "")));
+            xmlhttp.send(JSON.stringify(createResponseMatcher(path || ".*", "")));
+            return _this;
         };
 
-    return {
+    var _this = {
         retrieve: retrieve,
         verify: verify,
         reset: reset,
         clear: clear,
         dumpToLogs: dumpToLogs
     };
+    return  _this;
 };

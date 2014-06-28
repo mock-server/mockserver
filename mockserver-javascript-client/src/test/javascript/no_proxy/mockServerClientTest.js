@@ -228,60 +228,97 @@ describe("mockServerClient client:", function () {
         expect(xmlhttp.getResponseHeader("X-Test")).toEqual("test-value");
     });
 
-    it("should verify request has been received", function () {
+    it("should verify exact number of requests have been sent", function () {
         // given
         var client = mockServerClient("localhost", 1080);
-        client.mockAnyResponse(
+        client.mockSimpleResponse('/somePath', { name: 'value' }, 203);
+        xmlhttp.open("POST", "http://localhost:1080/somePath", false);
+        xmlhttp.send("someBody");
+        expect(xmlhttp.status).toEqual(203);
+
+        // when
+        client.verify(
             {
-                'httpRequest': {
+                'method': 'POST',
+                'path': '/somePath',
+                'body': 'someBody'
+            }, 1, true);
+    });
+
+    it("should verify at least a number of requests have been sent", function () {
+        // given
+        var client = mockServerClient("localhost", 1080);
+        client.mockSimpleResponse('/somePath', { name: 'value' }, 203);
+        client.mockSimpleResponse('/somePath', { name: 'value' }, 203);
+        xmlhttp.open("POST", "http://localhost:1080/somePath", false);
+        xmlhttp.send("someBody");
+        expect(xmlhttp.status).toEqual(203);
+        xmlhttp.open("POST", "http://localhost:1080/somePath", false);
+        xmlhttp.send("someBody");
+        expect(xmlhttp.status).toEqual(203);
+
+        // when
+        client.verify(
+            {
+                'method': 'POST',
+                'path': '/somePath',
+                'body': 'someBody'
+            }, 1);
+    });
+
+    it("should fail when no requests have been sent", function () {
+        // given
+        var client = mockServerClient("localhost", 1080);
+        client.mockSimpleResponse('/somePath', { name: 'value' }, 203);
+        xmlhttp.open("POST", "http://localhost:1080/somePath", false);
+        xmlhttp.send("someBody");
+        expect(xmlhttp.status).toEqual(203);
+
+        // when
+        expect(function () {
+            client.verify(
+                {
+                    'path': '/someOtherPath'
+                }, 1);
+        }).toThrow();
+    });
+
+    it("should fail when not enough exact requests have been sent", function () {
+        // given
+        var client = mockServerClient("localhost", 1080);
+        client.mockSimpleResponse('/somePath', { name: 'value' }, 203);
+        xmlhttp.open("POST", "http://localhost:1080/somePath", false);
+        xmlhttp.send("someBody");
+        expect(xmlhttp.status).toEqual(203);
+
+        // when
+        expect(function () {
+            client.verify(
+                {
                     'method': 'POST',
                     'path': '/somePath',
-                    'queryString': 'test=true',
-                    'parameters': [
-                        {
-                            'name': 'test',
-                            'values': [ 'true' ]
-                        }
-                    ],
-                    'body': {
-                        'type': "EXACT",
-                        'value': 'someBody'
-                    }
-                },
-                'httpResponse': {
-                    'statusCode': 200,
-                    'body': JSON.stringify({ name: 'value' }),
-                    'delay': {
-                        'timeUnit': 'MILLISECONDS',
-                        'value': 250
-                    }
-                },
-                'times': {
-                    'remainingTimes': 1,
-                    'unlimited': false
-                }
-            }
-        );
+                    'body': 'someBody'
+                }, 2, true);
+        }).toThrow();
+    });
 
-        // when - matching request
-        xmlhttp.open("POST", "http://localhost:1080/somePath?test=true", false);
+    it("should fail when not enough at least requests have been sent", function () {
+        // given
+        var client = mockServerClient("localhost", 1080);
+        client.mockSimpleResponse('/somePath', { name: 'value' }, 203);
+        xmlhttp.open("POST", "http://localhost:1080/somePath", false);
         xmlhttp.send("someBody");
+        expect(xmlhttp.status).toEqual(203);
 
-        // then - matching request
-        expect(xmlhttp.status).toEqual(200);
-        // then - verify request
-        expect(client.verify({
-            'httpRequest': {
-                'method': 'POST',
-                'path': '/somePath'
-            }
-        })).toBeTruthy();
-        expect(client.verify({
-            'httpRequest': {
-                'method': 'POST',
-                'path': '/otherPath'
-            }
-        })).toBeFalsy();
+        // when
+        expect(function () {
+            client.verify(
+                {
+                    'method': 'POST',
+                    'path': '/somePath',
+                    'body': 'someBody'
+                }, 2);
+        }).toThrow();
     });
 
     it("should clear expectations", function () {
