@@ -18,7 +18,7 @@ if [ $JAVA_VER -eq 16 ]; then
         echo
         echo ==== `pwd` =====;
         echo
-        mvn -q deploy --settings $current_directory/target/travis/settings.xml
+        mvn -q install --settings $current_directory/target/travis/settings.xml
         echo
         cd $current_directory;
     done
