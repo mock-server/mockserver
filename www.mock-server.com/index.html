@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html  prefix="og: http://ogp.me/ns#" xmlns:og="http://ogp.me/ns#">
 <head>
 <title>MockServer</title>
 <link rel="author" href="https://plus.google.com/u/0/110954472544793839756">
@@ -15,10 +15,12 @@
 <meta name="title" content="Mock Server">
 <meta property="og:locale" content="en_GB">
 <meta property="og:type" content="website">
+<meta property="og:image" content="http://www.mock-server.com/apple-touch-icon.png">
 <meta property="og:url" content="http://www.mock-server.com/">
 <meta property="og:site_name" content="MockServer">
 <meta property="og:title" content="MockServer">
 <meta property="og:description" content="An API to easily mock any system or service you integrate with via HTTP or HTTPS from either Java or JavaScript.">
+<meta property="article:author" content="James D Bloom">
 <link href="//fonts.googleapis.com/css?family=Averia+Sans+Libre:300normal,300italic,400normal,400italic,700normal,700italic|Amatic+SC:400normal|Belleza:400normal|Belgrano:400normal|Open+Sans:400normal|Dosis:400normal|Codystar:400normal|Concert+One:400normal|Oswald:400normal|Economica:400normal|Duru+Sans:400normal&amp;subset=all" rel="stylesheet" type="text/css">
 <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.3.0/pure-min.css">
 <style>
@@ -961,8 +963,14 @@ Hides the menu at `767px`, but modify this based on your app's needs.
      *                   Times.exactly(<span class="numeric_literal">3</span>)
      *           );
      *
+     * Times supports multiple static factory methods:
+     *
+     *   once()      - verify the request was only received once
+     *   exactly(<span class="numeric_literal">n</span>)  - verify the request was only received exactly <span class="numeric_literal">n</span> times
+     *   atLeast(<span class="numeric_literal">n</span>)  - verify the request was only received at least <span class="numeric_literal">n</span> times
+     *
      * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpRequest</span> the http request that must be matched for this verification to pass
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">times</span> the number of times this request must be matched
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">times</span>       the number of times this request must be matched
      * <span class="javadoc_param_annotation">@throws</span> <span class="javadoc_param_name">AssertionError</span> if the request has not been found
      */</span>
     <span class="keyword">public</span> MockServerClient verify(HttpRequest httpRequest, org.mockserver.client.proxy.Times times); <span class="keyword">throws</span> AssertionError
@@ -1073,8 +1081,14 @@ Hides the menu at `767px`, but modify this based on your app's needs.
      *                   Times.exactly(<span class="numeric_literal">3</span>)
      *           );
      *
+     * Times supports multiple static factory methods:
+     *
+     *   once()      - verify the request was only received once
+     *   exactly(<span class="numeric_literal">n</span>)  - verify the request was only received exactly <span class="numeric_literal">n</span> times
+     *   atLeast(<span class="numeric_literal">n</span>)  - verify the request was only received at least <span class="numeric_literal">n</span> times
+     *
      * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpRequest</span> the http request that must be matched for this verification to pass
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">times</span> the number of times this request must be matched
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">times</span>       the number of times this request must be matched
      * @throws AssertionError if the request has not been found
      */</span>
     <span class="keyword">public</span> ProxyClient verify(HttpRequest httpRequest, Times times); <span class="keyword">throws</span> AssertionError
@@ -1100,9 +1114,15 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p><strong>JavaScript MockServer Client</strong></p>
 
-<p>To simplest way to interact with MockServer from JavaScript is to use <strong>mockServerClient.js</strong> which provides the following API:</p>
+<p>To simplest way to interact with MockServer from JavaScript is to use <a href="https://rawgit.com/jamesdbloom/mockserver/master/mockserver-javascript-client/src/main/javascript/mockServerClient.js"><strong>mockServerClient.js</strong></a>.</p>
 
-<pre><code class="code">var mockServerClient = function (mockServerUrl) {
+<p>To include this file is an HTML page use one of the following script tag to load the file from <a href="http://www.maxcdn.com/">MaxCDN</a>:</p>
+
+<pre><code class="code">&lt;<span class="annotation">script</span> <span class="keyword">type</span>=<span class="string_literal">"text/javascript"</span> <span class="keyword">src</span>=<span class="string_literal">"https://cdn.rawgit.com/jamesdbloom/mockserver/01973e75099bbc2ad2e37f809e9b33c8d31cb6dd/mockserver-javascript-client/src/main/javascript/mockServerClient.js"</span>&gt;&lt;/<span class="annotation">script</span>&gt;</code></pre>
+
+<p><a href="https://rawgit.com/jamesdbloom/mockserver/master/mockserver-javascript-client/src/main/javascript/mockServerClient.js"><strong>mockServerClient.js</strong></a> provides the following API:</p>
+
+<pre><code class="code"><span class="keyword">var</span> mockServerClient = function (mockServerUrl) {
     <span class="string_literal">"use strict"</span>;
 
     <span class="comment">/**
@@ -1151,9 +1171,9 @@ Hides the menu at `767px`, but modify this based on your app's needs.
      *
      *   mockServerClient(<span class="string_literal">'localhost'</span>, <span class="numeric_literal">1080</span>).mockSimpleResponse(<span class="string_literal">'/somePath'</span>, { <span class="string_literal">'name'</span>: <span class="string_literal">'value'</span> }, <span class="numeric_literal">203</span>);
      *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">path</span> the path to match requests against
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">path</span>         the path to match requests against
      * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">responseBody</span> the response body to return if a request matches
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">statusCode</span> the response code to return if a request matches
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">statusCode</span>   the response code to return if a request matches
      */</span>
     mockSimpleResponse = function (path, responseBody, statusCode),
 
@@ -1174,16 +1194,19 @@ Hides the menu at `767px`, but modify this based on your app's needs.
     <span class="comment">/**
      * Verify a request has been sent for example:
      *
-     *   expect(client.verify({
+     *   client.verify({
      *       <span class="string_literal">'httpRequest'</span>: {
      *           <span class="string_literal">'method'</span>: <span class="string_literal">'POST'</span>,
      *           <span class="string_literal">'path'</span>: <span class="string_literal">'/somePath'</span>
      *       }
-     *   })).toBeTruthy();
+     *   }, 2, true);
      *
      * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">request</span> the http request that must be matched for this verification to pass
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">count</span>   the number of times this request must be matched
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">exact</span>   true if the count is matched as "equal to" or false if the count is matched as "greater than or equal to"
+     * <span class="javadoc_param_annotation">@throws</span> an error is the verify fails detailing which requests have been sent
      */</span>
-    verify = function (request),
+    verify = function (request, count, exact),
 
     <span class="comment">/**
      * Reset MockServer by clearing all expectations
@@ -1210,6 +1233,75 @@ Hides the menu at `767px`, but modify this based on your app's needs.
         mockAnyResponse: mockAnyResponse,
         mockSimpleResponse: mockSimpleResponse,
         setDefaultHeaders: setDefaultHeaders,
+        verify: verify,
+        reset: reset,
+        clear: clear,
+        dumpToLogs: dumpToLogs
+    };
+};</code></pre>
+
+<a name="javascript-proxy-client" class="anchor" href="#javascript-proxy-client">&nbsp;</a>
+
+<p><strong>JavaScript Proxy Client</strong></p>
+
+<p>To simplest way to interact with the proxy from JavaScript is to use <a href="https://rawgit.com/jamesdbloom/mockserver/master/mockserver-javascript-client/src/main/javascript/proxyClient.js"><strong>proxyClient.js</strong></a>.</p>
+
+<p>To include this file is an HTML page use one of the following script tag to load the file from <a href="http://www.maxcdn.com/">MaxCDN</a>:</p>
+
+<pre><code class="code">&lt;<span class="annotation">script</span> <span class="keyword">type</span>=<span class="string_literal">"text/javascript"</span> <span class="keyword">src</span>=<span class="string_literal">"https://cdn.rawgit.com/jamesdbloom/mockserver/01973e75099bbc2ad2e37f809e9b33c8d31cb6dd/mockserver-javascript-client/src/main/javascript/proxyClient.js"</span>&gt;&lt;/<span class="annotation">script</span>&gt;</code></pre>
+
+<p><a href="https://rawgit.com/jamesdbloom/mockserver/master/mockserver-javascript-client/src/main/javascript/proxyClient.js"><strong>proxyClient.js</strong></a> provides the following API:</p>
+
+<pre><code class="code"><span class="keyword">var</span> proxyClient = function (host, port) {
+    <span class="string_literal">"use strict"</span>;
+
+    <span class="comment">/**
+     * Retrieve the recorded requests that match the httpRequest parameter as a JSON array, use null for the parameter to retrieve all requests
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">request</span> the http request that is matched against when deciding whether to return each expectation, use null for the parameter to retrieve for all requests
+     * <span class="javadoc_param_annotation">@param</span> a JSON array of all expectations that have been recorded by the proxy
+     */</span>
+    <span class="keyword">var</span> retrieve = function (request),
+
+    <span class="comment">/**
+     * Verify a request has been sent for example:
+     *
+     *   client.verify({
+     *       <span class="string_literal">'httpRequest'</span>: {
+     *           <span class="string_literal">'method'</span>: <span class="string_literal">'POST'</span>,
+     *           <span class="string_literal">'path'</span>: <span class="string_literal">'/somePath'</span>
+     *       }
+     *   }, 2, true);
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">request</span> the http request that must be matched for this verification to pass
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">count</span>   the number of times this request must be matched
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">exact</span>   true if the count is matched as "equal to" or false if the count is matched as "greater than or equal to"
+     * <span class="javadoc_param_annotation">@throws</span> an error is the verify fails detailing which requests have been sent
+     */</span>
+    verify = function (request, count, exact),
+
+    <span class="comment">/**
+     * Reset the proxy by clearing all recorded requests
+     */</span>
+    reset = function (),
+
+    <span class="comment">/**
+     * Clear all recorded requests that match the specified path
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">path</span> the path to decide which expectations to cleared
+     */</span>
+    clear = function (path),
+
+    <span class="comment">/**
+     * Pretty-print the json for all requests / responses that match the specified path
+     * as Expectations to the log. They are printed into a dedicated log called mockserver_request.log
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">path</span> the path to decide which expectations to dump to the log
+     */</span>
+    dumpToLogs = function (path);
+
+    <span class="keyword">return</span> {
+        retrieve: retrieve,
         verify: verify,
         reset: reset,
         clear: clear,
@@ -1429,7 +1521,10 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 		<strong>skip</strong> - Prevent the plugin from running (required: false, default: false)
 	</li>
 	<li>
-		<strong>initializationClass</strong> - To enable the creation of default expectations that are generic across all tests or mocking scenarios a class can be specified to initialize expectations in the MockServer, this class must implement <span class="annotation">org.mockserver.initialize.ExpectationInitializer</span> interface, the <span class="annotation">initializeExpectations(MockServerClient mockServerClient)</span> method will be called once the MockServer has been started (but ONLY if <strong>serverPort</strong> has been set), however it should be noted that it is generally better practice to create all expectations locally in each test (or test class) for clarity, simplicity and to avoid brittle tests.  Note: that the plugin must be started during the <strong>process-test-classes</strong> to ensure that the initialization class has been compiled from either <strong>src/main/java</strong> or <strong>src/test/java</strong> locations. (required: false, default: false)
+		<strong>initializationClass</strong> - To enable the creation of default expectations that are generic across all tests or mocking scenarios a class can be specified to initialize expectations in the MockServer, this class must implement
+		<span class="annotation">org.mockserver.initialize.ExpectationInitializer</span> interface, the <span class="annotation">initializeExpectations(MockServerClient mockServerClient)</span> method will be called once the MockServer has been started (but ONLY if
+		<strong>serverPort</strong> has been set), however it should be noted that it is generally better practice to create all expectations locally in each test (or test class) for clarity, simplicity and to avoid brittle tests. Note: that the plugin must be started during the
+		<strong>process-test-classes</strong> to ensure that the initialization class has been compiled from either <strong>src/main/java</strong> or <strong>src/test/java</strong> locations. (required: false, default: false)
 	</li>
 </ul>
 
@@ -1532,13 +1627,15 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <pre><code class="code">docker run -d -P jamesdbloom/mockserver</code></pre>
 
-<p>This command will map the ports exposed by the MockServer and Proxy to dynamic ports using the <strong>-P</strong> option.  To specify which ports are used you can specify one or more port mappings using the <strong>-p <span class="annotation">&lt;host port&gt;</span>:<span class="annotation">&lt;container port&gt;</span></strong> option.  You only need to specify mapping for ports you need to use, for example, if you are not using the proxy there is no need to provide port mapping options for the proxy ports.</p>
+<p>This command will map the ports exposed by the MockServer and Proxy to dynamic ports using the <strong>-P</strong> option. To specify which ports are used you can specify one or more port mappings using the <strong>-p
+	<span class="annotation">&lt;host port&gt;</span>:<span class="annotation">&lt;container port&gt;</span></strong> option. You only need to specify mapping for ports you need to use, for example, if you are not using the proxy there is no need to provide port mapping options for the proxy ports.</p>
 
 <p>To run MockServer specifying as a Docker container run the following command (replacing each <strong><span class="annotation">&lt; ... &gt;</span></strong> section with the appropriate port value):</p>
 
 <pre><code class="code">docker run -d -p <span class="annotation">&lt;serverPort&gt;</span>:<span class="numeric_literal">8080</span> -p <span class="annotation">&lt;serverSecurePort&gt;</span>:<span class="numeric_literal">8090</span> -p <span class="annotation">&lt;proxyPort&gt;</span>:<span class="numeric_literal">9080</span> -p <span class="annotation">&lt;proxySecurePort&gt;</span>:<span class="numeric_literal">9090</span> jamesdbloom/mockserver</code></pre>
 
-<p><strong>Note</strong>: you only need to specify mapping for ports you need to use, for example, if you are only using the MockServer to mock HTTP endpoints then only specify <strong>-p <span class="annotation">&lt;serverPort&gt;</span>:<span class="numeric_literal">8080</span></strong> as follows (replacing each <strong><span class="annotation">&lt; ... &gt;</span></strong> section with the appropriate port value):</p>
+<p><strong>Note</strong>: you only need to specify mapping for ports you need to use, for example, if you are only using the MockServer to mock HTTP endpoints then only specify <strong>-p <span class="annotation">&lt;serverPort&gt;</span>:<span class="numeric_literal">8080</span></strong> as follows (replacing each
+	<strong><span class="annotation">&lt; ... &gt;</span></strong> section with the appropriate port value):</p>
 
 <pre><code class="code">docker run -d -p <span class="annotation">&lt;serverPort&gt;</span>:<span class="numeric_literal">8080</span> jamesdbloom/mockserver</code></pre>
 
@@ -1555,7 +1652,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <h4>Vert.X Module</h4>
 
-<p>MockServer can be run as a Vert.X module.  However, support for the Vert.X module was stopped at version 2.9.  This is because Vert.X requires Java 7 and the MockServer Vert.X module was the only MockServer module that relied on Java 7 making the build and development process more complex.</p>
+<p>MockServer can be run as a Vert.X module. However, support for the Vert.X module was stopped at version 2.9. This is because Vert.X requires Java 7 and the MockServer Vert.X module was the only MockServer module that relied on Java 7 making the build and development process more complex.</p>
 
 <p>First, you'll need to <a href="http://vertx.io/install.html">install Vert.x</a>.</p>
 
@@ -2027,7 +2124,7 @@ xmlHttpRequest.send(JSON.stringify({
 
 <p>The body can be matched using plain text, a json expression, an XPath expression or a regular expression, see <a href="http://saxon.sourceforge.net/saxon6.5.3/expressions.html">XPath Expression Syntax</a> for supported XPath syntax.</p>
 
-<p>A json expressions is a valid json object.  When a json expression is matched against a request body only fields in the json expression are matched, any extra fields in the request body not specified in the json expression will be ignored, in addition the order of fields in the body will be ignored.</p>
+<p>A json expressions is a valid json object. When a json expression is matched against a request body only fields in the json expression are matched, any extra fields in the request body not specified in the json expression will be ignored, in addition the order of fields in the body will be ignored.</p>
 
 <p>All other matching can be done using plain text or a regular expression, see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">Pattern (Java Platform SE 7)</a> for supported regular expression syntax.</p>
 
@@ -2261,8 +2358,11 @@ xmlHttpRequest.send(JSON.stringify({
 <span class="string_literal">"XPATH"</span>
 <span class="string_literal">"PARAMETERS"</span></code></pre>
 
-<p>When the <span class="string_literal">"type"</span> field has a value of <span class="string_literal">"EXACT"</span>, <span class="string_literal">"REGEX"</span>, <span class="string_literal">"JSON"</span> or <span class="string_literal">"XPATH"</span> the other field of <span class="string_literal">"body"</span>" should be <span class="string_literal">"value"</span> and it should provide a string to perform the match against, as shown in the example above.</p>
-<p>When the <span class="string_literal">"type"</span> field has a value of <span class="string_literal">"PARAMETERS"</span> the other field of <span class="string_literal">"body"</span>" should be <span class="string_literal">"parameters"</span> and it should provide a list of body parameters using the following syntax:</p>
+<p>When the <span class="string_literal">"type"</span> field has a value of <span class="string_literal">"EXACT"</span>, <span class="string_literal">"REGEX"</span>, <span class="string_literal">"JSON"</span> or <span class="string_literal">"XPATH"</span> the other field of
+	<span class="string_literal">"body"</span>" should be <span class="string_literal">"value"</span> and it should provide a string to perform the match against, as shown in the example above.</p>
+
+<p>When the <span class="string_literal">"type"</span> field has a value of <span class="string_literal">"PARAMETERS"</span> the other field of <span class="string_literal">"body"</span>" should be
+	<span class="string_literal">"parameters"</span> and it should provide a list of body parameters using the following syntax:</p>
 
 <pre><code class="code">{
     <span class="string_literal">"name"</span>: <span class="string_literal">"someName"</span>,
@@ -2576,7 +2676,7 @@ Times.exactly(<span class="keyword">int</span> count);</code></pre>
 
 <h3>Proxy Verification</h3>
 
-<p>In addition to verifying request that are being mocked by the MockServer it is also possible to verify requests not being mocked using the proxy.  To do this the system under test must be configured to use the MockServer proxy.  The following examples show how to do this with different HTTP clients.</p>
+<p>In addition to verifying request that are being mocked by the MockServer it is also possible to verify requests not being mocked using the proxy. To do this the system under test must be configured to use the MockServer proxy. The following examples show how to do this with different HTTP clients.</p>
 
 <h4>Jetty HttpClient 9.x</h4>
 
@@ -3030,7 +3130,7 @@ xmlHttpRequest.send(JSON.stringify({
 
 <h2>Docker Container</h2>
 
-<p>MockServer is available as a docker container that allows you to easily run MockServer as a separate container on any environment without having to install Java or any other libraries.  The docker container fully encapsulates all requirements required to run MockServer (such as Java) and separates the running MockServer instance from all other parts of the system.</p>
+<p>MockServer is available as a docker container that allows you to easily run MockServer as a separate container on any environment without having to install Java or any other libraries. The docker container fully encapsulates all requirements required to run MockServer (such as Java) and separates the running MockServer instance from all other parts of the system.</p>
 
 <p>The MockServer docker container can be found at <a href="https://index.docker.io/u/jamesdbloom/mockserver/">MockServer Docker</a></p>
 
@@ -3038,25 +3138,35 @@ xmlHttpRequest.send(JSON.stringify({
 
 <h2>Travis CI</h2>
 
-<p><a href="https://travis-ci.org/jamesdbloom/mockserver">Travis CI</a> is used for the continuous integration.  The build uses both Java 1.6 and Java 1.7 to build the different modules in their appropriate java version, the latest SNAPSHOT is also deployed to <a href="https://oss.sonatype.org/index.html#nexus-search;quick%7Emockserver">Sonatype</a>.</p>
-<p>The status of the build is shown at the top of this page and on the github project using the Travis CI logo &nbsp;&nbsp;<a href="https://travis-ci.org/jamesdbloom/mockserver"><img src="https://github-camo.global.ssl.fastly.net/2e2b9deeda5c745f167e2cabcd787322df06688f/68747470733a2f2f7472617669732d63692e6f72672f6a616d657364626c6f6f6d2f6d6f636b7365727665722e706e673f6272616e63683d6d6173746572" alt="Build Status" data-canonical-src="https://travis-ci.org/jamesdbloom/mockserver.png?branch=master" style="max-width:100%;"></a></p>
+<p><a href="https://travis-ci.org/jamesdbloom/mockserver">Travis CI</a> is used for the continuous integration. The build uses both Java 1.6, Java 1.7 and Java 1.8 to build the different modules in their appropriate java version, the latest SNAPSHOT is also deployed to
+	<a href="https://oss.sonatype.org/index.html#nexus-search;quick%7Emockserver">Sonatype</a>.</p>
+
+<p>The status of the build is shown at the top of this page and on the github project using the Travis CI logo &nbsp;&nbsp;<a href="https://travis-ci.org/jamesdbloom/mockserver"><img src="https://github-camo.global.ssl.fastly.net/2e2b9deeda5c745f167e2cabcd787322df06688f/68747470733a2f2f7472617669732d63692e6f72672f6a616d657364626c6f6f6d2f6d6f636b7365727665722e706e673f6272616e63683d6d6173746572" alt="Build Status" data-canonical-src="https://travis-ci.org/jamesdbloom/mockserver.png?branch=master" style="max-width:100%;"></a>
+</p>
 
 <h2>drone.io</h2>
 
-<p><a href="https://drone.io/github.com/jamesdbloom/mockserver">drone.io</a> is an alternative continuous integration
-    platform also being used. Currently both Travis CI and drone.io are being used to determine which platform works
-    better for MockServer.</p>
-<p>The status of the drone.io build is as follows: <a href="https://drone.io/github.com/jamesdbloom/mockserver"><img
-        src="https://drone.io/github.com/jamesdbloom/mockserver/status.png" alt="Build Status"></a></p>
+<p><a href="https://drone.io/github.com/jamesdbloom/mockserver">drone.io</a> is an alternative continuous integration platform also being used. Currently Travis CI, drone.io and Codeship are all being used to determine which platform works better for MockServer.</p>
+
+<p>The status of the drone.io build is as follows: <a href="https://drone.io/github.com/jamesdbloom/mockserver"><img src="https://drone.io/github.com/jamesdbloom/mockserver/status.png" alt="Build Status"></a></p>
+
+<h2>Codeship</h2>
+
+<p><a href="https://www.codeship.io/projects/20934">Codeship</a> is an alternative continuous integration platform also being used. Currently Travis CI, drone.io and Codeship are all being used to determine which platform works better for MockServer.</p>
+
+<p>The status of the Codeship build is as follows: <a href="https://www.codeship.io/projects/20934"><img src="https://www.codeship.io/projects/cdab0090-bafb-0131-c1a3-166904770eb2/status?branch=master" alt="Codeship Build Status" style="width: 155px; height: 25px;"></a></p>
 
 <a name="backlog" class="anchor" href="#backlog">&nbsp;</a>
 
 <h2>Backlog</h2>
 
 <p><a href="https://waffle.io/jamesdbloom/mockserver">Waffle</a> is used to visualise the backlog, although all the items are stored in <a href="https://github.com/jamesdbloom/mockserver/issues?milestone=&page=1&state=open">Github</a>.</p>
-<p>The following icons shows the status of the backlog:     <a href="https://waffle.io/jamesdbloom/mockserver"><img src="https://camo.githubusercontent.com/7cb4115a381b12f2730184fd28e238e98450b98c/68747470733a2f2f62616467652e776166666c652e696f2f6a616d657364626c6f6f6d2f6d6f636b7365727665722e706e673f6c6162656c3d70726f706f73616c267469746c653d50726f706f73616c73" alt="Stories in Backlog" data-canonical-src="https://badge.waffle.io/jamesdbloom/mockserver.png?label=proposal&amp;title=Proposals" style="max-width:100%;"></a>
-    <a href="https://waffle.io/jamesdbloom/mockserver"><img src="https://camo.githubusercontent.com/0c25a2c44f691aa43b5fec8c8b3617f3eb16740b/68747470733a2f2f62616467652e776166666c652e696f2f6a616d657364626c6f6f6d2f6d6f636b7365727665722e706e673f6c6162656c3d7265616479267469746c653d5265616479" alt="Stories in Backlog" data-canonical-src="https://badge.waffle.io/jamesdbloom/mockserver.png?label=ready&amp;title=Ready" style="max-width:100%;"></a>
-    <a href="https://waffle.io/jamesdbloom/mockserver"><img src="https://camo.githubusercontent.com/6cb0a7e54cd194e04a1ee2ae891c1e295969d152/68747470733a2f2f62616467652e776166666c652e696f2f6a616d657364626c6f6f6d2f6d6f636b7365727665722e706e673f6c6162656c3d696e25323070726f6772657373267469746c653d496e25323050726f6772657373" alt="Stories in Backlog" data-canonical-src="https://badge.waffle.io/jamesdbloom/mockserver.png?label=in%20progress&amp;title=In%20Progress" style="max-width:100%;"></a></p>
+
+<p>The following icons shows the status of the backlog:
+	<a href="https://waffle.io/jamesdbloom/mockserver"><img src="https://camo.githubusercontent.com/7cb4115a381b12f2730184fd28e238e98450b98c/68747470733a2f2f62616467652e776166666c652e696f2f6a616d657364626c6f6f6d2f6d6f636b7365727665722e706e673f6c6162656c3d70726f706f73616c267469746c653d50726f706f73616c73" alt="Stories in Backlog" data-canonical-src="https://badge.waffle.io/jamesdbloom/mockserver.png?label=proposal&amp;title=Proposals" style="max-width:100%;"></a>
+	<a href="https://waffle.io/jamesdbloom/mockserver"><img src="https://camo.githubusercontent.com/0c25a2c44f691aa43b5fec8c8b3617f3eb16740b/68747470733a2f2f62616467652e776166666c652e696f2f6a616d657364626c6f6f6d2f6d6f636b7365727665722e706e673f6c6162656c3d7265616479267469746c653d5265616479" alt="Stories in Backlog" data-canonical-src="https://badge.waffle.io/jamesdbloom/mockserver.png?label=ready&amp;title=Ready" style="max-width:100%;"></a>
+	<a href="https://waffle.io/jamesdbloom/mockserver"><img src="https://camo.githubusercontent.com/6cb0a7e54cd194e04a1ee2ae891c1e295969d152/68747470733a2f2f62616467652e776166666c652e696f2f6a616d657364626c6f6f6d2f6d6f636b7365727665722e706e673f6c6162656c3d696e25323070726f6772657373267469746c653d496e25323050726f6772657373" alt="Stories in Backlog" data-canonical-src="https://badge.waffle.io/jamesdbloom/mockserver.png?label=in%20progress&amp;title=In%20Progress" style="max-width:100%;"></a>
+</p>
 
 <p><br><a href="https://plus.google.com/110954472544793839756?rel=author">James D Bloom</a> - <a href="http://blog.jamesdbloom.com">Blog</a></p>
 <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -3068,7 +3178,6 @@ xmlHttpRequest.send(JSON.stringify({
 </span>
 <meta itemprop="name" content="MockServer">
 <meta itemprop="description" content="An API to easily mock any system or service you integrate with via HTTP or HTTPS from either Java or JavaScript.">
-</div>
 </div>
 </div>
 </div>
