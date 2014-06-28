@@ -134,6 +134,12 @@ public class ProxyClient {
      *                   Times.exactly(3)
      *           );
      *
+     * Times supports multiple static factory methods:
+     *
+     *   once()      - verify the request was only received once
+     *   exactly(n)  - verify the request was only received exactly n times
+     *   atLeast(n)  - verify the request was only received at least n times
+     *
      * @param httpRequest the http request that must be matched for this verification to pass
      * @param times the number of times this request must be matched
      * @throws AssertionError if the request has not been found
