@@ -8,11 +8,9 @@ script:
 
 jdk:
   - openjdk6
-  - oraclejdk7
   - oraclejdk8
 
 rvm:
-  - "1.9.3"
   - "2.0.0"
 
 # whitelist
