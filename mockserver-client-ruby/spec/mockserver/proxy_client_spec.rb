@@ -14,7 +14,7 @@ describe MockServer::ProxyClient do
 
     # Stub requests
     stub_request(:put, /.+\/retrieve/).with(body: search_request_json).to_return(
-      body: "[#{register_expectation_json}, #{register_expectation_json}]",
+      body:   "[#{register_expectation_json}, #{register_expectation_json}]",
       status: 200
     )
     stub_request(:put, /.+\/dumpToLog$/).to_return(status: 202).once

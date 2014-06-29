@@ -10,14 +10,16 @@ module MockServer::UtilityMethods
   # Does the following filter/transform operations on a hash
   # - exclude null or empty valued keys from the hash
   # - camelize the keys of the hash
-  # @param hash [Object] an object which will be used to create the hash. Must support :to_hash method
+  # @param obj [Object] an object which will be used to create the hash. Must support :to_hash method
   # @return [Hash] the transformed hash
+  # rubocop:disable Style/MethodLength
+  # rubocop:disable Style/CyclomaticComplexity
   def camelized_hash(obj)
     obj = obj && obj.respond_to?(:to_hash) ? obj.to_hash : obj
 
     if obj.is_a?(Hash)
       obj.each_with_object({}) do |(k, v), acc|
-        is_empty = v.nil? || (v.respond_to?(:empty?) ? v.empty? : false)
+        is_empty         = v.nil? || (v.respond_to?(:empty?) ? v.empty? : false)
         acc[camelize(k)] = camelized_hash(v) unless is_empty
       end
     elsif obj.respond_to?(:map)
@@ -40,7 +42,7 @@ module MockServer::UtilityMethods
     end
   end
 
-  # @param [Object] an object to camelize the string representation of
+  # @param str [Object] an object to camelize the string representation of
   # @return [String] the string converted to camelcase with first letter in lower case
   def camelize(str)
     str.to_s.camelize(:lower)
@@ -49,7 +51,7 @@ module MockServer::UtilityMethods
   # Parse string response into JSON
   # @param response [Response] from RestClient response
   # @return [Hash] the parsed response or the object unmodified if parsing is not possible
-  def parse_response(response)
+  def parse_string_to_json(response)
     JSON.parse(response)
   rescue JSON::ParserError
     response

@@ -71,11 +71,12 @@ out
 .bundle
 .config
 .yardoc
+.rakeTasks
 Gemfile.lock
 InstalledFiles
 _yardoc
 coverage
-doc/
+doc
 lib/bundler/man
 pkg
 rdoc

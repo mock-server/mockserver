@@ -10,8 +10,8 @@ require_relative './utility_methods'
 # @author Nayyara Samuel(mailto: nayyara.samuel@opower.com)
 #
 module MockServer
-  RESET_ENDPOINT = '/reset'
-  CLEAR_ENDPOINT = '/clear'
+  RESET_ENDPOINT    = '/reset'
+  CLEAR_ENDPOINT    = '/clear'
   RETRIEVE_ENDPOINT = '/retrieve'
   DUMP_LOG_ENDPOINT = '/dumpToLog'
 
@@ -26,7 +26,7 @@ module MockServer
     def initialize(host, port)
       fail 'Cannot instantiate AbstractClient class. You must subclass it.' if self.class == AbstractClient
       fail 'Host/port must not be nil' unless host && port
-      @base = RestClient::Resource.new("http://#{host}:#{port}")
+      @base   = RestClient::Resource.new("http://#{host}:#{port}")
       @logger = ::LoggingFactory::DEFAULT_FACTORY.log(self.class)
     end
 
@@ -35,28 +35,26 @@ module MockServer
     # @return [Object] the response from the clear action
     def clear(request)
       request = camelized_hash(HTTP_REQUEST => Request.new(symbolize_keys(request)))
-      url = CLEAR_ENDPOINT
 
       logger.debug("Clearing expectation with request: #{request}")
-      logger.debug("URL: #{url}. Payload: #{request.to_hash}")
+      logger.debug("URL: #{CLEAR_ENDPOINT}. Payload: #{request.to_hash}")
 
-      response = @base[url].put(request.to_json, content_type: :json)
+      response = @base[CLEAR_ENDPOINT].put(request.to_json, content_type: :json)
       logger.debug("Got clear response: #{response.code}")
-      parse_response(response)
+      parse_string_to_json(response)
     end
 
     # Reset the mock server clearing all expectations previously registered
     # @return [Object] the response from the reset action
     def reset
       request = {}
-      url = RESET_ENDPOINT
 
       logger.debug('Resetting mockserver')
-      logger.debug("URL: #{url}. Payload: #{request.to_hash}")
+      logger.debug("URL: #{RESET_ENDPOINT}. Payload: #{request.to_hash}")
 
-      response = @base[url].put(request.to_json)
+      response = @base[RESET_ENDPOINT].put(request.to_json)
       logger.debug("Got reset response: #{response.code}")
-      parse_response(response)
+      parse_string_to_json(response)
     end
 
     # Retrieve the list of requests that have been processed by the server
@@ -64,25 +62,17 @@ module MockServer
     # @return [Object] the list of responses processed by the server
     def retrieve(request = nil)
       request = request ? camelized_hash(HTTP_REQUEST => Request.new(symbolize_keys(request))) : {}
-      url = RETRIEVE_ENDPOINT
 
       logger.debug('Retrieving request list from mockserver')
-      logger.debug("URL: #{url}. Payload: #{request.to_hash}")
+      logger.debug("URL: #{RETRIEVE_ENDPOINT}. Payload: #{request.to_hash}")
 
       response = @base[RETRIEVE_ENDPOINT].put(request.to_json)
       logger.debug("Got retrieve response: #{response.code}")
-      results = parse_response(response)
-      mocks = Mocks.new([])
-      unless results.empty?
-        results.each do |result|
-          mock = Mock.new
-          mock.populate_from_payload(result)
-          mocks << mock
-        end
-      end
-      mocks.code = response.code
-
-      mocks
+      expectations = Expectations.new([])
+      parse_string_to_json(response).map { |result| expectations << expectation_from_json(result) } unless response.empty?
+      # expectations = Expectations.new([]).insert(0, (parse_string_to_json(response).map { |result| expectation_from_json(result) } unless response.empty?))
+      expectations.code = response.code
+      expectations
     end
 
     # Request to dump logs to file
@@ -90,15 +80,15 @@ module MockServer
     # @return [Object] the list of responses processed by the server
     def dump_log(request = nil, java = false)
       type_params = java ? '?type=java' : ''
-      url = "#{DUMP_LOG_ENDPOINT}#{type_params}"
-      request = request ? Request.new(symbolize_keys(request)) : {}
+      url         = "#{DUMP_LOG_ENDPOINT}#{type_params}"
+      request     = request ? Request.new(symbolize_keys(request)) : {}
 
       logger.debug('Sending dump log request to mockserver')
       logger.debug("URL: #{url}. Payload: #{request.to_hash}")
 
       response = @base[url].put(request.to_json)
       logger.debug("Got dump to log response: #{response.code}")
-      parse_response(response)
+      parse_string_to_json(response)
     end
 
     # Verify that the given request is called the number of times expected
@@ -107,12 +97,12 @@ module MockServer
     # @return [Object] the list of responses processed by the server that match the request
     def verify(request, times = exactly(1))
       logger.debug('Sending query for verify to mockserver')
-      results = retrieve(request)
+      results   = retrieve(request)
 
       # Reusing the times model here so interpreting values here
-      times = Times.new(symbolize_keys(times))
+      times     = Times.new(symbolize_keys(times))
       num_times = times.remaining_times
-      is_exact = !times.unlimited
+      is_exact  = !times.unlimited
 
       fulfilled = is_exact ? (num_times == results.size) : (num_times <= results.size)
       fail "Expected request to be present: [#{num_times}] (#{is_exact ? 'exactly' : 'at least'}). But found: [#{results.size}]" unless fulfilled

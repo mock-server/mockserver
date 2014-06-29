@@ -22,7 +22,7 @@ describe MockServer::MockServerClient do
     mock_expectation = expectation do |expectation|
       expectation.request do |request|
         request.method = 'POST'
-        request.path = '/login'
+        request.path   = '/login'
         request.query_parameters << parameter('returnUrl', '/account')
         request.cookies << cookie('sessionId', '2By8LOhBmaW5nZXJwcmludCIlMDAzMW')
         request.body = exact({ username: 'foo', password: 'bar' }.to_json)
@@ -32,7 +32,7 @@ describe MockServer::MockServerClient do
         response.status_code = 401
         response.headers << header('Content-Type', 'application/json; charset=utf-8')
         response.headers << header('Cache-Control', 'public, max-age=86400')
-        response.body = body({ message: 'incorrect username and password combination' }.to_json)
+        response.body  = body({ message: 'incorrect username and password combination' }.to_json)
         response.delay = delay_by(:SECONDS, 1)
       end
 
@@ -47,7 +47,7 @@ describe MockServer::MockServerClient do
     mock_expectation = expectation do |expectation|
       expectation.request do |request|
         request.method = 'POST'
-        request.path = '/login'
+        request.path   = '/login'
       end
 
       expectation.response do |response|

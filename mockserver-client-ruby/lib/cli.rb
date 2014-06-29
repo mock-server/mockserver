@@ -23,7 +23,7 @@ module CLIHelpers
   # @param options [Struct] with host and port set
   # @return [MockServerClient] the mockserver client with the host and port
   def mockserver_client(options)
-    client = MockServerClient.new(options.host, options.port)
+    client        = MockServerClient.new(options.host, options.port)
     client.logger = LOGGER
     client
   end
@@ -32,7 +32,7 @@ module CLIHelpers
   # @param options [Struct] with host and port set
   # @return [ProxyClient] the proxy client with the host and port
   def proxy_client(options)
-    client = ProxyClient.new(options.host, options.port)
+    client        = ProxyClient.new(options.host, options.port)
     client.logger = LOGGER
     client
   end
@@ -96,7 +96,7 @@ class MockServerCLI < Thor
 
   def register
     execute_command(true, true) do |client, options|
-      payload = read_file(options.data)
+      payload          = read_file(options.data)
       mock_expectation = expectation do |expectation|
         expectation.populate_from_payload(payload)
       end
@@ -135,9 +135,9 @@ class MockServerCLI < Thor
 
   def verify
     execute_command(false, true) do |client, _|
-      payload = read_file(options.data)
+      payload      = read_file(options.data)
       mock_request = payload[HTTP_REQUEST]
-      mock_times = payload[HTTP_TIMES]
+      mock_times   = payload[HTTP_TIMES]
 
       error 'No request found for verifying against' unless mock_request
       mock_times ? client.verify(mock_request, mock_times) : client.verify(mock_request)
