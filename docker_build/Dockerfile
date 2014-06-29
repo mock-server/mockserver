@@ -6,7 +6,7 @@
 #
 
 # pull base image.
-FROM dockerfile/ubuntu:14.04
+FROM dockerfile/ubuntu
 
 # maintainer details
 MAINTAINER James Bloom "jamesdbloom@gmail.com"
@@ -25,5 +25,4 @@ RUN \
   echo debconf shared/accepted-oracle-license-v1-1 select true | debconf-set-selections && \
   echo debconf shared/accepted-oracle-license-v1-1 seen true | debconf-set-selections && \
   apt-get install -y oracle-java6-installer maven && \
-  \curl -sSL https://get.rvm.io | bash -s stable --ruby=2.1.2 && \
-  source /etc/profile.d/rvm.sh
+  \curl -sSL https://get.rvm.io | bash -s stable --ruby=2.1.2
