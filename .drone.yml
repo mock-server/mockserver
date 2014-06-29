@@ -1,4 +1,4 @@
-image: bradrydzewski/java:openjdk6
+image: jamesdbloom/mockserver:build
 
 script:
   - git clone -b travis `git config --get remote.origin.url` target/travis
