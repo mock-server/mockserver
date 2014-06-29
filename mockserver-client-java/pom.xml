@@ -8,9 +8,9 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>mockserver-client</artifactId>
+    <artifactId>mockserver-client-java</artifactId>
 
-    <name>MockServer Client</name>
+    <name>MockServer Java Client</name>
     <description>A java client for the MockServer</description>
     <url>http://www.mock-server.com</url>
 

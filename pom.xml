@@ -49,10 +49,12 @@
         <tomcat.version>7.0.47</tomcat.version>
         <jackson.version>1.9.13</jackson.version>
         <netty.version>4.0.19.Final</netty.version>
+        <skipTests>false</skipTests>
     </properties>
 
     <modules>
-        <module>mockserver-client</module>
+        <module>mockserver-client-java</module>
+        <module>mockserver-client-ruby</module>
         <module>mockserver-core</module>
         <module>mockserver-war</module>
         <module>mockserver-proxy-war</module>
@@ -60,7 +62,7 @@
         <module>mockserver-netty</module>
         <module>mockserver-maven-plugin</module>
         <module>mockserver-maven-plugin-integration-tests</module>
-        <module>mockserver-javascript-client</module>
+        <module>mockserver-client-javascript</module>
         <module>mockserver-examples</module>
     </modules>
 
@@ -97,7 +99,7 @@
             </dependency>
             <dependency>
                 <groupId>org.mock-server</groupId>
-                <artifactId>mockserver-client</artifactId>
+                <artifactId>mockserver-client-java</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

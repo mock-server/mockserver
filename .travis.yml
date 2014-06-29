@@ -17,6 +17,7 @@ rvm:
 branches:
   only:
     - master
+    - rubyclient
 
 env:
   global:

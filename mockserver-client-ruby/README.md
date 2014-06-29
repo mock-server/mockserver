@@ -6,15 +6,21 @@ A Ruby client for [MockServer](http://www.mock-server.com) project. This client 
 
 Add this line to your application's Gemfile:
 
-    gem 'mockserver-client'
+```ruby
+gem 'mockserver-client'
+```
 
 And then execute:
 
-    $ bundle
+```bash
+bundle
+```
 
 Or install it yourself as:
 
-    $ gem install mockserver-client
+```bash
+gem install mockserver-client
+```
 
 ## Usage
 
@@ -28,8 +34,8 @@ include MockServer::Model::DSL
 ### Create Expectations
 
 ##### Java
-```java
 
+```java
 new MockServerClient("localhost", 9999)
         .when(
                 request()
@@ -59,7 +65,6 @@ new MockServerClient("localhost", 9999)
 ##### Ruby
 
 ```ruby
-
 client = MockServerClient.new('localhost', 9999)
 expectation = expectation do |expectation|
      expectation.request do |request|
@@ -120,7 +125,6 @@ new ProxyClient("localhost", 9090).verify(
 ##### Ruby
 
 ```ruby
-
 # Not providing times here because the default is exactly(1) i.e. the second argument to verify method
 ProxyClient.new('localhost', 9090).verify(request(:POST, '/login') do |request|
     request.body = exact("{username: 'foo', password: 'bar'}")
@@ -142,6 +146,7 @@ new ProxyClient("localhost", 9090).dumpToLogAsJava(
 ```
 
 ##### Ruby
+
 ```ruby
 # Second argument is true to set output to Java; false to set output to default JSON (default)
 ProxyClient.new('localhost', 9090).dump_log(request(:POST, '/login'), true)
@@ -192,7 +197,7 @@ Getter methods for `request`, `response` and `forward` methods will optionally a
 
 This gem comes with a command line interface which allow you to run the Mock Server calls from the command line. When this gem is installed, you will have the `mockserver` executable on your PATH. Type `mockserver --help` and you will get this output: 
 
-```
+```bash
 mockserver --help 
 
 Commands: 
@@ -214,7 +219,7 @@ Options:
 
 To get help for an individual command, e.g. `dump_log`, you would do:
 
-```
+```bash
 mockserver --help dump_log
 
 Usage:
@@ -233,7 +238,7 @@ Dumps the matching request to the mock server logs.
 
 Here is an example on how you would run the command:
 
-```
+```bash
 mockserver dump_log -j true
 
 Running with parameters:
