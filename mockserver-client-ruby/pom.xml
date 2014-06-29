@@ -36,7 +36,7 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <id>grunt</id>
+                        <id>ruby_make</id>
                         <phase>prepare-package</phase>
                         <goals>
                             <goal>exec</goal>
@@ -46,6 +46,25 @@
                             <arguments>
                                 <argument>exec</argument>
                                 <argument>rake</argument>
+                                <argument>build</argument>
+                            </arguments>
+                            <environmentVariables>
+                                <BUNDLE_GEMFILE>${basedir}/Gemfile</BUNDLE_GEMFILE>
+                            </environmentVariables>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>ruby_release</id>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>bundle</executable>
+                            <arguments>
+                                <argument>exec</argument>
+                                <argument>rake</argument>
+                                <argument>release</argument>
                             </arguments>
                             <environmentVariables>
                                 <BUNDLE_GEMFILE>${basedir}/Gemfile</BUNDLE_GEMFILE>
