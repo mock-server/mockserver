@@ -23,8 +23,8 @@ Maven Central contains the following MockServer artifacts:
 * [mockserver-jetty:jar-with-dependencies](http://search.maven.org/#search%7Cga%7C1%7Cmockserver-jetty) - a fully stand alone web server embedded with all dependencies that mocks HTTP and HTTPS requests (using Embedded Jetty)
 * [mockserver-war](http://search.maven.org/#search%7Cga%7C1%7Cmockserver-war) - a deployable WAR for mocking HTTP and HTTP requests (that runs on any JEE web server)
 * [mockserver-proxy](http://search.maven.org/#search%7Cga%7C1%7Cmockserver-proxy) - an HTTP / HTTPS proxy that allows the recording and querying of requests and response
-* [mockserver-client-java](http://search.maven.org/#search%7Cga%7C1%7Cmockserver-client) - a Java client to communicate with both the server and the proxy
-* [mockserver-client-javaScript](http://search.maven.org/#search%7Cga%7C1%7Cmockserver-client) - a Java client to communicate with both the server and the proxy
+* [mockserver-client-java](http://search.maven.org/#search%7Cga%7C1%7Cmockserver-client-java) - a Java client to communicate with both the server and the proxy
+* [mockserver-client-javascript](http://search.maven.org/#search%7Cga%7C1%7Cmockserver-client-javascript) - a Java client to communicate with both the server and the proxy
 
 In addition MockServer SNAPSHOT artifacts can also be found on [Sonatype](https://oss.sonatype.org/index.html#nexus-search;quick~mockserver).
 
