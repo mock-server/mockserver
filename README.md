@@ -40,7 +40,6 @@ Docker Index contains the following artifacts:
 Vert.X Module Registry contains the following artifacts:
 
 * [org.mock-server~mockserver-vertx~2.9](http://modulereg.vertx.io/) - a Vert.X module that mocks HTTP and HTTPS requests
-* 
 
 ### MockServer & Proxy Clients
 
