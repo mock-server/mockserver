@@ -251,11 +251,10 @@ Running with parameters:
 [2014-06-21 09:23:32] DEBUG [MockServerClient] Got dump to log response: 202
 ```
 
-## Contributing
+# Issues
 
-1. Fork it ( https://github.com/[my-github-username]/mockserver-client/fork )
-2. Create your feature branch (`git checkout -b my-new-feature`)
-3. Commit your changes (`git commit -am 'Add some feature'`)
-4. Push to the branch (`git push origin my-new-feature`)
-5. Create a new Pull Request
-6. **IMPORTANT**: Keep code coverage high. Preferably above 95%. This project uses SimpleCov for code coverage which reports percentage coverage.
+If you have any problems, please [check the project issues](https://github.com/jamesdbloom/mockserver/issues?state=open).
+
+# Contributions
+
+Pull requests are, of course, very welcome! Please read our [contributing to the project](https://github.com/jamesdbloom/mockserver/wiki/Contributing-to-the-project) guide first. Then head over to the [open issues](https://github.com/jamesdbloom/mockserver/issues?state=open) to see what we need help with. Make sure you let us know if you intend to work on something. Also, check out the [milestones](https://github.com/jamesdbloom/mockserver/issues/milestones) to see what is planned for future releases.
