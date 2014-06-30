@@ -43,9 +43,9 @@ Vert.X Module Registry contains the following artifacts:
 
 ### MockServer & Proxy Clients
 
-* [mockserver-client-ruby](https://rubygems.org/gems/mockserver-client) - a Ruby client to communicate with both the server and the proxy
-* [mockserver-client-java](http://search.maven.org/#search%7Cga%7C1%7Cmockserver-client-java) - a Java client to communicate with both the server and the proxy
-* [mockserver-client-javascript](https://rubygems.org/gems/mockserver-client-javascript) - a JavaScript client to communicate with both the server and the proxy
+* [mockserver-client-ruby ![mockserver-client](https://badge.fury.io/rb/mockserver-client.png)](https://rubygems.org/gems/mockserver-client) - Ruby client for both the MockServer and the proxy 
+* [mockserver-client-java](http://search.maven.org/#search%7Cga%7C1%7Cmockserver-client-java) - a Java client for both the MockServer and the proxy 
+* [mockserver-client-javascript](https://rubygems.org/gems/mockserver-client-javascript) - a JavaScript client for both the MockServer and the proxy 
 
 # Issues
 
