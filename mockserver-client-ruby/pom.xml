@@ -53,25 +53,24 @@
                             </environmentVariables>
                         </configuration>
                     </execution>
-                    <!-- TODO setup release permissions to https://rubygems.org/gems/mockserver-client -->
-                    <!--<execution>-->
-                        <!--<id>ruby_release</id>-->
-                        <!--<phase>deploy</phase>-->
-                        <!--<goals>-->
-                            <!--<goal>exec</goal>-->
-                        <!--</goals>-->
-                        <!--<configuration>-->
-                            <!--<executable>bundle</executable>-->
-                            <!--<arguments>-->
-                                <!--<argument>exec</argument>-->
-                                <!--<argument>rake</argument>-->
-                                <!--<argument>release</argument>-->
-                            <!--</arguments>-->
-                            <!--<environmentVariables>-->
-                                <!--<BUNDLE_GEMFILE>${basedir}/Gemfile</BUNDLE_GEMFILE>-->
-                            <!--</environmentVariables>-->
-                        <!--</configuration>-->
-                    <!--</execution>-->
+                    <execution>
+                        <id>ruby_release</id>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>bundle</executable>
+                            <arguments>
+                                <argument>exec</argument>
+                                <argument>rake</argument>
+                                <argument>release</argument>
+                            </arguments>
+                            <environmentVariables>
+                                <BUNDLE_GEMFILE>${basedir}/Gemfile</BUNDLE_GEMFILE>
+                            </environmentVariables>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
         </plugins>
