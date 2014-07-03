@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 public class MockServerClient {
     private static final Logger logger = LoggerFactory.getLogger(MockServerClient.class);
 
+    protected final int port;
     private final String uriBase;
     private ApacheHttpClient apacheHttpClient;
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
@@ -47,8 +48,9 @@ public class MockServerClient {
     public MockServerClient(String host, int port, String contextPath) {
         if (StringUtils.isEmpty(host)) throw new IllegalArgumentException("Host can not be null or empty");
         if (contextPath == null) throw new IllegalArgumentException("ContextPath can not be null");
-        uriBase = "http://" + host + ":" + port + (contextPath.length() > 0 && !contextPath.startsWith("/") ? "/" : "") + contextPath;
-        apacheHttpClient = new ApacheHttpClient(false);
+        this.port = port;
+        this.uriBase = "http://" + host + ":" + port + (contextPath.length() > 0 && !contextPath.startsWith("/") ? "/" : "") + contextPath;
+        this.apacheHttpClient = new ApacheHttpClient(false);
     }
 
     /**
