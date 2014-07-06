@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html  prefix="og: http://ogp.me/ns#" xmlns:og="http://ogp.me/ns#">
+<html xmlns:og="http://ogp.me/ns#" prefix="og: http://ogp.me/ns#">
 <head>
 <title>MockServer</title>
 <link rel="author" href="https://plus.google.com/u/0/110954472544793839756">
@@ -1593,6 +1593,60 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p>Any test method can now use the <strong>mockServerClient</strong> field to <a href="#create-expectations">create expectation</a> or <a href="#verify-behaviour">verify</a> requests.</p>
 
+<p>The MockServerRule has the following constructors:</p>
+
+<pre><code class="code"><span class="comment">/**
+ * Start the MockServer prior to test execution and stop the MockServer after the tests have completed.
+ * This constructor dynamically allocates a free port for the MockServer to use.
+ *
+ * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">target</span> an instance of the test being executed
+ */</span>
+<span class="keyword">public</span> MockServerRule(Object target);
+
+<span class="comment">/**
+ * Start the MockServer prior to test execution and stop the MockServer after the tests have completed.
+ * This constructor dynamically allocates a free port for the MockServer to use.
+ *
+ * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">target</span> an instance of the test being executed
+ * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">perTestSuite</span> indicates how many instances of MockServer are created
+ *                     if true a single MockServer is created per JVM
+ *                     if false one instance per test class is created
+ */</span>
+<span class="keyword">public</span> MockServerRule(Object target, <span class="keyword">boolean</span> per TestSuite);
+<span class="comment">/**
+ * Start the proxy prior to test execution and stop the proxy after the tests have completed.
+ * This constructor dynamically create a proxy that accepts HTTP requests on the specified port
+ *
+ * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpPort</span> the HTTP port for the proxy
+ * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">target</span> an instance of the test being executed
+ */</span>
+<span class="keyword">public</span> MockServerRule(Integer httpPort, Object target);
+
+<span class="comment">/**
+ * Start the proxy prior to test execution and stop the proxy after the tests have completed.
+ * This constructor dynamically create a proxy that accepts HTTP requests on the specified port
+ *
+ * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpPort</span> the HTTP port for the proxy
+ * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">target</span> an instance of the test being executed
+ * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">perTestSuite</span> indicates how many instances of MockServer are created
+ *                     if true a single MockServer is created per JVM
+ *                     if false one instance per test class is created
+ */</span>
+<span class="keyword">public</span> MockServerRule(Integer httpPort, Object target, <span class="keyword">boolean</span> per TestSuite);
+
+<span class="comment">/**
+ * Start the proxy prior to test execution and stop the proxy after the tests have completed.
+ * This constructor dynamically create a proxy that accepts HTTP and HTTPS requests on the specified ports
+ *
+ * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpPort</span> the HTTP port for the proxy
+ * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpsPort</span> the HTTPS port for the proxy
+ * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">target</span> an instance of the test being executed
+ * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">perTestSuite</span> indicates how many instances of MockServer are created
+ *                     if true a single MockServer is created per JVM
+ *                     if false one instance per test class is created
+ */</span>
+<span class="keyword">public</span> MockServerRule(Integer httpPort, Integer httpsPort, Object target, <span class="keyword">boolean</span> per TestSuite);</code></pre>
+
 <p>The proxy can be run using the ProxyRule.  The ProxyRule starts the proxy before the any test runs and stops the proxy after all tests have completed.  A ProxyClient is then assigned to any field in the unit test of type org.mockserver.client.proxy.ProxyClient</p>
 
 <pre><code class="code"><span class="annotation">@Rule</span>
@@ -1602,7 +1656,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p>Any test method can now use the <strong>proxyClient</strong> field to <a href="#verify-behaviour">verify</a> requests or <a href="#analysing-behaviour">anaylse a system's behaviour</a>.</p>
 
-<p>The ProxyRule has three constructors, as follows:</p>
+<p>The ProxyRule has the following constructors:</p>
 
 <pre><code class="code"><span class="comment">/**
  * Start the proxy prior to test execution and stop the proxy after the tests have completed.
@@ -1615,6 +1669,17 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <span class="comment">/**
  * Start the proxy prior to test execution and stop the proxy after the tests have completed.
+ * This constructor dynamically allocates a free port for the proxy to use.
+ *
+ * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">target</span> an instance of the test being executed
+ * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">perTestSuite</span> indicates how many instances of the proxy are created
+ *                     if true a single proxy is created per JVM
+ *                     if false one instance per test class is created
+ */</span>
+<span class="keyword">public</span> ProxyRule(Object target, <span class="keyword">boolean</span> per TestSuite);
+
+<span class="comment">/**
+ * Start the proxy prior to test execution and stop the proxy after the tests have completed.
  * This constructor dynamically create a proxy that accepts HTTP requests on the specified port
  *
  * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpPort</span> the HTTP port for the proxy
@@ -1624,13 +1689,28 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <span class="comment">/**
  * Start the proxy prior to test execution and stop the proxy after the tests have completed.
+ * This constructor dynamically create a proxy that accepts HTTP requests on the specified port
+ *
+ * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpPort</span> the HTTP port for the proxy
+ * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">target</span> an instance of the test being executed
+ * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">perTestSuite</span> indicates how many instances of the proxy are created
+ *                     if true a single proxy is created per JVM
+ *                     if false one instance per test class is created
+ */</span>
+<span class="keyword">public</span> ProxyRule(Integer httpPort, Object target, <span class="keyword">boolean</span> per TestSuite);
+
+<span class="comment">/**
+ * Start the proxy prior to test execution and stop the proxy after the tests have completed.
  * This constructor dynamically create a proxy that accepts HTTP and HTTPS requests on the specified ports
  *
  * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpPort</span> the HTTP port for the proxy
  * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpsPort</span> the HTTPS port for the proxy
  * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">target</span> an instance of the test being executed
+ * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">perTestSuite</span> indicates how many instances of the proxy are created
+ *                     if true a single proxy is created per JVM
+ *                     if false one instance per test class is created
  */</span>
-<span class="keyword">public</span> ProxyRule(Integer httpPort, Integer httpsPort, Object target);</code></pre>
+<span class="keyword">public</span> ProxyRule(Integer httpPort, Integer httpsPort, Object target, <span class="keyword">boolean</span> per TestSuite);</code></pre>
 
 <a name="running-from-command-line" class="anchor" href="#running-from-command-line">&nbsp;</a>
 

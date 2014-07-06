@@ -34,6 +34,9 @@ public class MockServerRule implements TestRule {
      * This constructor dynamically allocates a free port for the MockServer to use.
      *
      * @param target an instance of the test being executed
+     * @param perTestSuite indicates how many instances of MockServer are created
+     *                     if true a single MockServer is created per JVM
+     *                     if false one instance per test class is created
      */
     public MockServerRule(Object target, boolean perTestSuite) {
         this(PortFactory.findFreePort(), target, perTestSuite);
@@ -56,6 +59,9 @@ public class MockServerRule implements TestRule {
      *
      * @param httpPort the HTTP port for the proxy
      * @param target an instance of the test being executed
+     * @param perTestSuite indicates how many instances of MockServer are created
+     *                     if true a single MockServer is created per JVM
+     *                     if false one instance per test class is created
      */
     public MockServerRule(Integer httpPort, Object target, boolean perTestSuite) {
         this(httpPort, null, target, perTestSuite);
@@ -68,6 +74,9 @@ public class MockServerRule implements TestRule {
      * @param httpPort the HTTP port for the proxy
      * @param httpsPort the HTTPS port for the proxy
      * @param target an instance of the test being executed
+     * @param perTestSuite indicates how many instances of MockServer are created
+     *                     if true a single MockServer is created per JVM
+     *                     if false one instance per test class is created
      */
     public MockServerRule(Integer httpPort, Integer httpsPort, Object target, boolean perTestSuite) {
         this.httpPort = httpPort;

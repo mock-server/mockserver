@@ -35,6 +35,9 @@ public class ProxyRule implements TestRule {
      * This constructor dynamically allocates a free port for the proxy to use.
      *
      * @param target an instance of the test being executed
+     * @param perTestSuite indicates how many instances of the proxy are created
+     *                     if true a single proxy is created per JVM
+     *                     if false one instance per test class is created
      */
     public ProxyRule(Object target, boolean perTestSuite) {
         this(PortFactory.findFreePort(), target, perTestSuite);
@@ -57,6 +60,9 @@ public class ProxyRule implements TestRule {
      *
      * @param httpPort the HTTP port for the proxy
      * @param target an instance of the test being executed
+     * @param perTestSuite indicates how many instances of the proxy are created
+     *                     if true a single proxy is created per JVM
+     *                     if false one instance per test class is created
      */
     public ProxyRule(Integer httpPort, Object target, boolean perTestSuite) {
         this(httpPort, null, target, perTestSuite);
@@ -69,6 +75,9 @@ public class ProxyRule implements TestRule {
      * @param httpPort the HTTP port for the proxy
      * @param httpsPort the HTTPS port for the proxy
      * @param target an instance of the test being executed
+     * @param perTestSuite indicates how many instances of the proxy are created
+     *                     if true a single proxy is created per JVM
+     *                     if false one instance per test class is created
      */
     public ProxyRule(Integer httpPort, Integer httpsPort, Object target, boolean perTestSuite) {
         this.httpPort = httpPort;
