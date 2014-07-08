@@ -88,11 +88,15 @@ public class KeyStoreFactory {
         // add the extensions
         //
         List<ASN1Encodable> subjectAlternativeNames = new ArrayList<ASN1Encodable>();
-        for (String subjectAlternativeName : subjectAlternativeNameDomains) {
-            subjectAlternativeNames.add(new GeneralName(GeneralName.dNSName, subjectAlternativeName));
+        if (subjectAlternativeNameDomains != null) {
+            for (String subjectAlternativeName : subjectAlternativeNameDomains) {
+                subjectAlternativeNames.add(new GeneralName(GeneralName.dNSName, subjectAlternativeName));
+            }
         }
-        for (String subjectAlternativeName : subjectAlternativeNameIps) {
-            subjectAlternativeNames.add(new GeneralName(GeneralName.iPAddress, subjectAlternativeName));
+        if (subjectAlternativeNameDomains != null) {
+            for (String subjectAlternativeName : subjectAlternativeNameIps) {
+                subjectAlternativeNames.add(new GeneralName(GeneralName.iPAddress, subjectAlternativeName));
+            }
         }
         if (subjectAlternativeNames.size() > 0) {
             DERSequence subjectAlternativeNamesExtension = new DERSequence(subjectAlternativeNames.toArray(new ASN1Encodable[subjectAlternativeNames.size()]));
