@@ -93,7 +93,7 @@ public class KeyStoreFactory {
                 subjectAlternativeNames.add(new GeneralName(GeneralName.dNSName, subjectAlternativeName));
             }
         }
-        if (subjectAlternativeNameDomains != null) {
+        if (subjectAlternativeNameIps != null) {
             for (String subjectAlternativeName : subjectAlternativeNameIps) {
                 subjectAlternativeNames.add(new GeneralName(GeneralName.iPAddress, subjectAlternativeName));
             }
