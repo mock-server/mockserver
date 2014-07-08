@@ -107,7 +107,7 @@ public class SSLFactory {
                     KEY_STORE_CERT_ALIAS,
                     KEY_STORE_CA_ALIAS,
                     KEY_STORE_PASSWORD.toCharArray(),
-                    "CN=www.mockserver.com, O=MockServer, L=London, S=England, C=UK"
+                    "localhost", null, null
             );
         } catch (Exception e) {
             throw new RuntimeException("Exception while building KeyStore dynamically", e);
@@ -152,6 +152,5 @@ public class SSLFactory {
             throw new RuntimeException("Exception while saving KeyStore", e);
         }
     }
-
 
 }
