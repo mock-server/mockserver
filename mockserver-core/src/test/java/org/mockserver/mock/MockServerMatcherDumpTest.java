@@ -57,31 +57,31 @@ public class MockServerMatcherDumpTest {
         mockServerMatcher.dumpToLog(null);
 
         // then
-        verify(requestLogger).warn("{\n" +
-                "  \"httpRequest\" : {\n" +
-                "    \"path\" : \"some_path\"\n" +
-                "  },\n" +
-                "  \"httpResponse\" : {\n" +
-                "    \"statusCode\" : 200,\n" +
-                "    \"body\" : \"some_response_body\"\n" +
-                "  },\n" +
-                "  \"times\" : {\n" +
-                "    \"remainingTimes\" : 0,\n" +
-                "    \"unlimited\" : true\n" +
-                "  }\n" +
+        verify(requestLogger).warn("{" + System.getProperty("line.separator") +
+                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
+                "    \"path\" : \"some_path\"" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"httpResponse\" : {" + System.getProperty("line.separator") +
+                "    \"statusCode\" : 200," + System.getProperty("line.separator") +
+                "    \"body\" : \"some_response_body\"" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"times\" : {" + System.getProperty("line.separator") +
+                "    \"remainingTimes\" : 0," + System.getProperty("line.separator") +
+                "    \"unlimited\" : true" + System.getProperty("line.separator") +
+                "  }" + System.getProperty("line.separator") +
                 "}");
-        verify(requestLogger).warn("{\n" +
-                "  \"httpRequest\" : {\n" +
-                "    \"path\" : \"some_other_path\"\n" +
-                "  },\n" +
-                "  \"httpResponse\" : {\n" +
-                "    \"statusCode\" : 200,\n" +
-                "    \"body\" : \"some_other_response_body\"\n" +
-                "  },\n" +
-                "  \"times\" : {\n" +
-                "    \"remainingTimes\" : 0,\n" +
-                "    \"unlimited\" : true\n" +
-                "  }\n" +
+        verify(requestLogger).warn("{" + System.getProperty("line.separator") +
+                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
+                "    \"path\" : \"some_other_path\"" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"httpResponse\" : {" + System.getProperty("line.separator") +
+                "    \"statusCode\" : 200," + System.getProperty("line.separator") +
+                "    \"body\" : \"some_other_response_body\"" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"times\" : {" + System.getProperty("line.separator") +
+                "    \"remainingTimes\" : 0," + System.getProperty("line.separator") +
+                "    \"unlimited\" : true" + System.getProperty("line.separator") +
+                "  }" + System.getProperty("line.separator") +
                 "}");
     }
 
@@ -111,18 +111,18 @@ public class MockServerMatcherDumpTest {
         mockServerMatcher.dumpToLog(new HttpRequest().withPath("some_path"));
 
         // then
-        verify(requestLogger).warn("{\n" +
-                "  \"httpRequest\" : {\n" +
-                "    \"path\" : \"some_path\"\n" +
-                "  },\n" +
-                "  \"httpResponse\" : {\n" +
-                "    \"statusCode\" : 200,\n" +
-                "    \"body\" : \"some_response_body\"\n" +
-                "  },\n" +
-                "  \"times\" : {\n" +
-                "    \"remainingTimes\" : 0,\n" +
-                "    \"unlimited\" : true\n" +
-                "  }\n" +
+        verify(requestLogger).warn("{" + System.getProperty("line.separator") +
+                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
+                "    \"path\" : \"some_path\"" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"httpResponse\" : {" + System.getProperty("line.separator") +
+                "    \"statusCode\" : 200," + System.getProperty("line.separator") +
+                "    \"body\" : \"some_response_body\"" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"times\" : {" + System.getProperty("line.separator") +
+                "    \"remainingTimes\" : 0," + System.getProperty("line.separator") +
+                "    \"unlimited\" : true" + System.getProperty("line.separator") +
+                "  }" + System.getProperty("line.separator") +
                 "}");
         verifyNoMoreInteractions(requestLogger);
     }
@@ -131,262 +131,262 @@ public class MockServerMatcherDumpTest {
     @Test
     public void shouldCorrectlyMatchRegexForResponsesWithStatusCode() {
         // when
-        String result = mockServerMatcher.cleanBase64Response("{\n" +
-                "  \"httpRequest\" : {\n" +
-                "    \"path\" : \"some_path\"\n" +
-                "  },\n" +
-                "  \"httpResponse\" : {\n" +
-                "    \"statusCode\" : 200,\n" +
-                "    \"body\" : \"" + Base64Converter.stringToBase64Bytes("some_response_body".getBytes()) + "\"\n" +
-                "  },\n" +
-                "  \"times\" : {\n" +
-                "    \"remainingTimes\" : 0,\n" +
-                "    \"unlimited\" : true\n" +
-                "  }\n" +
+        String result = mockServerMatcher.cleanBase64Response("{" + System.getProperty("line.separator") +
+                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
+                "    \"path\" : \"some_path\"" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"httpResponse\" : {" + System.getProperty("line.separator") +
+                "    \"statusCode\" : 200," + System.getProperty("line.separator") +
+                "    \"body\" : \"" + Base64Converter.stringToBase64Bytes("some_response_body".getBytes()) + "\"" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"times\" : {" + System.getProperty("line.separator") +
+                "    \"remainingTimes\" : 0," + System.getProperty("line.separator") +
+                "    \"unlimited\" : true" + System.getProperty("line.separator") +
+                "  }" + System.getProperty("line.separator") +
                 "}");
 
         // then
-        assertThat(result, is("{\n" +
-                "  \"httpRequest\" : {\n" +
-                "    \"path\" : \"some_path\"\n" +
-                "  },\n" +
-                "  \"httpResponse\" : {\n" +
-                "    \"statusCode\" : 200,\n" +
-                "    \"body\" : \"some_response_body\"\n" +
-                "  },\n" +
-                "  \"times\" : {\n" +
-                "    \"remainingTimes\" : 0,\n" +
-                "    \"unlimited\" : true\n" +
-                "  }\n" +
+        assertThat(result, is("{" + System.getProperty("line.separator") +
+                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
+                "    \"path\" : \"some_path\"" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"httpResponse\" : {" + System.getProperty("line.separator") +
+                "    \"statusCode\" : 200," + System.getProperty("line.separator") +
+                "    \"body\" : \"some_response_body\"" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"times\" : {" + System.getProperty("line.separator") +
+                "    \"remainingTimes\" : 0," + System.getProperty("line.separator") +
+                "    \"unlimited\" : true" + System.getProperty("line.separator") +
+                "  }" + System.getProperty("line.separator") +
                 "}"));
     }
 
     @Test
     public void shouldCorrectlyMatchRegexForResponsesWithDelay() {
         // when
-        String result = mockServerMatcher.cleanBase64Response("{\n" +
-                "    \"httpRequest\": {\n" +
-                "        \"path\": \"somePath\"\n" +
-                "    },\n" +
-                "    \"httpResponse\": {\n" +
-                "        \"body\": \"" + Base64Converter.stringToBase64Bytes("someBody".getBytes()) + "\",\n" +
-                "        \"delay\": {\n" +
-                "            \"timeUnit\": null,\n" +
-                "            \"value\": null\n" +
-                "        }\n" +
-                "    }\n" +
+        String result = mockServerMatcher.cleanBase64Response("{" + System.getProperty("line.separator") +
+                "    \"httpRequest\": {" + System.getProperty("line.separator") +
+                "        \"path\": \"somePath\"" + System.getProperty("line.separator") +
+                "    }," + System.getProperty("line.separator") +
+                "    \"httpResponse\": {" + System.getProperty("line.separator") +
+                "        \"body\": \"" + Base64Converter.stringToBase64Bytes("someBody".getBytes()) + "\"," + System.getProperty("line.separator") +
+                "        \"delay\": {" + System.getProperty("line.separator") +
+                "            \"timeUnit\": null," + System.getProperty("line.separator") +
+                "            \"value\": null" + System.getProperty("line.separator") +
+                "        }" + System.getProperty("line.separator") +
+                "    }" + System.getProperty("line.separator") +
                 "}");
 
         // then
-        assertThat(result, is("{\n" +
-                "    \"httpRequest\": {\n" +
-                "        \"path\": \"somePath\"\n" +
-                "    },\n" +
-                "    \"httpResponse\": {\n" +
-                "        \"body\": \"someBody\",\n" +
-                "        \"delay\": {\n" +
-                "            \"timeUnit\": null,\n" +
-                "            \"value\": null\n" +
-                "        }\n" +
-                "    }\n" +
+        assertThat(result, is("{" + System.getProperty("line.separator") +
+                "    \"httpRequest\": {" + System.getProperty("line.separator") +
+                "        \"path\": \"somePath\"" + System.getProperty("line.separator") +
+                "    }," + System.getProperty("line.separator") +
+                "    \"httpResponse\": {" + System.getProperty("line.separator") +
+                "        \"body\": \"someBody\"," + System.getProperty("line.separator") +
+                "        \"delay\": {" + System.getProperty("line.separator") +
+                "            \"timeUnit\": null," + System.getProperty("line.separator") +
+                "            \"value\": null" + System.getProperty("line.separator") +
+                "        }" + System.getProperty("line.separator") +
+                "    }" + System.getProperty("line.separator") +
                 "}"));
     }
 
     @Test
     public void shouldCorrectlyMatchRegexForComplexResponses() {
         // when
-        String result = mockServerMatcher.cleanBase64Response("{\n" +
-                "  \"httpRequest\" : {\n" +
-                "    \"method\" : \"someMethod\",\n" +
-                "    \"url\" : \"http://www.example.com\",\n" +
-                "    \"path\" : \"somePath\",\n" +
-                "    \"queryStringParameters\" : [ {\n" +
-                "      \"name\" : \"queryStringParameterNameOne\",\n" +
-                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]\n" +
-                "    }, {\n" +
-                "      \"name\" : \"queryStringParameterNameTwo\",\n" +
-                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]\n" +
-                "    } ],\n" +
-                "    \"body\" : {\n" +
-                "      \"type\" : \"EXACT\",\n" +
-                "      \"value\" : \"someBody\"\n" +
-                "    },\n" +
-                "    \"cookies\" : [ {\n" +
-                "      \"name\" : \"someCookieName\",\n" +
-                "      \"values\" : [ \"someCookieValue\" ]\n" +
-                "    } ],\n" +
-                "    \"headers\" : [ {\n" +
-                "      \"name\" : \"someHeaderName\",\n" +
-                "      \"values\" : [ \"someHeaderValue\" ]\n" +
-                "    } ]\n" +
-                "  },\n" +
-                "  \"httpResponse\" : {\n" +
-                "    \"statusCode\" : 304,\n" +
-                "    \"body\" : \"" + Base64Converter.stringToBase64Bytes("someBody".getBytes()) + "\",\n" +
-                "    \"cookies\" : [ {\n" +
-                "      \"name\" : \"someCookieName\",\n" +
-                "      \"values\" : [ \"someCookieValue\" ]\n" +
-                "    } ],\n" +
-                "    \"headers\" : [ {\n" +
-                "      \"name\" : \"someHeaderName\",\n" +
-                "      \"values\" : [ \"someHeaderValue\" ]\n" +
-                "    } ],\n" +
-                "    \"delay\" : {\n" +
-                "      \"timeUnit\" : \"MICROSECONDS\",\n" +
-                "      \"value\" : 1\n" +
-                "    }\n" +
-                "  },\n" +
-                "  \"times\" : {\n" +
-                "    \"remainingTimes\" : 5,\n" +
-                "    \"unlimited\" : false\n" +
-                "  }\n" +
+        String result = mockServerMatcher.cleanBase64Response("{" + System.getProperty("line.separator") +
+                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
+                "    \"method\" : \"someMethod\"," + System.getProperty("line.separator") +
+                "    \"url\" : \"http://www.example.com\"," + System.getProperty("line.separator") +
+                "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
+                "    \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
+                "      \"name\" : \"queryStringParameterNameOne\"," + System.getProperty("line.separator") +
+                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + System.getProperty("line.separator") +
+                "    }, {" + System.getProperty("line.separator") +
+                "      \"name\" : \"queryStringParameterNameTwo\"," + System.getProperty("line.separator") +
+                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + System.getProperty("line.separator") +
+                "    } ]," + System.getProperty("line.separator") +
+                "    \"body\" : {" + System.getProperty("line.separator") +
+                "      \"type\" : \"EXACT\"," + System.getProperty("line.separator") +
+                "      \"value\" : \"someBody\"" + System.getProperty("line.separator") +
+                "    }," + System.getProperty("line.separator") +
+                "    \"cookies\" : [ {" + System.getProperty("line.separator") +
+                "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
+                "      \"values\" : [ \"someCookieValue\" ]" + System.getProperty("line.separator") +
+                "    } ]," + System.getProperty("line.separator") +
+                "    \"headers\" : [ {" + System.getProperty("line.separator") +
+                "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
+                "      \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
+                "    } ]" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"httpResponse\" : {" + System.getProperty("line.separator") +
+                "    \"statusCode\" : 304," + System.getProperty("line.separator") +
+                "    \"body\" : \"" + Base64Converter.stringToBase64Bytes("someBody".getBytes()) + "\"," + System.getProperty("line.separator") +
+                "    \"cookies\" : [ {" + System.getProperty("line.separator") +
+                "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
+                "      \"values\" : [ \"someCookieValue\" ]" + System.getProperty("line.separator") +
+                "    } ]," + System.getProperty("line.separator") +
+                "    \"headers\" : [ {" + System.getProperty("line.separator") +
+                "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
+                "      \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
+                "    } ]," + System.getProperty("line.separator") +
+                "    \"delay\" : {" + System.getProperty("line.separator") +
+                "      \"timeUnit\" : \"MICROSECONDS\"," + System.getProperty("line.separator") +
+                "      \"value\" : 1" + System.getProperty("line.separator") +
+                "    }" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"times\" : {" + System.getProperty("line.separator") +
+                "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
+                "    \"unlimited\" : false" + System.getProperty("line.separator") +
+                "  }" + System.getProperty("line.separator") +
                 "}");
 
         // then
-        assertThat(result, is("{\n" +
-                "  \"httpRequest\" : {\n" +
-                "    \"method\" : \"someMethod\",\n" +
-                "    \"url\" : \"http://www.example.com\",\n" +
-                "    \"path\" : \"somePath\",\n" +
-                "    \"queryStringParameters\" : [ {\n" +
-                "      \"name\" : \"queryStringParameterNameOne\",\n" +
-                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]\n" +
-                "    }, {\n" +
-                "      \"name\" : \"queryStringParameterNameTwo\",\n" +
-                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]\n" +
-                "    } ],\n" +
-                "    \"body\" : {\n" +
-                "      \"type\" : \"EXACT\",\n" +
-                "      \"value\" : \"someBody\"\n" +
-                "    },\n" +
-                "    \"cookies\" : [ {\n" +
-                "      \"name\" : \"someCookieName\",\n" +
-                "      \"values\" : [ \"someCookieValue\" ]\n" +
-                "    } ],\n" +
-                "    \"headers\" : [ {\n" +
-                "      \"name\" : \"someHeaderName\",\n" +
-                "      \"values\" : [ \"someHeaderValue\" ]\n" +
-                "    } ]\n" +
-                "  },\n" +
-                "  \"httpResponse\" : {\n" +
-                "    \"statusCode\" : 304,\n" +
-                "    \"body\" : \"someBody\",\n" +
-                "    \"cookies\" : [ {\n" +
-                "      \"name\" : \"someCookieName\",\n" +
-                "      \"values\" : [ \"someCookieValue\" ]\n" +
-                "    } ],\n" +
-                "    \"headers\" : [ {\n" +
-                "      \"name\" : \"someHeaderName\",\n" +
-                "      \"values\" : [ \"someHeaderValue\" ]\n" +
-                "    } ],\n" +
-                "    \"delay\" : {\n" +
-                "      \"timeUnit\" : \"MICROSECONDS\",\n" +
-                "      \"value\" : 1\n" +
-                "    }\n" +
-                "  },\n" +
-                "  \"times\" : {\n" +
-                "    \"remainingTimes\" : 5,\n" +
-                "    \"unlimited\" : false\n" +
-                "  }\n" +
+        assertThat(result, is("{" + System.getProperty("line.separator") +
+                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
+                "    \"method\" : \"someMethod\"," + System.getProperty("line.separator") +
+                "    \"url\" : \"http://www.example.com\"," + System.getProperty("line.separator") +
+                "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
+                "    \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
+                "      \"name\" : \"queryStringParameterNameOne\"," + System.getProperty("line.separator") +
+                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + System.getProperty("line.separator") +
+                "    }, {" + System.getProperty("line.separator") +
+                "      \"name\" : \"queryStringParameterNameTwo\"," + System.getProperty("line.separator") +
+                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + System.getProperty("line.separator") +
+                "    } ]," + System.getProperty("line.separator") +
+                "    \"body\" : {" + System.getProperty("line.separator") +
+                "      \"type\" : \"EXACT\"," + System.getProperty("line.separator") +
+                "      \"value\" : \"someBody\"" + System.getProperty("line.separator") +
+                "    }," + System.getProperty("line.separator") +
+                "    \"cookies\" : [ {" + System.getProperty("line.separator") +
+                "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
+                "      \"values\" : [ \"someCookieValue\" ]" + System.getProperty("line.separator") +
+                "    } ]," + System.getProperty("line.separator") +
+                "    \"headers\" : [ {" + System.getProperty("line.separator") +
+                "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
+                "      \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
+                "    } ]" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"httpResponse\" : {" + System.getProperty("line.separator") +
+                "    \"statusCode\" : 304," + System.getProperty("line.separator") +
+                "    \"body\" : \"someBody\"," + System.getProperty("line.separator") +
+                "    \"cookies\" : [ {" + System.getProperty("line.separator") +
+                "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
+                "      \"values\" : [ \"someCookieValue\" ]" + System.getProperty("line.separator") +
+                "    } ]," + System.getProperty("line.separator") +
+                "    \"headers\" : [ {" + System.getProperty("line.separator") +
+                "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
+                "      \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
+                "    } ]," + System.getProperty("line.separator") +
+                "    \"delay\" : {" + System.getProperty("line.separator") +
+                "      \"timeUnit\" : \"MICROSECONDS\"," + System.getProperty("line.separator") +
+                "      \"value\" : 1" + System.getProperty("line.separator") +
+                "    }" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"times\" : {" + System.getProperty("line.separator") +
+                "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
+                "    \"unlimited\" : false" + System.getProperty("line.separator") +
+                "  }" + System.getProperty("line.separator") +
                 "}"));
     }
 
     @Test
     public void shouldCorrectlyMatchNotRegexForComplex() {
         // when
-        String result = mockServerMatcher.cleanBase64Response("{\n" +
-                "  \"httpRequest\" : {\n" +
-                "    \"method\" : \"someMethod\",\n" +
-                "    \"url\" : \"http://www.example.com\",\n" +
-                "    \"path\" : \"somePath\",\n" +
-                "    \"queryStringParameters\" : [ {\n" +
-                "      \"name\" : \"queryStringParameterNameOne\",\n" +
-                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]\n" +
-                "    }, {\n" +
-                "      \"name\" : \"queryStringParameterNameTwo\",\n" +
-                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]\n" +
-                "    } ],\n" +
-                "    \"body\" : {\n" +
-                "      \"type\" : \"EXACT\",\n" +
-                "      \"value\" : \"some_body\"\n" +
-                "    },\n" +
-                "    \"cookies\" : [ {\n" +
-                "      \"name\" : \"someCookieName\",\n" +
-                "      \"values\" : [ \"someCookieValue\" ]\n" +
-                "    } ],\n" +
-                "    \"headers\" : [ {\n" +
-                "      \"name\" : \"someHeaderName\",\n" +
-                "      \"values\" : [ \"someHeaderValue\" ]\n" +
-                "    } ]\n" +
-                "  },\n" +
-                "  \"httpResponse\" : {\n" +
-                "    \"statusCode\" : 304,\n" +
-                "    \"body\" : \"some_body\",\n" +
-                "    \"cookies\" : [ {\n" +
-                "      \"name\" : \"someCookieName\",\n" +
-                "      \"values\" : [ \"someCookieValue\" ]\n" +
-                "    } ],\n" +
-                "    \"headers\" : [ {\n" +
-                "      \"name\" : \"someHeaderName\",\n" +
-                "      \"values\" : [ \"someHeaderValue\" ]\n" +
-                "    } ],\n" +
-                "    \"delay\" : {\n" +
-                "      \"timeUnit\" : \"MICROSECONDS\",\n" +
-                "      \"value\" : 1\n" +
-                "    }\n" +
-                "  },\n" +
-                "  \"times\" : {\n" +
-                "    \"remainingTimes\" : 5,\n" +
-                "    \"unlimited\" : false\n" +
-                "  }\n" +
+        String result = mockServerMatcher.cleanBase64Response("{" + System.getProperty("line.separator") +
+                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
+                "    \"method\" : \"someMethod\"," + System.getProperty("line.separator") +
+                "    \"url\" : \"http://www.example.com\"," + System.getProperty("line.separator") +
+                "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
+                "    \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
+                "      \"name\" : \"queryStringParameterNameOne\"," + System.getProperty("line.separator") +
+                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + System.getProperty("line.separator") +
+                "    }, {" + System.getProperty("line.separator") +
+                "      \"name\" : \"queryStringParameterNameTwo\"," + System.getProperty("line.separator") +
+                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + System.getProperty("line.separator") +
+                "    } ]," + System.getProperty("line.separator") +
+                "    \"body\" : {" + System.getProperty("line.separator") +
+                "      \"type\" : \"EXACT\"," + System.getProperty("line.separator") +
+                "      \"value\" : \"some_body\"" + System.getProperty("line.separator") +
+                "    }," + System.getProperty("line.separator") +
+                "    \"cookies\" : [ {" + System.getProperty("line.separator") +
+                "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
+                "      \"values\" : [ \"someCookieValue\" ]" + System.getProperty("line.separator") +
+                "    } ]," + System.getProperty("line.separator") +
+                "    \"headers\" : [ {" + System.getProperty("line.separator") +
+                "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
+                "      \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
+                "    } ]" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"httpResponse\" : {" + System.getProperty("line.separator") +
+                "    \"statusCode\" : 304," + System.getProperty("line.separator") +
+                "    \"body\" : \"some_body\"," + System.getProperty("line.separator") +
+                "    \"cookies\" : [ {" + System.getProperty("line.separator") +
+                "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
+                "      \"values\" : [ \"someCookieValue\" ]" + System.getProperty("line.separator") +
+                "    } ]," + System.getProperty("line.separator") +
+                "    \"headers\" : [ {" + System.getProperty("line.separator") +
+                "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
+                "      \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
+                "    } ]," + System.getProperty("line.separator") +
+                "    \"delay\" : {" + System.getProperty("line.separator") +
+                "      \"timeUnit\" : \"MICROSECONDS\"," + System.getProperty("line.separator") +
+                "      \"value\" : 1" + System.getProperty("line.separator") +
+                "    }" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"times\" : {" + System.getProperty("line.separator") +
+                "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
+                "    \"unlimited\" : false" + System.getProperty("line.separator") +
+                "  }" + System.getProperty("line.separator") +
                 "}");
 
         // then
-        assertThat(result, is("{\n" +
-                "  \"httpRequest\" : {\n" +
-                "    \"method\" : \"someMethod\",\n" +
-                "    \"url\" : \"http://www.example.com\",\n" +
-                "    \"path\" : \"somePath\",\n" +
-                "    \"queryStringParameters\" : [ {\n" +
-                "      \"name\" : \"queryStringParameterNameOne\",\n" +
-                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]\n" +
-                "    }, {\n" +
-                "      \"name\" : \"queryStringParameterNameTwo\",\n" +
-                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]\n" +
-                "    } ],\n" +
-                "    \"body\" : {\n" +
-                "      \"type\" : \"EXACT\",\n" +
-                "      \"value\" : \"some_body\"\n" +
-                "    },\n" +
-                "    \"cookies\" : [ {\n" +
-                "      \"name\" : \"someCookieName\",\n" +
-                "      \"values\" : [ \"someCookieValue\" ]\n" +
-                "    } ],\n" +
-                "    \"headers\" : [ {\n" +
-                "      \"name\" : \"someHeaderName\",\n" +
-                "      \"values\" : [ \"someHeaderValue\" ]\n" +
-                "    } ]\n" +
-                "  },\n" +
-                "  \"httpResponse\" : {\n" +
-                "    \"statusCode\" : 304,\n" +
-                "    \"body\" : \"some_body\",\n" +
-                "    \"cookies\" : [ {\n" +
-                "      \"name\" : \"someCookieName\",\n" +
-                "      \"values\" : [ \"someCookieValue\" ]\n" +
-                "    } ],\n" +
-                "    \"headers\" : [ {\n" +
-                "      \"name\" : \"someHeaderName\",\n" +
-                "      \"values\" : [ \"someHeaderValue\" ]\n" +
-                "    } ],\n" +
-                "    \"delay\" : {\n" +
-                "      \"timeUnit\" : \"MICROSECONDS\",\n" +
-                "      \"value\" : 1\n" +
-                "    }\n" +
-                "  },\n" +
-                "  \"times\" : {\n" +
-                "    \"remainingTimes\" : 5,\n" +
-                "    \"unlimited\" : false\n" +
-                "  }\n" +
+        assertThat(result, is("{" + System.getProperty("line.separator") +
+                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
+                "    \"method\" : \"someMethod\"," + System.getProperty("line.separator") +
+                "    \"url\" : \"http://www.example.com\"," + System.getProperty("line.separator") +
+                "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
+                "    \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
+                "      \"name\" : \"queryStringParameterNameOne\"," + System.getProperty("line.separator") +
+                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + System.getProperty("line.separator") +
+                "    }, {" + System.getProperty("line.separator") +
+                "      \"name\" : \"queryStringParameterNameTwo\"," + System.getProperty("line.separator") +
+                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + System.getProperty("line.separator") +
+                "    } ]," + System.getProperty("line.separator") +
+                "    \"body\" : {" + System.getProperty("line.separator") +
+                "      \"type\" : \"EXACT\"," + System.getProperty("line.separator") +
+                "      \"value\" : \"some_body\"" + System.getProperty("line.separator") +
+                "    }," + System.getProperty("line.separator") +
+                "    \"cookies\" : [ {" + System.getProperty("line.separator") +
+                "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
+                "      \"values\" : [ \"someCookieValue\" ]" + System.getProperty("line.separator") +
+                "    } ]," + System.getProperty("line.separator") +
+                "    \"headers\" : [ {" + System.getProperty("line.separator") +
+                "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
+                "      \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
+                "    } ]" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"httpResponse\" : {" + System.getProperty("line.separator") +
+                "    \"statusCode\" : 304," + System.getProperty("line.separator") +
+                "    \"body\" : \"some_body\"," + System.getProperty("line.separator") +
+                "    \"cookies\" : [ {" + System.getProperty("line.separator") +
+                "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
+                "      \"values\" : [ \"someCookieValue\" ]" + System.getProperty("line.separator") +
+                "    } ]," + System.getProperty("line.separator") +
+                "    \"headers\" : [ {" + System.getProperty("line.separator") +
+                "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
+                "      \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
+                "    } ]," + System.getProperty("line.separator") +
+                "    \"delay\" : {" + System.getProperty("line.separator") +
+                "      \"timeUnit\" : \"MICROSECONDS\"," + System.getProperty("line.separator") +
+                "      \"value\" : 1" + System.getProperty("line.separator") +
+                "    }" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"times\" : {" + System.getProperty("line.separator") +
+                "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
+                "    \"unlimited\" : false" + System.getProperty("line.separator") +
+                "  }" + System.getProperty("line.separator") +
                 "}"));
     }
 }

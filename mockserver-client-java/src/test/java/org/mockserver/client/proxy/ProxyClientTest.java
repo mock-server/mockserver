@@ -88,12 +88,12 @@ public class ProxyClientTest {
 
         // then
         verify(mockApacheHttpClient).sendPUTRequest("http://localhost:8080", "/clear", "" +
-                "{\n" +
-                "  \"path\" : \"/some_path\",\n" +
-                "  \"body\" : {\n" +
-                "    \"type\" : \"EXACT\",\n" +
-                "    \"value\" : \"some_request_body\"\n" +
-                "  }\n" +
+                "{" + System.getProperty("line.separator") +
+                "  \"path\" : \"/some_path\"," + System.getProperty("line.separator") +
+                "  \"body\" : {" + System.getProperty("line.separator") +
+                "    \"type\" : \"EXACT\"," + System.getProperty("line.separator") +
+                "    \"value\" : \"some_request_body\"" + System.getProperty("line.separator") +
+                "  }" + System.getProperty("line.separator") +
                 "}");
     }
 
@@ -114,12 +114,12 @@ public class ProxyClientTest {
 
         // then
         verify(mockApacheHttpClient).sendPUTRequest("http://localhost:8080", "/retrieve", "" +
-                "{\n" +
-                "  \"path\" : \"/some_path\",\n" +
-                "  \"body\" : {\n" +
-                "    \"type\" : \"EXACT\",\n" +
-                "    \"value\" : \"some_request_body\"\n" +
-                "  }\n" +
+                "{" + System.getProperty("line.separator") +
+                "  \"path\" : \"/some_path\"," + System.getProperty("line.separator") +
+                "  \"body\" : {" + System.getProperty("line.separator") +
+                "    \"type\" : \"EXACT\"," + System.getProperty("line.separator") +
+                "    \"value\" : \"some_request_body\"" + System.getProperty("line.separator") +
+                "  }" + System.getProperty("line.separator") +
                 "}");
         verify(expectationSerializer).deserializeArray("body");
     }
@@ -155,12 +155,12 @@ public class ProxyClientTest {
 
         // then
         verify(mockApacheHttpClient).sendPUTRequest("http://localhost:8080", "/retrieve", "" +
-                "{\n" +
-                "  \"path\" : \"/some_path\",\n" +
-                "  \"body\" : {\n" +
-                "    \"type\" : \"EXACT\",\n" +
-                "    \"value\" : \"some_request_body\"\n" +
-                "  }\n" +
+                "{" + System.getProperty("line.separator") +
+                "  \"path\" : \"/some_path\"," + System.getProperty("line.separator") +
+                "  \"body\" : {" + System.getProperty("line.separator") +
+                "    \"type\" : \"EXACT\"," + System.getProperty("line.separator") +
+                "    \"value\" : \"some_request_body\"" + System.getProperty("line.separator") +
+                "  }" + System.getProperty("line.separator") +
                 "}");
     }
 

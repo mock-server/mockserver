@@ -110,17 +110,17 @@ public class HttpRequestMatcher extends EqualsHashCodeToString implements Matche
             boolean cookiesMatch = matches(cookieMatcher, (httpRequest.getCookies() != null ? new ArrayList<KeyToMultiValue>(httpRequest.getCookies()) : null));
             boolean result = methodMatches && urlMatches && pathMatches && queryStringParametersMatches && bodyMatches && headersMatch && cookiesMatch;
             if (!result && logger.isDebugEnabled()) {
-                logger.debug("\n\nMatcher:\n\n" +
-                        "[" + this + "]\n\n" +
-                        "did not match request:\n\n" +
-                        "[" + httpRequest + "]\n\n" +
-                        "because:\n\n" +
-                        "methodMatches = " + methodMatches + "\n" +
-                        "urlMatches = " + urlMatches + "\n" +
-                        "pathMatches = " + pathMatches + "\n" +
-                        "queryStringParametersMatch = " + queryStringParametersMatches + "\n" +
-                        "bodyMatches = " + bodyMatches + "\n" +
-                        "headersMatch = " + headersMatch + "\n" +
+                logger.debug("\n\nMatcher:" + System.getProperty("line.separator") + System.getProperty("line.separator") +
+                        "[" + this + "]" + System.getProperty("line.separator") + System.getProperty("line.separator") +
+                        "did not match request:" + System.getProperty("line.separator") + System.getProperty("line.separator") +
+                        "[" + httpRequest + "]" + System.getProperty("line.separator") + System.getProperty("line.separator") +
+                        "because:" + System.getProperty("line.separator") + System.getProperty("line.separator") +
+                        "methodMatches = " + methodMatches + "" + System.getProperty("line.separator") +
+                        "urlMatches = " + urlMatches + "" + System.getProperty("line.separator") +
+                        "pathMatches = " + pathMatches + "" + System.getProperty("line.separator") +
+                        "queryStringParametersMatch = " + queryStringParametersMatches + "" + System.getProperty("line.separator") +
+                        "bodyMatches = " + bodyMatches + "" + System.getProperty("line.separator") +
+                        "headersMatch = " + headersMatch + "" + System.getProperty("line.separator") +
                         "cookiesMatch = " + cookiesMatch);
             }
             return result;

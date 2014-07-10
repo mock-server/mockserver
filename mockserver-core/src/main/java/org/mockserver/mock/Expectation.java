@@ -56,7 +56,8 @@ public class Expectation extends EqualsHashCodeToString {
 
     public Expectation thenRespond(HttpResponse httpResponse) {
         if (httpResponse != null) {
-            if (httpForward != null) throw new IllegalArgumentException("It is not possible to set a response once a forward has been set");
+            if (httpForward != null)
+                throw new IllegalArgumentException("It is not possible to set a response once a forward has been set");
             this.httpResponse = httpResponse;
         }
         return this;
@@ -64,14 +65,15 @@ public class Expectation extends EqualsHashCodeToString {
 
     public Expectation thenForward(HttpForward httpForward) {
         if (httpForward != null) {
-            if (httpResponse != null) throw new IllegalArgumentException("It is not possible to set a forward once a response has been set");
+            if (httpResponse != null)
+                throw new IllegalArgumentException("It is not possible to set a forward once a response has been set");
             this.httpForward = httpForward;
         }
         return this;
     }
 
     public boolean matches(HttpRequest httpRequest) {
-        logger.trace("\nMatching expectation: \n{} \nwith incoming http: \n{}\n", this.httpRequest, httpRequest);
+        logger.trace("\nMatching expectation: \n{} \nwith incoming http: \n{}" + System.getProperty("line.separator"), this.httpRequest, httpRequest);
         boolean matches =
                 (times == null || times.greaterThenZero()) &&
                         (

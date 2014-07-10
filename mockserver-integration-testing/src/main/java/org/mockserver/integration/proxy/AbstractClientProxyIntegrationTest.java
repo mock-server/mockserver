@@ -14,7 +14,6 @@ import org.apache.http.impl.conn.SystemDefaultRoutePlanner;
 import org.apache.http.util.EntityUtils;
 import org.junit.Test;
 import org.mockserver.client.proxy.ProxyClient;
-import org.mockserver.client.proxy.Times;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.socket.SSLFactory;
 import org.mockserver.streams.IOStreamUtils;

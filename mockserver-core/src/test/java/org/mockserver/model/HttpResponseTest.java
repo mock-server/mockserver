@@ -1,6 +1,5 @@
 package org.mockserver.model;
 
-import junit.framework.TestCase;
 import org.junit.Test;
 import org.mockserver.client.serialization.Base64Converter;
 
@@ -81,17 +80,17 @@ public class HttpResponseTest {
 
     @Test
     public void shouldReturnFormattedRequestInToString() {
-        assertEquals("{\n" +
-                        "  \"statusCode\" : 200,\n" +
-                        "  \"body\" : \"c29tZV9ib2R5\",\n" +
-                        "  \"headers\" : [ {\n" +
-                        "    \"name\" : \"name\",\n" +
-                        "    \"values\" : [ \"value\" ]\n" +
-                        "  } ],\n" +
-                        "  \"cookies\" : [ {\n" +
-                        "    \"name\" : \"name\",\n" +
-                        "    \"values\" : [ \"[A-Z]{0,10}\" ]\n" +
-                        "  } ]\n" +
+        assertEquals("{" + System.getProperty("line.separator") +
+                        "  \"statusCode\" : 200," + System.getProperty("line.separator") +
+                        "  \"body\" : \"c29tZV9ib2R5\"," + System.getProperty("line.separator") +
+                        "  \"headers\" : [ {" + System.getProperty("line.separator") +
+                        "    \"name\" : \"name\"," + System.getProperty("line.separator") +
+                        "    \"values\" : [ \"value\" ]" + System.getProperty("line.separator") +
+                        "  } ]," + System.getProperty("line.separator") +
+                        "  \"cookies\" : [ {" + System.getProperty("line.separator") +
+                        "    \"name\" : \"name\"," + System.getProperty("line.separator") +
+                        "    \"values\" : [ \"[A-Z]{0,10}\" ]" + System.getProperty("line.separator") +
+                        "  } ]" + System.getProperty("line.separator") +
                         "}",
                 response()
                         .withBody("some_body")

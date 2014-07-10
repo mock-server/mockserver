@@ -219,7 +219,7 @@ public class LoggingHandler extends ChannelDuplexHandler {
             if (relIdxMod16 == 15) {
                 dump.append(" |");
                 if (i > 15 && buf.readableBytes() > i) {
-                    dump.append(buf.toString(i - 15, 16, Charsets.UTF_8).replaceAll("\n", "/").replaceAll("\r", "/"));
+                    dump.append(buf.toString(i - 15, 16, Charsets.UTF_8).replaceAll("" + System.getProperty("line.separator"), "/").replaceAll("\r", "/"));
                 } else {
                     for (int j = i - 15; j <= i; j++) {
                         dump.append(BYTE2CHAR[buf.getUnsignedByte(j)]);

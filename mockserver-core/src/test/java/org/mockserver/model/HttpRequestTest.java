@@ -73,19 +73,19 @@ public class HttpRequestTest {
 
     @Test
     public void shouldReturnFormattedRequestInToString() {
-        TestCase.assertEquals("{\n" +
-                        "  \"body\" : {\n" +
-                        "    \"type\" : \"EXACT\",\n" +
-                        "    \"value\" : \"some_body\"\n" +
-                        "  },\n" +
-                        "  \"headers\" : [ {\n" +
-                        "    \"name\" : \"name\",\n" +
-                        "    \"values\" : [ \"value\" ]\n" +
-                        "  } ],\n" +
-                        "  \"cookies\" : [ {\n" +
-                        "    \"name\" : \"name\",\n" +
-                        "    \"values\" : [ \"[A-Z]{0,10}\" ]\n" +
-                        "  } ]\n" +
+        TestCase.assertEquals("{" + System.getProperty("line.separator") +
+                        "  \"body\" : {" + System.getProperty("line.separator") +
+                        "    \"type\" : \"EXACT\"," + System.getProperty("line.separator") +
+                        "    \"value\" : \"some_body\"" + System.getProperty("line.separator") +
+                        "  }," + System.getProperty("line.separator") +
+                        "  \"headers\" : [ {" + System.getProperty("line.separator") +
+                        "    \"name\" : \"name\"," + System.getProperty("line.separator") +
+                        "    \"values\" : [ \"value\" ]" + System.getProperty("line.separator") +
+                        "  } ]," + System.getProperty("line.separator") +
+                        "  \"cookies\" : [ {" + System.getProperty("line.separator") +
+                        "    \"name\" : \"name\"," + System.getProperty("line.separator") +
+                        "    \"values\" : [ \"[A-Z]{0,10}\" ]" + System.getProperty("line.separator") +
+                        "  } ]" + System.getProperty("line.separator") +
                         "}",
                 request()
                         .withBody("some_body")

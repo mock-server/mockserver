@@ -33,9 +33,9 @@ public abstract class AbstractClientSecureProxyIntegrationTest extends AbstractC
 
             // when
             output.write(("" +
-                    "CONNECT localhost:666 HTTP/1.1\r\n" +
-                    "Host: localhost:" + getServerSecurePort() + "\r\n" +
-                    "\r\n"
+                    "CONNECT localhost:666 HTTP/1.1\r" + System.getProperty("line.separator") +
+                    "Host: localhost:" + getServerSecurePort() + "\r" + System.getProperty("line.separator") +
+                    "\r" + System.getProperty("line.separator")
             ).getBytes(Charsets.UTF_8));
             output.flush();
 
@@ -59,9 +59,9 @@ public abstract class AbstractClientSecureProxyIntegrationTest extends AbstractC
             // when
             // - send CONNECT request
             output.write(("" +
-                    "CONNECT localhost:666 HTTP/1.1\r\n" +
-                    "Host: localhost:" + getServerSecurePort() + "\r\n" +
-                    "\r\n"
+                    "CONNECT localhost:666 HTTP/1.1\r" + System.getProperty("line.separator") +
+                    "Host: localhost:" + getServerSecurePort() + "\r" + System.getProperty("line.separator") +
+                    "\r" + System.getProperty("line.separator")
             ).getBytes(Charsets.UTF_8));
             output.flush();
 
@@ -77,10 +77,10 @@ public abstract class AbstractClientSecureProxyIntegrationTest extends AbstractC
 
                 // - send GET request for headers only
                 output.write(("" +
-                        "GET /test_headers_only HTTP/1.1\r\n" +
-                        "Host: localhost:" + getServerSecurePort() + "\r\n" +
-                        "Connection: keep-alive\r\n" +
-                        "\r\n"
+                        "GET /test_headers_only HTTP/1.1\r" + System.getProperty("line.separator") +
+                        "Host: localhost:" + getServerSecurePort() + "\r" + System.getProperty("line.separator") +
+                        "Connection: keep-alive\r" + System.getProperty("line.separator") +
+                        "\r" + System.getProperty("line.separator")
                 ).getBytes(Charsets.UTF_8));
                 output.flush();
 
@@ -89,9 +89,9 @@ public abstract class AbstractClientSecureProxyIntegrationTest extends AbstractC
 
                 // - send GET request for headers and body
                 output.write(("" +
-                        "GET /test_headers_and_body HTTP/1.1\r\n" +
-                        "Host: localhost:" + getServerSecurePort() + "\r\n" +
-                        "\r\n"
+                        "GET /test_headers_and_body HTTP/1.1\r" + System.getProperty("line.separator") +
+                        "Host: localhost:" + getServerSecurePort() + "\r" + System.getProperty("line.separator") +
+                        "\r" + System.getProperty("line.separator")
                 ).getBytes(Charsets.UTF_8));
                 output.flush();
 
@@ -144,9 +144,9 @@ public abstract class AbstractClientSecureProxyIntegrationTest extends AbstractC
             // when
             // - send CONNECT request
             output.write(("" +
-                    "CONNECT localhost:666 HTTP/1.1\r\n" +
-                    "Host: localhost:" + getServerSecurePort() + "\r\n" +
-                    "\r\n"
+                    "CONNECT localhost:666 HTTP/1.1\r" + System.getProperty("line.separator") +
+                    "Host: localhost:" + getServerSecurePort() + "\r" + System.getProperty("line.separator") +
+                    "\r" + System.getProperty("line.separator")
             ).getBytes(Charsets.UTF_8));
             output.flush();
 
@@ -161,9 +161,9 @@ public abstract class AbstractClientSecureProxyIntegrationTest extends AbstractC
                 // - send GET request
                 output = sslSocket.getOutputStream();
                 output.write(("" +
-                        "GET /unknown HTTP/1.1\r\n" +
-                        "Host: localhost:" + getServerSecurePort() + "\r\n" +
-                        "\r\n"
+                        "GET /unknown HTTP/1.1\r" + System.getProperty("line.separator") +
+                        "Host: localhost:" + getServerSecurePort() + "\r" + System.getProperty("line.separator") +
+                        "\r" + System.getProperty("line.separator")
                 ).getBytes(Charsets.UTF_8));
                 output.flush();
 

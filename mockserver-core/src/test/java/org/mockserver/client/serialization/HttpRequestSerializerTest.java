@@ -77,8 +77,8 @@ public class HttpRequestSerializerTest {
     @Test
     public void deserializeHttpRequestAsField() throws IOException {
         // given
-        String input = "{\n" +
-                "    \"httpRequest\": \"requestBytes\",\n" +
+        String input = "{" + System.getProperty("line.separator") +
+                "    \"httpRequest\": \"requestBytes\"," + System.getProperty("line.separator") +
                 "}";
         when(objectMapper.readValue(eq(input), same(ExpectationDTO.class))).thenReturn(new ExpectationDTO().setHttpRequest(fullHttpRequestDTO));
 

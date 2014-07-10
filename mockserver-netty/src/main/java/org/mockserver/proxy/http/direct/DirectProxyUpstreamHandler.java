@@ -179,7 +179,7 @@ public class DirectProxyUpstreamHandler extends ChannelDuplexHandler {
                 }
 
                 if (logger.isTraceEnabled()) {
-                    logger.trace("CHUNK:                     ---\n-\n" + Unpooled.copiedBuffer(chunk).toString(Charsets.UTF_8) + "\n-\n");
+                    logger.trace("CHUNK:                     ---\n-" + System.getProperty("line.separator") + Unpooled.copiedBuffer(chunk).toString(Charsets.UTF_8) + "\n-" + System.getProperty("line.separator"));
                     logger.trace("CONTENT-SO-FAR-PRE-CHUNK:  --- " + (contentSoFar - Unpooled.copiedBuffer(chunk).toString(Charsets.UTF_8).length()));
                     logger.trace("CHUNK-SIZE:                --- " + chunk.readableBytes());
                     logger.trace("CONTENT-SO-FAR-PRE-CHUNK:  --- " + contentSoFar);

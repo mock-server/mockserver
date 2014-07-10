@@ -66,9 +66,9 @@ public class NettyDirectProxyIntegrationTest {
             // when
             // - send GET request for headers only
             output.write(("" +
-                    "GET /test_headers_only HTTP/1.1\r\n" +
-                    "Host: localhost:" + SERVER_HTTP_PORT + "\r\n" +
-                    "\r\n"
+                    "GET /test_headers_only HTTP/1.1\r" + System.getProperty("line.separator") +
+                    "Host: localhost:" + SERVER_HTTP_PORT + "\r" + System.getProperty("line.separator") +
+                    "\r" + System.getProperty("line.separator")
             ).getBytes(Charsets.UTF_8));
             output.flush();
 
@@ -93,9 +93,9 @@ public class NettyDirectProxyIntegrationTest {
 
             // - send GET request for headers and body
             output.write(("" +
-                    "GET /test_headers_and_body HTTP/1.1\r\n" +
-                    "Host: localhost:" + SERVER_HTTP_PORT + "\r\n" +
-                    "\r\n"
+                    "GET /test_headers_and_body HTTP/1.1\r" + System.getProperty("line.separator") +
+                    "Host: localhost:" + SERVER_HTTP_PORT + "\r" + System.getProperty("line.separator") +
+                    "\r" + System.getProperty("line.separator")
             ).getBytes(Charsets.UTF_8));
             output.flush();
 
@@ -122,9 +122,9 @@ public class NettyDirectProxyIntegrationTest {
 
             // - send GET request for headers and body
             output.write(("" +
-                    "GET /unknown HTTP/1.1\r\n" +
-                    "Host: localhost:" + SERVER_HTTP_PORT + "\r\n" +
-                    "\r\n"
+                    "GET /unknown HTTP/1.1\r" + System.getProperty("line.separator") +
+                    "Host: localhost:" + SERVER_HTTP_PORT + "\r" + System.getProperty("line.separator") +
+                    "\r" + System.getProperty("line.separator")
             ).getBytes(Charsets.UTF_8));
             output.flush();
 

@@ -1,5 +1,6 @@
 package org.mockserver.client.serialization;
 
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.ObjectWriter;
 import org.junit.Before;
@@ -97,40 +98,40 @@ public class ExpectationSerializerTest {
     @Test
     public void shouldSerializeFullObjectWithResponseAsJava() throws IOException {
         // when
-        assertEquals("\n" +
-                        "new MockServerClient()\n" +
-                        "        .when(\n" +
-                        "                request()\n" +
-                        "                        .withMethod(\"GET\")\n" +
-                        "                        .withURL(\"http://www.example.com\")\n" +
-                        "                        .withPath(\"somePath\")\n" +
-                        "                        .withHeaders(\n" +
-                        "                                new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\"),\n" +
-                        "                                new Header(\"requestHeaderNameTwo\", \"requestHeaderValueTwo\")\n" +
-                        "                        )\n" +
-                        "                        .withCookies(\n" +
-                        "                                new Cookie(\"requestCookieNameOne\", \"requestCookieValueOneOne\", \"requestCookieValueOneTwo\"),\n" +
-                        "                                new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")\n" +
-                        "                        )\n" +
-                        "                        .withQueryStringParameters(\n" +
-                        "                                new QueryStringParameter(\"requestQueryStringParameterNameOne\", \"requestQueryStringParameterValueOneOne\", \"requestQueryStringParameterValueOneTwo\"),\n" +
-                        "                                new QueryStringParameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")\n" +
-                        "                        )\n" +
-                        "                        .withBody(new StringBody(\"somebody\", Body.Type.EXACT)),\n" +
-                        "                Times.once()\n" +
-                        "        )\n" +
-                        "        .thenRespond(\n" +
-                        "                response()\n" +
-                        "                        .withStatusCode(304)\n" +
-                        "                        .withHeaders(\n" +
-                        "                                new Header(\"responseHeaderNameOne\", \"responseHeaderValueOneOne\", \"responseHeaderValueOneTwo\"),\n" +
-                        "                                new Header(\"responseHeaderNameTwo\", \"responseHeaderValueTwo\")\n" +
-                        "                        )\n" +
-                        "                        .withCookies(\n" +
-                        "                                new Cookie(\"responseCookieNameOne\", \"responseCookieValueOneOne\", \"responseCookieValueOneTwo\"),\n" +
-                        "                                new Cookie(\"responseCookieNameTwo\", \"responseCookieValueTwo\")\n" +
-                        "                        )\n" +
-                        "                        .withBody(\"responseBody\")\n" +
+        assertEquals(System.getProperty("line.separator") +
+                        "new MockServerClient()" + System.getProperty("line.separator") +
+                        "        .when(" + System.getProperty("line.separator") +
+                        "                request()" + System.getProperty("line.separator") +
+                        "                        .withMethod(\"GET\")" + System.getProperty("line.separator") +
+                        "                        .withURL(\"http://www.example.com\")" + System.getProperty("line.separator") +
+                        "                        .withPath(\"somePath\")" + System.getProperty("line.separator") +
+                        "                        .withHeaders(" + System.getProperty("line.separator") +
+                        "                                new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\")," + System.getProperty("line.separator") +
+                        "                                new Header(\"requestHeaderNameTwo\", \"requestHeaderValueTwo\")" + System.getProperty("line.separator") +
+                        "                        )" + System.getProperty("line.separator") +
+                        "                        .withCookies(" + System.getProperty("line.separator") +
+                        "                                new Cookie(\"requestCookieNameOne\", \"requestCookieValueOneOne\", \"requestCookieValueOneTwo\")," + System.getProperty("line.separator") +
+                        "                                new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")" + System.getProperty("line.separator") +
+                        "                        )" + System.getProperty("line.separator") +
+                        "                        .withQueryStringParameters(" + System.getProperty("line.separator") +
+                        "                                new QueryStringParameter(\"requestQueryStringParameterNameOne\", \"requestQueryStringParameterValueOneOne\", \"requestQueryStringParameterValueOneTwo\")," + System.getProperty("line.separator") +
+                        "                                new QueryStringParameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")" + System.getProperty("line.separator") +
+                        "                        )" + System.getProperty("line.separator") +
+                        "                        .withBody(new StringBody(\"somebody\", Body.Type.EXACT))," + System.getProperty("line.separator") +
+                        "                Times.once()" + System.getProperty("line.separator") +
+                        "        )" + System.getProperty("line.separator") +
+                        "        .thenRespond(" + System.getProperty("line.separator") +
+                        "                response()" + System.getProperty("line.separator") +
+                        "                        .withStatusCode(304)" + System.getProperty("line.separator") +
+                        "                        .withHeaders(" + System.getProperty("line.separator") +
+                        "                                new Header(\"responseHeaderNameOne\", \"responseHeaderValueOneOne\", \"responseHeaderValueOneTwo\")," + System.getProperty("line.separator") +
+                        "                                new Header(\"responseHeaderNameTwo\", \"responseHeaderValueTwo\")" + System.getProperty("line.separator") +
+                        "                        )" + System.getProperty("line.separator") +
+                        "                        .withCookies(" + System.getProperty("line.separator") +
+                        "                                new Cookie(\"responseCookieNameOne\", \"responseCookieValueOneOne\", \"responseCookieValueOneTwo\")," + System.getProperty("line.separator") +
+                        "                                new Cookie(\"responseCookieNameTwo\", \"responseCookieValueTwo\")" + System.getProperty("line.separator") +
+                        "                        )" + System.getProperty("line.separator") +
+                        "                        .withBody(\"responseBody\")" + System.getProperty("line.separator") +
                         "        );",
                 expectationSerializer.serializeAsJava(
                         new Expectation(
@@ -172,22 +173,22 @@ public class ExpectationSerializerTest {
     @Test
     public void shouldSerializeFullObjectWithParameterBodyResponseAsJava() throws IOException {
         // when
-        assertEquals("\n" +
-                        "new MockServerClient()\n" +
-                        "        .when(\n" +
-                        "                request()\n" +
-                        "                        .withBody(\n" +
-                        "                                new ParameterBody(\n" +
-                        "                                        new Parameter(\"requestBodyParameterNameOne\", \"requestBodyParameterValueOneOne\", \"requestBodyParameterValueOneTwo\"),\n" +
-                        "                                        new Parameter(\"requestBodyParameterNameTwo\", \"requestBodyParameterValueTwo\")\n" +
-                        "                                )\n" +
-                        "                        ),\n" +
-                        "                Times.once()\n" +
-                        "        )\n" +
-                        "        .thenRespond(\n" +
-                        "                response()\n" +
-                        "                        .withStatusCode(200)\n" +
-                        "                        .withBody(\"responseBody\")\n" +
+        assertEquals(System.getProperty("line.separator") +
+                        "new MockServerClient()" + System.getProperty("line.separator") +
+                        "        .when(" + System.getProperty("line.separator") +
+                        "                request()" + System.getProperty("line.separator") +
+                        "                        .withBody(" + System.getProperty("line.separator") +
+                        "                                new ParameterBody(" + System.getProperty("line.separator") +
+                        "                                        new Parameter(\"requestBodyParameterNameOne\", \"requestBodyParameterValueOneOne\", \"requestBodyParameterValueOneTwo\")," + System.getProperty("line.separator") +
+                        "                                        new Parameter(\"requestBodyParameterNameTwo\", \"requestBodyParameterValueTwo\")" + System.getProperty("line.separator") +
+                        "                                )" + System.getProperty("line.separator") +
+                        "                        )," + System.getProperty("line.separator") +
+                        "                Times.once()" + System.getProperty("line.separator") +
+                        "        )" + System.getProperty("line.separator") +
+                        "        .thenRespond(" + System.getProperty("line.separator") +
+                        "                response()" + System.getProperty("line.separator") +
+                        "                        .withStatusCode(200)" + System.getProperty("line.separator") +
+                        "                        .withBody(\"responseBody\")" + System.getProperty("line.separator") +
                         "        );",
                 expectationSerializer.serializeAsJava(
                         new Expectation(
@@ -210,17 +211,17 @@ public class ExpectationSerializerTest {
     @Test
     public void shouldSerializeFullObjectWithBinaryBodyResponseAsJava() throws IOException {
         // when
-        assertEquals("\n" +
-                        "new MockServerClient()\n" +
-                        "        .when(\n" +
-                        "                request()\n" +
-                        "                        .withBody(new byte[0]) /* note: not possible to generate code for binary data */,\n" +
-                        "                Times.once()\n" +
-                        "        )\n" +
-                        "        .thenRespond(\n" +
-                        "                response()\n" +
-                        "                        .withStatusCode(200)\n" +
-                        "                        .withBody(\"responseBody\")\n" +
+        assertEquals(System.getProperty("line.separator") +
+                        "new MockServerClient()" + System.getProperty("line.separator") +
+                        "        .when(" + System.getProperty("line.separator") +
+                        "                request()" + System.getProperty("line.separator") +
+                        "                        .withBody(new byte[0]) /* note: not possible to generate code for binary data */," + System.getProperty("line.separator") +
+                        "                Times.once()" + System.getProperty("line.separator") +
+                        "        )" + System.getProperty("line.separator") +
+                        "        .thenRespond(" + System.getProperty("line.separator") +
+                        "                response()" + System.getProperty("line.separator") +
+                        "                        .withStatusCode(200)" + System.getProperty("line.separator") +
+                        "                        .withBody(\"responseBody\")" + System.getProperty("line.separator") +
                         "        );",
                 expectationSerializer.serializeAsJava(
                         new Expectation(
@@ -240,33 +241,33 @@ public class ExpectationSerializerTest {
     @Test
     public void shouldSerializeFullObjectWithForwardAsJava() throws IOException {
         // when
-        assertEquals("\n" +
-                        "new MockServerClient()\n" +
-                        "        .when(\n" +
-                        "                request()\n" +
-                        "                        .withMethod(\"GET\")\n" +
-                        "                        .withURL(\"http://www.example.com\")\n" +
-                        "                        .withPath(\"somePath\")\n" +
-                        "                        .withHeaders(\n" +
-                        "                                new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\"),\n" +
-                        "                                new Header(\"requestHeaderNameTwo\", \"requestHeaderValueTwo\")\n" +
-                        "                        )\n" +
-                        "                        .withCookies(\n" +
-                        "                                new Cookie(\"requestCookieNameOne\", \"requestCookieValueOneOne\", \"requestCookieValueOneTwo\"),\n" +
-                        "                                new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")\n" +
-                        "                        )\n" +
-                        "                        .withQueryStringParameters(\n" +
-                        "                                new QueryStringParameter(\"requestQueryStringParameterNameOne\", \"requestQueryStringParameterValueOneOne\", \"requestQueryStringParameterValueOneTwo\"),\n" +
-                        "                                new QueryStringParameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")\n" +
-                        "                        )\n" +
-                        "                        .withBody(new StringBody(\"somebody\", Body.Type.EXACT)),\n" +
-                        "                Times.once()\n" +
-                        "        )\n" +
-                        "        .thenForward(\n" +
-                        "                forward()\n" +
-                        "                        .withHost(\"some_host\")\n" +
-                        "                        .withPort(9090)\n" +
-                        "                        .withScheme(HttpForward.Scheme.HTTPS)\n" +
+        assertEquals(System.getProperty("line.separator") +
+                        "new MockServerClient()" + System.getProperty("line.separator") +
+                        "        .when(" + System.getProperty("line.separator") +
+                        "                request()" + System.getProperty("line.separator") +
+                        "                        .withMethod(\"GET\")" + System.getProperty("line.separator") +
+                        "                        .withURL(\"http://www.example.com\")" + System.getProperty("line.separator") +
+                        "                        .withPath(\"somePath\")" + System.getProperty("line.separator") +
+                        "                        .withHeaders(" + System.getProperty("line.separator") +
+                        "                                new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\")," + System.getProperty("line.separator") +
+                        "                                new Header(\"requestHeaderNameTwo\", \"requestHeaderValueTwo\")" + System.getProperty("line.separator") +
+                        "                        )" + System.getProperty("line.separator") +
+                        "                        .withCookies(" + System.getProperty("line.separator") +
+                        "                                new Cookie(\"requestCookieNameOne\", \"requestCookieValueOneOne\", \"requestCookieValueOneTwo\")," + System.getProperty("line.separator") +
+                        "                                new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")" + System.getProperty("line.separator") +
+                        "                        )" + System.getProperty("line.separator") +
+                        "                        .withQueryStringParameters(" + System.getProperty("line.separator") +
+                        "                                new QueryStringParameter(\"requestQueryStringParameterNameOne\", \"requestQueryStringParameterValueOneOne\", \"requestQueryStringParameterValueOneTwo\")," + System.getProperty("line.separator") +
+                        "                                new QueryStringParameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")" + System.getProperty("line.separator") +
+                        "                        )" + System.getProperty("line.separator") +
+                        "                        .withBody(new StringBody(\"somebody\", Body.Type.EXACT))," + System.getProperty("line.separator") +
+                        "                Times.once()" + System.getProperty("line.separator") +
+                        "        )" + System.getProperty("line.separator") +
+                        "        .thenForward(" + System.getProperty("line.separator") +
+                        "                forward()" + System.getProperty("line.separator") +
+                        "                        .withHost(\"some_host\")" + System.getProperty("line.separator") +
+                        "                        .withPort(9090)" + System.getProperty("line.separator") +
+                        "                        .withScheme(HttpForward.Scheme.HTTPS)" + System.getProperty("line.separator") +
                         "        );",
                 expectationSerializer.serializeAsJava(
                         new Expectation(
@@ -301,72 +302,72 @@ public class ExpectationSerializerTest {
     @Test
     public void shouldEscapeJSONBodies() throws IOException {
         // when
-        assertEquals("\n" +
-                        "new MockServerClient()\n" +
-                        "        .when(\n" +
-                        "                request()\n" +
-                        "                        .withPath(\"somePath\")\n" +
-                        "                        .withBody(new StringBody(\"[\\n    {\\n        \\\"id\\\": \\\"1\\\",\\n        \\\"title\\\": \\\"Xenophon's imperial fiction : on the education of Cyrus\\\",\\n        \\\"author\\\": \\\"James Tatum\\\",\\n        \\\"isbn\\\": \\\"0691067570\\\",\\n        \\\"publicationDate\\\": \\\"1989\\\"\\n    },\\n    {\\n        \\\"id\\\": \\\"2\\\",\\n        \\\"title\\\": \\\"You are here : personal geographies and other maps of the imagination\\\",\\n        \\\"author\\\": \\\"Katharine A. Harmon\\\",\\n        \\\"isbn\\\": \\\"1568984308\\\",\\n        \\\"publicationDate\\\": \\\"2004\\\"\\n    },\\n    {\\n        \\\"id\\\": \\\"3\\\",\\n        \\\"title\\\": \\\"You just don't understand : women and men in conversation\\\",\\n        \\\"author\\\": \\\"Deborah Tannen\\\",\\n        \\\"isbn\\\": \\\"0345372050\\\",\\n        \\\"publicationDate\\\": \\\"1990\\\"\\n    }\\n]\", Body.Type.EXACT)),\n" +
-                        "                Times.once()\n" +
-                        "        )\n" +
-                        "        .thenRespond(\n" +
-                        "                response()\n" +
-                        "                        .withStatusCode(304)\n" +
-                        "                        .withBody(\"[\\n    {\\n        \\\"id\\\": \\\"1\\\",\\n        \\\"title\\\": \\\"Xenophon's imperial fiction : on the education of Cyrus\\\",\\n        \\\"author\\\": \\\"James Tatum\\\",\\n        \\\"isbn\\\": \\\"0691067570\\\",\\n        \\\"publicationDate\\\": \\\"1989\\\"\\n    },\\n    {\\n        \\\"id\\\": \\\"2\\\",\\n        \\\"title\\\": \\\"You are here : personal geographies and other maps of the imagination\\\",\\n        \\\"author\\\": \\\"Katharine A. Harmon\\\",\\n        \\\"isbn\\\": \\\"1568984308\\\",\\n        \\\"publicationDate\\\": \\\"2004\\\"\\n    },\\n    {\\n        \\\"id\\\": \\\"3\\\",\\n        \\\"title\\\": \\\"You just don't understand : women and men in conversation\\\",\\n        \\\"author\\\": \\\"Deborah Tannen\\\",\\n        \\\"isbn\\\": \\\"0345372050\\\",\\n        \\\"publicationDate\\\": \\\"1990\\\"\\n    }\\n]\")\n" +
+        assertEquals("" + System.getProperty("line.separator") +
+                        "new MockServerClient()" + System.getProperty("line.separator") +
+                        "        .when(" + System.getProperty("line.separator") +
+                        "                request()" + System.getProperty("line.separator") +
+                        "                        .withPath(\"somePath\")" + System.getProperty("line.separator") +
+                        "                        .withBody(new StringBody(\"[" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    {" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"id\\\": \\\"1\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"title\\\": \\\"Xenophon's imperial fiction : on the education of Cyrus\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"author\\\": \\\"James Tatum\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"isbn\\\": \\\"0691067570\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"publicationDate\\\": \\\"1989\\\"" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    }," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    {" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"id\\\": \\\"2\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"title\\\": \\\"You are here : personal geographies and other maps of the imagination\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"author\\\": \\\"Katharine A. Harmon\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"isbn\\\": \\\"1568984308\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"publicationDate\\\": \\\"2004\\\"" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    }," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    {" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"id\\\": \\\"3\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"title\\\": \\\"You just don't understand : women and men in conversation\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"author\\\": \\\"Deborah Tannen\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"isbn\\\": \\\"0345372050\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"publicationDate\\\": \\\"1990\\\"" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    }" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "]\", Body.Type.EXACT))," + System.getProperty("line.separator") +
+                        "                Times.once()" + System.getProperty("line.separator") +
+                        "        )" + System.getProperty("line.separator") +
+                        "        .thenRespond(" + System.getProperty("line.separator") +
+                        "                response()" + System.getProperty("line.separator") +
+                        "                        .withStatusCode(304)" + System.getProperty("line.separator") +
+                        "                        .withBody(\"[" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    {" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"id\\\": \\\"1\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"title\\\": \\\"Xenophon's imperial fiction : on the education of Cyrus\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"author\\\": \\\"James Tatum\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"isbn\\\": \\\"0691067570\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"publicationDate\\\": \\\"1989\\\"" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    }," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    {" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"id\\\": \\\"2\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"title\\\": \\\"You are here : personal geographies and other maps of the imagination\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"author\\\": \\\"Katharine A. Harmon\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"isbn\\\": \\\"1568984308\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"publicationDate\\\": \\\"2004\\\"" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    }," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    {" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"id\\\": \\\"3\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"title\\\": \\\"You just don't understand : women and men in conversation\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"author\\\": \\\"Deborah Tannen\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"isbn\\\": \\\"0345372050\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"publicationDate\\\": \\\"1990\\\"" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    }" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "]\")" + System.getProperty("line.separator") +
                         "        );",
                 expectationSerializer.serializeAsJava(
                         new Expectation(
                                 new HttpRequest()
                                         .withPath("somePath")
-                                        .withBody(new StringBody("[\n" +
-                                                "    {\n" +
-                                                "        \"id\": \"1\",\n" +
-                                                "        \"title\": \"Xenophon's imperial fiction : on the education of Cyrus\",\n" +
-                                                "        \"author\": \"James Tatum\",\n" +
-                                                "        \"isbn\": \"0691067570\",\n" +
-                                                "        \"publicationDate\": \"1989\"\n" +
-                                                "    },\n" +
-                                                "    {\n" +
-                                                "        \"id\": \"2\",\n" +
-                                                "        \"title\": \"You are here : personal geographies and other maps of the imagination\",\n" +
-                                                "        \"author\": \"Katharine A. Harmon\",\n" +
-                                                "        \"isbn\": \"1568984308\",\n" +
-                                                "        \"publicationDate\": \"2004\"\n" +
-                                                "    },\n" +
-                                                "    {\n" +
-                                                "        \"id\": \"3\",\n" +
-                                                "        \"title\": \"You just don't understand : women and men in conversation\",\n" +
-                                                "        \"author\": \"Deborah Tannen\",\n" +
-                                                "        \"isbn\": \"0345372050\",\n" +
-                                                "        \"publicationDate\": \"1990\"\n" +
-                                                "    }\n" +
+                                        .withBody(new StringBody("[" + System.getProperty("line.separator") +
+                                                "    {" + System.getProperty("line.separator") +
+                                                "        \"id\": \"1\"," + System.getProperty("line.separator") +
+                                                "        \"title\": \"Xenophon's imperial fiction : on the education of Cyrus\"," + System.getProperty("line.separator") +
+                                                "        \"author\": \"James Tatum\"," + System.getProperty("line.separator") +
+                                                "        \"isbn\": \"0691067570\"," + System.getProperty("line.separator") +
+                                                "        \"publicationDate\": \"1989\"" + System.getProperty("line.separator") +
+                                                "    }," + System.getProperty("line.separator") +
+                                                "    {" + System.getProperty("line.separator") +
+                                                "        \"id\": \"2\"," + System.getProperty("line.separator") +
+                                                "        \"title\": \"You are here : personal geographies and other maps of the imagination\"," + System.getProperty("line.separator") +
+                                                "        \"author\": \"Katharine A. Harmon\"," + System.getProperty("line.separator") +
+                                                "        \"isbn\": \"1568984308\"," + System.getProperty("line.separator") +
+                                                "        \"publicationDate\": \"2004\"" + System.getProperty("line.separator") +
+                                                "    }," + System.getProperty("line.separator") +
+                                                "    {" + System.getProperty("line.separator") +
+                                                "        \"id\": \"3\"," + System.getProperty("line.separator") +
+                                                "        \"title\": \"You just don't understand : women and men in conversation\"," + System.getProperty("line.separator") +
+                                                "        \"author\": \"Deborah Tannen\"," + System.getProperty("line.separator") +
+                                                "        \"isbn\": \"0345372050\"," + System.getProperty("line.separator") +
+                                                "        \"publicationDate\": \"1990\"" + System.getProperty("line.separator") +
+                                                "    }" + System.getProperty("line.separator") +
                                                 "]", Body.Type.EXACT)),
                                 Times.once()
                         ).thenRespond(
                                 new HttpResponse()
                                         .withStatusCode(304)
-                                        .withBody("[\n" +
-                                                "    {\n" +
-                                                "        \"id\": \"1\",\n" +
-                                                "        \"title\": \"Xenophon's imperial fiction : on the education of Cyrus\",\n" +
-                                                "        \"author\": \"James Tatum\",\n" +
-                                                "        \"isbn\": \"0691067570\",\n" +
-                                                "        \"publicationDate\": \"1989\"\n" +
-                                                "    },\n" +
-                                                "    {\n" +
-                                                "        \"id\": \"2\",\n" +
-                                                "        \"title\": \"You are here : personal geographies and other maps of the imagination\",\n" +
-                                                "        \"author\": \"Katharine A. Harmon\",\n" +
-                                                "        \"isbn\": \"1568984308\",\n" +
-                                                "        \"publicationDate\": \"2004\"\n" +
-                                                "    },\n" +
-                                                "    {\n" +
-                                                "        \"id\": \"3\",\n" +
-                                                "        \"title\": \"You just don't understand : women and men in conversation\",\n" +
-                                                "        \"author\": \"Deborah Tannen\",\n" +
-                                                "        \"isbn\": \"0345372050\",\n" +
-                                                "        \"publicationDate\": \"1990\"\n" +
-                                                "    }\n" +
+                                        .withBody("[" + System.getProperty("line.separator") +
+                                                "    {" + System.getProperty("line.separator") +
+                                                "        \"id\": \"1\"," + System.getProperty("line.separator") +
+                                                "        \"title\": \"Xenophon's imperial fiction : on the education of Cyrus\"," + System.getProperty("line.separator") +
+                                                "        \"author\": \"James Tatum\"," + System.getProperty("line.separator") +
+                                                "        \"isbn\": \"0691067570\"," + System.getProperty("line.separator") +
+                                                "        \"publicationDate\": \"1989\"" + System.getProperty("line.separator") +
+                                                "    }," + System.getProperty("line.separator") +
+                                                "    {" + System.getProperty("line.separator") +
+                                                "        \"id\": \"2\"," + System.getProperty("line.separator") +
+                                                "        \"title\": \"You are here : personal geographies and other maps of the imagination\"," + System.getProperty("line.separator") +
+                                                "        \"author\": \"Katharine A. Harmon\"," + System.getProperty("line.separator") +
+                                                "        \"isbn\": \"1568984308\"," + System.getProperty("line.separator") +
+                                                "        \"publicationDate\": \"2004\"" + System.getProperty("line.separator") +
+                                                "    }," + System.getProperty("line.separator") +
+                                                "    {" + System.getProperty("line.separator") +
+                                                "        \"id\": \"3\"," + System.getProperty("line.separator") +
+                                                "        \"title\": \"You just don't understand : women and men in conversation\"," + System.getProperty("line.separator") +
+                                                "        \"author\": \"Deborah Tannen\"," + System.getProperty("line.separator") +
+                                                "        \"isbn\": \"0345372050\"," + System.getProperty("line.separator") +
+                                                "        \"publicationDate\": \"1990\"" + System.getProperty("line.separator") +
+                                                "    }" + System.getProperty("line.separator") +
                                                 "]")
                         )
                 )
@@ -376,17 +377,17 @@ public class ExpectationSerializerTest {
     @Test
     public void shouldSerializeMinimalObjectAsJava() throws IOException {
         // when
-        assertEquals("\n" +
-                        "new MockServerClient()\n" +
-                        "        .when(\n" +
-                        "                request()\n" +
-                        "                        .withPath(\"somePath\")\n" +
-                        "                        .withBody(new StringBody(\"responseBody\", Body.Type.EXACT)),\n" +
-                        "                Times.once()\n" +
-                        "        )\n" +
-                        "        .thenRespond(\n" +
-                        "                response()\n" +
-                        "                        .withStatusCode(304)\n" +
+        assertEquals(System.getProperty("line.separator") +
+                        "new MockServerClient()" + System.getProperty("line.separator") +
+                        "        .when(" + System.getProperty("line.separator") +
+                        "                request()" + System.getProperty("line.separator") +
+                        "                        .withPath(\"somePath\")" + System.getProperty("line.separator") +
+                        "                        .withBody(new StringBody(\"responseBody\", Body.Type.EXACT))," + System.getProperty("line.separator") +
+                        "                Times.once()" + System.getProperty("line.separator") +
+                        "        )" + System.getProperty("line.separator") +
+                        "        .thenRespond(" + System.getProperty("line.separator") +
+                        "                response()" + System.getProperty("line.separator") +
+                        "                        .withStatusCode(304)" + System.getProperty("line.separator") +
                         "        );",
                 expectationSerializer.serializeAsJava(
                         new Expectation(

@@ -1,7 +1,7 @@
 package org.mockserver.client.http;
 
-import io.netty.handler.codec.http.QueryStringDecoder;
 import com.google.common.base.Charsets;
+import io.netty.handler.codec.http.QueryStringDecoder;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.client.CircularRedirectException;
@@ -9,7 +9,6 @@ import org.apache.http.client.methods.*;
 import org.apache.http.conn.ssl.AllowAllHostnameVerifier;
 import org.apache.http.conn.ssl.SSLContexts;
 import org.apache.http.conn.ssl.TrustStrategy;
-import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -154,7 +153,7 @@ public class ApacheHttpClient {
 
             // logging
             if (logger.isTraceEnabled()) {
-                logger.trace("Proxy sending request:\n" + new ObjectMapper()
+                logger.trace("Proxy sending request:" + System.getProperty("line.separator") + new ObjectMapper()
                         .setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT)
                         .setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL)
                         .setSerializationInclusion(JsonSerialize.Inclusion.NON_EMPTY)

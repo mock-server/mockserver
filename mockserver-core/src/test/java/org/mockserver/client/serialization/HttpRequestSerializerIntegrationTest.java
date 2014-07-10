@@ -18,9 +18,9 @@ public class HttpRequestSerializerIntegrationTest {
     @Test
     public void shouldIgnoreExtraFields() throws IOException {
         // given
-        String requestBytes = ("{\n" +
-                "    \"path\": \"somePath\",\n" +
-                "    \"extra_field\": \"extra_value\"\n" +
+        String requestBytes = ("{" + System.getProperty("line.separator") +
+                "    \"path\": \"somePath\"," + System.getProperty("line.separator") +
+                "    \"extra_field\": \"extra_value\"" + System.getProperty("line.separator") +
                 "}");
 
         // when
@@ -35,26 +35,26 @@ public class HttpRequestSerializerIntegrationTest {
     @Test
     public void shouldDeserializeCompleteObject() throws IOException {
         // given
-        String requestBytes = ("{\n" +
-                "  \"method\" : \"someMethod\",\n" +
-                "  \"url\" : \"http://www.example.com\",\n" +
-                "  \"path\" : \"somePath\",\n" +
-                "  \"queryStringParameters\" : [ {\n" +
-                "    \"name\" : \"queryParameterName\",\n" +
-                "    \"values\" : [ \"queryParameterValue\" ]\n" +
-                "  } ],\n" +
-                "  \"body\" : {\n" +
-                "    \"type\" : \"EXACT\",\n" +
-                "    \"value\" : \"somebody\"\n" +
-                "  },\n" +
-                "  \"cookies\" : [ {\n" +
-                "    \"name\" : \"someCookieName\",\n" +
-                "    \"values\" : [ \"someCookieValue\" ]\n" +
-                "  } ],\n" +
-                "  \"headers\" : [ {\n" +
-                "    \"name\" : \"someHeaderName\",\n" +
-                "    \"values\" : [ \"someHeaderValue\" ]\n" +
-                "  } ]\n" +
+        String requestBytes = ("{" + System.getProperty("line.separator") +
+                "  \"method\" : \"someMethod\"," + System.getProperty("line.separator") +
+                "  \"url\" : \"http://www.example.com\"," + System.getProperty("line.separator") +
+                "  \"path\" : \"somePath\"," + System.getProperty("line.separator") +
+                "  \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
+                "    \"name\" : \"queryParameterName\"," + System.getProperty("line.separator") +
+                "    \"values\" : [ \"queryParameterValue\" ]" + System.getProperty("line.separator") +
+                "  } ]," + System.getProperty("line.separator") +
+                "  \"body\" : {" + System.getProperty("line.separator") +
+                "    \"type\" : \"EXACT\"," + System.getProperty("line.separator") +
+                "    \"value\" : \"somebody\"" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"cookies\" : [ {" + System.getProperty("line.separator") +
+                "    \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
+                "    \"values\" : [ \"someCookieValue\" ]" + System.getProperty("line.separator") +
+                "  } ]," + System.getProperty("line.separator") +
+                "  \"headers\" : [ {" + System.getProperty("line.separator") +
+                "    \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
+                "    \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
+                "  } ]" + System.getProperty("line.separator") +
                 "}");
 
         // when
@@ -75,8 +75,8 @@ public class HttpRequestSerializerIntegrationTest {
     @Test
     public void shouldDeserializePartialObject() throws IOException {
         // given
-        String requestBytes = ("{\n" +
-                "    \"path\": \"somePath\"\n" +
+        String requestBytes = ("{" + System.getProperty("line.separator") +
+                "    \"path\": \"somePath\"" + System.getProperty("line.separator") +
                 "}");
 
         // when
@@ -91,14 +91,14 @@ public class HttpRequestSerializerIntegrationTest {
     @Test
     public void shouldDeserializeAsHttpRequestField() throws IOException {
         // given
-        String requestBytes = ("{\n" +
-                "    \"httpRequest\": {\n" +
-                "        \"path\": \"somePath\",\n" +
-                "        \"queryStringParameters\" : [ {\n" +
-                "            \"name\" : \"queryParameterName\",\n" +
-                "            \"values\" : [ \"queryParameterValue\" ]\n" +
-                "        } ]\n" +
-                "    }\n" +
+        String requestBytes = ("{" + System.getProperty("line.separator") +
+                "    \"httpRequest\": {" + System.getProperty("line.separator") +
+                "        \"path\": \"somePath\"," + System.getProperty("line.separator") +
+                "        \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
+                "            \"name\" : \"queryParameterName\"," + System.getProperty("line.separator") +
+                "            \"values\" : [ \"queryParameterValue\" ]" + System.getProperty("line.separator") +
+                "        } ]" + System.getProperty("line.separator") +
+                "    }" + System.getProperty("line.separator") +
                 "}");
 
         // when
@@ -127,26 +127,26 @@ public class HttpRequestSerializerIntegrationTest {
         );
 
         // then
-        assertEquals("{\n" +
-                "  \"method\" : \"someMethod\",\n" +
-                "  \"url\" : \"http://www.example.com\",\n" +
-                "  \"path\" : \"somePath\",\n" +
-                "  \"queryStringParameters\" : [ {\n" +
-                "    \"name\" : \"queryParameterName\",\n" +
-                "    \"values\" : [ \"queryParameterValue\" ]\n" +
-                "  } ],\n" +
-                "  \"body\" : {\n" +
-                "    \"type\" : \"EXACT\",\n" +
-                "    \"value\" : \"somebody\"\n" +
-                "  },\n" +
-                "  \"cookies\" : [ {\n" +
-                "    \"name\" : \"someCookieName\",\n" +
-                "    \"values\" : [ \"someCookieValue\" ]\n" +
-                "  } ],\n" +
-                "  \"headers\" : [ {\n" +
-                "    \"name\" : \"someHeaderName\",\n" +
-                "    \"values\" : [ \"someHeaderValue\" ]\n" +
-                "  } ]\n" +
+        assertEquals("{" + System.getProperty("line.separator") +
+                "  \"method\" : \"someMethod\"," + System.getProperty("line.separator") +
+                "  \"url\" : \"http://www.example.com\"," + System.getProperty("line.separator") +
+                "  \"path\" : \"somePath\"," + System.getProperty("line.separator") +
+                "  \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
+                "    \"name\" : \"queryParameterName\"," + System.getProperty("line.separator") +
+                "    \"values\" : [ \"queryParameterValue\" ]" + System.getProperty("line.separator") +
+                "  } ]," + System.getProperty("line.separator") +
+                "  \"body\" : {" + System.getProperty("line.separator") +
+                "    \"type\" : \"EXACT\"," + System.getProperty("line.separator") +
+                "    \"value\" : \"somebody\"" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"cookies\" : [ {" + System.getProperty("line.separator") +
+                "    \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
+                "    \"values\" : [ \"someCookieValue\" ]" + System.getProperty("line.separator") +
+                "  } ]," + System.getProperty("line.separator") +
+                "  \"headers\" : [ {" + System.getProperty("line.separator") +
+                "    \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
+                "    \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
+                "  } ]" + System.getProperty("line.separator") +
                 "}", jsonExpectation);
     }
 
@@ -154,13 +154,13 @@ public class HttpRequestSerializerIntegrationTest {
     public void shouldSerializePartialRequestAndResponse() throws IOException {
         // when
         String jsonExpectation = new HttpRequestSerializer().serialize(new HttpRequestDTO()
-                .setPath("somePath")
-                .buildObject()
+                        .setPath("somePath")
+                        .buildObject()
         );
 
         // then
-        assertEquals("{\n" +
-                "  \"path\" : \"somePath\"\n" +
+        assertEquals("{" + System.getProperty("line.separator") +
+                "  \"path\" : \"somePath\"" + System.getProperty("line.separator") +
                 "}", jsonExpectation);
     }
 
@@ -168,13 +168,13 @@ public class HttpRequestSerializerIntegrationTest {
     public void shouldSerializePartialExpectation() throws IOException {
         // when
         String jsonExpectation = new HttpRequestSerializer().serialize(new HttpRequestDTO()
-                .setPath("somePath")
-                .buildObject()
+                        .setPath("somePath")
+                        .buildObject()
         );
 
         // then
-        assertEquals("{\n" +
-                "  \"path\" : \"somePath\"\n" +
+        assertEquals("{" + System.getProperty("line.separator") +
+                "  \"path\" : \"somePath\"" + System.getProperty("line.separator") +
                 "}", jsonExpectation);
     }
 }

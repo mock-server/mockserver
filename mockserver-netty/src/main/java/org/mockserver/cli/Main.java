@@ -23,22 +23,22 @@ public class Main {
     public static final String SERVER_PORT_KEY = "serverPort";
     public static final String SERVER_SECURE_PORT_KEY = "serverSecurePort";
     public static final String USAGE = "" +
-            "   java -jar <path to mockserver-jetty-jar-with-dependencies.jar> [-serverPort <port>] [-serverSecurePort <port>] [-proxyPort <port>] [-proxySecurePort <port>]\n" +
-            "   \n" +
-            "     valid options are:\n" +
-            "        -serverPort <port>         specifies the HTTP port for the MockServer      \n" +
-            "                                   if neither serverPort or serverSecurePort       \n" +
-            "                                   are provide the MockServer is not started       \n" +
-            "        -serverSecurePort <port>   specifies the HTTPS port for the MockServer     \n" +
-            "                                   if neither serverPort or serverSecurePort       \n" +
-            "                                   are provide the MockServer is not started       \n" +
-            "                                                                                   \n" +
-            "        -proxyPort <path>          specifies the HTTP port for the httpProxyBuilder           \n" +
-            "                                   if neither proxyPort or proxySecurePort         \n" +
-            "                                   are provide the MockServer is not started       \n" +
-            "        -proxySecurePort <path>    specifies the HTTPS port for the httpProxyBuilder          \n" +
-            "                                   if neither proxyPort or proxySecurePort         \n" +
-            "                                   are provide the MockServer is not started       \n";
+            "   java -jar <path to mockserver-jetty-jar-with-dependencies.jar> [-serverPort <port>] [-serverSecurePort <port>] [-proxyPort <port>] [-proxySecurePort <port>]" + System.getProperty("line.separator") +
+            "   " + System.getProperty("line.separator") +
+            "     valid options are:" + System.getProperty("line.separator") +
+            "        -serverPort <port>         specifies the HTTP port for the MockServer      " + System.getProperty("line.separator") +
+            "                                   if neither serverPort or serverSecurePort       " + System.getProperty("line.separator") +
+            "                                   are provide the MockServer is not started       " + System.getProperty("line.separator") +
+            "        -serverSecurePort <port>   specifies the HTTPS port for the MockServer     " + System.getProperty("line.separator") +
+            "                                   if neither serverPort or serverSecurePort       " + System.getProperty("line.separator") +
+            "                                   are provide the MockServer is not started       " + System.getProperty("line.separator") +
+            "                                                                                   " + System.getProperty("line.separator") +
+            "        -proxyPort <path>          specifies the HTTP port for the httpProxyBuilder           " + System.getProperty("line.separator") +
+            "                                   if neither proxyPort or proxySecurePort         " + System.getProperty("line.separator") +
+            "                                   are provide the MockServer is not started       " + System.getProperty("line.separator") +
+            "        -proxySecurePort <path>    specifies the HTTPS port for the httpProxyBuilder          " + System.getProperty("line.separator") +
+            "                                   if neither proxyPort or proxySecurePort         " + System.getProperty("line.separator") +
+            "                                   are provide the MockServer is not started       " + System.getProperty("line.separator");
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
     @VisibleForTesting
     static HttpProxyBuilder httpProxyBuilder = new HttpProxyBuilder();
@@ -60,7 +60,7 @@ public class Main {
         Map<String, Integer> parseArguments = parseArguments(arguments);
 
         if (logger.isDebugEnabled()) {
-            logger.debug("\n\nUsing command line options: " + Joiner.on(", ").withKeyValueSeparator("=").join(parseArguments) + "\n");
+            logger.debug("\n\nUsing command line options: " + Joiner.on(", ").withKeyValueSeparator("=").join(parseArguments) + "" + System.getProperty("line.separator"));
         }
         Logging.overrideLogLevel(System.getProperty("mockserver.logLevel"));
 
