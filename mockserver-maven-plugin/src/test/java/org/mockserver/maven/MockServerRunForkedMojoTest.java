@@ -25,7 +25,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class MockServerRunForkedMojoTest {
 
     public final String level = "LEVEL";
-    private final String jarWithDependenciesPath = "/foo";
+    private final String jarWithDependenciesPath = new File("/foo").getAbsolutePath();
     private final String javaBinaryPath = "java";
     @Mock
     protected RepositorySystem mockRepositorySystem;
