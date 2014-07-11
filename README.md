@@ -3,7 +3,7 @@ MockServer
 
 **Build Status:** 
 
-[![drone.io Build Status](https://drone.io/github.com/jamesdbloom/mockserver/status.png)](https://drone.io/github.com/jamesdbloom/mockserver/latest) [![Travis Build Status](https://travis-ci.org/jamesdbloom/mockserver.svg?branch=master)](https://travis-ci.org/jamesdbloom/mockserver)
+[![Codeship Build](https://www.codeship.io/projects/cdab0090-bafb-0131-c1a3-166904770eb2/status?branch=master)](https://www.codeship.io/projects/20934) [![drone.io Build Status](https://drone.io/github.com/jamesdbloom/mockserver/status.png)](https://drone.io/github.com/jamesdbloom/mockserver/latest)
 
 **Backlog:**
 
