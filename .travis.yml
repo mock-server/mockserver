@@ -1,10 +1,10 @@
 language: java
 
 before_install:
-  - "mvn install -T2C -q -DskipTests=true"
+  - "travis_wait mvn install -T2C -q -DskipTests=true"
 
 script:
-  - "./travis_build.sh"
+  - "travis_wait ./travis_build.sh"
 
 jdk:
   - openjdk6
