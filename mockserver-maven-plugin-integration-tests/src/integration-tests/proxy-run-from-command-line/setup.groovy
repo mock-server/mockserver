@@ -6,6 +6,4 @@ def deleteFile(file) {
     }
 }
 
-"pkill -INT -f jetty".execute().waitFor()
-
 return deleteFile(new File(basedir as String, "mockserver.log" as String))
