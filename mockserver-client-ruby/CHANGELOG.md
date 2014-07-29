@@ -9,3 +9,7 @@
 
 ### Version 1.0.0
  - Merged ruby client fully into main MockServer build on master.
+
+### Version 1.0.1
+ - Fixes serialization bug with multi_json.
+ - Changes dependency on activesupport from '~> 4' to '~> 3' to be less conservative.
