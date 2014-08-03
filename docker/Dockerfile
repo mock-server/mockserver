@@ -16,7 +16,7 @@ RUN mkdir -p /opt/mockserver
 WORKDIR /opt/mockserver
 
 # download MockServer
-RUN (cd /opt/mockserver && wget -O mockserver-netty-3.4-jar-with-dependencies.jar http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/3.4/mockserver-netty-3.4-jar-with-dependencies.jar)
+RUN (cd /opt/mockserver && wget -O mockserver-netty-3.5-jar-with-dependencies.jar http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/3.5/mockserver-netty-3.5-jar-with-dependencies.jar)
 RUN (cd /opt/mockserver && wget https://raw.github.com/jamesdbloom/mockserver/master/docker/run_mockserver.sh && chmod +x /opt/mockserver/run_mockserver.sh)
 
 # expose ports.
