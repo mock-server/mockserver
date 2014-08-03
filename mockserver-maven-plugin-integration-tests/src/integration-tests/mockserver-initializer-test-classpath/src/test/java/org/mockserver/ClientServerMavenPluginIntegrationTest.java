@@ -61,7 +61,7 @@ public class ClientServerMavenPluginIntegrationTest {
     }
 
     protected HttpResponse makeRequest(HttpRequest httpRequest) {
-        HttpResponse httpResponse = apacheHttpClient.sendRequest(httpRequest);
+        HttpResponse httpResponse = apacheHttpClient.sendRequest(httpRequest, false);
         List<Header> headers = new ArrayList<Header>();
         for (Header header : httpResponse.getHeaders()) {
             if (!(header.getName().equals("Server") || header.getName().equals("Expires") || header.getName().equals("Date") || header.getName().equals("Connection"))) {
