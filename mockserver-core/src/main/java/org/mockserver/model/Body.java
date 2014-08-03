@@ -3,7 +3,7 @@ package org.mockserver.model;
 /**
  * @author jamesdbloom
  */
-public abstract class Body extends EqualsHashCodeToString {
+public abstract class Body<T> extends EqualsHashCodeToString {
 
     private final Type type;
 
@@ -15,12 +15,14 @@ public abstract class Body extends EqualsHashCodeToString {
         return type;
     }
 
+    public abstract T getValue();
+
     public enum Type {
         PARAMETERS,
         XPATH,
         JSON,
         REGEX,
-        EXACT,
+        STRING,
         BINARY
     }
 }

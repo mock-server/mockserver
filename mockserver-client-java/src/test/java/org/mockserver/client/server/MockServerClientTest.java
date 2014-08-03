@@ -44,7 +44,7 @@ public class MockServerClientTest {
         HttpRequest httpRequest =
                 new HttpRequest()
                         .withPath("/some_path")
-                        .withBody(new StringBody("some_request_body", Body.Type.EXACT));
+                        .withBody(new StringBody("some_request_body", Body.Type.STRING));
         HttpResponse httpResponse =
                 new HttpResponse()
                         .withBody("some_response_body")
@@ -67,7 +67,7 @@ public class MockServerClientTest {
         HttpRequest httpRequest =
                 new HttpRequest()
                         .withPath("/some_path")
-                        .withBody(new StringBody("some_request_body", Body.Type.EXACT));
+                        .withBody(new StringBody("some_request_body", Body.Type.STRING));
         HttpForward httpForward =
                 new HttpForward()
                         .withHost("some_host")
@@ -92,7 +92,7 @@ public class MockServerClientTest {
                 .when(
                         new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.EXACT)),
+                                .withBody(new StringBody("some_request_body", Body.Type.STRING)),
                         Times.exactly(3)
                 )
                 .respond(
@@ -106,7 +106,7 @@ public class MockServerClientTest {
                 new ExpectationDTO()
                         .setHttpRequest(new HttpRequestDTO(new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.EXACT))))
+                                .withBody(new StringBody("some_request_body", Body.Type.STRING))))
                         .setHttpResponse(new HttpResponseDTO(new HttpResponse()
                                 .withBody("some_response_body")
                                 .withHeaders(new Header("responseName", "responseValue"))))
@@ -122,7 +122,7 @@ public class MockServerClientTest {
                 .when(
                         new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.EXACT)),
+                                .withBody(new StringBody("some_request_body", Body.Type.STRING)),
                         Times.exactly(3)
                 )
                 .forward(
@@ -137,13 +137,14 @@ public class MockServerClientTest {
                 new ExpectationDTO()
                         .setHttpRequest(new HttpRequestDTO(new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.EXACT))))
+                                .withBody(new StringBody("some_request_body", Body.Type.STRING))))
                         .setHttpForward(new HttpForwardDTO(new HttpForward()
                                 .withHost("some_host")
                                 .withPort(9090)
                                 .withScheme(HttpForward.Scheme.HTTPS)))
                         .setTimes(new TimesDTO(Times.exactly(3)))
-                        .buildObject());
+                        .buildObject()
+        );
     }
 
     @Test
@@ -153,7 +154,7 @@ public class MockServerClientTest {
                 .when(
                         new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.EXACT))
+                                .withBody(new StringBody("some_request_body", Body.Type.STRING))
                 )
                 .respond(
                         new HttpResponse()
@@ -166,12 +167,13 @@ public class MockServerClientTest {
                 new ExpectationDTO()
                         .setHttpRequest(new HttpRequestDTO(new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.EXACT))))
+                                .withBody(new StringBody("some_request_body", Body.Type.STRING))))
                         .setHttpResponse(new HttpResponseDTO(new HttpResponse()
                                 .withBody("some_response_body")
                                 .withHeaders(new Header("responseName", "responseValue"))))
                         .setTimes(new TimesDTO(Times.unlimited()))
-                        .buildObject());
+                        .buildObject()
+        );
     }
 
     @Test
@@ -208,17 +210,14 @@ public class MockServerClientTest {
                 .clear(
                         new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.EXACT))
+                                .withBody(new StringBody("some_request_body", Body.Type.STRING))
                 );
 
         // then
         verify(mockApacheHttpClient).sendPUTRequest("http://localhost:8080", "/clear", "" +
                 "{" + System.getProperty("line.separator") +
                 "  \"path\" : \"/some_path\"," + System.getProperty("line.separator") +
-                "  \"body\" : {" + System.getProperty("line.separator") +
-                "    \"type\" : \"EXACT\"," + System.getProperty("line.separator") +
-                "    \"value\" : \"some_request_body\"" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
+                "  \"body\" : \"some_request_body\"" + System.getProperty("line.separator") +
                 "}");
     }
 
@@ -234,17 +233,14 @@ public class MockServerClientTest {
                 .retrieveAsExpectations(
                         new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.EXACT))
+                                .withBody(new StringBody("some_request_body", Body.Type.STRING))
                 ));
 
         // then
         verify(mockApacheHttpClient).sendPUTRequest("http://localhost:8080", "/retrieve", "" +
                 "{" + System.getProperty("line.separator") +
                 "  \"path\" : \"/some_path\"," + System.getProperty("line.separator") +
-                "  \"body\" : {" + System.getProperty("line.separator") +
-                "    \"type\" : \"EXACT\"," + System.getProperty("line.separator") +
-                "    \"value\" : \"some_request_body\"" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
+                "  \"body\" : \"some_request_body\"" + System.getProperty("line.separator") +
                 "}");
         verify(expectationSerializer).deserializeArray("body");
     }
@@ -275,17 +271,14 @@ public class MockServerClientTest {
                 .retrieveAsJSON(
                         new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.EXACT))
+                                .withBody(new StringBody("some_request_body", Body.Type.STRING))
                 ));
 
         // then
         verify(mockApacheHttpClient).sendPUTRequest("http://localhost:8080", "/retrieve", "" +
                 "{" + System.getProperty("line.separator") +
                 "  \"path\" : \"/some_path\"," + System.getProperty("line.separator") +
-                "  \"body\" : {" + System.getProperty("line.separator") +
-                "    \"type\" : \"EXACT\"," + System.getProperty("line.separator") +
-                "    \"value\" : \"some_request_body\"" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
+                "  \"body\" : \"some_request_body\"" + System.getProperty("line.separator") +
                 "}");
     }
 
@@ -316,7 +309,7 @@ public class MockServerClientTest {
                 .verify(
                         new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.EXACT))
+                                .withBody(new StringBody("some_request_body", Body.Type.STRING))
                 );
 
         // no assertion exception thrown
@@ -336,13 +329,13 @@ public class MockServerClientTest {
                 .verify(
                         new HttpRequest()
                                 .withPath("/some_path_one")
-                                .withBody(new StringBody("some_request_body", Body.Type.EXACT)),
+                                .withBody(new StringBody("some_request_body", Body.Type.STRING)),
                         new HttpRequest()
                                 .withPath("/some_path_two")
-                                .withBody(new StringBody("some_request_body", Body.Type.EXACT)),
+                                .withBody(new StringBody("some_request_body", Body.Type.STRING)),
                         new HttpRequest()
                                 .withPath("/some_path_three")
-                                .withBody(new StringBody("some_request_body", Body.Type.EXACT))
+                                .withBody(new StringBody("some_request_body", Body.Type.STRING))
                 );
 
         // no assertion exception thrown
@@ -359,7 +352,7 @@ public class MockServerClientTest {
                 .verify(
                         new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.EXACT))
+                                .withBody(new StringBody("some_request_body", Body.Type.STRING))
                 );
     }
 
@@ -376,7 +369,7 @@ public class MockServerClientTest {
                 .verify(
                         new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.EXACT)),
+                                .withBody(new StringBody("some_request_body", Body.Type.STRING)),
                         org.mockserver.client.proxy.Times.once()
                 );
 
@@ -397,7 +390,7 @@ public class MockServerClientTest {
                 .verify(
                         new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.EXACT)),
+                                .withBody(new StringBody("some_request_body", Body.Type.STRING)),
                         org.mockserver.client.proxy.Times.once()
                 );
     }
@@ -415,7 +408,7 @@ public class MockServerClientTest {
                 .verify(
                         new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.EXACT)),
+                                .withBody(new StringBody("some_request_body", Body.Type.STRING)),
                         org.mockserver.client.proxy.Times.exactly(1)
                 );
 
@@ -436,7 +429,7 @@ public class MockServerClientTest {
                 .verify(
                         new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.EXACT)),
+                                .withBody(new StringBody("some_request_body", Body.Type.STRING)),
                         org.mockserver.client.proxy.Times.exactly(1)
                 );
     }
@@ -454,7 +447,7 @@ public class MockServerClientTest {
                 .verify(
                         new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.EXACT)),
+                                .withBody(new StringBody("some_request_body", Body.Type.STRING)),
                         org.mockserver.client.proxy.Times.atLeast(1)
                 );
 
@@ -476,7 +469,7 @@ public class MockServerClientTest {
                 .verify(
                         new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.EXACT)),
+                                .withBody(new StringBody("some_request_body", Body.Type.STRING)),
                         org.mockserver.client.proxy.Times.atLeast(1)
                 );
 
@@ -496,7 +489,7 @@ public class MockServerClientTest {
                 .verify(
                         new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.EXACT)),
+                                .withBody(new StringBody("some_request_body", Body.Type.STRING)),
                         org.mockserver.client.proxy.Times.exactly(2)
                 );
     }

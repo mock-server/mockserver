@@ -124,7 +124,7 @@ public class MockServerServlet extends HttpServlet {
     private void sendRequest(final HttpRequest httpRequest, final HttpServletResponse httpServletResponse) {
         // if HttpRequest was set to null by a filter don't send request
         if (httpRequest != null) {
-            HttpResponse httpResponse = filters.applyFilters(httpRequest, apacheHttpClient.sendRequest(httpRequest));
+            HttpResponse httpResponse = filters.applyFilters(httpRequest, apacheHttpClient.sendRequest(httpRequest, false));
             mockServerToHttpServletResponseMapper.mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
         }
     }

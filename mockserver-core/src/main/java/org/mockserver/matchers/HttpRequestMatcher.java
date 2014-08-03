@@ -56,14 +56,14 @@ public class HttpRequestMatcher extends EqualsHashCodeToString implements Matche
     private HttpRequestMatcher withBody(Body body) {
         if (body != null) {
             switch (body.getType()) {
-                case EXACT:
+                case STRING:
                     this.bodyMatcher = new ExactStringMatcher(((StringBody) body).getValue());
                     break;
                 case REGEX:
                     this.bodyMatcher = new RegexStringMatcher(((StringBody) body).getValue());
                     break;
                 case PARAMETERS:
-                    this.bodyMatcher = new ParameterStringMatcher(((ParameterBody) body).getParameters());
+                    this.bodyMatcher = new ParameterStringMatcher(((ParameterBody) body).getValue());
                     break;
                 case XPATH:
                     this.bodyMatcher = new XPathStringMatcher(((StringBody) body).getValue());
@@ -105,7 +105,12 @@ public class HttpRequestMatcher extends EqualsHashCodeToString implements Matche
             boolean urlMatches = matches(urlMatcher, httpRequest.getURL());
             boolean pathMatches = matches(pathMatcher, httpRequest.getPath());
             boolean queryStringParametersMatches = matches(queryStringParameterMatcher, (httpRequest.getQueryStringParameters() != null ? new ArrayList<KeyToMultiValue>(httpRequest.getQueryStringParameters()) : null));
-            boolean bodyMatches = matches(bodyMatcher, (httpRequest.getBody() != null ? httpRequest.getBody().toString() : ""));
+            boolean bodyMatches;
+            if (bodyMatcher instanceof BinaryMatcher) {
+                bodyMatches = matches(bodyMatcher, httpRequest.getRawBodyBytes());
+            } else {
+                bodyMatches = matches(bodyMatcher, (httpRequest.getBody() != null ? httpRequest.getBody().toString() : ""));
+            }
             boolean headersMatch = matches(headerMatcher, (httpRequest.getHeaders() != null ? new ArrayList<KeyToMultiValue>(httpRequest.getHeaders()) : null));
             boolean cookiesMatch = matches(cookieMatcher, (httpRequest.getCookies() != null ? new ArrayList<KeyToMultiValue>(httpRequest.getCookies()) : null));
             boolean result = methodMatches && urlMatches && pathMatches && queryStringParametersMatches && bodyMatches && headersMatch && cookiesMatch;

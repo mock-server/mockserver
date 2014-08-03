@@ -15,7 +15,7 @@ public class MatcherBuilderTest {
             .withPath("some_path")
             .withQueryStringParameter(new Parameter("queryStringParameterName", "queryStringParameterValue"))
             .withURL("http://www.example.com")
-            .withBody(new StringBody("some_body", Body.Type.EXACT))
+            .withBody(new StringBody("some_body", Body.Type.STRING))
             .withHeaders(new Header("name", "value"))
             .withCookies(new Cookie("name", "value"));
     ;
@@ -38,7 +38,7 @@ public class MatcherBuilderTest {
                         .withPath("some_path")
                         .withQueryStringParameter(new Parameter("queryStringParameterName", "queryStringParameterValue"))
                         .withURL("http://www.example.com")
-                        .withBody(new StringBody("some_body", Body.Type.EXACT))
+                        .withBody(new StringBody("some_body", Body.Type.STRING))
                         .withHeaders(new Header("name", "value"))
                         .withCookies(new Cookie("name", "value"))
         );
@@ -56,7 +56,7 @@ public class MatcherBuilderTest {
                         .withPath("")
                         .withQueryStringParameter(new Parameter("queryStringParameterName", "queryStringParameterValue"))
                         .withURL("http://www.example.com")
-                        .withBody(new StringBody("some_body", Body.Type.EXACT))
+                        .withBody(new StringBody("some_body", Body.Type.STRING))
                         .withHeaders(new Header("name", "value"))
                         .withCookies(new Cookie("name", "value"))
         );
@@ -74,7 +74,7 @@ public class MatcherBuilderTest {
                         .withPath("some_path")
                         .withQueryStringParameters()
                         .withURL("http://www.example.com")
-                        .withBody(new StringBody("some_body", Body.Type.EXACT))
+                        .withBody(new StringBody("some_body", Body.Type.STRING))
                         .withHeaders(new Header("name", "value"))
                         .withCookies(new Cookie("name", "value"))
         );
@@ -110,7 +110,7 @@ public class MatcherBuilderTest {
                         .withPath("some_path")
                         .withQueryStringParameter(new Parameter("queryStringParameterName", "queryStringParameterValue"))
                         .withURL("")
-                        .withBody(new StringBody("some_body", Body.Type.EXACT))
+                        .withBody(new StringBody("some_body", Body.Type.STRING))
                         .withHeaders(new Header("name", "value"))
                         .withCookies(new Cookie("name", "value"))
         );
@@ -128,7 +128,7 @@ public class MatcherBuilderTest {
                         .withPath("some_path")
                         .withQueryStringParameter(new Parameter("queryStringParameterName", "queryStringParameterValue"))
                         .withURL("http://www.example.com")
-                        .withBody(new StringBody("", Body.Type.EXACT))
+                        .withBody(new StringBody("", Body.Type.STRING))
                         .withHeaders(new Header("name", "value"))
                         .withCookies(new Cookie("name", "value"))
         );
@@ -146,7 +146,7 @@ public class MatcherBuilderTest {
                         .withPath("some_path")
                         .withQueryStringParameter(new Parameter("queryStringParameterName", "queryStringParameterValue"))
                         .withURL("http://www.example.com")
-                        .withBody(new StringBody("some_body", Body.Type.EXACT))
+                        .withBody(new StringBody("some_body", Body.Type.STRING))
                         .withHeaders()
                         .withCookies(new Cookie("name", "value"))
         );
@@ -164,7 +164,7 @@ public class MatcherBuilderTest {
                         .withPath("some_path")
                         .withQueryStringParameter(new Parameter("queryStringParameterName", "queryStringParameterValue"))
                         .withURL("http://www.example.com")
-                        .withBody(new StringBody("some_body", Body.Type.EXACT))
+                        .withBody(new StringBody("some_body", Body.Type.STRING))
                         .withHeaders(new Header("name", "value"))
                         .withCookies()
         );

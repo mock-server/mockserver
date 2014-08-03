@@ -2,7 +2,6 @@ package org.mockserver.client.serialization.model;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
-import org.mockserver.client.serialization.Base64Converter;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.EqualsHashCodeToString;
 import org.mockserver.model.Header;
@@ -16,14 +15,14 @@ import java.util.List;
  */
 public class HttpResponseDTO extends EqualsHashCodeToString {
     private Integer statusCode;
-    private String body;
+    private BodyDTO body;
     private List<CookieDTO> cookies = new ArrayList<CookieDTO>();
     private List<HeaderDTO> headers = new ArrayList<HeaderDTO>();
     private DelayDTO delay;
 
     public HttpResponseDTO(HttpResponse httpResponse) {
         statusCode = httpResponse.getStatusCode();
-        body = httpResponse.getBodyAsString();
+        body = BodyDTO.createDTO(httpResponse.getBody());
         headers = Lists.transform(httpResponse.getHeaders(), new Function<Header, HeaderDTO>() {
             public HeaderDTO apply(Header header) {
                 return new HeaderDTO(header);
@@ -43,7 +42,7 @@ public class HttpResponseDTO extends EqualsHashCodeToString {
     public HttpResponse buildObject() {
         return new HttpResponse()
                 .withStatusCode(statusCode)
-                .withBody(body != null ? Base64Converter.base64StringToBytes(body) : null)
+                .withBody(body != null ? body.buildObject() : null)
                 .withHeaders(Lists.transform(headers, new Function<HeaderDTO, Header>() {
                     public Header apply(HeaderDTO header) {
                         return header.buildObject();
@@ -66,11 +65,11 @@ public class HttpResponseDTO extends EqualsHashCodeToString {
         return this;
     }
 
-    public String getBody() {
+    public BodyDTO getBody() {
         return body;
     }
 
-    public HttpResponseDTO setBody(String body) {
+    public HttpResponseDTO setBody(BodyDTO body) {
         this.body = body;
         return this;
     }

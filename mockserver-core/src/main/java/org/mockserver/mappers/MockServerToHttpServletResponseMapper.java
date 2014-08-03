@@ -1,14 +1,15 @@
 package org.mockserver.mappers;
 
 import io.netty.handler.codec.http.DefaultCookie;
-import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.handler.codec.http.ServerCookieEncoder;
-import org.mockserver.model.*;
+import org.mockserver.client.serialization.Base64Converter;
+import org.mockserver.model.BinaryBody;
+import org.mockserver.model.Cookie;
+import org.mockserver.model.Header;
+import org.mockserver.model.HttpResponse;
 import org.mockserver.streams.IOStreamUtils;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.UnsupportedEncodingException;
-import java.util.List;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.SET_COOKIE;
 
@@ -51,8 +52,12 @@ public class MockServerToHttpServletResponseMapper {
     }
 
     private void setBody(HttpResponse httpResponse, HttpServletResponse httpServletResponse) {
-        if (httpResponse.getBody() != null) {
-            IOStreamUtils.writeToOutputStream(httpResponse.getBody(), httpServletResponse);
+        if (httpResponse.getBodyAsString() != null) {
+            if (httpResponse.getBody() instanceof BinaryBody) {
+                IOStreamUtils.writeToOutputStream(Base64Converter.base64StringToBytes(httpResponse.getBodyAsString()), httpServletResponse);
+            } else {
+                IOStreamUtils.writeToOutputStream(httpResponse.getBodyAsString().getBytes(), httpServletResponse);
+            }
         }
     }
 }

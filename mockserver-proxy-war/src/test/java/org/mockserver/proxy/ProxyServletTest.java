@@ -65,7 +65,7 @@ public class ProxyServletTest {
         // mappers
         when(mockHttpServletToMockServerRequestMapper.mapHttpServletRequestToMockServerRequest(any(MockHttpServletRequest.class))).thenReturn(httpRequest);
         httpRequestArgumentCaptor = ArgumentCaptor.forClass(HttpRequest.class);
-        when(mockApacheHttpClient.sendRequest(httpRequestArgumentCaptor.capture())).thenReturn(httpResponse);
+        when(mockApacheHttpClient.sendRequest(httpRequestArgumentCaptor.capture(), eq(false))).thenReturn(httpResponse);
     }
 
     @Test
@@ -76,7 +76,7 @@ public class ProxyServletTest {
         // then
         verify(mockHttpServletToMockServerRequestMapper).mapHttpServletRequestToMockServerRequest(same(mockHttpServletRequest));
         verify(mockMockServerToHttpServletResponseMapper).mapMockServerResponseToHttpServletResponse(same(httpResponse), same(mockHttpServletResponse));
-        verify(mockApacheHttpClient).sendRequest(same(httpRequest));
+        verify(mockApacheHttpClient).sendRequest(same(httpRequest), eq(false));
     }
 
     @Test
@@ -87,7 +87,7 @@ public class ProxyServletTest {
         // then
         verify(mockHttpServletToMockServerRequestMapper).mapHttpServletRequestToMockServerRequest(same(mockHttpServletRequest));
         verify(mockMockServerToHttpServletResponseMapper).mapMockServerResponseToHttpServletResponse(same(httpResponse), same(mockHttpServletResponse));
-        verify(mockApacheHttpClient).sendRequest(same(httpRequest));
+        verify(mockApacheHttpClient).sendRequest(same(httpRequest), eq(false));
     }
 
     @Test
@@ -98,7 +98,7 @@ public class ProxyServletTest {
         // then
         verify(mockHttpServletToMockServerRequestMapper).mapHttpServletRequestToMockServerRequest(same(mockHttpServletRequest));
         verify(mockMockServerToHttpServletResponseMapper).mapMockServerResponseToHttpServletResponse(same(httpResponse), same(mockHttpServletResponse));
-        verify(mockApacheHttpClient).sendRequest(same(httpRequest));
+        verify(mockApacheHttpClient).sendRequest(same(httpRequest), eq(false));
     }
 
     @Test
@@ -109,7 +109,7 @@ public class ProxyServletTest {
         // then
         verify(mockHttpServletToMockServerRequestMapper).mapHttpServletRequestToMockServerRequest(same(mockHttpServletRequest));
         verify(mockMockServerToHttpServletResponseMapper).mapMockServerResponseToHttpServletResponse(same(httpResponse), same(mockHttpServletResponse));
-        verify(mockApacheHttpClient).sendRequest(same(httpRequest));
+        verify(mockApacheHttpClient).sendRequest(same(httpRequest), eq(false));
     }
 
     @Test
@@ -120,7 +120,7 @@ public class ProxyServletTest {
         // then
         verify(mockHttpServletToMockServerRequestMapper).mapHttpServletRequestToMockServerRequest(same(mockHttpServletRequest));
         verify(mockMockServerToHttpServletResponseMapper).mapMockServerResponseToHttpServletResponse(same(httpResponse), same(mockHttpServletResponse));
-        verify(mockApacheHttpClient).sendRequest(same(httpRequest));
+        verify(mockApacheHttpClient).sendRequest(same(httpRequest), eq(false));
     }
 
     @Test
@@ -131,7 +131,7 @@ public class ProxyServletTest {
         // then
         verify(mockHttpServletToMockServerRequestMapper).mapHttpServletRequestToMockServerRequest(same(mockHttpServletRequest));
         verify(mockMockServerToHttpServletResponseMapper).mapMockServerResponseToHttpServletResponse(same(httpResponse), same(mockHttpServletResponse));
-        verify(mockApacheHttpClient).sendRequest(same(httpRequest));
+        verify(mockApacheHttpClient).sendRequest(same(httpRequest), eq(false));
     }
 
     @Test
@@ -142,7 +142,7 @@ public class ProxyServletTest {
         // then
         verify(mockHttpServletToMockServerRequestMapper).mapHttpServletRequestToMockServerRequest(same(mockHttpServletRequest));
         verify(mockMockServerToHttpServletResponseMapper).mapMockServerResponseToHttpServletResponse(same(httpResponse), same(mockHttpServletResponse));
-        verify(mockApacheHttpClient).sendRequest(same(httpRequest));
+        verify(mockApacheHttpClient).sendRequest(same(httpRequest), eq(false));
     }
 
     @Test

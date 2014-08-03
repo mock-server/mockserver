@@ -208,7 +208,7 @@ public class MockServerMatcherDumpTest {
                 "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + System.getProperty("line.separator") +
                 "    } ]," + System.getProperty("line.separator") +
                 "    \"body\" : {" + System.getProperty("line.separator") +
-                "      \"type\" : \"EXACT\"," + System.getProperty("line.separator") +
+                "      \"type\" : \"STRING\"," + System.getProperty("line.separator") +
                 "      \"value\" : \"someBody\"" + System.getProperty("line.separator") +
                 "    }," + System.getProperty("line.separator") +
                 "    \"cookies\" : [ {" + System.getProperty("line.separator") +
@@ -256,7 +256,7 @@ public class MockServerMatcherDumpTest {
                 "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + System.getProperty("line.separator") +
                 "    } ]," + System.getProperty("line.separator") +
                 "    \"body\" : {" + System.getProperty("line.separator") +
-                "      \"type\" : \"EXACT\"," + System.getProperty("line.separator") +
+                "      \"type\" : \"STRING\"," + System.getProperty("line.separator") +
                 "      \"value\" : \"someBody\"" + System.getProperty("line.separator") +
                 "    }," + System.getProperty("line.separator") +
                 "    \"cookies\" : [ {" + System.getProperty("line.separator") +
@@ -307,7 +307,7 @@ public class MockServerMatcherDumpTest {
                 "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + System.getProperty("line.separator") +
                 "    } ]," + System.getProperty("line.separator") +
                 "    \"body\" : {" + System.getProperty("line.separator") +
-                "      \"type\" : \"EXACT\"," + System.getProperty("line.separator") +
+                "      \"type\" : \"STRING\"," + System.getProperty("line.separator") +
                 "      \"value\" : \"some_body\"" + System.getProperty("line.separator") +
                 "    }," + System.getProperty("line.separator") +
                 "    \"cookies\" : [ {" + System.getProperty("line.separator") +
@@ -355,7 +355,7 @@ public class MockServerMatcherDumpTest {
                 "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + System.getProperty("line.separator") +
                 "    } ]," + System.getProperty("line.separator") +
                 "    \"body\" : {" + System.getProperty("line.separator") +
-                "      \"type\" : \"EXACT\"," + System.getProperty("line.separator") +
+                "      \"type\" : \"STRING\"," + System.getProperty("line.separator") +
                 "      \"value\" : \"some_body\"" + System.getProperty("line.separator") +
                 "    }," + System.getProperty("line.separator") +
                 "    \"cookies\" : [ {" + System.getProperty("line.separator") +

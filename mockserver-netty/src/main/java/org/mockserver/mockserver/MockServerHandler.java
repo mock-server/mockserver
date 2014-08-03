@@ -179,7 +179,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<Object> {
     FullHttpResponse sendRequest(final org.mockserver.model.HttpRequest httpRequest) {
         // if HttpRequest was set to null by a filter don't send request
         if (httpRequest != null) {
-            HttpResponse httpResponse = filters.applyFilters(httpRequest, apacheHttpClient.sendRequest(httpRequest));
+            HttpResponse httpResponse = filters.applyFilters(httpRequest, apacheHttpClient.sendRequest(httpRequest, false));
             return mockServerToNettyResponseMapper.mapMockServerResponseToNettyResponse(httpResponse);
         } else {
             return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);

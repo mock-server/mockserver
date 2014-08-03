@@ -1,10 +1,9 @@
 package org.mockserver.client.serialization;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
-import com.google.common.base.Charsets;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.mockserver.client.serialization.model.ExpectationDTO;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
@@ -68,7 +67,7 @@ public class ExpectationSerializer {
                 } else if (httpRequest.getBody() instanceof ParameterBody) {
                     output.append(System.getProperty("line.separator") + "                        .withBody(");
                     output.append(System.getProperty("line.separator") + "                                new ParameterBody(" + System.getProperty("line.separator"));
-                    serializeAsJavaKeyToMultiValueList(output, "Parameter", new ArrayList<KeyToMultiValue>(((ParameterBody) httpRequest.getBody()).getParameters()), 40);
+                    serializeAsJavaKeyToMultiValueList(output, "Parameter", new ArrayList<KeyToMultiValue>(((ParameterBody) httpRequest.getBody()).getValue()), 40);
                     output.append("                                )");
                     output.append(System.getProperty("line.separator") + "                        )");
                 } else if (httpRequest.getBody() instanceof BinaryBody) {
@@ -90,8 +89,8 @@ public class ExpectationSerializer {
                 if (httpResponse.getCookies().size() > 0) {
                     serializeAsJavaKeyToMultiValue(output, "Cookie", new ArrayList<KeyToMultiValue>(httpResponse.getCookies()));
                 }
-                if (httpResponse.getBody() != null && httpResponse.getBody().length > 0) {
-                    output.append(System.getProperty("line.separator") + "                        .withBody(\"").append(StringEscapeUtils.escapeJava(new String(httpResponse.getBody(), Charsets.UTF_8))).append("\")");
+                if (httpResponse.getBodyAsString() != null && httpResponse.getBodyAsString().length() > 0) {
+                    output.append(System.getProperty("line.separator") + "                        .withBody(\"").append(StringEscapeUtils.escapeJava(httpResponse.getBodyAsString())).append("\")");
                 }
                 output.append(System.getProperty("line.separator") + "        );");
             }

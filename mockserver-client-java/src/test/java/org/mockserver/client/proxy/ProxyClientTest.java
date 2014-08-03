@@ -83,17 +83,14 @@ public class ProxyClientTest {
                 .clear(
                         new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.EXACT))
+                                .withBody(new StringBody("some_request_body", Body.Type.STRING))
                 );
 
         // then
         verify(mockApacheHttpClient).sendPUTRequest("http://localhost:8080", "/clear", "" +
                 "{" + System.getProperty("line.separator") +
                 "  \"path\" : \"/some_path\"," + System.getProperty("line.separator") +
-                "  \"body\" : {" + System.getProperty("line.separator") +
-                "    \"type\" : \"EXACT\"," + System.getProperty("line.separator") +
-                "    \"value\" : \"some_request_body\"" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
+                "  \"body\" : \"some_request_body\"" + System.getProperty("line.separator") +
                 "}");
     }
 
@@ -109,17 +106,14 @@ public class ProxyClientTest {
                 .retrieveAsExpectations(
                         new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.EXACT))
+                                .withBody(new StringBody("some_request_body", Body.Type.STRING))
                 ));
 
         // then
         verify(mockApacheHttpClient).sendPUTRequest("http://localhost:8080", "/retrieve", "" +
                 "{" + System.getProperty("line.separator") +
                 "  \"path\" : \"/some_path\"," + System.getProperty("line.separator") +
-                "  \"body\" : {" + System.getProperty("line.separator") +
-                "    \"type\" : \"EXACT\"," + System.getProperty("line.separator") +
-                "    \"value\" : \"some_request_body\"" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
+                "  \"body\" : \"some_request_body\"" + System.getProperty("line.separator") +
                 "}");
         verify(expectationSerializer).deserializeArray("body");
     }
@@ -150,17 +144,14 @@ public class ProxyClientTest {
                 .retrieveAsJSON(
                         new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.EXACT))
+                                .withBody(new StringBody("some_request_body", Body.Type.STRING))
                 ));
 
         // then
         verify(mockApacheHttpClient).sendPUTRequest("http://localhost:8080", "/retrieve", "" +
                 "{" + System.getProperty("line.separator") +
                 "  \"path\" : \"/some_path\"," + System.getProperty("line.separator") +
-                "  \"body\" : {" + System.getProperty("line.separator") +
-                "    \"type\" : \"EXACT\"," + System.getProperty("line.separator") +
-                "    \"value\" : \"some_request_body\"" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
+                "  \"body\" : \"some_request_body\"" + System.getProperty("line.separator") +
                 "}");
     }
 
@@ -191,7 +182,7 @@ public class ProxyClientTest {
                 .verify(
                         new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.EXACT))
+                                .withBody(new StringBody("some_request_body", Body.Type.STRING))
                 );
 
         // no assertion exception thrown
@@ -208,7 +199,7 @@ public class ProxyClientTest {
                 .verify(
                         new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.EXACT))
+                                .withBody(new StringBody("some_request_body", Body.Type.STRING))
                 );
     }
 
@@ -225,7 +216,7 @@ public class ProxyClientTest {
                 .verify(
                         new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.EXACT)),
+                                .withBody(new StringBody("some_request_body", Body.Type.STRING)),
                         Times.once()
                 );
 
@@ -246,7 +237,7 @@ public class ProxyClientTest {
                 .verify(
                         new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.EXACT)),
+                                .withBody(new StringBody("some_request_body", Body.Type.STRING)),
                         Times.once()
                 );
     }
@@ -264,7 +255,7 @@ public class ProxyClientTest {
                 .verify(
                         new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.EXACT)),
+                                .withBody(new StringBody("some_request_body", Body.Type.STRING)),
                         Times.exactly(1)
                 );
 
@@ -285,7 +276,7 @@ public class ProxyClientTest {
                 .verify(
                         new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.EXACT)),
+                                .withBody(new StringBody("some_request_body", Body.Type.STRING)),
                         Times.exactly(1)
                 );
     }
@@ -303,7 +294,7 @@ public class ProxyClientTest {
                 .verify(
                         new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.EXACT)),
+                                .withBody(new StringBody("some_request_body", Body.Type.STRING)),
                         Times.atLeast(1)
                 );
 
@@ -325,7 +316,7 @@ public class ProxyClientTest {
                 .verify(
                         new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.EXACT)),
+                                .withBody(new StringBody("some_request_body", Body.Type.STRING)),
                         Times.atLeast(1)
                 );
 
@@ -345,7 +336,7 @@ public class ProxyClientTest {
                 .verify(
                         new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.EXACT)),
+                                .withBody(new StringBody("some_request_body", Body.Type.STRING)),
                         Times.exactly(2)
                 );
     }

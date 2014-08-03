@@ -1,7 +1,10 @@
 package org.mockserver.mappers;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.*;
+import org.mockserver.client.serialization.Base64Converter;
+import org.mockserver.model.BinaryBody;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpResponse;
@@ -21,7 +24,7 @@ public class MockServerToNettyResponseMapper {
             DefaultFullHttpResponse defaultFullHttpResponse = new DefaultFullHttpResponse(
                     HttpVersion.HTTP_1_1,
                     HttpResponseStatus.valueOf((httpResponse.getStatusCode() != null ? httpResponse.getStatusCode() : 200)),
-                    (httpResponse.getBody() != null ? Unpooled.copiedBuffer(httpResponse.getBody()) : Unpooled.buffer(0))
+                    getBody(httpResponse)
             );
             setHeaders(httpResponse, defaultFullHttpResponse);
             setCookies(httpResponse, defaultFullHttpResponse);
@@ -29,6 +32,18 @@ public class MockServerToNettyResponseMapper {
         } else {
             return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_FOUND);
         }
+    }
+
+    private ByteBuf getBody(HttpResponse httpResponse) {
+        ByteBuf content = Unpooled.buffer(0);
+        if (httpResponse.getBodyAsString() != null) {
+            if (httpResponse.getBody() instanceof BinaryBody) {
+                content = Unpooled.copiedBuffer(Base64Converter.base64StringToBytes(httpResponse.getBodyAsString()));
+            } else {
+                content = Unpooled.copiedBuffer(httpResponse.getBodyAsString().getBytes());
+            }
+        }
+        return content;
     }
 
     private void setHeaders(HttpResponse httpResponse, DefaultFullHttpResponse httpServletResponse) {

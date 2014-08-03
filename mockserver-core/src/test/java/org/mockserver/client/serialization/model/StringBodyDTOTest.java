@@ -6,9 +6,7 @@ import org.mockserver.model.StringBody;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.mockserver.model.StringBody.exact;
-import static org.mockserver.model.StringBody.regex;
-import static org.mockserver.model.StringBody.xpath;
+import static org.mockserver.model.StringBody.*;
 
 /**
  * @author jamesdbloom
@@ -18,11 +16,11 @@ public class StringBodyDTOTest {
     @Test
     public void shouldReturnValueSetInConstructor() {
         // when
-        StringBodyDTO stringBody = new StringBodyDTO(new StringBody("some_body", Body.Type.EXACT));
+        StringBodyDTO stringBody = new StringBodyDTO(new StringBody("some_body", Body.Type.STRING));
 
         // then
         assertThat(stringBody.getValue(), is("some_body"));
-        assertThat(stringBody.getType(), is(Body.Type.EXACT));
+        assertThat(stringBody.getType(), is(Body.Type.STRING));
     }
 
     @Test
@@ -37,13 +35,13 @@ public class StringBodyDTOTest {
 
     @Test
     public void shouldReturnCorrectObjectFromStaticBuilder() {
-        assertThat(exact("some_body"), is(new StringBody("some_body", Body.Type.EXACT)));
+        assertThat(exact("some_body"), is(new StringBody("some_body", Body.Type.STRING)));
         assertThat(regex("some_body"), is(new StringBody("some_body", Body.Type.REGEX)));
         assertThat(xpath("some_body"), is(new StringBody("some_body", Body.Type.XPATH)));
     }
 
     @Test
-    public void coverage(){
+    public void coverage() {
         new StringBodyDTO();
     }
 }

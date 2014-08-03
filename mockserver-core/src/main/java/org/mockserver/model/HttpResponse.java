@@ -1,8 +1,6 @@
 package org.mockserver.model;
 
-import com.google.common.base.Charsets;
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.mockserver.client.serialization.Base64Converter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mockserver.client.serialization.ObjectMapperFactory;
 
 import java.util.*;
@@ -12,7 +10,7 @@ import java.util.*;
  */
 public class HttpResponse extends Action {
     private Integer statusCode = 200;
-    private byte[] body = new byte[0];
+    private Body body = new StringBody("");
     private Map<String, Header> headers = new LinkedHashMap<String, Header>();
     private Map<String, Cookie> cookies = new LinkedHashMap<String, Cookie>();
     private Delay delay;
@@ -41,38 +39,62 @@ public class HttpResponse extends Action {
     }
 
     /**
-     * The response body
+     * Set response body to return as a simple UTF-8 string response body
      *
      * @param body a UTF-8 string
      */
     public HttpResponse withBody(String body) {
         if (body != null) {
-            withBody(body.getBytes());
-        } else {
-            withBody(new byte[0]);
+            this.body = new StringBody(body);
         }
         return this;
     }
 
+    /**
+     * Set response body to return as binary such as a pdf or image
+     *
+     * @param body a byte array
+     */
     public HttpResponse withBody(byte[] body) {
-        this.body = body != null ? Base64Converter.stringToBase64Bytes(body).getBytes() : null;
+        this.body = new BinaryBody(body);
         return this;
     }
 
-    public byte[] getBody() {
-        if (body != null) {
-            return Base64Converter.base64StringToBytes(new String(body));
-        } else {
-            return null;
-        }
+    /**
+     * Set the body to return for example:
+     *
+     * string body:
+     *   - exact("<html><head/><body><div>a simple string body</div></body></html>");
+     *
+     *   or
+     *
+     *   - new StringBody("<html><head/><body><div>a simple string body</div></body></html>")
+     *
+     * binary body:
+     *   - binary(IOUtils.readFully(getClass().getClassLoader().getResourceAsStream("example.pdf"), 1024));
+     *
+     *   or
+     *
+     *   - new BinaryBody(IOUtils.readFully(getClass().getClassLoader().getResourceAsStream("example.pdf"), 1024));
+     *
+     * @param body an instance of one of the Body subclasses including StringBody or BinaryBody
+     */
+    public HttpResponse withBody(Body body) {
+        this.body = body;
+        return this;
+    }
+
+    public Body getBody() {
+        return body;
     }
 
     @JsonIgnore
     public String getBodyAsString() {
-        if (body == null) {
-            return "";
+        if (body != null) {
+            return body.toString();
+        } else {
+            return null;
         }
-        return new String(body, Charsets.UTF_8);
     }
 
     /**

@@ -1,5 +1,6 @@
 package org.mockserver.mappers;
 
+import com.google.common.base.Charsets;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.model.*;
@@ -7,7 +8,6 @@ import org.mockserver.streams.IOStreamUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
 
@@ -52,7 +52,9 @@ public class HttpServletToMockServerRequestMapper {
     }
 
     private void setBody(HttpRequest httpRequest, HttpServletRequest httpServletRequest) {
-        httpRequest.withBody(new StringBody(IOStreamUtils.readInputStreamToString(httpServletRequest), Body.Type.EXACT));
+        byte[] bodyBytes = IOStreamUtils.readInputStreamToByteArray(httpServletRequest);
+        httpRequest.setRawBodyBytes(bodyBytes);
+        httpRequest.withBody(new StringBody(new String(bodyBytes, Charsets.UTF_8), Body.Type.STRING));
     }
 
     private void setHeaders(HttpRequest httpRequest, HttpServletRequest httpServletRequest) {

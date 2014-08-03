@@ -16,7 +16,7 @@ public class ParameterBodyDTO extends BodyDTO {
 
     public ParameterBodyDTO(ParameterBody parameterBody) {
         super(parameterBody.getType());
-        parameters = Lists.transform(parameterBody.getParameters(), new Function<Parameter, ParameterDTO>() {
+        parameters = Lists.transform(parameterBody.getValue(), new Function<Parameter, ParameterDTO>() {
             public ParameterDTO apply(Parameter parameter) {
                 return new ParameterDTO(parameter);
             }

@@ -10,17 +10,9 @@ import java.util.List;
 /**
  * @author jamesdbloom
  */
-public class ParameterBody extends Body {
+public class ParameterBody extends Body<List<Parameter>> {
 
     private final List<Parameter> parameters;
-
-    public static ParameterBody params(Parameter... parameters) {
-        return new ParameterBody(parameters);
-    }
-
-    public static ParameterBody params(List<Parameter> parameters) {
-        return new ParameterBody(parameters);
-    }
 
     public ParameterBody(Parameter... parameters) {
         this(Arrays.asList(parameters));
@@ -31,7 +23,15 @@ public class ParameterBody extends Body {
         this.parameters = parameters;
     }
 
-    public List<Parameter> getParameters() {
+    public static ParameterBody params(Parameter... parameters) {
+        return new ParameterBody(parameters);
+    }
+
+    public static ParameterBody params(List<Parameter> parameters) {
+        return new ParameterBody(parameters);
+    }
+
+    public List<Parameter> getValue() {
         return parameters;
     }
 

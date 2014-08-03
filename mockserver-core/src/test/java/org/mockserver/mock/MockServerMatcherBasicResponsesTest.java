@@ -2,7 +2,6 @@ package org.mockserver.mock;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.model.*;
 
 import static org.junit.Assert.assertEquals;
@@ -90,10 +89,10 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void respondWhenBodyMatches() {
         // when
-        mockServerMatcher.when(httpRequest.withBody(new StringBody("someBody", Body.Type.EXACT))).thenRespond(httpResponse.withBody("someBody"));
+        mockServerMatcher.when(httpRequest.withBody(new StringBody("someBody", Body.Type.STRING))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withBody(new StringBody("someBody", Body.Type.EXACT))));
+        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withBody(new StringBody("someBody", Body.Type.STRING))));
     }
 
     @Test
@@ -102,16 +101,16 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withBody(new StringBody("[a-zA-Z]*", Body.Type.REGEX))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withBody(new StringBody("someBody", Body.Type.EXACT))));
+        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withBody(new StringBody("someBody", Body.Type.STRING))));
     }
 
     @Test
     public void doNotRespondWhenBodyDoesNotMatch() {
         // when
-        mockServerMatcher.when(httpRequest.withBody(new StringBody("someBody", Body.Type.EXACT))).thenRespond(httpResponse.withBody("someBody"));
+        mockServerMatcher.when(httpRequest.withBody(new StringBody("someBody", Body.Type.STRING))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertNull(mockServerMatcher.handle(new HttpRequest().withBody(new StringBody("someOtherBody", Body.Type.EXACT))));
+        assertNull(mockServerMatcher.handle(new HttpRequest().withBody(new StringBody("someOtherBody", Body.Type.STRING))));
     }
 
     @Test
@@ -120,25 +119,25 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withBody(new StringBody("[a-z]*", Body.Type.REGEX))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertNull(mockServerMatcher.handle(new HttpRequest().withBody(new StringBody("someOtherBody123", Body.Type.EXACT))));
+        assertNull(mockServerMatcher.handle(new HttpRequest().withBody(new StringBody("someOtherBody123", Body.Type.STRING))));
     }
 
     @Test
     public void respondWhenBodyMatchesAndAdditionalHeaders() {
         // when
-        mockServerMatcher.when(httpRequest.withBody(new StringBody("someBody", Body.Type.EXACT))).thenRespond(httpResponse.withBody("someBody"));
+        mockServerMatcher.when(httpRequest.withBody(new StringBody("someBody", Body.Type.STRING))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withBody(new StringBody("someBody", Body.Type.EXACT)).withHeaders(new Header("name", "value"))));
+        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withBody(new StringBody("someBody", Body.Type.STRING)).withHeaders(new Header("name", "value"))));
     }
 
     @Test
     public void respondWhenBodyMatchesAndAdditionalQueryStringParameters() {
         // when
-        mockServerMatcher.when(httpRequest.withBody(new StringBody("someBody", Body.Type.EXACT))).thenRespond(httpResponse.withBody("someBody"));
+        mockServerMatcher.when(httpRequest.withBody(new StringBody("someBody", Body.Type.STRING))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withBody(new StringBody("someBody", Body.Type.EXACT)).withQueryStringParameter(new Parameter("name", "value"))));
+        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withBody(new StringBody("someBody", Body.Type.STRING)).withQueryStringParameter(new Parameter("name", "value"))));
     }
 
     @Test
@@ -274,7 +273,7 @@ public class MockServerMatcherBasicResponsesTest {
 
         // then
         assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withQueryStringParameters(
-                new Parameter("nameExtra", "valueExtra"),                new Parameter("name", "value"),
+                new Parameter("nameExtra", "valueExtra"), new Parameter("name", "value"),
                 new Parameter("nameExtraExtra", "valueExtraExtra")
         )));
     }

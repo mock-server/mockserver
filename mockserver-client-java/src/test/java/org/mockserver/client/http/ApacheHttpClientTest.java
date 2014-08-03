@@ -108,7 +108,7 @@ public class ApacheHttpClientTest {
     @Test
     public void shouldMapGETRequest() throws Exception {
         // when
-        apacheHttpClient.sendRequest(new HttpRequest().withMethod("GET"));
+        apacheHttpClient.sendRequest(new HttpRequest().withMethod("GET"), false);
 
         // then
         assertEquals(HttpGet.class, requestArgumentCaptor.getValue().getClass());
@@ -117,7 +117,7 @@ public class ApacheHttpClientTest {
     @Test
     public void shouldMapDELETERequest() throws Exception {
         // when
-        apacheHttpClient.sendRequest(new HttpRequest().withMethod("DELETE"));
+        apacheHttpClient.sendRequest(new HttpRequest().withMethod("DELETE"), false);
 
         // then
         assertEquals(HttpDelete.class, requestArgumentCaptor.getValue().getClass());
@@ -126,7 +126,7 @@ public class ApacheHttpClientTest {
     @Test
     public void shouldMapHEADRequest() throws Exception {
         // when
-        apacheHttpClient.sendRequest(new HttpRequest().withMethod("HEAD"));
+        apacheHttpClient.sendRequest(new HttpRequest().withMethod("HEAD"), false);
 
         // then
         assertEquals(HttpHead.class, requestArgumentCaptor.getValue().getClass());
@@ -135,7 +135,7 @@ public class ApacheHttpClientTest {
     @Test
     public void shouldMapOPTIONSRequest() throws Exception {
         // when
-        apacheHttpClient.sendRequest(new HttpRequest().withMethod("OPTIONS"));
+        apacheHttpClient.sendRequest(new HttpRequest().withMethod("OPTIONS"), false);
 
         // then
         assertEquals(HttpOptions.class, requestArgumentCaptor.getValue().getClass());
@@ -144,7 +144,7 @@ public class ApacheHttpClientTest {
     @Test
     public void shouldMapPOSTRequest() throws Exception {
         // when
-        apacheHttpClient.sendRequest(new HttpRequest().withMethod("POST"));
+        apacheHttpClient.sendRequest(new HttpRequest().withMethod("POST"), false);
 
         // then
         assertEquals(HttpPost.class, requestArgumentCaptor.getValue().getClass());
@@ -153,7 +153,7 @@ public class ApacheHttpClientTest {
     @Test
     public void shouldMapPUTRequest() throws Exception {
         // when
-        apacheHttpClient.sendRequest(new HttpRequest().withMethod("PUT"));
+        apacheHttpClient.sendRequest(new HttpRequest().withMethod("PUT"), false);
 
         // then
         assertEquals(HttpPut.class, requestArgumentCaptor.getValue().getClass());
@@ -162,7 +162,7 @@ public class ApacheHttpClientTest {
     @Test
     public void shouldMapTRACERequest() throws Exception {
         // when
-        apacheHttpClient.sendRequest(new HttpRequest().withMethod("TRACE"));
+        apacheHttpClient.sendRequest(new HttpRequest().withMethod("TRACE"), false);
 
         // then
         assertEquals(HttpTrace.class, requestArgumentCaptor.getValue().getClass());
@@ -171,7 +171,7 @@ public class ApacheHttpClientTest {
     @Test
     public void shouldMapPATCHRequest() throws Exception {
         // when
-        apacheHttpClient.sendRequest(new HttpRequest().withMethod("PATCH"));
+        apacheHttpClient.sendRequest(new HttpRequest().withMethod("PATCH"), false);
 
         // then
         assertEquals(HttpPatch.class, requestArgumentCaptor.getValue().getClass());
@@ -180,7 +180,7 @@ public class ApacheHttpClientTest {
     @Test
     public void shouldMapINCORRECTRequest() throws Exception {
         // when
-        apacheHttpClient.sendRequest(new HttpRequest().withMethod("INCORRECT"));
+        apacheHttpClient.sendRequest(new HttpRequest().withMethod("INCORRECT"), false);
 
         // then
         assertEquals(HttpGet.class, requestArgumentCaptor.getValue().getClass());
@@ -190,26 +190,27 @@ public class ApacheHttpClientTest {
     public void shouldSendFullPOSTRequest() throws Exception {
         // given
         HttpResponse httpResponse = new HttpResponse().withStatusCode(200).withBody("exampleResponse");
-        when(apacheHttpClientToMockServerResponseMapper.mapApacheHttpClientResponseToMockServerResponse(closeableHttpResponse)).thenReturn(httpResponse);
+        when(apacheHttpClientToMockServerResponseMapper.mapApacheHttpClientResponseToMockServerResponse(closeableHttpResponse, false)).thenReturn(httpResponse);
 
         // when
         HttpResponse httpResponseActual = apacheHttpClient.sendRequest(new HttpRequest()
-                .withMethod("POST")
-                .withURL("http://host:8080/path")
-                .withPath("/path")
-                .withQueryStringParameters(
-                        new Parameter("paramOneName", "paramOneValueOne", "paramOneValueTwo"),
-                        new Parameter("paramTwoName", "paramTwoValue")
-                )
-                .withHeaders(
-                        new org.mockserver.model.Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
-                        new org.mockserver.model.Header("headerTwoName", "headerTwoValue")
-                )
-                .withCookies(
-                        new Cookie("cookieOneName", "cookieOneValueOne", "cookieOneValueTwo"),
-                        new Cookie("cookieTwoName", "cookieTwoValue")
-                )
-                .withBody("bodyContent")
+                        .withMethod("POST")
+                        .withURL("http://host:8080/path")
+                        .withPath("/path")
+                        .withQueryStringParameters(
+                                new Parameter("paramOneName", "paramOneValueOne", "paramOneValueTwo"),
+                                new Parameter("paramTwoName", "paramTwoValue")
+                        )
+                        .withHeaders(
+                                new org.mockserver.model.Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
+                                new org.mockserver.model.Header("headerTwoName", "headerTwoValue")
+                        )
+                        .withCookies(
+                                new Cookie("cookieOneName", "cookieOneValueOne", "cookieOneValueTwo"),
+                                new Cookie("cookieTwoName", "cookieTwoValue")
+                        )
+                        .withBody("bodyContent"),
+                false
         );
 
         // then
@@ -226,7 +227,7 @@ public class ApacheHttpClientTest {
         assertEquals("headerTwoValue", httpPost.getAllHeaders()[2].getValue());
         assertEquals("Cookie", httpPost.getAllHeaders()[3].getName());
         assertEquals("cookieOneName=cookieOneValueOne; cookieOneName=cookieOneValueTwo; cookieTwoName=cookieTwoValue", httpPost.getAllHeaders()[3].getValue());
-        verify(apacheHttpClientToMockServerResponseMapper).mapApacheHttpClientResponseToMockServerResponse(closeableHttpResponse);
+        verify(apacheHttpClientToMockServerResponseMapper).mapApacheHttpClientResponseToMockServerResponse(closeableHttpResponse, false);
         assertSame(httpResponse, httpResponseActual);
     }
 
@@ -234,19 +235,20 @@ public class ApacheHttpClientTest {
     public void shouldSendBarePOSTRequest() throws Exception {
         // given
         HttpResponse httpResponse = new HttpResponse().withStatusCode(200).withBody("exampleResponse");
-        when(apacheHttpClientToMockServerResponseMapper.mapApacheHttpClientResponseToMockServerResponse(closeableHttpResponse)).thenReturn(httpResponse);
+        when(apacheHttpClientToMockServerResponseMapper.mapApacheHttpClientResponseToMockServerResponse(closeableHttpResponse, false)).thenReturn(httpResponse);
 
         // when
         HttpResponse httpResponseActual = apacheHttpClient.sendRequest(new HttpRequest()
-                .withMethod("POST")
-                .withURL("http://host:8080/path")
+                        .withMethod("POST")
+                        .withURL("http://host:8080/path"),
+                false
         );
 
         // then
         HttpPost httpPost = (HttpPost) requestArgumentCaptor.getValue();
         assertEquals("http://host:8080/path", httpPost.getURI().toString());
         assertEquals("POST", httpPost.getMethod());
-        verify(apacheHttpClientToMockServerResponseMapper).mapApacheHttpClientResponseToMockServerResponse(closeableHttpResponse);
+        verify(apacheHttpClientToMockServerResponseMapper).mapApacheHttpClientResponseToMockServerResponse(closeableHttpResponse, false);
         assertSame(httpResponse, httpResponseActual);
     }
 
@@ -254,24 +256,25 @@ public class ApacheHttpClientTest {
     public void shouldSendGETRequest() throws Exception {
         // when
         apacheHttpClient.sendRequest(new HttpRequest()
-                .withMethod("GET")
-                .withURL("http://host:8080/path")
-                .withPath("/path")
-                .withQueryStringParameters(
-                        new Parameter("paramOneName", "paramOneValueOne", "paramOneValueTwo"),
-                        new Parameter("paramTwoName", "paramTwoValue"),
-                        new Parameter("paramThreeName")
-                )
-                .withHeaders(
-                        new org.mockserver.model.Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
-                        new org.mockserver.model.Header("headerTwoName", "headerTwoValue"),
-                        new org.mockserver.model.Header("headerThreeName")
-                )
-                .withCookies(
-                        new Cookie("cookieOneName", "cookieOneValueOne", "cookieOneValueTwo"),
-                        new Cookie("cookieTwoName", "cookieTwoValue"),
-                        new Cookie("cookieThreeName")
-                )
+                        .withMethod("GET")
+                        .withURL("http://host:8080/path")
+                        .withPath("/path")
+                        .withQueryStringParameters(
+                                new Parameter("paramOneName", "paramOneValueOne", "paramOneValueTwo"),
+                                new Parameter("paramTwoName", "paramTwoValue"),
+                                new Parameter("paramThreeName")
+                        )
+                        .withHeaders(
+                                new org.mockserver.model.Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
+                                new org.mockserver.model.Header("headerTwoName", "headerTwoValue"),
+                                new org.mockserver.model.Header("headerThreeName")
+                        )
+                        .withCookies(
+                                new Cookie("cookieOneName", "cookieOneValueOne", "cookieOneValueTwo"),
+                                new Cookie("cookieTwoName", "cookieTwoValue"),
+                                new Cookie("cookieThreeName")
+                        ),
+                false
         );
 
         // then
@@ -295,13 +298,14 @@ public class ApacheHttpClientTest {
     public void shouldRemoveTransferEncoding() throws Exception {
         // when
         apacheHttpClient.sendRequest(new HttpRequest()
-                .withMethod("POST")
-                .withURL("http://host:8080/path")
-                .withHeaders(
-                        new org.mockserver.model.Header(HTTP.TRANSFER_ENCODING, HTTP.CHUNK_CODING),
-                        new org.mockserver.model.Header(HTTP.CONTENT_LEN, "0")
-                )
-                .withBody("bodyContent")
+                        .withMethod("POST")
+                        .withURL("http://host:8080/path")
+                        .withHeaders(
+                                new org.mockserver.model.Header(HTTP.TRANSFER_ENCODING, HTTP.CHUNK_CODING),
+                                new org.mockserver.model.Header(HTTP.CONTENT_LEN, "0")
+                        )
+                        .withBody("bodyContent"),
+                false
         );
 
         // then
@@ -309,24 +313,25 @@ public class ApacheHttpClientTest {
         assertEquals("http://host:8080/path", httpPost.getURI().toString());
         assertEquals("POST", httpPost.getMethod());
         assertEquals(0, httpPost.getAllHeaders().length);
-        verify(apacheHttpClientToMockServerResponseMapper).mapApacheHttpClientResponseToMockServerResponse(closeableHttpResponse);
+        verify(apacheHttpClientToMockServerResponseMapper).mapApacheHttpClientResponseToMockServerResponse(closeableHttpResponse, false);
     }
 
     @Test
     public void shouldHandleCircularRedirectException() throws Exception {
         // given
         HttpResponse httpResponse = new HttpResponse().withStatusCode(200).withBody("exampleResponse");
-        when(apacheHttpClientToMockServerResponseMapper.mapApacheHttpClientResponseToMockServerResponse(closeableHttpResponse)).thenReturn(httpResponse);
+        when(apacheHttpClientToMockServerResponseMapper.mapApacheHttpClientResponseToMockServerResponse(closeableHttpResponse, false)).thenReturn(httpResponse);
         when(httpClient.execute(any(HttpUriRequest.class))).thenThrow(new IOException("TEST EXCEPTION", new CircularRedirectException("TEST EXCEPTION")));
 
         // then
         assertEquals(new HttpResponse(), apacheHttpClient.sendRequest(new HttpRequest()
-                .withMethod("POST")
-                .withURL("http://host:8080/path")
-                .withHeaders(
-                        new org.mockserver.model.Header(HTTP.CONTENT_LEN, "0")
-                )
-                .withBody("bodyContent")
+                        .withMethod("POST")
+                        .withURL("http://host:8080/path")
+                        .withHeaders(
+                                new org.mockserver.model.Header(HTTP.CONTENT_LEN, "0")
+                        )
+                        .withBody("bodyContent"),
+                false
         ));
     }
 
@@ -337,8 +342,9 @@ public class ApacheHttpClientTest {
 
         // then
         apacheHttpClient.sendRequest(new HttpRequest()
-                .withMethod("POST")
-                .withURL("http://host:8080/path")
+                        .withMethod("POST")
+                        .withURL("http://host:8080/path"),
+                false
         );
     }
 
@@ -346,8 +352,9 @@ public class ApacheHttpClientTest {
     public void shouldHandleURISyntaxException() throws Exception {
         // then
         apacheHttpClient.sendRequest(new HttpRequest()
-                .withMethod("POST")
-                .withURL("http\\://this_is_an_invalid_url")
+                        .withMethod("POST")
+                        .withURL("http\\://this_is_an_invalid_url"),
+                false
         );
     }
 }

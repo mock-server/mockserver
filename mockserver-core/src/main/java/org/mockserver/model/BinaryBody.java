@@ -1,11 +1,11 @@
 package org.mockserver.model;
 
-import javax.xml.bind.DatatypeConverter;
+import org.mockserver.client.serialization.Base64Converter;
 
 /**
  * @author jamesdbloom
  */
-public class BinaryBody extends Body {
+public class BinaryBody extends Body<byte[]> {
 
     private final byte[] value;
 
@@ -24,6 +24,6 @@ public class BinaryBody extends Body {
 
     @Override
     public String toString() {
-        return new String(value);
+        return value != null ? Base64Converter.stringToBase64Bytes(value) : null;
     }
 }

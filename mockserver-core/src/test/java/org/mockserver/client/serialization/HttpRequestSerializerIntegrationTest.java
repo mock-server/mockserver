@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockserver.model.ParameterBody.params;
+import static org.mockserver.model.StringBody.*;
 
 /**
  * @author jamesdbloom
@@ -18,10 +20,10 @@ public class HttpRequestSerializerIntegrationTest {
     @Test
     public void shouldIgnoreExtraFields() throws IOException {
         // given
-        String requestBytes = ("{" + System.getProperty("line.separator") +
+        String requestBytes = "{" + System.getProperty("line.separator") +
                 "    \"path\": \"somePath\"," + System.getProperty("line.separator") +
                 "    \"extra_field\": \"extra_value\"" + System.getProperty("line.separator") +
-                "}");
+                "}";
 
         // when
         HttpRequest expectation = new HttpRequestSerializer().deserialize(requestBytes);
@@ -35,7 +37,7 @@ public class HttpRequestSerializerIntegrationTest {
     @Test
     public void shouldDeserializeCompleteObject() throws IOException {
         // given
-        String requestBytes = ("{" + System.getProperty("line.separator") +
+        String requestBytes = "{" + System.getProperty("line.separator") +
                 "  \"method\" : \"someMethod\"," + System.getProperty("line.separator") +
                 "  \"url\" : \"http://www.example.com\"," + System.getProperty("line.separator") +
                 "  \"path\" : \"somePath\"," + System.getProperty("line.separator") +
@@ -44,7 +46,7 @@ public class HttpRequestSerializerIntegrationTest {
                 "    \"values\" : [ \"queryParameterValue\" ]" + System.getProperty("line.separator") +
                 "  } ]," + System.getProperty("line.separator") +
                 "  \"body\" : {" + System.getProperty("line.separator") +
-                "    \"type\" : \"EXACT\"," + System.getProperty("line.separator") +
+                "    \"type\" : \"STRING\"," + System.getProperty("line.separator") +
                 "    \"value\" : \"somebody\"" + System.getProperty("line.separator") +
                 "  }," + System.getProperty("line.separator") +
                 "  \"cookies\" : [ {" + System.getProperty("line.separator") +
@@ -55,7 +57,7 @@ public class HttpRequestSerializerIntegrationTest {
                 "    \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
                 "    \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
                 "  } ]" + System.getProperty("line.separator") +
-                "}");
+                "}";
 
         // when
         HttpRequest expectation = new HttpRequestSerializer().deserialize(requestBytes);
@@ -66,18 +68,138 @@ public class HttpRequestSerializerIntegrationTest {
                 .setURL("http://www.example.com")
                 .setPath("somePath")
                 .setQueryStringParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")))))
-                .setBody(BodyDTO.createDTO(new StringBody("somebody", Body.Type.EXACT)))
+                .setBody(BodyDTO.createDTO(new StringBody("somebody", Body.Type.STRING)))
                 .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
                 .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", Arrays.asList("someCookieValue")))))
                 .buildObject(), expectation);
     }
 
     @Test
+    public void shouldDeserializeStringBodyShorthand() throws IOException {
+        // given
+        String requestBytes = "{" + System.getProperty("line.separator") +
+                "  \"body\" : \"somebody\"" + System.getProperty("line.separator") +
+                "}";
+
+        // when
+        HttpRequest expectation = new HttpRequestSerializer().deserialize(requestBytes);
+
+        // then
+        assertEquals(new HttpRequestDTO()
+                        .setBody(BodyDTO.createDTO(exact("somebody")))
+                        .buildObject(), expectation);
+    }
+
+    @Test
+    public void shouldDeserializeStringBodyWithType() throws IOException {
+        // given
+        String requestBytes = "{" + System.getProperty("line.separator") +
+                "  \"body\" : {" + System.getProperty("line.separator") +
+                "    \"type\" : \"STRING\"," + System.getProperty("line.separator") +
+                "    \"value\" : \"somebody\"" + System.getProperty("line.separator") +
+                "  }" + System.getProperty("line.separator") +
+                "}";
+
+        // when
+        HttpRequest expectation = new HttpRequestSerializer().deserialize(requestBytes);
+
+        // then
+        assertEquals(new HttpRequestDTO()
+                .setBody(BodyDTO.createDTO(exact("somebody")))
+                .buildObject(), expectation);
+    }
+
+    @Test
+    public void shouldDeserializeJsonBody() throws IOException {
+        // given
+        String requestBytes = "{" + System.getProperty("line.separator") +
+                "  \"body\" : {" + System.getProperty("line.separator") +
+                "    \"type\" : \"JSON\"," + System.getProperty("line.separator") +
+                "    \"value\" : \"{ \\\"key\\\": \\\"value\\\" }\"" + System.getProperty("line.separator") +
+                "  }" + System.getProperty("line.separator") +
+                "}";
+
+        // when
+        HttpRequest expectation = new HttpRequestSerializer().deserialize(requestBytes);
+
+        // then
+        assertEquals(new HttpRequestDTO()
+                        .setBody(BodyDTO.createDTO(json("{ \"key\": \"value\" }")))
+                        .buildObject(), expectation);
+    }
+
+    @Test
+    public void shouldDeserializeRegexBody() throws IOException {
+        // given
+        String requestBytes = "{" + System.getProperty("line.separator") +
+                "  \"body\" : {" + System.getProperty("line.separator") +
+                "    \"type\" : \"REGEX\"," + System.getProperty("line.separator") +
+                "    \"value\" : \"some[a-z]{3}\"" + System.getProperty("line.separator") +
+                "  }" + System.getProperty("line.separator") +
+                "}";
+
+        // when
+        HttpRequest expectation = new HttpRequestSerializer().deserialize(requestBytes);
+
+        // then
+        assertEquals(new HttpRequestDTO()
+                        .setBody(BodyDTO.createDTO(regex("some[a-z]{3}")))
+                        .buildObject(), expectation);
+    }
+
+    @Test
+    public void shouldDeserializeXpathBody() throws IOException {
+        // given
+        String requestBytes = "{" + System.getProperty("line.separator") +
+                "  \"body\" : {" + System.getProperty("line.separator") +
+                "    \"type\" : \"XPATH\"," + System.getProperty("line.separator") +
+                "    \"value\" : \"/element[key = 'some_key' and value = 'some_value']\"" + System.getProperty("line.separator") +
+                "  }" + System.getProperty("line.separator") +
+                "}";
+
+        // when
+        HttpRequest expectation = new HttpRequestSerializer().deserialize(requestBytes);
+
+        // then
+        assertEquals(new HttpRequestDTO()
+                        .setBody(BodyDTO.createDTO(xpath("/element[key = 'some_key' and value = 'some_value']")))
+                        .buildObject(), expectation);
+    }
+
+    @Test
+    public void shouldDeserializeParameterBody() throws IOException {
+        // given
+        String requestBytes = "{" + System.getProperty("line.separator") +
+                "  \"body\" : {" + System.getProperty("line.separator") +
+                "    \"type\" : \"PARAMETERS\"," + System.getProperty("line.separator") +
+                "    \"parameters\" : [ {" + System.getProperty("line.separator") +
+                "      \"name\" : \"nameOne\"," + System.getProperty("line.separator") +
+                "      \"values\" : [ \"valueOne\" ]" + System.getProperty("line.separator") +
+                "    }, {" + System.getProperty("line.separator") +
+                "      \"name\" : \"nameTwo\"," + System.getProperty("line.separator") +
+                "      \"values\" : [ \"valueTwo_One\", \"valueTwo_Two\" ]" + System.getProperty("line.separator") +
+                "    } ]" + System.getProperty("line.separator") +
+                "  }" + System.getProperty("line.separator") +
+                "}";
+
+        // when
+        HttpRequest expectation = new HttpRequestSerializer().deserialize(requestBytes);
+
+        // then
+        assertEquals(new HttpRequestDTO()
+                .setBody(BodyDTO.createDTO(params(
+                        new Parameter("nameOne", "valueOne"),
+                        new Parameter("nameTwo", "valueTwo_One", "valueTwo_Two")
+                )))
+                .buildObject(), expectation);
+    }
+
+    @Test
     public void shouldDeserializePartialObject() throws IOException {
         // given
-        String requestBytes = ("{" + System.getProperty("line.separator") +
+        String requestBytes = "{" + System.getProperty("line.separator") +
                 "    \"path\": \"somePath\"" + System.getProperty("line.separator") +
-                "}");
+                "}";
 
         // when
         HttpRequest expectation = new HttpRequestSerializer().deserialize(requestBytes);
@@ -91,7 +213,7 @@ public class HttpRequestSerializerIntegrationTest {
     @Test
     public void shouldDeserializeAsHttpRequestField() throws IOException {
         // given
-        String requestBytes = ("{" + System.getProperty("line.separator") +
+        String requestBytes = "{" + System.getProperty("line.separator") +
                 "    \"httpRequest\": {" + System.getProperty("line.separator") +
                 "        \"path\": \"somePath\"," + System.getProperty("line.separator") +
                 "        \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
@@ -99,7 +221,7 @@ public class HttpRequestSerializerIntegrationTest {
                 "            \"values\" : [ \"queryParameterValue\" ]" + System.getProperty("line.separator") +
                 "        } ]" + System.getProperty("line.separator") +
                 "    }" + System.getProperty("line.separator") +
-                "}");
+                "}";
 
         // when
         HttpRequest expectation = new HttpRequestSerializer().deserialize(requestBytes);
@@ -120,7 +242,7 @@ public class HttpRequestSerializerIntegrationTest {
                         .setURL("http://www.example.com")
                         .setPath("somePath")
                         .setQueryStringParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")))))
-                        .setBody(BodyDTO.createDTO(new StringBody("somebody", Body.Type.EXACT)))
+                        .setBody(BodyDTO.createDTO(new StringBody("somebody", Body.Type.STRING)))
                         .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
                         .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", Arrays.asList("someCookieValue")))))
                         .buildObject()
@@ -135,10 +257,7 @@ public class HttpRequestSerializerIntegrationTest {
                 "    \"name\" : \"queryParameterName\"," + System.getProperty("line.separator") +
                 "    \"values\" : [ \"queryParameterValue\" ]" + System.getProperty("line.separator") +
                 "  } ]," + System.getProperty("line.separator") +
-                "  \"body\" : {" + System.getProperty("line.separator") +
-                "    \"type\" : \"EXACT\"," + System.getProperty("line.separator") +
-                "    \"value\" : \"somebody\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
+                "  \"body\" : \"somebody\"," + System.getProperty("line.separator") +
                 "  \"cookies\" : [ {" + System.getProperty("line.separator") +
                 "    \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
                 "    \"values\" : [ \"someCookieValue\" ]" + System.getProperty("line.separator") +
@@ -147,6 +266,102 @@ public class HttpRequestSerializerIntegrationTest {
                 "    \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
                 "    \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
                 "  } ]" + System.getProperty("line.separator") +
+                "}", jsonExpectation);
+    }
+
+    @Test
+    public void shouldSerializeStringBody() throws IOException {
+        // when
+        String jsonExpectation = new HttpRequestSerializer().serialize(
+                new HttpRequestDTO()
+                        .setBody(BodyDTO.createDTO(exact("somebody")))
+                        .buildObject()
+        );
+
+        // then
+        assertEquals("{" + System.getProperty("line.separator") +
+                "  \"body\" : \"somebody\"" + System.getProperty("line.separator") +
+                "}", jsonExpectation);
+    }
+
+    @Test
+    public void shouldSerializeJsonBody() throws IOException {
+        // when
+        String jsonExpectation = new HttpRequestSerializer().serialize(
+                new HttpRequestDTO()
+                        .setBody(BodyDTO.createDTO(json("{ \"key\": \"value\" }")))
+                        .buildObject()
+        );
+
+        // then
+        assertEquals("{" + System.getProperty("line.separator") +
+                "  \"body\" : {" + System.getProperty("line.separator") +
+                "    \"type\" : \"JSON\"," + System.getProperty("line.separator") +
+                "    \"value\" : \"{ \\\"key\\\": \\\"value\\\" }\"" + System.getProperty("line.separator") +
+                "  }" + System.getProperty("line.separator") +
+                "}", jsonExpectation);
+    }
+
+    @Test
+    public void shouldSerializeRegexBody() throws IOException {
+        // when
+        String jsonExpectation = new HttpRequestSerializer().serialize(
+                new HttpRequestDTO()
+                        .setBody(BodyDTO.createDTO(regex("some[a-z]{3}")))
+                        .buildObject()
+        );
+
+        // then
+        assertEquals("{" + System.getProperty("line.separator") +
+                "  \"body\" : {" + System.getProperty("line.separator") +
+                "    \"type\" : \"REGEX\"," + System.getProperty("line.separator") +
+                "    \"value\" : \"some[a-z]{3}\"" + System.getProperty("line.separator") +
+                "  }" + System.getProperty("line.separator") +
+                "}", jsonExpectation);
+    }
+
+    @Test
+    public void shouldSerializeXpathBody() throws IOException {
+        // when
+        String jsonExpectation = new HttpRequestSerializer().serialize(
+                new HttpRequestDTO()
+                        .setBody(BodyDTO.createDTO(xpath("/element[key = 'some_key' and value = 'some_value']")))
+                        .buildObject()
+        );
+
+        // then
+        assertEquals("{" + System.getProperty("line.separator") +
+                "  \"body\" : {" + System.getProperty("line.separator") +
+                "    \"type\" : \"XPATH\"," + System.getProperty("line.separator") +
+                "    \"value\" : \"/element[key = 'some_key' and value = 'some_value']\"" + System.getProperty("line.separator") +
+                "  }" + System.getProperty("line.separator") +
+                "}", jsonExpectation);
+    }
+
+    @Test
+    public void shouldSerializeParameterBody() throws IOException {
+        // when
+        String jsonExpectation = new HttpRequestSerializer().serialize(
+                new HttpRequestDTO()
+                        .setBody(BodyDTO.createDTO(params(
+                                new Parameter("nameOne", "valueOne"),
+                                new Parameter("nameTwo", "valueTwo_One", "valueTwo_Two")
+                        )))
+                        .buildObject()
+        );
+
+        // then
+        assertEquals("{" + System.getProperty("line.separator") +
+                "  \"body\" : {" + System.getProperty("line.separator") +
+                "    \"type\" : \"PARAMETERS\"," + System.getProperty("line.separator") +
+                "    \"parameters\" : [ {" + System.getProperty("line.separator") +
+                "      \"name\" : \"nameOne\"," + System.getProperty("line.separator") +
+                "      \"values\" : [ \"valueOne\" ]" + System.getProperty("line.separator") +
+                "    }, {" + System.getProperty("line.separator") +
+                "      \"name\" : \"nameTwo\"," + System.getProperty("line.separator") +
+                "      \"values\" : [ \"valueTwo_One\", \"valueTwo_Two\" ]" + System.getProperty("line.separator") +
+                "    } ]" + System.getProperty("line.separator") +
+                "  }" + System.getProperty("line.separator") +
                 "}", jsonExpectation);
     }
 

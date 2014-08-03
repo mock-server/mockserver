@@ -54,7 +54,7 @@ public class IOStreamUtils {
 
     public static byte[] readInputStreamToByteArray(ServletRequest request) {
         try {
-            return IOUtils.toByteArray(new InputStreamReader(request.getInputStream()), Charsets.UTF_8);
+            return IOUtils.toByteArray(request.getInputStream());
         } catch (IOException ioe) {
             logger.error("IOException while reading HttpServletRequest input stream", ioe);
             throw new RuntimeException("IOException while reading HttpServletRequest input stream", ioe);

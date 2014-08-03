@@ -22,13 +22,13 @@ describe("mockServerClient client:", function () {
                         }
                     ],
                     'body': {
-                        'type': "EXACT",
+                        'type': "STRING",
                         'value': 'someBody'
                     }
                 },
                 'httpResponse': {
                     'statusCode': 200,
-                    'body': Base64.encode(JSON.stringify({ name: 'value' })),
+                    'body': JSON.stringify({ name: 'value' }),
                     'delay': {
                         'timeUnit': 'MILLISECONDS',
                         'value': 250
@@ -76,7 +76,7 @@ describe("mockServerClient client:", function () {
                         }
                     ],
                     'body': {
-                        'type': "EXACT",
+                        'type': "STRING",
                         'value': 'someBody'
                     }
                 },
@@ -123,13 +123,13 @@ describe("mockServerClient client:", function () {
                 'httpRequest': {
                     'path': '/somePath',
                     'body': {
-                        'type': "EXACT",
+                        'type': "STRING",
                         'value': 'someBody'
                     }
                 },
                 'httpResponse': {
                     'statusCode': 200,
-                    'body': Base64.encode(JSON.stringify({ name: 'first_body' })),
+                    'body': JSON.stringify({ name: 'first_body' }),
                     'delay': {
                         'timeUnit': 'MILLISECONDS',
                         'value': 250
@@ -152,7 +152,7 @@ describe("mockServerClient client:", function () {
                 },
                 'httpResponse': {
                     'statusCode': 200,
-                    'body': Base64.encode(JSON.stringify({ name: 'second_body' })),
+                    'body': JSON.stringify({ name: 'second_body' }),
                     'delay': {
                         'timeUnit': 'MILLISECONDS',
                         'value': 250

@@ -9,6 +9,7 @@ import org.apache.http.client.methods.*;
 import org.apache.http.conn.ssl.AllowAllHostnameVerifier;
 import org.apache.http.conn.ssl.SSLContexts;
 import org.apache.http.conn.ssl.TrustStrategy;
+import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -17,9 +18,8 @@ import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.impl.cookie.BrowserCompatSpec;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+import org.mockserver.client.serialization.Base64Converter;
+import org.mockserver.client.serialization.ObjectMapperFactory;
 import org.mockserver.mappers.ApacheHttpClientToMockServerResponseMapper;
 import org.mockserver.model.*;
 import org.mockserver.socket.SSLFactory;
@@ -105,7 +105,7 @@ public class ApacheHttpClient {
         }
     }
 
-    public HttpResponse sendRequest(HttpRequest httpRequest) {
+    public HttpResponse sendRequest(HttpRequest httpRequest, boolean binaryBody) {
         try {
             // url & method
             URI url = buildUrl(httpRequest);
@@ -146,23 +146,24 @@ public class ApacheHttpClient {
             }
 
             // body
-            String body = httpRequest.getBody() != null ? httpRequest.getBody().toString() : "";
-            if (proxiedRequest instanceof HttpEntityEnclosingRequest) {
-                ((HttpEntityEnclosingRequest) proxiedRequest).setEntity(new StringEntity(body));
+            if (binaryBody) {
+                byte[] body = httpRequest.getBody() != null ? Base64Converter.base64StringToBytes(httpRequest.getBody().toString()) : new byte[0];
+                if (proxiedRequest instanceof HttpEntityEnclosingRequest) {
+                    ((HttpEntityEnclosingRequest) proxiedRequest).setEntity(new ByteArrayEntity(body));
+                }
+            } else {
+                String body = httpRequest.getBody() != null ? httpRequest.getBody().toString() : "";
+                if (proxiedRequest instanceof HttpEntityEnclosingRequest) {
+                    ((HttpEntityEnclosingRequest) proxiedRequest).setEntity(new StringEntity(body));
+                }
             }
 
             // logging
             if (logger.isTraceEnabled()) {
-                logger.trace("Proxy sending request:" + System.getProperty("line.separator") + new ObjectMapper()
-                        .setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT)
-                        .setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL)
-                        .setSerializationInclusion(JsonSerialize.Inclusion.NON_EMPTY)
-                        .configure(SerializationConfig.Feature.FAIL_ON_EMPTY_BEANS, false)
-                        .writerWithDefaultPrettyPrinter()
-                        .writeValueAsString(httpRequest));
+                logger.trace("Proxy sending request:" + System.getProperty("line.separator") + ObjectMapperFactory.createObjectMapper().writeValueAsString(httpRequest));
             }
 
-            return apacheHttpClientToMockServerResponseMapper.mapApacheHttpClientResponseToMockServerResponse(this.httpClient.execute(proxiedRequest));
+            return apacheHttpClientToMockServerResponseMapper.mapApacheHttpClientResponseToMockServerResponse(this.httpClient.execute(proxiedRequest), binaryBody);
         } catch (IOException ioe) {
             if (ioe.getCause() instanceof CircularRedirectException) {
                 logger.debug("Circular redirect aborting request", ioe);

@@ -1,6 +1,5 @@
 package org.mockserver.server;
 
-import io.netty.handler.codec.http.HttpResponseStatus;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -88,7 +87,7 @@ public class MockServerServletTest {
 
         when(mockServerMatcher.handle(httpRequest)).thenReturn(httpForward);
         when(filters.applyFilters(any(HttpRequest.class))).thenReturn(httpRequest);
-        when(apacheHttpClient.sendRequest(any(HttpRequest.class))).thenReturn(httpResponse);
+        when(apacheHttpClient.sendRequest(any(HttpRequest.class), eq(false))).thenReturn(httpResponse);
         when(filters.applyFilters(any(HttpRequest.class), any(HttpResponse.class))).thenReturn(httpResponse);
         when(httpServletToMockServerRequestMapper.mapHttpServletRequestToMockServerRequest(httpServletRequest)).thenReturn(httpRequest);
 
@@ -98,7 +97,7 @@ public class MockServerServletTest {
         // then
         verify(mockServerMatcher).handle(httpRequest);
         verify(filters).applyFilters(httpRequest);
-        verify(apacheHttpClient).sendRequest(httpRequest);
+        verify(apacheHttpClient).sendRequest(httpRequest, false);
         verify(filters).applyFilters(httpRequest, httpResponse);
         verify(mockServerToHttpServletResponseMapper).mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
         assertThat(httpServletResponse.getStatus(), is(200));

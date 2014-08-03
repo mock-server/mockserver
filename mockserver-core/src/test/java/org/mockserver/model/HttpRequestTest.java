@@ -36,7 +36,7 @@ public class HttpRequestTest {
 
     @Test
     public void returnsBody() {
-        assertEquals(new StringBody("somebody", Body.Type.EXACT), new HttpRequest().withBody(new StringBody("somebody", Body.Type.EXACT)).getBody());
+        assertEquals(new StringBody("somebody", Body.Type.STRING), new HttpRequest().withBody(new StringBody("somebody", Body.Type.STRING)).getBody());
     }
 
     @Test
@@ -74,10 +74,7 @@ public class HttpRequestTest {
     @Test
     public void shouldReturnFormattedRequestInToString() {
         TestCase.assertEquals("{" + System.getProperty("line.separator") +
-                        "  \"body\" : {" + System.getProperty("line.separator") +
-                        "    \"type\" : \"EXACT\"," + System.getProperty("line.separator") +
-                        "    \"value\" : \"some_body\"" + System.getProperty("line.separator") +
-                        "  }," + System.getProperty("line.separator") +
+                        "  \"body\" : \"some_body\"," + System.getProperty("line.separator") +
                         "  \"headers\" : [ {" + System.getProperty("line.separator") +
                         "    \"name\" : \"name\"," + System.getProperty("line.separator") +
                         "    \"values\" : [ \"value\" ]" + System.getProperty("line.separator") +

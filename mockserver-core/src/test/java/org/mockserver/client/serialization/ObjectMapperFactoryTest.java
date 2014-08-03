@@ -34,7 +34,7 @@ public class ObjectMapperFactoryTest {
                 "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + System.getProperty("line.separator") +
                 "    } ]," + System.getProperty("line.separator") +
                 "    \"body\" : {" + System.getProperty("line.separator") +
-                "      \"type\" : \"EXACT\"," + System.getProperty("line.separator") +
+                "      \"type\" : \"STRING\"," + System.getProperty("line.separator") +
                 "      \"value\" : \"someBody\"" + System.getProperty("line.separator") +
                 "    }," + System.getProperty("line.separator") +
                 "    \"cookies\" : [ {" + System.getProperty("line.separator") +
@@ -82,14 +82,14 @@ public class ObjectMapperFactoryTest {
                                         new ParameterDTO(new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two")),
                                         new ParameterDTO(new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One"))
                                 ))
-                                .setBody(new StringBodyDTO(new StringBody("someBody", Body.Type.EXACT)))
+                                .setBody(new StringBodyDTO(new StringBody("someBody", Body.Type.STRING)))
                                 .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
                                 .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", Arrays.asList("someCookieValue")))))
                 )
                 .setHttpResponse(
                         new HttpResponseDTO()
                                 .setStatusCode(304)
-                                .setBody("someBody")
+                                .setBody(new StringBodyDTO(new StringBody("someBody")))
                                 .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
                                 .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", Arrays.asList("someCookieValue")))))
                                 .setDelay(
@@ -139,7 +139,7 @@ public class ObjectMapperFactoryTest {
         String json = ("{" + System.getProperty("line.separator") +
                 "    \"httpRequest\": {" + System.getProperty("line.separator") +
                 "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"type\" : \"EXACT\"," + System.getProperty("line.separator") +
+                "            \"type\" : \"STRING\"," + System.getProperty("line.separator") +
                 "            \"value\" : \"some_value\"" + System.getProperty("line.separator") +
                 "        }" + System.getProperty("line.separator") +
                 "    }" + System.getProperty("line.separator") +
@@ -152,7 +152,7 @@ public class ObjectMapperFactoryTest {
         assertEquals(new ExpectationDTO()
                 .setHttpRequest(
                         new HttpRequestDTO()
-                                .setBody(new StringBodyDTO(new StringBody("some_value", Body.Type.EXACT)))
+                                .setBody(new StringBodyDTO(new StringBody("some_value", Body.Type.STRING)))
                 ), expectationDTO);
     }
 
@@ -245,7 +245,7 @@ public class ObjectMapperFactoryTest {
         assertEquals(new ExpectationDTO()
                 .setHttpRequest(
                         new HttpRequestDTO()
-                                .setBody(new BinaryBodyDTO(new BinaryBody(DatatypeConverter.printBase64Binary("some_value".getBytes()).getBytes())))
+                                .setBody(new BinaryBodyDTO(new BinaryBody("some_value".getBytes())))
                 ), expectationDTO);
     }
 }

@@ -1,8 +1,8 @@
 package org.mockserver.client.serialization;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import org.apache.commons.lang3.StringEscapeUtils;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.ObjectWriter;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -34,7 +34,7 @@ public class ExpectationSerializerTest {
                     .withURL("http://www.example.com")
                     .withPath("somePath")
                     .withQueryStringParameters(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")))
-                    .withBody(new StringBody("somebody", Body.Type.EXACT))
+                    .withBody(new StringBody("somebody", Body.Type.STRING))
                     .withHeaders(new Header("headerName", "headerValue"))
                     .withCookies(new Cookie("cookieName", "cookieValue")),
             Times.once()
@@ -51,14 +51,14 @@ public class ExpectationSerializerTest {
                             .setURL("http://www.example.com")
                             .setPath("somePath")
                             .setQueryStringParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")))))
-                            .setBody(BodyDTO.createDTO(new StringBody("somebody", Body.Type.EXACT)))
+                            .setBody(BodyDTO.createDTO(new StringBody("somebody", Body.Type.STRING)))
                             .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("headerName", Arrays.asList("headerValue")))))
                             .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("cookieName", Arrays.asList("cookieValue")))))
             )
             .setHttpResponse(
                     new HttpResponseDTO()
                             .setStatusCode(304)
-                            .setBody(Base64Converter.stringToBase64Bytes("responseBody".getBytes()))
+                            .setBody(new StringBodyDTO(new StringBody("responseBody")))
                             .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("headerName", Arrays.asList("headerValue")))))
                             .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("cookieName", Arrays.asList("cookieValue")))))
                             .setDelay(
@@ -117,7 +117,7 @@ public class ExpectationSerializerTest {
                         "                                new QueryStringParameter(\"requestQueryStringParameterNameOne\", \"requestQueryStringParameterValueOneOne\", \"requestQueryStringParameterValueOneTwo\")," + System.getProperty("line.separator") +
                         "                                new QueryStringParameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")" + System.getProperty("line.separator") +
                         "                        )" + System.getProperty("line.separator") +
-                        "                        .withBody(new StringBody(\"somebody\", Body.Type.EXACT))," + System.getProperty("line.separator") +
+                        "                        .withBody(new StringBody(\"somebody\", Body.Type.STRING))," + System.getProperty("line.separator") +
                         "                Times.once()" + System.getProperty("line.separator") +
                         "        )" + System.getProperty("line.separator") +
                         "        .thenRespond(" + System.getProperty("line.separator") +
@@ -151,7 +151,7 @@ public class ExpectationSerializerTest {
                                                 new Cookie("requestCookieNameOne", "requestCookieValueOneOne", "requestCookieValueOneTwo"),
                                                 new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
                                         )
-                                        .withBody(new StringBody("somebody", Body.Type.EXACT)),
+                                        .withBody(new StringBody("somebody", Body.Type.STRING)),
                                 Times.once()
                         ).thenRespond(
                                 new HttpResponse()
@@ -260,7 +260,7 @@ public class ExpectationSerializerTest {
                         "                                new QueryStringParameter(\"requestQueryStringParameterNameOne\", \"requestQueryStringParameterValueOneOne\", \"requestQueryStringParameterValueOneTwo\")," + System.getProperty("line.separator") +
                         "                                new QueryStringParameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")" + System.getProperty("line.separator") +
                         "                        )" + System.getProperty("line.separator") +
-                        "                        .withBody(new StringBody(\"somebody\", Body.Type.EXACT))," + System.getProperty("line.separator") +
+                        "                        .withBody(new StringBody(\"somebody\", Body.Type.STRING))," + System.getProperty("line.separator") +
                         "                Times.once()" + System.getProperty("line.separator") +
                         "        )" + System.getProperty("line.separator") +
                         "        .thenForward(" + System.getProperty("line.separator") +
@@ -287,7 +287,7 @@ public class ExpectationSerializerTest {
                                                 new Cookie("requestCookieNameOne", "requestCookieValueOneOne", "requestCookieValueOneTwo"),
                                                 new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
                                         )
-                                        .withBody(new StringBody("somebody", Body.Type.EXACT)),
+                                        .withBody(new StringBody("somebody", Body.Type.STRING)),
                                 Times.once()
                         ).thenForward(
                                 new HttpForward()
@@ -307,7 +307,7 @@ public class ExpectationSerializerTest {
                         "        .when(" + System.getProperty("line.separator") +
                         "                request()" + System.getProperty("line.separator") +
                         "                        .withPath(\"somePath\")" + System.getProperty("line.separator") +
-                        "                        .withBody(new StringBody(\"[" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    {" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"id\\\": \\\"1\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"title\\\": \\\"Xenophon's imperial fiction : on the education of Cyrus\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"author\\\": \\\"James Tatum\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"isbn\\\": \\\"0691067570\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"publicationDate\\\": \\\"1989\\\"" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    }," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    {" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"id\\\": \\\"2\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"title\\\": \\\"You are here : personal geographies and other maps of the imagination\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"author\\\": \\\"Katharine A. Harmon\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"isbn\\\": \\\"1568984308\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"publicationDate\\\": \\\"2004\\\"" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    }," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    {" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"id\\\": \\\"3\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"title\\\": \\\"You just don't understand : women and men in conversation\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"author\\\": \\\"Deborah Tannen\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"isbn\\\": \\\"0345372050\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"publicationDate\\\": \\\"1990\\\"" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    }" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "]\", Body.Type.EXACT))," + System.getProperty("line.separator") +
+                        "                        .withBody(new StringBody(\"[" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    {" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"id\\\": \\\"1\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"title\\\": \\\"Xenophon's imperial fiction : on the education of Cyrus\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"author\\\": \\\"James Tatum\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"isbn\\\": \\\"0691067570\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"publicationDate\\\": \\\"1989\\\"" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    }," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    {" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"id\\\": \\\"2\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"title\\\": \\\"You are here : personal geographies and other maps of the imagination\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"author\\\": \\\"Katharine A. Harmon\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"isbn\\\": \\\"1568984308\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"publicationDate\\\": \\\"2004\\\"" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    }," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    {" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"id\\\": \\\"3\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"title\\\": \\\"You just don't understand : women and men in conversation\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"author\\\": \\\"Deborah Tannen\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"isbn\\\": \\\"0345372050\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"publicationDate\\\": \\\"1990\\\"" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    }" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "]\", Body.Type.STRING))," + System.getProperty("line.separator") +
                         "                Times.once()" + System.getProperty("line.separator") +
                         "        )" + System.getProperty("line.separator") +
                         "        .thenRespond(" + System.getProperty("line.separator") +
@@ -341,7 +341,7 @@ public class ExpectationSerializerTest {
                                                 "        \"isbn\": \"0345372050\"," + System.getProperty("line.separator") +
                                                 "        \"publicationDate\": \"1990\"" + System.getProperty("line.separator") +
                                                 "    }" + System.getProperty("line.separator") +
-                                                "]", Body.Type.EXACT)),
+                                                "]", Body.Type.STRING)),
                                 Times.once()
                         ).thenRespond(
                                 new HttpResponse()
@@ -382,7 +382,7 @@ public class ExpectationSerializerTest {
                         "        .when(" + System.getProperty("line.separator") +
                         "                request()" + System.getProperty("line.separator") +
                         "                        .withPath(\"somePath\")" + System.getProperty("line.separator") +
-                        "                        .withBody(new StringBody(\"responseBody\", Body.Type.EXACT))," + System.getProperty("line.separator") +
+                        "                        .withBody(new StringBody(\"responseBody\", Body.Type.STRING))," + System.getProperty("line.separator") +
                         "                Times.once()" + System.getProperty("line.separator") +
                         "        )" + System.getProperty("line.separator") +
                         "        .thenRespond(" + System.getProperty("line.separator") +
@@ -393,7 +393,7 @@ public class ExpectationSerializerTest {
                         new Expectation(
                                 new HttpRequest()
                                         .withPath("somePath")
-                                        .withBody(new StringBody("responseBody", Body.Type.EXACT)),
+                                        .withBody(new StringBody("responseBody", Body.Type.STRING)),
                                 Times.once()
                         ).thenRespond(
                                 new HttpResponse()

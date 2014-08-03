@@ -7,4 +7,4 @@ echo "-------------------------"
 echo "------- JAVA 1.6  -------"
 echo "-------------------------"
 echo
-mvn -T2C clean install
+mvn clean install

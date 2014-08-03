@@ -1,7 +1,7 @@
 package org.mockserver.client.serialization;
 
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.ObjectWriter;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -33,7 +33,7 @@ public class HttpRequestSerializerTest {
                             new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
                             new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
                     )
-                    .withBody(new StringBody("somebody", Body.Type.EXACT))
+                    .withBody(new StringBody("somebody", Body.Type.STRING))
                     .withHeaders(new Header("headerName", "headerValue"))
                     .withCookies(new Cookie("cookieName", "cookieValue"));
     private final HttpRequestDTO fullHttpRequestDTO =
@@ -45,7 +45,7 @@ public class HttpRequestSerializerTest {
                             new ParameterDTO(new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two")),
                             new ParameterDTO(new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One"))
                     ))
-                    .setBody(BodyDTO.createDTO(new StringBody("somebody", Body.Type.EXACT)))
+                    .setBody(BodyDTO.createDTO(new StringBody("somebody", Body.Type.STRING)))
                     .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("headerName", Arrays.asList("headerValue")))))
                     .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("cookieName", Arrays.asList("cookieValue")))));
     @Mock

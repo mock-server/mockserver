@@ -1,13 +1,11 @@
 package org.mockserver.mappers;
 
-import com.google.common.base.Charsets;
 import org.apache.http.ProtocolVersion;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicStatusLine;
 import org.junit.Test;
-import org.mockserver.client.serialization.Base64Converter;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpResponse;
@@ -17,7 +15,6 @@ import java.util.Arrays;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -26,34 +23,6 @@ import static org.mockito.Mockito.when;
  * @author jamesdbloom
  */
 public class ApacheHttpClientToMockServerResponseMapperTest {
-
-    @Test
-    public void shouldMapHttpClientResponseToHttpResponseForBase64() throws IOException {
-        // given
-        CloseableHttpResponse httpClientResponse = mock(CloseableHttpResponse.class);
-        when(httpClientResponse.getStatusLine()).thenReturn(new BasicStatusLine(new ProtocolVersion("HTTP", 1, 1), 500, "Server Error"));
-        when(httpClientResponse.getAllHeaders()).thenReturn(new org.apache.http.Header[]{
-                new BasicHeader("header_name", "header_value"),
-                new BasicHeader("Set-Cookie", "cookie_name=cookie_value")
-        });
-        when(httpClientResponse.getEntity()).thenReturn(new StringEntity("somebody"));
-
-        // when
-        HttpResponse httpResponse = new ApacheHttpClientToMockServerResponseMapper().mapApacheHttpClientResponseToMockServerResponse(httpClientResponse);
-
-        // then
-        assertEquals(httpResponse.getStatusCode(), new Integer(500));
-        assertThat(httpResponse.getHeaders(), containsInAnyOrder(
-                new Header("header_name", "header_value"),
-                new Header("Set-Cookie", "cookie_name=cookie_value")
-        ));
-        assertEquals(httpResponse.getCookies(), Arrays.asList(
-                new Cookie("cookie_name", "cookie_value")
-        ));
-        assertEquals(new String(httpResponse.getBody(), Charsets.UTF_8), "somebody");
-        assertEquals(httpResponse.getBodyAsString(), Base64Converter.stringToBase64Bytes("somebody".getBytes()));
-        assertArrayEquals(httpResponse.getBody(), "somebody".getBytes());
-    }
 
     @Test
     public void shouldMapHttpClientResponseToHttpResponse() throws IOException {
@@ -67,7 +36,7 @@ public class ApacheHttpClientToMockServerResponseMapperTest {
         when(httpClientResponse.getEntity()).thenReturn(new StringEntity("some_other_body"));
 
         // when
-        HttpResponse httpResponse = new ApacheHttpClientToMockServerResponseMapper().mapApacheHttpClientResponseToMockServerResponse(httpClientResponse);
+        HttpResponse httpResponse = new ApacheHttpClientToMockServerResponseMapper().mapApacheHttpClientResponseToMockServerResponse(httpClientResponse, false);
 
         // then
         assertEquals(httpResponse.getStatusCode(), new Integer(500));
@@ -78,9 +47,7 @@ public class ApacheHttpClientToMockServerResponseMapperTest {
         assertEquals(httpResponse.getCookies(), Arrays.asList(
                 new Cookie("cookie_name", "cookie_value")
         ));
-        assertEquals(new String(httpResponse.getBody(), Charsets.UTF_8), "some_other_body");
-        assertEquals(httpResponse.getBodyAsString(), Base64Converter.stringToBase64Bytes("some_other_body".getBytes()));
-        assertArrayEquals(httpResponse.getBody(), "some_other_body".getBytes());
+        assertEquals(httpResponse.getBodyAsString(), "some_other_body");
     }
 
     @Test
@@ -97,7 +64,7 @@ public class ApacheHttpClientToMockServerResponseMapperTest {
         when(httpClientResponse.getEntity()).thenReturn(new StringEntity(""));
 
         // when
-        HttpResponse httpResponse = new ApacheHttpClientToMockServerResponseMapper().mapApacheHttpClientResponseToMockServerResponse(httpClientResponse);
+        HttpResponse httpResponse = new ApacheHttpClientToMockServerResponseMapper().mapApacheHttpClientResponseToMockServerResponse(httpClientResponse, false);
 
         // then
         assertEquals(httpResponse.getHeaders(), Arrays.asList(
@@ -120,7 +87,7 @@ public class ApacheHttpClientToMockServerResponseMapperTest {
         when(httpClientResponse.getEntity()).thenReturn(new StringEntity(""));
 
         // when
-        HttpResponse httpResponse = new ApacheHttpClientToMockServerResponseMapper().mapApacheHttpClientResponseToMockServerResponse(httpClientResponse);
+        HttpResponse httpResponse = new ApacheHttpClientToMockServerResponseMapper().mapApacheHttpClientResponseToMockServerResponse(httpClientResponse, false);
 
         // then
         assertEquals(httpResponse.getCookies(), Arrays.asList(

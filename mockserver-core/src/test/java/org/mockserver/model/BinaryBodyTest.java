@@ -1,6 +1,7 @@
 package org.mockserver.model;
 
 import org.junit.Test;
+import org.mockserver.client.serialization.Base64Converter;
 
 import javax.xml.bind.DatatypeConverter;
 
@@ -36,6 +37,6 @@ public class BinaryBodyTest {
 
     @Test
     public void shouldReturnFormattedRequestInToString() {
-        assertEquals("some_body", binary("some_body".getBytes()).toString());
+        assertEquals(Base64Converter.stringToBase64Bytes("some_body".getBytes()), binary("some_body".getBytes()).toString());
     }
 }

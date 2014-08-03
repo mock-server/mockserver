@@ -577,7 +577,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
             }
         ],
         <span class="string_literal">"body"</span>: {
-            <span class="string_literal">"type"</span>: <span class="string_literal">"EXACT"</span>,
+            <span class="string_literal">"type"</span>: <span class="string_literal">"JSON"</span>,
             <span class="string_literal">"value"</span>: JSON.stringify({ username: <span class="string_literal">"foo"</span>, password: <span class="string_literal">"bar"</span> })
         }
     },
@@ -693,7 +693,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
         <span class="string_literal">"url"</span>: <span class="string_literal">"http://localhost:2021/login"</span>,
         <span class="string_literal">"path"</span>: <span class="string_literal">"/login"</span>,
         <span class="string_literal">"body"</span>: {
-            <span class="string_literal">"type"</span>: <span class="string_literal">"EXACT"</span>,
+            <span class="string_literal">"type"</span>: <span class="string_literal">"STRING"</span>,
             <span class="string_literal">"value"</span>: <span class="string_literal">"{username: 'foo', password: 'bar'}"</span>,
         },
         <span class="string_literal">"cookies"</span>: [
@@ -1148,7 +1148,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
      *           <span class="string_literal">'httpRequest'</span>: {
      *               <span class="string_literal">'path'</span>: <span class="string_literal">'/somePath'</span>,
      *               <span class="string_literal">'body'</span>: {
-     *                   <span class="string_literal">'type'</span>: <span class="string_literal">'EXACT'</span>,
+     *                   <span class="string_literal">'type'</span>: <span class="string_literal">'STRING'</span>,
      *                   <span class="string_literal">'value'</span>: <span class="string_literal">'someBody'</span>
      *               }
      *           },
@@ -2192,7 +2192,7 @@ xmlHttpRequest.send(JSON.stringify({
             }
         ],
         <span class="string_literal">"body"</span>: {
-            <span class="string_literal">"type"</span>: <span class="string_literal">"EXACT"</span>
+            <span class="string_literal">"type"</span>: <span class="string_literal">"JSON"</span>
             <span class="string_literal">"value"</span>: JSON.stringify({ username: <span class="string_literal">"foo"</span>, password: <span class="string_literal">"bar"</span> })
         }
     },
@@ -2353,25 +2353,33 @@ xmlHttpRequest.send(JSON.stringify({
      *
      * exact string match:
      *   - exact(<span class="string_literal">"this is an exact string body"</span>); or
-     *   - <span class="keyword">new</span> StringBody(<span class="string_literal">"{username: 'foo', password: 'bar'}"</span>, Body.Type.<span class="constant">EXACT</span>)
+     *   - <span class="keyword">new</span> StringBody(<span class="string_literal">"this is an exact string body"</span>)
+     *
      * exact match:
      *   - regex(<span class="string_literal">"username[a-z]{4}"</span>); or
      *   - <span class="keyword">new</span> StringBody(<span class="string_literal">"username[a-z]{4}"</span>, Body.Type.<span class="constant">REGEX</span>);
+     *
      * json match:
      *   - json(<span class="string_literal">"{username: 'foo', password: 'bar'}"</span>); or
      *   - <span class="keyword">new</span> StringBody(<span class="string_literal">"{username: 'foo', password: 'bar'}"</span>, Body.Type.<span class="constant">JSON</span>);
+     *
      * xpath match:
      *   - xpath(<span class="string_literal">"/element[key = 'some_key' and value = 'some_value']"</span>); or
      *   - <span class="keyword">new</span> StringBody(<span class="string_literal">"/element[key = 'some_key' and value = 'some_value']"</span>, Body.Type.<span class="constant">XPATH</span>);
+     *
      * body parameter match:
      *   - params(
      *             param(<span class="string_literal">"name_one"</span>, <span class="string_literal">"value_one_one"</span>, <span class="string_literal">"value_one_two"</span>)
      *             param(<span class="string_literal">"name_two"</span>, <span class="string_literal">"value_two"</span>)
      *     ); or
      *   - <span class="keyword">new</span> ParameterBody(
-     *                        <span class="keyword">new</span> Parameter(<span class="string_literal">"name_one"</span>, <span class="string_literal">"value_one_one"</span>, <span class="string_literal">"value_one_two"</span>)
-     *                        <span class="keyword">new</span> Parameter(<span class="string_literal">"name_two"</span>, <span class="string_literal">"value_two"</span>)
+     *             <span class="keyword">new</span> Parameter(<span class="string_literal">"name_one"</span>, <span class="string_literal">"value_one_one"</span>, <span class="string_literal">"value_one_two"</span>)
+     *             <span class="keyword">new</span> Parameter(<span class="string_literal">"name_two"</span>, <span class="string_literal">"value_two"</span>)
      *     );
+     *
+     * binary match:
+     *   - binary(IOUtils.readFully(getClass().getClassLoader().getResourceAsStream(<span class="string_literal">"example.pdf"</span>), <span class="numeric_literal">1024</span>)); or
+     *   - new BinaryBody(IOUtils.readFully(getClass().getClassLoader().getResourceAsStream(<span class="string_literal">"example.pdf"</span>), <span class="numeric_literal">1024</span>));
      *
      * for more details of the supported regex syntax see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>
      * for more details of the supported json syntax see <a href="http://jsonassert.skyscreamer.org">http://jsonassert.skyscreamer.org</a>
@@ -2451,7 +2459,7 @@ xmlHttpRequest.send(JSON.stringify({
     <span class="string_literal">"path"</span>: <span class="string_literal">""</span>,
     <span class="string_literal">"queryParameters"</span>: []
     <span class="string_literal">"body"</span>: {
-       <span class="string_literal">"type"</span>: <span class="annotation">&lt;</span><span class="string_literal">"EXACT"</span> <span class="annotation">or</span> <span class="string_literal">"REGEX"</span> <span class="annotation">or</span> <span class="string_literal">"JSON"</span> <span class="annotation">or</span> <span class="string_literal">"XPATH"</span> <span class="annotation">or</span> <span class="string_literal">"PARAMETERS"</span><span class="annotation">&gt;</span>,
+       <span class="string_literal">"type"</span>: <span class="annotation">&lt;</span><span class="string_literal">"STRING"</span> <span class="annotation">or</span> <span class="string_literal">"REGEX"</span> <span class="annotation">or</span> <span class="string_literal">"JSON"</span> <span class="annotation">or</span> <span class="string_literal">"XPATH"</span> <span class="annotation">or</span> <span class="string_literal">"PARAMETERS"</span><span class="annotation">&gt;</span>,
        <span class="string_literal">"value"</span>: <span class="string_literal">""</span> <span class="annotation">( or</span> <span class="string_literal">"parameters"</span> <span class="annotation">as shown in more detail below )</span>
     },
     <span class="string_literal">"cookies"</span>: [],
@@ -2485,23 +2493,23 @@ xmlHttpRequest.send(JSON.stringify({
         }
     ],
     <span class="string_literal">"body"</span>: {
-        <span class="string_literal">"type"</span>: <span class="string_literal">"EXACT"</span>,
+        <span class="string_literal">"type"</span>: <span class="string_literal">"STRING"</span>,
         <span class="string_literal">"value"</span>: <span class="string_literal">"{username: 'foo', password: 'bar'}"</span>
     }
 }</code></pre>
 
 <p>The <span class="string_literal">"type"</span> value in <span class="string_literal">"body"</span> can be:</p>
 
-<pre><code class="code"><span class="string_literal">"EXACT"</span>
+<pre><code class="code"><span class="string_literal">"STRING"</span>
 <span class="string_literal">"REGEX"</span>
 <span class="string_literal">"JSON"</span>
 <span class="string_literal">"XPATH"</span>
 <span class="string_literal">"PARAMETERS"</span></code></pre>
 
-<p>When the <span class="string_literal">"type"</span> field has a value of <span class="string_literal">"EXACT"</span>, <span class="string_literal">"REGEX"</span>, <span class="string_literal">"JSON"</span> or <span class="string_literal">"XPATH"</span> the other field of
+<p>When the <span class="string_literal">"type"</span> field has a value of <span class="string_literal">"STRING"</span>, <span class="string_literal">"REGEX"</span>, <span class="string_literal">"JSON"</span> or <span class="string_literal">"XPATH"</span> the other field of
 	<span class="string_literal">"body"</span>" should be <span class="string_literal">"value"</span> and it should provide a string to perform the match against, as shown in the example above.</p>
 
-<p>When the <span class="string_literal">"type"</span> field has a value of <span class="string_literal">"PARAMETERS"</span> the other field of <span class="string_literal">"body"</span>" should be
+<p>When the <span class="string_literal">"type"</span> field has a value of <span class="string_literal">"PARAMETERS"</span> the other field of <span class="string_literal">"body"</span> should be
 	<span class="string_literal">"parameters"</span> and it should provide a list of body parameters using the following syntax:</p>
 
 <pre><code class="code">{
@@ -2539,6 +2547,26 @@ xmlHttpRequest.send(JSON.stringify({
             }
         ]
     }
+}</code></pre>
+
+<p>When the <span class="string_literal">"type"</span> field has a value of <span class="string_literal">"STRING"</span> a short hand can be used where the <span class="string_literal">"body"</span> is only specified as a string literal for example:</p>
+
+<pre><code class="code"><span class="string_literal">"httpRequest"</span>: {
+    <span class="string_literal">"method"</span>: <span class="string_literal">"POST"</span>,
+    <span class="string_literal">"path"</span>: <span class="string_literal">"/login"</span>,
+    <span class="string_literal">"queryStringParameters"</span>: [
+        {
+            <span class="string_literal">"name"</span>: <span class="string_literal">"returnUrl"</span>,
+            <span class="string_literal">"values"</span>: [<span class="string_literal">"/account"</span>]
+        }
+    ],
+    <span class="string_literal">"cookies"</span>: [
+        {
+            <span class="string_literal">"name"</span>: <span class="string_literal">"sessionId"</span>,
+            <span class="string_literal">"values"</span>: [<span class="string_literal">"2By8LOhBmaW5nZXJwcmludCIlMDAzMW"</span>]
+        }
+    ],
+    <span class="string_literal">"body"</span>: <span class="string_literal">"a string body showing the short-hand way to specify a simple string body"</span>
 }</code></pre>
 
 <p><strong>Times</strong></p>
@@ -2627,11 +2655,33 @@ Times.exactly(<span class="keyword">int</span> count);</code></pre>
     <span class="keyword">public</span> HttpResponse withHeader(Header header)
 
     <span class="comment">/**
-     * The response body
+     * Set response body to return as a simple UTF-8 string response body
      *
      * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">body</span> a <span class="string_literal">"UTF-8"</span> string
      */</span>
     <span class="keyword">public</span> HttpResponse withBody(String body);
+
+    <span class="comment">/**
+     * * Set response body to return as binary such as a pdf or image
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">body</span> a byte array
+     */</span>
+    <span class="keyword">public</span> HttpResponse withBody(<span class="keyword">byte</span>[] body);
+
+    <span class="comment">/**
+     * Set the body to return for example:
+     *
+     * string body:
+     *   - exact(<span class="string_literal">"&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;div&gt;a simple string body&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;"</span>); or
+     *   - new StringBody(<span class="string_literal">"&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;div&gt;a simple string body&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;"</span>)
+     *
+     * binary body:
+     *   - binary(IOUtils.readFully(getClass().getClassLoader().getResourceAsStream(<span class="string_literal">"example.pdf"</span>), <span class="numeric_literal">1024</span>)); or
+     *   - new BinaryBody(IOUtils.readFully(getClass().getClassLoader().getResourceAsStream(<span class="string_literal">"example.pdf"</span>), <span class="numeric_literal">1024</span>));
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">body</span> an instance of one of the Body subclasses including StringBody or BinaryBody
+     */</span>
+    <span class="keyword">public</span> HttpResponse withBody(Body body);
 
     <span class="comment">/**
      * The delay before responding with this request as a Delay object, for example <span class="keyword">new</span> Delay(TimeUnit.<span class="constant">SECONDS</span>, <span class="numeric_literal">3</span>)

@@ -3,9 +3,14 @@ package org.mockserver.model;
 /**
  * @author jamesdbloom
  */
-public class StringBody extends Body {
+public class StringBody extends Body<String> {
 
     private final String value;
+
+    public StringBody(String value) {
+        super(Type.STRING);
+        this.value = value;
+    }
 
     public StringBody(String value, Type type) {
         super(type);
@@ -13,7 +18,7 @@ public class StringBody extends Body {
     }
 
     public static StringBody exact(String body) {
-        return new StringBody(body, Type.EXACT);
+        return new StringBody(body, Type.STRING);
     }
 
     public static StringBody regex(String body) {

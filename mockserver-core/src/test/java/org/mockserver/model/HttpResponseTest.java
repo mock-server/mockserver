@@ -7,7 +7,8 @@ import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 import static junit.framework.TestCase.assertNull;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotSame;
 import static org.mockito.Mockito.*;
 import static org.mockserver.model.HttpResponse.response;
 
@@ -29,10 +30,10 @@ public class HttpResponseTest {
 
     @Test
     public void returnsBody() {
-        assertEquals(Base64Converter.stringToBase64Bytes("somebody".getBytes()), new HttpResponse().withBody("somebody").getBodyAsString());
-        assertArrayEquals("somebody".getBytes(), new HttpResponse().withBody("somebody").getBody());
-        assertNull(new HttpResponse().withBody((byte[]) null).getBody());
-        assertArrayEquals(new byte[0], new HttpResponse().withBody((String) null).getBody());
+        assertEquals(Base64Converter.stringToBase64Bytes("somebody".getBytes()), new HttpResponse().withBody("somebody".getBytes()).getBodyAsString());
+        assertEquals("somebody", new HttpResponse().withBody("somebody").getBodyAsString());
+        assertNull(new HttpResponse().withBody((byte[]) null).getBodyAsString());
+        assertEquals("", new HttpResponse().withBody((String) null).getBodyAsString());
     }
 
     @Test
@@ -82,7 +83,7 @@ public class HttpResponseTest {
     public void shouldReturnFormattedRequestInToString() {
         assertEquals("{" + System.getProperty("line.separator") +
                         "  \"statusCode\" : 200," + System.getProperty("line.separator") +
-                        "  \"body\" : \"c29tZV9ib2R5\"," + System.getProperty("line.separator") +
+                        "  \"body\" : \"some_body\"," + System.getProperty("line.separator") +
                         "  \"headers\" : [ {" + System.getProperty("line.separator") +
                         "    \"name\" : \"name\"," + System.getProperty("line.separator") +
                         "    \"values\" : [ \"value\" ]" + System.getProperty("line.separator") +

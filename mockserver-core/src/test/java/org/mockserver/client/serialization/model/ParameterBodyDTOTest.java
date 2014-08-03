@@ -37,7 +37,7 @@ public class ParameterBodyDTOTest {
         )).buildObject();
 
         // then
-        assertThat(parameterBody.getParameters(), containsInAnyOrder(new Parameter("some", "value")));
+        assertThat(parameterBody.getValue(), containsInAnyOrder(new Parameter("some", "value")));
         assertThat(parameterBody.getType(), is(Body.Type.PARAMETERS));
     }
 

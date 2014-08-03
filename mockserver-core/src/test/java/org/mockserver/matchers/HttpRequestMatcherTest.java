@@ -7,8 +7,8 @@ import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockserver.model.HttpRequest.request;
-import static org.mockserver.model.StringBody.regex;
-import static org.mockserver.model.StringBody.xpath;
+import static org.mockserver.model.ParameterBody.params;
+import static org.mockserver.model.StringBody.*;
 
 /**
  * @author jamesdbloom
@@ -124,7 +124,7 @@ public class HttpRequestMatcherTest {
 
     @Test
     public void bodyMatchesMatchingBodyParameters() {
-        assertTrue(new HttpRequestMatcher(new HttpRequest().withBody(new ParameterBody(new Parameter("nameOne", "valueOne")))).matches(new HttpRequest().withBody(new ParameterBody(
+        assertTrue(new HttpRequestMatcher(new HttpRequest().withBody(params(new Parameter("nameOne", "valueOne")))).matches(new HttpRequest().withBody(new ParameterBody(
                 new Parameter("nameOne", "valueOne"),
                 new Parameter("nameTwo", "valueTwo")
         ))));
@@ -132,7 +132,7 @@ public class HttpRequestMatcherTest {
                 new Parameter("nameOne", "valueOne"),
                 new Parameter("nameTwo", "valueTwo")
         ))));
-        assertTrue(new HttpRequestMatcher(new HttpRequest().withBody(new ParameterBody(new Parameter("nameTwo", "valueTwo", "valueThree")))).matches(new HttpRequest().withBody(new ParameterBody(
+        assertTrue(new HttpRequestMatcher(new HttpRequest().withBody(params(new Parameter("nameTwo", "valueTwo", "valueThree")))).matches(new HttpRequest().withBody(new ParameterBody(
                 new Parameter("nameOne", "valueOne"),
                 new Parameter("nameTwo", "valueTwo"),
                 new Parameter("nameTwo", "valueThree")
@@ -142,7 +142,7 @@ public class HttpRequestMatcherTest {
                 new Parameter("nameTwo", "valueTwo"),
                 new Parameter("nameTwo", "valueThree")
         ))));
-        assertTrue(new HttpRequestMatcher(new HttpRequest().withBody(new ParameterBody(new Parameter("nameTwo", "valueThree")))).matches(new HttpRequest().withBody(new ParameterBody(
+        assertTrue(new HttpRequestMatcher(new HttpRequest().withBody(params(new Parameter("nameTwo", "valueThree")))).matches(new HttpRequest().withBody(new ParameterBody(
                 new Parameter("nameOne", "valueOne"),
                 new Parameter("nameTwo", "valueTwo"),
                 new Parameter("nameTwo", "valueThree")
@@ -171,12 +171,12 @@ public class HttpRequestMatcherTest {
 
     @Test
     public void matchesMatchingBody() {
-        assertTrue(new HttpRequestMatcher(new HttpRequest().withBody(new StringBody("somebody", Body.Type.EXACT))).matches(new HttpRequest().withBody(new StringBody("somebody", Body.Type.EXACT))));
+        assertTrue(new HttpRequestMatcher(new HttpRequest().withBody(new StringBody("somebody", Body.Type.STRING))).matches(new HttpRequest().withBody("somebody")));
     }
 
     @Test
     public void matchesMatchingBodyRegex() {
-        assertTrue(new HttpRequestMatcher(new HttpRequest().withBody(regex("some[a-z]{4}"))).matches(new HttpRequest().withBody(new StringBody("somebody", Body.Type.EXACT))));
+        assertTrue(new HttpRequestMatcher(new HttpRequest().withBody(regex("some[a-z]{4}"))).matches(new HttpRequest().withBody("somebody")));
     }
 
     @Test
@@ -186,17 +186,17 @@ public class HttpRequestMatcherTest {
                 "   <key>some_key</key>" +
                 "   <value>some_value</value>" +
                 "</element>";
-        assertTrue(new HttpRequestMatcher(new HttpRequest().withBody(xpath("/element[key = 'some_key' and value = 'some_value']"))).matches(new HttpRequest().withBody(new StringBody(matched, Body.Type.EXACT))));
+        assertTrue(new HttpRequestMatcher(new HttpRequest().withBody(xpath("/element[key = 'some_key' and value = 'some_value']"))).matches(new HttpRequest().withBody(matched)));
     }
 
     @Test
     public void doesNotMatchIncorrectBody() {
-        assertFalse(new HttpRequestMatcher(new HttpRequest().withBody(regex("somebody"))).matches(new HttpRequest().withBody(new StringBody("bodysome", Body.Type.EXACT))));
+        assertFalse(new HttpRequestMatcher(new HttpRequest().withBody(regex("somebody"))).matches(new HttpRequest().withBody("bodysome")));
     }
 
     @Test
     public void doesNotMatchIncorrectBodyRegex() {
-        assertFalse(new HttpRequestMatcher(new HttpRequest().withBody(regex("some[a-z]{3}"))).matches(new HttpRequest().withBody(new StringBody("bodysome", Body.Type.EXACT))));
+        assertFalse(new HttpRequestMatcher(new HttpRequest().withBody(regex("some[a-z]{3}"))).matches(new HttpRequest().withBody("bodysome")));
     }
 
     @Test
@@ -250,12 +250,9 @@ public class HttpRequestMatcherTest {
     }
 
     @Test
-    public void shouldReturnFormattedRequestInToString() {
+    public void shouldReturnFormattedRequestWithStringBodyInToString() {
         assertEquals("{" + System.getProperty("line.separator") +
-                        "  \"body\" : {" + System.getProperty("line.separator") +
-                        "    \"type\" : \"EXACT\"," + System.getProperty("line.separator") +
-                        "    \"value\" : \"some_body\"" + System.getProperty("line.separator") +
-                        "  }," + System.getProperty("line.separator") +
+                        "  \"body\" : \"some_body\"," + System.getProperty("line.separator") +
                         "  \"headers\" : [ {" + System.getProperty("line.separator") +
                         "    \"name\" : \"name\"," + System.getProperty("line.separator") +
                         "    \"values\" : [ \"value\" ]" + System.getProperty("line.separator") +
@@ -268,6 +265,31 @@ public class HttpRequestMatcherTest {
                 new HttpRequestMatcher(
                         request()
                                 .withBody("some_body")
+                                .withHeaders(new Header("name", "value"))
+                                .withCookies(new Cookie("name", "[A-Z]{0,10}"))
+                ).toString()
+        );
+    }
+
+    @Test
+    public void shouldReturnFormattedRequestWithJsonBodyInToString() {
+        assertEquals("{" + System.getProperty("line.separator") +
+                        "  \"body\" : {" + System.getProperty("line.separator") +
+                        "    \"type\" : \"JSON\"," + System.getProperty("line.separator") +
+                        "    \"value\" : \"{ \\\"key\\\": \\\"some_value\\\" }\"" + System.getProperty("line.separator") +
+                        "  }," + System.getProperty("line.separator") +
+                        "  \"headers\" : [ {" + System.getProperty("line.separator") +
+                        "    \"name\" : \"name\"," + System.getProperty("line.separator") +
+                        "    \"values\" : [ \"value\" ]" + System.getProperty("line.separator") +
+                        "  } ]," + System.getProperty("line.separator") +
+                        "  \"cookies\" : [ {" + System.getProperty("line.separator") +
+                        "    \"name\" : \"name\"," + System.getProperty("line.separator") +
+                        "    \"values\" : [ \"[A-Z]{0,10}\" ]" + System.getProperty("line.separator") +
+                        "  } ]" + System.getProperty("line.separator") +
+                        "}",
+                new HttpRequestMatcher(
+                        request()
+                                .withBody(json("{ \"key\": \"some_value\" }"))
                                 .withHeaders(new Header("name", "value"))
                                 .withCookies(new Cookie("name", "[A-Z]{0,10}"))
                 ).toString()

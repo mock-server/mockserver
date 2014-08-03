@@ -4,10 +4,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 import io.netty.handler.codec.http.HttpHeaders;
 import org.apache.commons.lang3.StringUtils;
-import org.mockserver.model.Cookie;
-import org.mockserver.model.Header;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.NettyHttpRequest;
+import org.mockserver.model.*;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.COOKIE;
 
@@ -49,7 +46,10 @@ public class NettyToMockServerRequestMapper {
 
     private void setBody(HttpRequest httpRequest, NettyHttpRequest mockServerHttpRequest) {
         if (mockServerHttpRequest.content() != null) {
-            httpRequest.withBody(mockServerHttpRequest.content().toString(Charsets.UTF_8));
+            byte[] bodyBytes = new byte[mockServerHttpRequest.content().readableBytes()];
+            mockServerHttpRequest.content().readBytes(bodyBytes);
+            httpRequest.setRawBodyBytes(bodyBytes);
+            httpRequest.withBody(new StringBody(new String(bodyBytes, Charsets.UTF_8), Body.Type.STRING));
         }
     }
 

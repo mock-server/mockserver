@@ -161,7 +161,7 @@ Request
 
 Body
 * **body**: Create a string body object (use in a response). Example: `body("unaccepted")`.
-* **exact**: Create a body of type `EXACT`. Example: `exact('{"reason": "unauthorized"}')`.
+* **exact**: Create a body of type `STRING`. Example: `exact('{"reason": "unauthorized"}')`.
 * **regex**: Create a body of type `REGEX`. Example: `regex('username[a-z]{4}')`.
 * **xpath**: Used to create a body of type `XPATH`. Example: `xpath("/element[key = 'some_key' and value = 'some_value']")`.
 * **parameterized**; Create a body to type `PARAMETERS`. Example `parameterized(parameter('someValue', 1, 2), parameter('otherValue', 4, 5))`.

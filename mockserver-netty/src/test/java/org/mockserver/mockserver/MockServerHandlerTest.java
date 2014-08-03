@@ -26,7 +26,6 @@ import static org.hamcrest.core.Is.is;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.matchers.Times.once;
 import static org.mockserver.model.HttpForward.forward;
@@ -199,7 +198,7 @@ public class MockServerHandlerTest {
         when(nettyToMockServerRequestMapper.mapNettyRequestToMockServerRequest(any(NettyHttpRequest.class))).thenReturn(request);
         when(mockServerMatcher.handle(any(HttpRequest.class))).thenReturn(forward);
         when(filters.applyFilters(any(HttpRequest.class))).thenReturn(request);
-        when(apacheHttpClient.sendRequest(any(HttpRequest.class))).thenReturn(response);
+        when(apacheHttpClient.sendRequest(any(HttpRequest.class), eq(false))).thenReturn(response);
         when(filters.applyFilters(any(HttpRequest.class), any(HttpResponse.class))).thenReturn(response);
         when(mockServerToNettyResponseMapper.mapMockServerResponseToNettyResponse(any(HttpResponse.class))).thenReturn(defaultFullHttpResponse);
 
@@ -209,7 +208,7 @@ public class MockServerHandlerTest {
         // then
         verify(mockServerMatcher).handle(request);
         verify(filters).applyFilters(request);
-        verify(apacheHttpClient).sendRequest(request);
+        verify(apacheHttpClient).sendRequest(request, false);
         verify(filters).applyFilters(request, response);
         verify(mockServerToNettyResponseMapper).mapMockServerResponseToNettyResponse(response);
         assertThat(result.getStatus(), is(HttpResponseStatus.NO_CONTENT));

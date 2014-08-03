@@ -1,6 +1,6 @@
 package org.mockserver.model;
 
-import org.codehaus.jackson.annotate.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mockserver.client.serialization.ObjectMapperFactory;
 
 import java.net.MalformedURLException;
@@ -16,6 +16,7 @@ public class HttpRequest extends EqualsHashCodeToString {
     private String path = "";
     private Map<String, Parameter> queryStringParameters = new LinkedHashMap<String, Parameter>();
     private Body body = null;
+    private byte[] rawBodyBytes = null;
     private Map<String, Header> headers = new LinkedHashMap<String, Header>();
     private Map<String, Cookie> cookies = new LinkedHashMap<String, Cookie>();
 
@@ -135,27 +136,84 @@ public class HttpRequest extends EqualsHashCodeToString {
         return body;
     }
 
+    public byte[] getRawBodyBytes() {
+        return rawBodyBytes;
+    }
+
+    public void setRawBodyBytes(byte[] bodyBytes) {
+        this.rawBodyBytes = bodyBytes;
+    }
+
     /**
-     * The exact string body to match on such as "{username: 'foo', password: 'bar'}"
+     * The body to match on such as "this is an exact string body" or a json expression such as "{username: 'foo', password: 'bar'}"
+     * or a regex (see http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html)
+     * or an XPath expression which returns one or more values or evaluates to true (see http://saxon.sourceforge.net/saxon6.5.3/expressions.html)
      *
-     * @param body the body on such as "{username: 'foo', password: 'bar'}"
+     * @param body the body on such as "this is an exact string body"
+     *             or a regex such as "username[a-z]{4}"
+     *             or a json expression such as "{username: 'foo', password: 'bar'}"
+     *             or an XPath such as "/element[key = 'some_key' and value = 'some_value']"
      */
     public HttpRequest withBody(String body) {
-        this.body = new StringBody(body, Body.Type.EXACT);
+        this.body = new StringBody(body, Body.Type.STRING);
         return this;
     }
 
     /**
      * The body match rules on such as using one of the Body subclasses as follows:
-     * - new StringBody("{username: 'foo', password: 'bar'}", Body.Type.EXACT)
-     * - new StringBody("username[a-z]{4}", Body.Type.REGEX);
-     * - new StringBody("/element[key = 'some_key' and value = 'some_value']", Body.Type.XPATH);
-     * - new ParameterBody(new Parameter("name", "value1", "value2"));
+     *
+     * exact string match:
+     *   - exact("this is an exact string body");
+     *
+     *   or
+     *
+     *   - new StringBody("this is an exact string body")
+     *
+     * exact match:
+     *   - regex("username[a-z]{4}");
+     *
+     *   or
+     *
+     *   - new StringBody("username[a-z]{4}", Body.Type.REGEX);
+     *
+     * json match:
+     *   - json("{username: 'foo', password: 'bar'}");
+     *
+     *   or
+     *
+     *   - new StringBody("{username: 'foo', password: 'bar'}", Body.Type.JSON);
+     *
+     * xpath match:
+     *   - xpath("/element[key = 'some_key' and value = 'some_value']");
+     *
+     *   or
+     *
+     *   - new StringBody("/element[key = 'some_key' and value = 'some_value']", Body.Type.XPATH);
+     *
+     * body parameter match:
+     *   - params(
+     *             param("name_one", "value_one_one", "value_one_two")
+     *             param("name_two", "value_two")
+     *     );
+     *
+     *   or
+     *
+     *   - new ParameterBody(
+     *             new Parameter("name_one", "value_one_one", "value_one_two")
+     *             new Parameter("name_two", "value_two")
+     *     );
+     *
+     * binary match:
+     *   - binary(IOUtils.readFully(getClass().getClassLoader().getResourceAsStream("example.pdf"), 1024));
+     *
+     *   or
+     *
+     *   - new BinaryBody(IOUtils.readFully(getClass().getClassLoader().getResourceAsStream("example.pdf"), 1024));
      *
      * for more details of the supported regex syntax see http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html
      * for more detail of XPath syntax see http://saxon.sourceforge.net/saxon6.5.3/expressions.html
      *
-     * @param body an instance of one of the Body subclasses including StringBody or ParameterBody
+     * @param body an instance of one of the Body subclasses including StringBody, ParameterBody or BinaryBody
      */
     public HttpRequest withBody(Body body) {
         this.body = body;

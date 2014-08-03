@@ -1,7 +1,6 @@
 package org.mockserver.mappers;
 
-import com.google.common.collect.LinkedListMultimap;
-import com.google.common.collect.Multimap;
+import com.google.common.base.Charsets;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.util.EntityUtils;
 import org.mockserver.model.Cookie;
@@ -20,13 +19,19 @@ import java.util.*;
 public class ApacheHttpClientToMockServerResponseMapper {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public HttpResponse mapApacheHttpClientResponseToMockServerResponse(CloseableHttpResponse clientResponse) throws IOException {
+    public HttpResponse mapApacheHttpClientResponseToMockServerResponse(CloseableHttpResponse clientResponse, boolean binaryBody) throws IOException {
         HttpResponse httpResponse = new HttpResponse();
         setStatusCode(httpResponse, clientResponse);
         setHeaders(httpResponse, clientResponse);
         setCookies(httpResponse);
-        if (clientResponse.getEntity() != null) {
-            setBody(httpResponse, EntityUtils.toByteArray(clientResponse.getEntity()));
+        if (binaryBody) {
+            if (clientResponse.getEntity() != null) {
+                setBody(httpResponse, EntityUtils.toByteArray(clientResponse.getEntity()));
+            }
+        } else {
+            if (clientResponse.getEntity() != null) {
+                setBody(httpResponse, EntityUtils.toString(clientResponse.getEntity(), Charsets.UTF_8));
+            }
         }
         return httpResponse;
     }
@@ -76,6 +81,10 @@ public class ApacheHttpClientToMockServerResponseMapper {
             }
         }
         httpResponse.withCookies(new ArrayList<Cookie>(mappedCookies.values()));
+    }
+
+    private void setBody(HttpResponse httpResponse, String content) {
+        httpResponse.withBody(content);
     }
 
     private void setBody(HttpResponse httpResponse, byte[] content) {

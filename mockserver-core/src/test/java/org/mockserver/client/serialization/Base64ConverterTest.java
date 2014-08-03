@@ -13,17 +13,17 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class Base64ConverterTest {
 
     @Test
-    public void shouldConvertToBase64Value(){
+    public void shouldConvertToBase64Value() {
         assertThat(new Base64Converter().stringToBase64Bytes("some_value".getBytes()), is(DatatypeConverter.printBase64Binary("some_value".getBytes())));
     }
 
     @Test
-    public void shouldConvertBase64ValueToString(){
+    public void shouldConvertBase64ValueToString() {
         assertThat(new String(Base64Converter.base64StringToBytes(DatatypeConverter.printBase64Binary("some_value".getBytes()))), is("some_value"));
     }
 
     @Test
-    public void shouldNotConvertNoneBase64Value(){
+    public void shouldNotConvertNoneBase64Value() {
         assertThat(new String(Base64Converter.base64StringToBytes("some_value")), is("some_value"));
     }
 }

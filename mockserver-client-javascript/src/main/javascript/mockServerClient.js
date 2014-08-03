@@ -44,7 +44,7 @@ var mockServerClient = function (host, port) {
                 httpRequest: createResponseMatcher(path),
                 httpResponse: {
                     statusCode: statusCode || 200,
-                    body: Base64.encode(JSON.stringify(responseBody)),
+                    body: JSON.stringify(responseBody),
                     cookies: [],
                     headers: defaultResponseHeaders,
                     delay: {
@@ -67,7 +67,7 @@ var mockServerClient = function (host, port) {
          *           'httpRequest': {
          *               'path': '/somePath',
          *               'body': {
-         *                   'type': "EXACT",
+         *                   'type': "STRING",
          *                   'value': 'someBody'
          *               }
          *           },

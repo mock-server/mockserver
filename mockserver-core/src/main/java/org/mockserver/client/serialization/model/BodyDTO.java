@@ -1,9 +1,6 @@
 package org.mockserver.client.serialization.model;
 
-import org.mockserver.model.Body;
-import org.mockserver.model.EqualsHashCodeToString;
-import org.mockserver.model.ParameterBody;
-import org.mockserver.model.StringBody;
+import org.mockserver.model.*;
 
 /**
  * @author jamesdbloom
@@ -24,6 +21,8 @@ public abstract class BodyDTO extends EqualsHashCodeToString {
             return new StringBodyDTO((StringBody) body);
         } else if (body instanceof ParameterBody) {
             return new ParameterBodyDTO((ParameterBody) body);
+        } else if (body instanceof BinaryBody) {
+            return new BinaryBodyDTO((BinaryBody) body);
         } else {
             return null;
         }

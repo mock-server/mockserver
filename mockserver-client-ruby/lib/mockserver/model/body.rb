@@ -11,7 +11,7 @@ module MockServer::Model
   # An enum for body type
   class BodyType < SymbolizedEnum
     def allowed_values
-      [:EXACT, :REGEX, :XPATH, :PARAMETERS]
+      [:STRING, :REGEX, :XPATH, :PARAMETERS]
     end
   end
 
@@ -38,7 +38,7 @@ module MockServer::Model
     end
 
     def exact(value)
-      Body.new(type: :EXACT, value: value)
+      Body.new(type: :STRING, value: value)
     end
 
     def regex(value)
