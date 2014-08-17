@@ -6,6 +6,7 @@ import org.mockserver.model.*;
 import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.ParameterBody.params;
 import static org.mockserver.model.StringBody.*;
@@ -14,6 +15,26 @@ import static org.mockserver.model.StringBody.*;
  * @author jamesdbloom
  */
 public class HttpRequestMatcherTest {
+
+    @Test
+    public void matchesMatchingMethod() {
+        assertTrue(new HttpRequestMatcher(new HttpRequest().withMethod("HEAD")).matches(new HttpRequest().withMethod("HEAD")));
+    }
+
+    @Test
+    public void matchesMatchingMethodRegex() {
+        assertTrue(new HttpRequestMatcher(new HttpRequest().withMethod("P[A-Z]{2}")).matches(new HttpRequest().withMethod("PUT")));
+    }
+
+    @Test
+    public void doesNotMatchIncorrectMethod() {
+        assertFalse(new HttpRequestMatcher(new HttpRequest().withMethod("HEAD")).matches(new HttpRequest().withMethod("OPTIONS")));
+    }
+
+    @Test
+    public void doesNotMatchIncorrectMethodRegex() {
+        assertFalse(new HttpRequestMatcher(new HttpRequest().withMethod("P[A-Z]{2}")).matches(new HttpRequest().withMethod("POST")));
+    }
 
     @Test
     public void matchesMatchingPath() {
@@ -171,12 +192,22 @@ public class HttpRequestMatcherTest {
 
     @Test
     public void matchesMatchingBody() {
-        assertTrue(new HttpRequestMatcher(new HttpRequest().withBody(new StringBody("somebody", Body.Type.STRING))).matches(new HttpRequest().withBody("somebody")));
+        assertTrue(new HttpRequestMatcher(new HttpRequest().withBody(new StringBody("somebody", Type.STRING))).matches(new HttpRequest().withBody("somebody")));
+    }
+
+    @Test
+    public void doesNotMatchIncorrectBody() {
+        assertFalse(new HttpRequestMatcher(new HttpRequest().withBody(exact("somebody"))).matches(new HttpRequest().withBody("bodysome")));
     }
 
     @Test
     public void matchesMatchingBodyRegex() {
         assertTrue(new HttpRequestMatcher(new HttpRequest().withBody(regex("some[a-z]{4}"))).matches(new HttpRequest().withBody("somebody")));
+    }
+
+    @Test
+    public void doesNotMatchIncorrectBodyRegex() {
+        assertFalse(new HttpRequestMatcher(new HttpRequest().withBody(regex("some[a-z]{3}"))).matches(new HttpRequest().withBody("bodysome")));
     }
 
     @Test
@@ -190,13 +221,45 @@ public class HttpRequestMatcherTest {
     }
 
     @Test
-    public void doesNotMatchIncorrectBody() {
-        assertFalse(new HttpRequestMatcher(new HttpRequest().withBody(regex("somebody"))).matches(new HttpRequest().withBody("bodysome")));
+    public void doesNotMatchIncorrectBodyXPath() {
+        String matched = "" +
+                "<element>" +
+                "   <key>some_key</key>" +
+                "</element>";
+        assertFalse(new HttpRequestMatcher(new HttpRequest().withBody(xpath("/element[key = 'some_key' and value = 'some_value']"))).matches(new HttpRequest().withBody(matched)));
     }
 
     @Test
-    public void doesNotMatchIncorrectBodyRegex() {
-        assertFalse(new HttpRequestMatcher(new HttpRequest().withBody(regex("some[a-z]{3}"))).matches(new HttpRequest().withBody("bodysome")));
+    public void matchesMatchingJSONBody() {
+        String matched = "" +
+                "{ " +
+                "   \"some_field\": \"some_value\", " +
+                "   \"some_other_field\": \"some_other_value\" " +
+                "}";
+        assertTrue(new HttpRequestMatcher(new HttpRequest().withBody(json("{ \"some_field\": \"some_value\" }"))).matches(new HttpRequest().withBody(matched)));
+    }
+
+    @Test
+    public void doesNotMatchIncorrectJSONBody() {
+        String matched = "" +
+                "{ " +
+                "   \"some_incorrect_field\": \"some_value\", " +
+                "   \"some_other_field\": \"some_other_value\" " +
+                "}";
+        assertFalse(new HttpRequestMatcher(new HttpRequest().withBody(json("{ \"some_field\": \"some_value\" }"))).matches(new HttpRequest().withBody(matched)));
+    }
+
+
+    @Test
+    public void matchesMatchingBinaryBody() {
+        byte[] matched = "some binary value".getBytes();
+        assertTrue(new HttpRequestMatcher(new HttpRequest().withBody(binary("some binary value".getBytes()))).matches(new HttpRequest().withBody(binary(matched))));
+    }
+
+    @Test
+    public void doesNotMatchIncorrectBinaryBody() {
+        byte[] matched = "some other binary value".getBytes();
+        assertFalse(new HttpRequestMatcher(new HttpRequest().withBody(binary("some binary value".getBytes()))).matches(new HttpRequest().withBody(binary(matched))));
     }
 
     @Test

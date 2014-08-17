@@ -21,19 +21,21 @@ public class HttpResponseDTO extends EqualsHashCodeToString {
     private DelayDTO delay;
 
     public HttpResponseDTO(HttpResponse httpResponse) {
-        statusCode = httpResponse.getStatusCode();
-        body = BodyDTO.createDTO(httpResponse.getBody());
-        headers = Lists.transform(httpResponse.getHeaders(), new Function<Header, HeaderDTO>() {
-            public HeaderDTO apply(Header header) {
-                return new HeaderDTO(header);
-            }
-        });
-        cookies = Lists.transform(httpResponse.getCookies(), new Function<Cookie, CookieDTO>() {
-            public CookieDTO apply(Cookie cookie) {
-                return new CookieDTO(cookie);
-            }
-        });
-        delay = (httpResponse.getDelay() != null ? new DelayDTO(httpResponse.getDelay()) : null);
+        if (httpResponse != null) {
+            statusCode = httpResponse.getStatusCode();
+            body = BodyDTO.createDTO(httpResponse.getBody());
+            headers = Lists.transform(httpResponse.getHeaders(), new Function<Header, HeaderDTO>() {
+                public HeaderDTO apply(Header header) {
+                    return new HeaderDTO(header);
+                }
+            });
+            cookies = Lists.transform(httpResponse.getCookies(), new Function<Cookie, CookieDTO>() {
+                public CookieDTO apply(Cookie cookie) {
+                    return new CookieDTO(cookie);
+                }
+            });
+            delay = (httpResponse.getDelay() != null ? new DelayDTO(httpResponse.getDelay()) : null);
+        }
     }
 
     public HttpResponseDTO() {

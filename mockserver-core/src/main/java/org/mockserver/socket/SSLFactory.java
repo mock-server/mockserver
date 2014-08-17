@@ -24,8 +24,8 @@ public class SSLFactory {
     public static final String KEY_STORE_PASSWORD = "changeit";
     public static final String KEY_STORE_FILENAME = "keystore.jks";
     private static final SSLFactory sslFactory = new SSLFactory();
-    private final Logger logger = LoggerFactory.getLogger(SSLFactory.class);
-    private final TrustManager DUMMY_TRUST_MANAGER = new X509TrustManager() {
+    private static final Logger logger = LoggerFactory.getLogger(SSLFactory.class);
+    private static final TrustManager DUMMY_TRUST_MANAGER = new X509TrustManager() {
         @Override
         public X509Certificate[] getAcceptedIssuers() {
             return new X509Certificate[0];

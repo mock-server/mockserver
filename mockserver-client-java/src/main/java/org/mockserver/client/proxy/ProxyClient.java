@@ -145,7 +145,9 @@ public class ProxyClient {
      * @throws AssertionError if the request has not been found
      */
     public ProxyClient verify(HttpRequest httpRequest, Times times) throws AssertionError {
-        if (httpRequest == null) throw new IllegalArgumentException("verify(HttpRequest) requires a non null HttpRequest object");
+        if (httpRequest == null) {
+            throw new IllegalArgumentException("verify(HttpRequest) requires a non null HttpRequest object");
+        }
 
         Expectation[] expectations = retrieveAsExpectations(httpRequest);
         if (expectations == null) {

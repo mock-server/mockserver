@@ -43,7 +43,9 @@ public class Filters {
             if (httpRequestMatcher.matches(httpRequest)) {
                 for (ProxyResponseFilter proxyFilter : responseFilters.getAll(httpRequestMatcher)) {
                     httpResponse = proxyFilter.onResponse(httpRequest, httpResponse);
-                    if (httpResponse == null) throw new IllegalStateException(proxyFilter.getClass().getName() + " returned a null HttpResponse, Filters are not allowed to return a null HttpResponse object, a Filter can only return null for an HttpRequest which will prevent the request being sent.");
+                    if (httpResponse == null) {
+                        throw new IllegalStateException(proxyFilter.getClass().getName() + " returned a null HttpResponse, Filters are not allowed to return a null HttpResponse object, a Filter can only return null for an HttpRequest which will prevent the request being sent.");
+                    }
                 }
             }
         }

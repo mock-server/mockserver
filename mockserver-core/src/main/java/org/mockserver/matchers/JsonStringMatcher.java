@@ -2,8 +2,6 @@ package org.mockserver.matchers;
 
 import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.skyscreamer.jsonassert.JSONCompareResult;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static org.skyscreamer.jsonassert.JSONCompare.compareJSON;
 
@@ -11,7 +9,6 @@ import static org.skyscreamer.jsonassert.JSONCompare.compareJSON;
  * @author jamesdbloom
  */
 public class JsonStringMatcher extends BodyMatcher<String> implements Matcher<String> {
-    private static Logger logger = LoggerFactory.getLogger(JsonStringMatcher.class);
     private final String matcher;
 
     public JsonStringMatcher(String matcher) {
@@ -37,10 +34,5 @@ public class JsonStringMatcher extends BodyMatcher<String> implements Matcher<St
         }
 
         return result;
-    }
-
-    @Override
-    public String[] fieldsExcludedFromEqualsAndHashCode() {
-        return new String[]{"logger"};
     }
 }

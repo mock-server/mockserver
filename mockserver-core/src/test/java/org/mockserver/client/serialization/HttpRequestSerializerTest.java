@@ -120,7 +120,7 @@ public class HttpRequestSerializerTest {
         // given
         HttpRequest httpRequest = mock(HttpRequest.class);
         when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
-        when(objectWriter.writeValueAsString(any(HttpRequestDTO.class))).thenThrow(new IOException("TEST EXCEPTION"));
+        when(objectWriter.writeValueAsString(any(HttpRequestDTO.class))).thenThrow(IOException.class);
 
         // when
         httpRequestSerializer.serialize(httpRequest);

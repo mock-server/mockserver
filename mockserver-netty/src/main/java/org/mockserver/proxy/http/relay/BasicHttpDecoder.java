@@ -26,7 +26,7 @@ public class BasicHttpDecoder {
         while (byteBuf.isReadable()) {
             char nextCharacter = (char) byteBuf.readByte();
             if (nextCharacter == '\r' || nextCharacter == '\n') {
-                if(byteBuf.isReadable()) {
+                if (byteBuf.isReadable()) {
                     // swallow '\r' or '\n'
                     byteBuf.readByte();
                 }

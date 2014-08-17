@@ -36,7 +36,9 @@ public class MockServer {
      * @param securePort the secure https port to use
      */
     public Thread start(final Integer port, final Integer securePort) {
-        if (port == null && securePort == null) throw new IllegalStateException("You must specify a port or a secure port");
+        if (port == null && securePort == null) {
+            throw new IllegalStateException("You must specify a port or a secure port");
+        }
 
         hasStarted = SettableFuture.create();
         bossGroup = new NioEventLoopGroup();
@@ -48,8 +50,8 @@ public class MockServer {
                 try {
                     Channel httpChannel = null;
                     logger.info("Starting MockServer on"
-                            + (port != null ? " serverPort " + port : "")
-                            + (securePort != null ? " secureServerPort " + securePort : "")
+                                    + (port != null ? " serverPort " + port : "")
+                                    + (securePort != null ? " secureServerPort " + securePort : "")
                     );
                     if (port != null) {
                         httpChannel = new ServerBootstrap()

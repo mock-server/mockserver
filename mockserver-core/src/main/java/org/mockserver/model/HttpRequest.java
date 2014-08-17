@@ -216,6 +216,9 @@ public class HttpRequest extends EqualsHashCodeToString {
      * @param body an instance of one of the Body subclasses including StringBody, ParameterBody or BinaryBody
      */
     public HttpRequest withBody(Body body) {
+        if (body instanceof BinaryBody) {
+            setRawBodyBytes(((BinaryBody) body).getValue());
+        }
         this.body = body;
         return this;
     }

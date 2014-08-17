@@ -6,6 +6,7 @@ import io.netty.handler.codec.http.DefaultHttpRequest;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.QueryStringDecoder;
+import org.mockserver.url.URLParser;
 
 import java.util.List;
 import java.util.Map;
@@ -22,7 +23,7 @@ public class NettyHttpRequest extends DefaultHttpRequest {
     public NettyHttpRequest(HttpVersion httpVersion, HttpMethod method, String uri, boolean secure) {
         super(httpVersion, method, uri);
         QueryStringDecoder queryStringDecoder = new QueryStringDecoder(uri);
-        this.path = queryStringDecoder.path();
+        this.path = URLParser.returnPath(queryStringDecoder.path());
         this.parameters = queryStringDecoder.parameters();
         this.secure = secure;
     }
@@ -47,12 +48,12 @@ public class NettyHttpRequest extends DefaultHttpRequest {
         return parameters;
     }
 
-    public void setSecure(boolean secure) {
-        this.secure = secure;
-    }
-
     public boolean isSecure() {
         return secure;
+    }
+
+    public void setSecure(boolean secure) {
+        this.secure = secure;
     }
 
     public boolean matches(HttpMethod method, String path) {

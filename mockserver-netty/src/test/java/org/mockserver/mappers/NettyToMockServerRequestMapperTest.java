@@ -78,4 +78,17 @@ public class NettyToMockServerRequestMapperTest {
         assertEquals("http://localhost/requestURI", httpRequest.getURL());
         assertEquals("/requestURI", httpRequest.getPath());
     }
+
+    @Test
+    public void shouldMapHttpServletRequestWithFullURLAsUri() {
+        // given
+        NettyHttpRequest nettyHttpRequest = new NettyHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "http://localhost/requestURI", false);
+
+        // when
+        HttpRequest httpRequest = new NettyToMockServerRequestMapper().mapNettyRequestToMockServerRequest(nettyHttpRequest);
+
+        // then
+        assertEquals("http://localhost/requestURI", httpRequest.getURL());
+        assertEquals("/requestURI", httpRequest.getPath());
+    }
 }

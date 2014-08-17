@@ -26,7 +26,7 @@ public class LogFilter implements ProxyResponseFilter {
     private Logger requestLogger = LoggerFactory.getLogger("REQUEST");
 
     public synchronized HttpResponse onResponse(HttpRequest httpRequest, HttpResponse httpResponse) {
-        if(httpRequest != null && httpResponse != null) {
+        if (httpRequest != null && httpResponse != null) {
             requestResponseLog.put(httpRequest, httpResponse);
         }
         return httpResponse;
@@ -104,7 +104,7 @@ public class LogFilter implements ProxyResponseFilter {
         if (httpRequest != null) {
             HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
             for (HttpRequest key : requestResponseLog.keySet()) {
-                for(HttpResponse value : requestResponseLog.getAll(key)) {
+                for (HttpResponse value : requestResponseLog.getAll(key)) {
                     if (httpRequestMatcher.matches(key)) {
                         expectations.add(new Expectation(key, Times.once()).thenRespond(value));
                     }
@@ -112,7 +112,7 @@ public class LogFilter implements ProxyResponseFilter {
             }
         } else {
             for (HttpRequest key : requestResponseLog.keySet()) {
-                for(HttpResponse value : requestResponseLog.getAll(key)) {
+                for (HttpResponse value : requestResponseLog.getAll(key)) {
                     expectations.add(new Expectation(key, Times.once()).thenRespond(value));
                 }
             }

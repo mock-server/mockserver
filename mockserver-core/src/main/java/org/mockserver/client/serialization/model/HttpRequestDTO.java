@@ -11,34 +11,36 @@ import java.util.List;
  * @author jamesdbloom
  */
 public class HttpRequestDTO extends EqualsHashCodeToString {
-    private String method;
-    private String url;
-    private String path;
+    private String method = "";
+    private String url = "";
+    private String path = "";
     private List<ParameterDTO> queryStringParameters = new ArrayList<ParameterDTO>();
     private BodyDTO body;
     private List<CookieDTO> cookies = new ArrayList<CookieDTO>();
     private List<HeaderDTO> headers = new ArrayList<HeaderDTO>();
 
     public HttpRequestDTO(HttpRequest httpRequest) {
-        method = httpRequest.getMethod();
-        url = httpRequest.getURL();
-        path = httpRequest.getPath();
-        headers = Lists.transform(httpRequest.getHeaders(), new Function<Header, HeaderDTO>() {
-            public HeaderDTO apply(Header header) {
-                return new HeaderDTO(header);
-            }
-        });
-        cookies = Lists.transform(httpRequest.getCookies(), new Function<Cookie, CookieDTO>() {
-            public CookieDTO apply(Cookie cookie) {
-                return new CookieDTO(cookie);
-            }
-        });
-        queryStringParameters = Lists.transform(httpRequest.getQueryStringParameters(), new Function<Parameter, ParameterDTO>() {
-            public ParameterDTO apply(Parameter parameter) {
-                return new ParameterDTO(parameter);
-            }
-        });
-        body = BodyDTO.createDTO(httpRequest.getBody());
+        if (httpRequest != null) {
+            method = httpRequest.getMethod();
+            url = httpRequest.getURL();
+            path = httpRequest.getPath();
+            headers = Lists.transform(httpRequest.getHeaders(), new Function<Header, HeaderDTO>() {
+                public HeaderDTO apply(Header header) {
+                    return new HeaderDTO(header);
+                }
+            });
+            cookies = Lists.transform(httpRequest.getCookies(), new Function<Cookie, CookieDTO>() {
+                public CookieDTO apply(Cookie cookie) {
+                    return new CookieDTO(cookie);
+                }
+            });
+            queryStringParameters = Lists.transform(httpRequest.getQueryStringParameters(), new Function<Parameter, ParameterDTO>() {
+                public ParameterDTO apply(Parameter parameter) {
+                    return new ParameterDTO(parameter);
+                }
+            });
+            body = BodyDTO.createDTO(httpRequest.getBody());
+        }
     }
 
     public HttpRequestDTO() {

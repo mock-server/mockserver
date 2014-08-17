@@ -1,9 +1,8 @@
 package org.mockserver.matchers;
 
 import io.netty.handler.codec.http.QueryStringDecoder;
-import org.mockserver.model.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.mockserver.model.KeyToMultiValue;
+import org.mockserver.model.Parameter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,7 +13,6 @@ import java.util.Map;
  * @author jamesdbloom
  */
 public class ParameterStringMatcher extends BodyMatcher<String> implements Matcher<String> {
-    private static Logger logger = LoggerFactory.getLogger(ParameterStringMatcher.class);
     private final MapMatcher matcher;
 
     public ParameterStringMatcher(List<Parameter> parameters) {
@@ -48,10 +46,5 @@ public class ParameterStringMatcher extends BodyMatcher<String> implements Match
             }
         }
         return new ArrayList<KeyToMultiValue>(mappedParameters.values());
-    }
-
-    @Override
-    public String[] fieldsExcludedFromEqualsAndHashCode() {
-        return new String[]{"logger"};
     }
 }

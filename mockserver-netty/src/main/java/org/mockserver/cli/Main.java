@@ -112,7 +112,9 @@ public class Main {
 
     private static void showUsage() {
         outputPrintStream.println(USAGE);
-        if (shutdownOnUsage) System.exit(1);
+        if (shutdownOnUsage) {
+            System.exit(1);
+        }
     }
 
 }

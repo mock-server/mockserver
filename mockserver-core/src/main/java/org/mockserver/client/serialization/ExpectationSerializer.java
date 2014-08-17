@@ -154,7 +154,9 @@ public class ExpectationSerializer {
     }
 
     public Expectation deserialize(String jsonExpectation) {
-        if (jsonExpectation == null || jsonExpectation.isEmpty()) throw new IllegalArgumentException("Expected an JSON expectation object but http body is empty");
+        if (jsonExpectation == null || jsonExpectation.isEmpty()) {
+            throw new IllegalArgumentException("Expected an JSON expectation object but http body is empty");
+        }
         Expectation expectation = null;
         try {
             ExpectationDTO expectationDTO = objectMapper.readValue(jsonExpectation, ExpectationDTO.class);

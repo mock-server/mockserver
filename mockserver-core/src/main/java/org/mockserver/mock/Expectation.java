@@ -56,8 +56,9 @@ public class Expectation extends EqualsHashCodeToString {
 
     public Expectation thenRespond(HttpResponse httpResponse) {
         if (httpResponse != null) {
-            if (httpForward != null)
+            if (httpForward != null) {
                 throw new IllegalArgumentException("It is not possible to set a response once a forward has been set");
+            }
             this.httpResponse = httpResponse;
         }
         return this;
@@ -65,8 +66,9 @@ public class Expectation extends EqualsHashCodeToString {
 
     public Expectation thenForward(HttpForward httpForward) {
         if (httpForward != null) {
-            if (httpResponse != null)
+            if (httpResponse != null) {
                 throw new IllegalArgumentException("It is not possible to set a forward once a response has been set");
+            }
             this.httpForward = httpForward;
         }
         return this;

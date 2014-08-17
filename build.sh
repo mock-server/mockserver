@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+export MAVEN_OPTS='-XX:MaxPermSize=1024m -Xmx1024m'
+
 # java 1.7 build
 export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.7.0_55.jdk/Contents/Home
 echo

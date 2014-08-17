@@ -1,12 +1,10 @@
 package org.mockserver.proxy.http.relay;
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.http.HttpContentCompressor;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
@@ -29,7 +27,9 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
     private final boolean secure;
 
     public RelayConnectHandler(InetSocketAddress connectSocket, boolean secure) {
-        if (connectSocket == null) throw new IllegalArgumentException("Connect Socket can not be null");
+        if (connectSocket == null) {
+            throw new IllegalArgumentException("Connect Socket can not be null");
+        }
         this.connectSocket = connectSocket;
         this.secure = secure;
     }
@@ -79,7 +79,8 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
                             failure("Failed to activate handler and retrieve channel", future.cause(), ctx, failureResponse(request));
                         }
                     }
-                });
+                }
+        );
 
         final Channel inboundChannel = ctx.channel();
         bootstrap.group(inboundChannel.eventLoop())

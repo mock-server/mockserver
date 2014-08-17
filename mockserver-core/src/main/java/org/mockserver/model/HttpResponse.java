@@ -11,6 +11,7 @@ import java.util.*;
 public class HttpResponse extends Action {
     private Integer statusCode = 200;
     private Body body = new StringBody("");
+    private byte[] rawBodyBytes = null;
     private Map<String, Header> headers = new LinkedHashMap<String, Header>();
     private Map<String, Cookie> cookies = new LinkedHashMap<String, Cookie>();
     private Delay delay;
@@ -57,6 +58,7 @@ public class HttpResponse extends Action {
      */
     public HttpResponse withBody(byte[] body) {
         this.body = new BinaryBody(body);
+        this.rawBodyBytes = body;
         return this;
     }
 
@@ -81,11 +83,18 @@ public class HttpResponse extends Action {
      */
     public HttpResponse withBody(Body body) {
         this.body = body;
+        if (body instanceof BinaryBody) {
+            this.rawBodyBytes = ((BinaryBody) body).getValue();
+        }
         return this;
     }
 
     public Body getBody() {
         return body;
+    }
+
+    public byte[] getRawBodyBytes() {
+        return rawBodyBytes;
     }
 
     @JsonIgnore

@@ -5,6 +5,7 @@ import org.mockserver.model.Delay;
 
 import java.util.concurrent.TimeUnit;
 
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 
@@ -33,5 +34,15 @@ public class DelayDTOTest {
         // then
         assertThat(delay.getTimeUnit(), is(TimeUnit.DAYS));
         assertThat(delay.getValue(), is(5l));
+    }
+
+    @Test
+    public void shouldHandleNullInput() {
+        // when
+        DelayDTO delay = new DelayDTO(null);
+
+        // then
+        assertThat(delay.getTimeUnit(), is(nullValue()));
+        assertThat(delay.getValue(), is(0l));
     }
 }

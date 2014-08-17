@@ -1,5 +1,6 @@
 package org.mockserver.client.http;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import org.apache.commons.lang3.StringUtils;
@@ -23,6 +24,7 @@ import org.mockserver.client.serialization.ObjectMapperFactory;
 import org.mockserver.mappers.ApacheHttpClientToMockServerResponseMapper;
 import org.mockserver.model.*;
 import org.mockserver.socket.SSLFactory;
+import org.mockserver.url.URLEncoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,6 +41,12 @@ import java.util.List;
  */
 public class ApacheHttpClient {
 
+    @VisibleForTesting
+    static final TrustStrategy trustStrategy = new TrustStrategy() {
+        public boolean isTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+            return true;
+        }
+    };
     private static final Logger logger = LoggerFactory.getLogger(ApacheHttpClient.class);
     private ApacheHttpClientToMockServerResponseMapper apacheHttpClientToMockServerResponseMapper = new ApacheHttpClientToMockServerResponseMapper();
     private CloseableHttpClient httpClient;
@@ -51,17 +59,13 @@ public class ApacheHttpClient {
                         .setSslcontext(
                                 SSLContexts
                                         .custom()
-                                        .loadTrustMaterial(SSLFactory.getInstance().buildKeyStore(), new TrustStrategy() {
-                                            public boolean isTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-                                                return true;
-                                            }
-                                        })
+                                        .loadTrustMaterial(SSLFactory.getInstance().buildKeyStore(), trustStrategy)
                                         .build()
                         )
                         .setHostnameVerifier(new AllowAllHostnameVerifier());
             }
 
-            // TODO the section below if commented out as it is still experimental
+            // TODO(jamesdbloom) the section below if commented out as it is still experimental
 //            System.getProperty("http.keepAlive", "false");
 //            httpClientBuilder
 //                    .setKeepAliveStrategy(new ConnectionKeepAliveStrategy() {

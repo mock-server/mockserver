@@ -1,7 +1,9 @@
 package org.mockserver.client.server;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.http.ApacheHttpClient;
@@ -13,16 +15,22 @@ import org.mockserver.model.*;
 
 import java.io.UnsupportedEncodingException;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.HttpResponse.response;
 
 /**
  * @author jamesdbloom
  */
 public class MockServerClientTest {
+
+    @Rule
+    public ExpectedException exception = ExpectedException.none();
 
     @Mock
     private ApacheHttpClient mockApacheHttpClient;
@@ -36,6 +44,28 @@ public class MockServerClientTest {
         mockServerClient = new MockServerClient("localhost", 8080);
 
         initMocks(this);
+    }
+
+    @Test
+    public void shouldHandleNullHostnameExceptions() {
+        // given
+        exception.expect(IllegalArgumentException.class);
+        exception.expectMessage(containsString("Host can not be null or empty"));
+
+
+        // when
+        new MockServerClient(null, 8080);
+    }
+
+    @Test
+    public void shouldHandleNullContextPathExceptions() {
+        // given
+        exception.expect(IllegalArgumentException.class);
+        exception.expectMessage(containsString("ContextPath can not be null"));
+
+
+        // when
+        new MockServerClient("localhost", 8080, null);
     }
 
     @Test
@@ -222,6 +252,16 @@ public class MockServerClientTest {
     }
 
     @Test
+    public void shouldSendClearRequestForNullRequest() throws Exception {
+        // when
+        mockServerClient
+                .clear(null);
+
+        // then
+        verify(mockApacheHttpClient).sendPUTRequest("http://localhost:8080", "/clear", "");
+    }
+
+    @Test
     public void shouldReceiveExpectationsAsObjects() throws UnsupportedEncodingException {
         // given
         Expectation[] expectations = {};
@@ -342,7 +382,7 @@ public class MockServerClientTest {
     }
 
     @Test(expected = AssertionError.class)
-    public void shouldVerifyNoMatch() throws UnsupportedEncodingException {
+    public void shouldVerifyZeroMatches() throws UnsupportedEncodingException {
         // given
         when(mockApacheHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn("body");
         when(expectationSerializer.deserializeArray(anyString())).thenReturn(new Expectation[]{});
@@ -354,6 +394,16 @@ public class MockServerClientTest {
                                 .withPath("/some_path")
                                 .withBody(new StringBody("some_request_body", Body.Type.STRING))
                 );
+    }
+
+    @Test(expected = AssertionError.class)
+    public void shouldVerifyNullExpectationsReturned() throws UnsupportedEncodingException {
+        // given
+        when(mockApacheHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn("body");
+        when(expectationSerializer.deserializeArray(anyString())).thenReturn(null);
+
+        // when
+        mockServerClient.verify(request(), org.mockserver.client.proxy.Times.exactly(2));
     }
 
     @Test
@@ -415,6 +465,33 @@ public class MockServerClientTest {
         // no assertion exception thrown
     }
 
+    @Test
+    public void shouldVerifyExactRequestCountWithResponseFilter() throws UnsupportedEncodingException {
+        // given
+        when(mockApacheHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn("body");
+        when(expectationSerializer.deserializeArray(anyString())).thenReturn(new Expectation[]{
+                new ExpectationDTO()
+                        .setHttpResponse(new HttpResponseDTO(
+                                response()
+                                        .withBody(new StringBody("some_response_body"))
+                        ))
+                        .buildObject()
+        });
+
+        // when
+        mockServerClient
+                .verify(
+                        request()
+                                .withPath("/some_path")
+                                .withBody(new StringBody("some_request_body")),
+                        response()
+                                .withBody(new StringBody("some_response_body")),
+                        org.mockserver.client.proxy.Times.exactly(1)
+                );
+
+        // no assertion exception thrown
+    }
+
     @Test(expected = AssertionError.class)
     public void shouldVerifyNotExactRequestCount() throws UnsupportedEncodingException {
         // given
@@ -431,6 +508,37 @@ public class MockServerClientTest {
                                 .withPath("/some_path")
                                 .withBody(new StringBody("some_request_body", Body.Type.STRING)),
                         org.mockserver.client.proxy.Times.exactly(1)
+                );
+    }
+
+    @Test(expected = AssertionError.class)
+    public void shouldVerifyNotExactRequestCountWithResponseFilter() throws UnsupportedEncodingException {
+        // given
+        when(mockApacheHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn("body");
+        when(expectationSerializer.deserializeArray(anyString())).thenReturn(new Expectation[]{
+                new ExpectationDTO()
+                        .setHttpResponse(new HttpResponseDTO(
+                                response()
+                                        .withBody(new StringBody("some_other_response_body"))
+                        ))
+                        .buildObject(),
+                new ExpectationDTO()
+                        .setHttpResponse(new HttpResponseDTO(
+                                response()
+                                        .withBody(new StringBody("some_response_body"))
+                        ))
+                        .buildObject()
+        });
+
+        // when
+        mockServerClient
+                .verify(
+                        new HttpRequest()
+                                .withPath("/some_path")
+                                .withBody(new StringBody("some_request_body", Body.Type.STRING)),
+                        response()
+                                .withBody(new StringBody("some_response_body")),
+                        org.mockserver.client.proxy.Times.exactly(2)
                 );
     }
 
@@ -492,5 +600,20 @@ public class MockServerClientTest {
                                 .withBody(new StringBody("some_request_body", Body.Type.STRING)),
                         org.mockserver.client.proxy.Times.exactly(2)
                 );
+    }
+
+    @Test
+    public void shouldHandleNullHttpRequest() {
+        exception.expect(IllegalArgumentException.class);
+        exception.expectMessage(containsString("verify(HttpRequest) requires a non null HttpRequest object"));
+
+        // when
+        mockServerClient.verify(null, org.mockserver.client.proxy.Times.exactly(2));
+    }
+
+    @Test(expected = AssertionError.class)
+    public void shouldHandleNullTimes() {
+        // when
+        mockServerClient.verify(request(), null);
     }
 }

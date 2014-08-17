@@ -158,7 +158,9 @@ public class HttpProxy {
 
     private ChannelFuture createHTTPChannel(final Integer port, final Integer securePort) throws ExecutionException, InterruptedException {
         boolean condition = port != null;
-        if (condition) logger.info("Starting HTTP proxy & HTTPS CONNECT port [" + port + "]");
+        if (condition) {
+            logger.info("Starting HTTP proxy & HTTPS CONNECT port [" + port + "]");
+        }
         return createBootstrap(condition, new ChannelInitializer<SocketChannel>() {
             @Override
             protected void initChannel(SocketChannel ch) throws Exception {
@@ -176,7 +178,9 @@ public class HttpProxy {
 
     private ChannelFuture createHTTPSChannel(final Integer securePort) throws ExecutionException, InterruptedException {
         boolean condition = securePort != null;
-        if (condition) logger.info("Starting HTTPS proxy port [" + securePort + "]");
+        if (condition) {
+            logger.info("Starting HTTPS proxy port [" + securePort + "]");
+        }
         return createBootstrap(condition, new ChannelInitializer<SocketChannel>() {
             @Override
             protected void initChannel(SocketChannel ch) throws Exception {
@@ -199,7 +203,9 @@ public class HttpProxy {
 
     private ChannelFuture createSOCKSChannel(final Integer socksPort, final Integer port) throws ExecutionException, InterruptedException {
         boolean condition = socksPort != null && port != null;
-        if (condition) logger.info("Starting SOCKS proxy port [" + socksPort + "]");
+        if (condition) {
+            logger.info("Starting SOCKS proxy port [" + socksPort + "]");
+        }
         return createBootstrap(condition, new ChannelInitializer<SocketChannel>() {
             @Override
             protected void initChannel(SocketChannel ch) throws Exception {
@@ -218,7 +224,9 @@ public class HttpProxy {
 
     private ChannelFuture createDirectChannel(final Integer directLocalPort, final String directRemoteHost, final Integer directRemotePort) throws ExecutionException, InterruptedException {
         boolean condition = directLocalPort != null && directRemoteHost != null && directRemotePort != null;
-        if (condition) logger.info("Starting Direct proxy from port [" + directLocalPort + "] to host [" + directRemoteHost + ":" + directRemotePort + "]");
+        if (condition) {
+            logger.info("Starting Direct proxy from port [" + directLocalPort + "] to host [" + directRemoteHost + ":" + directRemotePort + "]");
+        }
         return createBootstrap(condition, new ChannelInitializer<SocketChannel>() {
             @Override
             protected void initChannel(SocketChannel ch) throws Exception {
@@ -234,7 +242,9 @@ public class HttpProxy {
 
     private ChannelFuture createDirectSecureChannel(final Integer directLocalSecurePort, final String directRemoteHost, final Integer directRemotePort) throws ExecutionException, InterruptedException {
         boolean condition = directLocalSecurePort != null && directRemoteHost != null && directRemotePort != null;
-        if (condition) logger.info("Starting Direct SSL proxy from port [" + directLocalSecurePort + "] to host [" + directRemoteHost + ":" + directRemotePort + "]");
+        if (condition) {
+            logger.info("Starting Direct SSL proxy from port [" + directLocalSecurePort + "] to host [" + directRemoteHost + ":" + directRemotePort + "]");
+        }
         return createBootstrap(condition, new ChannelInitializer<SocketChannel>() {
             @Override
             protected void initChannel(SocketChannel ch) throws Exception {

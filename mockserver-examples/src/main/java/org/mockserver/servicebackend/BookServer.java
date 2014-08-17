@@ -7,7 +7,6 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.*;
-import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.ssl.SslHandler;
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -34,11 +33,11 @@ import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
  */
 public class BookServer {
 
+    private static ServerBootstrap serverBootstrap;
     private final Map<String, Book> booksDB = createBookData();
     private final ObjectMapper objectMapper = createObjectMapper();
     private final int httpPort;
     private final boolean secure;
-    private static ServerBootstrap serverBootstrap;
 
     public BookServer(int httpPort, boolean secure) {
         this.httpPort = httpPort;
@@ -47,7 +46,7 @@ public class BookServer {
 
     @PostConstruct
     public void startServer() throws InterruptedException {
-        if(serverBootstrap == null) {
+        if (serverBootstrap == null) {
             try {
                 serverBootstrap = new ServerBootstrap()
                         .group(new NioEventLoopGroup(1), new NioEventLoopGroup(1))

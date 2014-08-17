@@ -20,7 +20,9 @@ import org.mockserver.model.HttpResponse;
 import org.mockserver.model.Parameter;
 
 import java.io.IOException;
+import java.security.cert.CertificateException;
 
+import static junit.framework.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.mockito.Matchers.any;
@@ -356,5 +358,10 @@ public class ApacheHttpClientTest {
                         .withURL("http\\://this_is_an_invalid_url"),
                 false
         );
+    }
+
+    @Test
+    public void shouldAlwaysIndicateCertificationIsTrusted() throws CertificateException {
+        assertTrue(ApacheHttpClient.trustStrategy.isTrusted(null, null));
     }
 }

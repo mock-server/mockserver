@@ -75,9 +75,4 @@ public class RegexStringMatcher extends BodyMatcher<String> implements Matcher<S
         }
         return result;
     }
-
-    @Override
-    public String[] fieldsExcludedFromEqualsAndHashCode() {
-        return new String[]{"logger"};
-    }
 }

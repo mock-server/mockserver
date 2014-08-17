@@ -5,6 +5,7 @@ import com.google.common.base.Splitter;
 import io.netty.handler.codec.http.HttpHeaders;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.model.*;
+import org.mockserver.url.URLParser;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.COOKIE;
 
@@ -33,7 +34,12 @@ public class NettyToMockServerRequestMapper {
 
     private void setUrl(HttpRequest httpRequest, NettyHttpRequest mockServerHttpRequest) {
         String hostAndPort = mockServerHttpRequest.headers().get(HttpHeaders.Names.HOST);
-        httpRequest.withURL("http" + (mockServerHttpRequest.isSecure() ? "s" : "") + "://" + (hostAndPort != null ? hostAndPort : "localhost") + mockServerHttpRequest.getUri());
+        String uri = mockServerHttpRequest.getUri();
+        if (URLParser.isFullUrl(uri)) {
+            httpRequest.withURL(uri);
+        } else {
+            httpRequest.withURL("http" + (mockServerHttpRequest.isSecure() ? "s" : "") + "://" + (hostAndPort != null ? hostAndPort : "localhost") + uri);
+        }
     }
 
     private void setPath(HttpRequest httpRequest, NettyHttpRequest mockServerHttpRequest) {

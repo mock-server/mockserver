@@ -1,4 +1,4 @@
-package org.mockserver.client.http;
+package org.mockserver.url;
 
 import com.google.common.base.Charsets;
 import org.slf4j.Logger;
@@ -25,7 +25,7 @@ public class URLEncoder {
         }
     }
 
-    protected static String encodeURL(String input) {
+    public static String encodeURL(String input) {
         try {
             byte[] sourceBytes = URLDecoder.decode(input, Charsets.UTF_8.name()).getBytes(Charsets.UTF_8);
             ByteArrayOutputStream bos = new ByteArrayOutputStream(sourceBytes.length);

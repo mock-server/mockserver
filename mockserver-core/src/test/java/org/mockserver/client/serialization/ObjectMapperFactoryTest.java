@@ -134,6 +134,178 @@ public class ObjectMapperFactoryTest {
     }
 
     @Test
+    public void shouldParseJSONWithInvalidBody() throws IOException {
+        // given
+        String json = ("{" + System.getProperty("line.separator") +
+                "    \"httpRequest\": {" + System.getProperty("line.separator") +
+                "        \"body\" : {" + System.getProperty("line.separator") +
+                "        }" + System.getProperty("line.separator") +
+                "    }" + System.getProperty("line.separator") +
+                "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+                .setHttpRequest(
+                        new HttpRequestDTO()
+                ), expectationDTO);
+    }
+
+    @Test
+    public void shouldParseJSONWithMissingTypeFromBody() throws IOException {
+        // given
+        String json = ("{" + System.getProperty("line.separator") +
+                "    \"httpRequest\": {" + System.getProperty("line.separator") +
+                "        \"body\" : {" + System.getProperty("line.separator") +
+                "            \"value\" : \"some_value\"" + System.getProperty("line.separator") +
+                "        }" + System.getProperty("line.separator") +
+                "    }" + System.getProperty("line.separator") +
+                "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+                .setHttpRequest(
+                        new HttpRequestDTO()
+                ), expectationDTO);
+    }
+
+    @Test
+    public void shouldParseJSONWithMissingValueFromBody() throws IOException {
+        // given
+        String json = ("{" + System.getProperty("line.separator") +
+                "    \"httpRequest\": {" + System.getProperty("line.separator") +
+                "        \"body\" : {" + System.getProperty("line.separator") +
+                "            \"type\" : \"STRING\"" + System.getProperty("line.separator") +
+                "        }" + System.getProperty("line.separator") +
+                "    }" + System.getProperty("line.separator") +
+                "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+                .setHttpRequest(
+                        new HttpRequestDTO()
+                ), expectationDTO);
+    }
+
+    @Test
+    public void shouldParseJSONWithWrongFieldInBody() throws IOException {
+        // given
+        String json = ("{" + System.getProperty("line.separator") +
+                "    \"httpRequest\": {" + System.getProperty("line.separator") +
+                "        \"body\" : {" + System.getProperty("line.separator") +
+                "            \"type\" : \"STRING\"," + System.getProperty("line.separator") +
+                "            \"wrong_name\" : \"some_value\"" + System.getProperty("line.separator") +
+                "        }" + System.getProperty("line.separator") +
+                "    }" + System.getProperty("line.separator") +
+                "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+                .setHttpRequest(
+                        new HttpRequestDTO()
+                ), expectationDTO);
+    }
+
+    @Test
+    public void shouldParseJSONWithWrongValueFieldTypeInStringBody() throws IOException {
+        // given
+        String json = ("{" + System.getProperty("line.separator") +
+                "    \"httpRequest\": {" + System.getProperty("line.separator") +
+                "        \"body\" : {" + System.getProperty("line.separator") +
+                "            \"type\" : \"STRING\"," + System.getProperty("line.separator") +
+                "            \"value\" : 1" + System.getProperty("line.separator") +
+                "        }" + System.getProperty("line.separator") +
+                "    }" + System.getProperty("line.separator") +
+                "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+                .setHttpRequest(
+                        new HttpRequestDTO()
+                ), expectationDTO);
+    }
+
+    @Test
+    public void shouldParseJSONWithWrongValueFieldTypeInBinaryBody() throws IOException {
+        // given
+        String json = ("{" + System.getProperty("line.separator") +
+                "    \"httpRequest\": {" + System.getProperty("line.separator") +
+                "        \"body\" : {" + System.getProperty("line.separator") +
+                "            \"type\" : \"BINARY\"," + System.getProperty("line.separator") +
+                "            \"value\" : 1" + System.getProperty("line.separator") +
+                "        }" + System.getProperty("line.separator") +
+                "    }" + System.getProperty("line.separator") +
+                "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+                .setHttpRequest(
+                        new HttpRequestDTO()
+                ), expectationDTO);
+    }
+
+    @Test
+    public void shouldParseJSONWithWrongValueFieldTypeInParameterBody() throws IOException {
+        // given
+        String json = ("{" + System.getProperty("line.separator") +
+                "    \"httpRequest\": {" + System.getProperty("line.separator") +
+                "        \"body\" : {" + System.getProperty("line.separator") +
+                "            \"type\" : \"PARAMETERS\"," + System.getProperty("line.separator") +
+                "            \"value\" : 1" + System.getProperty("line.separator") +
+                "        }" + System.getProperty("line.separator") +
+                "    }" + System.getProperty("line.separator") +
+                "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+                .setHttpRequest(
+                        new HttpRequestDTO()
+                ), expectationDTO);
+    }
+
+    @Test
+    public void shouldParseJSONWithWrongTypeFieldTypeInBody() throws IOException {
+        // given
+        String json = ("{" + System.getProperty("line.separator") +
+                "    \"httpRequest\": {" + System.getProperty("line.separator") +
+                "        \"body\" : {" + System.getProperty("line.separator") +
+                "            \"type\" : 1," + System.getProperty("line.separator") +
+                "            \"value\" : \"some_value\"" + System.getProperty("line.separator") +
+                "        }" + System.getProperty("line.separator") +
+                "    }" + System.getProperty("line.separator") +
+                "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+                .setHttpRequest(
+                        new HttpRequestDTO()
+                ), expectationDTO);
+    }
+
+    @Test
     public void shouldParseJSONWithExactStringBody() throws IOException {
         // given
         String json = ("{" + System.getProperty("line.separator") +
@@ -246,6 +418,63 @@ public class ObjectMapperFactoryTest {
                 .setHttpRequest(
                         new HttpRequestDTO()
                                 .setBody(new BinaryBodyDTO(new BinaryBody("some_value".getBytes())))
+                ), expectationDTO);
+    }
+
+    @Test
+    public void shouldParseJSONWithParameterBody() throws IOException {
+        // given
+        String json = ("{" + System.getProperty("line.separator") +
+                "    \"httpRequest\": {" + System.getProperty("line.separator") +
+                "        \"body\" : {" + System.getProperty("line.separator") +
+                "            \"type\" : \"PARAMETERS\"," + System.getProperty("line.separator") +
+                "            \"parameters\" : [ {" + System.getProperty("line.separator") +
+                "                    \"name\" : \"parameterOneName\"," + System.getProperty("line.separator") +
+                "                    \"values\" : [ \"parameterOneValueOne\", \"parameterOneValueTwo\" ]" + System.getProperty("line.separator") +
+                "                }, {" + System.getProperty("line.separator") +
+                "                    \"name\" : \"parameterTwoName\"," + System.getProperty("line.separator") +
+                "                    \"values\" : [ \"parameterTwoValue\" ]" + System.getProperty("line.separator") +
+                "            } ]" + System.getProperty("line.separator") +
+                "        }" + System.getProperty("line.separator") +
+                "    }" + System.getProperty("line.separator") +
+                "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+                .setHttpRequest(
+                        new HttpRequestDTO()
+                                .setBody(new ParameterBodyDTO(new ParameterBody(
+                                        new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
+                                        new Parameter("parameterTwoName", "parameterTwoValue")
+                                )))
+                ), expectationDTO);
+    }
+
+    @Test
+    public void shouldParseJSONWithInvalidArrayParameterBody() throws IOException {
+        // given
+        String json = ("{" + System.getProperty("line.separator") +
+                "    \"httpRequest\": {" + System.getProperty("line.separator") +
+                "        \"body\" : {" + System.getProperty("line.separator") +
+                "            \"type\" : \"PARAMETERS\"," + System.getProperty("line.separator") +
+                "            \"parameters\" : {" + System.getProperty("line.separator") +
+                "                    \"name\" : \"parameterOneName\"," + System.getProperty("line.separator") +
+                "                    \"values\" : [ \"parameterOneValueOne\", \"parameterOneValueTwo\" ]" + System.getProperty("line.separator") +
+                "                }" + System.getProperty("line.separator") +
+                "        }" + System.getProperty("line.separator") +
+                "    }" + System.getProperty("line.separator") +
+                "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+                .setHttpRequest(
+                        new HttpRequestDTO()
                 ), expectationDTO);
     }
 }

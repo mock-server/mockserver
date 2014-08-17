@@ -1,31 +1,37 @@
 package org.mockserver.socket;
 
-import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.asn1.ASN1Encodable;
-import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.DERSequence;
-import org.bouncycastle.asn1.x500.style.RFC4519Style;
+import org.bouncycastle.asn1.x509.BasicConstraints;
 import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.asn1.x509.GeneralName;
+import org.bouncycastle.asn1.x509.X509Extensions;
 import org.bouncycastle.jce.X509Principal;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.x509.X509V1CertificateGenerator;
 import org.bouncycastle.x509.X509V3CertificateGenerator;
 
 import java.math.BigInteger;
 import java.security.*;
 import java.security.cert.X509Certificate;
-import java.util.*;
-import org.bouncycastle.asn1.x509.BasicConstraints;
-import org.bouncycastle.asn1.x509.Extensions;
-import org.bouncycastle.asn1.x509.ExtensionsGenerator;
-import org.bouncycastle.asn1.x509.X509Extensions;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 /**
  * @author jamesdbloom
  */
 @SuppressWarnings("deprecation")
 public class KeyStoreFactory {
+
+    /**
+     * Create a random 2048 bit RSA key pair
+     */
+    public static KeyPair generateRSAKeyPair() throws Exception {
+        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+        KeyPairGenerator kpGen = KeyPairGenerator.getInstance("RSA", BouncyCastleProvider.PROVIDER_NAME);
+        kpGen.initialize(2048, new SecureRandom());
+        return kpGen.generateKeyPair();
+    }
 
     /**
      * we generate the AC issuer's certificate
@@ -110,16 +116,6 @@ public class KeyStoreFactory {
         cert.verify(certificateAuthorityPublicKey);
 
         return cert;
-    }
-
-    /**
-     * Create a random 2048 bit RSA key pair
-     */
-    public static KeyPair generateRSAKeyPair() throws Exception {
-        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
-        KeyPairGenerator kpGen = KeyPairGenerator.getInstance("RSA", BouncyCastleProvider.PROVIDER_NAME);
-        kpGen.initialize(2048, new SecureRandom());
-        return kpGen.generateKeyPair();
     }
 
     /**

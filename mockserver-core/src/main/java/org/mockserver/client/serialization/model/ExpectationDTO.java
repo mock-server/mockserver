@@ -18,17 +18,19 @@ public class ExpectationDTO extends EqualsHashCodeToString {
     private TimesDTO times;
 
     public ExpectationDTO(Expectation expectation) {
-        if (expectation.getHttpRequest() != null) {
-            httpRequest = new HttpRequestDTO(expectation.getHttpRequest());
-        }
-        if (expectation.getHttpResponse(false) != null) {
-            httpResponse = new HttpResponseDTO(expectation.getHttpResponse(false));
-        }
-        if (expectation.getHttpForward() != null) {
-            httpForward = new HttpForwardDTO(expectation.getHttpForward());
-        }
-        if (expectation.getTimes() != null) {
-            times = new TimesDTO(expectation.getTimes());
+        if (expectation != null) {
+            if (expectation.getHttpRequest() != null) {
+                httpRequest = new HttpRequestDTO(expectation.getHttpRequest());
+            }
+            if (expectation.getHttpResponse(false) != null) {
+                httpResponse = new HttpResponseDTO(expectation.getHttpResponse(false));
+            }
+            if (expectation.getHttpForward() != null) {
+                httpForward = new HttpForwardDTO(expectation.getHttpForward());
+            }
+            if (expectation.getTimes() != null) {
+                times = new TimesDTO(expectation.getTimes());
+            }
         }
     }
 

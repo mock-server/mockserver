@@ -10,9 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * @author jamesdbloom
@@ -29,7 +27,7 @@ public class NettyHttpRequestTest {
 
         // then
         assertEquals("http://localhost:9090/somePath?queryStringParameterNameOne=queryStringParameterValueOne_One&queryStringParameterNameOne=queryStringParameterValueOne_Two;queryStringParameterNameTwo=queryStringParameterValueTwo_One", nettyHttpRequest.getUri());
-        assertEquals("http://localhost:9090/somePath", nettyHttpRequest.path());
+        assertEquals("/somePath", nettyHttpRequest.path());
         assertEquals(Arrays.asList("queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"), parameters.get("queryStringParameterNameOne"));
         assertEquals(Arrays.asList("queryStringParameterValueTwo_One"), parameters.get("queryStringParameterNameTwo"));
     }
