@@ -13,7 +13,7 @@
     <url>http://www.mock-server.com</url>
 
     <properties>
-        <releaseRuby>true</releaseRuby>
+        <skipRubyRelease>true</skipRubyRelease>
     </properties>
 
     <build>
@@ -64,7 +64,7 @@
                             <goal>exec</goal>
                         </goals>
                         <configuration>
-                            <skip>${releaseRuby}</skip>
+                            <skip>${skipRubyRelease}</skip>
                             <executable>bundle</executable>
                             <arguments>
                                 <argument>exec</argument>
