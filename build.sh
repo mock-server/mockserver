@@ -42,6 +42,6 @@ if [ $? -eq 0 ]; then
         mvn clean install
     else
         # only release if both java 7 and 6 are running correctly
-        mvn clean $1
+        mvn clean $1 -DskipRubyRelease=true
     fi
 fi

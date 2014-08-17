@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>mockserver</artifactId>
         <groupId>org.mock-server</groupId>
@@ -11,6 +11,10 @@
     <name>MockServer Ruby Client</name>
     <description>A ruby client for the MockServer</description>
     <url>http://www.mock-server.com</url>
+
+    <properties>
+        <releaseRuby>true</releaseRuby>
+    </properties>
 
     <build>
         <plugins>
@@ -60,6 +64,7 @@
                             <goal>exec</goal>
                         </goals>
                         <configuration>
+                            <skip>${releaseRuby}</skip>
                             <executable>bundle</executable>
                             <arguments>
                                 <argument>exec</argument>
