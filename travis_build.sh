@@ -30,7 +30,7 @@ if [ $JAVA_VER -eq 17 ]; then
     echo "----- JAVA 1.7 -----"
     echo "--------------------"
     echo
-    for module in . core client integration-testing war proxy-war netty maven-plugin maven-plugin-integration-tests javascript examples; do
+    for module in . core client-java integration-testing war proxy-war netty maven-plugin maven-plugin-integration-tests client-javascript client-ruby examples; do
         cd $current_directory/mockserver-$module;
         echo
         echo ==== `pwd` ====;
@@ -47,7 +47,7 @@ if [ $JAVA_VER -eq 18 ]; then
     echo "----- JAVA 1.8 -----"
     echo "--------------------"
     echo
-    for module in . core client integration-testing war proxy-war netty maven-plugin maven-plugin-integration-tests javascript examples; do
+    for module in . core client-java integration-testing war proxy-war netty maven-plugin maven-plugin-integration-tests client-javascript client-ruby examples; do
         cd $current_directory/mockserver-$module;
         echo
         echo ==== `pwd` ====;

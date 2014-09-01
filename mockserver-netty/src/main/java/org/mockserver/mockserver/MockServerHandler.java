@@ -26,7 +26,11 @@ import org.slf4j.LoggerFactory;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONNECTION;
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH;
+import static io.netty.handler.codec.http.HttpHeaders.is100ContinueExpected;
 import static io.netty.handler.codec.http.HttpHeaders.isKeepAlive;
+import static io.netty.handler.codec.http.HttpResponseStatus.CONTINUE;
+import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
+import static org.mockserver.model.Header.header;
 
 public class MockServerHandler extends SimpleChannelInboundHandler<Object> {
 
@@ -89,13 +93,13 @@ public class MockServerHandler extends SimpleChannelInboundHandler<Object> {
 
                     if (mockServerHttpRequest.matches(HttpMethod.PUT, "/stop")) {
 
-                        writeResponse(ctx, new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.ACCEPTED), isKeepAlive(request));
+                        writeResponse(ctx, new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.ACCEPTED), isKeepAlive(request), is100ContinueExpected(request));
                         ctx.close();
                         server.stop();
 
                     } else {
 
-                        writeResponse(ctx, mockResponse(mockServerHttpRequest), isKeepAlive(request));
+                        writeResponse(ctx, mockResponse(mockServerHttpRequest), isKeepAlive(request), is100ContinueExpected(request));
 
                     }
                 }
@@ -106,13 +110,18 @@ public class MockServerHandler extends SimpleChannelInboundHandler<Object> {
         }
     }
 
-    private void writeResponse(ChannelHandlerContext ctx, FullHttpResponse response, boolean isKeepAlive) {
+    private void writeResponse(ChannelHandlerContext ctx, FullHttpResponse response, boolean isKeepAlive, boolean is100ContinueExpected) {
+        // Add 'Content-Length' header only for a keep-alive connection.
+        response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
         if (isKeepAlive) {
-            // Add 'Content-Length' header only for a keep-alive connection.
-            response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
             // Add keep alive header as per:
             // - http://www.w3.org/Protocols/HTTP/1.1/draft-ietf-http-v11-spec-01.html#Connection
             response.headers().set(CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
+        } else {
+            response.headers().set(CONNECTION, HttpHeaders.Values.CLOSE);
+        }
+        if (is100ContinueExpected) {
+            ctx.write(new DefaultFullHttpResponse(HTTP_1_1, CONTINUE));
         }
         ctx.write(response);
         ctx.flush();
