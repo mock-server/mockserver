@@ -2,6 +2,7 @@ package org.mockserver.registration.serialization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
+import java.util.List;
 import org.mockserver.client.serialization.ObjectMapperFactory;
 import org.mockserver.model.EqualsHashCodeToString;
 import org.mockserver.registration.model.ServiceRegistrationResponse;
@@ -24,6 +25,17 @@ public class ServiceRegistrationResponseSerializer extends EqualsHashCodeToStrin
         } catch (IOException ioe) {
             this.logger.error(String.format("Exception while serializing serviceRegistrationResponse to JSON with value %s", serviceRegistrationResponse), ioe);
             throw new RuntimeException(String.format("Exception while serializing serviceRegistrationResponse to JSON with value %s", serviceRegistrationResponse), ioe);
+        }
+    }
+
+    public String serialize(List<ServiceRegistrationResponse> serviceRegistrationResponses) {
+        try {
+            return this.objectMapper
+                    .writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(serviceRegistrationResponses.toArray(new ServiceRegistrationResponse[]{}));
+        } catch (IOException ioe) {
+            this.logger.error(String.format("Exception while serializing serviceRegistrationResponse to JSON with value %s", serviceRegistrationResponses), ioe);
+            throw new RuntimeException(String.format("Exception while serializing serviceRegistrationResponse to JSON with value %s", serviceRegistrationResponses), ioe);
         }
     }
 

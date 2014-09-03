@@ -13,6 +13,7 @@ import org.mockserver.registration.model.ServiceRegistrationResponse;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockserver.registration.curator.AddressUtils.getLocalHostAddress;
 import static org.mockserver.registration.curator.AddressUtils.toStandardAddressScheme;
 
 /**
@@ -28,7 +29,7 @@ public class CuratorServiceRegistryTest {
     private static final String ZOOKEEPER_BASE_PATH = "/services/stage";
     private static final Set<InetSocketAddress> ZOOKEEPER_ADDRESSES = ImmutableSet.<InetSocketAddress>builder()
             .add(new InetSocketAddress(ZOOKEEPER_HOST, ZOOKEEPER_PORT)).build();
-    private static final InetSocketAddress MOCKSERVER_ADDRESS = new InetSocketAddress(ZOOKEEPER_HOST, 2000);
+    private static final int PORT = 2000;
 
     private TestingServer zkTestServer;
     private CuratorServiceRegistry serviceRegistry;
@@ -45,11 +46,11 @@ public class CuratorServiceRegistryTest {
 
         this.serviceRegistration.setServiceId(serviceId);
         this.serviceRegistration.setServiceName(serviceName);
-        this.serviceRegistration.setServiceAddress(toStandardAddressScheme(MOCKSERVER_ADDRESS));
+        this.serviceRegistration.setServiceAddress(toStandardAddressScheme(getLocalHostAddress(PORT)));
 
         //Create configuration for the curator service registry
         CuratorRegistryConfiguration curatorRegistryConfiguration = new CuratorRegistryConfiguration()
-                .setMockserverAddress(MOCKSERVER_ADDRESS)
+                .setMockserverPort(PORT)
                 .setZookeeperAddresses(ZOOKEEPER_ADDRESSES)
                 .setZookeeperBasePath(ZOOKEEPER_BASE_PATH);
         this.serviceRegistry = new CuratorServiceRegistry(curatorRegistryConfiguration);

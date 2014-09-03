@@ -13,7 +13,7 @@ public class CuratorRegistryConfiguration {
 
     private Set<InetSocketAddress> zookeeperAddresses;
     private String zookeeperBasePath;
-    private InetSocketAddress mockserverAddress;
+    private int mockserverPort;
 
     public CuratorRegistryConfiguration() {
     }
@@ -36,12 +36,12 @@ public class CuratorRegistryConfiguration {
         return this;
     }
 
-    public InetSocketAddress getMockserverAddress() {
-        return this.mockserverAddress;
+    public int getMockserverPort() {
+        return mockserverPort;
     }
 
-    public CuratorRegistryConfiguration setMockserverAddress(InetSocketAddress mockserverAddress) {
-        this.mockserverAddress = mockserverAddress;
+    public CuratorRegistryConfiguration setMockserverPort(int mockserverPort) {
+        this.mockserverPort = mockserverPort;
         return this;
     }
 }

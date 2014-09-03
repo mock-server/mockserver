@@ -20,6 +20,7 @@ import org.mockserver.registration.ServiceRegistry;
 import org.mockserver.registration.model.ServiceRegistrationRequest;
 import org.mockserver.registration.model.ServiceRegistrationResponse;
 
+import static org.mockserver.registration.curator.AddressUtils.getLocalHostAddress;
 import static org.mockserver.registration.curator.AddressUtils.toZookeeperConnectionString;
 import static org.mockserver.registration.curator.AddressUtils.COLON_JOINER;
 
@@ -62,7 +63,7 @@ public class CuratorServiceRegistry implements ServiceRegistry {
             };
 
     public CuratorServiceRegistry(CuratorRegistryConfiguration configuration) throws Exception {
-        this.mockServerAddress = configuration.getMockserverAddress();
+        this.mockServerAddress = getLocalHostAddress(configuration.getMockserverPort());
 
         this.curatorFramework = CuratorFrameworkFactory.newClient(
                 toZookeeperConnectionString(configuration.getZookeeperAddresses()),
