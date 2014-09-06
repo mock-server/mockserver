@@ -2,7 +2,6 @@ package org.mockserver.maven;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -182,13 +181,12 @@ public class InstanceHolderTest {
         verify(mockProxy).stop();
     }
 
-    @Ignore("mockito fails for some unknown reason only on JDK6 on Linux and only for these three tests in this class")
     @Test
     public void shouldStopMockServerAndProxyRemotely() {
         // given
         InstanceHolder embeddedJettyHolder = spy(instanceHolder);
-        when(embeddedJettyHolder.newMockServerClient(1)).thenReturn(mockServerClient);
-        when(embeddedJettyHolder.newProxyClient(2)).thenReturn(proxyClient);
+        doReturn(mockServerClient).when(embeddedJettyHolder).newMockServerClient(1);
+        doReturn(proxyClient).when(embeddedJettyHolder).newProxyClient(2);
 
         // when
         embeddedJettyHolder.stop(1, 2);
@@ -198,13 +196,12 @@ public class InstanceHolderTest {
         verify(proxyClient).stop();
     }
 
-    @Ignore("mockito fails for some unknown reason only on JDK6 on Linux and only for these three tests in this class")
     @Test
     public void shouldStopMockServerOnlyRemotely() {
         // given
         InstanceHolder embeddedJettyHolder = spy(instanceHolder);
-        when(embeddedJettyHolder.newMockServerClient(1)).thenReturn(mockServerClient);
-        when(embeddedJettyHolder.newProxyClient(2)).thenReturn(proxyClient);
+        doReturn(mockServerClient).when(embeddedJettyHolder).newMockServerClient(1);
+        doReturn(proxyClient).when(embeddedJettyHolder).newProxyClient(2);
 
         // when
         embeddedJettyHolder.stop(1, -1);
@@ -214,13 +211,12 @@ public class InstanceHolderTest {
         verify(proxyClient, times(0)).stop();
     }
 
-    @Ignore("mockito fails for some unknown reason only on JDK6 on Linux and only for these three tests in this class")
     @Test
     public void shouldStopProxyOnlyRemotely() {
         // given
         InstanceHolder embeddedJettyHolder = spy(instanceHolder);
-        when(embeddedJettyHolder.newMockServerClient(1)).thenReturn(mockServerClient);
-        when(embeddedJettyHolder.newProxyClient(2)).thenReturn(proxyClient);
+        doReturn(mockServerClient).when(embeddedJettyHolder).newMockServerClient(1);
+        doReturn(proxyClient).when(embeddedJettyHolder).newProxyClient(2);
 
         // when
         embeddedJettyHolder.stop(-1, 2);

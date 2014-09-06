@@ -27,7 +27,7 @@ public class HttpProxyBuilderTest {
         // - a build and http proxy
         HttpProxyBuilder httpProxyBuilder = spy(new HttpProxyBuilder());
         HttpProxy httpProxy = mock(HttpProxy.class);
-        when(httpProxyBuilder.newHttpProxy()).thenReturn(httpProxy);
+        doReturn(httpProxy).when(httpProxyBuilder).newHttpProxy();
 
         // when
         HttpProxy actual = httpProxyBuilder.withHTTPPort(port).build();
@@ -59,7 +59,7 @@ public class HttpProxyBuilderTest {
         // - a build and http proxy
         HttpProxyBuilder httpProxyBuilder = spy(new HttpProxyBuilder());
         HttpProxy httpProxy = mock(HttpProxy.class);
-        when(httpProxyBuilder.newHttpProxy()).thenReturn(httpProxy);
+        doReturn(httpProxy).when(httpProxyBuilder).newHttpProxy();
 
         // when
         HttpProxy actual = httpProxyBuilder.withHTTPSPort(securePort).build();
@@ -91,7 +91,7 @@ public class HttpProxyBuilderTest {
         // - a build and http proxy
         HttpProxyBuilder httpProxyBuilder = spy(new HttpProxyBuilder());
         HttpProxy httpProxy = mock(HttpProxy.class);
-        when(httpProxyBuilder.newHttpProxy()).thenReturn(httpProxy);
+        doReturn(httpProxy).when(httpProxyBuilder).newHttpProxy();
 
         // when
         HttpProxy actual = httpProxyBuilder.withSOCKSPort(socksPort).build();
@@ -123,7 +123,7 @@ public class HttpProxyBuilderTest {
         // - a build and http proxy
         HttpProxyBuilder httpProxyBuilder = spy(new HttpProxyBuilder());
         HttpProxy httpProxy = mock(HttpProxy.class);
-        when(httpProxyBuilder.newHttpProxy()).thenReturn(httpProxy);
+        doReturn(httpProxy).when(httpProxyBuilder).newHttpProxy();
 
         // when
         HttpProxy actual = httpProxyBuilder.withDirect(directLocalPort, directRemoteHost, directRemotePort).build();
@@ -155,7 +155,7 @@ public class HttpProxyBuilderTest {
         // - a build and http proxy
         HttpProxyBuilder httpProxyBuilder = spy(new HttpProxyBuilder());
         HttpProxy httpProxy = mock(HttpProxy.class);
-        when(httpProxyBuilder.newHttpProxy()).thenReturn(httpProxy);
+        doReturn(httpProxy).when(httpProxyBuilder).newHttpProxy();
 
         // when
         HttpProxy actual = httpProxyBuilder.withDirectSSL(directLocalSecurePort, directRemoteHost, directRemotePort).build();

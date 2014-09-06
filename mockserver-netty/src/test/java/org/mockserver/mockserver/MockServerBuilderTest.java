@@ -22,7 +22,7 @@ public class MockServerBuilderTest {
         // - a build and http proxy
         MockServerBuilder mockServerBuilder = spy(new MockServerBuilder());
         MockServer mockServer = mock(MockServer.class);
-        when(mockServerBuilder.newMockServer()).thenReturn(mockServer);
+        doReturn(mockServer).when(mockServerBuilder).newMockServer();
 
         // when
         MockServer actual = mockServerBuilder.withHTTPPort(port).build();
@@ -44,7 +44,7 @@ public class MockServerBuilderTest {
         // - a build and http proxy
         MockServerBuilder mockServerBuilder = spy(new MockServerBuilder());
         MockServer mockServer = mock(MockServer.class);
-        when(mockServerBuilder.newMockServer()).thenReturn(mockServer);
+        doReturn(mockServer).when(mockServerBuilder).newMockServer();
 
         // when
         MockServer actual = mockServerBuilder.withHTTPSPort(securePort).build();
