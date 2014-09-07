@@ -90,7 +90,7 @@ public abstract class AbstractClientServerIntegrationTest {
         mockServerClient
                 .when(
                         request()
-                                .withPath("/test_headers_and_body")
+                                .withPath("/echo")
                 )
                 .forward(
                         forward()
@@ -104,13 +104,20 @@ public abstract class AbstractClientServerIntegrationTest {
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withHeaders(
-                                new Header("X-Test", "test_headers_and_body"),
-                                new Header("Content-Type", "text/plain")
+                                new Header("host", "127.0.0.1:" + getTestServerPort()),
+                                new Header("accept-encoding", "gzip,deflate"),
+                                new Header("x-test", "test_headers_and_body")
                         )
                         .withBody("an_example_body"),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "test_headers_and_body"),
+                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "echo")
+                                .withMethod("POST")
+                                .withHeaders(
+                                        new Header("X-Test", "test_headers_and_body"),
+                                        new Header("Content-Type", "text/plain")
+                                )
+                                .withBody("an_example_body"),
                         false
                 )
         );
@@ -119,13 +126,22 @@ public abstract class AbstractClientServerIntegrationTest {
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withHeaders(
-                                new Header("X-Test", "test_headers_and_body"),
-                                new Header("Content-Type", "text/plain")
+                                new Header("host", "127.0.0.1:" + getTestServerPort()),
+                                new Header("accept-encoding", "gzip,deflate"),
+                                new Header("x-test", "test_headers_and_body")
                         )
                         .withBody("an_example_body"),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "test_headers_and_body"),
+                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "echo")
+                                .withMethod("POST")
+                                .withHeaders(
+                                        new Header("X-Test", "test_headers_and_body"),
+                                        new Header("Host", "127.0.0.1:" + getTestServerPort()),
+                                        new Header("Accept-Encoding", "gzip,deflate"),
+                                        new Header("Content-Type", "text/plain")
+                                )
+                                .withBody("an_example_body"),
                         false
                 )
         );
@@ -137,7 +153,7 @@ public abstract class AbstractClientServerIntegrationTest {
         mockServerClient
                 .when(
                         request()
-                                .withPath("/test_headers_and_body")
+                                .withPath("/echo")
                 )
                 .forward(
                         forward()
@@ -152,13 +168,20 @@ public abstract class AbstractClientServerIntegrationTest {
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withHeaders(
-                                new Header("X-Test", "test_headers_and_body"),
-                                new Header("Content-Type", "text/plain")
+                                new Header("host", "127.0.0.1:" + getTestServerSecurePort()),
+                                new Header("accept-encoding", "gzip,deflate"),
+                                new Header("x-test", "test_headers_and_body")
                         )
                         .withBody("an_example_body"),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "test_headers_and_body"),
+                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "echo")
+                                .withMethod("POST")
+                                .withHeaders(
+                                        new Header("X-Test", "test_headers_and_body"),
+                                        new Header("Content-Type", "text/plain")
+                                )
+                                .withBody("an_example_body"),
                         false
                 )
         );
@@ -167,13 +190,20 @@ public abstract class AbstractClientServerIntegrationTest {
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withHeaders(
-                                new Header("X-Test", "test_headers_and_body"),
-                                new Header("Content-Type", "text/plain")
+                                new Header("host", "127.0.0.1:" + getTestServerSecurePort()),
+                                new Header("accept-encoding", "gzip,deflate"),
+                                new Header("x-test", "test_headers_and_body")
                         )
                         .withBody("an_example_body"),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "test_headers_and_body"),
+                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "echo")
+                                .withMethod("POST")
+                                .withHeaders(
+                                        new Header("X-Test", "test_headers_and_body"),
+                                        new Header("Content-Type", "text/plain")
+                                )
+                                .withBody("an_example_body"),
                         false
                 )
         );
@@ -185,7 +215,7 @@ public abstract class AbstractClientServerIntegrationTest {
         mockServerClient
                 .when(
                         request()
-                                .withPath("/test_headers_and_body"),
+                                .withPath("/echo"),
                         once()
                 )
                 .forward(
@@ -210,13 +240,20 @@ public abstract class AbstractClientServerIntegrationTest {
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withHeaders(
-                                new Header("X-Test", "test_headers_and_body"),
-                                new Header("Content-Type", "text/plain")
+                                new Header("host", "127.0.0.1:" + getTestServerPort()),
+                                new Header("accept-encoding", "gzip,deflate"),
+                                new Header("x-test", "test_headers_and_body")
                         )
                         .withBody("an_example_body"),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "test_headers_and_body"),
+                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "echo")
+                                .withMethod("POST")
+                                .withHeaders(
+                                        new Header("X-Test", "test_headers_and_body"),
+                                        new Header("Content-Type", "text/plain")
+                                )
+                                .withBody("an_example_body"),
                         false
                 )
         );
@@ -750,7 +787,6 @@ public abstract class AbstractClientServerIntegrationTest {
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withHeaders(
-                                new Header(HttpHeaders.CONTENT_TYPE, MediaType.PDF.toString()),
                                 new Header(HttpHeaders.CONTENT_DISPOSITION, "form-data; name=\"test.pdf\"; filename=\"test.pdf\""),
                                 new Header(HttpHeaders.CACHE_CONTROL, "must-revalidate, post-check=0, pre-check=0")
                         )
@@ -767,7 +803,6 @@ public abstract class AbstractClientServerIntegrationTest {
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withHeaders(
-                                new Header(HttpHeaders.CONTENT_TYPE, MediaType.PDF.toString()),
                                 new Header(HttpHeaders.CONTENT_DISPOSITION, "form-data; name=\"test.pdf\"; filename=\"test.pdf\""),
                                 new Header(HttpHeaders.CACHE_CONTROL, "must-revalidate, post-check=0, pre-check=0")
                         )
@@ -807,7 +842,6 @@ public abstract class AbstractClientServerIntegrationTest {
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withHeaders(
-                                new Header(HttpHeaders.CONTENT_TYPE, MediaType.PNG.toString()),
                                 new Header(HttpHeaders.CONTENT_DISPOSITION, "form-data; name=\"test.png\"; filename=\"test.png\"")
                         )
                         .withBody(binary(pngBytes)),
@@ -824,7 +858,6 @@ public abstract class AbstractClientServerIntegrationTest {
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withHeaders(
-                                new Header(HttpHeaders.CONTENT_TYPE, MediaType.PNG.toString()),
                                 new Header(HttpHeaders.CONTENT_DISPOSITION, "form-data; name=\"test.png\"; filename=\"test.png\"")
                         )
                         .withBody(binary(pngBytes)),
@@ -863,7 +896,6 @@ public abstract class AbstractClientServerIntegrationTest {
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withHeaders(
-                                new Header(HttpHeaders.CONTENT_TYPE, MediaType.PDF.toString()),
                                 new Header(HttpHeaders.CONTENT_DISPOSITION, "form-data; name=\"test.pdf\"; filename=\"test.pdf\""),
                                 new Header(HttpHeaders.CACHE_CONTROL, "must-revalidate, post-check=0, pre-check=0")
                         )
@@ -881,7 +913,6 @@ public abstract class AbstractClientServerIntegrationTest {
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withHeaders(
-                                new Header(HttpHeaders.CONTENT_TYPE, MediaType.PDF.toString()),
                                 new Header(HttpHeaders.CONTENT_DISPOSITION, "form-data; name=\"test.pdf\"; filename=\"test.pdf\""),
                                 new Header(HttpHeaders.CACHE_CONTROL, "must-revalidate, post-check=0, pre-check=0")
                         )
@@ -921,7 +952,6 @@ public abstract class AbstractClientServerIntegrationTest {
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withHeaders(
-                                new Header(HttpHeaders.CONTENT_TYPE, MediaType.PNG.toString()),
                                 new Header(HttpHeaders.CONTENT_DISPOSITION, "form-data; name=\"test.png\"; filename=\"test.png\"")
                         )
                         .withBody(binary(pngBytes)),
@@ -938,7 +968,6 @@ public abstract class AbstractClientServerIntegrationTest {
                 new HttpResponse()
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withHeaders(
-                                new Header(HttpHeaders.CONTENT_TYPE, MediaType.PNG.toString()),
                                 new Header(HttpHeaders.CONTENT_DISPOSITION, "form-data; name=\"test.png\"; filename=\"test.png\"")
                         )
                         .withBody(binary(pngBytes)),
@@ -2659,7 +2688,7 @@ public abstract class AbstractClientServerIntegrationTest {
         HttpResponse httpResponse = apacheHttpClient.sendRequest(httpRequest, binaryBody);
         List<Header> headers = new ArrayList<Header>();
         for (Header header : httpResponse.getHeaders()) {
-            if (!(header.getName().equals("Server") || header.getName().equals("Expires") || header.getName().equals("Date") || header.getName().equals("Connection"))) {
+            if (!(header.getName().equalsIgnoreCase("Server") || header.getName().equalsIgnoreCase("Expires") || header.getName().equalsIgnoreCase("Date") || header.getName().equalsIgnoreCase("Connection") || header.getName().equalsIgnoreCase("User-Agent") || header.getName().equalsIgnoreCase("Content-Type"))) {
                 headers.add(header);
             }
         }

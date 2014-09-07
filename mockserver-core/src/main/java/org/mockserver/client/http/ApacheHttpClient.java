@@ -29,8 +29,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
@@ -168,6 +170,10 @@ public class ApacheHttpClient {
             }
 
             return apacheHttpClientToMockServerResponseMapper.mapApacheHttpClientResponseToMockServerResponse(this.httpClient.execute(proxiedRequest), binaryBody);
+        } catch (MalformedURLException murle) {
+            throw new RuntimeException("MalformedURLException for url [" + httpRequest.getURL() + "]", murle);
+        } catch (URISyntaxException use) {
+            throw new RuntimeException("URISyntaxException for url [" + httpRequest.getURL() + "]", use);
         } catch (IOException ioe) {
             if (ioe.getCause() instanceof CircularRedirectException) {
                 logger.debug("Circular redirect aborting request", ioe);
@@ -175,13 +181,11 @@ public class ApacheHttpClient {
             } else {
                 throw new RuntimeException("IOException while sending request for url [" + httpRequest.getURL() + "]", ioe);
             }
-        } catch (URISyntaxException urle) {
-            throw new RuntimeException("URISyntaxException for url [" + httpRequest.getURL() + "]", urle);
         }
     }
 
-    private URI buildUrl(HttpRequest httpRequest) throws URISyntaxException {
-        URI url = new URI(URLEncoder.encodeURL(httpRequest.getURL()));
+    private URI buildUrl(HttpRequest httpRequest) throws URISyntaxException, MalformedURLException {
+        URL url = new URL(URLEncoder.encodeURL(httpRequest.getURL()));
         if (url.getQuery() != null) {
             httpRequest.withQueryStringParameters(new QueryStringDecoder("?" + url.getQuery()).parameters());
         }
@@ -208,7 +212,7 @@ public class ApacheHttpClient {
                 queryString.append('&');
             }
         }
-        return new URI(url.getScheme(), url.getUserInfo(), url.getHost(), url.getPort(), url.getPath(), (queryString.toString().isEmpty() ? null : queryString.toString()), url.getFragment());
+        return new URI(url.getProtocol(), url.getUserInfo(), url.getHost(), url.getPort(), url.getPath(), (queryString.toString().isEmpty() ? null : queryString.toString()), null);
     }
 
     protected HttpUriRequest createHttpUriRequest(HttpMethod httpMethod, URI uri) {

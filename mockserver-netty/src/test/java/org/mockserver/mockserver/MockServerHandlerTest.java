@@ -14,6 +14,8 @@ import org.mockserver.mappers.NettyToMockServerRequestMapper;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.MockServerMatcher;
+import org.mockserver.mock.action.HttpForwardActionHandler;
+import org.mockserver.mock.action.HttpResponseActionHandler;
 import org.mockserver.model.HttpForward;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -51,6 +53,10 @@ public class MockServerHandlerTest {
     private ExpectationSerializer expectationSerializer;
     @Mock
     private HttpRequestSerializer httpRequestSerializer;
+    @Mock
+    private HttpResponseActionHandler httpResponseActionHandler;
+    @Mock
+    private HttpForwardActionHandler httpForwardActionHandler;
 
     @InjectMocks
     private MockServerHandler mockServerHandler;
@@ -175,14 +181,15 @@ public class MockServerHandlerTest {
 
         when(nettyToMockServerRequestMapper.mapNettyRequestToMockServerRequest(any(NettyHttpRequest.class))).thenReturn(request);
         when(mockServerMatcher.handle(any(HttpRequest.class))).thenReturn(response);
-        when(mockServerToNettyResponseMapper.mapMockServerResponseToNettyResponse(any(HttpResponse.class))).thenReturn(defaultFullHttpResponse);
+        when(httpResponseActionHandler.handle(any(HttpResponse.class), any(HttpRequest.class))).thenReturn(response);
+        when(mockServerToNettyResponseMapper.mapMockServerResponseToNettyResponse(response)).thenReturn(defaultFullHttpResponse);
 
         // when
         FullHttpResponse result = mockServerHandler.mockResponse(nettyHttpRequest);
 
         // then
         verify(nettyToMockServerRequestMapper).mapNettyRequestToMockServerRequest(nettyHttpRequest);
-        verify(mockServerMatcher).handle(request);
+        verify(httpResponseActionHandler).handle(response, request);
         assertThat(result.getStatus(), is(HttpResponseStatus.NO_CONTENT));
     }
 
@@ -197,20 +204,16 @@ public class MockServerHandlerTest {
 
         when(nettyToMockServerRequestMapper.mapNettyRequestToMockServerRequest(any(NettyHttpRequest.class))).thenReturn(request);
         when(mockServerMatcher.handle(any(HttpRequest.class))).thenReturn(forward);
-        when(filters.applyFilters(any(HttpRequest.class))).thenReturn(request);
-        when(apacheHttpClient.sendRequest(any(HttpRequest.class), eq(false))).thenReturn(response);
-        when(filters.applyFilters(any(HttpRequest.class), any(HttpResponse.class))).thenReturn(response);
-        when(mockServerToNettyResponseMapper.mapMockServerResponseToNettyResponse(any(HttpResponse.class))).thenReturn(defaultFullHttpResponse);
+        when(httpForwardActionHandler.handle(any(HttpForward.class), any(HttpRequest.class))).thenReturn(response);
+        when(mockServerToNettyResponseMapper.mapMockServerResponseToNettyResponse(response)).thenReturn(defaultFullHttpResponse);
 
         // when
         FullHttpResponse result = mockServerHandler.mockResponse(nettyHttpRequest);
 
-        // then
+        // then                                                   \
+        verify(nettyToMockServerRequestMapper).mapNettyRequestToMockServerRequest(nettyHttpRequest);
         verify(mockServerMatcher).handle(request);
-        verify(filters).applyFilters(request);
-        verify(apacheHttpClient).sendRequest(request, false);
-        verify(filters).applyFilters(request, response);
-        verify(mockServerToNettyResponseMapper).mapMockServerResponseToNettyResponse(response);
+        verify(httpForwardActionHandler).handle(forward, request);
         assertThat(result.getStatus(), is(HttpResponseStatus.NO_CONTENT));
     }
 
@@ -218,12 +221,14 @@ public class MockServerHandlerTest {
     public void shouldReturnNotFound() {
         // given
         HttpRequest request = request();
+        HttpResponse response = response();
         NettyHttpRequest nettyHttpRequest = createNettyHttpRequest("/some_other_path", HttpMethod.GET, "some_content");
         DefaultFullHttpResponse defaultFullHttpResponse = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_FOUND);
 
         when(nettyToMockServerRequestMapper.mapNettyRequestToMockServerRequest(any(NettyHttpRequest.class))).thenReturn(request);
         when(mockServerMatcher.handle(any(HttpRequest.class))).thenReturn(null);
-        when(mockServerToNettyResponseMapper.mapMockServerResponseToNettyResponse(null)).thenReturn(defaultFullHttpResponse);
+        when(httpResponseActionHandler.handle((HttpResponse) isNull(), any(HttpRequest.class))).thenReturn(response);
+        when(mockServerToNettyResponseMapper.mapMockServerResponseToNettyResponse(response)).thenReturn(defaultFullHttpResponse);
 
         // when
         FullHttpResponse result = mockServerHandler.mockResponse(nettyHttpRequest);

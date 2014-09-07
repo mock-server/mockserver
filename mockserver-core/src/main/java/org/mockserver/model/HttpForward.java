@@ -1,5 +1,6 @@
 package org.mockserver.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mockserver.client.serialization.ObjectMapperFactory;
 
 /**
@@ -11,16 +12,17 @@ public class HttpForward extends Action {
     private Integer port = 80;
     private Scheme scheme = Scheme.HTTP;
 
-    public enum Scheme {
-        HTTP,
-        HTTPS
-    }
-
     public HttpForward() {
     }
 
     public static HttpForward forward() {
         return new HttpForward();
+    }
+
+    @Override
+    @JsonIgnore
+    public Type getType() {
+        return Type.FORWARD;
     }
 
     public String getHost() {
@@ -75,5 +77,10 @@ public class HttpForward extends Action {
         } catch (Exception e) {
             return super.toString();
         }
+    }
+
+    public enum Scheme {
+        HTTP,
+        HTTPS
     }
 }

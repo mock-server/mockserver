@@ -26,7 +26,7 @@ public class StopClientProxyNettyIntegrationTest {
         // start client
         ProxyClient proxyClient = new ProxyClient("localhost", serverPort);
 
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 3; i++) {
             // when
             proxyClient.stop();
 

@@ -263,6 +263,22 @@ public class HttpRequest extends EqualsHashCodeToString {
         return this;
     }
 
+    /**
+     * Adds one header to match on as a Header object where the header values list can be a list of strings or regular expressions
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html)
+     *
+     * @param header the Header object which can have a values list of strings or regular expressions
+     */
+    public HttpRequest replaceHeader(Header header) {
+        for (String key : new HashSet<String>(this.headers.keySet())) {
+            if (header.getName().equalsIgnoreCase(key)) {
+                this.headers.remove(key);
+            }
+        }
+        this.headers.put(header.getName(), header);
+        return this;
+    }
+
     public List<Header> getHeaders() {
         return new ArrayList<Header>(headers.values());
     }

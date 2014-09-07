@@ -225,5 +225,11 @@ public class HttpResponse extends Action {
             return super.toString();
         }
     }
+
+    @Override
+    @JsonIgnore
+    public Type getType() {
+        return Type.RESPONSE;
+    }
 }
 

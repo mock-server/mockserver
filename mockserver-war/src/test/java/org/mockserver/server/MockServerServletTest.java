@@ -12,6 +12,8 @@ import org.mockserver.mappers.MockServerToHttpServletResponseMapper;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.MockServerMatcher;
+import org.mockserver.mock.action.HttpForwardActionHandler;
+import org.mockserver.mock.action.HttpResponseActionHandler;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpForward;
 import org.mockserver.model.HttpRequest;
@@ -20,6 +22,7 @@ import org.mockserver.proxy.filters.Filters;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
@@ -48,6 +51,10 @@ public class MockServerServletTest {
     private ExpectationSerializer expectationSerializer;
     @Mock
     private HttpRequestSerializer httpRequestSerializer;
+    @Mock
+    private HttpResponseActionHandler httpResponseActionHandler;
+    @Mock
+    private HttpForwardActionHandler httpForwardActionHandler;
     @InjectMocks
     private MockServerServlet mockServerServlet;
 
@@ -59,47 +66,49 @@ public class MockServerServletTest {
     }
 
     @Test
-    public void respondWhenPathMatches() throws IOException {
+    public void shouldReturnMatchedExpectation() {
         // given
-        HttpRequest httpRequest = new HttpRequest().withPath("somepath");
-        HttpResponse httpResponse = new HttpResponse().withHeaders(new Header("name", "value")).withBody("somebody");
+        HttpRequest request = new HttpRequest().withPath("somepath");
+        HttpResponse response = new HttpResponse().withHeaders(new Header("name", "value")).withBody("somebody");
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
         MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("GET", "somepath");
 
-        when(mockServerMatcher.handle(httpRequest)).thenReturn(httpResponse);
-        when(httpServletToMockServerRequestMapper.mapHttpServletRequestToMockServerRequest(httpServletRequest)).thenReturn(httpRequest);
+        when(httpServletToMockServerRequestMapper.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class))).thenReturn(request);
+        when(mockServerMatcher.handle(any(HttpRequest.class))).thenReturn(response);
+        when(httpResponseActionHandler.handle(any(HttpResponse.class), any(HttpRequest.class))).thenReturn(response);
 
         // when
         mockServerServlet.doGet(httpServletRequest, httpServletResponse);
 
         // then
-        verify(mockServerToHttpServletResponseMapper).mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
+        when(httpServletToMockServerRequestMapper.mapHttpServletRequestToMockServerRequest(httpServletRequest)).thenReturn(request);
+        verify(mockServerMatcher).handle(request);
+        when(httpResponseActionHandler.handle(response, request)).thenReturn(response);
+        verify(mockServerToHttpServletResponseMapper).mapMockServerResponseToHttpServletResponse(response, httpServletResponse);
+        assertThat(httpServletResponse.getStatus(), is(200));
     }
 
     @Test
-    public void forwardWhenPathMatches() throws IOException {
+    public void shouldForwardMatchedExpectation() throws IOException {
         // given
-        HttpRequest httpRequest = new HttpRequest().withPath("somepath");
-        HttpForward httpForward = new HttpForward().withHost("some_host").withPort(1234);
-        HttpResponse httpResponse = new HttpResponse();
+        HttpRequest request = new HttpRequest().withPath("somepath");
+        HttpForward forward = new HttpForward().withHost("some-host").withPort(1234);
+        HttpResponse response = new HttpResponse();
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
         MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("GET", "somepath");
 
-        when(mockServerMatcher.handle(httpRequest)).thenReturn(httpForward);
-        when(filters.applyFilters(any(HttpRequest.class))).thenReturn(httpRequest);
-        when(apacheHttpClient.sendRequest(any(HttpRequest.class), eq(false))).thenReturn(httpResponse);
-        when(filters.applyFilters(any(HttpRequest.class), any(HttpResponse.class))).thenReturn(httpResponse);
-        when(httpServletToMockServerRequestMapper.mapHttpServletRequestToMockServerRequest(httpServletRequest)).thenReturn(httpRequest);
+        when(httpServletToMockServerRequestMapper.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class))).thenReturn(request);
+        when(mockServerMatcher.handle(any(HttpRequest.class))).thenReturn(forward);
+        when(httpForwardActionHandler.handle(any(HttpForward.class), any(HttpRequest.class))).thenReturn(response);
 
         // when
         mockServerServlet.doGet(httpServletRequest, httpServletResponse);
 
         // then
-        verify(mockServerMatcher).handle(httpRequest);
-        verify(filters).applyFilters(httpRequest);
-        verify(apacheHttpClient).sendRequest(httpRequest, false);
-        verify(filters).applyFilters(httpRequest, httpResponse);
-        verify(mockServerToHttpServletResponseMapper).mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
+        when(httpServletToMockServerRequestMapper.mapHttpServletRequestToMockServerRequest(httpServletRequest)).thenReturn(request);
+        verify(mockServerMatcher).handle(request);
+        when(httpForwardActionHandler.handle(forward, request)).thenReturn(response);
+        verify(mockServerToHttpServletResponseMapper).mapMockServerResponseToHttpServletResponse(response, httpServletResponse);
         assertThat(httpServletResponse.getStatus(), is(200));
     }
 

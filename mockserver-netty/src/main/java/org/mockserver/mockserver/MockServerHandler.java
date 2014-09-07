@@ -3,17 +3,19 @@ package org.mockserver.mockserver;
 import com.google.common.annotations.VisibleForTesting;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.*;
 import io.netty.util.CharsetUtil;
-import org.mockserver.client.http.ApacheHttpClient;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.mappers.MockServerToNettyResponseMapper;
 import org.mockserver.mappers.NettyToMockServerRequestMapper;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.MockServerMatcher;
+import org.mockserver.mock.action.HttpForwardActionHandler;
+import org.mockserver.mock.action.HttpResponseActionHandler;
 import org.mockserver.model.Action;
 import org.mockserver.model.HttpForward;
 import org.mockserver.model.HttpResponse;
@@ -30,20 +32,19 @@ import static io.netty.handler.codec.http.HttpHeaders.is100ContinueExpected;
 import static io.netty.handler.codec.http.HttpHeaders.isKeepAlive;
 import static io.netty.handler.codec.http.HttpResponseStatus.CONTINUE;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
-import static org.mockserver.model.Header.header;
 
+@ChannelHandler.Sharable
 public class MockServerHandler extends SimpleChannelInboundHandler<Object> {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     // mockserver
-    private final MockServerMatcher mockServerMatcher;
+    private final MockServer server;
     private final LogFilter logFilter;
+    private final MockServerMatcher mockServerMatcher;
     // netty
     private final boolean secure;
-    private final MockServer server;
-    // request forwarding
-    private Filters filters = new Filters();
-    private ApacheHttpClient apacheHttpClient = new ApacheHttpClient(true);
+    private HttpForwardActionHandler httpForwardActionHandler;
+    private HttpResponseActionHandler httpResponseActionHandler;
     // mappers
     private NettyToMockServerRequestMapper nettyToMockServerRequestMapper = new NettyToMockServerRequestMapper();
     private MockServerToNettyResponseMapper mockServerToNettyResponseMapper = new MockServerToNettyResponseMapper();
@@ -59,8 +60,15 @@ public class MockServerHandler extends SimpleChannelInboundHandler<Object> {
         this.logFilter = logFilter;
         this.server = server;
         this.secure = secure;
+        Filters filters = new Filters();
         filters.withFilter(new org.mockserver.model.HttpRequest(), new HopByHopHeaderFilter());
         filters.withFilter(new org.mockserver.model.HttpRequest(), logFilter);
+        httpResponseActionHandler = new HttpResponseActionHandler(filters);
+        httpForwardActionHandler = new HttpForwardActionHandler(filters);
+    }
+
+    public boolean isSecure() {
+        return secure;
     }
 
     @Override
@@ -165,30 +173,26 @@ public class MockServerHandler extends SimpleChannelInboundHandler<Object> {
 
             org.mockserver.model.HttpRequest httpRequest = nettyToMockServerRequestMapper.mapNettyRequestToMockServerRequest(nettyHttpRequest);
             Action action = mockServerMatcher.handle(httpRequest);
-            if (action instanceof HttpForward) {
-                HttpForward httpForward = (HttpForward) action;
-                nettyHttpRequest.headers().set(HttpHeaders.Names.HOST, httpForward.getHost() + (httpForward.getPort() != null ? ":" + httpForward.getPort() : ""));
-                nettyHttpRequest.setSecure(httpForward.getScheme() == HttpForward.Scheme.HTTPS);
-                return forwardRequest(nettyHttpRequest);
-            } else {
-                HttpResponse httpResponse = (HttpResponse) action;
-                logFilter.onResponse(httpRequest, httpResponse);
-                return mockServerToNettyResponseMapper.mapMockServerResponseToNettyResponse(httpResponse);
-            }
 
+            if (action != null) {
+                switch (action.getType()) {
+                    case FORWARD: {
+                        return mapResponse(httpForwardActionHandler.handle((HttpForward) action, httpRequest));
+                    }
+                    case CALLBACK:
+                        // todo implement callback logic in here
+                    case RESPONSE:
+                    default:
+                        return mapResponse(httpResponseActionHandler.handle((HttpResponse) action, httpRequest));
+                }
+            } else {
+                return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_FOUND);
+            }
         }
     }
 
-    @VisibleForTesting
-    FullHttpResponse forwardRequest(NettyHttpRequest request) {
-        return sendRequest(filters.applyFilters(nettyToMockServerRequestMapper.mapNettyRequestToMockServerRequest(request)));
-    }
-
-    @VisibleForTesting
-    FullHttpResponse sendRequest(final org.mockserver.model.HttpRequest httpRequest) {
-        // if HttpRequest was set to null by a filter don't send request
-        if (httpRequest != null) {
-            HttpResponse httpResponse = filters.applyFilters(httpRequest, apacheHttpClient.sendRequest(httpRequest, false));
+    private FullHttpResponse mapResponse(HttpResponse httpResponse) {
+        if (httpResponse != null) {
             return mockServerToNettyResponseMapper.mapMockServerResponseToNettyResponse(httpResponse);
         } else {
             return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);

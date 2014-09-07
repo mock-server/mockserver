@@ -1,25 +1,22 @@
 package org.mockserver.server;
 
-import org.apache.http.client.utils.URIBuilder;
-import org.mockserver.client.http.ApacheHttpClient;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.mappers.HttpServletToMockServerRequestMapper;
 import org.mockserver.mappers.MockServerToHttpServletResponseMapper;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.MockServerMatcher;
+import org.mockserver.mock.action.HttpForwardActionHandler;
+import org.mockserver.mock.action.HttpResponseActionHandler;
 import org.mockserver.model.*;
 import org.mockserver.proxy.filters.Filters;
 import org.mockserver.proxy.filters.HopByHopHeaderFilter;
 import org.mockserver.proxy.filters.LogFilter;
 import org.mockserver.streams.IOStreamUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.net.URISyntaxException;
 
 /**
  * @author jamesdbloom
@@ -27,19 +24,26 @@ import java.net.URISyntaxException;
 public class MockServerServlet extends HttpServlet {
 
     private static final long serialVersionUID = 5058943788293770703L;
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
+    // mockserver
+    private LogFilter logFilter = new LogFilter();
     private MockServerMatcher mockServerMatcher = new MockServerMatcher();
+    private HttpForwardActionHandler httpForwardActionHandler;
+    private HttpResponseActionHandler httpResponseActionHandler;
+    // mappers
     private HttpServletToMockServerRequestMapper httpServletToMockServerRequestMapper = new HttpServletToMockServerRequestMapper();
     private MockServerToHttpServletResponseMapper mockServerToHttpServletResponseMapper = new MockServerToHttpServletResponseMapper();
+    // serializer
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
-    private ApacheHttpClient apacheHttpClient = new ApacheHttpClient(true);
-    private LogFilter logFilter = new LogFilter();
-    private Filters filters = new Filters();
+
 
     public MockServerServlet() {
-        filters.withFilter(new HttpRequest(), new HopByHopHeaderFilter());
-        filters.withFilter(new HttpRequest(), logFilter);
+        Filters filters = new Filters();
+        filters.withFilter(new org.mockserver.model.HttpRequest(), new HopByHopHeaderFilter());
+        filters.withFilter(new org.mockserver.model.HttpRequest(), logFilter);
+        httpResponseActionHandler = new HttpResponseActionHandler(filters);
+        httpForwardActionHandler = new HttpForwardActionHandler(filters);
     }
 
     public void doGet(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
@@ -86,46 +90,30 @@ public class MockServerServlet extends HttpServlet {
     private void mockResponse(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
         HttpRequest httpRequest = httpServletToMockServerRequestMapper.mapHttpServletRequestToMockServerRequest(httpServletRequest);
         Action action = mockServerMatcher.handle(httpRequest);
-        if (action instanceof HttpForward) {
-            HttpForward httpForward = (HttpForward) action;
-            httpServletRequest.getRequestURL();
-            forwardRequest(httpServletRequest, httpServletResponse, httpForward);
-        } else {
-            HttpResponse httpResponse = (HttpResponse) action;
-            logFilter.onResponse(httpRequest, httpResponse);
-            if (httpResponse != null) {
-                mockServerToHttpServletResponseMapper.mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
-            } else {
-                httpServletResponse.setStatus(HttpStatusCode.NOT_FOUND_404.code());
+
+        if (action != null) {
+            switch (action.getType()) {
+                case FORWARD:
+                    mapResponse(httpForwardActionHandler.handle((HttpForward) action, httpRequest), httpServletResponse);
+                    break;
+                case CALLBACK:
+                    // todo implement callback logic in here
+                case RESPONSE:
+                default:
+                    mapResponse(httpResponseActionHandler.handle((HttpResponse) action, httpRequest), httpServletResponse);
+                    break;
             }
+        } else {
+            httpServletResponse.setStatus(HttpStatusCode.NOT_FOUND_404.code());
         }
     }
 
-    private HttpRequest updateUrl(HttpRequest httpRequest, HttpServletRequest httpServletRequest, HttpForward httpForward) {
-        try {
-            URIBuilder uriBuilder = new URIBuilder(httpServletRequest.getRequestURL().toString());
-            uriBuilder.setPath(retrieveRequestPath(httpServletRequest));
-            uriBuilder.setHost(httpForward.getHost());
-            uriBuilder.setPort(httpForward.getPort());
-            uriBuilder.setScheme(httpForward.getScheme().name().toLowerCase());
-            uriBuilder.setCustomQuery(httpServletRequest.getQueryString());
-            httpRequest.withURL(uriBuilder.toString());
-        } catch (URISyntaxException e) {
-            logger.warn("URISyntaxException for url " + httpServletRequest.getRequestURL(), e);
-        }
-        return httpRequest;
-    }
 
-    private void forwardRequest(HttpServletRequest request, HttpServletResponse response, HttpForward httpForward) {
-        HttpRequest httpRequest = updateUrl(httpServletToMockServerRequestMapper.mapHttpServletRequestToMockServerRequest(request), request, httpForward);
-        sendRequest(filters.applyFilters(httpRequest), response);
-    }
-
-    private void sendRequest(final HttpRequest httpRequest, final HttpServletResponse httpServletResponse) {
-        // if HttpRequest was set to null by a filter don't send request
-        if (httpRequest != null) {
-            HttpResponse httpResponse = filters.applyFilters(httpRequest, apacheHttpClient.sendRequest(httpRequest, false));
+    private void mapResponse(HttpResponse httpResponse, HttpServletResponse httpServletResponse) {
+        if (httpResponse != null) {
             mockServerToHttpServletResponseMapper.mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
+        } else {
+            httpServletResponse.setStatus(HttpStatusCode.NOT_FOUND_404.code());
         }
     }
 }

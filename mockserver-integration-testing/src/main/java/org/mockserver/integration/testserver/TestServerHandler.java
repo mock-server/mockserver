@@ -16,21 +16,28 @@
 package org.mockserver.integration.testserver;
 
 import com.google.common.base.Charsets;
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.handler.codec.http.DefaultFullHttpResponse;
-import io.netty.handler.codec.http.FullHttpResponse;
-import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.*;
 
-import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH;
-import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import static io.netty.handler.codec.http.HttpHeaders.Names.*;
 import static io.netty.handler.codec.http.HttpHeaders.is100ContinueExpected;
+import static io.netty.handler.codec.http.HttpHeaders.isKeepAlive;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 public class TestServerHandler extends SimpleChannelInboundHandler<Object> {
+
+    // requests
+    private DefaultFullHttpRequest mockServerHttpRequest = null;
+    private ByteBuf responseContent;
+    private HttpRequest request = null;
 
     @Override
     public void channelReadComplete(ChannelHandlerContext ctx) {
@@ -38,34 +45,88 @@ public class TestServerHandler extends SimpleChannelInboundHandler<Object> {
     }
 
     @Override
-    public void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
-        if (msg instanceof HttpRequest) {
-            HttpRequest req = (HttpRequest) msg;
-
-            if (is100ContinueExpected(req)) {
-                ctx.write(new DefaultFullHttpResponse(HTTP_1_1, CONTINUE));
+    protected void channelRead0(ChannelHandlerContext ctx, Object msg) {
+        if (msg instanceof HttpObject && ((HttpObject) msg).getDecoderResult().isSuccess()) {
+            if (msg instanceof HttpRequest) {
+                request = (HttpRequest) msg;
             }
 
-            FullHttpResponse response;
-            if (req.getUri().equals("/unknown")) {
-                response = new DefaultFullHttpResponse(HTTP_1_1, NOT_FOUND);
-            } else if (req.getUri().equals("/test_headers_and_body")) {
-                response = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.wrappedBuffer("an_example_body".getBytes(Charsets.UTF_8)));
-                response.headers().set("X-Test", "test_headers_and_body");
-                response.headers().set(CONTENT_TYPE, "text/plain");
-                response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
-            } else if (req.getUri().equals("/test_headers_only")) {
-                response = new DefaultFullHttpResponse(HTTP_1_1, OK);
-                response.headers().set("X-Test", "test_headers_only");
-                response.headers().set(CONTENT_TYPE, "text/plain");
-                response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
-            } else {
-                response = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.wrappedBuffer("Hello World".getBytes(Charsets.UTF_8)));
-                response.headers().set(CONTENT_TYPE, "text/plain");
-                response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
+            if (msg instanceof HttpContent) {
+                ByteBuf requestContent = ((HttpContent) msg).content();
+
+                if (requestContent.isReadable()) {
+                    if (this.responseContent == null) {
+                        this.responseContent = Unpooled.copiedBuffer(requestContent);
+                    } else {
+                        this.responseContent.writeBytes(requestContent);
+                    }
+                }
+
+                if (msg instanceof LastHttpContent) {
+                    mockServerHttpRequest = new DefaultFullHttpRequest(request.getProtocolVersion(), request.getMethod(), request.getUri(), requestContent);
+                    mockServerHttpRequest.headers().add(request.headers());
+
+                    LastHttpContent trailer = (LastHttpContent) msg;
+                    if (!trailer.trailingHeaders().isEmpty()) {
+                        mockServerHttpRequest.headers().entries().addAll(trailer.trailingHeaders().entries());
+                    }
+
+                    writeResponse(ctx, handleRequest(mockServerHttpRequest), isKeepAlive(request), is100ContinueExpected(request));
+                }
+
             }
-            ctx.write(response).addListener(ChannelFutureListener.CLOSE);
+        } else {
+            ctx.write(new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.BAD_REQUEST));
         }
+    }
+
+    private void writeResponse(ChannelHandlerContext ctx, FullHttpResponse response, boolean isKeepAlive, boolean is100ContinueExpected) {
+        if (isKeepAlive) {
+            // Add 'Content-Length' header only for a keep-alive connection.
+            response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
+            // Add keep alive header as per:
+            // - http://www.w3.org/Protocols/HTTP/1.1/draft-ietf-http-v11-spec-01.html#Connection
+            response.headers().set(CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
+        }
+        if (is100ContinueExpected) {
+            ctx.write(new DefaultFullHttpResponse(HTTP_1_1, CONTINUE));
+        }
+        ctx.write(response);
+        ctx.flush();
+    }
+
+
+    public FullHttpResponse handleRequest(DefaultFullHttpRequest req) {
+        FullHttpResponse response;
+        if (req.getUri().equals("/unknown")) {
+            response = new DefaultFullHttpResponse(HTTP_1_1, NOT_FOUND);
+        } else if (req.getUri().equals("/test_headers_and_body")) {
+            response = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.wrappedBuffer("an_example_body".getBytes(Charsets.UTF_8)));
+            response.headers().set("X-Test", "test_headers_and_body");
+            response.headers().set(CONTENT_TYPE, "text/plain");
+            response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
+        } else if (req.getUri().equals("/test_headers_only")) {
+            response = new DefaultFullHttpResponse(HTTP_1_1, OK);
+            response.headers().set("X-Test", "test_headers_only");
+            response.headers().set(CONTENT_TYPE, "text/plain");
+            response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
+        } else if (req.getUri().equals("/echo")) {
+            // echo back body
+            response = new DefaultFullHttpResponse(HTTP_1_1, OK, req.content());
+            // echo back headers
+            List<String> headerNames = new ArrayList<String>(req.headers().names());
+            Collections.sort(headerNames);
+            for (String headerName : headerNames) {
+                response.headers().set(headerName.toLowerCase(), req.headers().get(headerName));
+            }
+            response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
+
+        } else {
+            response = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.wrappedBuffer("Hello World".getBytes(Charsets.UTF_8)));
+            response.headers().set(CONTENT_TYPE, "text/plain");
+            response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
+        }
+        return response;
     }
 
     @Override

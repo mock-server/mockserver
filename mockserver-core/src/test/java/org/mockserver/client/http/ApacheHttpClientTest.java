@@ -8,6 +8,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -63,7 +64,7 @@ public class ApacheHttpClientTest {
         String response = apacheHttpClient.sendPUTRequest("baseUri", "/path", "body");
 
         // then
-        assertEquals("baseUri/path", requestArgumentCaptor.getValue().getURI().toString());
+        Assert.assertEquals("baseUri/path", requestArgumentCaptor.getValue().getURI().toString());
         assertEquals("body", new String(EntityUtils.toByteArray(((HttpPut) requestArgumentCaptor.getValue()).getEntity()), Charsets.UTF_8));
         assertEquals("bodyContent", response);
     }
@@ -77,25 +78,25 @@ public class ApacheHttpClientTest {
         apacheHttpClient.sendPUTRequest("baseUri/", "/path", "body");
 
         // then
-        assertEquals("baseUri/path", requestArgumentCaptor.getValue().getURI().toString());
+        Assert.assertEquals("baseUri/path", requestArgumentCaptor.getValue().getURI().toString());
 
         // when
         apacheHttpClient.sendPUTRequest("baseUri/", "/path", "body");
 
         // then
-        assertEquals("baseUri/path", requestArgumentCaptor.getValue().getURI().toString());
+        Assert.assertEquals("baseUri/path", requestArgumentCaptor.getValue().getURI().toString());
 
         // when
         apacheHttpClient.sendPUTRequest("baseUri/", "path", "body");
 
         // then
-        assertEquals("baseUri/path", requestArgumentCaptor.getValue().getURI().toString());
+        Assert.assertEquals("baseUri/path", requestArgumentCaptor.getValue().getURI().toString());
 
         // when
         apacheHttpClient.sendPUTRequest("baseUri", "path", "body");
 
         // then
-        assertEquals("baseUri/path", requestArgumentCaptor.getValue().getURI().toString());
+        Assert.assertEquals("baseUri/path", requestArgumentCaptor.getValue().getURI().toString());
     }
 
     @Test(expected = RuntimeException.class)
@@ -110,82 +111,82 @@ public class ApacheHttpClientTest {
     @Test
     public void shouldMapGETRequest() throws Exception {
         // when
-        apacheHttpClient.sendRequest(new HttpRequest().withMethod("GET"), false);
+        apacheHttpClient.sendRequest(new HttpRequest().withMethod("GET").withURL("http://localhost"), false);
 
         // then
-        assertEquals(HttpGet.class, requestArgumentCaptor.getValue().getClass());
+        Assert.assertEquals(HttpGet.class, requestArgumentCaptor.getValue().getClass());
     }
 
     @Test
     public void shouldMapDELETERequest() throws Exception {
         // when
-        apacheHttpClient.sendRequest(new HttpRequest().withMethod("DELETE"), false);
+        apacheHttpClient.sendRequest(new HttpRequest().withMethod("DELETE").withURL("http://localhost"), false);
 
         // then
-        assertEquals(HttpDelete.class, requestArgumentCaptor.getValue().getClass());
+        Assert.assertEquals(HttpDelete.class, requestArgumentCaptor.getValue().getClass());
     }
 
     @Test
     public void shouldMapHEADRequest() throws Exception {
         // when
-        apacheHttpClient.sendRequest(new HttpRequest().withMethod("HEAD"), false);
+        apacheHttpClient.sendRequest(new HttpRequest().withMethod("HEAD").withURL("http://localhost"), false);
 
         // then
-        assertEquals(HttpHead.class, requestArgumentCaptor.getValue().getClass());
+        Assert.assertEquals(HttpHead.class, requestArgumentCaptor.getValue().getClass());
     }
 
     @Test
     public void shouldMapOPTIONSRequest() throws Exception {
         // when
-        apacheHttpClient.sendRequest(new HttpRequest().withMethod("OPTIONS"), false);
+        apacheHttpClient.sendRequest(new HttpRequest().withMethod("OPTIONS").withURL("http://localhost"), false);
 
         // then
-        assertEquals(HttpOptions.class, requestArgumentCaptor.getValue().getClass());
+        Assert.assertEquals(HttpOptions.class, requestArgumentCaptor.getValue().getClass());
     }
 
     @Test
     public void shouldMapPOSTRequest() throws Exception {
         // when
-        apacheHttpClient.sendRequest(new HttpRequest().withMethod("POST"), false);
+        apacheHttpClient.sendRequest(new HttpRequest().withMethod("POST").withURL("http://localhost"), false);
 
         // then
-        assertEquals(HttpPost.class, requestArgumentCaptor.getValue().getClass());
+        Assert.assertEquals(HttpPost.class, requestArgumentCaptor.getValue().getClass());
     }
 
     @Test
     public void shouldMapPUTRequest() throws Exception {
         // when
-        apacheHttpClient.sendRequest(new HttpRequest().withMethod("PUT"), false);
+        apacheHttpClient.sendRequest(new HttpRequest().withMethod("PUT").withURL("http://localhost"), false);
 
         // then
-        assertEquals(HttpPut.class, requestArgumentCaptor.getValue().getClass());
+        Assert.assertEquals(HttpPut.class, requestArgumentCaptor.getValue().getClass());
     }
 
     @Test
     public void shouldMapTRACERequest() throws Exception {
         // when
-        apacheHttpClient.sendRequest(new HttpRequest().withMethod("TRACE"), false);
+        apacheHttpClient.sendRequest(new HttpRequest().withMethod("TRACE").withURL("http://localhost"), false);
 
         // then
-        assertEquals(HttpTrace.class, requestArgumentCaptor.getValue().getClass());
+        Assert.assertEquals(HttpTrace.class, requestArgumentCaptor.getValue().getClass());
     }
 
     @Test
     public void shouldMapPATCHRequest() throws Exception {
         // when
-        apacheHttpClient.sendRequest(new HttpRequest().withMethod("PATCH"), false);
+        apacheHttpClient.sendRequest(new HttpRequest().withMethod("PATCH").withURL("http://localhost"), false);
 
         // then
-        assertEquals(HttpPatch.class, requestArgumentCaptor.getValue().getClass());
+        Assert.assertEquals(HttpPatch.class, requestArgumentCaptor.getValue().getClass());
     }
 
     @Test
     public void shouldMapINCORRECTRequest() throws Exception {
         // when
-        apacheHttpClient.sendRequest(new HttpRequest().withMethod("INCORRECT"), false);
+        apacheHttpClient.sendRequest(new HttpRequest().withMethod("INCORRECT").withURL("http://localhost"), false);
 
         // then
-        assertEquals(HttpGet.class, requestArgumentCaptor.getValue().getClass());
+        Assert.assertEquals(HttpGet.class, requestArgumentCaptor.getValue().getClass());
     }
 
     @Test
@@ -217,18 +218,18 @@ public class ApacheHttpClientTest {
 
         // then
         HttpPost httpPost = (HttpPost) requestArgumentCaptor.getValue();
-        assertEquals("http://host:8080/path?paramOneName=paramOneValueOne&paramOneName=paramOneValueTwo&paramTwoName=paramTwoValue", httpPost.getURI().toString());
-        assertEquals("bodyContent", EntityUtils.toString(httpPost.getEntity()));
-        assertEquals("POST", httpPost.getMethod());
-        assertEquals(4, httpPost.getAllHeaders().length);
-        assertEquals("headerOneName", httpPost.getAllHeaders()[0].getName());
-        assertEquals("headerOneValueOne", httpPost.getAllHeaders()[0].getValue());
-        assertEquals("headerOneName", httpPost.getAllHeaders()[1].getName());
-        assertEquals("headerOneValueTwo", httpPost.getAllHeaders()[1].getValue());
-        assertEquals("headerTwoName", httpPost.getAllHeaders()[2].getName());
-        assertEquals("headerTwoValue", httpPost.getAllHeaders()[2].getValue());
-        assertEquals("Cookie", httpPost.getAllHeaders()[3].getName());
-        assertEquals("cookieOneName=cookieOneValueOne; cookieOneName=cookieOneValueTwo; cookieTwoName=cookieTwoValue", httpPost.getAllHeaders()[3].getValue());
+        Assert.assertEquals("http://host:8080/path?paramOneName=paramOneValueOne&paramOneName=paramOneValueTwo&paramTwoName=paramTwoValue", httpPost.getURI().toString());
+        Assert.assertEquals("bodyContent", EntityUtils.toString(httpPost.getEntity()));
+        Assert.assertEquals("POST", httpPost.getMethod());
+        Assert.assertEquals(4, httpPost.getAllHeaders().length);
+        Assert.assertEquals("headerOneName", httpPost.getAllHeaders()[0].getName());
+        Assert.assertEquals("headerOneValueOne", httpPost.getAllHeaders()[0].getValue());
+        Assert.assertEquals("headerOneName", httpPost.getAllHeaders()[1].getName());
+        Assert.assertEquals("headerOneValueTwo", httpPost.getAllHeaders()[1].getValue());
+        Assert.assertEquals("headerTwoName", httpPost.getAllHeaders()[2].getName());
+        Assert.assertEquals("headerTwoValue", httpPost.getAllHeaders()[2].getValue());
+        Assert.assertEquals("Cookie", httpPost.getAllHeaders()[3].getName());
+        Assert.assertEquals("cookieOneName=cookieOneValueOne; cookieOneName=cookieOneValueTwo; cookieTwoName=cookieTwoValue", httpPost.getAllHeaders()[3].getValue());
         verify(apacheHttpClientToMockServerResponseMapper).mapApacheHttpClientResponseToMockServerResponse(closeableHttpResponse, false);
         assertSame(httpResponse, httpResponseActual);
     }
@@ -248,8 +249,8 @@ public class ApacheHttpClientTest {
 
         // then
         HttpPost httpPost = (HttpPost) requestArgumentCaptor.getValue();
-        assertEquals("http://host:8080/path", httpPost.getURI().toString());
-        assertEquals("POST", httpPost.getMethod());
+        Assert.assertEquals("http://host:8080/path", httpPost.getURI().toString());
+        Assert.assertEquals("POST", httpPost.getMethod());
         verify(apacheHttpClientToMockServerResponseMapper).mapApacheHttpClientResponseToMockServerResponse(closeableHttpResponse, false);
         assertSame(httpResponse, httpResponseActual);
     }
@@ -281,19 +282,19 @@ public class ApacheHttpClientTest {
 
         // then
         HttpGet httpGet = (HttpGet) requestArgumentCaptor.getValue();
-        assertEquals("http://host:8080/path?paramOneName=paramOneValueOne&paramOneName=paramOneValueTwo&paramTwoName=paramTwoValue&paramThreeName=", httpGet.getURI().toString());
-        assertEquals("GET", httpGet.getMethod());
-        assertEquals(5, httpGet.getAllHeaders().length);
-        assertEquals("headerOneName", httpGet.getAllHeaders()[0].getName());
-        assertEquals("headerOneValueOne", httpGet.getAllHeaders()[0].getValue());
-        assertEquals("headerOneName", httpGet.getAllHeaders()[1].getName());
-        assertEquals("headerOneValueTwo", httpGet.getAllHeaders()[1].getValue());
-        assertEquals("headerTwoName", httpGet.getAllHeaders()[2].getName());
-        assertEquals("headerTwoValue", httpGet.getAllHeaders()[2].getValue());
-        assertEquals("headerThreeName", httpGet.getAllHeaders()[3].getName());
-        assertEquals("", httpGet.getAllHeaders()[3].getValue());
-        assertEquals("Cookie", httpGet.getAllHeaders()[4].getName());
-        assertEquals("cookieOneName=cookieOneValueOne; cookieOneName=cookieOneValueTwo; cookieTwoName=cookieTwoValue; cookieThreeName=", httpGet.getAllHeaders()[4].getValue());
+        Assert.assertEquals("http://host:8080/path?paramOneName=paramOneValueOne&paramOneName=paramOneValueTwo&paramTwoName=paramTwoValue&paramThreeName=", httpGet.getURI().toString());
+        Assert.assertEquals("GET", httpGet.getMethod());
+        Assert.assertEquals(5, httpGet.getAllHeaders().length);
+        Assert.assertEquals("headerOneName", httpGet.getAllHeaders()[0].getName());
+        Assert.assertEquals("headerOneValueOne", httpGet.getAllHeaders()[0].getValue());
+        Assert.assertEquals("headerOneName", httpGet.getAllHeaders()[1].getName());
+        Assert.assertEquals("headerOneValueTwo", httpGet.getAllHeaders()[1].getValue());
+        Assert.assertEquals("headerTwoName", httpGet.getAllHeaders()[2].getName());
+        Assert.assertEquals("headerTwoValue", httpGet.getAllHeaders()[2].getValue());
+        Assert.assertEquals("headerThreeName", httpGet.getAllHeaders()[3].getName());
+        Assert.assertEquals("", httpGet.getAllHeaders()[3].getValue());
+        Assert.assertEquals("Cookie", httpGet.getAllHeaders()[4].getName());
+        Assert.assertEquals("cookieOneName=cookieOneValueOne; cookieOneName=cookieOneValueTwo; cookieTwoName=cookieTwoValue; cookieThreeName=", httpGet.getAllHeaders()[4].getValue());
     }
 
     @Test
@@ -312,9 +313,9 @@ public class ApacheHttpClientTest {
 
         // then
         HttpPost httpPost = (HttpPost) requestArgumentCaptor.getValue();
-        assertEquals("http://host:8080/path", httpPost.getURI().toString());
-        assertEquals("POST", httpPost.getMethod());
-        assertEquals(0, httpPost.getAllHeaders().length);
+        Assert.assertEquals("http://host:8080/path", httpPost.getURI().toString());
+        Assert.assertEquals("POST", httpPost.getMethod());
+        Assert.assertEquals(0, httpPost.getAllHeaders().length);
         verify(apacheHttpClientToMockServerResponseMapper).mapApacheHttpClientResponseToMockServerResponse(closeableHttpResponse, false);
     }
 
