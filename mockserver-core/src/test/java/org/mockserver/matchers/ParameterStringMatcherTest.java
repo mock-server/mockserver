@@ -68,6 +68,35 @@ public class ParameterStringMatcherTest {
     }
 
     @Test
+    public void shouldNotMatchNullParameterValue() {
+        assertFalse(new ParameterStringMatcher(Arrays.asList(
+                new Parameter("parameterOneName", "parameterValueOne"),
+                new Parameter("parameterTwoName", "parameterTwoValue")
+        )).matches("" +
+                "parameterOneName=parameterValueOne" +
+                "&parameterTwoName="));
+    }
+
+    @Test
+    public void shouldMatchNullParameterValueInExpectation() {
+        assertTrue(new ParameterStringMatcher(Arrays.asList(
+                new Parameter("parameterOneName", "parameterValueOne"),
+                new Parameter("parameterTwoName", "")
+        )).matches("" +
+                "parameterOneName=parameterValueOne" +
+                "&parameterTwoName=parameterTwoValue"));
+    }
+
+    @Test
+    public void shouldNotMatchMissingParameter() {
+        assertFalse(new ParameterStringMatcher(Arrays.asList(
+                new Parameter("parameterOneName", "parameterValueOne"),
+                new Parameter("parameterTwoName", "parameterTwoValue")
+        )).matches("" +
+                "parameterOneName=parameterValueOne"));
+    }
+
+    @Test
     public void shouldMatchNullTest() {
         assertTrue(new ParameterStringMatcher(Arrays.<Parameter>asList()).matches(null));
     }

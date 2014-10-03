@@ -32,7 +32,7 @@ public class CaseInsensitiveRegexMultiMap extends EqualsHashCodeToString impleme
         for (String matcherKey : backingMap.keySet()) {
             for (List<String> allMatcherKeyValues : backingMap.getAll(matcherKey)) {
                 for (String matcherKeyValue : allMatcherKeyValues) {
-                    if (RegexStringMatcher.matches(matcherKey, key, true) && RegexStringMatcher.matches(matcherKeyValue, value, false)) {
+                    if (RegexStringMatcher.matches(matcherKey, key, true) && RegexStringMatcher.matches(value, matcherKeyValue, false)) {
                         return true;
                     }
                 }

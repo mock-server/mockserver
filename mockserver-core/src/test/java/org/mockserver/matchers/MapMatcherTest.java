@@ -1,7 +1,5 @@
 package org.mockserver.matchers;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.collections.CaseInsensitiveRegexMultiMap;
@@ -33,6 +31,18 @@ public class MapMatcherTest {
     public void matchesMatchingValues() {
         // given
         multimap.put("foo", "bar");
+
+        // when
+        keyToMultiValues.add(new KeyToMultiValue("foo", "bar"));
+
+        // then
+        assertTrue(mapMatcher.matches(keyToMultiValues));
+    }
+
+    @Test
+    public void doesNotMatchEmptyValueInExpectation() {
+        // given
+        multimap.put("foo", "");
 
         // when
         keyToMultiValues.add(new KeyToMultiValue("foo", "bar"));
@@ -189,6 +199,18 @@ public class MapMatcherTest {
 
         // when
         keyToMultiValues.add(new KeyToMultiValue("foo", "bar2"));
+
+        // then
+        assertFalse(mapMatcher.matches(keyToMultiValues));
+    }
+
+    @Test
+    public void doesNotMatchDifferentEmptyValue() {
+        // given
+        multimap.put("foo", "bar");
+
+        // when
+        keyToMultiValues.add(new KeyToMultiValue("foo", ""));
 
         // then
         assertFalse(mapMatcher.matches(keyToMultiValues));
