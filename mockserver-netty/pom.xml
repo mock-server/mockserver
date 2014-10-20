@@ -58,7 +58,8 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <scope>compile</scope>
-            <optional>true</optional> <!-- do not impose on downstream  junit users -->
+            <optional>true</optional>
+            <!-- do not impose on project importing mock-server -->
         </dependency>
 
         <!-- test -->
