@@ -76,15 +76,17 @@ public class Expectation extends EqualsHashCodeToString {
 
     public boolean matches(HttpRequest httpRequest) {
         logger.trace("\nMatching expectation: \n{} \nwith incoming http: \n{}" + System.getProperty("line.separator"), this.httpRequest, httpRequest);
-        boolean matches =
-                (times == null || times.greaterThenZero()) &&
-                        (
-                                (httpRequest == null && this.httpRequest == null) || this.httpRequestMatcher.matches(httpRequest)
-                        );
-        if (matches && times != null) {
+        return hasRemainingMatches() && httpRequestMatcher.matches(httpRequest);
+    }
+
+    private boolean hasRemainingMatches() {
+        return times == null || times.greaterThenZero();
+    }
+
+    public void decrementRemainingMatches() {
+        if (times != null) {
             times.decrement();
         }
-        return matches;
     }
 
     public void setNotUnlimitedResponses() {

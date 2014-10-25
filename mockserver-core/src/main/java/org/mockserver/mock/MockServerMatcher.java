@@ -63,6 +63,7 @@ public class MockServerMatcher extends EqualsHashCodeToString {
         ArrayList<Expectation> expectations = new ArrayList<Expectation>(this.expectations);
         for (Expectation expectation : expectations) {
             if (expectation.matches(httpRequest)) {
+                expectation.decrementRemainingMatches();
                 if (!expectation.getTimes().greaterThenZero()) {
                     if (this.expectations.contains(expectation)) {
                         this.expectations.remove(expectation);

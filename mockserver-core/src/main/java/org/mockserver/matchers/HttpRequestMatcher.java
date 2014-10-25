@@ -100,7 +100,9 @@ public class HttpRequestMatcher extends EqualsHashCodeToString implements Matche
     }
 
     public boolean matches(HttpRequest httpRequest) {
-        if (httpRequest != null) {
+        if (httpRequest == this.httpRequest) {
+            return true;
+        } else if (httpRequest != null) {
             boolean methodMatches = matches(methodMatcher, httpRequest.getMethod());
             boolean urlMatches = matches(urlMatcher, httpRequest.getURL());
             boolean pathMatches = matches(pathMatcher, httpRequest.getPath());
