@@ -115,7 +115,7 @@ public class MockServer {
     public boolean isRunning() {
         if (hasStarted.isDone()) {
             try {
-                TimeUnit.SECONDS.sleep(3);
+                TimeUnit.SECONDS.sleep(1);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
