@@ -10,4 +10,4 @@ echo "-------------------------"
 echo "------- JAVA 1.6  -------"
 echo "-------------------------"
 echo
-mvn clean integration-test $1
+mvn clean install $1
