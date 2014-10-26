@@ -33,6 +33,8 @@
                             <executable>bundle</executable>
                             <arguments>
                                 <argument>install</argument>
+                                <argument>--path</argument>
+                                <argument>vendor/bundle</argument>
                             </arguments>
                             <environmentVariables>
                                 <BUNDLE_GEMFILE>${basedir}/Gemfile</BUNDLE_GEMFILE>

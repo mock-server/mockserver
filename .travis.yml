@@ -4,7 +4,7 @@ before_install:
   - "travis_retry mvn install -T2C -q -DskipTests=true"
 
 script:
-  - "./travis_build.sh"
+  - "./scripts/travis_build.sh"
 
 jdk:
   - openjdk6

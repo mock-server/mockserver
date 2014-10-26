@@ -23,6 +23,7 @@ mods
 # Logs and databases #
 ######################
 *.log
+test.csv
 *.sql
 *.sqlite
 
@@ -63,30 +64,3 @@ google
 .gradle
 build
 out
-
-# Ruby #
-########
-*.gem
-*.rbc
-.bundle
-.config
-.yardoc
-.rakeTasks
-Gemfile.lock
-InstalledFiles
-_yardoc
-coverage
-doc
-lib/bundler/man
-pkg
-rdoc
-spec/reports
-test/tmp
-test/version_tmp
-tmp
-*.bundle
-*.so
-*.o
-*.a
-mkmf.log
-tmp.log

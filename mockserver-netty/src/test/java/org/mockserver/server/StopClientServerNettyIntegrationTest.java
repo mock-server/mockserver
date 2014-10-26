@@ -25,7 +25,7 @@ public class StopClientServerNettyIntegrationTest {
         // start client
         MockServerClient mockServerClient = new MockServerClient("localhost", serverPort);
 
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 2; i++) {
             // when
             mockServerClient.stop();
 
@@ -49,7 +49,7 @@ public class StopClientServerNettyIntegrationTest {
         // start client
         MockServerClient mockServerClient = new MockServerClient("localhost", serverPort);
 
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 2; i++) {
             // when
             mockServerClient.stop();
 
