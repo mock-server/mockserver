@@ -108,7 +108,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 new Header("accept-encoding", "gzip,deflate"),
                                 new Header("x-test", "test_headers_and_body")
                         )
-                        .withBody("an_example_body"),
+                        .withBody("an_example_body_http"),
                 makeRequest(
                         new HttpRequest()
                                 .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "echo")
@@ -117,7 +117,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         new Header("X-Test", "test_headers_and_body"),
                                         new Header("Content-Type", "text/plain")
                                 )
-                                .withBody("an_example_body"),
+                                .withBody("an_example_body_http"),
                         false
                 )
         );
@@ -130,7 +130,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 new Header("accept-encoding", "gzip,deflate"),
                                 new Header("x-test", "test_headers_and_body")
                         )
-                        .withBody("an_example_body"),
+                        .withBody("an_example_body_https"),
                 makeRequest(
                         new HttpRequest()
                                 .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "echo")
@@ -141,7 +141,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         new Header("Accept-Encoding", "gzip,deflate"),
                                         new Header("Content-Type", "text/plain")
                                 )
-                                .withBody("an_example_body"),
+                                .withBody("an_example_body_https"),
                         false
                 )
         );
@@ -172,7 +172,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 new Header("accept-encoding", "gzip,deflate"),
                                 new Header("x-test", "test_headers_and_body")
                         )
-                        .withBody("an_example_body"),
+                        .withBody("an_example_body_http"),
                 makeRequest(
                         new HttpRequest()
                                 .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "echo")
@@ -181,7 +181,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         new Header("X-Test", "test_headers_and_body"),
                                         new Header("Content-Type", "text/plain")
                                 )
-                                .withBody("an_example_body"),
+                                .withBody("an_example_body_http"),
                         false
                 )
         );
@@ -194,7 +194,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 new Header("accept-encoding", "gzip,deflate"),
                                 new Header("x-test", "test_headers_and_body")
                         )
-                        .withBody("an_example_body"),
+                        .withBody("an_example_body_https"),
                 makeRequest(
                         new HttpRequest()
                                 .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "echo")
@@ -203,7 +203,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         new Header("X-Test", "test_headers_and_body"),
                                         new Header("Content-Type", "text/plain")
                                 )
-                                .withBody("an_example_body"),
+                                .withBody("an_example_body_https"),
                         false
                 )
         );
