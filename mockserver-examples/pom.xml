@@ -221,11 +221,11 @@
 
     <build>
         <plugins>
-            <!-- prevent tests from running on MacOS due to Java bug that causes the JVM to crash randomly -->
+            <!-- run tests -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.16</version>
+                <version>2.17</version>
             </plugin>
             <!-- dependency analysis -->
             <plugin>
