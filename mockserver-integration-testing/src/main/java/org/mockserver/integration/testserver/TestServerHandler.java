@@ -16,8 +16,7 @@
 package org.mockserver.integration.testserver;
 
 import com.google.common.base.Charsets;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
+import io.netty.buffer.*;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.*;
@@ -36,7 +35,7 @@ public class TestServerHandler extends SimpleChannelInboundHandler<Object> {
 
     // requests
     private DefaultFullHttpRequest mockServerHttpRequest = null;
-    private ByteBuf responseContent;
+    private ByteBuf requestContent;
     private HttpRequest request = null;
 
     @Override
@@ -55,10 +54,10 @@ public class TestServerHandler extends SimpleChannelInboundHandler<Object> {
                 ByteBuf requestContent = ((HttpContent) msg).content();
 
                 if (requestContent.isReadable()) {
-                    if (this.responseContent == null) {
-                        this.responseContent = Unpooled.copiedBuffer(requestContent);
+                    if (this.requestContent == null) {
+                        this.requestContent = Unpooled.copiedBuffer(requestContent);
                     } else {
-                        this.responseContent.writeBytes(requestContent);
+                        this.requestContent.writeBytes(requestContent);
                     }
                 }
 
@@ -72,6 +71,7 @@ public class TestServerHandler extends SimpleChannelInboundHandler<Object> {
                     }
 
                     writeResponse(ctx, handleRequest(mockServerHttpRequest), isKeepAlive(request), is100ContinueExpected(request));
+                    this.requestContent = null;
                 }
 
             }
@@ -112,7 +112,7 @@ public class TestServerHandler extends SimpleChannelInboundHandler<Object> {
             response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
         } else if (req.getUri().equals("/echo")) {
             // echo back body
-            response = new DefaultFullHttpResponse(HTTP_1_1, OK, req.content());
+            response = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.copiedBuffer(req.content()));
             // echo back headers
             List<String> headerNames = new ArrayList<String>(req.headers().names());
             Collections.sort(headerNames);
