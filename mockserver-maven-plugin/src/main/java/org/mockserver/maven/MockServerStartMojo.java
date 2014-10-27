@@ -36,7 +36,7 @@ public class MockServerStartMojo extends MockServerAbstractMojo {
             getLog().info("Skipping plugin execution");
         } else {
             if (getLog().isInfoEnabled()) {
-                getLog().info("Starting MockServer on"
+                getLog().info("mockserver:start about to start MockServer on: "
                         + (serverPort != -1 ? " serverPort " + serverPort : "")
                         + (serverSecurePort != -1 ? " serverSecurePort " + serverSecurePort : "")
                         + (proxyPort != -1 ? " proxyPort " + proxyPort : "")

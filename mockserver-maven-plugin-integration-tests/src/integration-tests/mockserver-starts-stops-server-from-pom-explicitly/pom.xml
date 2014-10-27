@@ -10,6 +10,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <maven.compiler.source>1.6</maven.compiler.source>
         <maven.compiler.target>1.6</maven.compiler.target>
     </properties>
@@ -25,13 +26,15 @@
 
     <build>
         <plugins>
+            <!-- run mockserver -->
             <plugin>
                 <groupId>org.mock-server</groupId>
                 <artifactId>mockserver-maven-plugin</artifactId>
                 <version>${mockserver.version}</version>
                 <configuration>
-                    <serverPort>8089</serverPort>
-                    <serverSecurePort>8090</serverSecurePort>
+                    <serverPort>8094</serverPort>
+                    <serverSecurePort>8095</serverSecurePort>
+                    <pipeLogToConsole>true</pipeLogToConsole>
                 </configuration>
                 <executions>
                     <execution>
@@ -42,10 +45,46 @@
                         </goals>
                     </execution>
                     <execution>
-                        <id>verify</id>
-                        <phase>verify</phase>
+                        <id>pre-integration-test</id>
+                        <phase>pre-integration-test</phase>
                         <goals>
                             <goal>stop</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- tests run after mock server started -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.17</version>
+                <configuration>
+                    <!-- allow debugging tests -->
+                    <!--<forkMode>never</forkMode>-->
+                    <includes>
+                        <include>**/*Test.java</include>
+                    </includes>
+                    <excludes>
+                        <exclude>**/*StopTest.java</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+            <!-- tests run after mock server stopped (to check it has been stopped) -->
+            <plugin>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>2.17</version>
+                <configuration>
+                    <!-- allow debugging tests -->
+                    <!--<forkCount>0</forkCount>-->
+                    <includes>
+                        <include>**/*StopTest.java</include>
+                    </includes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
                         </goals>
                     </execution>
                 </executions>

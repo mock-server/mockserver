@@ -11,12 +11,12 @@ import org.mockserver.socket.PortFactory;
 /**
  * @author jamesdbloom
  */
-public class ClientProxyMavenPluginIntegrationTest extends AbstractClientProxyIntegrationTest {
+public class ClientProxyMavenPluginTest extends AbstractClientProxyIntegrationTest {
 
     private final static int SERVER_HTTP_PORT = PortFactory.findFreePort();
     private final static int SERVER_HTTPS_PORT = PortFactory.findFreePort();
-    private final static int PROXY_HTTP_PORT = 9091;
-    private final static int PROXY_HTTPS_PORT = 9092;
+    private final static int PROXY_HTTP_PORT = 9092;
+    private final static int PROXY_HTTPS_PORT = 9093;
     private static TestServer testServer = new TestServer();
     private static ProxyClient proxyClient;
 
