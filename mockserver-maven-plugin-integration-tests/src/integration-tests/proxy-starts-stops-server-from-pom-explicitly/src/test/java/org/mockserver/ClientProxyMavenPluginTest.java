@@ -1,9 +1,7 @@
 package org.mockserver;
 
 import org.junit.AfterClass;
-import org.junit.Before;
 import org.junit.BeforeClass;
-import org.mockserver.client.proxy.ProxyClient;
 import org.mockserver.integration.proxy.AbstractClientProxyIntegrationTest;
 import org.mockserver.integration.testserver.TestServer;
 import org.mockserver.socket.PortFactory;
@@ -11,31 +9,22 @@ import org.mockserver.socket.PortFactory;
 /**
  * @author jamesdbloom
  */
-public class ClientProxyMavenPluginIntegrationTest extends AbstractClientProxyIntegrationTest {
+public class ClientProxyMavenPluginTest extends AbstractClientProxyIntegrationTest {
 
     private final static int SERVER_HTTP_PORT = PortFactory.findFreePort();
     private final static int SERVER_HTTPS_PORT = PortFactory.findFreePort();
-    private final static int PROXY_HTTP_PORT = 9093;
-    private final static int PROXY_HTTPS_PORT = 9094;
+    private final static int PROXY_HTTP_PORT = 9096;
+    private final static int PROXY_HTTPS_PORT = 9097;
     private static TestServer testServer = new TestServer();
-    private static ProxyClient proxyClient;
 
     @BeforeClass
     public static void startServer() throws Exception {
         testServer.startServer(SERVER_HTTP_PORT, SERVER_HTTPS_PORT);
-
-        // start client
-        proxyClient = new ProxyClient("localhost", PROXY_HTTP_PORT);
     }
 
     @AfterClass
     public static void stopServer() throws Exception {
         testServer.stop();
-    }
-
-    @Before
-    public void resetProxy() {
-        proxyClient.reset();
     }
 
     @Override

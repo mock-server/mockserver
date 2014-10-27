@@ -60,10 +60,16 @@
                             <directory>src/integration-tests/proxy-run-stop-forked-from-command-line/target</directory>
                         </fileset>
                         <fileset>
+                            <directory>src/integration-tests/mockserver-start-using-plugin-stop-using-listener/target</directory>
+                        </fileset>
+                        <fileset>
                             <directory>src/integration-tests/proxy-starts-stops-forked-server-from-pom/target</directory>
                         </fileset>
                         <fileset>
                             <directory>src/integration-tests/proxy-starts-stops-server-from-pom-explicitly/target</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>src/integration-tests/proxy-starts-using-plugins-stops-using-listener/target</directory>
                         </fileset>
                         <fileset>
                             <directory>src/integration-tests/skip/target</directory>
@@ -85,15 +91,16 @@
                 <configuration>
                     <skipInvocation>${skipTests}</skipInvocation>
                     <debug>false</debug>
+                    <parallelThreads>5</parallelThreads>
+                    <streamLogs>false</streamLogs>
                     <showErrors>true</showErrors>
-                    <streamLogs>true</streamLogs>
                     <projectsDirectory>${basedir}/src/integration-tests/</projectsDirectory>
                     <cloneProjectsTo>${project.build.directory}/integration-tests/</cloneProjectsTo>
                     <cloneClean>true</cloneClean>
                     <ignoreFailures>false</ignoreFailures>
                     <addTestClassPath>true</addTestClassPath>
-                    <preBuildHookScript>setup</preBuildHookScript>
-                    <postBuildHookScript>verify</postBuildHookScript>
+                    <!--<preBuildHookScript>setup</preBuildHookScript>-->
+                    <!--<postBuildHookScript>verify</postBuildHookScript>-->
                     <properties>
                         <property>
                             <name>mockserver.version</name>
@@ -106,11 +113,11 @@
                             <value>${project.version}</value>
                         </property>
                     </testProperties>
-                    <localRepositoryPath>${project.build.directory}/local-repo</localRepositoryPath>
+                    <!--<localRepositoryPath>${project.build.directory}/local-repo</localRepositoryPath>-->
+                    <!--<settingsFile>src/integration-tests/settings.xml</settingsFile>-->
                     <extraArtifacts>
                         <extraArtifact>org.mock-server:mockserver:${project.version}:pom</extraArtifact>
                     </extraArtifacts>
-                    <settingsFile>src/integration-tests/settings.xml</settingsFile>
                     <!--<mavenOpts>-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005</mavenOpts>-->
                     <pomIncludes>
                         <pomInclude>**/pom.xml</pomInclude>

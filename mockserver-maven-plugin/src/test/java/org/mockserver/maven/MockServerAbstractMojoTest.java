@@ -16,7 +16,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class MockServerAbstractMojoTest {
 
     @Mock
-    private InstanceHolder embeddedJettyHolder;
+    private InstanceHolder mockEmbeddedJettyHolder;
 
     @InjectMocks
     private MockServerAbstractMojo mockServerAbstractMojo;
@@ -29,8 +29,8 @@ public class MockServerAbstractMojoTest {
                 throw new UnsupportedOperationException("method not implemented yet");
             }
         };
-
         initMocks(this);
+        MockServerAbstractMojo.embeddedJettyHolder = mockEmbeddedJettyHolder;
     }
 
     @Test
@@ -50,6 +50,6 @@ public class MockServerAbstractMojoTest {
     @Test
     public void shouldNotCreateIfAlreadyInitialized() {
         // then
-        assertSame(embeddedJettyHolder, mockServerAbstractMojo.getEmbeddedJettyHolder());
+        assertSame(mockEmbeddedJettyHolder, mockServerAbstractMojo.getEmbeddedJettyHolder());
     }
 }

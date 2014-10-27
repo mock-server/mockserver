@@ -1,5 +1,6 @@
 package org.mockserver.maven;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -88,7 +89,8 @@ public abstract class MockServerAbstractMojo extends AbstractMojo {
     /**
      * Holds reference to jetty across plugin execution
      */
-    private InstanceHolder embeddedJettyHolder;
+    @VisibleForTesting
+    protected static InstanceHolder embeddedJettyHolder;
 
     protected InstanceHolder getEmbeddedJettyHolder() {
         if (embeddedJettyHolder == null) {

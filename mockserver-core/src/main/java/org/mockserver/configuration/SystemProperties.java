@@ -36,30 +36,21 @@ public class SystemProperties {
     }
 
     // mockserver config
-    public static int serverStopPort(Integer port, Integer securePort) {
-        return SystemProperties.readIntegerProperty("mockserver.serverStopPort", Math.max((port != null ? port : 0), (securePort != null ? securePort : 0)) + 1);
+    public static int mockServerHttpPort() {
+        return SystemProperties.readIntegerProperty("mockserver.mockServerHttpPort", -1);
     }
 
-    public static void serverStopPort(int port) {
-        System.setProperty("mockserver.serverStopPort", "" + port);
+    public static void mockServerHttpPort(int port) {
+        System.setProperty("mockserver.mockServerHttpPort", "" + port);
     }
 
     // proxy config
-    public static int proxyStopPort(Integer port, Integer securePort) {
-        return SystemProperties.readIntegerProperty("mockserver.proxyStopPort", Math.max((port != null ? port : 0), (securePort != null ? securePort : 0)) + 1);
+    public static int proxyHttpPort() {
+        return SystemProperties.readIntegerProperty("mockserver.proxyHttpPort", -1);
     }
 
-    public static void proxyStopPort(int port) {
-        System.setProperty("mockserver.proxyStopPort", "" + port);
-    }
-
-    // socks config
-    public static int socksPort() {
-        return SystemProperties.readIntegerProperty("mockserver.socksPort", -1);
-    }
-
-    public static void socksPort(int port) {
-        System.setProperty("mockserver.socksPort", "" + port);
+    public static void proxyHttpPort(int port) {
+        System.setProperty("mockserver.proxyHttpPort", "" + port);
     }
 
     private static Integer readIntegerProperty(String key, int defaultValue) {
@@ -67,7 +58,7 @@ public class SystemProperties {
             return Integer.parseInt(System.getProperty(key, "" + defaultValue));
         } catch (NumberFormatException nfe) {
             logger.error("NumberFormatException converting " + key + " with value [" + System.getProperty(key) + "]", nfe);
-            throw new RuntimeException("NumberFormatException converting " + key + " with value [" + System.getProperty(key) + "]", nfe);
+            return defaultValue;
         }
     }
 
@@ -76,7 +67,7 @@ public class SystemProperties {
             return Long.parseLong(System.getProperty(key, "" + defaultValue));
         } catch (NumberFormatException nfe) {
             logger.error("NumberFormatException converting " + key + " with value [" + System.getProperty(key) + "]", nfe);
-            throw new RuntimeException("NumberFormatException converting " + key + " with value [" + System.getProperty(key) + "]", nfe);
+            return defaultValue;
         }
     }
 }

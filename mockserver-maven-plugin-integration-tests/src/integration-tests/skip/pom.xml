@@ -10,12 +10,12 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <maven.compiler.source>1.6</maven.compiler.source>
         <maven.compiler.target>1.6</maven.compiler.target>
     </properties>
 
     <dependencies>
-        <!-- mockserver -->
         <dependency>
             <groupId>org.mock-server</groupId>
             <artifactId>mockserver-integration-testing</artifactId>
@@ -26,16 +26,17 @@
 
     <build>
         <plugins>
+            <!-- run mockserver -->
             <plugin>
                 <groupId>org.mock-server</groupId>
                 <artifactId>mockserver-maven-plugin</artifactId>
                 <version>${mockserver.version}</version>
                 <configuration>
                     <skip>true</skip>
-                    <serverPort>8091</serverPort>
-                    <serverSecurePort>8092</serverSecurePort>
-                    <proxyPort>9097</proxyPort>
-                    <proxySecurePort>9098</proxySecurePort>
+                    <logLevel>INFO</logLevel>
+                    <serverPort>8096</serverPort>
+                    <proxyPort>9100</proxyPort>
+                    <pipeLogToConsole>true</pipeLogToConsole>
                 </configuration>
                 <executions>
                     <execution>

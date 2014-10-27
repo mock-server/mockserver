@@ -9,6 +9,7 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.repository.RepositorySystem;
+import org.mockserver.configuration.SystemProperties;
 
 import java.io.File;
 import java.io.IOException;
@@ -58,7 +59,7 @@ public class MockServerRunForkedMojo extends MockServerAbstractMojo {
             getLog().info("Skipping plugin execution");
         } else {
             if (getLog().isInfoEnabled()) {
-                getLog().info("Starting MockServer on"
+                getLog().info("mockserver:runForked about to start MockServer on: "
                                 + (serverPort != -1 ? " serverPort " + serverPort : "")
                                 + (serverSecurePort != -1 ? " serverSecurePort " + serverSecurePort : "")
                                 + (proxyPort != -1 ? " proxyPort " + proxyPort : "")
@@ -73,6 +74,7 @@ public class MockServerRunForkedMojo extends MockServerAbstractMojo {
             if (serverPort != -1) {
                 arguments.add("-serverPort");
                 arguments.add("" + serverPort);
+                SystemProperties.mockServerHttpPort(serverPort);
             }
             if (serverSecurePort != -1) {
                 arguments.add("-serverSecurePort");
@@ -81,6 +83,7 @@ public class MockServerRunForkedMojo extends MockServerAbstractMojo {
             if (proxyPort != -1) {
                 arguments.add("-proxyPort");
                 arguments.add("" + proxyPort);
+                SystemProperties.proxyHttpPort(proxyPort);
             }
             if (proxySecurePort != -1) {
                 arguments.add("-proxySecurePort");

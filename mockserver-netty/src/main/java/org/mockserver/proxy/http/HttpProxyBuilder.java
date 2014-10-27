@@ -1,6 +1,7 @@
 package org.mockserver.proxy.http;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.mockserver.configuration.SystemProperties;
 
 /**
  * This class should be used to configure the HttpProxy, using this class is the simplest way to create an HttpProxy instance
@@ -24,6 +25,7 @@ public class HttpProxyBuilder {
      */
     public HttpProxyBuilder withHTTPPort(Integer port) {
         if (port != null && port != -1) {
+            SystemProperties.proxyHttpPort(port);
             this.port = port;
         } else {
             this.port = null;

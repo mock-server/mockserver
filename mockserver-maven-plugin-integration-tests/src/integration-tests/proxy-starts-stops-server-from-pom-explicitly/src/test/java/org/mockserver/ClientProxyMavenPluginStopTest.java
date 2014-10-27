@@ -9,15 +9,10 @@ import java.net.ConnectException;
 /**
  * @author jamesdbloom
  */
-public class ClientProxyMavenPluginIntegrationTest {
+public class ClientProxyMavenPluginStopTest {
 
     @Test(expected = RuntimeException.class)
     public void shouldNotBeAbleToReachProxy() {
-        new ProxyClient("127.0.0.1", 9097).reset();
-    }
-
-    @Test(expected = RuntimeException.class)
-    public void shouldNotBeAbleToReachMockServer() {
-        new MockServerClient("127.0.0.1", 8091).reset();
+        new ProxyClient("127.0.0.1", 9096).reset();
     }
 }

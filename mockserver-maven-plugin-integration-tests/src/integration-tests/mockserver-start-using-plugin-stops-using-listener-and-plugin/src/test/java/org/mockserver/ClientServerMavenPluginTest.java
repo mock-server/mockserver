@@ -1,6 +1,5 @@
 package org.mockserver;
 
-import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -12,12 +11,12 @@ import org.mockserver.socket.PortFactory;
 /**
  * @author jamesdbloom
  */
-public class ClientServerMavenPluginIntegrationTest extends AbstractClientServerIntegrationTest {
+public class ClientServerMavenPluginTest extends AbstractClientServerIntegrationTest {
 
     private final static int TEST_SERVER_HTTP_PORT = PortFactory.findFreePort();
     private final static int TEST_SERVER_HTTPS_PORT = PortFactory.findFreePort();
-    private final static int SERVER_HTTP_PORT = 8085;
-    private final static int SERVER_HTTPS_PORT = 8086;
+    private final static int SERVER_HTTP_PORT = 8090;
+    private final static int SERVER_HTTPS_PORT = 8091;
     private static TestServer testServer = new TestServer();
 
     @BeforeClass
