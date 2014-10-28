@@ -62,6 +62,8 @@
         <module>mockserver-netty</module>
         <module>mockserver-maven-plugin</module>
         <module>mockserver-maven-plugin-integration-tests</module>
+        <module>mockserver-grunt</module>
+        <module>mockserver-client-node</module>
         <module>mockserver-client-javascript</module>
         <module>mockserver-examples</module>
     </modules>
@@ -95,6 +97,16 @@
                 <groupId>org.mock-server</groupId>
                 <artifactId>mockserver-netty</artifactId>
                 <classifier>jar-with-dependencies</classifier>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mock-server</groupId>
+                <artifactId>mockserver-grunt</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mock-server</groupId>
+                <artifactId>mockserver-client-node</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

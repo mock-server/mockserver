@@ -1,7 +1,7 @@
 {
   "name": "mockserver-grunt",
   "description": "A grunt task to run the MockServer",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "homepage": "https://github.com/jamesdbloom/mockserver",
   "author": {
     "name": "James Bloom",

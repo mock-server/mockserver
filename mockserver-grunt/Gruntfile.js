@@ -50,6 +50,36 @@ module.exports = function (grunt) {
         }
     });
 
+    grunt.registerTask('linkModule', 'Link module to support other dependent modules', function () {
+        var done = this.async();
+
+        var spawn = require('child_process').spawn,
+            MAX_ERROR_MESSAGE_LENGTH = 1024,
+            stderrBuf = '',
+            pkg = grunt.file.readJSON('package.json');
+
+        var nodeProcess = spawn('npm', ['link']);
+
+        grunt.log.ok('Linked module with name ' + pkg.name);
+
+        nodeProcess.stdout.on('data', function (data) {
+            grunt.log.writeln('[linkModule]: ' + data);
+        });
+        nodeProcess.stderr.on('data', function (data) {
+            grunt.log.errorlns(data);
+            if (data.length === undefined) {
+                data = '' + data;
+            }
+            if (stderrBuf.length + data.length < MAX_ERROR_MESSAGE_LENGTH) {
+                stderrBuf += data;
+            }
+        });
+
+        nodeProcess.on('exit', function (code) {
+            done(true);
+        });
+    });
+
     // load this plugin's task
     grunt.loadTasks('tasks');
 
@@ -59,5 +89,5 @@ module.exports = function (grunt) {
 
     grunt.registerTask('test', ['start_mockserver:start', 'nodeunit:started', 'stop_mockserver:stop', 'nodeunit:stopped']);
 
-    grunt.registerTask('default', ['jshint', 'test']);
+    grunt.registerTask('default', ['jshint', 'test', 'linkModule']);
 };

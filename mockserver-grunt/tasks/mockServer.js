@@ -19,7 +19,7 @@ module.exports = function (grunt) {
                 options = this.options(),
                 spawn = require('child_process').spawn;
 
-            var commandLineOptions = ['-Dfile.encoding=UTF-8', '-Dmockserver.logLevel=WARN', '-jar', grunt.file.expand('mockserver-netty-*-jar-with-dependencies.jar')];
+            var commandLineOptions = ['-Dfile.encoding=UTF-8', '-Dmockserver.logLevel=WARN', '-jar', grunt.file.expand('**/mockserver-netty-*-jar-with-dependencies.jar')];
             if (options.serverPort) {
                 commandLineOptions.push("-serverPort");
                 commandLineOptions.push(options.serverPort);

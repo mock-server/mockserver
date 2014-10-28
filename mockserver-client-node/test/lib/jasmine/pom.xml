@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.mock-server.integration-test</groupId>
+    <artifactId>mockserver-run-stop-forked-from-command-line</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>1.6</maven.compiler.source>
+        <maven.compiler.target>1.6</maven.compiler.target>
+        <mockserver.version>3.6.1-SNAPSHOT</mockserver.version>
+    </properties>
+
+    <dependencies>
+        <!-- MockServer -->
+        <dependency>
+            <groupId>org.mock-server</groupId>
+            <artifactId>mockserver-integration-testing</artifactId>
+            <version>${mockserver.version}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.mock-server</groupId>
+                <artifactId>mockserver-maven-plugin</artifactId>
+                <version>${mockserver.version}</version>
+                <configuration>
+                    <logLevel>INFO</logLevel>
+                    <serverPort>1080</serverPort>
+                    <serverSecurePort>1082</serverSecurePort>
+                    <proxyPort>1090</proxyPort>
+                    <proxySecurePort>1092</proxySecurePort>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
