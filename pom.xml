@@ -62,8 +62,8 @@
         <module>mockserver-netty</module>
         <module>mockserver-maven-plugin</module>
         <module>mockserver-maven-plugin-integration-tests</module>
-        <module>mockserver-grunt</module>
-        <module>mockserver-client-node</module>
+        <!--<module>mockserver-grunt</module>-->
+        <!--<module>mockserver-client-node</module>-->
         <module>mockserver-client-javascript</module>
         <module>mockserver-examples</module>
     </modules>
