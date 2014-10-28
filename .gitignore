@@ -64,3 +64,10 @@ google
 .gradle
 build
 out
+
+# grunt / node build artifacts #
+################################
+node_modules
+npm-debug.log
+tmp
+custom_tmp

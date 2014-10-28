@@ -1,0 +1,49 @@
+{
+  "name": "mockserver-grunt",
+  "description": "A grunt task to run the MockServer",
+  "version": "0.0.1",
+  "homepage": "https://github.com/jamesdbloom/mockserver",
+  "author": {
+    "name": "James Bloom",
+    "email": "jamesdbloom@gmail.com",
+    "url": "http://mock-server.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jamesdbloom/mockserver.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jamesdbloom/mockserver/issues"
+  },
+  "licenses": [
+    {
+      "type": "Apache",
+      "url": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/license.txt"
+    }
+  ],
+  "engines": {
+    "node": ">= 0.8.0"
+  },
+  "scripts": {
+    "test": "grunt"
+  },
+  "devDependencies": {
+    "grunt": "~0.4",
+    "grunt-contrib-clean": "~0.6",
+    "grunt-contrib-jshint": "~0.10",
+    "grunt-contrib-nodeunit": "~0.4",
+    "grunt-run-node": "~0.1",
+    "nodeunit": "~0.9",
+    "q": "~1.0"
+  },
+  "peerDependencies": {
+    "grunt": "~0.4"
+  },
+  "keywords": [
+    "mockserver"
+  ],
+  "dependencies": {
+    "sleep": "~1.1",
+    "request": "~2.47"
+  }
+}
