@@ -34,7 +34,7 @@ In addition MockServer SNAPSHOT artifacts can also be found on [Sonatype](https:
 
 NPM Registry contains the following module:
 
-* [MockServer Grunt Plugin ![mockserver-grunt](https://nodei.co/npm/mockserver-grunt.png?compact=true)](https://www.npmjs.org/package/mockserver-grunt) - a Node.js module and Grunt plugin to start and stop MockServer
+* [MockServer Grunt Plugin ![mockserver-grunt](https://nodei.co/npm/mockserver-grunt.png?mini=true)](https://www.npmjs.org/package/mockserver-grunt) - a Node.js module and Grunt plugin to start and stop MockServer
 
 ### Docker Index
 
@@ -53,7 +53,7 @@ Vert.X Module Registry contains the following artifacts:
 * [mockserver-client-ruby ![mockserver-client](https://badge.fury.io/rb/mockserver-client.png)](https://rubygems.org/gems/mockserver-client) - Ruby client for both the MockServer and the proxy 
 * [mockserver-client-java](http://search.maven.org/#search%7Cga%7C1%7Cmockserver-client-java) - a Java client for both the MockServer and the proxy 
 * [mockserver-client-javascript](https://rubygems.org/gems/mockserver-client-javascript) - a JavaScript client for both the MockServer and the proxy 
-* [mockserver-client-node ![mockserver-client-node](https://nodei.co/npm/mockserver-client.png?compact=true)](https://www.npmjs.org/package/mockserver-client) - a Node.js client for both the MockServer and the proxy 
+* [mockserver-client-node ![mockserver-client-node](https://nodei.co/npm/mockserver-client.png?mini=true)](https://www.npmjs.org/package/mockserver-client) - a Node.js client for both the MockServer and the proxy 
 
 # Issues
 
