@@ -28,12 +28,17 @@ Maven Central contains the following MockServer artifacts:
 
 In addition MockServer SNAPSHOT artifacts can also be found on [Sonatype](https://oss.sonatype.org/index.html#nexus-search;quick~mockserver).
 
+### Node Module & Grunt Plugin
+
+NPM Registry contains the following module:
+
+* [MockServer Grunt Plugin](https://www.npmjs.org/package/mockserver-grunt) - a Node.js module and Grunt plugin to start and stop MockServer
 
 ### Docker Index
 
 Docker Index contains the following artifacts:
 
-* [MockServer Docker Container](https://registry.hub.docker.com/u/jamesdbloom/mockserver/) - a Docker container containing the Netty MockServer and proxy
+* [MockServer Docker Container](https://registry.hub.docker.com/u/jamesdbloom/mockserver) - a Docker container containing the Netty MockServer and proxy
 
 ### Vert.X Module Registry
 
@@ -41,11 +46,12 @@ Vert.X Module Registry contains the following artifacts:
 
 * [org.mock-server~mockserver-vertx~2.9](http://modulereg.vertx.io/) - a Vert.X module that mocks HTTP and HTTPS requests
 
-### MockServer & Proxy Clients
+### MockServer Clients
 
 * [mockserver-client-ruby ![mockserver-client](https://badge.fury.io/rb/mockserver-client.png)](https://rubygems.org/gems/mockserver-client) - Ruby client for both the MockServer and the proxy 
 * [mockserver-client-java](http://search.maven.org/#search%7Cga%7C1%7Cmockserver-client-java) - a Java client for both the MockServer and the proxy 
 * [mockserver-client-javascript](https://rubygems.org/gems/mockserver-client-javascript) - a JavaScript client for both the MockServer and the proxy 
+* [mockserver-client-node](https://www.npmjs.org/package/mockserver-client) - a Node.js client for both the MockServer and the proxy 
 
 # Issues
 
