@@ -521,7 +521,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 <p>There are currently clients written in Java and JavaScript (<a href="#clients">see more below</a>) although any language that can send JSON via HTTP can easily use the MockServer API.</p>
 <ul>
 	<li><a href="#clients">Java</a></li>
-	<li><a href="#clients">JavaScript</a></li>
+	<li><a href="#clients">JavaScript</a> (browser API & Node.js)</li>
 	<li><a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-client-ruby/README.md">Ruby</a></li>
 </ul>
 
@@ -769,6 +769,8 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 	<li>via the mockserver-maven-plugin, for example, as part of a build cycle</li>
 	<li>programmatically via an API, for example, in an <span class="annotation">@Before</span> / <span class="annotation">@After</span> method</li>
 	<li>from the command line as a stand-alone process, for example, as part of a deployment process to a test environment</li>
+	<li>from a Grunt build using a Grunt plugin</li>
+	<li>from an Node.js code using an NPM plugin</li>
 </ul>
 
 <p>MockServer is available as:</p>
@@ -777,6 +779,8 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 	<li>a stand alone Netty web server that is fully self contained</li>
 	<li>a deployable WAR that runs on any JEE web server</li>
 	<li>a Vert.X module that runs on a Vert.X</li>
+	<li>a Grunt plugin (that has the embedded Netty server bundle with it)</li>
+	<li>an NPM plugin (that has the embedded Netty server bundle with it)</li>
 </ul>
 
 <a name="clients" class="anchor" href="#clients">&nbsp;</a>
@@ -811,9 +815,9 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 			</li>
 		</ul>
 	</li>
-	<li>JavaScript
+	<li>JavaScript (both browser API & Node.js module)
 		<ul>
-			<li><a href="#javascript-mockserver-client"><strong>mockServerClient.js</strong></a> - supports:
+			<li><a href="#javascript-mockserver-client"><strong>mockServerClient</strong></a> - supports:
 				<ul>
 					<li>creating expectations</li>
 					<li>clearing expectations (selectively)</li>
@@ -822,7 +826,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 					<li>verifying which requests have been received</li>
 				</ul>
 			</li>
-			<li><a href="#javascript-proxy-client"><strong>proxyClient.js</strong></a> - supports:
+			<li><a href="#javascript-proxy-client"><strong>proxyClient</strong></a> - supports:
 				<ul>
 					<li>verifying which requests have been recorded</li>
 					<li>retrieving all recorded requests / responses as JSON or Expectation objects</li>
@@ -1120,13 +1124,23 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p><strong>JavaScript MockServer Client</strong></p>
 
-<p>To simplest way to interact with MockServer from JavaScript is to use <a href="https://rawgit.com/jamesdbloom/mockserver/master/mockserver-javascript-client/src/main/javascript/mockServerClient.js"><strong>mockServerClient.js</strong></a>.</p>
+<p>To interact with MockServer from JavaScript it is possible to use either:</p>
 
-<p>To include this file is an HTML page use one of the following script tag to load the file from <a href="http://www.maxcdn.com/">MaxCDN</a>:</p>
+<ul>
+	<li>a browser based API file <a href="https://rawgit.com/jamesdbloom/mockserver/master/mockserver-javascript-client/src/main/javascript/mockServerClient.js"><strong>mockServerClient.js</strong></a></li>
+	<li>a Node.js npm module <a href="https://www.npmjs.org/package/mockserver-client"><strong>mockserver-client</strong></a><br/><a href="https://www.npmjs.org/package/mockserver-client"><img src="https://nodei.co/npm/mockserver-client.png?downloads=true&downloadRank=true&stars=true" alt="mockserver-client-node"/></a></li>
+</ul>
+
+<p>To include the browser based in an HTML page use one of the following script tag to load the file from <a href="http://www.maxcdn.com/">MaxCDN</a>:</p>
 
 <pre><code class="code">&lt;<span class="annotation">script</span> <span class="keyword">type</span>=<span class="string_literal">"text/javascript"</span> <span class="keyword">src</span>=<span class="string_literal">"https://cdn.rawgit.com/jamesdbloom/mockserver/01973e75099bbc2ad2e37f809e9b33c8d31cb6dd/mockserver-javascript-client/src/main/javascript/mockServerClient.js"</span>&gt;&lt;/<span class="annotation">script</span>&gt;</code></pre>
 
-<p><a href="https://rawgit.com/jamesdbloom/mockserver/master/mockserver-javascript-client/src/main/javascript/mockServerClient.js"><strong>mockServerClient.js</strong></a> provides the following API:</p>
+<p>To use the Node.js module add the following code to your node project:</p>
+
+<pre><code class="code"><span class="keyword">var</span> mockServer = require(<span class="string_literal">'mockserver-client'</span>),
+    mockServerClient = mockServer.mockServerClient;</code></pre>
+
+<p>Both versions of <strong>mockServerClient</strong> provide the same API as follows:</p>
 
 <pre><code class="code"><span class="keyword">var</span> mockServerClient = function (mockServerUrl) {
     <span class="string_literal">"use strict"</span>;
@@ -1250,13 +1264,23 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p><strong>JavaScript Proxy Client</strong></p>
 
-<p>To simplest way to interact with the proxy from JavaScript is to use <a href="https://rawgit.com/jamesdbloom/mockserver/master/mockserver-javascript-client/src/main/javascript/proxyClient.js"><strong>proxyClient.js</strong></a>.</p>
+<p>To interact with the proxy from JavaScript it is possible to use either:</p>
+
+<ul>
+	<li>a browser based API file <a href="https://rawgit.com/jamesdbloom/mockserver/master/mockserver-javascript-client/src/main/javascript/proxyClient.js"><strong>proxyClient.js</strong></a></li>
+	<li>a Node.js npm module <a href="https://www.npmjs.org/package/mockserver-client"><strong>mockserver-client</strong></a><br/><a href="https://www.npmjs.org/package/mockserver-client"><img src="https://nodei.co/npm/mockserver-client.png?downloads=true&downloadRank=true&stars=true" alt="mockserver-client-node"/></a></li>
+</ul>
 
 <p>To include this file is an HTML page use one of the following script tag to load the file from <a href="http://www.maxcdn.com/">MaxCDN</a>:</p>
 
 <pre><code class="code">&lt;<span class="annotation">script</span> <span class="keyword">type</span>=<span class="string_literal">"text/javascript"</span> <span class="keyword">src</span>=<span class="string_literal">"https://cdn.rawgit.com/jamesdbloom/mockserver/01973e75099bbc2ad2e37f809e9b33c8d31cb6dd/mockserver-javascript-client/src/main/javascript/proxyClient.js"</span>&gt;&lt;/<span class="annotation">script</span>&gt;</code></pre>
 
-<p><a href="https://rawgit.com/jamesdbloom/mockserver/master/mockserver-javascript-client/src/main/javascript/proxyClient.js"><strong>proxyClient.js</strong></a> provides the following API:</p>
+<p>To use the Node.js module add the following code to your node project:</p>
+
+<pre><code class="code"><span class="keyword">var</span> mockServer = require(<span class="string_literal">'mockserver-client'</span>),
+    proxyClient = mockServer.proxyClient;</code></pre>
+
+<p>Both versions of <strong>proxyClient</strong> provide the same API as follows:</p>
 
 <pre><code class="code"><span class="keyword">var</span> proxyClient = function (host, port) {
     <span class="string_literal">"use strict"</span>;
@@ -1371,13 +1395,15 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 <p>The mock server can be run:</p>
 
 <ul>
-	<li>via a <a href="#maven-plugin"><strong>Maven Plugin</strong></a> as part of a build cycle</li>
+	<li>via a <a href="#maven-plugin"><strong>Maven Plugin</strong></a> as part of a Maven build cycle</li>
 	<li><a href="#client-api"><strong>programmatically via an API</strong></a> in an <span class="annotation">@Before</span> or <span class="annotation">@After</span> method</li>
 	<li><a href="#junit-rule"><strong>using a JUnit @Rule</strong></a> via a <span class="annotation">@Rule</span> annotated field in a JUnit test</li>
 	<li><a href="#running-from-command-line"><strong>from the command line</strong></a> as a stand-alone process in a test environment</li>
 	<li>as a <a href="#docker-container"><strong>Docker container</strong></a> in any Docker enabled environment</li>
 	<li>as a <a href="#vertx-module"><strong>Vert.X module</strong></a> as part of an existing Vert.X environment</li>
 	<li>as a <a href="#deployable-war"><strong>deployable WAR</strong></a> to an existing application server</li>
+	<li>as a <a href="https://www.npmjs.org/package/mockserver-grunt"><strong>Grunt plugin</strong></a> as part of a Grunt build cycle</li>
+	<li>as a <a href="https://www.npmjs.org/package/mockserver-grunt"><strong>Node.js (NPM) module</strong></a> from any Node.js code</li>
 </ul>
 
 <p>MockServer is available as:</p>
@@ -2167,6 +2193,8 @@ cd mockserver</code></pre>
 
 <p>The <a href="https://github.com/jamesdbloom/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example test called
 	<a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-examples/src/test/java/org/mockserver/web/controller/BooksPageIntegrationTest.java">BookPageIntegrationTest</a> that demonstrates a fully working example.</p>
+
+<a name="create-expectations-javascript" class="anchor" href="#create-expectations-javascript">&nbsp;</a>
 
 <p><strong>JavaScript</strong></p>
 
