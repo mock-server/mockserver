@@ -6,6 +6,7 @@ import org.mockserver.mappers.HttpServletToMockServerRequestMapper;
 import org.mockserver.mappers.MockServerToHttpServletResponseMapper;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.MockServerMatcher;
+import org.mockserver.mock.action.HttpCallbackActionHandler;
 import org.mockserver.mock.action.HttpForwardActionHandler;
 import org.mockserver.mock.action.HttpResponseActionHandler;
 import org.mockserver.model.*;
@@ -29,6 +30,7 @@ public class MockServerServlet extends HttpServlet {
     private LogFilter logFilter = new LogFilter();
     private MockServerMatcher mockServerMatcher = new MockServerMatcher();
     private HttpForwardActionHandler httpForwardActionHandler;
+    private HttpCallbackActionHandler httpCallbackActionHandler;
     private HttpResponseActionHandler httpResponseActionHandler;
     // mappers
     private HttpServletToMockServerRequestMapper httpServletToMockServerRequestMapper = new HttpServletToMockServerRequestMapper();
@@ -43,6 +45,7 @@ public class MockServerServlet extends HttpServlet {
         filters.withFilter(new org.mockserver.model.HttpRequest(), new HopByHopHeaderFilter());
         filters.withFilter(new org.mockserver.model.HttpRequest(), logFilter);
         httpResponseActionHandler = new HttpResponseActionHandler(filters);
+        httpCallbackActionHandler = new HttpCallbackActionHandler(filters);
         httpForwardActionHandler = new HttpForwardActionHandler(filters);
     }
 
@@ -97,11 +100,13 @@ public class MockServerServlet extends HttpServlet {
                     mapResponse(httpForwardActionHandler.handle((HttpForward) action, httpRequest), httpServletResponse);
                     break;
                 case CALLBACK:
-                    // todo implement callback logic in here
+                    mapResponse(httpCallbackActionHandler.handle((HttpCallback) action, httpRequest), httpServletResponse);
+                    break;
                 case RESPONSE:
-                default:
                     mapResponse(httpResponseActionHandler.handle((HttpResponse) action, httpRequest), httpServletResponse);
                     break;
+                default:
+                    httpServletResponse.setStatus(HttpStatusCode.NOT_FOUND_404.code());
             }
         } else {
             httpServletResponse.setStatus(HttpStatusCode.NOT_FOUND_404.code());

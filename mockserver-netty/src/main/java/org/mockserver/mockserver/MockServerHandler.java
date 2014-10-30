@@ -7,6 +7,7 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http.HttpRequest;
 import io.netty.util.CharsetUtil;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
@@ -14,12 +15,11 @@ import org.mockserver.mappers.MockServerToNettyResponseMapper;
 import org.mockserver.mappers.NettyToMockServerRequestMapper;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.MockServerMatcher;
+import org.mockserver.mock.action.HttpCallbackActionHandler;
 import org.mockserver.mock.action.HttpForwardActionHandler;
 import org.mockserver.mock.action.HttpResponseActionHandler;
-import org.mockserver.model.Action;
-import org.mockserver.model.HttpForward;
+import org.mockserver.model.*;
 import org.mockserver.model.HttpResponse;
-import org.mockserver.model.NettyHttpRequest;
 import org.mockserver.proxy.filters.Filters;
 import org.mockserver.proxy.filters.HopByHopHeaderFilter;
 import org.mockserver.proxy.filters.LogFilter;
@@ -44,6 +44,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<Object> {
     // netty
     private final boolean secure;
     private HttpForwardActionHandler httpForwardActionHandler;
+    private HttpCallbackActionHandler httpCallbackActionHandler;
     private HttpResponseActionHandler httpResponseActionHandler;
     // mappers
     private NettyToMockServerRequestMapper nettyToMockServerRequestMapper = new NettyToMockServerRequestMapper();
@@ -64,6 +65,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<Object> {
         filters.withFilter(new org.mockserver.model.HttpRequest(), new HopByHopHeaderFilter());
         filters.withFilter(new org.mockserver.model.HttpRequest(), logFilter);
         httpResponseActionHandler = new HttpResponseActionHandler(filters);
+        httpCallbackActionHandler = new HttpCallbackActionHandler(filters);
         httpForwardActionHandler = new HttpForwardActionHandler(filters);
     }
 
@@ -176,14 +178,14 @@ public class MockServerHandler extends SimpleChannelInboundHandler<Object> {
 
             if (action != null) {
                 switch (action.getType()) {
-                    case FORWARD: {
+                    case FORWARD:
                         return mapResponse(httpForwardActionHandler.handle((HttpForward) action, httpRequest));
-                    }
                     case CALLBACK:
-                        // todo implement callback logic in here
+                        return mapResponse(httpCallbackActionHandler.handle((HttpCallback) action, httpRequest));
                     case RESPONSE:
-                    default:
                         return mapResponse(httpResponseActionHandler.handle((HttpResponse) action, httpRequest));
+                    default:
+                        return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_FOUND);
                 }
             } else {
                 return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_FOUND);
