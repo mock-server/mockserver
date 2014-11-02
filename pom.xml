@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-<parent>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
         <groupId>org.sonatype.oss</groupId>
         <artifactId>oss-parent</artifactId>
         <version>7</version>
@@ -50,6 +50,7 @@
         <jackson.version>2.4.3</jackson.version>
         <netty.version>4.0.23.Final</netty.version>
         <skipTests>false</skipTests>
+        <release.arguments></release.arguments>
     </properties>
 
     <modules>
@@ -309,7 +310,9 @@
         <profile>
             <id>kill_mockserver_instances</id>
             <activation>
-                <file><exists>/usr/bin/env</exists></file>
+                <file>
+                    <exists>/usr/bin/env</exists>
+                </file>
             </activation>
 
             <build>
@@ -345,21 +348,21 @@
         <plugins>
             <!-- dependency analysis -->
             <!--<plugin>-->
-                <!--<groupId>org.apache.maven.plugins</groupId>-->
-                <!--<artifactId>maven-dependency-plugin</artifactId>-->
-                <!--<executions>-->
-                    <!--<execution>-->
-                        <!--<id>break-on-dependency-warnings</id>-->
-                        <!--<goals>-->
-                            <!--<goal>analyze-only</goal>-->
-                        <!--</goals>-->
-                        <!--<phase>generate-sources</phase>-->
-                        <!--<configuration>-->
-                            <!--<failOnWarning>false</failOnWarning>-->
-                            <!--<ignoreNonCompile>true</ignoreNonCompile>-->
-                        <!--</configuration>-->
-                    <!--</execution>-->
-                <!--</executions>-->
+            <!--<groupId>org.apache.maven.plugins</groupId>-->
+            <!--<artifactId>maven-dependency-plugin</artifactId>-->
+            <!--<executions>-->
+            <!--<execution>-->
+            <!--<id>break-on-dependency-warnings</id>-->
+            <!--<goals>-->
+            <!--<goal>analyze-only</goal>-->
+            <!--</goals>-->
+            <!--<phase>generate-sources</phase>-->
+            <!--<configuration>-->
+            <!--<failOnWarning>false</failOnWarning>-->
+            <!--<ignoreNonCompile>true</ignoreNonCompile>-->
+            <!--</configuration>-->
+            <!--</execution>-->
+            <!--</executions>-->
             <!--</plugin>-->
             <!-- compile with correct warnings -->
             <plugin>
@@ -395,7 +398,6 @@
                 <executions>
                     <execution>
                         <id>attach-sources</id>
-                        <phase>deploy</phase>
                         <goals>
                             <goal>jar</goal>
                         </goals>
@@ -410,12 +412,10 @@
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>
-                        <phase>deploy</phase>
                         <goals>
                             <goal>jar</goal>
                         </goals>
                         <configuration>
-                            <skip>${skipTests}</skip>
                             <failOnError>false</failOnError>
                         </configuration>
                     </execution>
@@ -635,6 +635,15 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <configuration>
+                    <mavenExecutorId>forked-path</mavenExecutorId>
+                    <useReleaseProfile>false</useReleaseProfile>
+                    <arguments>-Psonatype-oss-release ${release.arguments}</arguments>
+                </configuration>
             </plugin>
         </plugins>
     </build>

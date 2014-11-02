@@ -10,5 +10,5 @@ if [ $? -eq 0 ]; then
     echo "------- JAVA 1.6  -------"
     echo "-------------------------"
     echo
-    mvn release:clean && mvn release:prepare && mvn release:perform
+    mvn release:clean -Drelease.arguments="-Dmaven.test.skip=true -DskipTests=true" && mvn release:prepare -Drelease.arguments="-Dmaven.test.skip=true -DskipTests=true" && mvn release:perform -Drelease.arguments="-Dmaven.test.skip=true -DskipTests=true"
 fi
