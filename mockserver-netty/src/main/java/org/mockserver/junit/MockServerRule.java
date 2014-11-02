@@ -153,7 +153,6 @@ public class MockServerRule implements TestRule {
         }
 
         public ClientAndServer newClientAndServer() {
-            System.out.println("httpPort = " + httpPort);
             if (httpsPort == null) {
                 return ClientAndServer.startClientAndServer(httpPort);
             } else {

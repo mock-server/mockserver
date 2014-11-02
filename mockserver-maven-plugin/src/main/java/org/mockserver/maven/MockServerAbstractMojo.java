@@ -2,12 +2,15 @@ package org.mockserver.maven;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.maven.artifact.Artifact;
+import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.mockserver.initialize.ExpectationInitializer;
 
 import java.io.File;
 import java.lang.reflect.Constructor;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.List;
@@ -87,6 +90,18 @@ public abstract class MockServerAbstractMojo extends AbstractMojo {
     protected List<String> testClasspath;
 
     /**
+     * The plugin dependencies
+     */
+    @Parameter(property = "pluginDescriptor.plugin.dependencies", required = true, readonly = true)
+    protected List<Dependency> dependencies;
+
+    /**
+     * The plugin dependencies
+     */
+    @Parameter(property = "pluginDescriptor.artifacts", required = true, readonly = true)
+    protected List<Artifact> pluginArtifacts;
+
+    /**
      * Holds reference to jetty across plugin execution
      */
     @VisibleForTesting
@@ -101,27 +116,48 @@ public abstract class MockServerAbstractMojo extends AbstractMojo {
     }
 
     protected ExpectationInitializer createInitializer() {
-        if (compileClasspath != null && StringUtils.isNotEmpty(initializationClass)) {
-            try {
-                URL[] urls = new URL[compileClasspath.size() + testClasspath.size()];
-                for (int i = 0; i < compileClasspath.size(); i++) {
-                    urls[i] = new File(compileClasspath.get(i)).toURI().toURL();
-                }
-                for (int i = compileClasspath.size(); i < compileClasspath.size() + testClasspath.size(); i++) {
-                    urls[i] = new File(testClasspath.get(i - compileClasspath.size())).toURI().toURL();
-                }
-
-                ClassLoader contextClassLoader = URLClassLoader.newInstance(urls, Thread.currentThread().getContextClassLoader());
-                Thread.currentThread().setContextClassLoader(contextClassLoader);
+        try {
+            ClassLoader contextClassLoader = setupClasspath();
+            if (contextClassLoader != null && StringUtils.isNotEmpty(initializationClass)) {
                 Constructor<?> initializerClassConstructor = contextClassLoader.loadClass(initializationClass).getDeclaredConstructor();
                 Object expectationInitializer = initializerClassConstructor.newInstance();
                 if (expectationInitializer instanceof ExpectationInitializer) {
                     return (ExpectationInitializer) expectationInitializer;
                 }
-            } catch (Exception e) {
-                throw new RuntimeException(e);
             }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
         return null;
+    }
+
+    private ClassLoader setupClasspath() throws MalformedURLException {
+        if (compileClasspath != null) {
+            URL[] urls = new URL[compileClasspath.size() + testClasspath.size()];
+            for (int i = 0; i < compileClasspath.size(); i++) {
+                urls[i] = new File(compileClasspath.get(i)).toURI().toURL();
+            }
+            for (int i = compileClasspath.size(); i < compileClasspath.size() + testClasspath.size(); i++) {
+                urls[i] = new File(testClasspath.get(i - compileClasspath.size())).toURI().toURL();
+            }
+
+            ClassLoader contextClassLoader = URLClassLoader.newInstance(urls, Thread.currentThread().getContextClassLoader());
+            Thread.currentThread().setContextClassLoader(contextClassLoader);
+            return contextClassLoader;
+        }
+        return null;
+    }
+
+    /**
+     * Logs the plugin classpath.
+     */
+    protected void logPluginClasspath() {
+        if (getLog().isDebugEnabled()) {
+            StringBuilder sb = new StringBuilder();
+            for (Artifact artifact : pluginArtifacts) {
+                sb.append(artifact.getFile());
+            }
+            getLog().debug("Plugin classpath:\n" + sb.toString());
+        }
     }
 }

@@ -53,6 +53,13 @@
                         </goals>
                     </execution>
                 </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.mock-server</groupId>
+                        <artifactId>mockserver-integration-testing</artifactId>
+                        <version>${mockserver.version}</version>
+                    </dependency>
+                </dependencies>
             </plugin>
             <!-- tests run after mock server started -->
             <plugin>

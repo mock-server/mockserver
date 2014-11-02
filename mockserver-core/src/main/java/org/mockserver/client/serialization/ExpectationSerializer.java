@@ -39,6 +39,7 @@ public class ExpectationSerializer {
             HttpRequest httpRequest = expectation.getHttpRequest();
             HttpResponse httpResponse = expectation.getHttpResponse(false);
             HttpForward httpForward = expectation.getHttpForward();
+            HttpCallback httpCallback = expectation.getHttpCallback();
             output.append(System.getProperty("line.separator") +
                     "new MockServerClient()" + System.getProperty("line.separator") +
                     "        .when(" + System.getProperty("line.separator") +
@@ -105,6 +106,14 @@ public class ExpectationSerializer {
                 }
                 if (httpForward.getScheme() != null) {
                     output.append("                        .withScheme(HttpForward.Scheme.").append(httpForward.getScheme()).append(")" + System.getProperty("line.separator"));
+                }
+                output.append("        );");
+            }
+            if (httpCallback != null) {
+                output.append("        .thenCallback(" + System.getProperty("line.separator") +
+                        "                callback()" + System.getProperty("line.separator"));
+                if (httpCallback.getCallbackClass() != null) {
+                    output.append("                        .withCallbackClass(\"").append(httpCallback.getCallbackClass()).append("\")" + System.getProperty("line.separator"));
                 }
                 output.append("        );");
             }

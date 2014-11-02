@@ -8,8 +8,6 @@ import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.matchers.Times;
-import org.mockserver.mock.action.HttpForwardActionHandler;
-import org.mockserver.mock.action.HttpResponseActionHandler;
 import org.mockserver.model.Action;
 import org.mockserver.model.EqualsHashCodeToString;
 import org.mockserver.model.HttpRequest;
@@ -29,8 +27,6 @@ public class MockServerMatcher extends EqualsHashCodeToString {
 
     protected final List<Expectation> expectations = new ArrayList<Expectation>();
     private Logger requestLogger = LoggerFactory.getLogger("REQUEST");
-    private HttpForwardActionHandler httpForwardActionHandler;
-    private HttpResponseActionHandler httpResponseActionHandler;
 
     public synchronized Expectation when(HttpRequest httpRequest) {
         return when(httpRequest, Times.unlimited());

@@ -7,6 +7,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.client.http.ApacheHttpClient;
 import org.mockserver.client.server.MockServerClient;
+import org.mockserver.integration.callback.PrecannedTestExpectationCallback;
 import org.mockserver.model.*;
 
 import java.io.IOException;
@@ -20,6 +21,7 @@ import static org.mockserver.configuration.SystemProperties.maxTimeout;
 import static org.mockserver.matchers.Times.exactly;
 import static org.mockserver.matchers.Times.once;
 import static org.mockserver.model.BinaryBody.binary;
+import static org.mockserver.model.HttpCallback.callback;
 import static org.mockserver.model.HttpForward.forward;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -275,6 +277,56 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "test_headers_and_body"),
+                        false
+                )
+        );
+    }
+
+
+    @Test
+    public void clientCanCallServerForCallbackInHTTP() {
+        // when
+        mockServerClient
+                .when(
+                        request()
+                                .withPath("/callback")
+                )
+                .callback(
+                        callback()
+                                .withCallbackClass("org.mockserver.integration.callback.PrecannedTestExpectationCallback")
+                );
+
+        // then
+        // - in http
+        assertEquals(
+                PrecannedTestExpectationCallback.httpResponse,
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "callback")
+                                .withMethod("POST")
+                                .withHeaders(
+                                        new Header("X-Test", "test_headers_and_body"),
+                                        new Header("Content-Type", "text/plain")
+                                )
+                                .withBody("an_example_body_http"),
+                        false
+                )
+        );
+
+        // - in https
+        assertEquals(
+                PrecannedTestExpectationCallback.httpResponse,
+                makeRequest(
+                        new HttpRequest()
+                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "callback")
+                                .withMethod("POST")
+                                .withHeaders(
+                                        new Header("X-Test", "test_headers_and_body"),
+                                        new Header("Host", "127.0.0.1:" + getTestServerPort()),
+                                        new Header("Accept-Encoding", "gzip,deflate"),
+                                        new Header("Content-Type", "text/plain")
+                                )
+                                .withBody("an_example_body_https"),
                         false
                 )
         );

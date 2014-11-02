@@ -6,6 +6,8 @@ import io.netty.handler.codec.http.DefaultHttpRequest;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.QueryStringDecoder;
+import io.netty.util.CharsetUtil;
+import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.mockserver.url.URLParser;
 
 import java.util.List;
@@ -32,7 +34,11 @@ public class NettyHttpRequest extends DefaultHttpRequest {
         if (this.content == null) {
             this.content = Unpooled.copiedBuffer(content);
         } else {
-            this.content.writeBytes(content);
+            if (this.content.isWritable(content.readableBytes())) {
+                this.content.writeBytes(content);
+            } else {
+                this.content = Unpooled.copiedBuffer(this.content, content);
+            }
         }
     }
 
@@ -58,5 +64,16 @@ public class NettyHttpRequest extends DefaultHttpRequest {
 
     public boolean matches(HttpMethod method, String path) {
         return getMethod() == method && this.path.equals(path);
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("NettyHttpRequest => {");
+        sb.append("path='").append(path).append('\'');
+        sb.append(", parameters=").append(parameters);
+        sb.append(", secure=").append(secure);
+        sb.append(", content=").append((content != null ? new String(Unpooled.copiedBuffer(content).array(), CharsetUtil.UTF_8) : ""));
+        sb.append('}');
+        return sb.toString();
     }
 }

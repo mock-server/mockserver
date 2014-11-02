@@ -1,21 +1,16 @@
 package org.mockserver.mock.action;
 
-import io.netty.handler.codec.http.HttpHeaders;
-import org.apache.http.client.utils.URIBuilder;
-import org.mockserver.client.http.ApacheHttpClient;
 import org.mockserver.model.HttpCallback;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
-import org.mockserver.model.Parameter;
 import org.mockserver.proxy.filters.Filters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.net.URISyntaxException;
 
-import static org.mockserver.model.Header.header;
+import static org.mockserver.model.HttpResponse.response;
 
 /**
  * @author jamesdbloom
@@ -55,9 +50,14 @@ public class HttpCallbackActionHandler {
 
     private HttpResponse sendRequest(HttpCallback httpCallback, HttpRequest httpRequest) {
         if (httpRequest != null) {
-            return filters.applyFilters(httpRequest, instantiateCallback(httpCallback).handle(httpRequest));
+            ExpectationCallback expectationCallback = instantiateCallback(httpCallback);
+            if (expectationCallback != null) {
+                return filters.applyFilters(httpRequest, expectationCallback.handle(httpRequest));
+            } else {
+                return response().withStatusCode(404);
+            }
         } else {
-            return null;
+            return response().withStatusCode(404);
         }
     }
 }

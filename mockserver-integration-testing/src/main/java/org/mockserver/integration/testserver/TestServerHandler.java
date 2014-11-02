@@ -16,7 +16,8 @@
 package org.mockserver.integration.testserver;
 
 import com.google.common.base.Charsets;
-import io.netty.buffer.*;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.*;
@@ -33,11 +34,6 @@ import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 public class TestServerHandler extends SimpleChannelInboundHandler<Object> {
 
-    // requests
-    private DefaultFullHttpRequest mockServerHttpRequest = null;
-    private ByteBuf requestContent;
-    private HttpRequest request = null;
-
     @Override
     public void channelReadComplete(ChannelHandlerContext ctx) {
         ctx.flush();
@@ -45,36 +41,20 @@ public class TestServerHandler extends SimpleChannelInboundHandler<Object> {
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Object msg) {
-        if (msg instanceof HttpObject && ((HttpObject) msg).getDecoderResult().isSuccess()) {
-            if (msg instanceof HttpRequest) {
-                request = (HttpRequest) msg;
+        if (msg instanceof FullHttpMessage && ((HttpObject) msg).getDecoderResult().isSuccess()) {
+            HttpRequest request = (HttpRequest) msg;
+
+            ByteBuf requestContent = Unpooled.copiedBuffer(((HttpContent) msg).content());
+
+            DefaultFullHttpRequest mockServerHttpRequest = new DefaultFullHttpRequest(request.getProtocolVersion(), request.getMethod(), request.getUri(), requestContent);
+            mockServerHttpRequest.headers().add(request.headers());
+
+            LastHttpContent trailer = (LastHttpContent) msg;
+            if (!trailer.trailingHeaders().isEmpty()) {
+                mockServerHttpRequest.headers().entries().addAll(trailer.trailingHeaders().entries());
             }
 
-            if (msg instanceof HttpContent) {
-                ByteBuf requestContent = ((HttpContent) msg).content();
-
-                if (requestContent.isReadable()) {
-                    if (this.requestContent == null) {
-                        this.requestContent = Unpooled.copiedBuffer(requestContent);
-                    } else {
-                        this.requestContent.writeBytes(requestContent);
-                    }
-                }
-
-                if (msg instanceof LastHttpContent) {
-                    mockServerHttpRequest = new DefaultFullHttpRequest(request.getProtocolVersion(), request.getMethod(), request.getUri(), requestContent);
-                    mockServerHttpRequest.headers().add(request.headers());
-
-                    LastHttpContent trailer = (LastHttpContent) msg;
-                    if (!trailer.trailingHeaders().isEmpty()) {
-                        mockServerHttpRequest.headers().entries().addAll(trailer.trailingHeaders().entries());
-                    }
-
-                    writeResponse(ctx, handleRequest(mockServerHttpRequest), isKeepAlive(request), is100ContinueExpected(request));
-                    this.requestContent = null;
-                }
-
-            }
+            writeResponse(ctx, handleRequest(mockServerHttpRequest), isKeepAlive(request), is100ContinueExpected(request));
         } else {
             ctx.write(new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.BAD_REQUEST));
         }
@@ -120,7 +100,6 @@ public class TestServerHandler extends SimpleChannelInboundHandler<Object> {
                 response.headers().set(headerName.toLowerCase(), req.headers().get(headerName));
             }
             response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
-
         } else {
             response = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.wrappedBuffer("Hello World".getBytes(Charsets.UTF_8)));
             response.headers().set(CONTENT_TYPE, "text/plain");

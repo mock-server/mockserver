@@ -52,9 +52,6 @@ public class MockServerHandler extends SimpleChannelInboundHandler<Object> {
     // serializers
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
-    // requests
-    private NettyHttpRequest mockServerHttpRequest = null;
-    private HttpRequest request = null;
 
     public MockServerHandler(MockServerMatcher mockServerMatcher, LogFilter logFilter, MockServer server, boolean secure) {
         this.mockServerMatcher = mockServerMatcher;
@@ -80,41 +77,35 @@ public class MockServerHandler extends SimpleChannelInboundHandler<Object> {
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Object msg) {
-        if (msg instanceof HttpObject && ((HttpObject) msg).getDecoderResult().isSuccess()) {
-            if (msg instanceof HttpRequest) {
-                request = (HttpRequest) msg;
-                mockServerHttpRequest = new NettyHttpRequest(request.getProtocolVersion(), request.getMethod(), request.getUri(), secure);
-                mockServerHttpRequest.headers().add(request.headers());
+        if (msg instanceof FullHttpMessage && ((HttpObject) msg).getDecoderResult().isSuccess()) {
+            HttpRequest request = (HttpRequest) msg;
+
+            NettyHttpRequest mockServerHttpRequest = new NettyHttpRequest(request.getProtocolVersion(), request.getMethod(), request.getUri(), secure);
+            mockServerHttpRequest.headers().add(request.headers());
+
+            ByteBuf content = ((HttpContent) msg).content();
+
+            if (content.isReadable()) {
+                mockServerHttpRequest.content(content);
             }
 
-            if (msg instanceof HttpContent && mockServerHttpRequest != null) {
-                ByteBuf content = ((HttpContent) msg).content();
+            LastHttpContent trailer = (LastHttpContent) msg;
+            if (!trailer.trailingHeaders().isEmpty()) {
+                mockServerHttpRequest.headers().entries().addAll(trailer.trailingHeaders().entries());
+            }
 
-                if (content.isReadable()) {
-                    mockServerHttpRequest.content(content);
-                }
+            if (mockServerHttpRequest.matches(HttpMethod.PUT, "/stop")) {
 
-                if (msg instanceof LastHttpContent) {
+                writeResponse(ctx, new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.ACCEPTED), isKeepAlive(request), is100ContinueExpected(request));
+                ctx.close();
+                server.stop();
 
-                    LastHttpContent trailer = (LastHttpContent) msg;
-                    if (!trailer.trailingHeaders().isEmpty()) {
-                        mockServerHttpRequest.headers().entries().addAll(trailer.trailingHeaders().entries());
-                    }
+            } else {
 
-                    if (mockServerHttpRequest.matches(HttpMethod.PUT, "/stop")) {
-
-                        writeResponse(ctx, new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.ACCEPTED), isKeepAlive(request), is100ContinueExpected(request));
-                        ctx.close();
-                        server.stop();
-
-                    } else {
-
-                        writeResponse(ctx, mockResponse(mockServerHttpRequest), isKeepAlive(request), is100ContinueExpected(request));
-
-                    }
-                }
+                writeResponse(ctx, mockResponse(mockServerHttpRequest), isKeepAlive(request), is100ContinueExpected(request));
 
             }
+
         } else {
             ctx.write(new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.BAD_REQUEST));
         }
@@ -139,57 +130,61 @@ public class MockServerHandler extends SimpleChannelInboundHandler<Object> {
 
     @VisibleForTesting
     FullHttpResponse mockResponse(NettyHttpRequest nettyHttpRequest) {
+        try {
+            String content = (nettyHttpRequest.content() != null ? nettyHttpRequest.content().toString(CharsetUtil.UTF_8) : "");
 
-        String content = (nettyHttpRequest.content() != null ? nettyHttpRequest.content().toString(CharsetUtil.UTF_8) : "");
+            if (nettyHttpRequest.matches(HttpMethod.PUT, "/dumpToLog")) {
 
-        if (nettyHttpRequest.matches(HttpMethod.PUT, "/dumpToLog")) {
+                mockServerMatcher.dumpToLog(httpRequestSerializer.deserialize(content));
+                return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.ACCEPTED);
 
-            mockServerMatcher.dumpToLog(httpRequestSerializer.deserialize(content));
-            return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.ACCEPTED);
+            } else if (nettyHttpRequest.matches(HttpMethod.PUT, "/reset")) {
 
-        } else if (nettyHttpRequest.matches(HttpMethod.PUT, "/reset")) {
+                logFilter.reset();
+                mockServerMatcher.reset();
+                return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.ACCEPTED);
 
-            logFilter.reset();
-            mockServerMatcher.reset();
-            return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.ACCEPTED);
+            } else if (nettyHttpRequest.matches(HttpMethod.PUT, "/clear")) {
 
-        } else if (nettyHttpRequest.matches(HttpMethod.PUT, "/clear")) {
+                org.mockserver.model.HttpRequest httpRequest = httpRequestSerializer.deserialize(content);
+                logFilter.clear(httpRequest);
+                mockServerMatcher.clear(httpRequest);
+                return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.ACCEPTED);
 
-            org.mockserver.model.HttpRequest httpRequest = httpRequestSerializer.deserialize(content);
-            logFilter.clear(httpRequest);
-            mockServerMatcher.clear(httpRequest);
-            return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.ACCEPTED);
+            } else if (nettyHttpRequest.matches(HttpMethod.PUT, "/expectation")) {
 
-        } else if (nettyHttpRequest.matches(HttpMethod.PUT, "/expectation")) {
+                Expectation expectation = expectationSerializer.deserialize(content);
+                mockServerMatcher.when(expectation.getHttpRequest(), expectation.getTimes()).thenRespond(expectation.getHttpResponse(false)).thenForward(expectation.getHttpForward()).thenCallback(expectation.getHttpCallback());
+                return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.CREATED);
 
-            Expectation expectation = expectationSerializer.deserialize(content);
-            mockServerMatcher.when(expectation.getHttpRequest(), expectation.getTimes()).thenRespond(expectation.getHttpResponse(false)).thenForward(expectation.getHttpForward());
-            return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.CREATED);
+            } else if (nettyHttpRequest.matches(HttpMethod.PUT, "/retrieve")) {
 
-        } else if (nettyHttpRequest.matches(HttpMethod.PUT, "/retrieve")) {
+                Expectation[] expectations = logFilter.retrieve(httpRequestSerializer.deserialize(content));
+                return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.copiedBuffer(expectationSerializer.serialize(expectations).getBytes()));
 
-            Expectation[] expectations = logFilter.retrieve(httpRequestSerializer.deserialize(content));
-            return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.copiedBuffer(expectationSerializer.serialize(expectations).getBytes()));
-
-        } else {
-
-            org.mockserver.model.HttpRequest httpRequest = nettyToMockServerRequestMapper.mapNettyRequestToMockServerRequest(nettyHttpRequest);
-            Action action = mockServerMatcher.handle(httpRequest);
-
-            if (action != null) {
-                switch (action.getType()) {
-                    case FORWARD:
-                        return mapResponse(httpForwardActionHandler.handle((HttpForward) action, httpRequest));
-                    case CALLBACK:
-                        return mapResponse(httpCallbackActionHandler.handle((HttpCallback) action, httpRequest));
-                    case RESPONSE:
-                        return mapResponse(httpResponseActionHandler.handle((HttpResponse) action, httpRequest));
-                    default:
-                        return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_FOUND);
-                }
             } else {
-                return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_FOUND);
+
+                org.mockserver.model.HttpRequest httpRequest = nettyToMockServerRequestMapper.mapNettyRequestToMockServerRequest(nettyHttpRequest);
+                Action action = mockServerMatcher.handle(httpRequest);
+
+                if (action != null) {
+                    switch (action.getType()) {
+                        case FORWARD:
+                            return mapResponse(httpForwardActionHandler.handle((HttpForward) action, httpRequest));
+                        case CALLBACK:
+                            return mapResponse(httpCallbackActionHandler.handle((HttpCallback) action, httpRequest));
+                        case RESPONSE:
+                            return mapResponse(httpResponseActionHandler.handle((HttpResponse) action, httpRequest));
+                        default:
+                            return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_FOUND);
+                    }
+                } else {
+                    return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_FOUND);
+                }
             }
+        } catch (Exception e) {
+            logger.error("Exception processing " + nettyHttpRequest, e);
+            return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.BAD_REQUEST);
         }
     }
 
@@ -203,7 +198,9 @@ public class MockServerHandler extends SimpleChannelInboundHandler<Object> {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        logger.warn("Exception caught by MockServer handler closing pipeline", cause);
+        if (!cause.getMessage().contains("Connection reset by peer")) {
+            logger.warn("Exception caught by MockServer handler closing pipeline", cause);
+        }
         ctx.close();
     }
 }

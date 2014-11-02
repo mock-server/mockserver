@@ -2,6 +2,7 @@ package org.mockserver.mock;
 
 import org.junit.Test;
 import org.mockserver.matchers.Times;
+import org.mockserver.model.HttpCallback;
 import org.mockserver.model.HttpForward;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -9,6 +10,7 @@ import org.mockserver.model.HttpResponse;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 import static org.mockserver.model.HttpRequest.request;
 
 /**
@@ -22,6 +24,7 @@ public class ExpectationTest {
         HttpRequest httpRequest = new HttpRequest();
         HttpResponse httpResponse = new HttpResponse();
         HttpForward httpForward = new HttpForward();
+        HttpCallback httpCallback = new HttpCallback();
         Times times = Times.exactly(3);
 
         // when
@@ -32,6 +35,7 @@ public class ExpectationTest {
         assertEquals(httpResponse, expectationThatResponds.getHttpResponse(false));
         assertNull(expectationThatResponds.getHttpForward());
         assertEquals(httpResponse, expectationThatResponds.getAction(false));
+        assertNull(expectationThatResponds.getHttpCallback());
         assertEquals(times, expectationThatResponds.getTimes());
 
         // when
@@ -42,13 +46,25 @@ public class ExpectationTest {
         assertNull(expectationThatForwards.getHttpResponse(false));
         assertEquals(httpForward, expectationThatForwards.getHttpForward());
         assertEquals(httpForward, expectationThatForwards.getAction(false));
+        assertNull(expectationThatForwards.getHttpCallback());
+        assertEquals(times, expectationThatForwards.getTimes());
+
+        // when
+        Expectation expectationThatCallsback = new Expectation(httpRequest, times).thenCallback(httpCallback);
+
+        // then
+        assertEquals(httpRequest, expectationThatForwards.getHttpRequest());
+        assertNull(expectationThatCallsback.getHttpResponse(false));
+        assertNull(expectationThatCallsback.getHttpForward());
+        assertEquals(httpCallback, expectationThatCallsback.getHttpCallback());
+        assertEquals(httpCallback, expectationThatCallsback.getAction(false));
         assertEquals(times, expectationThatForwards.getTimes());
     }
 
     @Test
     public void shouldAllowForNulls() {
         // when
-        Expectation expectation = new Expectation(null, null).thenRespond(null).thenForward(null);
+        Expectation expectation = new Expectation(null, null).thenRespond(null).thenForward(null).thenCallback(null);
 
         // then
         expectation.setNotUnlimitedResponses();
@@ -58,6 +74,7 @@ public class ExpectationTest {
         assertNull(expectation.getHttpRequest());
         assertNull(expectation.getHttpResponse(false));
         assertNull(expectation.getHttpForward());
+        assertNull(expectation.getHttpCallback());
         assertNull(expectation.getTimes());
     }
 
@@ -119,6 +136,17 @@ public class ExpectationTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
+    public void shouldPreventForwardAfterCallback() {
+        // given
+        HttpRequest httpRequest = new HttpRequest();
+        HttpCallback httpCallback = new HttpCallback();
+        HttpForward httpForward = new HttpForward();
+
+        // then
+        new Expectation(httpRequest, Times.once()).thenCallback(httpCallback).thenForward(httpForward);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
     public void shouldPreventResponseAfterForward() {
         // given
         HttpRequest httpRequest = new HttpRequest();
@@ -127,5 +155,38 @@ public class ExpectationTest {
 
         // then
         new Expectation(httpRequest, Times.once()).thenForward(httpForward).thenRespond(httpResponse);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void shouldPreventResponseAfterCallback() {
+        // given
+        HttpRequest httpRequest = new HttpRequest();
+        HttpCallback httpCallback = new HttpCallback();
+        HttpResponse httpResponse = new HttpResponse();
+
+        // then
+        new Expectation(httpRequest, Times.once()).thenCallback(httpCallback).thenRespond(httpResponse);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void shouldPreventCallbackAfterForward() {
+        // given
+        HttpRequest httpRequest = new HttpRequest();
+        HttpResponse httpResponse = new HttpResponse();
+        HttpCallback httpCallback = new HttpCallback();
+
+        // then
+        new Expectation(httpRequest, Times.once()).thenCallback(httpCallback).thenRespond(httpResponse);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void shouldPreventCallbackAfterResponse() {
+        // given
+        HttpRequest httpRequest = new HttpRequest();
+        HttpCallback httpCallback = new HttpCallback();
+        HttpForward httpForward = new HttpForward();
+
+        // then
+        new Expectation(httpRequest, Times.once()).thenCallback(httpCallback).thenForward(httpForward);
     }
 }

@@ -2,6 +2,7 @@ package org.mockserver.mockserver;
 
 import com.google.common.util.concurrent.SettableFuture;
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
@@ -55,10 +56,11 @@ public class MockServer {
                     );
                     if (port != null) {
                         httpChannel = new ServerBootstrap()
+                                .option(ChannelOption.SO_BACKLOG, 1024)
+                                .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                                 .group(bossGroup, workerGroup)
                                 .channel(NioServerSocketChannel.class)
                                 .childHandler(new MockServerInitializer(new MockServerHandler(mockServerMatcher, logFilter, MockServer.this, false)))
-                                .option(ChannelOption.SO_BACKLOG, 1024)
                                 .bind(port)
                                 .sync()
                                 .channel();
@@ -66,10 +68,11 @@ public class MockServer {
                     Channel httpsChannel = null;
                     if (securePort != null) {
                         httpsChannel = new ServerBootstrap()
+                                .option(ChannelOption.SO_BACKLOG, 1024)
+                                .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                                 .group(bossGroup, workerGroup)
                                 .channel(NioServerSocketChannel.class)
                                 .childHandler(new MockServerInitializer(new MockServerHandler(mockServerMatcher, logFilter, MockServer.this, true)))
-                                .option(ChannelOption.SO_BACKLOG, 1024)
                                 .bind(securePort)
                                 .sync()
                                 .channel();
@@ -115,7 +118,7 @@ public class MockServer {
     public boolean isRunning() {
         if (hasStarted.isDone()) {
             try {
-                TimeUnit.SECONDS.sleep(1);
+                TimeUnit.SECONDS.sleep(2);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

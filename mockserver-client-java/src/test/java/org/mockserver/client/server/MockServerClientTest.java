@@ -116,6 +116,28 @@ public class MockServerClientTest {
     }
 
     @Test
+    public void shouldSetupExpectationWithCallback() {
+        // given
+        HttpRequest httpRequest =
+                new HttpRequest()
+                        .withPath("/some_path")
+                        .withBody(new StringBody("some_request_body", Body.Type.STRING));
+        HttpCallback httpCallback =
+                new HttpCallback()
+                        .withCallbackClass("some_class");
+
+        // when
+        ForwardChainExpectation forwardChainExpectation = mockServerClient.when(httpRequest);
+        forwardChainExpectation.callback(httpCallback);
+
+        // then
+        Expectation expectation = forwardChainExpectation.getExpectation();
+        assertTrue(expectation.matches(httpRequest));
+        assertSame(httpCallback, expectation.getHttpCallback());
+        assertEquals(Times.unlimited(), expectation.getTimes());
+    }
+
+    @Test
     public void shouldSendExpectationRequestWithExactTimes() throws Exception {
         // when
         mockServerClient
@@ -168,10 +190,47 @@ public class MockServerClientTest {
                         .setHttpRequest(new HttpRequestDTO(new HttpRequest()
                                 .withPath("/some_path")
                                 .withBody(new StringBody("some_request_body", Body.Type.STRING))))
-                        .setHttpForward(new HttpForwardDTO(new HttpForward()
-                                .withHost("some_host")
-                                .withPort(9090)
-                                .withScheme(HttpForward.Scheme.HTTPS)))
+                        .setHttpForward(
+                                new HttpForwardDTO(
+                                        new HttpForward()
+                                                .withHost("some_host")
+                                                .withPort(9090)
+                                                .withScheme(HttpForward.Scheme.HTTPS)
+                                )
+                        )
+                        .setTimes(new TimesDTO(Times.exactly(3)))
+                        .buildObject()
+        );
+    }
+
+
+    @Test
+    public void shouldSendExpectationWithCallback() throws Exception {
+        // when
+        mockServerClient
+                .when(
+                        new HttpRequest()
+                                .withPath("/some_path")
+                                .withBody(new StringBody("some_request_body", Body.Type.STRING)),
+                        Times.exactly(3)
+                )
+                .callback(
+                        new HttpCallback()
+                                .withCallbackClass("some_class")
+                );
+
+        // then
+        verify(expectationSerializer).serialize(
+                new ExpectationDTO()
+                        .setHttpRequest(new HttpRequestDTO(new HttpRequest()
+                                .withPath("/some_path")
+                                .withBody(new StringBody("some_request_body", Body.Type.STRING))))
+                        .setHttpCallback(
+                                new HttpCallbackDTO(
+                                        new HttpCallback()
+                                                .withCallbackClass("some_class")
+                                )
+                        )
                         .setTimes(new TimesDTO(Times.exactly(3)))
                         .buildObject()
         );

@@ -154,7 +154,6 @@ public class ProxyRule implements TestRule {
         }
 
         public ClientAndProxy newClientAndProxy() {
-            System.out.println("httpPort = " + httpPort);
             if (httpsPort == null) {
                 return ClientAndProxy.startClientAndProxy(httpPort);
             } else {

@@ -300,6 +300,63 @@ public class ExpectationSerializerTest {
     }
 
     @Test
+    public void shouldSerializeFullObjectWithCallbackAsJava() throws IOException {
+        // when
+        assertEquals(System.getProperty("line.separator") +
+                        "new MockServerClient()" + System.getProperty("line.separator") +
+                        "        .when(" + System.getProperty("line.separator") +
+                        "                request()" + System.getProperty("line.separator") +
+                        "                        .withMethod(\"GET\")" + System.getProperty("line.separator") +
+                        "                        .withURL(\"http://www.example.com\")" + System.getProperty("line.separator") +
+                        "                        .withPath(\"somePath\")" + System.getProperty("line.separator") +
+                        "                        .withHeaders(" + System.getProperty("line.separator") +
+                        "                                new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\")," + System.getProperty("line.separator") +
+                        "                                new Header(\"requestHeaderNameTwo\", \"requestHeaderValueTwo\")" + System.getProperty("line.separator") +
+                        "                        )" + System.getProperty("line.separator") +
+                        "                        .withCookies(" + System.getProperty("line.separator") +
+                        "                                new Cookie(\"requestCookieNameOne\", \"requestCookieValueOneOne\", \"requestCookieValueOneTwo\")," + System.getProperty("line.separator") +
+                        "                                new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")" + System.getProperty("line.separator") +
+                        "                        )" + System.getProperty("line.separator") +
+                        "                        .withQueryStringParameters(" + System.getProperty("line.separator") +
+                        "                                new QueryStringParameter(\"requestQueryStringParameterNameOne\", \"requestQueryStringParameterValueOneOne\", \"requestQueryStringParameterValueOneTwo\")," + System.getProperty("line.separator") +
+                        "                                new QueryStringParameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")" + System.getProperty("line.separator") +
+                        "                        )" + System.getProperty("line.separator") +
+                        "                        .withBody(new StringBody(\"somebody\", Body.Type.STRING))," + System.getProperty("line.separator") +
+                        "                Times.once()" + System.getProperty("line.separator") +
+                        "        )" + System.getProperty("line.separator") +
+                        "        .thenCallback(" + System.getProperty("line.separator") +
+                        "                callback()" + System.getProperty("line.separator") +
+                        "                        .withCallbackClass(\"some_class\")" + System.getProperty("line.separator") +
+                        "        );",
+                expectationSerializer.serializeAsJava(
+                        new Expectation(
+                                new HttpRequest()
+                                        .withMethod("GET")
+                                        .withURL("http://www.example.com")
+                                        .withPath("somePath")
+                                        .withQueryStringParameters(
+                                                new Parameter("requestQueryStringParameterNameOne", "requestQueryStringParameterValueOneOne", "requestQueryStringParameterValueOneTwo"),
+                                                new Parameter("requestQueryStringParameterNameTwo", "requestQueryStringParameterValueTwo")
+                                        )
+                                        .withHeaders(
+                                                new Header("requestHeaderNameOne", "requestHeaderValueOneOne", "requestHeaderValueOneTwo"),
+                                                new Header("requestHeaderNameTwo", "requestHeaderValueTwo")
+                                        )
+                                        .withCookies(
+                                                new Cookie("requestCookieNameOne", "requestCookieValueOneOne", "requestCookieValueOneTwo"),
+                                                new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
+                                        )
+                                        .withBody(new StringBody("somebody", Body.Type.STRING)),
+                                Times.once()
+                        ).thenCallback(
+                                new HttpCallback()
+                                        .withCallbackClass("some_class")
+                        )
+                )
+        );
+    }
+
+    @Test
     public void shouldEscapeJSONBodies() throws IOException {
         // when
         assertEquals("" + System.getProperty("line.separator") +

@@ -51,7 +51,7 @@ public class NettyToMockServerRequestMapper {
     }
 
     private void setBody(HttpRequest httpRequest, NettyHttpRequest mockServerHttpRequest) {
-        if (mockServerHttpRequest.content() != null) {
+        if (mockServerHttpRequest.content() != null && mockServerHttpRequest.content().readableBytes() > 0) {
             byte[] bodyBytes = new byte[mockServerHttpRequest.content().readableBytes()];
             mockServerHttpRequest.content().readBytes(bodyBytes);
             httpRequest.setRawBodyBytes(bodyBytes);

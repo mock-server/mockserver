@@ -410,6 +410,69 @@ public class ExpectationSerializerIntegrationTest {
     }
 
     @Test
+    public void shouldDeserializeCompleteObjectWithCallback() throws IOException {
+        // given
+        String requestBytes = ("{" + System.getProperty("line.separator") +
+                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
+                "    \"method\" : \"someMethod\"," + System.getProperty("line.separator") +
+                "    \"url\" : \"http://www.example.com\"," + System.getProperty("line.separator") +
+                "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
+                "    \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
+                "      \"name\" : \"queryStringParameterNameOne\"," + System.getProperty("line.separator") +
+                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + System.getProperty("line.separator") +
+                "    }, {" + System.getProperty("line.separator") +
+                "      \"name\" : \"queryStringParameterNameTwo\"," + System.getProperty("line.separator") +
+                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + System.getProperty("line.separator") +
+                "    } ]," + System.getProperty("line.separator") +
+                "    \"body\" : {" + System.getProperty("line.separator") +
+                "      \"type\" : \"STRING\"," + System.getProperty("line.separator") +
+                "      \"value\" : \"someBody\"" + System.getProperty("line.separator") +
+                "    }," + System.getProperty("line.separator") +
+                "    \"cookies\" : [ {" + System.getProperty("line.separator") +
+                "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
+                "      \"values\" : [ \"someCookieValue\" ]" + System.getProperty("line.separator") +
+                "    } ]," + System.getProperty("line.separator") +
+                "    \"headers\" : [ {" + System.getProperty("line.separator") +
+                "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
+                "      \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
+                "    } ]" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"httpCallback\" : {" + System.getProperty("line.separator") +
+                "    \"callbackClass\" : \"someClass\"" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"times\" : {" + System.getProperty("line.separator") +
+                "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
+                "    \"unlimited\" : false" + System.getProperty("line.separator") +
+                "  }" + System.getProperty("line.separator") +
+                "}");
+
+        // when
+        Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
+
+        // then
+        assertEquals(new ExpectationDTO()
+                        .setHttpRequest(
+                                new HttpRequestDTO()
+                                        .setMethod("someMethod")
+                                        .setURL("http://www.example.com")
+                                        .setPath("somePath")
+                                        .setQueryStringParameters(Arrays.asList(
+                                                new ParameterDTO(new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two")),
+                                                new ParameterDTO(new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One"))
+                                        ))
+                                        .setBody(new StringBodyDTO(new StringBody("someBody", Body.Type.STRING)))
+                                        .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
+                                        .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", Arrays.asList("someCookieValue")))))
+                        )
+                        .setHttpCallback(
+                                new HttpCallbackDTO()
+                                        .setCallbackClass("someClass")
+                        )
+                        .setTimes(new TimesDTO(Times.exactly(5))).buildObject(), expectation
+        );
+    }
+
+    @Test
     public void shouldDeserializePartialObject() throws IOException {
         // given
         String requestBytes = ("{" + System.getProperty("line.separator") +
@@ -646,6 +709,63 @@ public class ExpectationSerializerIntegrationTest {
                 "    \"host\" : \"someHost\"," + System.getProperty("line.separator") +
                 "    \"port\" : 1234," + System.getProperty("line.separator") +
                 "    \"scheme\" : \"HTTPS\"" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"times\" : {" + System.getProperty("line.separator") +
+                "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
+                "    \"unlimited\" : false" + System.getProperty("line.separator") +
+                "  }" + System.getProperty("line.separator") +
+                "}", jsonExpectation);
+    }
+
+    public void shouldSerializeCompleteObjectWithCallback() throws IOException {
+        // when
+        String jsonExpectation = new ExpectationSerializer().serialize(new ExpectationDTO()
+                        .setHttpRequest(
+                                new HttpRequestDTO()
+                                        .setMethod("someMethod")
+                                        .setURL("http://www.example.com")
+                                        .setPath("somePath")
+                                        .setQueryStringParameters(Arrays.asList(
+                                                new ParameterDTO(new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two")),
+                                                new ParameterDTO(new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One"))
+                                        ))
+                                        .setBody(new StringBodyDTO(new StringBody("someBody", Body.Type.STRING)))
+                                        .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
+                                        .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", Arrays.asList("someCookieValue")))))
+                        )
+                        .setHttpCallback(
+                                new HttpCallbackDTO()
+                                        .setCallbackClass("someClass")
+                        )
+                        .setTimes(new TimesDTO(Times.exactly(5)))
+                        .buildObject()
+        );
+
+        // then
+        assertEquals("{" + System.getProperty("line.separator") +
+                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
+                "    \"method\" : \"someMethod\"," + System.getProperty("line.separator") +
+                "    \"url\" : \"http://www.example.com\"," + System.getProperty("line.separator") +
+                "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
+                "    \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
+                "      \"name\" : \"queryStringParameterNameOne\"," + System.getProperty("line.separator") +
+                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + System.getProperty("line.separator") +
+                "    }, {" + System.getProperty("line.separator") +
+                "      \"name\" : \"queryStringParameterNameTwo\"," + System.getProperty("line.separator") +
+                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + System.getProperty("line.separator") +
+                "    } ]," + System.getProperty("line.separator") +
+                "    \"body\" : \"someBody\"," + System.getProperty("line.separator") +
+                "    \"cookies\" : [ {" + System.getProperty("line.separator") +
+                "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
+                "      \"values\" : [ \"someCookieValue\" ]" + System.getProperty("line.separator") +
+                "    } ]," + System.getProperty("line.separator") +
+                "    \"headers\" : [ {" + System.getProperty("line.separator") +
+                "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
+                "      \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
+                "    } ]" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"httpCallback\" : {" + System.getProperty("line.separator") +
+                "    \"callbackClass\" : \"someClass\"" + System.getProperty("line.separator") +
                 "  }," + System.getProperty("line.separator") +
                 "  \"times\" : {" + System.getProperty("line.separator") +
                 "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +

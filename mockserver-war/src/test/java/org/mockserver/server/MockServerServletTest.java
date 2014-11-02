@@ -12,12 +12,10 @@ import org.mockserver.mappers.MockServerToHttpServletResponseMapper;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.MockServerMatcher;
+import org.mockserver.mock.action.HttpCallbackActionHandler;
 import org.mockserver.mock.action.HttpForwardActionHandler;
 import org.mockserver.mock.action.HttpResponseActionHandler;
-import org.mockserver.model.Header;
-import org.mockserver.model.HttpForward;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
+import org.mockserver.model.*;
 import org.mockserver.proxy.filters.Filters;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -55,6 +53,8 @@ public class MockServerServletTest {
     private HttpResponseActionHandler httpResponseActionHandler;
     @Mock
     private HttpForwardActionHandler httpForwardActionHandler;
+    @Mock
+    private HttpCallbackActionHandler httpCallbackActionHandler;
     @InjectMocks
     private MockServerServlet mockServerServlet;
 
@@ -108,6 +108,30 @@ public class MockServerServletTest {
         when(httpServletToMockServerRequestMapper.mapHttpServletRequestToMockServerRequest(httpServletRequest)).thenReturn(request);
         verify(mockServerMatcher).handle(request);
         when(httpForwardActionHandler.handle(forward, request)).thenReturn(response);
+        verify(mockServerToHttpServletResponseMapper).mapMockServerResponseToHttpServletResponse(response, httpServletResponse);
+        assertThat(httpServletResponse.getStatus(), is(200));
+    }
+
+    @Test
+    public void shouldCallbackMatchedExpectation() throws IOException {
+        // given
+        HttpRequest request = new HttpRequest().withPath("somepath");
+        HttpCallback callback = new HttpCallback().withCallbackClass("some-class");
+        HttpResponse response = new HttpResponse();
+        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
+        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("GET", "somepath");
+
+        when(httpServletToMockServerRequestMapper.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class))).thenReturn(request);
+        when(mockServerMatcher.handle(any(HttpRequest.class))).thenReturn(callback);
+        when(httpCallbackActionHandler.handle(any(HttpCallback.class), any(HttpRequest.class))).thenReturn(response);
+
+        // when
+        mockServerServlet.doGet(httpServletRequest, httpServletResponse);
+
+        // then
+        when(httpServletToMockServerRequestMapper.mapHttpServletRequestToMockServerRequest(httpServletRequest)).thenReturn(request);
+        verify(mockServerMatcher).handle(request);
+        when(httpCallbackActionHandler.handle(callback, request)).thenReturn(response);
         verify(mockServerToHttpServletResponseMapper).mapMockServerResponseToHttpServletResponse(response, httpServletResponse);
         assertThat(httpServletResponse.getStatus(), is(200));
     }

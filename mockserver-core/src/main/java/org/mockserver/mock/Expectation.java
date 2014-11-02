@@ -15,6 +15,7 @@ public class Expectation extends EqualsHashCodeToString {
     private final HttpRequestMatcher httpRequestMatcher;
     private HttpResponse httpResponse;
     private HttpForward httpForward;
+    private HttpCallback httpCallback;
 
     public Expectation(HttpRequest httpRequest, Times times) {
         this.httpRequest = httpRequest;
@@ -42,11 +43,17 @@ public class Expectation extends EqualsHashCodeToString {
         return httpForward;
     }
 
+    public HttpCallback getHttpCallback() {
+        return httpCallback;
+    }
+
     public Action getAction(boolean applyDelay) {
         if (httpResponse != null) {
             return getHttpResponse(applyDelay);
-        } else {
+        } else if (httpForward != null) {
             return getHttpForward();
+        } else {
+            return getHttpCallback();
         }
     }
 
@@ -59,6 +66,9 @@ public class Expectation extends EqualsHashCodeToString {
             if (httpForward != null) {
                 throw new IllegalArgumentException("It is not possible to set a response once a forward has been set");
             }
+            if (httpCallback != null) {
+                throw new IllegalArgumentException("It is not possible to set a response once a callback has been set");
+            }
             this.httpResponse = httpResponse;
         }
         return this;
@@ -69,7 +79,24 @@ public class Expectation extends EqualsHashCodeToString {
             if (httpResponse != null) {
                 throw new IllegalArgumentException("It is not possible to set a forward once a response has been set");
             }
+            if (httpCallback != null) {
+                throw new IllegalArgumentException("It is not possible to set a forward once a callback has been set");
+            }
             this.httpForward = httpForward;
+        }
+        return this;
+    }
+
+
+    public Expectation thenCallback(HttpCallback httpCallback) {
+        if (httpCallback != null) {
+            if (httpResponse != null) {
+                throw new IllegalArgumentException("It is not possible to set a callback once a response has been set");
+            }
+            if (httpForward != null) {
+                throw new IllegalArgumentException("It is not possible to set a callback once a forward has been set");
+            }
+            this.httpCallback = httpCallback;
         }
         return this;
     }

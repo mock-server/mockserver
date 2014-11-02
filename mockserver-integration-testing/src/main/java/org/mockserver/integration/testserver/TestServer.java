@@ -6,6 +6,7 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.ssl.SslHandler;
 import org.mockserver.socket.SSLFactory;
@@ -45,6 +46,7 @@ public class TestServer {
 
                                     pipeline.addLast("logger", new LoggingHandler("TEST_SERVER"));
                                     pipeline.addLast("codec", new HttpServerCodec());
+                                    pipeline.addLast("chunk-aggregator", new HttpObjectAggregator(10 * 1024 * 1024));
                                     pipeline.addLast("handler", new TestServerHandler());
                                 }
                             })
@@ -75,6 +77,7 @@ public class TestServer {
                                     pipeline.addLast("ssl", new SslHandler(engine));
                                     pipeline.addLast("logger", new LoggingHandler("TEST_SERVER_SSL"));
                                     pipeline.addLast("codec", new HttpServerCodec());
+                                    pipeline.addLast("chunk-aggregator", new HttpObjectAggregator(10 * 1024 * 1024));
                                     pipeline.addLast("handler", new TestServerHandler());
                                 }
                             })
