@@ -62,5 +62,5 @@ then
 fi
 
 
-echo "java -Dfile.encoding=UTF-8 -Dmockserver.logLevel=WARN -jar $MOCKSERVER_HOME/mockserver-netty-3.6.1-jar-with-dependencies.jar $COMMAND_LINE_OPTS"
-java -Dfile.encoding=UTF-8 -Dmockserver.logLevel=WARN -jar $MOCKSERVER_HOME/mockserver-netty-3.6.1-jar-with-dependencies.jar $COMMAND_LINE_OPTS
+echo "java -Dfile.encoding=UTF-8 -Dmockserver.logLevel=WARN -jar $MOCKSERVER_HOME/mockserver-netty-3.7-jar-with-dependencies.jar $COMMAND_LINE_OPTS"
+java -Dfile.encoding=UTF-8 -Dmockserver.logLevel=WARN -jar $MOCKSERVER_HOME/mockserver-netty-3.7-jar-with-dependencies.jar $COMMAND_LINE_OPTS

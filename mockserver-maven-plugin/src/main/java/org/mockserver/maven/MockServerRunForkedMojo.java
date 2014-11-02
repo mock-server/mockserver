@@ -163,13 +163,13 @@ public class MockServerRunForkedMojo extends MockServerAbstractMojo {
 
     @VisibleForTesting
     String getVersion() {
-        String version = "3.6.1";
+        String version = "3.7";
         try {
             Properties p = new Properties();
             InputStream is = getClass().getResourceAsStream("/META-INF/maven/org.mock-server/mockserver-maven-plugin/pom.properties");
             if (is != null) {
                 p.load(is);
-                version = p.getProperty("version", "3.6.1");
+                version = p.getProperty("version", "3.7");
             }
         } catch (Exception e) {
             // ignore
