@@ -1,7 +1,7 @@
 language: java
 
 before_install:
-  - "travis_retry mvn install -T2C -q -DskipTests=true"
+  - "travis_retry mvn test-compile -T2C -q"
 
 script:
   - "./scripts/travis_build.sh"
