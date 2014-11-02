@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-export MAVEN_OPTS='-XX:MaxPermSize=1024m -Xmx1024m'
-export JAVA_OPTS='-XX:MaxPermSize=1024m -Xmx1024m'
+export MAVEN_OPTS='-XX:MaxPermSize=1024m -Xmx2048m'
+export JAVA_OPTS='-XX:MaxPermSize=1024m -Xmx2048m'
 JAVA_VER=$(java -version 2>&1 | sed 's/java version "\(.*\)\.\(.*\)\..*"/\1\2/; 1q')
 current_directory=${PWD}
 
@@ -13,15 +13,7 @@ if [ $JAVA_VER -eq 16 ]; then
     echo
     rm -rf $current_directory/target/travis
     git clone -b travis `git config --get remote.origin.url` $current_directory/target/travis
-    for module in . core client-java integration-testing war proxy-war netty maven-plugin maven-plugin-integration-tests client-javascript client-ruby examples; do
-        cd $current_directory/mockserver-$module;
-        echo
-        echo ==== `pwd` =====;
-        echo
-        mvn -q install --settings $current_directory/target/travis/settings.xml
-        echo
-        cd $current_directory;
-    done
+    mvn -q deploy --settings $current_directory/target/travis/settings.xml
 fi
 
 if [ $JAVA_VER -eq 17 ]; then
@@ -30,15 +22,7 @@ if [ $JAVA_VER -eq 17 ]; then
     echo "----- JAVA 1.7 -----"
     echo "--------------------"
     echo
-    for module in . core client-java integration-testing war proxy-war netty maven-plugin maven-plugin-integration-tests client-javascript client-ruby examples; do
-        cd $current_directory/mockserver-$module;
-        echo
-        echo ==== `pwd` ====;
-        echo
-        mvn -q install
-        echo
-        cd $current_directory;
-    done
+    mvn -q install
 fi
 
 if [ $JAVA_VER -eq 18 ]; then
@@ -47,13 +31,5 @@ if [ $JAVA_VER -eq 18 ]; then
     echo "----- JAVA 1.8 -----"
     echo "--------------------"
     echo
-    for module in . core client-java integration-testing war proxy-war netty maven-plugin maven-plugin-integration-tests client-javascript client-ruby examples; do
-        cd $current_directory/mockserver-$module;
-        echo
-        echo ==== `pwd` ====;
-        echo
-        mvn -q install
-        echo
-        cd $current_directory;
-    done
+    mvn -q install
 fi
