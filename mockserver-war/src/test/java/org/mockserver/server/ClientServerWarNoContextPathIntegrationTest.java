@@ -7,7 +7,6 @@ import org.apache.catalina.startup.Tomcat;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.mockserver.client.server.MockServerClient;
-import org.mockserver.integration.server.AbstractClientServerIntegrationTest;
 import org.mockserver.integration.testserver.TestServer;
 import org.mockserver.socket.PortFactory;
 import org.mockserver.socket.SSLFactory;
@@ -17,7 +16,7 @@ import java.io.File;
 /**
  * @author jamesdbloom
  */
-public class ClientServerWarNoContextPathIntegrationTest extends AbstractClientServerIntegrationTest {
+public class ClientServerWarNoContextPathIntegrationTest extends AbstractClientServerSharedClassloadersAndTestClasspathIntegrationTest {
 
     private final static int SERVER_HTTP_PORT = PortFactory.findFreePort();
     private final static int SERVER_HTTPS_PORT = PortFactory.findFreePort();

@@ -2,8 +2,8 @@ package org.mockserver.integration;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.mockserver.integration.server.AbstractClientServerIntegrationTest;
 import org.mockserver.integration.testserver.TestServer;
+import org.mockserver.server.AbstractClientServerSharedClassloadersAndTestClasspathIntegrationTest;
 import org.mockserver.socket.PortFactory;
 
 import java.util.concurrent.ExecutionException;
@@ -13,7 +13,7 @@ import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 /**
  * @author jamesdbloom
  */
-public class ClientAndServerIntegrationTest extends AbstractClientServerIntegrationTest {
+public class ClientAndServerIntegrationTest extends AbstractClientServerSharedClassloadersAndTestClasspathIntegrationTest {
 
     private static final int SERVER_HTTP_PORT = PortFactory.findFreePort();
     private static final int SERVER_HTTPS_PORT = PortFactory.findFreePort();
