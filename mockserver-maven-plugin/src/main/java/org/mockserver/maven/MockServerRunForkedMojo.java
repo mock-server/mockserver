@@ -1,14 +1,18 @@
 package org.mockserver.maven;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.resolver.ArtifactResolutionRequest;
 import org.apache.maven.artifact.resolver.ArtifactResolver;
+import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.repository.RepositorySystem;
+import org.mockserver.cli.Main;
 import org.mockserver.configuration.SystemProperties;
 
 import java.io.File;
@@ -67,10 +71,19 @@ public class MockServerRunForkedMojo extends MockServerAbstractMojo {
                 );
             }
             List<String> arguments = new ArrayList<String>(Arrays.asList(getJavaBin()));
+//            arguments.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5010");
             arguments.add("-Dfile.encoding=UTF-8");
             arguments.add("-Dmockserver.logLevel=" + logLevel);
-            arguments.add("-jar");
-            arguments.add(jarWithDependencies());
+            arguments.add("-cp");
+            String classPath = resolveJarWithDependenciesPath();
+            if (dependencies != null && !dependencies.isEmpty()) {
+                for (Dependency dependency : dependencies) {
+                    classPath += System.getProperty("path.separator");
+                    classPath += resolvePluginDependencyJarPath(dependency);
+                }
+            }
+            arguments.add(classPath);
+            arguments.add(Main.class.getName());
             if (serverPort != -1) {
                 arguments.add("-serverPort");
                 arguments.add("" + serverPort);
@@ -89,6 +102,11 @@ public class MockServerRunForkedMojo extends MockServerAbstractMojo {
                 arguments.add("-proxySecurePort");
                 arguments.add("" + proxySecurePort);
             }
+            getLog().info(" ");
+            getLog().info(StringUtils.rightPad("", 72, "-"));
+            getLog().info("Running MockServer: " + Joiner.on(" ").join(arguments));
+            getLog().info(StringUtils.rightPad("", 72, "-"));
+            getLog().info(" ");
             ProcessBuilder processBuilder = newProcessBuilder(arguments);
             if (pipeLogToConsole) {
                 processBuilder.redirectErrorStream(true);
@@ -130,10 +148,16 @@ public class MockServerRunForkedMojo extends MockServerAbstractMojo {
     }
 
     @VisibleForTesting
-    String jarWithDependencies() {
+    String resolvePluginDependencyJarPath(Dependency dependency) {
+        Artifact dependencyArtifact = repositorySystem.createArtifactWithClassifier(dependency.getGroupId(), dependency.getArtifactId(), dependency.getVersion(), dependency.getType(), dependency.getClassifier());
+        artifactResolver.resolve(new ArtifactResolutionRequest().setArtifact(dependencyArtifact));
+        return dependencyArtifact.getFile().getAbsolutePath();
+    }
+
+    @VisibleForTesting
+    String resolveJarWithDependenciesPath() {
         Artifact jarWithDependencies = repositorySystem.createArtifactWithClassifier("org.mock-server", "mockserver-netty", getVersion(), "jar", "jar-with-dependencies");
         artifactResolver.resolve(new ArtifactResolutionRequest().setArtifact(jarWithDependencies));
-        getLog().debug("Running MockServer using " + jarWithDependencies.getFile().getAbsolutePath());
         return jarWithDependencies.getFile().getAbsolutePath();
     }
 
