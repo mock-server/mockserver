@@ -6,6 +6,7 @@ import org.mockserver.mappers.HttpServletToMockServerRequestMapper;
 import org.mockserver.mappers.MockServerToHttpServletResponseMapper;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.MockServerMatcher;
+import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.mock.action.HttpCallbackActionHandler;
 import org.mockserver.mock.action.HttpForwardActionHandler;
 import org.mockserver.mock.action.HttpResponseActionHandler;
@@ -29,25 +30,13 @@ public class MockServerServlet extends HttpServlet {
     // mockserver
     private LogFilter logFilter = new LogFilter();
     private MockServerMatcher mockServerMatcher = new MockServerMatcher();
-    private HttpForwardActionHandler httpForwardActionHandler;
-    private HttpCallbackActionHandler httpCallbackActionHandler;
-    private HttpResponseActionHandler httpResponseActionHandler;
+    private ActionHandler actionHandler = new ActionHandler(logFilter);
     // mappers
     private HttpServletToMockServerRequestMapper httpServletToMockServerRequestMapper = new HttpServletToMockServerRequestMapper();
     private MockServerToHttpServletResponseMapper mockServerToHttpServletResponseMapper = new MockServerToHttpServletResponseMapper();
     // serializer
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
-
-
-    public MockServerServlet() {
-        Filters filters = new Filters();
-        filters.withFilter(new org.mockserver.model.HttpRequest(), new HopByHopHeaderFilter());
-        filters.withFilter(new org.mockserver.model.HttpRequest(), logFilter);
-        httpResponseActionHandler = new HttpResponseActionHandler(filters);
-        httpCallbackActionHandler = new HttpCallbackActionHandler(filters);
-        httpForwardActionHandler = new HttpForwardActionHandler(filters);
-    }
 
     public void doGet(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
         mockResponse(httpServletRequest, httpServletResponse);
@@ -92,25 +81,8 @@ public class MockServerServlet extends HttpServlet {
 
     private void mockResponse(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
         HttpRequest httpRequest = httpServletToMockServerRequestMapper.mapHttpServletRequestToMockServerRequest(httpServletRequest);
-        Action action = mockServerMatcher.handle(httpRequest);
-
-        if (action != null) {
-            switch (action.getType()) {
-                case FORWARD:
-                    mapResponse(httpForwardActionHandler.handle((HttpForward) action, httpRequest), httpServletResponse);
-                    break;
-                case CALLBACK:
-                    mapResponse(httpCallbackActionHandler.handle((HttpCallback) action, httpRequest), httpServletResponse);
-                    break;
-                case RESPONSE:
-                    mapResponse(httpResponseActionHandler.handle((HttpResponse) action, httpRequest), httpServletResponse);
-                    break;
-                default:
-                    httpServletResponse.setStatus(HttpStatusCode.NOT_FOUND_404.code());
-            }
-        } else {
-            httpServletResponse.setStatus(HttpStatusCode.NOT_FOUND_404.code());
-        }
+        HttpResponse httpResponse = actionHandler.processAction(mockServerMatcher.handle(httpRequest), httpRequest);
+        mapResponse(httpResponse, httpServletResponse);
     }
 
 

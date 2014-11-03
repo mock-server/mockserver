@@ -23,8 +23,8 @@ public class MockServer {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     // mockserver
-    private final MockServerMatcher mockServerMatcher = new MockServerMatcher();
     private final LogFilter logFilter = new LogFilter();
+    private final MockServerMatcher mockServerMatcher = new MockServerMatcher();
     private SettableFuture<String> hasStarted;
     // netty
     private EventLoopGroup bossGroup;
@@ -60,7 +60,7 @@ public class MockServer {
                                 .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                                 .group(bossGroup, workerGroup)
                                 .channel(NioServerSocketChannel.class)
-                                .childHandler(new MockServerInitializer(new MockServerHandler(mockServerMatcher, logFilter, MockServer.this, false)))
+                                .childHandler(new MockServerInitializer(new MockServerHandler(mockServerMatcher, logFilter, MockServer.this), false))
                                 .bind(port)
                                 .sync()
                                 .channel();
@@ -72,7 +72,7 @@ public class MockServer {
                                 .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                                 .group(bossGroup, workerGroup)
                                 .channel(NioServerSocketChannel.class)
-                                .childHandler(new MockServerInitializer(new MockServerHandler(mockServerMatcher, logFilter, MockServer.this, true)))
+                                .childHandler(new MockServerInitializer(new MockServerHandler(mockServerMatcher, logFilter, MockServer.this), true))
                                 .bind(securePort)
                                 .sync()
                                 .channel();

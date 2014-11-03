@@ -16,9 +16,11 @@ import javax.net.ssl.SSLEngine;
 public class MockServerInitializer extends ChannelInitializer<SocketChannel> {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final boolean secure;
     private final MockServerHandler mockServerHandler;
 
-    public MockServerInitializer(MockServerHandler mockServerHandler) {
+    public MockServerInitializer(MockServerHandler mockServerHandler, boolean secure) {
+        this.secure = secure;
         this.mockServerHandler = mockServerHandler;
     }
 
@@ -28,7 +30,7 @@ public class MockServerInitializer extends ChannelInitializer<SocketChannel> {
         ChannelPipeline pipeline = ch.pipeline();
 
         // add HTTPS support
-        if (mockServerHandler.isSecure()) {
+        if (secure) {
             SSLEngine engine = SSLFactory.getInstance().sslContext().createSSLEngine();
             engine.setUseClientMode(false);
             pipeline.addLast("ssl", new SslHandler(engine));
@@ -43,7 +45,8 @@ public class MockServerInitializer extends ChannelInitializer<SocketChannel> {
         pipeline.addLast("decoder-encoder", new HttpServerCodec());
         pipeline.addLast("chunk-aggregator", new HttpObjectAggregator(10 * 1024 * 1024));
 
-        // add handler
+        // add mock server handlers
+        pipeline.addLast("mock-server-request-codec", new MockServerHttpRequestCodec(secure));
         pipeline.addLast("handler", mockServerHandler);
     }
 }
