@@ -3,9 +3,7 @@ package org.mockserver.mockserver;
 import com.google.common.annotations.VisibleForTesting;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.*;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.util.CharsetUtil;
@@ -124,8 +122,11 @@ public class MockServerHandler extends SimpleChannelInboundHandler<Object> {
         if (is100ContinueExpected) {
             ctx.write(new DefaultFullHttpResponse(HTTP_1_1, CONTINUE));
         }
-        ctx.write(response);
-        ctx.flush();
+        ChannelFuture future = ctx.write(response);
+        if (!isKeepAlive) {
+            future.addListener(ChannelFutureListener.CLOSE);
+        }
+//        ctx.flush();
     }
 
     @VisibleForTesting
