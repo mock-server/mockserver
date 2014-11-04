@@ -509,11 +509,13 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p>MockServer is for mocking of any system you integrate with via HTTP or HTTPS (i.e. services, web sites, etc).</p>
 
-<p>MockServer supports:</p>
+<p>MockServer can:</p>
 <ul>
-	<li>mocking of any HTTP / HTTPS response when any request is matched (<a href="#mocking">see more below</a>)</li>
-	<li>recording requests and responses to analyse how a system behaves (<a href="#proxying">see more below</a>)</li>
-	<li>verifying which requests and responses have been sent as part of a test (<a href="#proxying">see more below</a>)</li>
+	<li><strong>return a "mock" response</strong> when a request matches an expectation (<a href="#mocking">see more below</a>)</li>
+	<li><strong>forward a request</strong> when the request matches an expectation (i.e. ack as a selective proxy) (<a href="#mocking">see more below</a>)</li>
+	<li><strong>execute a callback</strong> (in Java) when a request matches an expectation, allowing the response to be created dynamically (<a href="#mocking">see more below</a>)</li>
+	<li><strong>verify requests</strong> have been sent (i.e. in a test assertion) (<a href="#verify-behaviour">see more below</a>)</li>
+	<li><strong>record requests and responses</strong> to analyse how a system behaves (<a href="#proxying">see more below</a>)</li>
 </ul>
 
 <p>MockServer Clients:</p>
@@ -606,7 +608,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 });
 </code></pre>
 
-<p>Requests can be matched on:</p>
+<h3>Requests can be matched on:</h3>
 
 <ul>
 	<li><strong>url</strong> - regex or plain text</li>
@@ -619,9 +621,21 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p>The body can be matched using plain text, a json expression, an XPath expression or a regular expression, see <a href="http://saxon.sourceforge.net/saxon6.5.3/expressions.html">XPath Expression Syntax</a> for supported XPath syntax.</p>
 
-<p>All other matching can be done using plain text or a regular expression, see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">Pattern (Java Platform SE 7)</a> for supported regular expression syntax.</p>
+<p>All other matching can be done using plain text or a regular expression, see <a href="http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html">Pattern (Java Platform SE 6)</a> for supported regular expression syntax.</p>
 
-<p>Responses can contain:</p>
+<h3>Actions can be defined:</h3>
+
+<p>When a request is matched there are three actions that can be defined as follows:</p>
+
+<ul>
+	<li><strong>respond</strong> - return a "mock" response</li>
+	<li><strong>forward</strong> - forward the request</li>
+	<li><strong>callback</strong> - execute a callback</li>
+</ul>
+
+<h4>Response Actions</h4>
+
+<p>A response action defines a mock response.  Each response can contain:</p>
 
 <ul>
 	<li><strong>status code</strong></li>
@@ -636,6 +650,32 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 	<li>a delay before the response is sent</li>
 	<li>the number of times the response is sent (including unlimited)</li>
 </ul>
+
+<p>For more details see the section below on <a href="#create-expectations">creating expectations</a>.</p>
+
+<h4>Forward Actions</h4>
+
+<p>A forward action defines how a request should be forwarded.  Each forward can contain:</p>
+
+<ul>
+	<li><strong>host</strong></li>
+	<li><strong>port</strong></li>
+	<li><strong>scheme</strong></li>
+</ul>
+
+<p>Only the host is mandatory as the port is default to 80 and the scheme is defaulted to HTTP.</p>
+
+<p>For more details see the section below on <a href="#create-expectations">creating expectations</a>.</p>
+
+<h4>Callback Actions</h4>
+
+<p>A callback action defines a class that will be used to dynamically generate the response.  Each callback contains:</p>
+
+<ul>
+	<li><strong>callbackClass</strong></li>
+</ul>
+
+<p>The class must define a default constructor and implement <strong>org.mockserver.mock.action.ExpectationCallback</strong>.</p>
 
 <p>For more details see the section below on <a href="#create-expectations">creating expectations</a>.</p>
 
@@ -2132,6 +2172,7 @@ cd mockserver</code></pre>
 <ul>
 	<li>the <a href="#request-matchers">request matcher</a> and</li>
 	<li>what <a href="#mock-response">response</a> should be returned or</li>
+	<li>what <a href="#callback">callback</a> should be executed or</li>
 	<li>where the request should be <a href="#mock-forward">forwarded</a>.</li>
 </ul>
 
@@ -2294,7 +2335,7 @@ xmlHttpRequest.send(JSON.stringify({
 
 <p>A json expressions is a valid json object. When a json expression is matched against a request body only fields in the json expression are matched, any extra fields in the request body not specified in the json expression will be ignored, in addition the order of fields in the body will be ignored.</p>
 
-<p>All other matching can be done using plain text or a regular expression, see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">Pattern (Java Platform SE 7)</a> for supported regular expression syntax.</p>
+<p>All other matching can be done using plain text or a regular expression, see <a href="http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html">Pattern (Java Platform SE 6)</a> for supported regular expression syntax.</p>
 
 <p><strong>Java</strong></p>
 
@@ -2311,7 +2352,7 @@ xmlHttpRequest.send(JSON.stringify({
 
     <span class="comment">/**
      * The URL to match on such as <span class="string_literal">"http://localhost:9999/some_mocked_path"</span> regex values are also
-     * supported such as <span class="string_literal">".*some_mocked_path"</span>, see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>
+     * supported such as <span class="string_literal">".*some_mocked_path"</span>, see <a href="http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html</a>
      * for full details of the supported regex syntax
      *
      * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">url</span> the full URL such as <span class="string_literal">"http://localhost:9999/some_mocked_path"</span> or a regex
@@ -2320,7 +2361,7 @@ xmlHttpRequest.send(JSON.stringify({
 
     <span class="comment">/**
      * The path to match on such as <span class="string_literal">"/some_mocked_path"</span> any servlet context path is ignored for matching and should not be specified here
-     * regex values are also supported such as <span class="string_literal">".*_path"</span>, see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>
+     * regex values are also supported such as <span class="string_literal">".*_path"</span>, see <a href="http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html</a>
      * for full details of the supported regex syntax
      *
      * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">path</span> the path such as <span class="string_literal">"/some_mocked_path"</span> or a regex
@@ -2330,7 +2371,7 @@ xmlHttpRequest.send(JSON.stringify({
     <span class="comment">/**
      * The query string parameters to match on as a list of Parameter objects where the values or keys of each parameter
      * can be either a string or a regex (for more details of the supported regex syntax
-     * see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>)
+     * see <a href="http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html</a>)
      *
      * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">parameters</span> the list of Parameter objects where the values or keys of each parameter can be either a string or a regex
      */</span>
@@ -2339,7 +2380,7 @@ xmlHttpRequest.send(JSON.stringify({
     <span class="comment">/**
      * The query string parameters to match on as a varags Parameter objects where the values or keys of each parameter
      * can be either a string or a regex (for more details of the supported regex syntax
-     * see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>)
+     * see <a href="http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html</a>)
      *
      * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">parameters</span> the varags Parameter objects where the values or keys of each parameter can be either a string or a regex
      */</span>
@@ -2348,7 +2389,7 @@ xmlHttpRequest.send(JSON.stringify({
     <span class="comment">/**
      * The query string parameters to match on as a Map&lt;String, List&lt;String&gt;&gt; where the values or keys of each parameter
      * can be either a string or a regex (for more details of the supported regex syntax
-     * see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>)
+     * see <a href="http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html</a>)
      *
      * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">parameters</span> the Map&lt;String, List&lt;String&gt;&gt; object where the values or keys of each parameter can be either a string or a regex
      */</span>
@@ -2357,7 +2398,7 @@ xmlHttpRequest.send(JSON.stringify({
     <span class="comment">/**
      * Adds one query string parameter to match on as a Parameter object where the parameter values list can be a list of strings
      * or regular expressions (for more details of the supported regex syntax
-     * see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>)
+     * see <a href="http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html</a>)
      *
      * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">parameter</span> the Parameter object which can have a values list of strings or regular expressions
      */</span>
@@ -2365,7 +2406,7 @@ xmlHttpRequest.send(JSON.stringify({
 
     <span class="comment">/**
      * The body to match on such as <span class="string_literal">"this is an exact string body"</span> or a json expression such as <span class="string_literal">"{username: 'foo', password: 'bar'}"</span> or a regex
-     * (see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>)
+     * (see <a href="http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html</a>)
      * or an XPath expression which returns one or more values or evaluates to true
      * (see <a href="http://saxon.sourceforge.net/saxon6.5.3/expressions.html">http://saxon.sourceforge.net/saxon6.5.3/expressions.html</a>)
      *
@@ -2409,7 +2450,7 @@ xmlHttpRequest.send(JSON.stringify({
      *   - binary(IOUtils.readFully(getClass().getClassLoader().getResourceAsStream(<span class="string_literal">"example.pdf"</span>), <span class="numeric_literal">1024</span>)); or
      *   - new BinaryBody(IOUtils.readFully(getClass().getClassLoader().getResourceAsStream(<span class="string_literal">"example.pdf"</span>), <span class="numeric_literal">1024</span>));
      *
-     * for more details of the supported regex syntax see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>
+     * for more details of the supported regex syntax see <a href="http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html</a>
      * for more details of the supported json syntax see <a href="http://jsonassert.skyscreamer.org">http://jsonassert.skyscreamer.org</a>
      * for more detail of XPath syntax see <a href="http://saxon.sourceforge.net/saxon6.5.3/expressions.html">http://saxon.sourceforge.net/saxon6.5.3/expressions.html</a>
      *
@@ -2419,14 +2460,14 @@ xmlHttpRequest.send(JSON.stringify({
 
     <span class="comment">/**
      * The headers to match on as a list of Header objects where the values or keys of each header can be either a string or a regex
-     * (for more details of the supported regex syntax see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>)
+     * (for more details of the supported regex syntax see <a href="http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html</a>)
      *
      * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">headers</span> the list of Header objects where the values or keys of each header can be either a string or a regex
      */</span>
     <span class="keyword">public</span> HttpRequest withHeaders(List&lt;Header&gt; headers);
     <span class="comment">/**
      * The headers to match on as a varags of Header objects  where the values or keys of each header can be either a string or a regex
-     * (for more details of the supported regex syntax see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>)
+     * (for more details of the supported regex syntax see <a href="http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html</a>)
      *
      * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">headers</span> the varags of Header objects where the values or keys of each header can be either a string or a regex
      */</span>
@@ -2434,7 +2475,7 @@ xmlHttpRequest.send(JSON.stringify({
 
     <span class="comment">/**
      * Adds one header to match on as a Header object where the header values list can be a list of strings or regular expressions
-     * (for more details of the supported regex syntax see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>)
+     * (for more details of the supported regex syntax see <a href="http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html</a>)
      *
      * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">header</span> the Header object which can have a values list of strings or regular expressions
      */</span>
@@ -2442,14 +2483,14 @@ xmlHttpRequest.send(JSON.stringify({
 
     <span class="comment">/**
      * The cookies to match on as a list of Cookie objects  where the values or keys of each cookie can be either a string or a regex
-     * (for more details of the supported regex syntax see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>)
+     * (for more details of the supported regex syntax see <a href="http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html</a>)
      *
      * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">cookies</span> the list of Cookie objects where the values or keys of each cookie can be either a string or a regex
      */</span>
     <span class="keyword">public</span> HttpRequest withCookies(List&lt;Cookie&gt; cookies);
     <span class="comment">/**
      * The cookies to match on as a varags Cookie objects where the values or keys of each cookie can be either a string or a regex
-     * (for more details of the supported regex syntax see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>)
+     * (for more details of the supported regex syntax see <a href="http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html</a>)
      *
      * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">cookies</span> the varags Cookie objects where the values or keys of each cookie can be either a string or a regex
      */</span>
@@ -2457,7 +2498,7 @@ xmlHttpRequest.send(JSON.stringify({
 
     <span class="comment">/**
      * Adds one cookie to match on as a Cookie object where the cookie values list can be a list of strings or regular expressions
-     * (for more details of the supported regex syntax see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html</a>)
+     * (for more details of the supported regex syntax see <a href="http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html</a>)
      *
      * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">cookie</span> the Cookie object which can have a values list of strings or regular expressions
      */</span>
@@ -2785,6 +2826,20 @@ Times.exactly(<span class="keyword">int</span> count);</code></pre>
         <span class="string_literal">"value"</span>: <span class="numeric_literal">1</span>
     }
 }</code></pre>
+
+<a name="callback" class="anchor" href="#callback">&nbsp;</a>
+
+<h3>Callback</h3>
+
+<p><em><strong>Note: the documentation section on callbacks is in progress and will be completed shortly (04/10/2014)</strong></em></p>
+
+<p>A callback action defines a class that will be used to dynamically generate the response.  Each callback contains:</p>
+
+<ul>
+	<li><strong>callbackClass</strong></li>
+</ul>
+
+<p>The class must define a default constructor and implement <strong>org.mockserver.mock.action.ExpectationCallback</strong>.</p>
 
 <a name="mock-forward" class="anchor" href="#mock-forward">&nbsp;</a>
 

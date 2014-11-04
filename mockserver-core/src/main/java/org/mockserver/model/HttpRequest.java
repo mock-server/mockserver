@@ -47,7 +47,7 @@ public class HttpRequest extends EqualsHashCodeToString {
 
     /**
      * The URL to match on such as "http://localhost:9999/some_mocked_path" regex values are also supported
-     * such as ".*some_mocked_path", see http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html
+     * such as ".*some_mocked_path", see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html
      * for full details of the supported regex syntax
      *
      * @param url the full URL such as "http://localhost:9999/some_mocked_path" or a regex
@@ -63,7 +63,7 @@ public class HttpRequest extends EqualsHashCodeToString {
 
     /**
      * The path to match on such as "/some_mocked_path" any servlet context path is ignored for matching and should not be specified here
-     * regex values are also supported such as ".*_path", see http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html
+     * regex values are also supported such as ".*_path", see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html
      * for full details of the supported regex syntax
      *
      * @param path the path such as "/some_mocked_path" or a regex
@@ -75,7 +75,7 @@ public class HttpRequest extends EqualsHashCodeToString {
 
     /**
      * The query string parameters to match on as a list of Parameter objects where the values or keys of each parameter can be either a string or a regex
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
      *
      * @param parameters the list of Parameter objects where the values or keys of each parameter can be either a string or a regex
      */
@@ -89,7 +89,7 @@ public class HttpRequest extends EqualsHashCodeToString {
 
     /**
      * The query string parameters to match on as a varags Parameter objects where the values or keys of each parameter can be either a string or a regex
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
      *
      * @param parameters the varags Parameter objects where the values or keys of each parameter can be either a string or a regex
      */
@@ -99,7 +99,7 @@ public class HttpRequest extends EqualsHashCodeToString {
 
     /**
      * The query string parameters to match on as a Map<String, List<String>> where the values or keys of each parameter can be either a string or a regex
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
      *
      * @param parameters the Map<String, List<String>> object where the values or keys of each parameter can be either a string or a regex
      */
@@ -115,7 +115,7 @@ public class HttpRequest extends EqualsHashCodeToString {
 
     /**
      * Adds one query string parameter to match on as a Parameter object where the parameter values list can be a list of strings or regular expressions
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
      *
      * @param parameter the Parameter object which can have a values list of strings or regular expressions
      */
@@ -146,7 +146,7 @@ public class HttpRequest extends EqualsHashCodeToString {
 
     /**
      * The body to match on such as "this is an exact string body" or a json expression such as "{username: 'foo', password: 'bar'}"
-     * or a regex (see http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html)
+     * or a regex (see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
      * or an XPath expression which returns one or more values or evaluates to true (see http://saxon.sourceforge.net/saxon6.5.3/expressions.html)
      *
      * @param body the body on such as "this is an exact string body"
@@ -210,7 +210,7 @@ public class HttpRequest extends EqualsHashCodeToString {
      *
      *   - new BinaryBody(IOUtils.readFully(getClass().getClassLoader().getResourceAsStream("example.pdf"), 1024));
      *
-     * for more details of the supported regex syntax see http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html
+     * for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html
      * for more detail of XPath syntax see http://saxon.sourceforge.net/saxon6.5.3/expressions.html
      *
      * @param body an instance of one of the Body subclasses including StringBody, ParameterBody or BinaryBody
@@ -225,7 +225,7 @@ public class HttpRequest extends EqualsHashCodeToString {
 
     /**
      * The headers to match on as a list of Header objects where the values or keys of each header can be either a string or a regex
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
      *
      * @param headers the list of Header objects where the values or keys of each header can be either a string or a regex
      */
@@ -239,7 +239,7 @@ public class HttpRequest extends EqualsHashCodeToString {
 
     /**
      * The headers to match on as a varags of Header objects where the values or keys of each header can be either a string or a regex
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
      *
      * @param headers the varags of Header objects where the values or keys of each header can be either a string or a regex
      */
@@ -250,7 +250,7 @@ public class HttpRequest extends EqualsHashCodeToString {
 
     /**
      * Adds one header to match on as a Header object where the header values list can be a list of strings or regular expressions
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
      *
      * @param header the Header object which can have a values list of strings or regular expressions
      */
@@ -265,7 +265,7 @@ public class HttpRequest extends EqualsHashCodeToString {
 
     /**
      * Adds one header to match on as a Header object where the header values list can be a list of strings or regular expressions
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
      *
      * @param header the Header object which can have a values list of strings or regular expressions
      */
@@ -295,7 +295,7 @@ public class HttpRequest extends EqualsHashCodeToString {
 
     /**
      * The cookies to match on as a list of Cookie objects where the values or keys of each cookie can be either a string or a regex
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
      *
      * @param cookies the list of Cookie objects where the values or keys of each cookie can be either a string or a regex
      */
@@ -309,7 +309,7 @@ public class HttpRequest extends EqualsHashCodeToString {
 
     /**
      * The cookies to match on as a varags Cookie objects where the values or keys of each cookie can be either a string or a regex
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
      *
      * @param cookies the varags Cookie objects where the values or keys of each cookie can be either a string or a regex
      */
@@ -320,7 +320,7 @@ public class HttpRequest extends EqualsHashCodeToString {
 
     /**
      * Adds one cookie to match on as a Cookie object where the cookie values list can be a list of strings or regular expressions
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
      *
      * @param cookie the Cookie object which can have a values list of strings or regular expressions
      */
