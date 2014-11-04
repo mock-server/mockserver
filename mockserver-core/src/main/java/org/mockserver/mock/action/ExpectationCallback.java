@@ -8,5 +8,13 @@ import org.mockserver.model.HttpResponse;
  */
 public interface ExpectationCallback {
 
-    public HttpResponse handle(HttpRequest httpRequest);
+    /**
+     * Called for every request when expectation condition has been satisfied.
+     * The request that satisfied the expectation condition is passed as the
+     * parameter and the return value is the response that will be returned to the client.
+     *
+     * @param httpRequest the request that satisfied the expectation condition
+     * @return the response that will be returned to the client
+     */
+     public HttpResponse handle(HttpRequest httpRequest);
 }

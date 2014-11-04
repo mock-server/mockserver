@@ -105,7 +105,7 @@ the menu have 100% height and be fixed on the page as the rest of it scrolls.
 /*
 All anchors inside the menu should be styled like this.
 */
-#menu a {
+#menu li a {
 	color: #999;
 	border: none;
 	padding: 0.6em 0 0.6em 0.6em;
@@ -473,10 +473,16 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 			<li><a href="#github">GitHub</a></li>
 			<li><a href="#maven-central">Maven Central</a></li>
 			<li><a href="#ruby-gems">Ruby Gems</a></li>
+			<li><a href="#npm-modules">npm</a></li>
 			<li><a href="#vertx-registry">Vert.X Registry</a></li>
 			<li><a href="#docker-index">Docker</a></li>
 			<li><a href="#continuous-integration">Continuous Integration</a></li>
 			<li><a href="#backlog">Backlog</a></li>
+		</ul>
+	</div>
+	<div class="pure-menu pure-menu-open">
+		<ul>
+			<li class="pure-menu-heading"><a href="#site-map">Site Map</a></li>
 		</ul>
 	</div>
 </div>
@@ -494,17 +500,8 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <div style="float: right; overflow: hidden;">
 	<a href="https://drone.io/github.com/jamesdbloom/mockserver"><img src="https://drone.io/github.com/jamesdbloom/mockserver/status.png" alt="Drone.io Build Status"></a>
-	<!--<a href="https://www.codeship.io/projects/20934"><img src="https://www.codeship.io/projects/cdab0090-bafb-0131-c1a3-166904770eb2/status?branch=master" alt="Codeship Build Status"></a>-->
 </div>
-<!-- div style="width: 200px; float: right; overflow: hidden;">
-	<div style="margin: 0 auto; width: 165px">
-		<a href="https://travis-ci.org/jamesdbloom/mockserver"><img src="https://github-camo.global.ssl.fastly.net/2e2b9deeda5c745f167e2cabcd787322df06688f/68747470733a2f2f7472617669732d63692e6f72672f6a616d657364626c6f6f6d2f6d6f636b7365727665722e706e673f6272616e63683d6d6173746572" alt="TravisCI Build Status" data-canonical-src="https://travis-ci.org/jamesdbloom/mockserver.png?branch=master" style="width:80px; height: 20px;"></a>
-		<a href="https://drone.io/github.com/jamesdbloom/mockserver"><img src="https://drone.io/github.com/jamesdbloom/mockserver/status.png" alt="Drone.io Build Status" style="width:80px; height: 20px;"></a>
-	</div>
-	<div style="margin: 0 auto;  width: 155px">
-		<a href="https://www.codeship.io/projects/20934"><img src="https://www.codeship.io/projects/cdab0090-bafb-0131-c1a3-166904770eb2/status?branch=master" alt="Codeship Build Status" style="width: 155px; height: 25px;"></a>
-	</div>
-</div -->
+
 <h2>What is MockServer</h2>
 
 <p>MockServer is for mocking of any system you integrate with via HTTP or HTTPS (i.e. services, web sites, etc).</p>
@@ -520,7 +517,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p>MockServer Clients:</p>
 
-<p>There are currently clients written in Java and JavaScript (<a href="#clients">see more below</a>) although any language that can send JSON via HTTP can easily use the MockServer API.</p>
+<p>There are currently clients written in Java, JavaScript and Ruby (<a href="#clients">see more below</a>) although any language that can send JSON via HTTP can easily use MockServer API.</p>
 <ul>
 	<li><a href="#clients">Java</a></li>
 	<li><a href="#clients">JavaScript</a> (browser API & Node.js)</li>
@@ -531,9 +528,17 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <h3>Mocking</h3>
 
-<p>To mock an HTTP / HTTPS interaction an expectation is setup specifying how a request should be matched and what response the MockServer should reply with when the request has been matched.</p>
+<p>To mock an HTTP / HTTPS interaction an expectation is setup specifying how a request should be matched and what action MockServer should take with when the request has been matched.</p>
 
-<p>For example to create an expectation using <strong>Java</strong>:</p>
+<p>When a request is matched there are three actions that can be defined as follows:</p>
+
+<ul>
+	<li><strong>respond</strong> - return a "mock" response</li>
+	<li><strong>forward</strong> - forward the request</li>
+	<li><strong>callback</strong> - execute a callback</li>
+</ul>
+
+<p>For example to create an expectation using <strong>Java</strong> then has a respond action:</p>
 
 <pre><code class="code"><span class="keyword">new</span> MockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">9999</span>)
         .when(
@@ -623,6 +628,8 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p>All other matching can be done using plain text or a regular expression, see <a href="http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html">Pattern (Java Platform SE 6)</a> for supported regular expression syntax.</p>
 
+<p>For more details see the section below on <a href="#create-expectations">creating expectations</a>.</p>
+
 <h3>Actions can be defined:</h3>
 
 <p>When a request is matched there are three actions that can be defined as follows:</p>
@@ -633,7 +640,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 	<li><strong>callback</strong> - execute a callback</li>
 </ul>
 
-<h4>Response Actions</h4>
+<h4><em>Respond Actions</em></h4>
 
 <p>A response action defines a mock response.  Each response can contain:</p>
 
@@ -653,7 +660,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p>For more details see the section below on <a href="#create-expectations">creating expectations</a>.</p>
 
-<h4>Forward Actions</h4>
+<h4><em>Forward Actions</em></h4>
 
 <p>A forward action defines how a request should be forwarded.  Each forward can contain:</p>
 
@@ -667,7 +674,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <p>For more details see the section below on <a href="#create-expectations">creating expectations</a>.</p>
 
-<h4>Callback Actions</h4>
+<h4><em>Callback Actions</em></h4>
 
 <p>A callback action defines a class that will be used to dynamically generate the response.  Each callback contains:</p>
 
@@ -696,7 +703,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 	<li>They can be output in JSON format to log what request the system under has sent and what responses it received.
 		<ul>
 			<li>This is useful for analysing an existing system prior to writing automated tests.</li>
-			<li>This is also useful to simplify the creation of test setup code as the JSON output is in the MockServer expectation format.</li>
+			<li>This is also useful to simplify the creation of test setup code as the JSON output is in MockServer expectation format.</li>
 		</ul>
 	</li>
 	<li>They can be output in human readable Java code format that can be pasted directly into a test setup method.
@@ -810,7 +817,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 	<li>programmatically via an API, for example, in an <span class="annotation">@Before</span> / <span class="annotation">@After</span> method</li>
 	<li>from the command line as a stand-alone process, for example, as part of a deployment process to a test environment</li>
 	<li>from a Grunt build using a Grunt plugin</li>
-	<li>from an Node.js code using an NPM plugin</li>
+	<li>from an Node.js code using an npm plugin</li>
 </ul>
 
 <p>MockServer is available as:</p>
@@ -820,7 +827,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 	<li>a deployable WAR that runs on any JEE web server</li>
 	<li>a Vert.X module that runs on a Vert.X</li>
 	<li>a Grunt plugin (that has the embedded Netty server bundle with it)</li>
-	<li>an NPM plugin (that has the embedded Netty server bundle with it)</li>
+	<li>an npm plugin (that has the embedded Netty server bundle with it)</li>
 </ul>
 
 <a name="clients" class="anchor" href="#clients">&nbsp;</a>
@@ -893,8 +900,8 @@ Hides the menu at `767px`, but modify this based on your app's needs.
      *
      *   MockServerClient mockServerClient = <span class="keyword">new</span> MockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">8080</span>);
      *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">host</span> the host for the MockServer to communicate with
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">port</span> the port for the MockServer to communicate with
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">host</span> the host for MockServer to communicate with
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">port</span> the port for MockServer to communicate with
      */</span>
     <span class="keyword">public</span> MockServerClient(String host, <span class="keyword">int</span> port);
 
@@ -904,9 +911,9 @@ Hides the menu at `767px`, but modify this based on your app's needs.
      *
      *   MockServerClient mockServerClient = <span class="keyword">new</span> MockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">8080</span>);
      *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">host</span> the host for the MockServer to communicate with
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">port</span> the port for the MockServer to communicate with
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">contextPath</span> the context path that the MockServer war is deployed to
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">host</span> the host for MockServer to communicate with
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">port</span> the port for MockServer to communicate with
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">contextPath</span> the context path that MockServer war is deployed to
      */</span>
     <span class="keyword">public</span> MockServerClient(String host, <span class="keyword">int</span> port, String contextPath);
 
@@ -1194,7 +1201,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
     ],
 
     <span class="comment">/**
-     * Setup an expectation in the MockServer by specifying an expectation object
+     * Setup an expectation in MockServer by specifying an expectation object
      * for example:
      *
      *   mockServerClient(<span class="string_literal">'localhost'</span>, <span class="numeric_literal">1080</span>).mockAnyResponse(
@@ -1221,12 +1228,12 @@ Hides the menu at `767px`, but modify this based on your app's needs.
      *       }
      *   );
      *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">expectation</span> the expectation to setup on the MockServer
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">expectation</span> the expectation to setup in MockServer
      */</span>
     mockAnyResponse = function (expectation),
 
     <span class="comment">/**
-     * Setup an expectation in the MockServer without having to specify the full expectation object
+     * Setup an expectation in MockServer without having to specify the full expectation object
      * for example:
      *
      *   mockServerClient(<span class="string_literal">'localhost'</span>, <span class="numeric_literal">1080</span>).mockSimpleResponse(<span class="string_literal">'/somePath'</span>, { <span class="string_literal">'name'</span>: <span class="string_literal">'value'</span> }, <span class="numeric_literal">203</span>);
@@ -1400,7 +1407,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 		<ul>
 			<li>start working against a service API before the service is available. If an API or service is not yet fully developed MockServer can mock the API allowing any team who is using the service to start work without being delayed.</li>
-			<li>isolate development teams particularly critical during the initial development phases when the APIs / services may be extremely unstable and volatile. Using the MockServer allows development work to continue even when an external service fails.</li>
+			<li>isolate development teams particularly critical during the initial development phases when the APIs / services may be extremely unstable and volatile. Using MockServer allows development work to continue even when an external service fails.</li>
 		</ul>
 	</li>
 </ul>
@@ -1417,7 +1424,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <h2>Getting Started</h2>
 
-<p>To use the MockServer:</p>
+<p>To use MockServer:</p>
 
 <ol>
 	<li><a href="#starting-mockserver">Start MockServer</a></li>
@@ -1430,7 +1437,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <h3>Starting MockServer</h3>
 
-<p>Before any mock expectation can be sent to the MockServer it must be started.</p>
+<p>Before any mock expectation can be sent to MockServer it must be started.</p>
 
 <p>The mock server can be run:</p>
 
@@ -1443,7 +1450,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 	<li>as a <a href="#vertx-module"><strong>Vert.X module</strong></a> as part of an existing Vert.X environment</li>
 	<li>as a <a href="#deployable-war"><strong>deployable WAR</strong></a> to an existing application server</li>
 	<li>as a <a href="https://www.npmjs.org/package/mockserver-grunt"><strong>Grunt plugin</strong></a> as part of a Grunt build cycle</li>
-	<li>as a <a href="https://www.npmjs.org/package/mockserver-grunt"><strong>Node.js (NPM) module</strong></a> from any Node.js code</li>
+	<li>as a <a href="https://www.npmjs.org/package/mockserver-grunt"><strong>Node.js (npm) module</strong></a> from any Node.js code</li>
 </ul>
 
 <p>MockServer is available as:</p>
@@ -1455,7 +1462,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 	<li>a Vert.X module that runs on a Vert.X</li>
 </ul>
 
-<p>It is also possible to build and run the MockServer directly from source code <a href="#build-and-run-from-source">as described below</a></p>
+<p>It is also possible to build and run MockServer directly from source code <a href="#build-and-run-from-source">as described below</a></p>
 
 <a name="maven-plugin" class="anchor" href="#maven-plugin">&nbsp;</a>
 
@@ -1493,12 +1500,12 @@ Hides the menu at `767px`, but modify this based on your app's needs.
     &lt;/<span class="element">executions</span>&gt;
 &lt;/<span class="element">plugin</span>&gt;</code></pre>
 
-<p>This will start the MockServer during the <strong>process-test-classes</strong> phase and will stop the MockServer during the <strong>verify</strong> phase. For more details about Maven build phases see:
+<p>This will start MockServer during the <strong>process-test-classes</strong> phase and will stop MockServer during the <strong>verify</strong> phase. For more details about Maven build phases see:
 	<a href="http://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html">Introduction to the Build Lifecycle</a>.</p>
 
-<p>This ensures that any integration tests you run during the <strong>test</strong> or <strong>integration-test</strong> phases can use the MockServer on the port specified.</p>
+<p>This ensures that any integration tests you run during the <strong>test</strong> or <strong>integration-test</strong> phases can use MockServer on the port specified.</p>
 
-<p>It is also possible to run the MockServer as a forked JVM using the <span class="annotation">runForked</span> and <span class="annotation">stopForked</span> goals as follows:</p>
+<p>It is also possible to run MockServer as a forked JVM using the <span class="annotation">runForked</span> and <span class="annotation">stopForked</span> goals as follows:</p>
 
 <pre><code class="code xml"> &lt;<span class="element">plugin</span>&gt;
      &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;
@@ -1531,25 +1538,25 @@ Hides the menu at `767px`, but modify this based on your app's needs.
  &lt;/<span class="element">plugin</span>&gt;</code></pre>
 
 <p>
-	<strong>Note:</strong> If you use the <span class="annotation">runForked</span> goal as above and the <strong>test</strong> phase fails (because a test has failed) the MockServer will not be stopped as Maven does not run any more phases after a phase has failed. In the case above the
-	<strong>verify</strong> phase is not run if a test fails so the forked MockServer will not be stopped. If you want to ensure the MockServer is stopped even when there are test failures make sure you use <span class="annotation">start</span> and
-	<span class="annotation">stop</span> goals as these run the MockServer on a separate thread that is stopped however maven exits (even if a test fails). </p>
+	<strong>Note:</strong> If you use the <span class="annotation">runForked</span> goal as above and the <strong>test</strong> phase fails (because a test has failed) MockServer will not be stopped as Maven does not run any more phases after a phase has failed. In the case above the
+	<strong>verify</strong> phase is not run if a test fails so the forked MockServer will not be stopped. If you want to ensure MockServer is stopped even when there are test failures make sure you use <span class="annotation">start</span> and
+	<span class="annotation">stop</span> goals as these run MockServer on a separate thread that is stopped however maven exits (even if a test fails). </p>
 
 <p>These goals can be used from the command line as well to start and stop MockServer, as follows:</p>
 
-<p>To run the MockServer synchronously and block:</p>
+<p>To run MockServer synchronously and block:</p>
 
 <pre><code class="code">mvn mockserver:run</code></pre>
 
-<p>To run the MockServer asynchronously as a forked JVM:</p>
+<p>To run MockServer asynchronously as a forked JVM:</p>
 
 <pre><code class="code">mvn mockserver:runForked</code></pre>
 
-<p>To stop a forked instance of the MockServer running on the same machine:</p>
+<p>To stop a forked instance of MockServer running on the same machine:</p>
 
 <pre><code class="code">mvn mockserver:stopForked</code></pre>
 
-<p>The <strong>stopForked</strong> goal does assumes that the MockServer is running on the same physical machine as it uses 127.0.0.1 to communicate with the MockServer stop socket.</p>
+<p>The <strong>stopForked</strong> goal does assumes that MockServer is running on the same physical machine as it uses 127.0.0.1 to communicate with MockServer stop socket.</p>
 
 <p>The Maven plugin has the following goals:</p>
 
@@ -1574,10 +1581,10 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <ul>
 	<li>
-		<strong>serverPort</strong> - The port the MockServer listens to incoming HTTP requests (required: false - but at least one of the four ports must be specified)
+		<strong>serverPort</strong> - The port MockServer listens to incoming HTTP requests (required: false - but at least one of the four ports must be specified)
 	</li>
 	<li>
-		<strong>serverSecurePort</strong> - The port the MockServer listens to incoming HTTPS requests (required: false - but at least one of the four ports must be specified)
+		<strong>serverSecurePort</strong> - The port MockServer listens to incoming HTTPS requests (required: false - but at least one of the four ports must be specified)
 	</li>
 	<li>
 		<strong>proxyPort</strong> - The port the proxy listens to incoming HTTP (and HTTP -> HTTPS CONNECT) requests (required: false - but at least one of the four ports must be specified)
@@ -1595,8 +1602,8 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 		<strong>skip</strong> - Prevent the plugin from running (required: false, default: false)
 	</li>
 	<li>
-		<strong>initializationClass</strong> - To enable the creation of default expectations that are generic across all tests or mocking scenarios a class can be specified to initialize expectations in the MockServer, this class must implement
-		<span class="annotation">org.mockserver.initialize.ExpectationInitializer</span> interface, the <span class="annotation">initializeExpectations(MockServerClient mockServerClient)</span> method will be called once the MockServer has been started (but ONLY if
+		<strong>initializationClass</strong> - To enable the creation of default expectations that are generic across all tests or mocking scenarios a class can be specified to initialize expectations in MockServer, this class must implement
+		<span class="annotation">org.mockserver.initialize.ExpectationInitializer</span> interface, the <span class="annotation">initializeExpectations(MockServerClient mockServerClient)</span> method will be called once MockServer has been started (but ONLY if
 		<strong>serverPort</strong> has been set), however it should be noted that it is generally better practice to create all expectations locally in each test (or test class) for clarity, simplicity and to avoid brittle tests. Note: that the plugin must be started during the
 		<strong>process-test-classes</strong> to ensure that the initialization class has been compiled from either <strong>src/main/java</strong> or <strong>src/test/java</strong> locations. (required: false, default: false)
 	</li>
@@ -1606,7 +1613,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <h4>Client API&nbsp;&nbsp;-&nbsp;&nbsp;starting and stopping</h4>
 
-<p>Use the client API to run the MockServer programmatically.</p>
+<p>Use the client API to run MockServer programmatically.</p>
 
 <p>First add the following maven dependency:</p>
 
@@ -1654,7 +1661,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <h4>Running MockServer via a JUnit @Rule</h4>
 
-<p>MockServer can be run using the MockServerRule. The MockServerRule starts the MockServer on a free port before the any test runs and stops the MockServer after all tests have completed. A MockServerClient is then assigned to any field in the unit test of type org.mockserver.client.server.MockServerClient</p>
+<p>MockServer can be run using the MockServerRule. The MockServerRule starts MockServer on a free port before the any test runs and stops MockServer after all tests have completed. A MockServerClient is then assigned to any field in the unit test of type org.mockserver.client.server.MockServerClient</p>
 
 <pre><code class="code"><span class="annotation">@Rule</span>
 <span class="keyword">public</span> MockServerRule mockServerRule = <span class="keyword">new</span> MockServerRule(<span class="keyword">this</span>);
@@ -1666,16 +1673,16 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 <p>The MockServerRule has the following constructors:</p>
 
 <pre><code class="code"><span class="comment">/**
- * Start the MockServer prior to test execution and stop the MockServer after the tests have completed.
- * This constructor dynamically allocates a free port for the MockServer to use.
+ * Start MockServer prior to test execution and stop MockServer after the tests have completed.
+ * This constructor dynamically allocates a free port for MockServer to use.
  *
  * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">target</span> an instance of the test being executed
  */</span>
 <span class="keyword">public</span> MockServerRule(Object target);
 
 <span class="comment">/**
- * Start the MockServer prior to test execution and stop the MockServer after the tests have completed.
- * This constructor dynamically allocates a free port for the MockServer to use.
+ * Start MockServer prior to test execution and stop MockServer after the tests have completed.
+ * This constructor dynamically allocates a free port for MockServer to use.
  *
  * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">target</span> an instance of the test being executed
  * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">perTestSuite</span> indicates how many instances of MockServer are created
@@ -1803,23 +1810,23 @@ Hides the menu at `767px`, but modify this based on your app's needs.
                         [-proxySecurePort &lt;port&gt;]
 
   valid options are:
-     -serverPort &lt;port&gt;         specifies the HTTP port for the MockServer
+     -serverPort &lt;port&gt;         specifies the HTTP port for MockServer
                                 if neither serverPort or serverSecurePort
-                                are provide the MockServer is not started
-     -serverSecurePort &lt;port&gt;   specifies the HTTPS port for the MockServer
+                                are provide MockServer is not started
+     -serverSecurePort &lt;port&gt;   specifies the HTTPS port for MockServer
                                 if neither serverPort or serverSecurePort
-                                are provide the MockServer is not started
+                                are provide MockServer is not started
 
      -proxyPort &lt;path&gt;          specifies the HTTP port for the proxy
                                 if neither proxyPort or proxySecurePort
-                                are provide the MockServer is not started
+                                are provide MockServer is not started
      -proxySecurePort &lt;path&gt;    specifies the HTTPS port for the proxy
                                 if neither proxyPort or proxySecurePort
-                                are provide the MockServer is not started</code></pre>
+                                are provide MockServer is not started</code></pre>
 
 <p>For example:</p>
 
-<pre><code class="code">java -jar ~/Downloads/mockserver-netty-3.7-jar-with-dependencies.jar -serverPort <span class="numeric_literal">8080</span> -proxyPort <span class="numeric_literal">9090</span></code></pre>
+<pre><code class="code">java -Dmockserver.logLevel=DEBUG -jar ~/Downloads/mockserver-netty-3.7-jar-with-dependencies.jar -serverPort <span class="numeric_literal">8080</span> -proxyPort <span class="numeric_literal">9090</span></code></pre>
 
 <a name="docker-container" class="anchor" href="#docker-container">&nbsp;</a>
 
@@ -1833,14 +1840,14 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <pre><code class="code">docker run -d -P jamesdbloom/mockserver</code></pre>
 
-<p>This command will map the ports exposed by the MockServer and Proxy to dynamic ports using the <strong>-P</strong> option. To specify which ports are used you can specify one or more port mappings using the <strong>-p
+<p>This command will map the ports exposed by MockServer and Proxy to dynamic ports using the <strong>-P</strong> option. To specify which ports are used you can specify one or more port mappings using the <strong>-p
 	<span class="annotation">&lt;host port&gt;</span>:<span class="annotation">&lt;container port&gt;</span></strong> option. You only need to specify mapping for ports you need to use, for example, if you are not using the proxy there is no need to provide port mapping options for the proxy ports.</p>
 
 <p>To run MockServer specifying as a Docker container run the following command (replacing each <strong><span class="annotation">&lt; ... &gt;</span></strong> section with the appropriate port value):</p>
 
 <pre><code class="code">docker run -d -p <span class="annotation">&lt;serverPort&gt;</span>:<span class="numeric_literal">8080</span> -p <span class="annotation">&lt;serverSecurePort&gt;</span>:<span class="numeric_literal">8090</span> -p <span class="annotation">&lt;proxyPort&gt;</span>:<span class="numeric_literal">9080</span> -p <span class="annotation">&lt;proxySecurePort&gt;</span>:<span class="numeric_literal">9090</span> jamesdbloom/mockserver</code></pre>
 
-<p><strong>Note</strong>: you only need to specify mapping for ports you need to use, for example, if you are only using the MockServer to mock HTTP endpoints then only specify <strong>-p <span class="annotation">&lt;serverPort&gt;</span>:<span class="numeric_literal">8080</span></strong> as follows (replacing each
+<p><strong>Note</strong>: you only need to specify mapping for ports you need to use, for example, if you are only using MockServer to mock HTTP endpoints then only specify <strong>-p <span class="annotation">&lt;serverPort&gt;</span>:<span class="numeric_literal">8080</span></strong> as follows (replacing each
 	<strong><span class="annotation">&lt; ... &gt;</span></strong> section with the appropriate port value):</p>
 
 <pre><code class="code">docker run -d -p <span class="annotation">&lt;serverPort&gt;</span>:<span class="numeric_literal">8080</span> jamesdbloom/mockserver</code></pre>
@@ -1858,7 +1865,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
 <h4>Vert.X Module</h4>
 
-<p>MockServer can be run as a Vert.X module. However, support for the Vert.X module was stopped at version 2.9. This is because Vert.X requires Java 7 and the MockServer Vert.X module was the only MockServer module that relied on Java 7 making the build and development process more complex.</p>
+<p>MockServer can be run as a Vert.X module. However, support for the Vert.X module was stopped at version 2.9. This is because Vert.X requires Java 7 and MockServer Vert.X module was the only MockServer module that relied on Java 7 making the build and development process more complex.</p>
 
 <p>First, you'll need to <a href="http://vertx.io/install.html">install Vert.x</a>.</p>
 
@@ -1870,7 +1877,7 @@ vertx runmod org.mock-server~mockserver-vertx~2.9</code></pre>
 
 <p>The specify the HTTP port and / or HTTPS port the <strong>VERTX_OPTS</strong> environment variable must be set specifying the system property <strong>mockserver.serverPort</strong> for the HTTP port and <strong>mockserver.serverSecurePort</strong> for the HTTPS port.</p>
 
-<p><strong>Note:</strong> At least one of either the HTTP or the HTTPS port must be specified for the MockServer to run.</p>
+<p><strong>Note:</strong> At least one of either the HTTP or the HTTPS port must be specified for MockServer to run.</p>
 
 <pre><code class="code">export VERTX_OPTS=<span class="string_literal">"-Dmockserver.serverPort=8080 -Dmockserver.serverSecurePort=1443 -Dmockserver.logLevel=TRACE"</span></code></pre>
 
@@ -1920,7 +1927,7 @@ cd mockserver</code></pre>
 
 <pre><code class="code">mockserver-netty/target/mockserver-netty-3.7-jar-with-dependencies.jar</code></pre>
 
-<p>Run the MockServer then using the executable jar as per the instruction above in <a href="#running-from-command-line">Running From The Command Line</a></p>
+<p>Run MockServer then using the executable jar as per the instruction above in <a href="#running-from-command-line">Running From The Command Line</a></p>
 
 <p><strong>Create Client For Existing MockServer or Proxy</strong></p>
 
@@ -1940,8 +1947,8 @@ cd mockserver</code></pre>
 *
 *   MockServerClient mockServerClient = <span class="keyword">new</span> MockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">8080</span>);
 *
-* <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">host</span> the host for the MockServer to communicate with
-* <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">port</span> the port for the MockServer to communicate with
+* <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">host</span> the host for MockServer to communicate with
+* <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">port</span> the port for MockServer to communicate with
 */</span>
 <span class="keyword">public</span> MockServerClient(String host, <span class="keyword">int</span> port);
 
@@ -1951,9 +1958,9 @@ cd mockserver</code></pre>
 *
 *   MockServerClient mockServerClient = <span class="keyword">new</span> MockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">8080</span>, <span class="string_literal">"/mockserver"</span>);
 *
-* <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">host</span> the host for the MockServer to communicate with
-* <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">port</span> the port for the MockServer to communicate with
-* <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">contextPath</span> the context path that the MockServer war is deployed to
+* <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">host</span> the host for MockServer to communicate with
+* <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">port</span> the port for MockServer to communicate with
+* <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">contextPath</span> the context path that MockServer war is deployed to
 */</span>
 <span class="keyword">public</span> MockServerClient(String host, <span class="keyword">int</span> port, String contextPath);
 
@@ -2176,8 +2183,8 @@ cd mockserver</code></pre>
 	<li>where the request should be <a href="#mock-forward">forwarded</a>.</li>
 </ul>
 
-<p>The MockServer will play expectations in the exact order they are setup. For example, if an expectation <span class="annotation">A</span> is setup to response (or forward) <strong>3</strong> times then expectation <span class="annotation">B</span> is setup to response (or forward)
-	<strong>2</strong> times for the same request the MockServer will response (or forward) in the following order <span class="annotation">A</span>, <span class="annotation">A</span>, <span class="annotation">A</span>, <span class="annotation">B</span>, <span class="annotation">B</span>.</p>
+<p>MockServer will play expectations in the exact order they are setup. For example, if an expectation <span class="annotation">A</span> is setup to response (or forward) <strong>3</strong> times then expectation <span class="annotation">B</span> is setup to response (or forward)
+	<strong>2</strong> times for the same request MockServer will response (or forward) in the following order <span class="annotation">A</span>, <span class="annotation">A</span>, <span class="annotation">A</span>, <span class="annotation">B</span>, <span class="annotation">B</span>.</p>
 
 <p><strong>Java</strong></p>
 
@@ -2640,7 +2647,7 @@ xmlHttpRequest.send(JSON.stringify({
 
 <p><strong>Times</strong></p>
 
-<p>The org.mockserver.matchers.Times class is used to specify how many times you want the MockServer to match a request:</p>
+<p>The org.mockserver.matchers.Times class is used to specify how many times you want MockServer to match a request:</p>
 
 <p>To create an instance of Times use one of the static factory methods:</p>
 
@@ -2652,7 +2659,7 @@ Times.exactly(<span class="keyword">int</span> count);</code></pre>
 
 <h3>Mock Responses</h3>
 
-<p>Responses can contain:</p>
+<p>Response actions contain:</p>
 
 <ul>
 	<li><strong>status code</strong> i.e. 200, 302, 404, etc</li>
@@ -2827,25 +2834,11 @@ Times.exactly(<span class="keyword">int</span> count);</code></pre>
     }
 }</code></pre>
 
-<a name="callback" class="anchor" href="#callback">&nbsp;</a>
-
-<h3>Callback</h3>
-
-<p><em><strong>Note: the documentation section on callbacks is in progress and will be completed shortly (04/10/2014)</strong></em></p>
-
-<p>A callback action defines a class that will be used to dynamically generate the response.  Each callback contains:</p>
-
-<ul>
-	<li><strong>callbackClass</strong></li>
-</ul>
-
-<p>The class must define a default constructor and implement <strong>org.mockserver.mock.action.ExpectationCallback</strong>.</p>
-
 <a name="mock-forward" class="anchor" href="#mock-forward">&nbsp;</a>
 
 <h3>Mock Forward</h3>
 
-<p>Forward configuration can contain:</p>
+<p>Forward actions contain:</p>
 
 <ul>
 	<li><strong>host</strong> - the host to forward to i.e. www.mock-server.com</li>
@@ -2921,6 +2914,116 @@ Times.exactly(<span class="keyword">int</span> count);</code></pre>
 }
 </code></pre>
 
+
+<a name="callback" class="anchor" href="#callback">&nbsp;</a>
+
+<h3>Callback</h3>
+
+<p>A callback specifies a class that will be called for each matching request and can be used to dynamically generate the response.<p>
+<p>Callback actions contain:</p>
+
+<ul>
+	<li><strong>callbackClass</strong></li>
+</ul>
+
+<p>The callback class must:</p>
+
+<ul>
+	<li>have a default constructor</li>
+	<li>implement <strong>org.mockserver.mock.action.ExpectationCallback</strong></li>
+	<li>be available on the classpath (see below)</li>
+</ul>
+
+<strong>Classpath Visibility</strong>
+
+<p>If MockServer is started using the JUnitRule <strong>org.mockserver.junit.MockServerRule</strong> or using <strong>org.mockserver.integration.ClientAndServer</strong> or directly using the <strong>org.mockserver.mockserver.MockServerBuilder</strong> then any class present in the main or test classpaths will be visible to MockServer.</p>
+<p>If MockServer is started using the plugin only the non-forked goals (such as <span class="element_value">runAndWait</span> and <span class="element_value">start</span>) will be able to load classes from the main and test classpaths.  It is possible to use classes from a separate maven dependency, however, this dependency must be specified in the plugin configuration <span class="element">dependencies</span> section.  Any dependency added to the plugin configuration <span class="element">dependencies</span> section will then be visible to MockServer run using both forked and non-forked goals.</p>
+
+<p>The following configuration shows how to use classes from a separate maven dependency in callback actions.</p>
+
+<pre><code class="code xml"> &lt;<span class="element">plugin</span>&gt;
+     &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;
+     &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-maven-plugin</span>&lt;/<span class="element">artifactId</span>&gt;
+     &lt;<span class="element">version</span>&gt;<span class="element_value">3.7</span>&lt;/<span class="element">version</span>&gt;
+     &lt;<span class="element">configuration</span>&gt;
+        &lt;<span class="element">serverPort</span>&gt;<span class="element_value">1080</span>&lt;/<span class="element">serverPort</span>&gt;
+        &lt;<span class="element">logLevel</span>&gt;<span class="element_value">DEBUG</span>&lt;/<span class="element">logLevel</span>&gt;
+        &lt;<span class="element">pipeLogToConsole</span>&gt;<span class="element_value">true</span>&lt;/<span class="element">pipeLogToConsole</span>&gt;
+     &lt;/<span class="element">configuration</span>&gt;
+     &lt;<span class="element">executions</span>&gt;
+         &lt;<span class="element">execution</span>&gt;
+             &lt;<span class="element">id</span>&gt;<span class="element_value">pre-integration-test</span>&lt;/<span class="element">id</span>&gt;
+             &lt;<span class="element">phase</span>&gt;<span class="element_value">pre-integration-test</span>&lt;/<span class="element">phase</span>&gt;
+             &lt;<span class="element">goals</span>&gt;
+                 &lt;<span class="element">goal</span>&gt;<span class="element_value">runForked</span>&lt;/<span class="element">goal</span>&gt;
+             &lt;/<span class="element">goals</span>&gt;
+         &lt;/<span class="element">execution</span>&gt;
+         &lt;<span class="element">execution</span>&gt;
+             &lt;<span class="element">id</span>&gt;<span class="element_value">post-integration-test</span>&lt;/<span class="element">id</span>&gt;
+             &lt;<span class="element">phase</span>&gt;<span class="element_value">post-integration-test</span>&lt;/<span class="element">phase</span>&gt;
+             &lt;<span class="element">goals</span>&gt;
+                 &lt;<span class="element">goal</span>&gt;<span class="element_value">stopForked</span>&lt;/<span class="element">goal</span>&gt;
+             &lt;/<span class="element">goals</span>&gt;
+         &lt;/<span class="element">execution</span>&gt;
+     &lt;/<span class="element">executions</span>&gt;
+     &lt;<span class="element">dependencies</span>&gt;
+         &lt;<span class="element">dependency</span>&gt;
+             &lt;<span class="element">groupId</span>&gt;<span class="element_value">com.my-domain</span>&lt;/<span class="element">groupId</span>&gt;
+             &lt;<span class="element">artifactId</span>&gt;<span class="element_value">my-callback-dependency</span>&lt;/<span class="element">artifactId</span>&gt;
+             &lt;<span class="element">version</span>&gt;<span class="element_value">1.0.0</span>&lt;/<span class="element">version</span>&gt;
+         &lt;/<span class="element">dependency</span>&gt;
+     &lt;/<span class="element">dependencies</span>&gt;
+ &lt;/<span class="element">plugin</span>&gt;</code></pre>
+
+<p>If MockServer is started using the command line then the callback classes must be added to the JVM using the classpath command line switch (<strong>cp</strong> or <strong>classpath</strong>).  The <strong>classpath</strong> switch is ignored by the JVM if the <strong>jar</strong> switch is used.  So to run the MockServer from the command line directly (with mockserver-netty-3.7-jar-with-dependencies.jar) you must specify the <strong>org.mockserver.cli.Main</strong> main class specifically and not use the <strong>jar</strong> switch as follows.</p>
+
+<pre><code class="code">java -Dfile.encoding=UTF-8 -cp mockserver-netty-3.7-jar-with-dependencies.jar:my-callback-dependency.jar org.mockserver.cli.Main -serverPort 1080</code></pre>
+
+<p><strong>Java</strong></p>
+
+<p>To setup a callback in Java use the <strong>org.mockserver.model.HttpCallback</strong> class which specifies the details class to callback as follows:</p>
+
+<pre><code class="code"><span class="keyword">public class</span> HttpCallback {
+
+    <span class="comment">/**
+     * The class to callback as a fully qualified class name
+     *
+     * This calls must:
+     *  - implement org.mockserver.mock.action.ExpectationCallback
+     *  - have a zero argument constructor
+     *  - be available in the classpath of the MockServer
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">callbackClass</span> class to callback as a fully qualified class name, i.e. <span class="string_literal">"com.foo.MyExpectationCallback"</span>
+     */</span>
+    <span class="keyword">public</span> HttpCallback withCallbackClass(String callbackClass);
+
+}</code></pre>
+
+<p>The class specified must implement the <strong>org.mockserver.mock.action.ExpectationCallback</strong> interface as follows:</p>
+
+<pre><code class="code"><span class="keyword">public interface</span> ExpectationCallback {
+
+    <span class="comment">/**
+     * Called for every request when expectation condition has been satisfied.
+     * The request that satisfied the expectation condition is passed as the
+     * parameter and the return value is the response that will be returned to the client.
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpRequest</span> the request that satisfied the expectation condition
+     * <span class="javadoc_param_annotation">@return</span> the response that will be returned to the client
+     */</span>
+    <span class="keyword">public</span> HttpResponse handle(HttpRequest httpRequest);
+
+}</code></pre>
+
+<p><strong>JavaScript</strong></p>
+
+<p>To setup a callback in javascript use JSON to specify the details with the following format: </p>
+
+<pre><code class="code"><span class="string_literal">"httpCallback"</span>: {
+    <span class="string_literal">"callbackClass"</span>: <span class="string_literal">"org.mypackage.MyCallbackClass"</span>
+}
+</code></pre>
+
 <a name="verify-behaviour" class="anchor" href="#verify-behaviour">&nbsp;</a>
 
 <h2>Verifying Behaviour</h2>
@@ -2928,13 +3031,15 @@ Times.exactly(<span class="keyword">int</span> count);</code></pre>
 <p>Request can be verified in two ways:</p>
 
 <ul>
-	<li><strong>MockServer</strong> - the MockServer records all requests made to the MockServer and can be used to verify which requests have been made</li>
+	<li><strong>MockServer</strong> - MockServer records all requests made to MockServer and can be used to verify which requests have been made</li>
 	<li><strong>Proxy</strong> - the proxy records all requests that are proxied and can be used to verify which requests have been made</li>
 </ul>
 
+<a name="verify-behaviour-with-mockserver" class="anchor" href="#verify-behaviour-with-mockserver">&nbsp;</a>
+
 <h3>MockServer Verification</h3>
 
-<p>To verify that the system under test has sent a request to the MockServer use the verify method of the MockServerClient as follows:</p>
+<p>To verify that the system under test has sent a request to MockServer use the verify method of the MockServerClient as follows:</p>
 
  <pre><code class="code"><span class="keyword">new</span> MockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">9090</span>).verify(
         request()
@@ -2947,9 +3052,11 @@ Times.exactly(<span class="keyword">int</span> count);</code></pre>
         Times.exactly(<span class="numeric_literal">1</span>)
 );</code></pre>
 
+<a name="verify-behaviour-with-proxy" class="anchor" href="#verify-behaviour-with-proxy">&nbsp;</a>
+
 <h3>Proxy Verification</h3>
 
-<p>In addition to verifying request that are being mocked by the MockServer it is also possible to verify requests not being mocked using the proxy. To do this the system under test must be configured to use the MockServer proxy. The following examples show how to do this with different HTTP clients.</p>
+<p>In addition to verifying request that are being mocked by MockServer it is also possible to verify requests not being mocked using the proxy. To do this the system under test must be configured to use MockServer proxy. The following examples show how to do this with different HTTP clients.</p>
 
 <h4>Jetty HttpClient 9.x</h4>
 
@@ -3026,7 +3133,7 @@ AsyncHttpClient asyncHttpClient = <span class="keyword">new</span> AsyncHttpClie
         Times.exactly(<span class="numeric_literal">1</span>)
 );</code></pre>
 
-<p>The org.mockserver.client.proxy.Times class is used to specify how many times you want the MockServer to match a request:</p>
+<p>The org.mockserver.client.proxy.Times class is used to specify how many times you want MockServer to match a request:</p>
 
 <p>To create an instance of Times use one of the static factory methods:</p>
 
@@ -3043,7 +3150,7 @@ Times.atLeast(<span class="keyword">int</span> count);</code></pre>
 
 <p>To analyse the requests that system makes the proxy can be used to record all requests and write them into the <span class="annotation">mockserver_request.log</span>. This can be particularly helpful when refactoring an existing or legacy system.</p>
 
-<p>The requests can be written to the log in JSON or as Java code. The Java code can then be used to setup expectations in the MockServer and exactly replay all interactions.</p>
+<p>The requests can be written to the log in JSON or as Java code. The Java code can then be used to setup expectations in MockServer and exactly replay all interactions.</p>
 
 <p>First the system that is being analysed must be configured to use the proxy.</p>
 
@@ -3291,7 +3398,7 @@ xmlHttpRequest.send(JSON.stringify({
 
 <h2>Debugging Issues</h2>
 
-<p>To simplify debugging the MockServer expectations can be dumped to the log at WARN level using pretty-printed JSON.</p>
+<p>To simplify debugging MockServer expectations can be dumped to the log at WARN level using pretty-printed JSON.</p>
 
 <p>To dump <strong>all expectations</strong> to the log use <strong>dumpToLog</strong> as follows:</p>
 
@@ -3366,7 +3473,7 @@ xmlHttpRequest.send(JSON.stringify({
 
 <a name="maven-central" class="anchor" href="#maven-central">&nbsp;</a>
 
-<h2>Maven Central</h2>
+<h2>Maven Central&nbsp;&nbsp;<a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver"><img src="https://camo.githubusercontent.com/e81e59784109e88f76e25361cd6b4da7a5a18947/68747470733a2f2f6d6176656e2d6261646765732e6865726f6b756170702e636f6d2f6d6176656e2d63656e7472616c2f6f72672e6d6f636b2d7365727665722f6d6f636b7365727665722d6e657474792f62616467652e7376673f7374796c653d666c6174" alt="mockserver" data-canonical-src="https://maven-badges.herokuapp.com/maven-central/org.mock-server/mockserver-netty/badge.svg?style=flat" style="max-width:100%;"></a></h2>
 
 <p>Maven Central contains the following MockServer artifacts:</p>
 
@@ -3386,14 +3493,23 @@ xmlHttpRequest.send(JSON.stringify({
 
 <a name="ruby-gems" class="anchor" href="#ruby-gems">&nbsp;</a>
 
-<h2>Ruby Gems</h2>
+<h2>Ruby Gems&nbsp;&nbsp;<a href="http://badge.fury.io/rb/mockserver-client"><img src="https://badge.fury.io/rb/mockserver-client.png" alt="Gem Version" height="18"></a></h2>
 
-<p>Ruby Gems contains the following gems:
-
-<p>
+<p>Ruby Gems contains the following gems:<p>
 
 <ul>
-	<li><a href="https://rubygems.org/gems/mockserver-client">mockserver-client</a> - ruby client for the MockServer and proxy</li>
+	<li><a href="https://rubygems.org/gems/mockserver-client">mockserver-client</a> - ruby client for MockServer and proxy</li>
+</ul>
+
+<a name="npm-modules" class="anchor" href="#npm-modules">&nbsp;</a>
+
+<h2>Node Packaged Modules (npm)</h2>
+
+<p>npm contains the following modules:<p>
+
+<ul>
+	<li><a href="https://www.npmjs.org/package/mockserver-grunt">mockserver-grunt</a> - node module and grunt taks to start and stop MockServer and its proxy&nbsp;&nbsp;<a href="http://badge.fury.io/js/mockserver-grunt"><img src="https://badge.fury.io/js/mockserver-grunt.png" alt="npm version" height="18"></a>&nbsp;<a href="http://badge.fury.io/bo/mockserver-grunt"><img src="https://badge.fury.io/bo/mockserver-grunt.png" alt="Bower version" height="18"></a></li>
+	<li><a href="https://www.npmjs.org/package/mockserver-client">mockserver-client</a> - node client for MockServer and its proxy&nbsp;&nbsp;<a href="http://badge.fury.io/js/mockserver-client"><img src="https://badge.fury.io/js/mockserver-client.png" alt="npm version" height="18"></a>&nbsp;<a href="http://badge.fury.io/bo/mockserver-client"><img src="https://badge.fury.io/bo/mockserver-client.png" alt="Bower version" height="18"></a></li>
 </ul>
 
 <a name="vertx-registry" class="anchor" href="#vertx-registry">&nbsp;</a>
@@ -3418,7 +3534,7 @@ xmlHttpRequest.send(JSON.stringify({
 
 <p>MockServer is available as a docker container that allows you to easily run MockServer as a separate container on any environment without having to install Java or any other libraries. The docker container fully encapsulates all requirements required to run MockServer (such as Java) and separates the running MockServer instance from all other parts of the system.</p>
 
-<p>The MockServer docker container can be found at <a href="https://index.docker.io/u/jamesdbloom/mockserver/">MockServer Docker</a></p>
+<p>MockServer docker container can be found at <a href="https://index.docker.io/u/jamesdbloom/mockserver/">MockServer Docker</a></p>
 
 <a name="continuous-integration" class="anchor" href="#continuous-integration">&nbsp;</a>
 
@@ -3432,15 +3548,9 @@ xmlHttpRequest.send(JSON.stringify({
 
 <h2>drone.io</h2>
 
-<p><a href="https://drone.io/github.com/jamesdbloom/mockserver">drone.io</a> is an alternative continuous integration platform also being used. Currently Travis CI, drone.io and Codeship are all being used to determine which platform works better for MockServer.</p>
+<p><a href="https://drone.io/github.com/jamesdbloom/mockserver">drone.io</a> is an alternative continuous integration platform also being used. Currently Travis CI and drone.io are both being used to determine which platform works better for MockServer.</p>
 
 <p>The status of the drone.io build is as follows: <a href="https://drone.io/github.com/jamesdbloom/mockserver"><img src="https://drone.io/github.com/jamesdbloom/mockserver/status.png" alt="Build Status"></a></p>
-
-<h2>Codeship</h2>
-
-<p><a href="https://www.codeship.io/projects/20934">Codeship</a> is an alternative continuous integration platform also being used. Currently Travis CI, drone.io and Codeship are all being used to determine which platform works better for MockServer.</p>
-
-<p>The status of the Codeship build is as follows: <a href="https://www.codeship.io/projects/20934"><img src="https://www.codeship.io/projects/cdab0090-bafb-0131-c1a3-166904770eb2/status?branch=master" alt="Codeship Build Status" style="width: 155px; height: 25px;"></a></p>
 
 <a name="backlog" class="anchor" href="#backlog">&nbsp;</a>
 
@@ -3454,7 +3564,74 @@ xmlHttpRequest.send(JSON.stringify({
 	<a href="https://waffle.io/jamesdbloom/mockserver"><img src="https://camo.githubusercontent.com/6cb0a7e54cd194e04a1ee2ae891c1e295969d152/68747470733a2f2f62616467652e776166666c652e696f2f6a616d657364626c6f6f6d2f6d6f636b7365727665722e706e673f6c6162656c3d696e25323070726f6772657373267469746c653d496e25323050726f6772657373" alt="Stories in Backlog" data-canonical-src="https://badge.waffle.io/jamesdbloom/mockserver.png?label=in%20progress&amp;title=In%20Progress" style="max-width:100%;"></a>
 </p>
 
-<p><br><a href="https://plus.google.com/110954472544793839756?rel=author">James D Bloom</a> - <a href="http://blog.jamesdbloom.com">Blog</a></p>
+<a name="site-map" class="anchor" href="#site-map">&nbsp;</a>
+
+<h2>Site Map</h2>
+
+<ul>
+	<li><a href="#what-is-mockserver">What Is Mockserver</a>
+		<ul>
+			<li><a href="#mocking">Mocking</a></li>
+			<li><a href="#proxying">Proxying</a></li>
+			<li><a href="#versions">Versions</a></li>
+		</ul>
+	</li>
+	<li><a href="#clients">Clients</a>
+		<ul>
+			<li><a href="#java-mockserver-client">Java Mockserver Client</a></li>
+			<li><a href="#java-proxy-client">Java Proxy Client</a></li>
+			<li><a href="#javascript-mockserver-client">Javascript Mockserver Client</a></li>
+			<li><a href="#javascript-proxy-client">Javascript Proxy Client</a></li>
+		</ul>
+	</li>
+	<li><a href="#why-use-mockserver">Why Use Mockserver</a></li>
+	<li><a href="#getting-started">Getting Started</a></li>
+	<li><a href="#starting-mockserver">Starting Mockserver</a>
+		<ul>
+			<li><a href="#maven-plugin">Maven Plugin</a></li>
+			<li><a href="#client-api">Client API</a></li>
+			<li><a href="#junit-rule">Junit Rule</a></li>
+			<li><a href="#running-from-command-line">Running From Command Line</a></li>
+			<li><a href="#docker-container">Docker Container</a></li>
+			<li><a href="#vertx-module">Vert.x Module</a></li>
+			<li><a href="#deployable-war">Deployable WAR</a></li>
+			<li><a href="#build-and-run-from-source">Build & Run From Source</a></li>
+		</ul>
+	</li>
+	<li><a href="#create-expectations">Create Expectations</a>
+		<ul>
+			<li><a href="#request-matchers">Request Matchers</a></li>
+			<li><a href="#mock-response">Response Actions</a></li>
+			<li><a href="#mock-forward">Forward Actions</a></li>
+			<li><a href="#callback">Callback Actions</a></li>
+		</ul>
+	</li>
+	<li><a href="#verify-behaviour">Verify Behaviour</a>
+		<ul>
+			<li><a href="#verify-behaviour-with-mockserver">Verifying With MockServer</a></li>
+			<li><a href="#verify-behaviour-with-proxy">Verifying With The Proxy</a></li>
+		</ul>
+	</li>
+	<li><a href="#analysing-behaviour">Analysing Behaviour</a></li>
+	<li><a href="#ensuring-tests-can-run-in-parallel">Ensuring Tests Can Run In Parallel</a></li>
+	<li><a href="#clear-and-reset">Clear & Reset</a></li>
+	<li><a href="#debugging-issues">Debugging Issues</a></li>
+	<li><a href="#requirements">Requirements</a></li>
+	<li><a href="#versions">Versions</a>
+		<ul>
+			<li><a href="#github">github</a></li>
+			<li><a href="#maven-central">Maven Central</a></li>
+			<li><a href="#ruby-gems">Ruby Gems</a></li>
+			<li><a href="#npm-modules">npm</a></li>
+			<li><a href="#vertx-registry">Vert.x Registry</a></li>
+			<li><a href="#docker-index">Docker Index</a></li>
+		</ul>
+	</li>
+	<li><a href="#continuous-integration">Continuous Integration</a></li>
+	<li><a href="#backlog">Backlog</a></li>
+</ul>
+
+<p style="display: block; overflow: hidden"><span style="float: right"><a href="https://plus.google.com/110954472544793839756?rel=author">James D Bloom</a> - <a href="http://blog.jamesdbloom.com">Blog</a></span></p>
 <span itemprop="author" itemscope itemtype="http://schema.org/Person">
     <meta itemprop="name" content="James D Bloom">
     <meta itemprop="image" content="http://blog.jamesdbloom.com/jamesdbloom.jpg">
