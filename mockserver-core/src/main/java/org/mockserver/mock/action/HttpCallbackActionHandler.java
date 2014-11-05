@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
-import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.HttpResponse.notFoundResponse;
 
 /**
  * @author jamesdbloom
@@ -54,10 +54,10 @@ public class HttpCallbackActionHandler {
             if (expectationCallback != null) {
                 return filters.applyFilters(httpRequest, expectationCallback.handle(httpRequest));
             } else {
-                return response().withStatusCode(404);
+                return notFoundResponse();
             }
         } else {
-            return response().withStatusCode(404);
+            return notFoundResponse();
         }
     }
 }

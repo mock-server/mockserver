@@ -5,7 +5,7 @@ import org.mockserver.proxy.filters.Filters;
 import org.mockserver.proxy.filters.HopByHopHeaderFilter;
 import org.mockserver.proxy.filters.LogFilter;
 
-import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.HttpResponse.notFoundResponse;
 
 /**
  * @author jamesdbloom
@@ -35,10 +35,10 @@ public class ActionHandler {
                 case RESPONSE:
                     return httpResponseActionHandler.handle((HttpResponse) action, httpRequest);
                 default:
-                    return response().withStatusCode(404);
+                    return notFoundResponse();
             }
         } else {
-            return response().withStatusCode(404);
+            return notFoundResponse();
         }
     }
 }

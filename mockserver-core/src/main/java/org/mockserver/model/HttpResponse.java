@@ -22,6 +22,9 @@ public class HttpResponse extends Action {
     public static HttpResponse response() {
         return new HttpResponse();
     }
+    public static HttpResponse notFoundResponse() {
+        return new HttpResponse().withStatusCode(404);
+    }
 
     /**
      * The status code to return, such as 200, 404, the status code specified

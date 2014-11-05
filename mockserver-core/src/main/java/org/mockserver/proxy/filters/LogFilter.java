@@ -16,6 +16,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
+import static org.mockserver.model.HttpResponse.notFoundResponse;
+
 /**
  * @author jamesdbloom
  */
@@ -28,6 +30,8 @@ public class LogFilter implements ProxyResponseFilter {
     public synchronized HttpResponse onResponse(HttpRequest httpRequest, HttpResponse httpResponse) {
         if (httpRequest != null && httpResponse != null) {
             requestResponseLog.put(httpRequest, httpResponse);
+        } else if (httpRequest != null) {
+            requestResponseLog.put(httpRequest, notFoundResponse());
         }
         return httpResponse;
     }
