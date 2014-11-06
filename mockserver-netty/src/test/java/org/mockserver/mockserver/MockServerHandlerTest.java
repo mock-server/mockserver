@@ -70,10 +70,8 @@ public class MockServerHandlerTest {
     @InjectMocks
     private MockServerHandler mockServerHandler;
 
-    private NettyHttpRequest createNettyHttpRequest(String uri, HttpMethod method, String some_content) {
-        NettyHttpRequest nettyHttpRequest = new NettyHttpRequest(HttpVersion.HTTP_1_1, method, uri, false);
-        nettyHttpRequest.content(Unpooled.copiedBuffer(some_content.getBytes()));
-        return nettyHttpRequest;
+    private DefaultFullHttpRequest createNettyHttpRequest(String uri, HttpMethod method, String some_content) {
+        return new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, method, uri, Unpooled.copiedBuffer(some_content.getBytes()));
     }
 
     @Before
@@ -81,7 +79,7 @@ public class MockServerHandlerTest {
         // given - a mock server handler
         mockMockServerMatcher = mock(MockServerMatcher.class);
         mockLogFilter = mock(LogFilter.class);
-        mockServerHandler = new MockServerHandler(mockMockServerMatcher, mockLogFilter, mockMockServer);
+        mockServerHandler = new MockServerHandler(mockMockServerMatcher, mockLogFilter, mockMockServer, false);
 
         initMocks(this);
 
@@ -106,7 +104,7 @@ public class MockServerHandlerTest {
     @Test
     public void shouldSetupExpectation() {
         // given
-        NettyHttpRequest nettyHttpRequest = createNettyHttpRequest("/expectation", HttpMethod.PUT, "some_content");
+        DefaultFullHttpRequest nettyHttpRequest = createNettyHttpRequest("/expectation", HttpMethod.PUT, "some_content");
 
         // when
         mockServerHandler.channelRead0(mockChannelHandlerContext, nettyHttpRequest);
@@ -132,7 +130,7 @@ public class MockServerHandlerTest {
     @Test
     public void shouldResetExpectations() {
         // given
-        NettyHttpRequest nettyHttpRequest = createNettyHttpRequest("/reset", HttpMethod.PUT, "some_content");
+        DefaultFullHttpRequest nettyHttpRequest = createNettyHttpRequest("/reset", HttpMethod.PUT, "some_content");
 
         // when
         mockServerHandler.channelRead0(mockChannelHandlerContext, nettyHttpRequest);
@@ -153,7 +151,7 @@ public class MockServerHandlerTest {
     @Test
     public void shouldClearExpectations() {
         // given
-        NettyHttpRequest nettyHttpRequest = createNettyHttpRequest("/clear", HttpMethod.PUT, "some_content");
+        DefaultFullHttpRequest nettyHttpRequest = createNettyHttpRequest("/clear", HttpMethod.PUT, "some_content");
 
         // when
         mockServerHandler.channelRead0(mockChannelHandlerContext, nettyHttpRequest);
@@ -177,7 +175,7 @@ public class MockServerHandlerTest {
     @Test
     public void shouldDumpExpectationsToLog() {
         // given
-        NettyHttpRequest nettyHttpRequest = createNettyHttpRequest("/dumpToLog", HttpMethod.PUT, "some_content");
+        DefaultFullHttpRequest nettyHttpRequest = createNettyHttpRequest("/dumpToLog", HttpMethod.PUT, "some_content");
 
         // when
         mockServerHandler.channelRead0(mockChannelHandlerContext, nettyHttpRequest);
@@ -203,7 +201,7 @@ public class MockServerHandlerTest {
         Expectation[] expectations = {};
         when(mockLogFilter.retrieve(mockHttpRequest)).thenReturn(expectations);
         when(mockExpectationSerializer.serialize(expectations)).thenReturn("expectations");
-        NettyHttpRequest nettyHttpRequest = createNettyHttpRequest("/retrieve", HttpMethod.PUT, "some_content");
+        DefaultFullHttpRequest nettyHttpRequest = createNettyHttpRequest("/retrieve", HttpMethod.PUT, "some_content");
 
         // when
         mockServerHandler.channelRead0(mockChannelHandlerContext, nettyHttpRequest);
@@ -226,10 +224,10 @@ public class MockServerHandlerTest {
     @Test
     public void shouldReturnNotFoundAfterException() {
         // given - a mapper that throws an exception
-        when(mockNettyToMockServerRequestMapper.mapNettyRequestToMockServerRequest(any(NettyHttpRequest.class))).thenThrow(new RuntimeException("TEST EXCEPTION"));
+        when(mockNettyToMockServerRequestMapper.mapNettyRequestToMockServerRequest(any(FullHttpRequest.class), anyBoolean())).thenThrow(new RuntimeException("TEST EXCEPTION"));
 
         // and - a request
-        NettyHttpRequest nettyHttpRequest = createNettyHttpRequest("/randomPath", HttpMethod.GET, "some_content");
+        DefaultFullHttpRequest nettyHttpRequest = createNettyHttpRequest("/randomPath", HttpMethod.GET, "some_content");
 
         // when
         mockServerHandler.channelRead0(mockChannelHandlerContext, nettyHttpRequest);
@@ -246,7 +244,7 @@ public class MockServerHandlerTest {
     @Test
     public void shouldActionResult() {
         // given - a mapper
-        when(mockNettyToMockServerRequestMapper.mapNettyRequestToMockServerRequest(any(NettyHttpRequest.class))).thenReturn(mockHttpRequest);
+        when(mockNettyToMockServerRequestMapper.mapNettyRequestToMockServerRequest(any(FullHttpRequest.class), anyBoolean())).thenReturn(mockHttpRequest);
 
         // and - a handler returning an action
         when(mockMockServerMatcher.handle(mockHttpRequest)).thenReturn(response().withBody("some_response"));
@@ -258,7 +256,7 @@ public class MockServerHandlerTest {
 
 
         // and - a request
-        NettyHttpRequest nettyHttpRequest = createNettyHttpRequest("/randomPath", HttpMethod.GET, "some_content");
+        DefaultFullHttpRequest nettyHttpRequest = createNettyHttpRequest("/randomPath", HttpMethod.GET, "some_content");
 
         // when
         mockServerHandler.channelRead0(mockChannelHandlerContext, nettyHttpRequest);
@@ -278,7 +276,7 @@ public class MockServerHandlerTest {
     @Test
     public void shouldStopMockServer() {
         // given
-        NettyHttpRequest nettyHttpRequest = createNettyHttpRequest("/stop", HttpMethod.PUT, "some_content");
+        DefaultFullHttpRequest nettyHttpRequest = createNettyHttpRequest("/stop", HttpMethod.PUT, "some_content");
 
         // when
         mockServerHandler.channelRead0(mockChannelHandlerContext, nettyHttpRequest);

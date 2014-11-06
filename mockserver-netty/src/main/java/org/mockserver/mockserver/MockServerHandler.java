@@ -17,6 +17,7 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.NettyHttpRequest;
 import org.mockserver.proxy.filters.LogFilter;
+import org.mockserver.url.URLParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,11 +26,12 @@ import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH;
 import static io.netty.handler.codec.http.HttpHeaders.isKeepAlive;
 
 @ChannelHandler.Sharable
-public class MockServerHandler extends SimpleChannelInboundHandler<NettyHttpRequest> {
+public class MockServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     // mockserver
     private MockServer server;
+    private final boolean secure;
     private LogFilter logFilter;
     private MockServerMatcher mockServerMatcher;
     private ActionHandler actionHandler;
@@ -40,49 +42,50 @@ public class MockServerHandler extends SimpleChannelInboundHandler<NettyHttpRequ
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
 
-    public MockServerHandler(MockServerMatcher mockServerMatcher, LogFilter logFilter, MockServer server) {
+    public MockServerHandler(MockServerMatcher mockServerMatcher, LogFilter logFilter, MockServer server, boolean secure) {
         this.mockServerMatcher = mockServerMatcher;
         this.logFilter = logFilter;
         this.server = server;
+        this.secure = secure;
         this.actionHandler = new ActionHandler(logFilter);
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, NettyHttpRequest request) {
+    protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) {
 
         try {
-            String content = (request.content() != null ? request.content().toString(CharsetUtil.UTF_8) : "");
+            MappedRequest mappedRequest = new MappedRequest(request);
 
-            if (request.matches(HttpMethod.PUT, "/dumpToLog")) {
+            if (mappedRequest.matches(HttpMethod.PUT, "/dumpToLog")) {
 
-                mockServerMatcher.dumpToLog(httpRequestSerializer.deserialize(content));
+                mockServerMatcher.dumpToLog(httpRequestSerializer.deserialize(mappedRequest.content()));
                 writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
 
-            } else if (request.matches(HttpMethod.PUT, "/reset")) {
+            } else if (mappedRequest.matches(HttpMethod.PUT, "/reset")) {
 
                 logFilter.reset();
                 mockServerMatcher.reset();
                 writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
 
-            } else if (request.matches(HttpMethod.PUT, "/clear")) {
+            } else if (mappedRequest.matches(HttpMethod.PUT, "/clear")) {
 
-                org.mockserver.model.HttpRequest httpRequest = httpRequestSerializer.deserialize(content);
+                org.mockserver.model.HttpRequest httpRequest = httpRequestSerializer.deserialize(mappedRequest.content());
                 logFilter.clear(httpRequest);
                 mockServerMatcher.clear(httpRequest);
                 writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
 
-            } else if (request.matches(HttpMethod.PUT, "/expectation")) {
+            } else if (mappedRequest.matches(HttpMethod.PUT, "/expectation")) {
 
-                Expectation expectation = expectationSerializer.deserialize(content);
+                Expectation expectation = expectationSerializer.deserialize(mappedRequest.content());
                 mockServerMatcher.when(expectation.getHttpRequest(), expectation.getTimes()).thenRespond(expectation.getHttpResponse(false)).thenForward(expectation.getHttpForward()).thenCallback(expectation.getHttpCallback());
                 writeResponse(ctx, request, HttpResponseStatus.CREATED);
 
-            } else if (request.matches(HttpMethod.PUT, "/retrieve")) {
+            } else if (mappedRequest.matches(HttpMethod.PUT, "/retrieve")) {
 
-                Expectation[] expectations = logFilter.retrieve(httpRequestSerializer.deserialize(content));
+                Expectation[] expectations = logFilter.retrieve(httpRequestSerializer.deserialize(mappedRequest.content()));
                 writeResponse(ctx, request, HttpResponseStatus.OK, Unpooled.copiedBuffer(expectationSerializer.serialize(expectations).getBytes()));
 
-            } else if (request.matches(HttpMethod.PUT, "/stop")) {
+            } else if (mappedRequest.matches(HttpMethod.PUT, "/stop")) {
 
                 writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
                 ctx.close();
@@ -90,7 +93,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<NettyHttpRequ
 
             } else {
 
-                HttpRequest httpRequest = nettyToMockServerRequestMapper.mapNettyRequestToMockServerRequest(request);
+                HttpRequest httpRequest = nettyToMockServerRequestMapper.mapNettyRequestToMockServerRequest(request, secure);
                 writeResponse(ctx, request, actionHandler.processAction(mockServerMatcher.handle(httpRequest), httpRequest));
 
             }

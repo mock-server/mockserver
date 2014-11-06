@@ -15,8 +15,8 @@ public final class HttpConnectHandler extends RelayConnectHandler<HttpRequest> {
     }
 
     protected void removeCodecSupport(ChannelHandlerContext ctx) {
-        ctx.pipeline().remove(HttpServerCodec.class.getSimpleName());
-        ctx.pipeline().remove(this);
+        ctx.pipeline().remove(HttpServerCodec.class);
+        ctx.pipeline().remove(this.getClass());
     }
 
     protected Object successResponse(Object request) {

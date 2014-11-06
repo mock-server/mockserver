@@ -7,6 +7,7 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.socks.SocksInitRequestDecoder;
 import io.netty.handler.codec.socks.SocksMessageEncoder;
@@ -169,8 +170,9 @@ public class HttpProxy {
 
                 // add HTTP decoder and encoder
                 pipeline.addLast(HttpServerCodec.class.getSimpleName(), new HttpServerCodec());
+                pipeline.addLast(HttpObjectAggregator.class.getSimpleName(), new HttpObjectAggregator(Integer.MAX_VALUE));
 
-                // add handler
+                // add handlers
                 pipeline.addLast(HttpProxyHandler.class.getSimpleName(), new HttpProxyHandler(logFilter, HttpProxy.this, securePort != null ? new InetSocketAddress(securePort) : null, false));
             }
         }, port, true);
@@ -194,8 +196,9 @@ public class HttpProxy {
 
                 // add HTTP decoder and encoder
                 pipeline.addLast(HttpServerCodec.class.getSimpleName(), new HttpServerCodec());
+                pipeline.addLast(HttpObjectAggregator.class.getSimpleName(), new HttpObjectAggregator(Integer.MAX_VALUE));
 
-                // add handler
+                // add handlers
                 pipeline.addLast(HttpProxyHandler.class.getSimpleName(), new HttpProxyHandler(logFilter, HttpProxy.this, securePort != null ? new InetSocketAddress(securePort) : null, true));
             }
         }, securePort, true);
@@ -216,8 +219,8 @@ public class HttpProxy {
                 pipeline.addLast(SocksInitRequestDecoder.class.getSimpleName(), new SocksInitRequestDecoder());
                 pipeline.addLast(SocksMessageEncoder.class.getSimpleName(), new SocksMessageEncoder());
 
-                // add handler
-                pipeline.addLast(HttpProxyHandler.class.getSimpleName(), new HttpProxyHandler(logFilter, HttpProxy.this, new InetSocketAddress(port), false));
+                // add handlers
+                pipeline.addLast(SocksProxyHandler.class.getSimpleName(), new SocksProxyHandler(port != null ? new InetSocketAddress(port) : null, false));
             }
         }, socksPort, true);
     }
@@ -315,10 +318,10 @@ public class HttpProxy {
     public void stop() {
         try {
             proxyStopping();
-            workerGroup.shutdownGracefully(2, 15, TimeUnit.SECONDS);
-            bossGroup.shutdownGracefully(2, 15, TimeUnit.SECONDS);
+            workerGroup.shutdownGracefully(1, 3, TimeUnit.SECONDS);
+            bossGroup.shutdownGracefully(1, 3, TimeUnit.SECONDS);
             // wait for shutdown
-            TimeUnit.SECONDS.sleep(1);
+            TimeUnit.SECONDS.sleep(3);
         } catch (Exception ie) {
             logger.trace("Exception while waiting for MockServer to stop", ie);
         }

@@ -35,10 +35,6 @@ public class MockServerMatcher extends EqualsHashCodeToString {
     protected final List<Expectation> expectations = new ArrayList<Expectation>();
     private Logger requestLogger = LoggerFactory.getLogger("REQUEST");
 
-    public MockServerMatcher() {
-
-    }
-
     public synchronized Expectation when(HttpRequest httpRequest) {
         return when(httpRequest, Times.unlimited());
     }

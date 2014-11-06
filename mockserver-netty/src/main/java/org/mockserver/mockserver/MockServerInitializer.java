@@ -7,6 +7,8 @@ import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.ssl.SslHandler;
 import org.mockserver.logging.LoggingHandler;
+import org.mockserver.mock.MockServerMatcher;
+import org.mockserver.proxy.filters.LogFilter;
 import org.mockserver.socket.SSLFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,12 +18,16 @@ import javax.net.ssl.SSLEngine;
 public class MockServerInitializer extends ChannelInitializer<SocketChannel> {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final MockServerMatcher mockServerMatcher;
+    private final LogFilter logFilter;
     private final boolean secure;
-    private final MockServerHandler mockServerHandler;
+    private final MockServer mockServer;
 
-    public MockServerInitializer(MockServerHandler mockServerHandler, boolean secure) {
+    public MockServerInitializer(MockServerMatcher mockServerMatcher, LogFilter logFilter, MockServer mockServer, boolean secure) {
+        this.mockServerMatcher = mockServerMatcher;
+        this.logFilter = logFilter;
         this.secure = secure;
-        this.mockServerHandler = mockServerHandler;
+        this.mockServer = mockServer;
     }
 
     @Override
@@ -43,10 +49,9 @@ public class MockServerInitializer extends ChannelInitializer<SocketChannel> {
 
         // add msg <-> HTTP
         pipeline.addLast("decoder-encoder", new HttpServerCodec());
-        pipeline.addLast("chunk-aggregator", new HttpObjectAggregator(10 * 1024 * 1024));
+        pipeline.addLast("chunk-aggregator", new HttpObjectAggregator(Integer.MAX_VALUE));
 
         // add mock server handlers
-        pipeline.addLast("mock-server-request-codec", new MockServerHttpRequestCodec(secure));
-        pipeline.addLast("handler", mockServerHandler);
+        pipeline.addLast("handler", new MockServerHandler(mockServerMatcher, logFilter, mockServer, secure));
     }
 }

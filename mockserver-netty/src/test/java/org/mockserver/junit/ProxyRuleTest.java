@@ -19,7 +19,7 @@ public class ProxyRuleTest {
     private ProxyClient proxyClient;
 
     @Test
-    public void shouldSetTestMockServeField() {
+    public void shouldSetTestMockServerField() {
         assertThat(proxyClient, is(not(nullValue())));
     }
 

@@ -62,6 +62,16 @@ public abstract class BooksPageIntegrationTest {
         proxy.reset();
     }
 
+    @After
+    public void stopMockServer() {
+        mockServer.stop();
+
+        // for debugging test
+        proxy.dumpToLogAsJSON();
+        proxy.dumpToLogAsJava();
+
+    }
+
     @Test
     public void shouldLoadListOfBooks() throws Exception {
         // given
@@ -162,16 +172,6 @@ public abstract class BooksPageIntegrationTest {
                         ),
                 Times.exactly(1)
         );
-    }
-
-    @After
-    public void stopMockServer() {
-        mockServer.stop();
-
-        // for debugging test
-        proxy.dumpToLogAsJSON();
-        proxy.dumpToLogAsJava();
-
     }
 
 }

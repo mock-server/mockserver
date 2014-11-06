@@ -49,22 +49,24 @@ public class MockServer {
             @Override
             public void run() {
                 try {
-                    Channel httpChannel = null;
                     logger.info("MockServer starting up"
                                     + (port != null ? " serverPort " + port : "")
                                     + (securePort != null ? " secureServerPort " + securePort : "")
                     );
+
+                    Channel httpChannel = null;
                     if (port != null) {
                         httpChannel = new ServerBootstrap()
                                 .option(ChannelOption.SO_BACKLOG, 1024)
                                 .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                                 .group(bossGroup, workerGroup)
                                 .channel(NioServerSocketChannel.class)
-                                .childHandler(new MockServerInitializer(new MockServerHandler(mockServerMatcher, logFilter, MockServer.this), false))
+                                .childHandler(new MockServerInitializer(mockServerMatcher, logFilter, MockServer.this, false))
                                 .bind(port)
                                 .sync()
                                 .channel();
                     }
+
                     Channel httpsChannel = null;
                     if (securePort != null) {
                         httpsChannel = new ServerBootstrap()
@@ -72,7 +74,7 @@ public class MockServer {
                                 .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                                 .group(bossGroup, workerGroup)
                                 .channel(NioServerSocketChannel.class)
-                                .childHandler(new MockServerInitializer(new MockServerHandler(mockServerMatcher, logFilter, MockServer.this), true))
+                                .childHandler(new MockServerInitializer(mockServerMatcher, logFilter, MockServer.this, true))
                                 .bind(securePort)
                                 .sync()
                                 .channel();
@@ -108,8 +110,10 @@ public class MockServer {
 
     public void stop() {
         try {
-            workerGroup.shutdownGracefully(2, 15, TimeUnit.SECONDS);
-            bossGroup.shutdownGracefully(2, 15, TimeUnit.SECONDS);
+            workerGroup.shutdownGracefully(1, 3, TimeUnit.SECONDS);
+            bossGroup.shutdownGracefully(1, 3, TimeUnit.SECONDS);
+            // wait for shutdown
+            TimeUnit.SECONDS.sleep(3);
         } catch (Exception ie) {
             logger.trace("Exception while waiting for MockServer to stop", ie);
         }
@@ -118,7 +122,7 @@ public class MockServer {
     public boolean isRunning() {
         if (hasStarted.isDone()) {
             try {
-                TimeUnit.SECONDS.sleep(2);
+                TimeUnit.SECONDS.sleep(1);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
