@@ -7,6 +7,7 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.serialization.model.*;
+import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 
 import java.io.IOException;
@@ -113,6 +114,21 @@ public class HttpRequestSerializerTest {
         // then
         verify(objectMapper).writerWithDefaultPrettyPrinter();
         verify(objectWriter).writeValueAsString(fullHttpRequestDTO);
+    }
+
+
+    @Test
+    public void shouldSerializeArray() throws IOException {
+        // given
+        when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
+
+
+        // when
+        httpRequestSerializer.serialize(new HttpRequest[]{fullHttpRequest, fullHttpRequest});
+
+        // then
+        verify(objectMapper).writerWithDefaultPrettyPrinter();
+        verify(objectWriter).writeValueAsString(new HttpRequestDTO[]{fullHttpRequestDTO, fullHttpRequestDTO});
     }
 
     @Test(expected = RuntimeException.class)

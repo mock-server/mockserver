@@ -1,6 +1,7 @@
 package org.mockserver.proxy.filters;
 
 import org.mockserver.client.serialization.ExpectationSerializer;
+import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.collections.CircularMultiMap;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatcherBuilder;
@@ -8,6 +9,7 @@ import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.model.Verification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -122,5 +124,37 @@ public class LogFilter implements ProxyResponseFilter {
             }
         }
         return expectations.toArray(new Expectation[expectations.size()]);
+    }
+
+    private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
+
+    public synchronized String verify(Verification verification) {
+        if (verification != null) {
+            List<HttpRequest> requests = new ArrayList<HttpRequest>();
+            if (verification.getHttpRequest() != null) {
+                HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(verification.getHttpRequest());
+                for (HttpRequest httpRequest : requestResponseLog.keySet()) {
+                    if (httpRequestMatcher.matches(httpRequest)) {
+                        requests.add(httpRequest);
+                    }
+                }
+            }
+
+            HttpRequest[] httpRequests = requestResponseLog.keySet().toArray(new HttpRequest[requests.size()]);
+            if (requests.isEmpty()) {
+                return "expected: " + httpRequestSerializer.serialize(verification.getHttpRequest()) + " but was: " + httpRequestSerializer.serialize(httpRequests);
+            }
+            if (verification.getTimes().isExact()) {
+                if (requests.size() != verification.getTimes().getCount()) {
+                    return "expected: " + httpRequestSerializer.serialize(verification.getHttpRequest()) + " but was: " + httpRequestSerializer.serialize(httpRequests);
+                }
+            } else {
+                if (requests.size() < verification.getTimes().getCount()) {
+                    return "expected: " + httpRequestSerializer.serialize(verification.getHttpRequest()) + " but was: " + httpRequestSerializer.serialize(httpRequests);
+                }
+            }
+        }
+
+        return "";
     }
 }

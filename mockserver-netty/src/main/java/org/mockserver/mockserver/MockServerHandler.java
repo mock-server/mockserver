@@ -7,6 +7,7 @@ import io.netty.handler.codec.http.*;
 import io.netty.util.CharsetUtil;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
+import org.mockserver.client.serialization.VerificationSerializer;
 import org.mockserver.mappers.MockServerToNettyResponseMapper;
 import org.mockserver.mappers.NettyToMockServerRequestMapper;
 import org.mockserver.mock.Expectation;
@@ -41,6 +42,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<FullHttpReque
     // serializers
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
+    private VerificationSerializer verificationSerializer = new VerificationSerializer();
 
     public MockServerHandler(MockServerMatcher mockServerMatcher, LogFilter logFilter, MockServer server, boolean secure) {
         this.mockServerMatcher = mockServerMatcher;
@@ -84,6 +86,15 @@ public class MockServerHandler extends SimpleChannelInboundHandler<FullHttpReque
 
                 Expectation[] expectations = logFilter.retrieve(httpRequestSerializer.deserialize(mappedRequest.content()));
                 writeResponse(ctx, request, HttpResponseStatus.OK, Unpooled.copiedBuffer(expectationSerializer.serialize(expectations).getBytes()));
+
+            } else if (mappedRequest.matches(HttpMethod.PUT, "/verify")) {
+
+                String result = logFilter.verify(verificationSerializer.deserialize(mappedRequest.content()));
+                if (result.isEmpty()) {
+                    writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
+                } else {
+                    writeResponse(ctx, request, HttpResponseStatus.NOT_ACCEPTABLE, Unpooled.copiedBuffer(result.getBytes()));
+                }
 
             } else if (mappedRequest.matches(HttpMethod.PUT, "/stop")) {
 

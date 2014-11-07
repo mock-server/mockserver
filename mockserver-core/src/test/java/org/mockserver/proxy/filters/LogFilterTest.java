@@ -3,15 +3,14 @@ package org.mockserver.proxy.filters;
 import org.junit.Test;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
-import org.mockserver.model.Cookie;
-import org.mockserver.model.Header;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
+import org.mockserver.model.*;
 
 import java.util.Arrays;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.*;
+import static org.mockserver.model.VerificationTimes.atLeast;
+import static org.mockserver.model.VerificationTimes.exactly;
 
 /**
  * @author jamesdbloom
@@ -111,6 +110,180 @@ public class LogFilterTest {
                 new Expectation[]{
                         new Expectation(otherHttpRequest, Times.once()).thenRespond(httpResponseTwo)
                 });
+    }
+
+    @Test
+    public void shouldVerifyWithDefaultTimes() {
+        // given
+        HttpResponse httpResponseOne = new HttpResponse().withBody("body_one");
+        HttpResponse httpResponseTwo = new HttpResponse().withBody("body_two");
+        HttpResponse httpResponseThree = new HttpResponse().withBody("body_three");
+        HttpRequest httpRequest = new HttpRequest().withPath("some_path");
+        HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
+        LogFilter logFilter = new LogFilter();
+
+        // when
+        logFilter.onResponse(httpRequest, httpResponseOne);
+        logFilter.onResponse(otherHttpRequest, httpResponseTwo);
+        logFilter.onResponse(httpRequest, httpResponseThree);
+
+        // then
+        assertThat(logFilter.verify(null), is(""));
+        assertThat(logFilter.verify(
+                        new Verification()
+                                .withRequest(new HttpRequest())
+                ),
+                is("expected: { } but was: [ {" + System.getProperty("line.separator") +
+                        "  \"path\" : \"some_path\"" + System.getProperty("line.separator") +
+                        "}, {" + System.getProperty("line.separator") +
+                        "  \"path\" : \"some_other_path\"" + System.getProperty("line.separator") +
+                        "} ]"));
+        assertThat(logFilter.verify(
+                        new Verification()
+                                .withRequest(
+                                        new HttpRequest()
+                                                .withPath("some_path")
+                                )
+                ),
+                is(""));
+        assertThat(logFilter.verify(
+                        new Verification()
+                                .withRequest(
+                                        new HttpRequest()
+                                                .withPath("some_other_path")
+                                )
+                ),
+                is(""));
+    }
+
+    @Test
+    public void shouldVerifyWithAtLeastTimes() {
+        // given
+        HttpResponse httpResponseOne = new HttpResponse().withBody("body_one");
+        HttpResponse httpResponseTwo = new HttpResponse().withBody("body_two");
+        HttpResponse httpResponseThree = new HttpResponse().withBody("body_three");
+        HttpRequest httpRequest = new HttpRequest().withPath("some_path");
+        HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
+        LogFilter logFilter = new LogFilter();
+
+        // when
+        logFilter.onResponse(httpRequest, httpResponseOne);
+        logFilter.onResponse(otherHttpRequest, httpResponseTwo);
+        logFilter.onResponse(httpRequest, httpResponseThree);
+
+        // then
+        assertThat(logFilter.verify(null), is(""));
+        assertThat(logFilter.verify(
+                        new Verification()
+                                .withRequest(new HttpRequest())
+                                .withTimes(atLeast(0))
+                ),
+                is(""));
+        assertThat(logFilter.verify(
+                        new Verification()
+                                .withRequest(new HttpRequest())
+                                .withTimes(atLeast(3))
+                ),
+                is("expected: { } but was: [ {" + System.getProperty("line.separator") +
+                        "  \"path\" : \"some_path\"" + System.getProperty("line.separator") +
+                        "}, {" + System.getProperty("line.separator") +
+                        "  \"path\" : \"some_other_path\"" + System.getProperty("line.separator") +
+                        "} ]"));
+        assertThat(logFilter.verify(
+                        new Verification()
+                                .withRequest(
+                                        new HttpRequest()
+                                                .withPath("some_path")
+                                )
+                                .withTimes(atLeast(1))
+                ),
+                is(""));
+        assertThat(logFilter.verify(
+                        new Verification()
+                                .withRequest(
+                                        new HttpRequest()
+                                                .withPath("some_path")
+                                )
+                                .withTimes(atLeast(2))
+                ),
+                is("expected: {" + System.getProperty("line.separator") +
+                        "  \"path\" : \"some_path\"" + System.getProperty("line.separator") +
+                        "} but was: [ {" + System.getProperty("line.separator") +
+                        "  \"path\" : \"some_path\"" + System.getProperty("line.separator") +
+                        "}, {" + System.getProperty("line.separator") +
+                        "  \"path\" : \"some_other_path\"" + System.getProperty("line.separator") +
+                        "} ]"));
+        assertThat(logFilter.verify(
+                        new Verification()
+                                .withRequest(
+                                        new HttpRequest()
+                                                .withPath("some_other_path")
+                                )
+                                .withTimes(atLeast(1))
+                ),
+                is(""));
+    }
+
+    @Test
+    public void shouldVerifyWithExactTimes() {
+        // given
+        HttpResponse httpResponseOne = new HttpResponse().withBody("body_one");
+        HttpResponse httpResponseTwo = new HttpResponse().withBody("body_two");
+        HttpResponse httpResponseThree = new HttpResponse().withBody("body_three");
+        HttpRequest httpRequest = new HttpRequest().withPath("some_path");
+        HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
+        LogFilter logFilter = new LogFilter();
+
+        // when
+        logFilter.onResponse(httpRequest, httpResponseOne);
+        logFilter.onResponse(otherHttpRequest, httpResponseTwo);
+        logFilter.onResponse(httpRequest, httpResponseThree);
+
+        // then
+        assertThat(logFilter.verify(null), is(""));
+        assertThat(logFilter.verify(
+                        new Verification()
+                                .withRequest(new HttpRequest())
+                                .withTimes(exactly(0))
+                ),
+                is("expected: { } but was: [ {" + System.getProperty("line.separator") +
+                        "  \"path\" : \"some_path\"" + System.getProperty("line.separator") +
+                        "}, {" + System.getProperty("line.separator") +
+                        "  \"path\" : \"some_other_path\"" + System.getProperty("line.separator") +
+                        "} ]"));
+        assertThat(logFilter.verify(
+                        new Verification()
+                                .withRequest(
+                                        new HttpRequest()
+                                                .withPath("some_path")
+                                )
+                                .withTimes(exactly(1))
+                ),
+                is(""));
+        assertThat(logFilter.verify(
+                        new Verification()
+                                .withRequest(
+                                        new HttpRequest()
+                                                .withPath("some_path")
+                                )
+                                .withTimes(exactly(2))
+                ),
+                is("expected: {" + System.getProperty("line.separator") +
+                        "  \"path\" : \"some_path\"" + System.getProperty("line.separator") +
+                        "} but was: [ {" + System.getProperty("line.separator") +
+                        "  \"path\" : \"some_path\"" + System.getProperty("line.separator") +
+                        "}, {" + System.getProperty("line.separator") +
+                        "  \"path\" : \"some_other_path\"" + System.getProperty("line.separator") +
+                        "} ]"));
+        assertThat(logFilter.verify(
+                        new Verification()
+                                .withRequest(
+                                        new HttpRequest()
+                                                .withPath("some_other_path")
+                                )
+                                .withTimes(exactly(1))
+                ),
+                is(""));
     }
 
     @Test

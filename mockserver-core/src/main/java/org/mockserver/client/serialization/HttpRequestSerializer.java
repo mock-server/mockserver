@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 /**
  * @author jamesdbloom
@@ -49,4 +50,21 @@ public class HttpRequestSerializer {
         return httpRequest;
     }
 
+    public String serialize(HttpRequest[] httpRequest) {
+        try {
+            if (httpRequest != null && httpRequest.length > 0) {
+                HttpRequestDTO[] httpRequestDTOs = new HttpRequestDTO[httpRequest.length];
+                for (int i = 0; i < httpRequest.length; i++) {
+                    httpRequestDTOs[i] = new HttpRequestDTO(httpRequest[i]);
+                }
+                return objectMapper
+                        .writerWithDefaultPrettyPrinter()
+                        .writeValueAsString(httpRequestDTOs);
+            }
+            return "";
+        } catch (IOException ioe) {
+            logger.error("Exception while serializing http request to JSON with value " + Arrays.asList(httpRequest), ioe);
+            throw new RuntimeException("Exception while serializing http request to JSON with value " + Arrays.asList(httpRequest), ioe);
+        }
+    }
 }
