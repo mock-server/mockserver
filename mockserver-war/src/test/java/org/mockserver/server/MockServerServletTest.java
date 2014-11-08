@@ -6,6 +6,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
+import org.mockserver.client.serialization.VerificationSerializer;
 import org.mockserver.mappers.HttpServletToMockServerRequestMapper;
 import org.mockserver.mappers.MockServerToHttpServletResponseMapper;
 import org.mockserver.matchers.Times;
@@ -13,6 +14,9 @@ import org.mockserver.mock.Expectation;
 import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.model.*;
+import org.mockserver.proxy.filters.LogFilter;
+import org.mockserver.verify.Verification;
+import org.mockserver.verify.VerificationTimes;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -42,7 +46,11 @@ public class MockServerServletTest {
     @Mock
     private HttpRequestSerializer mockHttpRequestSerializer;
     @Mock
+    private VerificationSerializer mockVerificationSerializer;
+    @Mock
     private ActionHandler mockActionHandler;
+    @Mock
+    private LogFilter mockLogFilter;
     @InjectMocks
     private MockServerServlet mockServerServlet;
 
@@ -283,6 +291,72 @@ public class MockServerServletTest {
         // then
         verify(mockHttpRequestSerializer).deserialize(requestBytes);
         verify(mockMockServerMatcher).dumpToLog(httpRequest);
+        verifyNoMoreInteractions(mockHttpServletToMockServerRequestMapper);
+    }
+
+    @Test
+    public void shouldRetrieveExpectationsMockServer() throws IOException {
+        // given
+        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
+        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/retrieve");
+        Expectation expectation = new Expectation(new HttpRequest(), Times.unlimited()).thenRespond(new HttpResponse());
+
+        httpServletRequest.setContent("requestBytes".getBytes());
+        when(mockHttpRequestSerializer.deserialize(anyString())).thenReturn(expectation.getHttpRequest());
+        when(mockLogFilter.retrieve(any(HttpRequest.class))).thenReturn(new Expectation[]{expectation});
+        when(mockExpectationSerializer.serialize(any(Expectation[].class))).thenReturn("expectations_response");
+
+        // when
+        mockServerServlet.doPut(httpServletRequest, httpServletResponse);
+
+        // then
+        verify(mockLogFilter).retrieve(expectation.getHttpRequest());
+        assertThat(httpServletResponse.getContentAsByteArray(), is("expectations_response".getBytes()));
+        assertThat(httpServletResponse.getStatus(), is(HttpStatusCode.OK_200.code()));
+        verifyNoMoreInteractions(mockHttpServletToMockServerRequestMapper);
+    }
+
+    @Test
+    public void shouldVerifyRequestNotMatching() throws IOException {
+        // given
+        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
+        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/verify");
+        Verification verification = new Verification().withRequest(new HttpRequest()).withTimes(VerificationTimes.once());
+
+        String requestBytes = "requestBytes";
+        httpServletRequest.setContent(requestBytes.getBytes());
+        when(mockVerificationSerializer.deserialize(requestBytes)).thenReturn(verification);
+        when(mockLogFilter.verify(verification)).thenReturn("verification_error");
+
+        // when
+        mockServerServlet.doPut(httpServletRequest, httpServletResponse);
+
+        // then
+        verify(mockLogFilter).verify(verification);
+        assertThat(httpServletResponse.getContentAsString(), is("verification_error"));
+        assertThat(httpServletResponse.getStatus(), is(HttpStatusCode.NOT_ACCEPTABLE_406.code()));
+        verifyNoMoreInteractions(mockHttpServletToMockServerRequestMapper);
+    }
+
+    @Test
+    public void shouldVerifyRequestMatching() throws IOException {
+        // given
+        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
+        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/verify");
+        Verification verification = new Verification().withRequest(new HttpRequest()).withTimes(VerificationTimes.once());
+
+        String requestBytes = "requestBytes";
+        httpServletRequest.setContent(requestBytes.getBytes());
+        when(mockVerificationSerializer.deserialize(requestBytes)).thenReturn(verification);
+        when(mockLogFilter.verify(verification)).thenReturn("");
+
+        // when
+        mockServerServlet.doPut(httpServletRequest, httpServletResponse);
+
+        // then
+        verify(mockLogFilter).verify(verification);
+        assertThat(httpServletResponse.getContentAsString(), is(""));
+        assertThat(httpServletResponse.getStatus(), is(HttpStatusCode.ACCEPTED_202.code()));
         verifyNoMoreInteractions(mockHttpServletToMockServerRequestMapper);
     }
 }

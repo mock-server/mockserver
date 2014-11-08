@@ -2,8 +2,8 @@ package org.mockserver.client.serialization.model;
 
 import org.junit.Test;
 import org.mockserver.model.HttpRequest;
-import org.mockserver.model.Verification;
-import org.mockserver.model.VerificationTimes;
+import org.mockserver.verify.Verification;
+import org.mockserver.verify.VerificationTimes;
 
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;

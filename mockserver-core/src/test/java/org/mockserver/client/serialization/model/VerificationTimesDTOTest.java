@@ -1,7 +1,7 @@
 package org.mockserver.client.serialization.model;
 
 import org.junit.Test;
-import org.mockserver.model.VerificationTimes;
+import org.mockserver.verify.VerificationTimes;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;

@@ -1,4 +1,6 @@
-package org.mockserver.model;
+package org.mockserver.verify;
+
+import org.mockserver.model.EqualsHashCodeToString;
 
 /**
  * @author jamesdbloom
@@ -31,5 +33,20 @@ public class VerificationTimes extends EqualsHashCodeToString {
 
     public boolean isExact() {
         return exact;
+    }
+
+    public String toString() {
+        String string = "";
+        if (exact) {
+            string += "exactly ";
+        } else {
+            string += "at least ";
+        }
+        if (count == 1) {
+            string += "once";
+        } else {
+            string += count + " times";
+        }
+        return string;
     }
 }

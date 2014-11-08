@@ -9,6 +9,7 @@ import org.mockserver.client.http.ApacheHttpClient;
 import org.mockserver.client.server.MockServerClient;
 import org.mockserver.integration.callback.PrecannedTestExpectationCallback;
 import org.mockserver.model.*;
+import org.mockserver.verify.VerificationTimes;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -516,7 +517,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 .withPath("/some_path"));
         mockServerClient.verify(new HttpRequest()
                 .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
-                .withPath("/some_path"), org.mockserver.client.proxy.Times.exactly(1));
+                .withPath("/some_path"), VerificationTimes.exactly(1));
 
         // - in https
         assertEquals(
@@ -532,10 +533,10 @@ public abstract class AbstractClientServerIntegrationTest {
         );
         mockServerClient.verify(new HttpRequest()
                 .withURL("https{0,1}\\:\\/\\/localhost\\:\\d*\\/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("\\/") ? "\\/" : "") + "some_path")
-                .withPath("/some_path"), org.mockserver.client.proxy.Times.atLeast(1));
+                .withPath("/some_path"), VerificationTimes.atLeast(1));
         mockServerClient.verify(new HttpRequest()
                 .withURL("https{0,1}\\:\\/\\/localhost\\:\\d*\\/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("\\/") ? "\\/" : "") + "some_path")
-                .withPath("/some_path"), org.mockserver.client.proxy.Times.exactly(2));
+                .withPath("/some_path"), VerificationTimes.exactly(2));
     }
 
     @Test
@@ -560,7 +561,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 .withPath("/some_path"));
         mockServerClient.verify(new HttpRequest()
                 .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
-                .withPath("/some_path"), org.mockserver.client.proxy.Times.exactly(1));
+                .withPath("/some_path"), VerificationTimes.exactly(1));
     }
 
     @Test(expected = AssertionError.class)
@@ -582,7 +583,7 @@ public abstract class AbstractClientServerIntegrationTest {
         );
         mockServerClient.verify(new HttpRequest()
                 .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
-                .withPath("/some_path"), org.mockserver.client.proxy.Times.atLeast(2));
+                .withPath("/some_path"), VerificationTimes.atLeast(2));
     }
 
     @Test(expected = AssertionError.class)
@@ -604,7 +605,7 @@ public abstract class AbstractClientServerIntegrationTest {
         );
         mockServerClient.verify(new HttpRequest()
                 .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
-                .withPath("/some_path"), org.mockserver.client.proxy.Times.exactly(0));
+                .withPath("/some_path"), VerificationTimes.exactly(0));
     }
 
     @Test(expected = AssertionError.class)
@@ -626,7 +627,7 @@ public abstract class AbstractClientServerIntegrationTest {
         );
         mockServerClient.verify(new HttpRequest()
                 .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_other_path")
-                .withPath("/some_other_path"), org.mockserver.client.proxy.Times.exactly(2));
+                .withPath("/some_other_path"), VerificationTimes.exactly(2));
     }
 
     @Test

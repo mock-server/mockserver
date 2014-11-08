@@ -1,13 +1,13 @@
 package org.mockserver.model;
 
 import org.junit.Test;
+import org.mockserver.verify.Verification;
+import org.mockserver.verify.VerificationTimes;
 
-import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.Matchers.same;
 import static org.mockserver.model.HttpRequest.request;
-import static org.mockserver.model.VerificationTimes.atLeast;
+import static org.mockserver.verify.VerificationTimes.atLeast;
 
 /**
  * @author jamesdbloom

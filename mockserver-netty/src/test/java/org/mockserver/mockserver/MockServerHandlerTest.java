@@ -21,6 +21,7 @@ import org.mockserver.model.*;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.proxy.filters.LogFilter;
+import org.mockserver.verify.Verification;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;

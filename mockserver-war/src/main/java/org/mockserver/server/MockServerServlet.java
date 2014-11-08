@@ -2,17 +2,15 @@ package org.mockserver.server;
 
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
+import org.mockserver.client.serialization.VerificationSerializer;
 import org.mockserver.mappers.HttpServletToMockServerRequestMapper;
 import org.mockserver.mappers.MockServerToHttpServletResponseMapper;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.mock.action.ActionHandler;
-import org.mockserver.mock.action.HttpCallbackActionHandler;
-import org.mockserver.mock.action.HttpForwardActionHandler;
-import org.mockserver.mock.action.HttpResponseActionHandler;
-import org.mockserver.model.*;
-import org.mockserver.proxy.filters.Filters;
-import org.mockserver.proxy.filters.HopByHopHeaderFilter;
+import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpResponse;
+import org.mockserver.model.HttpStatusCode;
 import org.mockserver.proxy.filters.LogFilter;
 import org.mockserver.streams.IOStreamUtils;
 
@@ -37,6 +35,7 @@ public class MockServerServlet extends HttpServlet {
     // serializer
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
+    private VerificationSerializer verificationSerializer = new VerificationSerializer();
 
     public void doGet(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
         mockResponse(httpServletRequest, httpServletResponse);
@@ -70,6 +69,14 @@ public class MockServerServlet extends HttpServlet {
             Expectation[] expectations = logFilter.retrieve(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
             IOStreamUtils.writeToOutputStream(expectationSerializer.serialize(expectations).getBytes(), httpServletResponse);
             httpServletResponse.setStatus(HttpStatusCode.OK_200.code());
+        } else if (requestPath.equals("/verify")) {
+            String result = logFilter.verify(verificationSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
+            if (result.isEmpty()) {
+                httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
+            } else {
+                IOStreamUtils.writeToOutputStream(result.getBytes(), httpServletResponse);
+                httpServletResponse.setStatus(HttpStatusCode.NOT_ACCEPTABLE_406.code());
+            }
         } else {
             mockResponse(httpServletRequest, httpServletResponse);
         }

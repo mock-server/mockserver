@@ -4,13 +4,14 @@ import org.junit.Test;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
+import org.mockserver.verify.Verification;
 
 import java.util.Arrays;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
-import static org.mockserver.model.VerificationTimes.atLeast;
-import static org.mockserver.model.VerificationTimes.exactly;
+import static org.mockserver.verify.VerificationTimes.atLeast;
+import static org.mockserver.verify.VerificationTimes.exactly;
 
 /**
  * @author jamesdbloom
@@ -133,11 +134,11 @@ public class LogFilterTest {
                         new Verification()
                                 .withRequest(new HttpRequest())
                 ),
-                is("expected: { } but was: [ {" + System.getProperty("line.separator") +
+                is("expected:<{ }> but was:<[ {" + System.getProperty("line.separator") +
                         "  \"path\" : \"some_path\"" + System.getProperty("line.separator") +
                         "}, {" + System.getProperty("line.separator") +
                         "  \"path\" : \"some_other_path\"" + System.getProperty("line.separator") +
-                        "} ]"));
+                        "} ]>"));
         assertThat(logFilter.verify(
                         new Verification()
                                 .withRequest(
@@ -184,11 +185,11 @@ public class LogFilterTest {
                                 .withRequest(new HttpRequest())
                                 .withTimes(atLeast(3))
                 ),
-                is("expected: { } but was: [ {" + System.getProperty("line.separator") +
+                is("expected:<{ }> but was:<[ {" + System.getProperty("line.separator") +
                         "  \"path\" : \"some_path\"" + System.getProperty("line.separator") +
                         "}, {" + System.getProperty("line.separator") +
                         "  \"path\" : \"some_other_path\"" + System.getProperty("line.separator") +
-                        "} ]"));
+                        "} ]>"));
         assertThat(logFilter.verify(
                         new Verification()
                                 .withRequest(
@@ -206,13 +207,13 @@ public class LogFilterTest {
                                 )
                                 .withTimes(atLeast(2))
                 ),
-                is("expected: {" + System.getProperty("line.separator") +
+                is("expected:<{" + System.getProperty("line.separator") +
                         "  \"path\" : \"some_path\"" + System.getProperty("line.separator") +
-                        "} but was: [ {" + System.getProperty("line.separator") +
+                        "}> but was:<[ {" + System.getProperty("line.separator") +
                         "  \"path\" : \"some_path\"" + System.getProperty("line.separator") +
                         "}, {" + System.getProperty("line.separator") +
                         "  \"path\" : \"some_other_path\"" + System.getProperty("line.separator") +
-                        "} ]"));
+                        "} ]>"));
         assertThat(logFilter.verify(
                         new Verification()
                                 .withRequest(
@@ -246,11 +247,11 @@ public class LogFilterTest {
                                 .withRequest(new HttpRequest())
                                 .withTimes(exactly(0))
                 ),
-                is("expected: { } but was: [ {" + System.getProperty("line.separator") +
+                is("expected:<{ }> but was:<[ {" + System.getProperty("line.separator") +
                         "  \"path\" : \"some_path\"" + System.getProperty("line.separator") +
                         "}, {" + System.getProperty("line.separator") +
                         "  \"path\" : \"some_other_path\"" + System.getProperty("line.separator") +
-                        "} ]"));
+                        "} ]>"));
         assertThat(logFilter.verify(
                         new Verification()
                                 .withRequest(
@@ -268,13 +269,13 @@ public class LogFilterTest {
                                 )
                                 .withTimes(exactly(2))
                 ),
-                is("expected: {" + System.getProperty("line.separator") +
+                is("expected:<{" + System.getProperty("line.separator") +
                         "  \"path\" : \"some_path\"" + System.getProperty("line.separator") +
-                        "} but was: [ {" + System.getProperty("line.separator") +
+                        "}> but was:<[ {" + System.getProperty("line.separator") +
                         "  \"path\" : \"some_path\"" + System.getProperty("line.separator") +
                         "}, {" + System.getProperty("line.separator") +
                         "  \"path\" : \"some_other_path\"" + System.getProperty("line.separator") +
-                        "} ]"));
+                        "} ]>"));
         assertThat(logFilter.verify(
                         new Verification()
                                 .withRequest(

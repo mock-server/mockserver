@@ -1,11 +1,10 @@
 package org.mockserver.client.serialization.model;
 
 import org.mockserver.model.EqualsHashCodeToString;
-import org.mockserver.model.Verification;
-import org.mockserver.model.VerificationTimes;
+import org.mockserver.verify.Verification;
 
 import static org.mockserver.model.HttpRequest.request;
-import static org.mockserver.model.VerificationTimes.once;
+import static org.mockserver.verify.VerificationTimes.once;
 
 /**
  * @author jamesdbloom

@@ -1,6 +1,8 @@
-package org.mockserver.model;
+package org.mockserver.verify;
 
 import org.mockserver.client.serialization.ObjectMapperFactory;
+import org.mockserver.model.EqualsHashCodeToString;
+import org.mockserver.model.HttpRequest;
 
 import static org.mockserver.model.HttpRequest.request;
 

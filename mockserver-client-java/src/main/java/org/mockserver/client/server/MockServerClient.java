@@ -4,11 +4,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.mockserver.client.http.ApacheHttpClient;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
+import org.mockserver.client.serialization.VerificationSerializer;
 import org.mockserver.matchers.HttpResponseMatcher;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.verify.Verification;
+import org.mockserver.verify.VerificationTimes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +29,7 @@ public class MockServerClient {
     private ApacheHttpClient apacheHttpClient;
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
+    private VerificationSerializer verificationSerializer = new VerificationSerializer();
 
     /**
      * Start the client communicating to a MockServer at the specified host and port
@@ -167,7 +171,7 @@ public class MockServerClient {
     }
 
     /**
-     * Verify a request has been sent for example:
+     * Verify a request has been sent at least once for example:
      *
      *   mockServerClient
      *           .verify(
@@ -181,7 +185,7 @@ public class MockServerClient {
      */
     public MockServerClient verify(HttpRequest... httpRequests) throws AssertionError {
         for (HttpRequest httpRequest : httpRequests) {
-            verify(httpRequest, org.mockserver.client.proxy.Times.atLeast(1));
+            verify(httpRequest, VerificationTimes.atLeast(1));
         }
         return this;
     }
@@ -207,59 +211,21 @@ public class MockServerClient {
      * @param times the number of times this request must be matched
      * @throws AssertionError if the request has not been found
      */
-    public MockServerClient verify(HttpRequest httpRequest, org.mockserver.client.proxy.Times times) throws AssertionError {
-        return verify(httpRequest, null, times);
-    }
-
-    /**
-     * Verify a request has been sent for a specific expected response example:
-     *
-     *   mockServerClient
-     *           .verify(
-     *                   request()
-     *                           .withPath("/some_path")
-     *                           .withBody("some_request_body"),
-     *                   Times.exactly(3)
-     *           );
-     *
-     * This version is useful if multiple requests have been configured with different
-     * responses the needs to confirm that an exact response has been received.
-     *
-     * Times supports multiple static factory methods:
-     *
-     *   once()      - verify the request was only received once
-     *   exactly(n)  - verify the request was only received exactly n times
-     *   atLeast(n)  - verify the request was only received at least n times
-     *
-     * @param httpRequest the http request that must be matched for this verification to pass
-     * @param httpResponse the http response that must be matched for this verification to pass
-     * @param times the number of times this request must be matched
-     * @throws AssertionError if the request has not been found
-     */
-    public MockServerClient verify(HttpRequest httpRequest, HttpResponse httpResponse, org.mockserver.client.proxy.Times times) throws AssertionError {
+    public MockServerClient verify(HttpRequest httpRequest, final VerificationTimes times) throws AssertionError {
         if (httpRequest == null) {
-            throw new IllegalArgumentException("verify(HttpRequest) requires a non null HttpRequest object");
+            throw new IllegalArgumentException("verify(HttpRequest, VerificationTimes) requires a non null HttpRequest object");
+        }
+        if (times == null) {
+            throw new IllegalArgumentException("verify(HttpRequest, VerificationTimes) requires a non null VerificationTimes object");
         }
 
-        Expectation[] expectations = retrieveAsExpectations(httpRequest, httpResponse);
-        if (expectations == null) {
-            throw new AssertionError("Expected " + httpRequestSerializer.serialize(httpRequest) + butFoundAssertionErrorMessage());
-        }
-        if (times.isExact()) {
-            if (expectations.length != times.getCount()) {
-                throw new AssertionError("Expected " + httpRequestSerializer.serialize(httpRequest) + butFoundAssertionErrorMessage());
-            }
-        } else {
-            if (expectations.length < times.getCount()) {
-                throw new AssertionError("Expected " + httpRequestSerializer.serialize(httpRequest) + butFoundAssertionErrorMessage());
-            }
+        Verification verification = new Verification().withRequest(httpRequest).withTimes(times);
+        String result = apacheHttpClient.sendPUTRequest(uriBase, "/verify", verificationSerializer.serialize(verification));
+
+        if (result != null && !result.isEmpty()) {
+            throw new AssertionError("Request not found " + times + " " + result);
         }
         return this;
-    }
-
-    private String butFoundAssertionErrorMessage() {
-        String allRequests = apacheHttpClient.sendPUTRequest(uriBase, "/retrieve", "");
-        return " but " + (StringUtils.isNotEmpty(allRequests) ? "only found " + allRequests : "found no requests");
     }
 
     /**

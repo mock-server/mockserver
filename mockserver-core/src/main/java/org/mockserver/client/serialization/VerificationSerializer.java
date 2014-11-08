@@ -2,7 +2,7 @@ package org.mockserver.client.serialization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.mockserver.client.serialization.model.VerificationDTO;
-import org.mockserver.model.Verification;
+import org.mockserver.verify.Verification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

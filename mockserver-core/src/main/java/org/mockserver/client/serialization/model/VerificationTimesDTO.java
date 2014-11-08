@@ -1,7 +1,7 @@
 package org.mockserver.client.serialization.model;
 
 import org.mockserver.model.EqualsHashCodeToString;
-import org.mockserver.model.VerificationTimes;
+import org.mockserver.verify.VerificationTimes;
 
 /**
  * @author jamesdbloom

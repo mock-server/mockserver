@@ -10,6 +10,8 @@ import org.mockserver.client.serialization.model.HttpRequestDTO;
 import org.mockserver.client.serialization.model.VerificationDTO;
 import org.mockserver.client.serialization.model.VerificationTimesDTO;
 import org.mockserver.model.*;
+import org.mockserver.verify.Verification;
+import org.mockserver.verify.VerificationTimes;
 
 import java.io.IOException;
 

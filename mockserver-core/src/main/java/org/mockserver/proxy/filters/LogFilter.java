@@ -9,7 +9,7 @@ import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
-import org.mockserver.model.Verification;
+import org.mockserver.verify.Verification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -142,15 +142,15 @@ public class LogFilter implements ProxyResponseFilter {
 
             HttpRequest[] httpRequests = requestResponseLog.keySet().toArray(new HttpRequest[requests.size()]);
             if (requests.isEmpty()) {
-                return "expected: " + httpRequestSerializer.serialize(verification.getHttpRequest()) + " but was: " + httpRequestSerializer.serialize(httpRequests);
+                return "expected:<" + httpRequestSerializer.serialize(verification.getHttpRequest()) + "> but was:<" + (httpRequests.length == 1 ? httpRequestSerializer.serialize(httpRequests[0]) : httpRequestSerializer.serialize(httpRequests)) + ">";
             }
             if (verification.getTimes().isExact()) {
                 if (requests.size() != verification.getTimes().getCount()) {
-                    return "expected: " + httpRequestSerializer.serialize(verification.getHttpRequest()) + " but was: " + httpRequestSerializer.serialize(httpRequests);
+                    return "expected:<" + httpRequestSerializer.serialize(verification.getHttpRequest()) + "> but was:<" + (httpRequests.length == 1 ? httpRequestSerializer.serialize(httpRequests[0]) : httpRequestSerializer.serialize(httpRequests)) + ">";
                 }
             } else {
                 if (requests.size() < verification.getTimes().getCount()) {
-                    return "expected: " + httpRequestSerializer.serialize(verification.getHttpRequest()) + " but was: " + httpRequestSerializer.serialize(httpRequests);
+                    return "expected:<" + httpRequestSerializer.serialize(verification.getHttpRequest()) + "> but was:<" + (httpRequests.length == 1 ? httpRequestSerializer.serialize(httpRequests[0]) : httpRequestSerializer.serialize(httpRequests)) + ">";
                 }
             }
         }
