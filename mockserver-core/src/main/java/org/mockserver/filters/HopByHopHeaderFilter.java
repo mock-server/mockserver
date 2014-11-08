@@ -1,4 +1,4 @@
-package org.mockserver.proxy.filters;
+package org.mockserver.filters;
 
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
@@ -11,7 +11,7 @@ import java.util.Locale;
 /**
  * @author jamesdbloom
  */
-public class HopByHopHeaderFilter implements ProxyRequestFilter {
+public class HopByHopHeaderFilter implements RequestFilter {
 
     public HttpRequest onRequest(HttpRequest httpRequest) {
         if (httpRequest != null) {

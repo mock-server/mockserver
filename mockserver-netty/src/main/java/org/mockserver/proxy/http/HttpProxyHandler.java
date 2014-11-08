@@ -2,22 +2,20 @@ package org.mockserver.proxy.http;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.*;
 import io.netty.handler.codec.http.*;
 import org.mockserver.client.http.ApacheHttpClient;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
+import org.mockserver.client.serialization.VerificationSerializer;
 import org.mockserver.mappers.MockServerToNettyResponseMapper;
 import org.mockserver.mappers.NettyToMockServerRequestMapper;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mockserver.MappedRequest;
 import org.mockserver.model.HttpResponse;
-import org.mockserver.proxy.filters.Filters;
-import org.mockserver.proxy.filters.HopByHopHeaderFilter;
-import org.mockserver.proxy.filters.LogFilter;
+import org.mockserver.filters.Filters;
+import org.mockserver.filters.HopByHopHeaderFilter;
+import org.mockserver.filters.LogFilter;
 import org.mockserver.proxy.http.connect.HttpConnectHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +27,7 @@ import static io.netty.handler.codec.http.HttpHeaders.Names.CONNECTION;
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH;
 import static io.netty.handler.codec.http.HttpHeaders.isKeepAlive;
 
+@ChannelHandler.Sharable
 public class HttpProxyHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -45,7 +44,7 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<FullHttpReques
     // serializers
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
-
+    private VerificationSerializer verificationSerializer = new VerificationSerializer();
 
     public HttpProxyHandler(LogFilter logFilter, HttpProxy server, InetSocketAddress connectSocket, boolean secure) {
         super(false); // TODO(jamesdbloom): why does this need to be autorelease false??
@@ -93,6 +92,15 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<FullHttpReques
                 String serialize = expectationSerializer.serialize(expectations);
                 writeResponse(ctx, request, HttpResponseStatus.OK, Unpooled.copiedBuffer(serialize.getBytes()));
 
+            } else if (mappedRequest.matches(HttpMethod.PUT, "/verify")) {
+
+                String result = logFilter.verify(verificationSerializer.deserialize(mappedRequest.content()));
+                if (result.isEmpty()) {
+                    writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
+                } else {
+                    writeResponse(ctx, request, HttpResponseStatus.NOT_ACCEPTABLE, Unpooled.copiedBuffer(result.getBytes()));
+                }
+
             } else if (mappedRequest.matches(HttpMethod.PUT, "/stop")) {
 
                 writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
@@ -112,13 +120,13 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<FullHttpReques
     }
 
     private FullHttpResponse forwardRequest(FullHttpRequest nettyHttpRequest) {
-        return sendRequest(filters.applyFilters(nettyToMockServerRequestMapper.mapNettyRequestToMockServerRequest(nettyHttpRequest, secure)));
+        return sendRequest(filters.applyOnRequestFilters(nettyToMockServerRequestMapper.mapNettyRequestToMockServerRequest(nettyHttpRequest, secure)));
     }
 
     private FullHttpResponse sendRequest(final org.mockserver.model.HttpRequest httpRequest) {
         // if HttpRequest was set to null by a filter don't send request
         if (httpRequest != null) {
-            HttpResponse httpResponse = filters.applyFilters(httpRequest, apacheHttpClient.sendRequest(httpRequest, false));
+            HttpResponse httpResponse = filters.applyOnResponseFilters(httpRequest, apacheHttpClient.sendRequest(httpRequest, false));
             return mockServerToNettyResponseMapper.mapMockServerResponseToNettyResponse(httpResponse);
         } else {
             return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_FOUND);

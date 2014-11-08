@@ -27,6 +27,7 @@ public class CircularMultiMapTest {
         // then
         assertEquals(Arrays.asList("1_1", "1_2", "1_3"), circularMultiMap.getAll("1"));
         assertEquals(Arrays.asList("2"), circularMultiMap.getAll("2"));
+        assertEquals(Arrays.asList("1", "1", "1", "2"), circularMultiMap.getKeyListForValues());
     }
 
     @Test
@@ -47,6 +48,7 @@ public class CircularMultiMapTest {
         assertTrue(circularMultiMap.containsKey("3"));
         assertTrue(circularMultiMap.containsKey("4"));
         assertEquals(Sets.newHashSet("2", "3", "4"), circularMultiMap.keySet());
+        assertEquals(Arrays.asList("2", "3", "4"), circularMultiMap.getKeyListForValues());
     }
 
     @Test
@@ -68,6 +70,7 @@ public class CircularMultiMapTest {
         assertTrue(circularMultiMap.containsKey("1"));
         assertTrue(circularMultiMap.containsKey("2"));
         assertEquals(Sets.newHashSet("1", "2"), circularMultiMap.keySet());
+        assertEquals(Arrays.asList("1", "1", "1", "2", "2"), circularMultiMap.getKeyListForValues());
         // - should have correct values
         assertFalse(circularMultiMap.containsValue("1"));
         assertTrue(circularMultiMap.containsValue("2"));
@@ -102,6 +105,7 @@ public class CircularMultiMapTest {
         // then
         assertEquals(Arrays.asList("1_1", "1_2", "1_3"), circularMultiMap.getAll("1"));
         assertEquals(Arrays.asList("2"), circularMultiMap.getAll("2"));
+        assertEquals(Arrays.asList("1", "1", "1", "2"), circularMultiMap.getKeyListForValues());
     }
 
     @Test
@@ -129,6 +133,7 @@ public class CircularMultiMapTest {
         assertFalse(circularMultiMap.containsKey("2"));
         assertFalse(circularMultiMap.containsValue("1_2"));
         assertFalse(circularMultiMap.containsValue("2"));
+        assertEquals(Arrays.asList(), circularMultiMap.getKeyListForValues());
     }
 
     @Test
@@ -151,6 +156,7 @@ public class CircularMultiMapTest {
                         circularMultiMap.new ImmutableEntry("1", "1_3"),
                         circularMultiMap.new ImmutableEntry("2", "2")
                 }), circularMultiMap.entrySet());
+        assertEquals(Arrays.asList("1", "1", "1", "2"), circularMultiMap.getKeyListForValues());
     }
 
     @Test
@@ -188,6 +194,7 @@ public class CircularMultiMapTest {
         assertFalse(circularMultiMap.containsKey("1"));
         assertTrue(circularMultiMap.containsKey("2"));
         assertEquals(Sets.newHashSet("2"), circularMultiMap.keySet());
+        assertEquals(Arrays.asList("2"), circularMultiMap.getKeyListForValues());
         // - should have correct values
         assertFalse(circularMultiMap.containsValue("1_1"));
         assertFalse(circularMultiMap.containsValue("1_2"));
@@ -202,7 +209,6 @@ public class CircularMultiMapTest {
     }
 
     @Test
-
     public void shouldSupportRemovingAValue() {
         // given
         CircularMultiMap<String, String> circularMultiMap = new CircularMultiMap<String, String>(3, 3);
@@ -220,6 +226,7 @@ public class CircularMultiMapTest {
         assertTrue(circularMultiMap.containsKey("1"));
         assertTrue(circularMultiMap.containsKey("2"));
         assertEquals(Sets.newHashSet("1", "2"), circularMultiMap.keySet());
+        assertEquals(Arrays.asList("1", "1", "2"), circularMultiMap.getKeyListForValues());
         // - should have correct values
         assertFalse(circularMultiMap.containsValue("1_1"));
         assertTrue(circularMultiMap.containsValue("1_2"));

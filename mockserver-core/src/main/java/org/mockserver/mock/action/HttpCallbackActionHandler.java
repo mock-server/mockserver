@@ -3,7 +3,7 @@ package org.mockserver.mock.action;
 import org.mockserver.model.HttpCallback;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
-import org.mockserver.proxy.filters.Filters;
+import org.mockserver.filters.Filters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,15 +16,10 @@ import static org.mockserver.model.HttpResponse.notFoundResponse;
  * @author jamesdbloom
  */
 public class HttpCallbackActionHandler {
-    private final Filters filters;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public HttpCallbackActionHandler(Filters filters) {
-        this.filters = filters;
-    }
-
     public HttpResponse handle(HttpCallback httpCallback, HttpRequest httpRequest) {
-        return sendRequest(httpCallback, filters.applyFilters(httpRequest));
+        return sendRequest(httpCallback, httpRequest);
     }
 
     private ExpectationCallback instantiateCallback(HttpCallback httpCallback) {
@@ -52,7 +47,7 @@ public class HttpCallbackActionHandler {
         if (httpRequest != null) {
             ExpectationCallback expectationCallback = instantiateCallback(httpCallback);
             if (expectationCallback != null) {
-                return filters.applyFilters(httpRequest, expectationCallback.handle(httpRequest));
+                return expectationCallback.handle(httpRequest);
             } else {
                 return notFoundResponse();
             }

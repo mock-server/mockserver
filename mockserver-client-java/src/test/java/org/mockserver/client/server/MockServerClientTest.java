@@ -405,7 +405,7 @@ public class MockServerClientTest {
     @Test
     public void shouldVerifyDoesNotMatchSingleRequestNoVerificationTimes() throws UnsupportedEncodingException {
         // given
-        when(mockApacheHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn("expected:<foo> but was:<bar>");
+        when(mockApacheHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn("Request not found at least once expected:<foo> but was:<bar>");
         HttpRequest httpRequest = new HttpRequest()
                 .withPath("/some_path")
                 .withBody(new StringBody("some_request_body", Body.Type.STRING));
@@ -424,7 +424,7 @@ public class MockServerClientTest {
     @Test
     public void shouldVerifyDoesNotMatchMultipleRequestsNoVerificationTimes() throws UnsupportedEncodingException {
         // given
-        when(mockApacheHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn("expected:<foo> but was:<bar>");
+        when(mockApacheHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn("Request not found at least once expected:<foo> but was:<bar>");
         HttpRequest httpRequest = new HttpRequest()
                 .withPath("/some_path")
                 .withBody(new StringBody("some_request_body", Body.Type.STRING));
@@ -481,9 +481,9 @@ public class MockServerClientTest {
     }
 
     @Test
-    public void shouldVerifyDoesNotMatchRequestAtLeastOnce() throws UnsupportedEncodingException {
+    public void shouldVerifyDoesNotMatchRequest() throws UnsupportedEncodingException {
         // given
-        when(mockApacheHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn("expected:<foo> but was:<bar>");
+        when(mockApacheHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn("Request not found at least once expected:<foo> but was:<bar>");
         HttpRequest httpRequest = new HttpRequest()
                 .withPath("/some_path")
                 .withBody(new StringBody("some_request_body", Body.Type.STRING));
@@ -496,63 +496,6 @@ public class MockServerClientTest {
         } catch (AssertionError ae) {
             verify(verificationSerializer).serialize(new Verification().withRequest(httpRequest).withTimes(atLeast(1)));
             assertThat(ae.getMessage(), is("Request not found at least once expected:<foo> but was:<bar>"));
-        }
-    }
-
-    @Test
-    public void shouldVerifyDoesNotMatchRequestExactlyOnce() throws UnsupportedEncodingException {
-        // given
-        when(mockApacheHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn("expected:<foo> but was:<bar>");
-        HttpRequest httpRequest = new HttpRequest()
-                .withPath("/some_path")
-                .withBody(new StringBody("some_request_body", Body.Type.STRING));
-
-        try {
-            mockServerClient.verify(httpRequest, once());
-
-            // then
-            fail();
-        } catch (AssertionError ae) {
-            verify(verificationSerializer).serialize(new Verification().withRequest(httpRequest).withTimes(once()));
-            assertThat(ae.getMessage(), is("Request not found exactly once expected:<foo> but was:<bar>"));
-        }
-    }
-
-    @Test
-    public void shouldVerifyDoesNotMatchRequestAtLeastTwice() throws UnsupportedEncodingException {
-        // given
-        when(mockApacheHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn("expected:<foo> but was:<bar>");
-        HttpRequest httpRequest = new HttpRequest()
-                .withPath("/some_path")
-                .withBody(new StringBody("some_request_body", Body.Type.STRING));
-
-        try {
-            mockServerClient.verify(httpRequest, atLeast(2));
-
-            // then
-            fail();
-        } catch (AssertionError ae) {
-            verify(verificationSerializer).serialize(new Verification().withRequest(httpRequest).withTimes(atLeast(2)));
-            assertThat(ae.getMessage(), is("Request not found at least 2 times expected:<foo> but was:<bar>"));
-        }
-    }
-
-    @Test
-    public void shouldVerifyDoesNotMatchRequestExactlyTwice() throws UnsupportedEncodingException {
-        // given
-        when(mockApacheHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn("expected:<foo> but was:<bar>");
-        HttpRequest httpRequest = new HttpRequest()
-                .withPath("/some_path")
-                .withBody(new StringBody("some_request_body", Body.Type.STRING));
-
-        try {
-            mockServerClient.verify(httpRequest, exactly(2));
-
-            // then
-            fail();
-        } catch (AssertionError ae) {
-            verify(verificationSerializer).serialize(new Verification().withRequest(httpRequest).withTimes(exactly(2)));
-            assertThat(ae.getMessage(), is("Request not found exactly 2 times expected:<foo> but was:<bar>"));
         }
     }
 

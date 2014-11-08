@@ -100,7 +100,7 @@ public class MockServerClient {
      *                   new HttpRequest()
      *                           .withPath("/some_path")
      *                           .withBody("some_request_body"),
-     *                   Times.exactly(5)
+     *                   VerificationTimes.exactly(5)
      *           )
      *           .respond(
      *                   new HttpResponse()
@@ -198,10 +198,10 @@ public class MockServerClient {
      *                   request()
      *                           .withPath("/some_path")
      *                           .withBody("some_request_body"),
-     *                   Times.exactly(3)
+     *                   VerificationTimes.exactly(3)
      *           );
      *
-     * Times supports multiple static factory methods:
+     * VerificationTimes supports multiple static factory methods:
      *
      *   once()      - verify the request was only received once
      *   exactly(n)  - verify the request was only received exactly n times
@@ -223,7 +223,7 @@ public class MockServerClient {
         String result = apacheHttpClient.sendPUTRequest(uriBase, "/verify", verificationSerializer.serialize(verification));
 
         if (result != null && !result.isEmpty()) {
-            throw new AssertionError("Request not found " + times + " " + result);
+            throw new AssertionError(result);
         }
         return this;
     }

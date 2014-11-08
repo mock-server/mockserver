@@ -4,8 +4,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.mockserver.client.http.ApacheHttpClient;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
+import org.mockserver.client.serialization.VerificationSerializer;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.verify.Verification;
+import org.mockserver.verify.VerificationTimes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,6 +22,7 @@ public class ProxyClient {
     private ApacheHttpClient apacheHttpClient;
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
+    private VerificationSerializer verificationSerializer = new VerificationSerializer();
 
     /**
      * Start the client communicating to the proxy at the specified host and port
@@ -116,11 +120,14 @@ public class ProxyClient {
      *                           .withBody("some_request_body")
      *           );
      *
-     * @param httpRequest the http request that must be matched for this verification to pass
+     * @param httpRequests the http requests that must be matched for this verification to pass
      * @throws AssertionError if the request has not been found
      */
-    public ProxyClient verify(HttpRequest httpRequest) throws AssertionError {
-        return verify(httpRequest, Times.atLeast(1));
+    public ProxyClient verify(HttpRequest... httpRequests) throws AssertionError {
+        for (HttpRequest httpRequest : httpRequests) {
+            verify(httpRequest, VerificationTimes.atLeast(1));
+        }
+        return this;
     }
 
     /**
@@ -131,10 +138,10 @@ public class ProxyClient {
      *                   request()
      *                           .withPath("/some_path")
      *                           .withBody("some_request_body"),
-     *                   Times.exactly(3)
+     *                   VerificationTimes.exactly(3)
      *           );
      *
-     * Times supports multiple static factory methods:
+     * VerificationTimes supports multiple static factory methods:
      *
      *   once()      - verify the request was only received once
      *   exactly(n)  - verify the request was only received exactly n times
@@ -144,23 +151,19 @@ public class ProxyClient {
      * @param times the number of times this request must be matched
      * @throws AssertionError if the request has not been found
      */
-    public ProxyClient verify(HttpRequest httpRequest, Times times) throws AssertionError {
+    public ProxyClient verify(HttpRequest httpRequest, VerificationTimes times) throws AssertionError {
         if (httpRequest == null) {
-            throw new IllegalArgumentException("verify(HttpRequest) requires a non null HttpRequest object");
+            throw new IllegalArgumentException("verify(HttpRequest, VerificationTimes) requires a non null HttpRequest object");
+        }
+        if (times == null) {
+            throw new IllegalArgumentException("verify(HttpRequest, VerificationTimes) requires a non null VerificationTimes object");
         }
 
-        Expectation[] expectations = retrieveAsExpectations(httpRequest);
-        if (expectations == null) {
-            throw new AssertionError("Expected " + httpRequestSerializer.serialize(httpRequest) + butFoundAssertionErrorMessage());
-        }
-        if (times.isExact()) {
-            if (expectations.length != times.getCount()) {
-                throw new AssertionError("Expected " + httpRequestSerializer.serialize(httpRequest) + butFoundAssertionErrorMessage());
-            }
-        } else {
-            if (expectations.length < times.getCount()) {
-                throw new AssertionError("Expected " + httpRequestSerializer.serialize(httpRequest) + butFoundAssertionErrorMessage());
-            }
+        Verification verification = new Verification().withRequest(httpRequest).withTimes(times);
+        String result = apacheHttpClient.sendPUTRequest(uriBase, "/verify", verificationSerializer.serialize(verification));
+
+        if (result != null && !result.isEmpty()) {
+            throw new AssertionError(result);
         }
         return this;
     }

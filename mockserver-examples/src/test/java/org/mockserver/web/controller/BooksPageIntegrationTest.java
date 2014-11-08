@@ -1,7 +1,6 @@
 package org.mockserver.web.controller;
 
 import org.junit.*;
-import org.mockserver.client.proxy.Times;
 import org.mockserver.integration.ClientAndProxy;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.model.Book;
@@ -23,6 +22,7 @@ import static org.mockserver.integration.ClientAndProxy.startClientAndProxy;
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.verify.VerificationTimes.exactly;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -127,7 +127,7 @@ public abstract class BooksPageIntegrationTest {
         proxy.verify(
                 request()
                         .withPath("/get_books"),
-                Times.exactly(1)
+                exactly(1)
         );
     }
 
@@ -170,7 +170,7 @@ public abstract class BooksPageIntegrationTest {
                         .withQueryStringParameter(
                                 new Parameter("id", "1")
                         ),
-                Times.exactly(1)
+                exactly(1)
         );
     }
 

@@ -11,7 +11,7 @@ import static org.mockserver.model.HttpRequest.request;
  */
 public class Verification extends EqualsHashCodeToString {
     private HttpRequest httpRequest = request();
-    private VerificationTimes times = VerificationTimes.once();
+    private VerificationTimes times = VerificationTimes.atLeast(1);
 
     public Verification withRequest(HttpRequest httpRequest) {
         this.httpRequest = httpRequest;

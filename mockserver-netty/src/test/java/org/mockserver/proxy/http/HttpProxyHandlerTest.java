@@ -1,4 +1,4 @@
-package org.mockserver.mockserver;
+package org.mockserver.proxy.http;
 
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
@@ -15,13 +15,15 @@ import org.mockserver.mappers.MockServerToNettyResponseMapper;
 import org.mockserver.mappers.NettyToMockServerRequestMapper;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
-import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.mock.action.ActionHandler;
-import org.mockserver.model.*;
+import org.mockserver.model.HttpCallback;
+import org.mockserver.model.HttpForward;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.filters.LogFilter;
 import org.mockserver.verify.Verification;
+
+import java.net.InetSocketAddress;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -29,12 +31,11 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
-import static org.mockserver.model.HttpResponse.response;
 
 /**
  * @author jamesdbloom
  */
-public class MockServerHandlerTest {
+public class HttpProxyHandlerTest {
 
 
     // model objects
@@ -52,9 +53,7 @@ public class MockServerHandlerTest {
     private Verification mockVerification;
     // mockserver
     private LogFilter mockLogFilter;
-    private MockServerMatcher mockMockServerMatcher;
-    @Mock
-    private MockServer mockMockServer;
+    private HttpProxy mockHttpProxy;
     @Mock
     private ActionHandler mockActionHandler;
     // mappers
@@ -74,7 +73,7 @@ public class MockServerHandlerTest {
     private ChannelHandlerContext mockChannelHandlerContext;
 
     @InjectMocks
-    private MockServerHandler mockServerHandler;
+    private HttpProxyHandler httpProxyHandler;
 
     private DefaultFullHttpRequest createNettyHttpRequest(String uri, HttpMethod method, String some_content) {
         return new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, method, uri, Unpooled.copiedBuffer(some_content.getBytes()));
@@ -83,9 +82,9 @@ public class MockServerHandlerTest {
     @Before
     public void setupFixture() {
         // given - a mock server handler
-        mockMockServerMatcher = mock(MockServerMatcher.class);
         mockLogFilter = mock(LogFilter.class);
-        mockServerHandler = new MockServerHandler(mockMockServerMatcher, mockLogFilter, mockMockServer, false);
+        mockHttpProxy = mock(HttpProxy.class);
+        httpProxyHandler = new HttpProxyHandler(mockLogFilter, mockHttpProxy, new InetSocketAddress(1234), false);
 
         initMocks(this);
 
@@ -95,7 +94,6 @@ public class MockServerHandlerTest {
         when(mockVerificationSerializer.deserialize(anyString())).thenReturn(mockVerification);
 
         // given - an expectation that can be setup
-        when(mockMockServerMatcher.when(any(HttpRequest.class), any(Times.class))).thenReturn(mockExpectation);
         when(mockExpectation.thenRespond(any(HttpResponse.class))).thenReturn(mockExpectation);
         when(mockExpectation.thenForward(any(HttpForward.class))).thenReturn(mockExpectation);
         when(mockExpectation.thenCallback(any(HttpCallback.class))).thenReturn(mockExpectation);
@@ -109,42 +107,15 @@ public class MockServerHandlerTest {
     }
 
     @Test
-    public void shouldSetupExpectation() {
-        // given
-        DefaultFullHttpRequest nettyHttpRequest = createNettyHttpRequest("/expectation", HttpMethod.PUT, "some_content");
-
-        // when
-        mockServerHandler.channelRead0(mockChannelHandlerContext, nettyHttpRequest);
-
-        // then - request deserialized
-        verify(mockExpectationSerializer).deserialize("some_content");
-
-        // and - expectation correctly setup
-        verify(mockMockServerMatcher).when(any(HttpRequest.class), any(Times.class));
-        verify(mockExpectation).thenRespond(any(HttpResponse.class));
-        verify(mockExpectation).thenForward(any(HttpForward.class));
-        verify(mockExpectation).thenCallback(any(HttpCallback.class));
-
-        // and - correct response written to ChannelHandlerContext
-        ArgumentCaptor<DefaultFullHttpResponse> responseCaptor = ArgumentCaptor.forClass(DefaultFullHttpResponse.class);
-        verify(mockChannelHandlerContext).write(responseCaptor.capture());
-        DefaultFullHttpResponse defaultFullHttpResponse = responseCaptor.getValue();
-        assertThat(defaultFullHttpResponse.getStatus(), is(HttpResponseStatus.CREATED));
-        assertThat(defaultFullHttpResponse.getProtocolVersion(), is(HttpVersion.HTTP_1_1));
-        assertThat(defaultFullHttpResponse.content().readableBytes(), is(0));
-    }
-
-    @Test
     public void shouldResetExpectations() {
         // given
         DefaultFullHttpRequest nettyHttpRequest = createNettyHttpRequest("/reset", HttpMethod.PUT, "some_content");
 
         // when
-        mockServerHandler.channelRead0(mockChannelHandlerContext, nettyHttpRequest);
+        httpProxyHandler.channelRead0(mockChannelHandlerContext, nettyHttpRequest);
 
         // then - filter and matcher is reset
         verify(mockLogFilter).reset();
-        verify(mockMockServerMatcher).reset();
 
         // and - correct response written to ChannelHandlerContext
         ArgumentCaptor<DefaultFullHttpResponse> responseCaptor = ArgumentCaptor.forClass(DefaultFullHttpResponse.class);
@@ -161,14 +132,13 @@ public class MockServerHandlerTest {
         DefaultFullHttpRequest nettyHttpRequest = createNettyHttpRequest("/clear", HttpMethod.PUT, "some_content");
 
         // when
-        mockServerHandler.channelRead0(mockChannelHandlerContext, nettyHttpRequest);
+        httpProxyHandler.channelRead0(mockChannelHandlerContext, nettyHttpRequest);
 
         // then - request deserialized
         verify(mockHttpRequestSerializer).deserialize("some_content");
 
         // then - filter and matcher is cleared
         verify(mockLogFilter).clear(mockHttpRequest);
-        verify(mockMockServerMatcher).clear(mockHttpRequest);
 
         // and - correct response written to ChannelHandlerContext
         ArgumentCaptor<DefaultFullHttpResponse> responseCaptor = ArgumentCaptor.forClass(DefaultFullHttpResponse.class);
@@ -185,13 +155,36 @@ public class MockServerHandlerTest {
         DefaultFullHttpRequest nettyHttpRequest = createNettyHttpRequest("/dumpToLog", HttpMethod.PUT, "some_content");
 
         // when
-        mockServerHandler.channelRead0(mockChannelHandlerContext, nettyHttpRequest);
+        httpProxyHandler.channelRead0(mockChannelHandlerContext, nettyHttpRequest);
 
         // then - request deserialized
         verify(mockHttpRequestSerializer).deserialize("some_content");
 
         // then - expectations dumped to log
-        verify(mockMockServerMatcher).dumpToLog(mockHttpRequest);
+        verify(mockLogFilter).dumpToLog(mockHttpRequest, false);
+
+        // and - correct response written to ChannelHandlerContext
+        ArgumentCaptor<DefaultFullHttpResponse> responseCaptor = ArgumentCaptor.forClass(DefaultFullHttpResponse.class);
+        verify(mockChannelHandlerContext).write(responseCaptor.capture());
+        DefaultFullHttpResponse defaultFullHttpResponse = responseCaptor.getValue();
+        assertThat(defaultFullHttpResponse.getStatus(), is(HttpResponseStatus.ACCEPTED));
+        assertThat(defaultFullHttpResponse.getProtocolVersion(), is(HttpVersion.HTTP_1_1));
+        assertThat(defaultFullHttpResponse.content().readableBytes(), is(0));
+    }
+
+    @Test
+    public void shouldDumpExpectationsToLogAsJava() {
+        // given
+        DefaultFullHttpRequest nettyHttpRequest = createNettyHttpRequest("/dumpToLog?type=java", HttpMethod.PUT, "some_content");
+
+        // when
+        httpProxyHandler.channelRead0(mockChannelHandlerContext, nettyHttpRequest);
+
+        // then - request deserialized
+        verify(mockHttpRequestSerializer).deserialize("some_content");
+
+        // then - expectations dumped to log
+        verify(mockLogFilter).dumpToLog(mockHttpRequest, true);
 
         // and - correct response written to ChannelHandlerContext
         ArgumentCaptor<DefaultFullHttpResponse> responseCaptor = ArgumentCaptor.forClass(DefaultFullHttpResponse.class);
@@ -211,7 +204,7 @@ public class MockServerHandlerTest {
         DefaultFullHttpRequest nettyHttpRequest = createNettyHttpRequest("/retrieve", HttpMethod.PUT, "some_content");
 
         // when
-        mockServerHandler.channelRead0(mockChannelHandlerContext, nettyHttpRequest);
+        httpProxyHandler.channelRead0(mockChannelHandlerContext, nettyHttpRequest);
 
         // then - request deserialized
         verify(mockHttpRequestSerializer).deserialize("some_content");
@@ -237,7 +230,7 @@ public class MockServerHandlerTest {
         DefaultFullHttpRequest nettyHttpRequest = createNettyHttpRequest("/randomPath", HttpMethod.GET, "some_content");
 
         // when
-        mockServerHandler.channelRead0(mockChannelHandlerContext, nettyHttpRequest);
+        httpProxyHandler.channelRead0(mockChannelHandlerContext, nettyHttpRequest);
 
         // and - correct response written to ChannelHandlerContext
         ArgumentCaptor<DefaultFullHttpResponse> responseCaptor = ArgumentCaptor.forClass(DefaultFullHttpResponse.class);
@@ -249,45 +242,13 @@ public class MockServerHandlerTest {
     }
 
     @Test
-    public void shouldActionResult() {
-        // given - a mapper
-        when(mockNettyToMockServerRequestMapper.mapNettyRequestToMockServerRequest(any(FullHttpRequest.class), anyBoolean())).thenReturn(mockHttpRequest);
-
-        // and - a handler returning an action
-        when(mockMockServerMatcher.handle(mockHttpRequest)).thenReturn(response().withBody("some_response"));
-        when(mockActionHandler.processAction(response().withBody("some_response"), mockHttpRequest)).thenReturn(mockHttpResponse);
-
-        // and - a response mapper
-        DefaultFullHttpResponse httpResponse = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.PAYMENT_REQUIRED, Unpooled.copiedBuffer("some_content".getBytes()));
-        when(mockMockServerToNettyResponseMapper.mapMockServerResponseToNettyResponse(any(HttpResponse.class))).thenReturn(httpResponse);
-
-
-        // and - a request
-        DefaultFullHttpRequest nettyHttpRequest = createNettyHttpRequest("/randomPath", HttpMethod.GET, "some_content");
-
-        // when
-        mockServerHandler.channelRead0(mockChannelHandlerContext, nettyHttpRequest);
-
-        // then
-        verify(mockActionHandler).processAction(response().withBody("some_response"), mockHttpRequest);
-
-        // and - correct response written to ChannelHandlerContext
-        ArgumentCaptor<DefaultFullHttpResponse> responseCaptor = ArgumentCaptor.forClass(DefaultFullHttpResponse.class);
-        verify(mockChannelHandlerContext).write(responseCaptor.capture());
-        DefaultFullHttpResponse defaultFullHttpResponse = responseCaptor.getValue();
-        assertThat(defaultFullHttpResponse.getStatus(), is(HttpResponseStatus.PAYMENT_REQUIRED));
-        assertThat(defaultFullHttpResponse.getProtocolVersion(), is(HttpVersion.HTTP_1_1));
-        assertThat(defaultFullHttpResponse.content().array(), is("some_content".getBytes()));
-    }
-
-    @Test
     public void shouldVerifyPassingRequest() {
         // given
         DefaultFullHttpRequest nettyHttpRequest = createNettyHttpRequest("/verify", HttpMethod.PUT, "some_content");
         when(mockLogFilter.verify(any(Verification.class))).thenReturn("");
 
         // when
-        mockServerHandler.channelRead0(mockChannelHandlerContext, nettyHttpRequest);
+        httpProxyHandler.channelRead0(mockChannelHandlerContext, nettyHttpRequest);
 
         // then - request deserialized
         verify(mockVerificationSerializer).deserialize("some_content");
@@ -311,7 +272,7 @@ public class MockServerHandlerTest {
         when(mockLogFilter.verify(any(Verification.class))).thenReturn("failure response");
 
         // when
-        mockServerHandler.channelRead0(mockChannelHandlerContext, nettyHttpRequest);
+        httpProxyHandler.channelRead0(mockChannelHandlerContext, nettyHttpRequest);
 
         // then - request deserialized
         verify(mockVerificationSerializer).deserialize("some_content");
@@ -334,10 +295,10 @@ public class MockServerHandlerTest {
         DefaultFullHttpRequest nettyHttpRequest = createNettyHttpRequest("/stop", HttpMethod.PUT, "some_content");
 
         // when
-        mockServerHandler.channelRead0(mockChannelHandlerContext, nettyHttpRequest);
+        httpProxyHandler.channelRead0(mockChannelHandlerContext, nettyHttpRequest);
 
         // then - mock server is stopped
-        verify(mockMockServer).stop();
+        verify(mockHttpProxy).stop();
 
         // and - correct response written to ChannelHandlerContext
         ArgumentCaptor<DefaultFullHttpResponse> responseCaptor = ArgumentCaptor.forClass(DefaultFullHttpResponse.class);

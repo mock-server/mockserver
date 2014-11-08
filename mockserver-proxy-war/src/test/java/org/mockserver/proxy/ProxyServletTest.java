@@ -8,6 +8,9 @@ import org.mockito.Mock;
 import org.mockserver.client.http.ApacheHttpClient;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
+import org.mockserver.client.serialization.VerificationSerializer;
+import org.mockserver.filters.RequestFilter;
+import org.mockserver.filters.ResponseFilter;
 import org.mockserver.mappers.HttpServletToMockServerRequestMapper;
 import org.mockserver.mappers.MockServerToHttpServletResponseMapper;
 import org.mockserver.mock.Expectation;
@@ -15,12 +18,17 @@ import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpStatusCode;
-import org.mockserver.proxy.filters.LogFilter;
-import org.mockserver.proxy.filters.ProxyRequestFilter;
-import org.mockserver.proxy.filters.ProxyResponseFilter;
+import org.mockserver.filters.LogFilter;
+import org.mockserver.verify.Verification;
+import org.mockserver.verify.VerificationTimes;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.AdditionalMatchers.aryEq;
 import static org.mockito.Matchers.any;
@@ -42,6 +50,8 @@ public class ProxyServletTest {
     private HttpRequestSerializer mockHttpRequestSerializer;
     @Mock
     private ExpectationSerializer mockExpectationSerializer;
+    @Mock
+    private VerificationSerializer mockVerificationSerializer;
     @InjectMocks
     private ProxyServlet proxyServlet;
     private MockHttpServletRequest mockHttpServletRequest;
@@ -69,7 +79,7 @@ public class ProxyServletTest {
     }
 
     @Test
-    public void shouldProxyGETRequest() throws Exception {
+    public void shouldProxyGETRequest() {
         // when
         proxyServlet.doGet(mockHttpServletRequest, mockHttpServletResponse);
 
@@ -80,7 +90,7 @@ public class ProxyServletTest {
     }
 
     @Test
-    public void shouldProxyHEADRequest() throws Exception {
+    public void shouldProxyHEADRequest() {
         // when
         proxyServlet.doHead(mockHttpServletRequest, mockHttpServletResponse);
 
@@ -91,7 +101,7 @@ public class ProxyServletTest {
     }
 
     @Test
-    public void shouldProxyPOSTRequest() throws Exception {
+    public void shouldProxyPOSTRequest() {
         // when
         proxyServlet.doPost(mockHttpServletRequest, mockHttpServletResponse);
 
@@ -102,7 +112,7 @@ public class ProxyServletTest {
     }
 
     @Test
-    public void shouldProxyPUTRequest() throws Exception {
+    public void shouldProxyPUTRequest() {
         // when
         proxyServlet.doPut(mockHttpServletRequest, mockHttpServletResponse);
 
@@ -113,7 +123,7 @@ public class ProxyServletTest {
     }
 
     @Test
-    public void shouldProxyDELETERequest() throws Exception {
+    public void shouldProxyDELETERequest() {
         // when
         proxyServlet.doDelete(mockHttpServletRequest, mockHttpServletResponse);
 
@@ -124,7 +134,7 @@ public class ProxyServletTest {
     }
 
     @Test
-    public void shouldProxyOPTIONSRequest() throws Exception {
+    public void shouldProxyOPTIONSRequest() {
         // when
         proxyServlet.doOptions(mockHttpServletRequest, mockHttpServletResponse);
 
@@ -135,7 +145,7 @@ public class ProxyServletTest {
     }
 
     @Test
-    public void shouldProxyTRACERequest() throws Exception {
+    public void shouldProxyTRACERequest() {
         // when
         proxyServlet.doTrace(mockHttpServletRequest, mockHttpServletResponse);
 
@@ -146,16 +156,16 @@ public class ProxyServletTest {
     }
 
     @Test
-    public void shouldCallMatchingFiltersBeforeForwardingRequest() throws Exception {
+    public void shouldCallMatchingFiltersBeforeForwardingRequest() {
         // given
         // - add first filter
-        ProxyRequestFilter filter = mock(ProxyRequestFilter.class);
+        RequestFilter filter = mock(RequestFilter.class);
         proxyServlet.withFilter(httpRequest, filter);
         // - add first filter with other request
         HttpRequest someOtherRequest = new HttpRequest().withPath("some_other_path");
         proxyServlet.withFilter(someOtherRequest, filter);
         // - add second filter
-        ProxyRequestFilter someOtherFilter = mock(ProxyRequestFilter.class);
+        RequestFilter someOtherFilter = mock(RequestFilter.class);
         proxyServlet.withFilter(someOtherRequest, someOtherFilter);
 
         // when
@@ -168,17 +178,17 @@ public class ProxyServletTest {
     }
 
     @Test
-    public void shouldApplyFiltersBeforeAndAfterRequest() throws Exception {
+    public void shouldApplyFiltersBeforeAndAfterRequest() {
         // given
         // - add first filter
-        ProxyResponseFilter filter = mock(ProxyResponseFilter.class);
+        ResponseFilter filter = mock(ResponseFilter.class);
         when(filter.onResponse(any(HttpRequest.class), any(HttpResponse.class))).thenReturn(new HttpResponse());
         proxyServlet.withFilter(httpRequest, filter);
         // - add first filter with other request
         HttpRequest someOtherRequest = new HttpRequest().withPath("some_other_path");
         proxyServlet.withFilter(someOtherRequest, filter);
         // - add second filter
-        ProxyResponseFilter someOtherFilter = mock(ProxyResponseFilter.class);
+        ResponseFilter someOtherFilter = mock(ResponseFilter.class);
         proxyServlet.withFilter(someOtherRequest, someOtherFilter);
 
         // when
@@ -191,7 +201,7 @@ public class ProxyServletTest {
     }
 
     @Test
-    public void shouldNotForwardHopByHopHeaders() throws Exception {
+    public void shouldNotForwardHopByHopHeaders() {
         // given
         httpRequest.withHeaders(
                 new Header("some_other_header"),
@@ -215,7 +225,7 @@ public class ProxyServletTest {
     }
 
     @Test
-    public void shouldDumpToLogAsJSON() throws Exception {
+    public void shouldDumpToLogAsJSON() {
         // given
         mockHttpServletRequest.setRequestURI("/dumpToLog");
         mockHttpServletRequest.setContent("body".getBytes());
@@ -230,7 +240,7 @@ public class ProxyServletTest {
     }
 
     @Test
-    public void shouldDumpToLogAsJava() throws Exception {
+    public void shouldDumpToLogAsJava() {
         // given
         mockHttpServletRequest.setRequestURI("/dumpToLog");
         mockHttpServletRequest.setContent("body".getBytes());
@@ -246,7 +256,7 @@ public class ProxyServletTest {
     }
 
     @Test
-    public void shouldRetrieve() throws Exception {
+    public void shouldRetrieve() throws UnsupportedEncodingException {
         // given
         Expectation[] expectations = new Expectation[]{};
         mockHttpServletRequest.setRequestURI("/retrieve");
@@ -265,7 +275,51 @@ public class ProxyServletTest {
     }
 
     @Test
-    public void shouldReset() throws Exception {
+    public void shouldVerifyRequestNotMatching() throws IOException {
+        // given
+        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
+        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/verify");
+        Verification verification = new Verification().withRequest(new HttpRequest()).withTimes(VerificationTimes.once());
+
+        String requestBytes = "requestBytes";
+        httpServletRequest.setContent(requestBytes.getBytes());
+        when(mockVerificationSerializer.deserialize(requestBytes)).thenReturn(verification);
+        when(mockLogFilter.verify(verification)).thenReturn("verification_error");
+
+        // when
+        proxyServlet.doPut(httpServletRequest, httpServletResponse);
+
+        // then
+        verify(mockLogFilter).verify(verification);
+        assertThat(httpServletResponse.getContentAsString(), is("verification_error"));
+        assertThat(httpServletResponse.getStatus(), is(HttpStatusCode.NOT_ACCEPTABLE_406.code()));
+        verifyNoMoreInteractions(mockHttpServletToMockServerRequestMapper);
+    }
+
+    @Test
+    public void shouldVerifyRequestMatching() throws IOException {
+        // given
+        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
+        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/verify");
+        Verification verification = new Verification().withRequest(new HttpRequest()).withTimes(VerificationTimes.once());
+
+        String requestBytes = "requestBytes";
+        httpServletRequest.setContent(requestBytes.getBytes());
+        when(mockVerificationSerializer.deserialize(requestBytes)).thenReturn(verification);
+        when(mockLogFilter.verify(verification)).thenReturn("");
+
+        // when
+        proxyServlet.doPut(httpServletRequest, httpServletResponse);
+
+        // then
+        verify(mockLogFilter).verify(verification);
+        assertThat(httpServletResponse.getContentAsString(), is(""));
+        assertThat(httpServletResponse.getStatus(), is(HttpStatusCode.ACCEPTED_202.code()));
+        verifyNoMoreInteractions(mockHttpServletToMockServerRequestMapper);
+    }
+
+    @Test
+    public void shouldReset() {
         // given
         mockHttpServletRequest.setRequestURI("/reset");
 
@@ -278,7 +332,7 @@ public class ProxyServletTest {
     }
 
     @Test
-    public void shouldClear() throws Exception {
+    public void shouldClear() {
         // given
         mockHttpServletRequest.setRequestURI("/clear");
         mockHttpServletRequest.setContent("body".getBytes());
@@ -293,7 +347,7 @@ public class ProxyServletTest {
     }
 
     @Test
-    public void shouldMapPathWhenContextSet() throws Exception {
+    public void shouldMapPathWhenContextSet() {
         // given
         mockHttpServletRequest.setPathInfo("/clear");
         mockHttpServletRequest.setContextPath("/mockserver");
@@ -310,7 +364,7 @@ public class ProxyServletTest {
     }
 
     @Test
-    public void shouldMapPathWhenContextSetButPathNull() throws Exception {
+    public void shouldMapPathWhenContextSetButPathNull() {
         // given
         mockHttpServletRequest.setPathInfo(null);
         mockHttpServletRequest.setContextPath("/mockserver");

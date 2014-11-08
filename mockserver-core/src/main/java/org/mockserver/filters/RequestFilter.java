@@ -1,11 +1,11 @@
-package org.mockserver.proxy.filters;
+package org.mockserver.filters;
 
 import org.mockserver.model.HttpRequest;
 
 /**
  * @author jamesdbloom
  */
-public interface ProxyRequestFilter {
+public interface RequestFilter extends Filter {
 
     public HttpRequest onRequest(HttpRequest httpRequest);
 

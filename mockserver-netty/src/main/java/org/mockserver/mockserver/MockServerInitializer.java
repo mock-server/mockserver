@@ -8,7 +8,7 @@ import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.ssl.SslHandler;
 import org.mockserver.logging.LoggingHandler;
 import org.mockserver.mock.MockServerMatcher;
-import org.mockserver.proxy.filters.LogFilter;
+import org.mockserver.filters.LogFilter;
 import org.mockserver.socket.SSLFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

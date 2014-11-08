@@ -1,4 +1,4 @@
-package org.mockserver.proxy.filters;
+package org.mockserver.filters;
 
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -6,7 +6,7 @@ import org.mockserver.model.HttpResponse;
 /**
  * @author jamesdbloom
  */
-public interface ProxyResponseFilter {
+public interface ResponseFilter extends Filter {
 
     public HttpResponse onResponse(HttpRequest httpRequest, HttpResponse httpResponse);
 

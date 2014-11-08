@@ -10,7 +10,7 @@ import io.netty.handler.codec.socks.SocksInitRequestDecoder;
 import io.netty.handler.codec.socks.SocksMessageEncoder;
 import io.netty.handler.codec.socks.SocksProtocolVersion;
 import io.netty.handler.ssl.SslHandler;
-import org.mockserver.proxy.filters.LogFilter;
+import org.mockserver.filters.LogFilter;
 import org.mockserver.socket.SSLFactory;
 
 import javax.net.ssl.SSLEngine;

@@ -11,7 +11,7 @@ import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpStatusCode;
-import org.mockserver.proxy.filters.LogFilter;
+import org.mockserver.filters.LogFilter;
 import org.mockserver.streams.IOStreamUtils;
 
 import javax.servlet.http.HttpServlet;
@@ -32,7 +32,7 @@ public class MockServerServlet extends HttpServlet {
     // mappers
     private HttpServletToMockServerRequestMapper httpServletToMockServerRequestMapper = new HttpServletToMockServerRequestMapper();
     private MockServerToHttpServletResponseMapper mockServerToHttpServletResponseMapper = new MockServerToHttpServletResponseMapper();
-    // serializer
+    // serializers
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
     private VerificationSerializer verificationSerializer = new VerificationSerializer();

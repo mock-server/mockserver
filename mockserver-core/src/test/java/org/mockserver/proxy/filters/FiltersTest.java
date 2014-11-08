@@ -1,6 +1,9 @@
 package org.mockserver.proxy.filters;
 
 import org.junit.Test;
+import org.mockserver.filters.Filters;
+import org.mockserver.filters.RequestFilter;
+import org.mockserver.filters.ResponseFilter;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
@@ -19,17 +22,17 @@ public class FiltersTest {
         Filters filters = new Filters();
         // add first filter
         HttpRequest httpRequest = new HttpRequest();
-        ProxyRequestFilter filter = mock(ProxyRequestFilter.class);
+        RequestFilter filter = mock(RequestFilter.class);
         filters.withFilter(httpRequest, filter);
         // add first filter with other request
         HttpRequest someOtherRequest = new HttpRequest().withPath("some_other_path");
         filters.withFilter(someOtherRequest, filter);
         // add second filter
-        ProxyRequestFilter someOtherFilter = mock(ProxyRequestFilter.class);
+        RequestFilter someOtherFilter = mock(RequestFilter.class);
         filters.withFilter(someOtherRequest, someOtherFilter);
 
         // when
-        filters.applyFilters(httpRequest);
+        filters.applyOnRequestFilters(httpRequest);
 
         // then
         verify(filter, times(1)).onRequest(same(httpRequest));
@@ -44,18 +47,18 @@ public class FiltersTest {
         HttpResponse httpResponse = new HttpResponse();
         // add first filter
         HttpRequest httpRequest = new HttpRequest();
-        ProxyResponseFilter filter = mock(ProxyResponseFilter.class);
+        ResponseFilter filter = mock(ResponseFilter.class);
         when(filter.onResponse(any(HttpRequest.class), any(HttpResponse.class))).thenReturn(new HttpResponse());
         filters.withFilter(httpRequest, filter);
         // add first filter with other request
         HttpRequest someOtherRequest = new HttpRequest().withPath("some_other_path");
         filters.withFilter(someOtherRequest, filter);
         // add second filter
-        ProxyResponseFilter someOtherFilter = mock(ProxyResponseFilter.class);
+        ResponseFilter someOtherFilter = mock(ResponseFilter.class);
         filters.withFilter(someOtherRequest, someOtherFilter);
 
         // when
-        filters.applyFilters(httpRequest, httpResponse);
+        filters.applyOnResponseFilters(httpRequest, httpResponse);
 
         // then
         verify(filter, times(1)).onResponse(same(httpRequest), same(httpResponse));
@@ -70,11 +73,11 @@ public class FiltersTest {
         HttpResponse httpResponse = new HttpResponse();
         // add first filter
         HttpRequest httpRequest = new HttpRequest();
-        ProxyResponseFilter filter = mock(ProxyResponseFilter.class);
+        ResponseFilter filter = mock(ResponseFilter.class);
         when(filter.onResponse(any(HttpRequest.class), any(HttpResponse.class))).thenReturn(null);
         filters.withFilter(httpRequest, filter);
 
         // when
-        filters.applyFilters(httpRequest, httpResponse);
+        filters.applyOnResponseFilters(httpRequest, httpResponse);
     }
 }

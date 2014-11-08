@@ -3,19 +3,12 @@ package org.mockserver.mock;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
-import io.netty.handler.codec.http.HttpResponseStatus;
 import org.mockserver.client.serialization.Base64Converter;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.matchers.Times;
-import org.mockserver.mock.action.HttpCallbackActionHandler;
-import org.mockserver.mock.action.HttpForwardActionHandler;
-import org.mockserver.mock.action.HttpResponseActionHandler;
 import org.mockserver.model.*;
-import org.mockserver.proxy.filters.Filters;
-import org.mockserver.proxy.filters.HopByHopHeaderFilter;
-import org.mockserver.proxy.filters.LogFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,8 +17,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static org.mockserver.model.HttpResponse.response;
 
 /**
  * @author jamesdbloom

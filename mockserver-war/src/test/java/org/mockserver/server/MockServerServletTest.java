@@ -14,7 +14,7 @@ import org.mockserver.mock.Expectation;
 import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.model.*;
-import org.mockserver.proxy.filters.LogFilter;
+import org.mockserver.filters.LogFilter;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationTimes;
 import org.springframework.mock.web.MockHttpServletRequest;

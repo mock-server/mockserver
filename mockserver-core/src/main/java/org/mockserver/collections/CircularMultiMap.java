@@ -59,6 +59,16 @@ public class CircularMultiMap<K, V> implements Map<K, V> {
         return values;
     }
 
+    public synchronized List<K> getKeyListForValues() {
+        List<K> values = new ArrayList<K>();
+        for (K key : backingMap.keySet()) {
+            for (V value : backingMap.get(key)) {
+                values.add(key);
+            }
+        }
+        return values;
+    }
+
     @Override
     public synchronized V put(K key, V value) {
         if (containsKey(key)) {

@@ -1,9 +1,9 @@
 package org.mockserver.mock.action;
 
+import org.mockserver.filters.Filters;
+import org.mockserver.filters.HopByHopHeaderFilter;
+import org.mockserver.filters.LogFilter;
 import org.mockserver.model.*;
-import org.mockserver.proxy.filters.Filters;
-import org.mockserver.proxy.filters.HopByHopHeaderFilter;
-import org.mockserver.proxy.filters.LogFilter;
 
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 
@@ -12,33 +12,32 @@ import static org.mockserver.model.HttpResponse.notFoundResponse;
  */
 public class ActionHandler {
 
-    private HttpForwardActionHandler httpForwardActionHandler;
-    private HttpCallbackActionHandler httpCallbackActionHandler;
-    private HttpResponseActionHandler httpResponseActionHandler;
+    private HttpForwardActionHandler httpForwardActionHandler = new HttpForwardActionHandler();
+    private HttpCallbackActionHandler httpCallbackActionHandler = new HttpCallbackActionHandler();
+    private HttpResponseActionHandler httpResponseActionHandler = new HttpResponseActionHandler();
+    private Filters filters = new Filters();
 
     public ActionHandler(LogFilter logFilter) {
-        Filters filters = new Filters();
         filters.withFilter(new org.mockserver.model.HttpRequest(), new HopByHopHeaderFilter());
         filters.withFilter(new org.mockserver.model.HttpRequest(), logFilter);
-        httpResponseActionHandler = new HttpResponseActionHandler(filters);
-        httpCallbackActionHandler = new HttpCallbackActionHandler(filters);
-        httpForwardActionHandler = new HttpForwardActionHandler(filters);
     }
 
     public synchronized HttpResponse processAction(Action action, HttpRequest httpRequest) {
+        HttpResponse httpResponse = notFoundResponse();
+        httpRequest = filters.applyOnRequestFilters(httpRequest);
         if (action != null) {
             switch (action.getType()) {
                 case FORWARD:
-                    return httpForwardActionHandler.handle((HttpForward) action, httpRequest);
+                    httpResponse = httpForwardActionHandler.handle((HttpForward) action, httpRequest);
+                    break;
                 case CALLBACK:
-                    return httpCallbackActionHandler.handle((HttpCallback) action, httpRequest);
+                    httpResponse = httpCallbackActionHandler.handle((HttpCallback) action, httpRequest);
+                    break;
                 case RESPONSE:
-                    return httpResponseActionHandler.handle((HttpResponse) action, httpRequest);
-                default:
-                    return notFoundResponse();
+                    httpResponse = httpResponseActionHandler.handle((HttpResponse) action);
+                    break;
             }
-        } else {
-            return notFoundResponse();
         }
+        return filters.applyOnResponseFilters(httpRequest, httpResponse);
     }
 }

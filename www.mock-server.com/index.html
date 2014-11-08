@@ -1030,7 +1030,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
      * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">times</span>       the number of times this request must be matched
      * <span class="javadoc_param_annotation">@throws</span> <span class="javadoc_param_name">AssertionError</span> if the request has not been found
      */</span>
-    <span class="keyword">public</span> MockServerClient verify(HttpRequest httpRequest, org.mockserver.client.proxy.Times times); <span class="keyword">throws</span> AssertionError
+    <span class="keyword">public</span> MockServerClient verify(HttpRequest httpRequest, org.mockserver.verify.VerificationTimes times); <span class="keyword">throws</span> AssertionError
 
     <span class="comment">/**
      * Retrieve the recorded requests that match the httpRequest parameter as expectations, use null for the parameter to retrieve all requests
@@ -3133,7 +3133,7 @@ AsyncHttpClient asyncHttpClient = <span class="keyword">new</span> AsyncHttpClie
         Times.exactly(<span class="numeric_literal">1</span>)
 );</code></pre>
 
-<p>The org.mockserver.client.proxy.Times class is used to specify how many times you want MockServer to match a request:</p>
+<p>The org.mockserver.verify.VerificationTimes class is used to specify how many times you want MockServer to match a request:</p>
 
 <p>To create an instance of Times use one of the static factory methods:</p>
 

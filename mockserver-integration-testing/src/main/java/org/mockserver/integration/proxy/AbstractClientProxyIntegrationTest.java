@@ -23,10 +23,10 @@ import java.net.ProxySelector;
 import java.net.Socket;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockserver.client.proxy.Times.atLeast;
-import static org.mockserver.client.proxy.Times.exactly;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.test.Assert.assertContains;
+import static org.mockserver.verify.VerificationTimes.atLeast;
+import static org.mockserver.verify.VerificationTimes.exactly;
 
 /**
  * @author jamesdbloom

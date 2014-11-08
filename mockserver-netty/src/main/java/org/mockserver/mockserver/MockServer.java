@@ -9,7 +9,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.mockserver.mock.MockServerMatcher;
-import org.mockserver.proxy.filters.LogFilter;
+import org.mockserver.filters.LogFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

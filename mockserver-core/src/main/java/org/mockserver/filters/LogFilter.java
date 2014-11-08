@@ -1,7 +1,8 @@
-package org.mockserver.proxy.filters;
+package org.mockserver.filters;
 
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
+import org.mockserver.collections.CircularLinkedList;
 import org.mockserver.collections.CircularMultiMap;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatcherBuilder;
@@ -23,12 +24,14 @@ import static org.mockserver.model.HttpResponse.notFoundResponse;
 /**
  * @author jamesdbloom
  */
-public class LogFilter implements ProxyResponseFilter {
+public class LogFilter implements ResponseFilter, RequestFilter {
 
     private final CircularMultiMap<HttpRequest, HttpResponse> requestResponseLog = new CircularMultiMap<HttpRequest, HttpResponse>(100, 100);
+    private final CircularLinkedList<HttpRequest> requestLog = new CircularLinkedList<HttpRequest>(100);
     private final MatcherBuilder matcherBuilder = new MatcherBuilder();
     private Logger requestLogger = LoggerFactory.getLogger("REQUEST");
 
+    @Override
     public synchronized HttpResponse onResponse(HttpRequest httpRequest, HttpResponse httpResponse) {
         if (httpRequest != null && httpResponse != null) {
             requestResponseLog.put(httpRequest, httpResponse);
@@ -36,6 +39,12 @@ public class LogFilter implements ProxyResponseFilter {
             requestResponseLog.put(httpRequest, notFoundResponse());
         }
         return httpResponse;
+    }
+
+    @Override
+    public synchronized HttpRequest onRequest(HttpRequest httpRequest) {
+        requestLog.add(httpRequest);
+        return httpRequest;
     }
 
     public synchronized List<HttpResponse> httpResponses(HttpRequest httpRequest) {
@@ -61,9 +70,8 @@ public class LogFilter implements ProxyResponseFilter {
     }
 
     public synchronized void reset() {
-        synchronized (this.requestResponseLog) {
-            requestResponseLog.clear();
-        }
+        requestResponseLog.clear();
+        requestLog.clear();
     }
 
     public synchronized void clear(HttpRequest httpRequest) {
@@ -71,9 +79,12 @@ public class LogFilter implements ProxyResponseFilter {
             HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
             for (HttpRequest key : new LinkedHashSet<HttpRequest>(requestResponseLog.keySet())) {
                 if (httpRequestMatcher.matches(key)) {
-                    synchronized (this.requestResponseLog) {
-                        requestResponseLog.removeAll(key);
-                    }
+                    requestResponseLog.removeAll(key);
+                }
+            }
+            for (HttpRequest value : new LinkedHashSet<HttpRequest>(requestLog)) {
+                if (httpRequestMatcher.matches(value)) {
+                    requestLog.remove(value);
                 }
             }
         } else {
@@ -130,27 +141,27 @@ public class LogFilter implements ProxyResponseFilter {
 
     public synchronized String verify(Verification verification) {
         if (verification != null) {
-            List<HttpRequest> requests = new ArrayList<HttpRequest>();
+            List<HttpRequest> matchingRequests = new ArrayList<HttpRequest>();
             if (verification.getHttpRequest() != null) {
                 HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(verification.getHttpRequest());
-                for (HttpRequest httpRequest : requestResponseLog.keySet()) {
+                for (HttpRequest httpRequest : requestLog) {
                     if (httpRequestMatcher.matches(httpRequest)) {
-                        requests.add(httpRequest);
+                        matchingRequests.add(httpRequest);
                     }
                 }
             }
 
-            HttpRequest[] httpRequests = requestResponseLog.keySet().toArray(new HttpRequest[requests.size()]);
-            if (requests.isEmpty()) {
-                return "expected:<" + httpRequestSerializer.serialize(verification.getHttpRequest()) + "> but was:<" + (httpRequests.length == 1 ? httpRequestSerializer.serialize(httpRequests[0]) : httpRequestSerializer.serialize(httpRequests)) + ">";
+            HttpRequest[] allRequestsArray = requestLog.toArray(new HttpRequest[requestLog.size()]);
+            if (verification.getTimes().getCount() != 0 && matchingRequests.isEmpty()) {
+                return "Request not found " + verification.getTimes() + " expected:<" + httpRequestSerializer.serialize(verification.getHttpRequest()) + "> but was:<" + (allRequestsArray.length == 1 ? httpRequestSerializer.serialize(allRequestsArray[0]) : httpRequestSerializer.serialize(allRequestsArray)) + ">";
             }
             if (verification.getTimes().isExact()) {
-                if (requests.size() != verification.getTimes().getCount()) {
-                    return "expected:<" + httpRequestSerializer.serialize(verification.getHttpRequest()) + "> but was:<" + (httpRequests.length == 1 ? httpRequestSerializer.serialize(httpRequests[0]) : httpRequestSerializer.serialize(httpRequests)) + ">";
+                if (matchingRequests.size() != verification.getTimes().getCount()) {
+                    return "Request not found " + verification.getTimes() + " expected:<" + httpRequestSerializer.serialize(verification.getHttpRequest()) + "> but was:<" + (allRequestsArray.length == 1 ? httpRequestSerializer.serialize(allRequestsArray[0]) : httpRequestSerializer.serialize(allRequestsArray)) + ">";
                 }
             } else {
-                if (requests.size() < verification.getTimes().getCount()) {
-                    return "expected:<" + httpRequestSerializer.serialize(verification.getHttpRequest()) + "> but was:<" + (httpRequests.length == 1 ? httpRequestSerializer.serialize(httpRequests[0]) : httpRequestSerializer.serialize(httpRequests)) + ">";
+                if (matchingRequests.size() < verification.getTimes().getCount()) {
+                    return "Request not found " + verification.getTimes() + " expected:<" + httpRequestSerializer.serialize(verification.getHttpRequest()) + "> but was:<" + (allRequestsArray.length == 1 ? httpRequestSerializer.serialize(allRequestsArray[0]) : httpRequestSerializer.serialize(allRequestsArray)) + ">";
                 }
             }
         }

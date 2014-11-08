@@ -7,7 +7,6 @@ import org.mockserver.model.HttpForward;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.Parameter;
-import org.mockserver.proxy.filters.Filters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,18 +18,13 @@ import static org.mockserver.model.Header.header;
  * @author jamesdbloom
  */
 public class HttpForwardActionHandler {
-    private final Filters filters;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private ApacheHttpClient apacheHttpClient = new ApacheHttpClient(true);
 
-    public HttpForwardActionHandler(Filters filters) {
-        this.filters = filters;
-    }
-
     public HttpResponse handle(HttpForward httpForward, HttpRequest httpRequest) {
         updateURLAndHost(httpRequest, httpForward);
-        return sendRequest(filters.applyFilters(httpRequest));
+        return sendRequest(httpRequest);
     }
 
     private void updateURLAndHost(HttpRequest httpRequest, HttpForward httpForward) {
@@ -54,7 +48,7 @@ public class HttpForwardActionHandler {
 
     private HttpResponse sendRequest(HttpRequest httpRequest) {
         if (httpRequest != null) {
-            return filters.applyFilters(httpRequest, apacheHttpClient.sendRequest(httpRequest, false));
+            return apacheHttpClient.sendRequest(httpRequest, false);
         } else {
             return null;
         }
