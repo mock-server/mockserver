@@ -121,7 +121,6 @@ describe("proxyClient client:", function () {
 
         // when
         client.clear('/somePath');
-        client.clear('/somePath');
 
         // then
         expect(function () {

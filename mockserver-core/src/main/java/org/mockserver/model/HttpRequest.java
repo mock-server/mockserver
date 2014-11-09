@@ -26,6 +26,9 @@ public class HttpRequest extends EqualsHashCodeToString {
     public static HttpRequest request() {
         return new HttpRequest();
     }
+    public static HttpRequest request(String path) {
+        return new HttpRequest().withPath(path);
+    }
 
     /**
      * The HTTP method to match on such as "GET" or "POST"

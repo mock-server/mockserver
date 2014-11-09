@@ -22,6 +22,9 @@ public class HttpResponse extends Action {
     public static HttpResponse response() {
         return new HttpResponse();
     }
+    public static HttpResponse response(String body) {
+        return new HttpResponse().withBody(body);
+    }
     public static HttpResponse notFoundResponse() {
         return new HttpResponse().withStatusCode(404);
     }

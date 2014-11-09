@@ -33,6 +33,7 @@ public class VerificationTimesTest {
         assertThat(times.isExact(), is(true));
         assertThat(times.getCount(), is(2));
     }
+
     @Test
     public void shouldCreateCorrectObjectForOnce() {
         // when
@@ -43,4 +44,15 @@ public class VerificationTimesTest {
         assertThat(times.getCount(), is(1));
     }
 
+    @Test
+    public void shouldGenerateCorrectToString() {
+        // then
+        assertThat(once().toString(), is("exactly once"));
+        assertThat(atLeast(0).toString(), is("at least 0 times"));
+        assertThat(atLeast(1).toString(), is("at least once"));
+        assertThat(atLeast(2).toString(), is("at least 2 times"));
+        assertThat(exactly(0).toString(), is("exactly 0 times"));
+        assertThat(exactly(1).toString(), is("exactly once"));
+        assertThat(exactly(2).toString(), is("exactly 2 times"));
+    }
 }

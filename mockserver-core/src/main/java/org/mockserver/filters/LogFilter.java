@@ -14,10 +14,7 @@ import org.mockserver.verify.Verification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 
@@ -61,7 +58,7 @@ public class LogFilter implements ResponseFilter, RequestFilter {
     public synchronized List<HttpRequest> httpRequests(HttpRequest httpRequest) {
         List<HttpRequest> httpRequests = new ArrayList<HttpRequest>();
         HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
-        for (HttpRequest loggedHttpRequest : requestResponseLog.keySet()) {
+        for (HttpRequest loggedHttpRequest : requestLog) {
             if (httpRequestMatcher.matches(loggedHttpRequest)) {
                 httpRequests.add(loggedHttpRequest);
             }
@@ -77,12 +74,12 @@ public class LogFilter implements ResponseFilter, RequestFilter {
     public synchronized void clear(HttpRequest httpRequest) {
         if (httpRequest != null) {
             HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
-            for (HttpRequest key : new LinkedHashSet<HttpRequest>(requestResponseLog.keySet())) {
+            for (HttpRequest key : new LinkedList<HttpRequest>(requestResponseLog.keySet())) {
                 if (httpRequestMatcher.matches(key)) {
                     requestResponseLog.removeAll(key);
                 }
             }
-            for (HttpRequest value : new LinkedHashSet<HttpRequest>(requestLog)) {
+            for (HttpRequest value : new LinkedList<HttpRequest>(requestLog)) {
                 if (httpRequestMatcher.matches(value)) {
                     requestLog.remove(value);
                 }
