@@ -22,17 +22,18 @@ public class VerificationSerializerIntegrationTest {
         // given
         String requestBytes = "{" + System.getProperty("line.separator") +
                 "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"path\" : \"somepath\"" + System.getProperty("line.separator") +
+                "    \"path\" : \"somepath\"," + System.getProperty("line.separator") +
+                "    \"random_field\" : \"random_value\"" + System.getProperty("line.separator") +
                 "  }" + System.getProperty("line.separator") +
                 "}";
 
         // when
-        Verification expectation = new VerificationSerializer().deserialize(requestBytes);
+        Verification verification = new VerificationSerializer().deserialize(requestBytes);
 
         // then
         assertEquals(new VerificationDTO()
                 .setHttpRequest(new HttpRequestDTO(request().withPath("somepath")))
-                .buildObject(), expectation);
+                .buildObject(), verification);
     }
 
     @Test
@@ -50,13 +51,13 @@ public class VerificationSerializerIntegrationTest {
                 "}";
 
         // when
-        Verification expectation = new VerificationSerializer().deserialize(requestBytes);
+        Verification verification = new VerificationSerializer().deserialize(requestBytes);
 
         // then
         assertEquals(new VerificationDTO()
                 .setHttpRequest(new HttpRequestDTO(request().withMethod("GET").withPath("somepath")))
                 .setTimes(new VerificationTimesDTO(VerificationTimes.exactly(2)))
-                .buildObject(), expectation);
+                .buildObject(), verification);
     }
 
     @Test
@@ -67,12 +68,12 @@ public class VerificationSerializerIntegrationTest {
                 "}";
 
         // when
-        Verification expectation = new VerificationSerializer().deserialize(requestBytes);
+        Verification verification = new VerificationSerializer().deserialize(requestBytes);
 
         // then
         assertEquals(new VerificationDTO()
                 .setHttpRequest(new HttpRequestDTO(request()))
-                .buildObject(), expectation);
+                .buildObject(), verification);
     }
 
     @Test

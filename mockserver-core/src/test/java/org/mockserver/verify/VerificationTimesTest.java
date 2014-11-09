@@ -1,4 +1,4 @@
-package org.mockserver.model;
+package org.mockserver.verify;
 
 import org.junit.Test;
 import org.mockserver.verify.VerificationTimes;

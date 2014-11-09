@@ -11,10 +11,14 @@ import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.verify.Verification;
+import org.mockserver.verify.VerificationChain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 
@@ -159,6 +163,30 @@ public class LogFilter implements ResponseFilter, RequestFilter {
             } else {
                 if (matchingRequests.size() < verification.getTimes().getCount()) {
                     return "Request not found " + verification.getTimes() + " expected:<" + httpRequestSerializer.serialize(verification.getHttpRequest()) + "> but was:<" + (allRequestsArray.length == 1 ? httpRequestSerializer.serialize(allRequestsArray[0]) : httpRequestSerializer.serialize(allRequestsArray)) + ">";
+                }
+            }
+        }
+
+        return "";
+    }
+
+    public String verify(VerificationChain verificationChain) {
+        if (verificationChain != null) {
+            int requestLogCounter = 0;
+
+            for (HttpRequest verificationHttpRequest : verificationChain.getHttpRequests()) {
+                if (verificationHttpRequest != null) {
+                    HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(verificationHttpRequest);
+                    boolean foundRequest = false;
+                    for (; !foundRequest && requestLogCounter < requestLog.size(); requestLogCounter++) {
+                        if (httpRequestMatcher.matches(requestLog.get(requestLogCounter))) {
+                            // move on to next request
+                            foundRequest = true;
+                        }
+                    }
+                    if (!foundRequest) {
+                        return "Request not found " + verificationHttpRequest + " expected:<" + httpRequestSerializer.serialize(verificationChain.getHttpRequests()) + "> but was:<" + httpRequestSerializer.serialize(requestLog) + ">";
+                    }
                 }
             }
         }

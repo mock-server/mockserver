@@ -13,7 +13,7 @@ import static org.mockserver.verify.VerificationTimes.exactly;
 /**
  * @author jamesdbloom
  */
-public class LogFilterVerifcationTest {
+public class LogFilterVerificationTest {
 
     @Test
     public void shouldPassVerificationWithNullRequest() {
@@ -28,7 +28,7 @@ public class LogFilterVerifcationTest {
         logFilter.onRequest(httpRequest);
 
         // then
-        assertThat(logFilter.verify(null), is(""));
+        assertThat(logFilter.verify((Verification)null), is(""));
     }
 
     @Test
@@ -162,7 +162,7 @@ public class LogFilterVerifcationTest {
         LogFilter logFilter = new LogFilter();
 
         // then
-        assertThat(logFilter.verify(null), is(""));
+        assertThat(logFilter.verify((Verification)null), is(""));
     }
 
     @Test

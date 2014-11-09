@@ -86,8 +86,8 @@ public class HttpRequestSerializerIntegrationTest {
 
         // then
         assertEquals(new HttpRequestDTO()
-                        .setBody(BodyDTO.createDTO(exact("somebody")))
-                        .buildObject(), expectation);
+                .setBody(BodyDTO.createDTO(exact("somebody")))
+                .buildObject(), expectation);
     }
 
     @Test
@@ -124,8 +124,8 @@ public class HttpRequestSerializerIntegrationTest {
 
         // then
         assertEquals(new HttpRequestDTO()
-                        .setBody(BodyDTO.createDTO(json("{ \"key\": \"value\" }")))
-                        .buildObject(), expectation);
+                .setBody(BodyDTO.createDTO(json("{ \"key\": \"value\" }")))
+                .buildObject(), expectation);
     }
 
     @Test
@@ -143,8 +143,8 @@ public class HttpRequestSerializerIntegrationTest {
 
         // then
         assertEquals(new HttpRequestDTO()
-                        .setBody(BodyDTO.createDTO(regex("some[a-z]{3}")))
-                        .buildObject(), expectation);
+                .setBody(BodyDTO.createDTO(regex("some[a-z]{3}")))
+                .buildObject(), expectation);
     }
 
     @Test
@@ -162,8 +162,8 @@ public class HttpRequestSerializerIntegrationTest {
 
         // then
         assertEquals(new HttpRequestDTO()
-                        .setBody(BodyDTO.createDTO(xpath("/element[key = 'some_key' and value = 'some_value']")))
-                        .buildObject(), expectation);
+                .setBody(BodyDTO.createDTO(xpath("/element[key = 'some_key' and value = 'some_value']")))
+                .buildObject(), expectation);
     }
 
     @Test
@@ -267,6 +267,86 @@ public class HttpRequestSerializerIntegrationTest {
                 "    \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
                 "  } ]" + System.getProperty("line.separator") +
                 "}", jsonExpectation);
+    }
+
+    @Test
+    public void shouldSerializeArray() throws IOException {
+        // when
+        String jsonExpectation = new HttpRequestSerializer().serialize(
+                new HttpRequest[]{
+                        new HttpRequestDTO()
+                                .setMethod("some_method_one")
+                                .setPath("some_path_one")
+                                .setBody(BodyDTO.createDTO(new StringBody("some_body_one", Body.Type.STRING)))
+                                .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("some_header_name_one", Arrays.asList("some_header_value_one")))))
+                                .buildObject(),
+                        new HttpRequestDTO()
+                                .setMethod("some_method_two")
+                                .setPath("some_path_two")
+                                .setBody(BodyDTO.createDTO(new StringBody("some_body_two", Body.Type.STRING)))
+                                .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("some_header_name_two", Arrays.asList("some_header_value_two")))))
+                                .buildObject()
+                }
+        );
+
+        // then
+        assertEquals("[ {" + System.getProperty("line.separator") +
+                "  \"method\" : \"some_method_one\"," + System.getProperty("line.separator") +
+                "  \"path\" : \"some_path_one\"," + System.getProperty("line.separator") +
+                "  \"body\" : \"some_body_one\"," + System.getProperty("line.separator") +
+                "  \"headers\" : [ {" + System.getProperty("line.separator") +
+                "    \"name\" : \"some_header_name_one\"," + System.getProperty("line.separator") +
+                "    \"values\" : [ \"some_header_value_one\" ]" + System.getProperty("line.separator") +
+                "  } ]" + System.getProperty("line.separator") +
+                "}, {" + System.getProperty("line.separator") +
+                "  \"method\" : \"some_method_two\"," + System.getProperty("line.separator") +
+                "  \"path\" : \"some_path_two\"," + System.getProperty("line.separator") +
+                "  \"body\" : \"some_body_two\"," + System.getProperty("line.separator") +
+                "  \"headers\" : [ {" + System.getProperty("line.separator") +
+                "    \"name\" : \"some_header_name_two\"," + System.getProperty("line.separator") +
+                "    \"values\" : [ \"some_header_value_two\" ]" + System.getProperty("line.separator") +
+                "  } ]" + System.getProperty("line.separator") +
+                "} ]", jsonExpectation);
+    }
+
+    @Test
+    public void shouldSerializeList() throws IOException {
+        // when
+        String jsonExpectation = new HttpRequestSerializer().serialize(
+                Arrays.asList(
+                        new HttpRequestDTO()
+                                .setMethod("some_method_one")
+                                .setPath("some_path_one")
+                                .setBody(BodyDTO.createDTO(new StringBody("some_body_one", Body.Type.STRING)))
+                                .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("some_header_name_one", Arrays.asList("some_header_value_one")))))
+                                .buildObject(),
+                        new HttpRequestDTO()
+                                .setMethod("some_method_two")
+                                .setPath("some_path_two")
+                                .setBody(BodyDTO.createDTO(new StringBody("some_body_two", Body.Type.STRING)))
+                                .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("some_header_name_two", Arrays.asList("some_header_value_two")))))
+                                .buildObject()
+                )
+        );
+
+        // then
+        assertEquals("[ {" + System.getProperty("line.separator") +
+                "  \"method\" : \"some_method_one\"," + System.getProperty("line.separator") +
+                "  \"path\" : \"some_path_one\"," + System.getProperty("line.separator") +
+                "  \"body\" : \"some_body_one\"," + System.getProperty("line.separator") +
+                "  \"headers\" : [ {" + System.getProperty("line.separator") +
+                "    \"name\" : \"some_header_name_one\"," + System.getProperty("line.separator") +
+                "    \"values\" : [ \"some_header_value_one\" ]" + System.getProperty("line.separator") +
+                "  } ]" + System.getProperty("line.separator") +
+                "}, {" + System.getProperty("line.separator") +
+                "  \"method\" : \"some_method_two\"," + System.getProperty("line.separator") +
+                "  \"path\" : \"some_path_two\"," + System.getProperty("line.separator") +
+                "  \"body\" : \"some_body_two\"," + System.getProperty("line.separator") +
+                "  \"headers\" : [ {" + System.getProperty("line.separator") +
+                "    \"name\" : \"some_header_name_two\"," + System.getProperty("line.separator") +
+                "    \"values\" : [ \"some_header_value_two\" ]" + System.getProperty("line.separator") +
+                "  } ]" + System.getProperty("line.separator") +
+                "} ]", jsonExpectation);
     }
 
     @Test

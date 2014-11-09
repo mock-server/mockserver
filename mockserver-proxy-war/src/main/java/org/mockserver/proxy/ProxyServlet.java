@@ -3,6 +3,7 @@ package org.mockserver.proxy;
 import org.mockserver.client.http.ApacheHttpClient;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
+import org.mockserver.client.serialization.VerificationChainSerializer;
 import org.mockserver.client.serialization.VerificationSerializer;
 import org.mockserver.filters.*;
 import org.mockserver.mappers.HttpServletToMockServerRequestMapper;
@@ -33,6 +34,7 @@ public class ProxyServlet extends HttpServlet {
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
     private VerificationSerializer verificationSerializer = new VerificationSerializer();
+    private VerificationChainSerializer verificationChainSerializer = new VerificationChainSerializer();
 
     public ProxyServlet() {
         filters.withFilter(new HttpRequest(), new HopByHopHeaderFilter());
@@ -96,6 +98,14 @@ public class ProxyServlet extends HttpServlet {
             httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
         } else if (requestPath.equals("/verify")) {
             String result = logFilter.verify(verificationSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
+            if (result.isEmpty()) {
+                httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
+            } else {
+                IOStreamUtils.writeToOutputStream(result.getBytes(), httpServletResponse);
+                httpServletResponse.setStatus(HttpStatusCode.NOT_ACCEPTABLE_406.code());
+            }
+        } else if (requestPath.equals("/verifyChain")) {
+            String result = logFilter.verify(verificationChainSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
             if (result.isEmpty()) {
                 httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
             } else {

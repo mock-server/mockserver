@@ -6,6 +6,7 @@ import io.netty.channel.*;
 import io.netty.handler.codec.http.*;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
+import org.mockserver.client.serialization.VerificationChainSerializer;
 import org.mockserver.client.serialization.VerificationSerializer;
 import org.mockserver.mappers.MockServerToNettyResponseMapper;
 import org.mockserver.mappers.NettyToMockServerRequestMapper;
@@ -39,6 +40,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<FullHttpReque
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
     private VerificationSerializer verificationSerializer = new VerificationSerializer();
+    private VerificationChainSerializer verificationChainSerializer = new VerificationChainSerializer();
 
     public MockServerHandler(MockServerMatcher mockServerMatcher, LogFilter logFilter, MockServer server, boolean secure) {
         this.mockServerMatcher = mockServerMatcher;
@@ -86,6 +88,15 @@ public class MockServerHandler extends SimpleChannelInboundHandler<FullHttpReque
             } else if (mappedRequest.matches(HttpMethod.PUT, "/verify")) {
 
                 String result = logFilter.verify(verificationSerializer.deserialize(mappedRequest.content()));
+                if (result.isEmpty()) {
+                    writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
+                } else {
+                    writeResponse(ctx, request, HttpResponseStatus.NOT_ACCEPTABLE, Unpooled.copiedBuffer(result.getBytes()));
+                }
+
+            } else if (mappedRequest.matches(HttpMethod.PUT, "/verifyChain")) {
+
+                String result = logFilter.verify(verificationChainSerializer.deserialize(mappedRequest.content()));
                 if (result.isEmpty()) {
                     writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
                 } else {

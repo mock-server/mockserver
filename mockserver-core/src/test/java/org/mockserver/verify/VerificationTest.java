@@ -1,8 +1,7 @@
-package org.mockserver.model;
+package org.mockserver.verify;
 
 import org.junit.Test;
-import org.mockserver.verify.Verification;
-import org.mockserver.verify.VerificationTimes;
+import org.mockserver.model.HttpRequest;
 
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;

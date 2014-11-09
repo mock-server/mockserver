@@ -63,7 +63,6 @@ public class VerificationDTOTest {
         assertThat(verificationDTO.getTimes(), is(times));
     }
 
-
     @Test
     public void shouldHandleNullObjectInput() {
         // when

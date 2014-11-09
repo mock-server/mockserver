@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * @author jamesdbloom
@@ -48,6 +49,10 @@ public class HttpRequestSerializer {
             }
         }
         return httpRequest;
+    }
+
+    public String serialize(List<HttpRequest> httpRequests) {
+        return serialize(httpRequests.toArray(new HttpRequest[httpRequests.size()]));
     }
 
     public String serialize(HttpRequest[] httpRequest) {

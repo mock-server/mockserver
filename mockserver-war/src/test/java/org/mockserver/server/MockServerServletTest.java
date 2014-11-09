@@ -6,6 +6,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
+import org.mockserver.client.serialization.VerificationChainSerializer;
 import org.mockserver.client.serialization.VerificationSerializer;
 import org.mockserver.mappers.HttpServletToMockServerRequestMapper;
 import org.mockserver.mappers.MockServerToHttpServletResponseMapper;
@@ -16,6 +17,7 @@ import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.model.*;
 import org.mockserver.filters.LogFilter;
 import org.mockserver.verify.Verification;
+import org.mockserver.verify.VerificationChain;
 import org.mockserver.verify.VerificationTimes;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -29,6 +31,7 @@ import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockserver.model.HttpRequest.request;
 
 /**
  * @author jamesdbloom
@@ -47,6 +50,8 @@ public class MockServerServletTest {
     private HttpRequestSerializer mockHttpRequestSerializer;
     @Mock
     private VerificationSerializer mockVerificationSerializer;
+    @Mock
+    private VerificationChainSerializer mockVerificationChainSerializer;
     @Mock
     private ActionHandler mockActionHandler;
     @Mock
@@ -348,6 +353,50 @@ public class MockServerServletTest {
         String requestBytes = "requestBytes";
         httpServletRequest.setContent(requestBytes.getBytes());
         when(mockVerificationSerializer.deserialize(requestBytes)).thenReturn(verification);
+        when(mockLogFilter.verify(verification)).thenReturn("");
+
+        // when
+        mockServerServlet.doPut(httpServletRequest, httpServletResponse);
+
+        // then
+        verify(mockLogFilter).verify(verification);
+        assertThat(httpServletResponse.getContentAsString(), is(""));
+        assertThat(httpServletResponse.getStatus(), is(HttpStatusCode.ACCEPTED_202.code()));
+        verifyNoMoreInteractions(mockHttpServletToMockServerRequestMapper);
+    }
+
+    @Test
+    public void shouldVerifyChainRequestNotMatching() throws IOException {
+        // given
+        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
+        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/verifyChain");
+        VerificationChain verification = new VerificationChain().withRequests(request("one"), request("two"));
+
+        String requestBytes = "requestBytes";
+        httpServletRequest.setContent(requestBytes.getBytes());
+        when(mockVerificationChainSerializer.deserialize(requestBytes)).thenReturn(verification);
+        when(mockLogFilter.verify(verification)).thenReturn("verification_error");
+
+        // when
+        mockServerServlet.doPut(httpServletRequest, httpServletResponse);
+
+        // then
+        verify(mockLogFilter).verify(verification);
+        assertThat(httpServletResponse.getContentAsString(), is("verification_error"));
+        assertThat(httpServletResponse.getStatus(), is(HttpStatusCode.NOT_ACCEPTABLE_406.code()));
+        verifyNoMoreInteractions(mockHttpServletToMockServerRequestMapper);
+    }
+
+    @Test
+    public void shouldVerifyChainRequestMatching() throws IOException {
+        // given
+        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
+        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/verifyChain");
+        VerificationChain verification = new VerificationChain().withRequests(request("one"), request("two"));
+
+        String requestBytes = "requestBytes";
+        httpServletRequest.setContent(requestBytes.getBytes());
+        when(mockVerificationChainSerializer.deserialize(requestBytes)).thenReturn(verification);
         when(mockLogFilter.verify(verification)).thenReturn("");
 
         // when

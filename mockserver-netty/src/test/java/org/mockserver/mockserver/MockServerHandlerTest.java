@@ -10,6 +10,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
+import org.mockserver.client.serialization.VerificationChainSerializer;
 import org.mockserver.client.serialization.VerificationSerializer;
 import org.mockserver.mappers.MockServerToNettyResponseMapper;
 import org.mockserver.mappers.NettyToMockServerRequestMapper;
@@ -22,6 +23,7 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.filters.LogFilter;
 import org.mockserver.verify.Verification;
+import org.mockserver.verify.VerificationChain;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -50,6 +52,8 @@ public class MockServerHandlerTest {
     private HttpCallback mockHttpCallback;
     @Mock
     private Verification mockVerification;
+    @Mock
+    private VerificationChain mockVerificationChain;
     // mockserver
     private LogFilter mockLogFilter;
     private MockServerMatcher mockMockServerMatcher;
@@ -69,6 +73,8 @@ public class MockServerHandlerTest {
     private HttpRequestSerializer mockHttpRequestSerializer;
     @Mock
     private VerificationSerializer mockVerificationSerializer;
+    @Mock
+    private VerificationChainSerializer mockVerificationChainSerializer;
     // netty
     @Mock
     private ChannelHandlerContext mockChannelHandlerContext;
@@ -93,6 +99,7 @@ public class MockServerHandlerTest {
         when(mockExpectationSerializer.deserialize(anyString())).thenReturn(mockExpectation);
         when(mockHttpRequestSerializer.deserialize(anyString())).thenReturn(mockHttpRequest);
         when(mockVerificationSerializer.deserialize(anyString())).thenReturn(mockVerification);
+        when(mockVerificationChainSerializer.deserialize(anyString())).thenReturn(mockVerificationChain);
 
         // given - an expectation that can be setup
         when(mockMockServerMatcher.when(any(HttpRequest.class), any(Times.class))).thenReturn(mockExpectation);
@@ -318,6 +325,54 @@ public class MockServerHandlerTest {
 
         // and - log filter called
         verify(mockLogFilter).verify(mockVerification);
+
+        // and - correct response written to ChannelHandlerContext
+        ArgumentCaptor<DefaultFullHttpResponse> responseCaptor = ArgumentCaptor.forClass(DefaultFullHttpResponse.class);
+        verify(mockChannelHandlerContext).write(responseCaptor.capture());
+        DefaultFullHttpResponse defaultFullHttpResponse = responseCaptor.getValue();
+        assertThat(defaultFullHttpResponse.getStatus(), is(HttpResponseStatus.NOT_ACCEPTABLE));
+        assertThat(defaultFullHttpResponse.getProtocolVersion(), is(HttpVersion.HTTP_1_1));
+        assertThat(defaultFullHttpResponse.content().array(), is("failure response".getBytes()));
+    }
+
+    @Test
+    public void shouldVerifyChainPassingRequest() {
+        // given
+        DefaultFullHttpRequest nettyHttpRequest = createNettyHttpRequest("/verifyChain", HttpMethod.PUT, "some_content");
+        when(mockLogFilter.verify(any(VerificationChain.class))).thenReturn("");
+
+        // when
+        mockServerHandler.channelRead0(mockChannelHandlerContext, nettyHttpRequest);
+
+        // then - request deserialized
+        verify(mockVerificationChainSerializer).deserialize("some_content");
+
+        // and - log filter called
+        verify(mockLogFilter).verify(mockVerificationChain);
+
+        // and - correct response written to ChannelHandlerContext
+        ArgumentCaptor<DefaultFullHttpResponse> responseCaptor = ArgumentCaptor.forClass(DefaultFullHttpResponse.class);
+        verify(mockChannelHandlerContext).write(responseCaptor.capture());
+        DefaultFullHttpResponse defaultFullHttpResponse = responseCaptor.getValue();
+        assertThat(defaultFullHttpResponse.getStatus(), is(HttpResponseStatus.ACCEPTED));
+        assertThat(defaultFullHttpResponse.getProtocolVersion(), is(HttpVersion.HTTP_1_1));
+        assertThat(defaultFullHttpResponse.content().readableBytes(), is(0));
+    }
+
+    @Test
+    public void shouldVerifyChainFailingRequest() {
+        // given
+        DefaultFullHttpRequest nettyHttpRequest = createNettyHttpRequest("/verifyChain", HttpMethod.PUT, "some_content");
+        when(mockLogFilter.verify(any(VerificationChain.class))).thenReturn("failure response");
+
+        // when
+        mockServerHandler.channelRead0(mockChannelHandlerContext, nettyHttpRequest);
+
+        // then - request deserialized
+        verify(mockVerificationChainSerializer).deserialize("some_content");
+
+        // and - log filter called
+        verify(mockLogFilter).verify(mockVerificationChain);
 
         // and - correct response written to ChannelHandlerContext
         ArgumentCaptor<DefaultFullHttpResponse> responseCaptor = ArgumentCaptor.forClass(DefaultFullHttpResponse.class);
