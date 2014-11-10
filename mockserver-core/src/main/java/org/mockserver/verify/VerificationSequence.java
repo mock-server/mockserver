@@ -11,15 +11,15 @@ import java.util.List;
 /**
  * @author jamesdbloom
  */
-public class VerificationChain extends EqualsHashCodeToString {
+public class VerificationSequence extends EqualsHashCodeToString {
     private List<HttpRequest> httpRequests = new ArrayList<HttpRequest>();
 
-    public VerificationChain withRequests(HttpRequest... httpRequests) {
+    public VerificationSequence withRequests(HttpRequest... httpRequests) {
         Collections.addAll(this.httpRequests, httpRequests);
         return this;
     }
 
-    public VerificationChain withRequests(List<HttpRequest> httpRequests) {
+    public VerificationSequence withRequests(List<HttpRequest> httpRequests) {
         this.httpRequests = httpRequests;
         return this;
     }

@@ -11,7 +11,7 @@ import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.verify.Verification;
-import org.mockserver.verify.VerificationChain;
+import org.mockserver.verify.VerificationSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -170,11 +170,11 @@ public class LogFilter implements ResponseFilter, RequestFilter {
         return "";
     }
 
-    public String verify(VerificationChain verificationChain) {
-        if (verificationChain != null) {
+    public String verify(VerificationSequence verificationSequence) {
+        if (verificationSequence != null) {
             int requestLogCounter = 0;
 
-            for (HttpRequest verificationHttpRequest : verificationChain.getHttpRequests()) {
+            for (HttpRequest verificationHttpRequest : verificationSequence.getHttpRequests()) {
                 if (verificationHttpRequest != null) {
                     HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(verificationHttpRequest);
                     boolean foundRequest = false;
@@ -185,7 +185,7 @@ public class LogFilter implements ResponseFilter, RequestFilter {
                         }
                     }
                     if (!foundRequest) {
-                        return "Request not found " + verificationHttpRequest + " expected:<" + httpRequestSerializer.serialize(verificationChain.getHttpRequests()) + "> but was:<" + httpRequestSerializer.serialize(requestLog) + ">";
+                        return "Request not found " + verificationHttpRequest + " expected:<" + httpRequestSerializer.serialize(verificationSequence.getHttpRequests()) + "> but was:<" + httpRequestSerializer.serialize(requestLog) + ">";
                     }
                 }
             }

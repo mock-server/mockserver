@@ -8,13 +8,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.http.ApacheHttpClient;
 import org.mockserver.client.serialization.ExpectationSerializer;
+import org.mockserver.client.serialization.VerificationSequenceSerializer;
 import org.mockserver.client.serialization.VerificationSerializer;
-import org.mockserver.client.serialization.model.ExpectationDTO;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.Body;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.StringBody;
 import org.mockserver.verify.Verification;
+import org.mockserver.verify.VerificationSequence;
 import org.mockserver.verify.VerificationTimes;
 
 import java.io.UnsupportedEncodingException;
@@ -22,8 +23,7 @@ import java.io.UnsupportedEncodingException;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.*;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -43,9 +43,11 @@ public class ProxyClientTest {
     @Mock
     private ApacheHttpClient mockApacheHttpClient;
     @Mock
-    private ExpectationSerializer expectationSerializer;
+    private ExpectationSerializer mockExpectationSerializer;
     @Mock
-    private VerificationSerializer verificationSerializer;
+    private VerificationSerializer mockVerificationSerializer;
+    @Mock
+    private VerificationSequenceSerializer mockVerificationSequenceSerializer;
     @InjectMocks
     private ProxyClient proxyClient;
 
@@ -54,24 +56,6 @@ public class ProxyClientTest {
         proxyClient = new ProxyClient("localhost", 8080);
 
         initMocks(this);
-    }
-
-    @Test
-    public void shouldSendDumpToLogAsJSONRequest() throws Exception {
-        // when
-        proxyClient.dumpToLogAsJSON();
-
-        // then
-        verify(mockApacheHttpClient).sendPUTRequest("http://localhost:8080", "/dumpToLog", "");
-    }
-
-    @Test
-    public void shouldSendDumpToLogAsJavaRequest() throws Exception {
-        // when
-        proxyClient.dumpToLogAsJava();
-
-        // then
-        verify(mockApacheHttpClient).sendPUTRequest("http://localhost:8080", "/dumpToLog?type=java", "");
     }
 
     @Test
@@ -93,6 +77,24 @@ public class ProxyClientTest {
     }
 
     @Test
+    public void shouldSendDumpToLogAsJSONRequest() throws Exception {
+        // when
+        proxyClient.dumpToLogAsJSON();
+
+        // then
+        verify(mockApacheHttpClient).sendPUTRequest("http://localhost:8080", "/dumpToLog", "");
+    }
+
+    @Test
+    public void shouldSendDumpToLogAsJavaRequest() throws Exception {
+        // when
+        proxyClient.dumpToLogAsJava();
+
+        // then
+        verify(mockApacheHttpClient).sendPUTRequest("http://localhost:8080", "/dumpToLog?type=java", "");
+    }
+
+    @Test
     public void shouldSendClearRequest() throws Exception {
         // when
         proxyClient
@@ -111,11 +113,21 @@ public class ProxyClientTest {
     }
 
     @Test
+    public void shouldSendClearRequestForNullRequest() throws Exception {
+        // when
+        proxyClient
+                .clear(null);
+
+        // then
+        verify(mockApacheHttpClient).sendPUTRequest("http://localhost:8080", "/clear", "");
+    }
+
+    @Test
     public void shouldReceiveExpectationsAsObjects() throws UnsupportedEncodingException {
         // given
         Expectation[] expectations = {};
         when(mockApacheHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn("body");
-        when(expectationSerializer.deserializeArray("body")).thenReturn(expectations);
+        when(mockExpectationSerializer.deserializeArray("body")).thenReturn(expectations);
 
         // when
         assertSame(expectations, proxyClient
@@ -131,7 +143,7 @@ public class ProxyClientTest {
                 "  \"path\" : \"/some_path\"," + System.getProperty("line.separator") +
                 "  \"body\" : \"some_request_body\"" + System.getProperty("line.separator") +
                 "}");
-        verify(expectationSerializer).deserializeArray("body");
+        verify(mockExpectationSerializer).deserializeArray("body");
     }
 
     @Test
@@ -139,14 +151,14 @@ public class ProxyClientTest {
         // given
         Expectation[] expectations = {};
         when(mockApacheHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn("body");
-        when(expectationSerializer.deserializeArray("body")).thenReturn(expectations);
+        when(mockExpectationSerializer.deserializeArray("body")).thenReturn(expectations);
 
         // when
         assertSame(expectations, proxyClient.retrieveAsExpectations(null));
 
         // then
         verify(mockApacheHttpClient).sendPUTRequest("http://localhost:8080", "/retrieve", "");
-        verify(expectationSerializer).deserializeArray("body");
+        verify(mockExpectationSerializer).deserializeArray("body");
     }
 
     @Test
@@ -188,6 +200,7 @@ public class ProxyClientTest {
     public void shouldVerifyDoesNotMatchSingleRequestNoVerificationTimes() throws UnsupportedEncodingException {
         // given
         when(mockApacheHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn("Request not found at least once expected:<foo> but was:<bar>");
+        when(mockVerificationSequenceSerializer.serialize(any(VerificationSequence.class))).thenReturn("verification_json");
         HttpRequest httpRequest = new HttpRequest()
                 .withPath("/some_path")
                 .withBody(new StringBody("some_request_body", Body.Type.STRING));
@@ -198,7 +211,8 @@ public class ProxyClientTest {
             // then
             fail();
         } catch (AssertionError ae) {
-            verify(verificationSerializer).serialize(new Verification().withRequest(httpRequest).withTimes(atLeast(1)));
+            verify(mockVerificationSequenceSerializer).serialize(new VerificationSequence().withRequests(httpRequest));
+            verify(mockApacheHttpClient).sendPUTRequest("http://localhost:8080", "/verifySequence", "verification_json");
             assertThat(ae.getMessage(), is("Request not found at least once expected:<foo> but was:<bar>"));
         }
     }
@@ -207,6 +221,7 @@ public class ProxyClientTest {
     public void shouldVerifyDoesNotMatchMultipleRequestsNoVerificationTimes() throws UnsupportedEncodingException {
         // given
         when(mockApacheHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn("Request not found at least once expected:<foo> but was:<bar>");
+        when(mockVerificationSequenceSerializer.serialize(any(VerificationSequence.class))).thenReturn("verification_json");
         HttpRequest httpRequest = new HttpRequest()
                 .withPath("/some_path")
                 .withBody(new StringBody("some_request_body", Body.Type.STRING));
@@ -217,7 +232,8 @@ public class ProxyClientTest {
             // then
             fail();
         } catch (AssertionError ae) {
-            verify(verificationSerializer).serialize(new Verification().withRequest(httpRequest).withTimes(atLeast(1)));
+            verify(mockVerificationSequenceSerializer).serialize(new VerificationSequence().withRequests(httpRequest, httpRequest));
+            verify(mockApacheHttpClient).sendPUTRequest("http://localhost:8080", "/verifySequence", "verification_json");
             assertThat(ae.getMessage(), is("Request not found at least once expected:<foo> but was:<bar>"));
         }
     }
@@ -226,6 +242,7 @@ public class ProxyClientTest {
     public void shouldVerifyDoesMatchSingleRequestNoVerificationTimes() throws UnsupportedEncodingException {
         // given
         when(mockApacheHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn("");
+        when(mockVerificationSequenceSerializer.serialize(any(VerificationSequence.class))).thenReturn("verification_json");
         HttpRequest httpRequest = new HttpRequest()
                 .withPath("/some_path")
                 .withBody(new StringBody("some_request_body", Body.Type.STRING));
@@ -239,13 +256,15 @@ public class ProxyClientTest {
         }
 
         // then
-        verify(verificationSerializer).serialize(new Verification().withRequest(httpRequest).withTimes(atLeast(1)));
+        verify(mockVerificationSequenceSerializer).serialize(new VerificationSequence().withRequests(httpRequest));
+        verify(mockApacheHttpClient).sendPUTRequest("http://localhost:8080", "/verifySequence", "verification_json");
     }
 
     @Test
     public void shouldVerifyDoesMatchSingleRequestOnce() throws UnsupportedEncodingException {
         // given
         when(mockApacheHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn("");
+        when(mockVerificationSerializer.serialize(any(Verification.class))).thenReturn("verification_json");
         HttpRequest httpRequest = new HttpRequest()
                 .withPath("/some_path")
                 .withBody(new StringBody("some_request_body", Body.Type.STRING));
@@ -259,13 +278,15 @@ public class ProxyClientTest {
         }
 
         // then
-        verify(verificationSerializer).serialize(new Verification().withRequest(httpRequest).withTimes(once()));
+        verify(mockVerificationSerializer).serialize(new Verification().withRequest(httpRequest).withTimes(once()));
+        verify(mockApacheHttpClient).sendPUTRequest("http://localhost:8080", "/verify", "verification_json");
     }
 
     @Test
-    public void shouldVerifyDoesNotMatchRequest() throws UnsupportedEncodingException {
+    public void shouldVerifyDoesNotMatchSingleRequest() throws UnsupportedEncodingException {
         // given
         when(mockApacheHttpClient.sendPUTRequest(anyString(), anyString(), anyString())).thenReturn("Request not found at least once expected:<foo> but was:<bar>");
+        when(mockVerificationSerializer.serialize(any(Verification.class))).thenReturn("verification_json");
         HttpRequest httpRequest = new HttpRequest()
                 .withPath("/some_path")
                 .withBody(new StringBody("some_request_body", Body.Type.STRING));
@@ -276,7 +297,8 @@ public class ProxyClientTest {
             // then
             fail();
         } catch (AssertionError ae) {
-            verify(verificationSerializer).serialize(new Verification().withRequest(httpRequest).withTimes(atLeast(1)));
+            verify(mockVerificationSerializer).serialize(new Verification().withRequest(httpRequest).withTimes(atLeast(1)));
+            verify(mockApacheHttpClient).sendPUTRequest("http://localhost:8080", "/verify", "verification_json");
             assertThat(ae.getMessage(), is("Request not found at least once expected:<foo> but was:<bar>"));
         }
     }

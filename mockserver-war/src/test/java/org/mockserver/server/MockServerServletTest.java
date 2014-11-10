@@ -6,7 +6,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
-import org.mockserver.client.serialization.VerificationChainSerializer;
+import org.mockserver.client.serialization.VerificationSequenceSerializer;
 import org.mockserver.client.serialization.VerificationSerializer;
 import org.mockserver.mappers.HttpServletToMockServerRequestMapper;
 import org.mockserver.mappers.MockServerToHttpServletResponseMapper;
@@ -17,7 +17,7 @@ import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.model.*;
 import org.mockserver.filters.LogFilter;
 import org.mockserver.verify.Verification;
-import org.mockserver.verify.VerificationChain;
+import org.mockserver.verify.VerificationSequence;
 import org.mockserver.verify.VerificationTimes;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -51,7 +51,7 @@ public class MockServerServletTest {
     @Mock
     private VerificationSerializer mockVerificationSerializer;
     @Mock
-    private VerificationChainSerializer mockVerificationChainSerializer;
+    private VerificationSequenceSerializer mockVerificationSequenceSerializer;
     @Mock
     private ActionHandler mockActionHandler;
     @Mock
@@ -366,15 +366,15 @@ public class MockServerServletTest {
     }
 
     @Test
-    public void shouldVerifyChainRequestNotMatching() throws IOException {
+    public void shouldVerifySequenceRequestNotMatching() throws IOException {
         // given
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/verifyChain");
-        VerificationChain verification = new VerificationChain().withRequests(request("one"), request("two"));
+        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/verifySequence");
+        VerificationSequence verification = new VerificationSequence().withRequests(request("one"), request("two"));
 
         String requestBytes = "requestBytes";
         httpServletRequest.setContent(requestBytes.getBytes());
-        when(mockVerificationChainSerializer.deserialize(requestBytes)).thenReturn(verification);
+        when(mockVerificationSequenceSerializer.deserialize(requestBytes)).thenReturn(verification);
         when(mockLogFilter.verify(verification)).thenReturn("verification_error");
 
         // when
@@ -388,15 +388,15 @@ public class MockServerServletTest {
     }
 
     @Test
-    public void shouldVerifyChainRequestMatching() throws IOException {
+    public void shouldVerifySequenceRequestMatching() throws IOException {
         // given
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/verifyChain");
-        VerificationChain verification = new VerificationChain().withRequests(request("one"), request("two"));
+        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/verifySequence");
+        VerificationSequence verification = new VerificationSequence().withRequests(request("one"), request("two"));
 
         String requestBytes = "requestBytes";
         httpServletRequest.setContent(requestBytes.getBytes());
-        when(mockVerificationChainSerializer.deserialize(requestBytes)).thenReturn(verification);
+        when(mockVerificationSequenceSerializer.deserialize(requestBytes)).thenReturn(verification);
         when(mockLogFilter.verify(verification)).thenReturn("");
 
         // when

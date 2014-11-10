@@ -16,7 +16,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static org.hamcrest.CoreMatchers.startsWith;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.mockserver.configuration.SystemProperties.bufferSize;
 import static org.mockserver.configuration.SystemProperties.maxTimeout;
 import static org.mockserver.matchers.Times.exactly;
@@ -25,6 +27,7 @@ import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.HttpCallback.callback;
 import static org.mockserver.model.HttpForward.forward;
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.ParameterBody.params;
 import static org.mockserver.model.StringBody.*;
@@ -57,6 +60,16 @@ public abstract class AbstractClientServerIntegrationTest {
         mockServerClient.reset();
     }
 
+    private String baseURL(boolean secure) {
+        String baseUrl;
+        if (secure) {
+            baseUrl = "https://localhost:" + getMockServerSecurePort();
+        } else {
+            baseUrl = "http://localhost:" + getMockServerPort();
+        }
+        return baseUrl + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "");
+    }
+
     @Test
     public void clientCanCallServerForSimpleResponse() {
         // when
@@ -70,7 +83,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body"),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + ""),
+                                .withURL(baseURL(false) + ""),
                         false
                 )
         );
@@ -81,7 +94,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body"),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "")),
+                                .withURL(baseURL(true)),
                         false
                 )
         );
@@ -114,7 +127,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("an_example_body_http"),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "echo")
+                                .withURL(baseURL(false) + "echo")
                                 .withMethod("POST")
                                 .withHeaders(
                                         new Header("X-Test", "test_headers_and_body"),
@@ -136,7 +149,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("an_example_body_https"),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "echo")
+                                .withURL(baseURL(true) + "echo")
                                 .withMethod("POST")
                                 .withHeaders(
                                         new Header("X-Test", "test_headers_and_body"),
@@ -178,7 +191,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("an_example_body_http"),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "echo")
+                                .withURL(baseURL(false) + "echo")
                                 .withMethod("POST")
                                 .withHeaders(
                                         new Header("X-Test", "test_headers_and_body"),
@@ -200,7 +213,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("an_example_body_https"),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "echo")
+                                .withURL(baseURL(true) + "echo")
                                 .withMethod("POST")
                                 .withHeaders(
                                         new Header("X-Test", "test_headers_and_body"),
@@ -250,7 +263,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("an_example_body"),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "echo")
+                                .withURL(baseURL(false) + "echo")
                                 .withMethod("POST")
                                 .withHeaders(
                                         new Header("X-Test", "test_headers_and_body"),
@@ -267,7 +280,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body"),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "test_headers_and_body"),
+                                .withURL(baseURL(false) + "test_headers_and_body"),
                         false
                 )
         );
@@ -277,7 +290,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "test_headers_and_body"),
+                                .withURL(baseURL(false) + "test_headers_and_body"),
                         false
                 )
         );
@@ -303,7 +316,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 PrecannedTestExpectationCallback.httpResponse,
                 makeRequest(
                         new HttpRequest()
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "callback")
+                                .withURL(baseURL(false) + "callback")
                                 .withMethod("POST")
                                 .withHeaders(
                                         new Header("X-Test", "test_headers_and_body"),
@@ -319,7 +332,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 PrecannedTestExpectationCallback.httpResponse,
                 makeRequest(
                         new HttpRequest()
-                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "callback")
+                                .withURL(baseURL(true) + "callback")
                                 .withMethod("POST")
                                 .withHeaders(
                                         new Header("X-Test", "test_headers_and_body"),
@@ -351,7 +364,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withStatusCode(HttpStatusCode.OK_200.code()),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                                .withURL(baseURL(false) + "some_path")
                                 .withMethod("POST"),
                         false
                 )
@@ -362,7 +375,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withStatusCode(HttpStatusCode.OK_200.code()),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                                .withURL(baseURL(true) + "some_path")
                                 .withMethod("POST"),
                         false
                 )
@@ -399,7 +412,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body2"),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path2")
+                                .withURL(baseURL(false) + "some_path2")
                                 .withPath("/some_path2"),
                         false
                 )
@@ -410,7 +423,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body1"),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path1")
+                                .withURL(baseURL(false) + "some_path1")
                                 .withPath("/some_path1"),
                         false
                 )
@@ -422,7 +435,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body2"),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path2")
+                                .withURL(baseURL(true) + "some_path2")
                                 .withPath("/some_path2"),
                         false
                 )
@@ -433,7 +446,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body1"),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path1")
+                                .withURL(baseURL(true) + "some_path1")
                                 .withPath("/some_path1"),
                         false
                 )
@@ -453,7 +466,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body"),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                                .withURL(baseURL(false) + "some_path")
                                 .withPath("/some_path"),
                         false
                 )
@@ -465,7 +478,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body"),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                                .withURL(baseURL(true) + "some_path")
                                 .withPath("/some_path"),
                         false
                 )
@@ -476,7 +489,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                                .withURL(baseURL(false) + "some_path")
                                 .withPath("/some_path"),
                         false
                 )
@@ -487,7 +500,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                                .withURL(baseURL(true) + "some_path")
                                 .withPath("/some_path"),
                         false
                 )
@@ -507,16 +520,16 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body"),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                                .withURL(baseURL(false) + "some_path")
                                 .withPath("/some_path"),
                         false
                 )
         );
         mockServerClient.verify(new HttpRequest()
-                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                .withURL(baseURL(false) + "some_path")
                 .withPath("/some_path"));
         mockServerClient.verify(new HttpRequest()
-                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                .withURL(baseURL(false) + "some_path")
                 .withPath("/some_path"), VerificationTimes.exactly(1));
 
         // - in https
@@ -526,7 +539,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body"),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                                .withURL(baseURL(true) + "some_path")
                                 .withPath("/some_path"),
                         false
                 )
@@ -551,20 +564,20 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withStatusCode(HttpStatusCode.OK_200.code()),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                                .withURL(baseURL(false) + "some_path")
                                 .withPath("/some_path"),
                         false
                 )
         );
         mockServerClient.verify(new HttpRequest()
-                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                .withURL(baseURL(false) + "some_path")
                 .withPath("/some_path"));
         mockServerClient.verify(new HttpRequest()
-                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                .withURL(baseURL(false) + "some_path")
                 .withPath("/some_path"), VerificationTimes.exactly(1));
     }
 
-    @Test(expected = AssertionError.class)
+    @Test
     public void clientCanVerifyNotEnoughRequestsReceived() {
         // when
         mockServerClient.when(new HttpRequest().withPath("/some_path"), exactly(2)).respond(new HttpResponse().withBody("some_body"));
@@ -576,17 +589,27 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body"),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                                .withURL(baseURL(false) + "some_path")
                                 .withPath("/some_path"),
                         false
                 )
         );
-        mockServerClient.verify(new HttpRequest()
-                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
-                .withPath("/some_path"), VerificationTimes.atLeast(2));
+        try {
+            mockServerClient.verify(new HttpRequest()
+                    .withURL(baseURL(false) + "some_path")
+                    .withPath("/some_path"), VerificationTimes.atLeast(2));
+        } catch (AssertionError ae) {
+            assertThat(ae.getMessage(), startsWith("Request not found at least 2 times expected:<{" + System.getProperty("line.separator") +
+                    "  \"url\" : \"http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path\"," + System.getProperty("line.separator") +
+                    "  \"path\" : \"/some_path\"" + System.getProperty("line.separator") +
+                    "}> but was:<{" + System.getProperty("line.separator") +
+                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
+                    "  \"url\" : \"http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path\"," + System.getProperty("line.separator") +
+                    "  \"path\" : \"/some_path\"," + System.getProperty("line.separator")));
+        }
     }
 
-    @Test(expected = AssertionError.class)
+    @Test
     public void clientCanVerifyTooManyRequestsReceived() {
         // when
         mockServerClient.when(new HttpRequest().withPath("/some_path"), exactly(2)).respond(new HttpResponse().withBody("some_body"));
@@ -598,17 +621,27 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body"),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                                .withURL(baseURL(false) + "some_path")
                                 .withPath("/some_path"),
                         false
                 )
         );
-        mockServerClient.verify(new HttpRequest()
-                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
-                .withPath("/some_path"), VerificationTimes.exactly(0));
+        try {
+            mockServerClient.verify(new HttpRequest()
+                    .withURL(baseURL(false) + "some_path")
+                    .withPath("/some_path"), VerificationTimes.exactly(0));
+        } catch (AssertionError ae) {
+            assertThat(ae.getMessage(), startsWith("Request not found exactly 0 times expected:<{" + System.getProperty("line.separator") +
+                    "  \"url\" : \"http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path\"," + System.getProperty("line.separator") +
+                    "  \"path\" : \"/some_path\"" + System.getProperty("line.separator") +
+                    "}> but was:<{" + System.getProperty("line.separator") +
+                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
+                    "  \"url\" : \"http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path\"," + System.getProperty("line.separator") +
+                    "  \"path\" : \"/some_path\"," + System.getProperty("line.separator")));
+        }
     }
 
-    @Test(expected = AssertionError.class)
+    @Test
     public void clientCanVerifyNotMatchingRequestsReceived() {
         // when
         mockServerClient.when(new HttpRequest().withPath("/some_path"), exactly(2)).respond(new HttpResponse().withBody("some_body"));
@@ -620,14 +653,213 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body"),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                                .withURL(baseURL(false) + "some_path")
                                 .withPath("/some_path"),
                         false
                 )
         );
-        mockServerClient.verify(new HttpRequest()
-                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_other_path")
-                .withPath("/some_other_path"), VerificationTimes.exactly(2));
+        try {
+            mockServerClient.verify(new HttpRequest()
+                    .withURL(baseURL(false) + "some_other_path")
+                    .withPath("/some_other_path"), VerificationTimes.exactly(2));
+        } catch (AssertionError ae) {
+            assertThat(ae.getMessage(), startsWith("Request not found exactly 2 times expected:<{" + System.getProperty("line.separator") +
+                    "  \"url\" : \"http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_other_path\"," + System.getProperty("line.separator") +
+                    "  \"path\" : \"/some_other_path\"" + System.getProperty("line.separator") +
+                    "}> but was:<{" + System.getProperty("line.separator") +
+                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
+                    "  \"url\" : \"http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path\"," + System.getProperty("line.separator") +
+                    "  \"path\" : \"/some_path\"," + System.getProperty("line.separator")));
+        }
+    }
+
+    @Test
+    public void clientCanVerifySequenceOfRequestsReceived() {
+        // when
+        mockServerClient.when(new HttpRequest().withPath("/some_path.*"), exactly(6)).respond(new HttpResponse().withBody("some_body"));
+
+        // then
+        // - in http
+        assertEquals(
+                response("some_body"),
+                makeRequest(
+                        request().withURL(baseURL(false) + "some_path_one"),
+                        false
+                )
+        );
+        assertEquals(
+                response("some_body"),
+                makeRequest(
+                        request().withURL(baseURL(false) + "some_path_two"),
+                        false
+                )
+        );
+        assertEquals(
+                response("some_body"),
+                makeRequest(
+                        request().withURL(baseURL(false) + "some_path_three"),
+                        false
+                )
+        );
+        mockServerClient.verify(request("/some_path_one"), request("/some_path_three"));
+        mockServerClient.verify(request("/some_path_one"), request("/some_path_two"));
+        mockServerClient.verify(request("/some_path_one"), request("/some_path_two"), request("/some_path_three"));
+
+        // - in https
+        assertEquals(
+                response("some_body"),
+                makeRequest(
+                        request().withURL(baseURL(true) + "some_path_one"),
+                        false
+                )
+        );
+        assertEquals(
+                response("some_body"),
+                makeRequest(
+                        request().withURL(baseURL(true) + "some_path_two"),
+                        false
+                )
+        );
+        assertEquals(
+                response("some_body"),
+                makeRequest(
+                        request().withURL(baseURL(true) + "some_path_three"),
+                        false
+                )
+        );
+        mockServerClient.verify(request("/some_path_one"), request("/some_path_three"));
+        mockServerClient.verify(request("/some_path_one"), request("/some_path_two"));
+        mockServerClient.verify(request("/some_path_one"), request("/some_path_two"), request("/some_path_three"));
+    }
+
+
+    @Test
+    public void clientCanVerifySequenceOfRequestsReceivedEvenThoseNotMatchingAnException() {
+        // when
+        mockServerClient.when(new HttpRequest().withPath("/some_path.*"), exactly(4)).respond(new HttpResponse().withBody("some_body"));
+
+        // then
+        // - in http
+        assertEquals(
+                response("some_body"),
+                makeRequest(
+                        request().withURL(baseURL(false) + "some_path_one"),
+                        false
+                )
+        );
+        assertEquals(
+                notFoundResponse(),
+                makeRequest(
+                        request().withURL(baseURL(false) + "not_found"),
+                        false
+                )
+        );
+        assertEquals(
+                response("some_body"),
+                makeRequest(
+                        request().withURL(baseURL(false) + "some_path_three"),
+                        false
+                )
+        );
+        mockServerClient.verify(request("/some_path_one"), request("/some_path_three"));
+        mockServerClient.verify(request("/some_path_one"), request("/not_found"));
+        mockServerClient.verify(request("/some_path_one"), request("/not_found"), request("/some_path_three"));
+
+        // - in https
+        assertEquals(
+                response("some_body"),
+                makeRequest(
+                        request().withURL(baseURL(true) + "some_path_one"),
+                        false
+                )
+        );
+        assertEquals(
+                notFoundResponse(),
+                makeRequest(
+                        request().withURL(baseURL(true) + "not_found"),
+                        false
+                )
+        );
+        assertEquals(
+                response("some_body"),
+                makeRequest(
+                        request().withURL(baseURL(true) + "some_path_three"),
+                        false
+                )
+        );
+        mockServerClient.verify(request("/some_path_one"), request("/some_path_three"));
+        mockServerClient.verify(request("/some_path_one"), request("/not_found"));
+        mockServerClient.verify(request("/some_path_one"), request("/not_found"), request("/some_path_three"));
+    }
+
+    @Test
+    public void clientCanVerifySequenceOfRequestsNotReceived() {
+        // when
+        mockServerClient.when(new HttpRequest().withPath("/some_path.*"), exactly(6)).respond(new HttpResponse().withBody("some_body"));
+
+        // then
+        // - in http
+        assertEquals(
+                response("some_body"),
+                makeRequest(
+                        request().withURL(baseURL(false) + "some_path_one"),
+                        false
+                )
+        );
+        assertEquals(
+                response("some_body"),
+                makeRequest(
+                        request().withURL(baseURL(false) + "some_path_two"),
+                        false
+                )
+        );
+        assertEquals(
+                response("some_body"),
+                makeRequest(
+                        request().withURL(baseURL(false) + "some_path_three"),
+                        false
+                )
+        );
+        try {
+            mockServerClient.verify(request("/some_path_two"), request("/some_path_one"));
+        } catch (AssertionError ae) {
+            assertThat(ae.getMessage(), startsWith("Request not found {" + System.getProperty("line.separator") +
+                    "  \"path\" : \"/some_path_one\"" + System.getProperty("line.separator") +
+                    "} expected:<[ {" + System.getProperty("line.separator") +
+                    "  \"path\" : \"/some_path_two\"" + System.getProperty("line.separator") +
+                    "}, {" + System.getProperty("line.separator") +
+                    "  \"path\" : \"/some_path_one\"" + System.getProperty("line.separator") +
+                    "} ]> but was:<[ {" + System.getProperty("line.separator") +
+                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
+                    "  \"url\" : \"http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path_one\"," + System.getProperty("line.separator") +
+                    "  \"path\" : \"/some_path_one\"," + System.getProperty("line.separator")));
+        }
+        try {
+            mockServerClient.verify(request("/some_path_three"), request("/some_path_two"));
+        } catch (AssertionError ae) {
+            assertThat(ae.getMessage(), startsWith("Request not found {" + System.getProperty("line.separator") +
+                    "  \"path\" : \"/some_path_two\"" + System.getProperty("line.separator") +
+                    "} expected:<[ {" + System.getProperty("line.separator") +
+                    "  \"path\" : \"/some_path_three\"" + System.getProperty("line.separator") +
+                    "}, {" + System.getProperty("line.separator") +
+                    "  \"path\" : \"/some_path_two\"" + System.getProperty("line.separator") +
+                    "} ]> but was:<[ {" + System.getProperty("line.separator") +
+                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
+                    "  \"url\" : \"http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path_one\"," + System.getProperty("line.separator") +
+                    "  \"path\" : \"/some_path_one\"," + System.getProperty("line.separator")));
+        }
+        try {
+            mockServerClient.verify(request("/some_path_four"));
+        } catch (AssertionError ae) {
+            assertThat(ae.getMessage(), startsWith("Request not found {" + System.getProperty("line.separator") +
+                    "  \"path\" : \"/some_path_four\"" + System.getProperty("line.separator") +
+                    "} expected:<[ {" + System.getProperty("line.separator") +
+                    "  \"path\" : \"/some_path_four\"" + System.getProperty("line.separator") +
+                    "} ]> but was:<[ {" + System.getProperty("line.separator") +
+                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
+                    "  \"url\" : \"http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path_one\"," + System.getProperty("line.separator") +
+                    "  \"path\" : \"/some_path_one\"," + System.getProperty("line.separator")));
+        }
     }
 
     @Test
@@ -643,7 +875,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body"),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                                .withURL(baseURL(false) + "some_path")
                                 .withMethod("POST")
                                 .withBody(new StringBody("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + System.getProperty("line.separator") +
                                         "" + System.getProperty("line.separator") +
@@ -681,7 +913,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body"),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                                .withURL(baseURL(true) + "some_path")
                                 .withMethod("POST")
                                 .withBody(new StringBody("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + System.getProperty("line.separator") +
                                         "" + System.getProperty("line.separator") +
@@ -748,7 +980,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body"),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                                .withURL(baseURL(false) + "some_path")
                                 .withMethod("POST")
                                 .withBody("{" + System.getProperty("line.separator") +
                                         "    \"title\": \"example glossary\", " + System.getProperty("line.separator") +
@@ -783,7 +1015,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body"),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                                .withURL(baseURL(true) + "some_path")
                                 .withMethod("POST")
                                 .withBody("{" + System.getProperty("line.separator") +
                                         "    \"title\": \"example glossary\", " + System.getProperty("line.separator") +
@@ -846,7 +1078,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody(binary(pdfBytes)),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "/ws/rest/user/1/document/2.pdf")
+                                .withURL(baseURL(false) + "/ws/rest/user/1/document/2.pdf")
                                 .withMethod("GET"),
                         true
                 )
@@ -862,7 +1094,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody(binary(pdfBytes)),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "/ws/rest/user/1/document/2.pdf")
+                                .withURL(baseURL(true) + "/ws/rest/user/1/document/2.pdf")
                                 .withMethod("GET"),
                         true
                 )
@@ -900,7 +1132,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody(binary(pngBytes)),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "/ws/rest/user/1/icon/1.png")
+                                .withURL(baseURL(false) + "/ws/rest/user/1/icon/1.png")
                                 .withMethod("GET"),
                         true
                 )
@@ -916,7 +1148,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody(binary(pngBytes)),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "/ws/rest/user/1/icon/1.png")
+                                .withURL(baseURL(true) + "/ws/rest/user/1/icon/1.png")
                                 .withMethod("GET"),
                         true
                 )
@@ -955,7 +1187,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody(binary(pdfBytes)),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "ws/rest/user/1/document/2.pdf")
+                                .withURL(baseURL(false) + "ws/rest/user/1/document/2.pdf")
                                 .withBody(binary(pdfBytes))
                                 .withMethod("POST"),
                         true
@@ -972,7 +1204,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody(binary(pdfBytes)),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "ws/rest/user/1/document/2.pdf")
+                                .withURL(baseURL(true) + "ws/rest/user/1/document/2.pdf")
                                 .withBody(binary(pdfBytes))
                                 .withMethod("POST"),
                         true
@@ -1010,7 +1242,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody(binary(pngBytes)),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "ws/rest/user/1/icon/1.png")
+                                .withURL(baseURL(false) + "ws/rest/user/1/icon/1.png")
                                 .withBody(binary(pngBytes))
                                 .withMethod("POST"),
                         true
@@ -1026,7 +1258,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody(binary(pngBytes)),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "ws/rest/user/1/icon/1.png")
+                                .withURL(baseURL(true) + "ws/rest/user/1/icon/1.png")
                                 .withBody(binary(pngBytes))
                                 .withMethod("POST"),
                         true
@@ -1062,7 +1294,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body2"),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path2")
+                                .withURL(baseURL(false) + "some_path2")
                                 .withPath("/some_path2"),
                         false
                 )
@@ -1073,7 +1305,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body1"),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path1")
+                                .withURL(baseURL(false) + "some_path1")
                                 .withPath("/some_path1"),
                         false
                 )
@@ -1085,7 +1317,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body2"),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path2")
+                                .withURL(baseURL(true) + "some_path2")
                                 .withPath("/some_path2"),
                         false
                 )
@@ -1096,7 +1328,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body1"),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path1")
+                                .withURL(baseURL(true) + "some_path1")
                                 .withPath("/some_path1"),
                         false
                 )
@@ -1127,7 +1359,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
+                                .withURL(baseURL(false) + "some_pathRequest?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
                                 .withPath("/some_pathRequest")
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
@@ -1146,7 +1378,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
-                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
+                                .withURL(baseURL(true) + "some_pathRequest?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
                                 .withPath("/some_pathRequest")
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
@@ -1188,7 +1420,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("POST")
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
+                                .withURL(baseURL(false) + "some_pathRequest?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
                                 .withPath("/some_pathRequest")
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
@@ -1211,7 +1443,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("POST")
-                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
+                                .withURL(baseURL(true) + "some_pathRequest?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
                                 .withPath("/some_pathRequest")
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
@@ -1258,7 +1490,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest")
+                                .withURL(baseURL(false) + "some_pathRequest")
                                 .withPath("/some_pathRequest")
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
@@ -1281,7 +1513,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
-                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
+                                .withURL(baseURL(true) + "some_pathRequest?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
                                 .withPath("/some_pathRequest")
                                 .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
                                 .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest")),
@@ -1323,7 +1555,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest")
+                                .withURL(baseURL(false) + "some_pathRequest")
                                 .withPath("/some_pathRequest")
                                 .withHeaders(
                                         new Header("requestHeaderNameOne", "requestHeaderValueOne_One", "requestHeaderValueOne_Two"),
@@ -1345,7 +1577,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
-                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest")
+                                .withURL(baseURL(true) + "some_pathRequest")
                                 .withPath("/some_pathRequest")
                                 .withHeaders(
                                         new Header("requestHeaderNameOne", "requestHeaderValueOne_One", "requestHeaderValueOne_Two"),
@@ -1396,7 +1628,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest")
+                                .withURL(baseURL(false) + "some_pathRequest")
                                 .withPath("/some_pathRequest")
                                 .withHeaders(
                                         new Header("headerNameRequest", "headerValueRequest")
@@ -1423,7 +1655,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest")
+                                .withURL(baseURL(false) + "some_pathRequest")
                                 .withPath("/some_pathRequest")
                                 .withHeaders(
                                         new Header("headerNameRequest", "headerValueRequest"),
@@ -1447,7 +1679,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
-                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest")
+                                .withURL(baseURL(true) + "some_pathRequest")
                                 .withPath("/some_pathRequest")
                                 .withHeaders(
                                         new Header("headerNameRequest", "headerValueRequest")
@@ -1474,7 +1706,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
-                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest")
+                                .withURL(baseURL(true) + "some_pathRequest")
                                 .withPath("/some_pathRequest")
                                 .withHeaders(
                                         new Header("headerNameRequest", "headerValueRequest"),
@@ -1513,7 +1745,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("POST")
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path" +
+                                .withURL(baseURL(false) + "some_path" +
                                         "?queryStringParameterOneName=queryStringParameterOneValueOne" +
                                         "&queryStringParameterOneName=queryStringParameterOneValueTwo" +
                                         "&queryStringParameterTwoName=queryStringParameterTwoValue")
@@ -1530,7 +1762,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("POST")
-                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                                .withURL(baseURL(true) + "some_path")
                                 .withPath("/some_path")
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValueOne", "queryStringParameterOneValueTwo"),
@@ -1578,7 +1810,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("POST")
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest" +
+                                .withURL(baseURL(false) + "some_pathRequest" +
                                         "?queryStringParameterOneName=queryStringParameterOneValueOne" +
                                         "&queryStringParameterOneName=queryStringParameterOneValueTwo" +
                                         "&queryStringParameterTwoName=queryStringParameterTwoValue")
@@ -1602,7 +1834,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("POST")
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest")
+                                .withURL(baseURL(false) + "some_pathRequest")
                                 .withPath("/some_pathRequest")
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValueOne", "queryStringParameterOneValueTwo"),
@@ -1627,7 +1859,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("POST")
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest" +
+                                .withURL(baseURL(false) + "some_pathRequest" +
                                         "?queryStringParameterOneName=queryStringParameterOneValueOne" +
                                         "&queryStringParameterOneName=queryStringParameterOneValueTwo" +
                                         "&queryStringParameterTwoName=queryStringParameterTwoValue")
@@ -1679,7 +1911,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("POST")
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest")
+                                .withURL(baseURL(false) + "some_pathRequest")
                                 .withPath("/some_pathRequest")
                                 .withBody(new StringBody("bodyParameterOneName=Parameter+One+Value+One" +
                                         "&bodyParameterOneName=Parameter+One+Value+Two" +
@@ -1702,7 +1934,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("POST")
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest")
+                                .withURL(baseURL(false) + "some_pathRequest")
                                 .withPath("/some_pathRequest")
                                 .withBody(params(
                                         new Parameter("bodyParameterOneName", "Parameter One Value One", "Parameter One Value Two"),
@@ -1726,7 +1958,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("POST")
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest" +
+                                .withURL(baseURL(false) + "some_pathRequest" +
                                         "?bodyParameterOneName=bodyParameterOneValueOne" +
                                         "&bodyParameterOneName=bodyParameterOneValueTwo" +
                                         "&bodyParameterTwoName=bodyParameterTwoValue")
@@ -1778,7 +2010,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("PUT")
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest")
+                                .withURL(baseURL(false) + "some_pathRequest")
                                 .withPath("/some_pathRequest")
                                 .withBody(new StringBody("bodyParameterOneName=Parameter+One+Value+One" +
                                         "&bodyParameterOneName=Parameter+One+Value+Two" +
@@ -1803,7 +2035,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("PUT")
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest")
+                                .withURL(baseURL(false) + "some_pathRequest")
                                 .withPath("/some_pathRequest")
                                 .withBody(params(
                                         new Parameter("bodyParameterOneName", "Parameter One Value One", "Parameter One Value Two"),
@@ -1848,7 +2080,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
+                                .withURL(baseURL(false) + "some_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
                                 .withPath("/some_path")
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
@@ -1867,7 +2099,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
-                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
+                                .withURL(baseURL(true) + "some_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
                                 .withPath("/some_path")
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
@@ -1893,7 +2125,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                                .withURL(baseURL(true) + "some_path")
                                 .withMethod("POST")
                                 .withBody(new StringBody("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + System.getProperty("line.separator") +
                                         "" + System.getProperty("line.separator") +
@@ -1930,7 +2162,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                                .withURL(baseURL(true) + "some_path")
                                 .withMethod("POST")
                                 .withBody(new StringBody("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + System.getProperty("line.separator") +
                                         "" + System.getProperty("line.separator") +
@@ -1997,7 +2229,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                                .withURL(baseURL(false) + "some_path")
                                 .withMethod("POST")
                                 .withBody("{" + System.getProperty("line.separator") +
                                         "    \"title\": \"example glossary\", " + System.getProperty("line.separator") +
@@ -2031,7 +2263,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path")
+                                .withURL(baseURL(true) + "some_path")
                                 .withMethod("POST")
                                 .withBody("{" + System.getProperty("line.separator") +
                                         "    \"title\": \"example glossary\", " + System.getProperty("line.separator") +
@@ -2093,7 +2325,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_other_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
+                                .withURL(baseURL(false) + "some_other_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
                                 .withPath("/some_other_path")
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
@@ -2112,7 +2344,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
-                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_other_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
+                                .withURL(baseURL(true) + "some_other_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
                                 .withPath("/some_other_path")
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
@@ -2156,7 +2388,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("POST")
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest" +
+                                .withURL(baseURL(false) + "some_pathRequest" +
                                         "?OTHERQueryStringParameterOneName=queryStringParameterOneValueOne" +
                                         "&queryStringParameterOneName=queryStringParameterOneValueTwo" +
                                         "&queryStringParameterTwoName=queryStringParameterTwoValue")
@@ -2198,7 +2430,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("POST")
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest")
+                                .withURL(baseURL(false) + "some_pathRequest")
                                 .withPath("/some_pathRequest")
                                 .withBody(params(
                                         new Parameter("OTHERBodyParameterOneName", "Parameter One Value One", "Parameter One Value Two"),
@@ -2216,7 +2448,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("POST")
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest")
+                                .withURL(baseURL(false) + "some_pathRequest")
                                 .withPath("/some_pathRequest")
                                 .withBody(new StringBody("OTHERBodyParameterOneName=Parameter+One+Value+One" +
                                         "&bodyParameterOneName=Parameter+One+Value+Two" +
@@ -2258,7 +2490,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("POST")
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest")
+                                .withURL(baseURL(false) + "some_pathRequest")
                                 .withPath("/some_pathRequest")
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "OTHERqueryStringParameterOneValueOne", "queryStringParameterOneValueTwo"),
@@ -2301,7 +2533,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("POST")
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest")
+                                .withURL(baseURL(false) + "some_pathRequest")
                                 .withPath("/some_pathRequest")
                                 .withBody(params(
                                         new Parameter("bodyParameterOneName", "Other Parameter One Value One", "Parameter One Value Two"),
@@ -2319,7 +2551,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("POST")
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_pathRequest")
+                                .withURL(baseURL(false) + "some_pathRequest")
                                 .withPath("/some_pathRequest")
                                 .withBody(new StringBody("bodyParameterOneName=Other Parameter+One+Value+One" +
                                         "&bodyParameterOneName=Parameter+One+Value+Two" +
@@ -2363,7 +2595,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
+                                .withURL(baseURL(false) + "some_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
                                 .withPath("/some_path")
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
@@ -2382,7 +2614,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
-                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
+                                .withURL(baseURL(true) + "some_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
                                 .withPath("/some_path")
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
@@ -2428,7 +2660,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
+                                .withURL(baseURL(false) + "some_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
                                 .withPath("/some_path")
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
@@ -2447,7 +2679,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
-                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
+                                .withURL(baseURL(true) + "some_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
                                 .withPath("/some_path")
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
@@ -2493,7 +2725,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
+                                .withURL(baseURL(false) + "some_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
                                 .withPath("/some_path")
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
@@ -2512,7 +2744,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
-                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
+                                .withURL(baseURL(true) + "some_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
                                 .withPath("/some_path")
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
@@ -2558,7 +2790,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
+                                .withURL(baseURL(false) + "some_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
                                 .withPath("/some_path")
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
@@ -2577,7 +2809,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("GET")
-                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
+                                .withURL(baseURL(true) + "some_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
                                 .withPath("/some_path")
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
@@ -2628,7 +2860,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body2"),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path2")
+                                .withURL(baseURL(false) + "some_path2")
                                 .withPath("/some_path2"),
                         false
                 )
@@ -2638,7 +2870,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path1")
+                                .withURL(baseURL(false) + "some_path1")
                                 .withPath("/some_path1"),
                         false
                 )
@@ -2650,7 +2882,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body2"),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path2")
+                                .withURL(baseURL(true) + "some_path2")
                                 .withPath("/some_path2"),
                         false
                 )
@@ -2660,7 +2892,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path1")
+                                .withURL(baseURL(true) + "some_path1")
                                 .withPath("/some_path1"),
                         false
                 )
@@ -2699,7 +2931,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path1")
+                                .withURL(baseURL(false) + "some_path1")
                                 .withPath("/some_path1"),
                         false
                 )
@@ -2709,7 +2941,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path2")
+                                .withURL(baseURL(false) + "some_path2")
                                 .withPath("/some_path2"),
                         false
                 )
@@ -2720,7 +2952,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path1")
+                                .withURL(baseURL(true) + "some_path1")
                                 .withPath("/some_path1"),
                         false
                 )
@@ -2730,7 +2962,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         new HttpRequest()
-                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path2")
+                                .withURL(baseURL(true) + "some_path2")
                                 .withPath("/some_path2"),
                         false
                 )

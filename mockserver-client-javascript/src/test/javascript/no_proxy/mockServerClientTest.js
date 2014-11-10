@@ -321,6 +321,93 @@ describe("mockServerClient client:", function () {
         }).toThrow();
     });
 
+    it("should pass when correct sequence of requests have been sent", function () {
+        // given
+        var client = mockServerClient("localhost", 1080);
+        client.mockSimpleResponse('/one', { name: 'value' }, 203);
+        client.mockSimpleResponse('/two', { name: 'value' }, 203);
+        xmlhttp.open("POST", "http://localhost:1080/one", false);
+        xmlhttp.send("someBody");
+        expect(xmlhttp.status).toEqual(203);
+        xmlhttp.open("GET", "http://localhost:1080/notFound", false);
+        xmlhttp.send();
+        expect(xmlhttp.status).toEqual(404);
+        xmlhttp.open("GET", "http://localhost:1080/two", false);
+        xmlhttp.send();
+        expect(xmlhttp.status).toEqual(203);
+
+        // when
+        client.verifySequence(
+            {
+                'method': 'POST',
+                'path': '/one',
+                'body': 'someBody'
+            },
+            {
+                'method': 'GET',
+                'path': '/notFound'
+            },
+            {
+                'method': 'GET',
+                'path': '/two'
+            }
+        );
+    });
+
+    it("should fail when incorrect sequence of requests have been sent", function () {
+        // given
+        var client = mockServerClient("localhost", 1080);
+        client.mockSimpleResponse('/one', { name: 'value' }, 203);
+        client.mockSimpleResponse('/two', { name: 'value' }, 203);
+        xmlhttp.open("POST", "http://localhost:1080/one", false);
+        xmlhttp.send("someBody");
+        expect(xmlhttp.status).toEqual(203);
+        xmlhttp.open("GET", "http://localhost:1080/notFound", false);
+        xmlhttp.send();
+        expect(xmlhttp.status).toEqual(404);
+        xmlhttp.open("GET", "http://localhost:1080/two", false);
+        xmlhttp.send();
+        expect(xmlhttp.status).toEqual(203);
+
+        // when - wrong order
+        expect(function () {
+            client.verifySequence(
+                {
+                    'method': 'POST',
+                    'path': '/one',
+                    'body': 'someBody'
+                },
+                {
+                    'method': 'GET',
+                    'path': '/two'
+                },
+                {
+                    'method': 'GET',
+                    'path': '/notFound'
+                }
+            );
+        }).toThrow();
+
+        // when - first request incorrect body
+        expect(function () {
+            client.verifySequence(
+                {
+                    'method': 'POST',
+                    'path': '/one',
+                    'body': 'some_incorrect_body'
+                },
+                {
+                    'method': 'GET',
+                    'path': '/notFound'
+                },
+                {
+                    'method': 'GET',
+                    'path': '/two'
+                }
+            );
+        }).toThrow();
+    });
+
     it("should clear expectations", function () {
         // when
         var client = mockServerClient("localhost", 1080);

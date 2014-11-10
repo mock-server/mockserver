@@ -8,12 +8,12 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockserver.model.HttpRequest.request;
 
-public class VerificationChainTest {
+public class VerificationSequenceTest {
 
     @Test
     public void shouldReturnValueSetInSetter() {
         // when
-        VerificationChain verification = new VerificationChain()
+        VerificationSequence verification = new VerificationSequence()
                 .withRequests(request("one"), request("two"), request("three"));
 
         // then

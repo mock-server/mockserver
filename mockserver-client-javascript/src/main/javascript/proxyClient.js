@@ -33,6 +33,18 @@ var proxyClient = function (host, port) {
         xmlhttp.send(JSON.stringify(request));
         return xmlhttp.responseText && JSON.parse(xmlhttp.responseText);
     };
+    /**
+     * Verify a request has been received for example:
+     *
+     *   client.verify({
+     *      'method': 'POST',
+     *      'path': '/somePath'
+     *   });
+     *
+     * @param request the http request that must be matched for this verification to pass
+     * @param count   the number of times this request must be matched
+     * @param exact   true if the count is matched as "equal to" or false if the count is matched as "greater than or equal to"
+     */
     var verify = function (request, count, exact) {
         if (count === undefined) {
             count = 1;
@@ -44,6 +56,41 @@ var proxyClient = function (host, port) {
                 "count": count,
                 "exact": exact
             }
+        }));
+        if (xmlhttp.status !== 202) {
+            console && console.error && console.error(xmlhttp.responseText);
+            throw xmlhttp.responseText;
+        }
+        return _this;
+    };
+    /**
+     * Verify a sequence of requests has been received for example:
+     *
+     *   client.verify(
+     *       {
+     *          'method': 'POST',
+     *          'path': '/first_request'
+     *       },
+     *       {
+     *          'method': 'POST',
+     *          'path': '/second_request'
+     *       },
+     *       {
+     *          'method': 'POST',
+     *          'path': '/third_request'
+     *       }
+     *   );
+     *
+     * @param arguments the list of http requests that must be matched for this verification to pass
+     */
+    var verifySequence = function () {
+        xmlhttp.open("PUT", proxyUrl + "/verifySequence", false);
+        var requestSequence = [];
+        for (var i = 0; i < arguments.length; i++) {
+            requestSequence.push(arguments[i]);
+        }
+        xmlhttp.send(JSON.stringify({
+            "httpRequests": requestSequence
         }));
         if (xmlhttp.status !== 202) {
             console && console.error && console.error(xmlhttp.responseText);
@@ -84,6 +131,7 @@ var proxyClient = function (host, port) {
     var _this = {
         retrieve: retrieve,
         verify: verify,
+        verifySequence: verifySequence,
         reset: reset,
         clear: clear,
         dumpToLogs: dumpToLogs

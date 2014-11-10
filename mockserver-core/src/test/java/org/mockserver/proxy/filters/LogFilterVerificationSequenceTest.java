@@ -2,7 +2,7 @@ package org.mockserver.proxy.filters;
 
 import org.junit.Test;
 import org.mockserver.filters.LogFilter;
-import org.mockserver.verify.VerificationChain;
+import org.mockserver.verify.VerificationSequence;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -11,7 +11,7 @@ import static org.mockserver.model.HttpRequest.request;
 /**
  * @author jamesdbloom
  */
-public class LogFilterVerificationChainTest {
+public class LogFilterVerificationSequenceTest {
 
     @Test
     public void shouldPassVerificationWithNullRequest() {
@@ -26,11 +26,11 @@ public class LogFilterVerificationChainTest {
         logFilter.onRequest(request("four"));
 
         // then
-        assertThat(logFilter.verify((VerificationChain) null), is(""));
+        assertThat(logFilter.verify((VerificationSequence) null), is(""));
     }
 
     @Test
-    public void shouldPassVerificationChainWithNoRequest() {
+    public void shouldPassVerificationSequenceWithNoRequest() {
         // given
         LogFilter logFilter = new LogFilter();
 
@@ -43,7 +43,7 @@ public class LogFilterVerificationChainTest {
 
         // then
         assertThat(logFilter.verify(
-                        new VerificationChain()
+                        new VerificationSequence()
                                 .withRequests(
 
                                 )
@@ -52,7 +52,7 @@ public class LogFilterVerificationChainTest {
     }
 
     @Test
-    public void shouldPassVerificationChainWithOneRequest() {
+    public void shouldPassVerificationSequenceWithOneRequest() {
         // given
         LogFilter logFilter = new LogFilter();
 
@@ -65,28 +65,28 @@ public class LogFilterVerificationChainTest {
 
         // then
         assertThat(logFilter.verify(
-                        new VerificationChain()
+                        new VerificationSequence()
                                 .withRequests(
                                         request("one")
                                 )
                 ),
                 is(""));
         assertThat(logFilter.verify(
-                        new VerificationChain()
+                        new VerificationSequence()
                                 .withRequests(
                                         request("multi")
                                 )
                 ),
                 is(""));
         assertThat(logFilter.verify(
-                        new VerificationChain()
+                        new VerificationSequence()
                                 .withRequests(
                                         request("three")
                                 )
                 ),
                 is(""));
         assertThat(logFilter.verify(
-                        new VerificationChain()
+                        new VerificationSequence()
                                 .withRequests(
                                         request("four")
                                 )
@@ -95,7 +95,7 @@ public class LogFilterVerificationChainTest {
     }
 
     @Test
-    public void shouldPassVerificationChainWithTwoRequests() {
+    public void shouldPassVerificationSequenceWithTwoRequests() {
         // given
         LogFilter logFilter = new LogFilter();
 
@@ -108,7 +108,7 @@ public class LogFilterVerificationChainTest {
 
         // then - next to each other
         assertThat(logFilter.verify(
-                        new VerificationChain()
+                        new VerificationSequence()
                                 .withRequests(
                                         request("one"),
                                         request("multi")
@@ -116,7 +116,7 @@ public class LogFilterVerificationChainTest {
                 ),
                 is(""));
         assertThat(logFilter.verify(
-                        new VerificationChain()
+                        new VerificationSequence()
                                 .withRequests(
                                         request("multi"),
                                         request("three")
@@ -124,7 +124,7 @@ public class LogFilterVerificationChainTest {
                 ),
                 is(""));
         assertThat(logFilter.verify(
-                        new VerificationChain()
+                        new VerificationSequence()
                                 .withRequests(
                                         request("three"),
                                         request("multi")
@@ -132,7 +132,7 @@ public class LogFilterVerificationChainTest {
                 ),
                 is(""));
         assertThat(logFilter.verify(
-                        new VerificationChain()
+                        new VerificationSequence()
                                 .withRequests(
                                         request("multi"),
                                         request("four")
@@ -141,7 +141,7 @@ public class LogFilterVerificationChainTest {
                 is(""));
         // then - not next to each other
         assertThat(logFilter.verify(
-                        new VerificationChain()
+                        new VerificationSequence()
                                 .withRequests(
                                         request("one"),
                                         request("three")
@@ -149,7 +149,7 @@ public class LogFilterVerificationChainTest {
                 ),
                 is(""));
         assertThat(logFilter.verify(
-                        new VerificationChain()
+                        new VerificationSequence()
                                 .withRequests(
                                         request("one"),
                                         request("four")
@@ -157,7 +157,7 @@ public class LogFilterVerificationChainTest {
                 ),
                 is(""));
         assertThat(logFilter.verify(
-                        new VerificationChain()
+                        new VerificationSequence()
                                 .withRequests(
                                         request("multi"),
                                         request("multi")
@@ -165,7 +165,7 @@ public class LogFilterVerificationChainTest {
                 ),
                 is(""));
         assertThat(logFilter.verify(
-                        new VerificationChain()
+                        new VerificationSequence()
                                 .withRequests(
                                         request("three"),
                                         request("four")
@@ -175,7 +175,7 @@ public class LogFilterVerificationChainTest {
     }
 
     @Test
-    public void shouldFailVerificationChainWithOneRequest() {
+    public void shouldFailVerificationSequenceWithOneRequest() {
         // given
         LogFilter logFilter = new LogFilter();
 
@@ -188,7 +188,7 @@ public class LogFilterVerificationChainTest {
 
         // then
         assertThat(logFilter.verify(
-                        new VerificationChain()
+                        new VerificationSequence()
                                 .withRequests(
                                         request("five")
                                 )
@@ -211,7 +211,7 @@ public class LogFilterVerificationChainTest {
     }
 
     @Test
-    public void shouldFailVerificationChainWithTwoRequestsWrongOrder() {
+    public void shouldFailVerificationSequenceWithTwoRequestsWrongOrder() {
         // given
         LogFilter logFilter = new LogFilter();
 
@@ -224,7 +224,7 @@ public class LogFilterVerificationChainTest {
 
         // then - next to each other
         assertThat(logFilter.verify(
-                        new VerificationChain()
+                        new VerificationSequence()
                                 .withRequests(
                                         request("multi"),
                                         request("one")
@@ -248,7 +248,7 @@ public class LogFilterVerificationChainTest {
                         "  \"path\" : \"four\"" + System.getProperty("line.separator") +
                         "} ]>"));
         assertThat(logFilter.verify(
-                        new VerificationChain()
+                        new VerificationSequence()
                                 .withRequests(
                                         request("four"),
                                         request("multi")
@@ -273,7 +273,7 @@ public class LogFilterVerificationChainTest {
                         "} ]>"));
         // then - not next to each other
         assertThat(logFilter.verify(
-                        new VerificationChain()
+                        new VerificationSequence()
                                 .withRequests(
                                         request("three"),
                                         request("one")
@@ -297,7 +297,7 @@ public class LogFilterVerificationChainTest {
                         "  \"path\" : \"four\"" + System.getProperty("line.separator") +
                         "} ]>"));
         assertThat(logFilter.verify(
-                        new VerificationChain()
+                        new VerificationSequence()
                                 .withRequests(
                                         request("four"),
                                         request("one")
@@ -321,7 +321,7 @@ public class LogFilterVerificationChainTest {
                         "  \"path\" : \"four\"" + System.getProperty("line.separator") +
                         "} ]>"));
         assertThat(logFilter.verify(
-                        new VerificationChain()
+                        new VerificationSequence()
                                 .withRequests(
                                         request("four"),
                                         request("three")
@@ -347,7 +347,7 @@ public class LogFilterVerificationChainTest {
     }
 
     @Test
-    public void shouldFailVerificationChainWithTwoRequestsFirstIncorrect() {
+    public void shouldFailVerificationSequenceWithTwoRequestsFirstIncorrect() {
         // given
         LogFilter logFilter = new LogFilter();
 
@@ -360,7 +360,7 @@ public class LogFilterVerificationChainTest {
 
         // then - next to each other
         assertThat(logFilter.verify(
-                        new VerificationChain()
+                        new VerificationSequence()
                                 .withRequests(
                                         request("zero"),
                                         request("multi")
@@ -384,7 +384,7 @@ public class LogFilterVerificationChainTest {
                         "  \"path\" : \"four\"" + System.getProperty("line.separator") +
                         "} ]>"));
         assertThat(logFilter.verify(
-                        new VerificationChain()
+                        new VerificationSequence()
                                 .withRequests(
                                         request("zero"),
                                         request("three")
@@ -408,7 +408,7 @@ public class LogFilterVerificationChainTest {
                         "  \"path\" : \"four\"" + System.getProperty("line.separator") +
                         "} ]>"));
         assertThat(logFilter.verify(
-                        new VerificationChain()
+                        new VerificationSequence()
                                 .withRequests(
                                         request("zero"),
                                         request("four")
@@ -434,7 +434,7 @@ public class LogFilterVerificationChainTest {
     }
 
     @Test
-    public void shouldFailVerificationChainWithTwoRequestsSecondIncorrect() {
+    public void shouldFailVerificationSequenceWithTwoRequestsSecondIncorrect() {
         // given
         LogFilter logFilter = new LogFilter();
 
@@ -447,7 +447,7 @@ public class LogFilterVerificationChainTest {
 
         // then - next to each other
         assertThat(logFilter.verify(
-                        new VerificationChain()
+                        new VerificationSequence()
                                 .withRequests(
                                         request("one"),
                                         request("five")
@@ -471,7 +471,7 @@ public class LogFilterVerificationChainTest {
                         "  \"path\" : \"four\"" + System.getProperty("line.separator") +
                         "} ]>"));
         assertThat(logFilter.verify(
-                        new VerificationChain()
+                        new VerificationSequence()
                                 .withRequests(
                                         request("multi"),
                                         request("five")
@@ -495,7 +495,7 @@ public class LogFilterVerificationChainTest {
                         "  \"path\" : \"four\"" + System.getProperty("line.separator") +
                         "} ]>"));
         assertThat(logFilter.verify(
-                        new VerificationChain()
+                        new VerificationSequence()
                                 .withRequests(
                                         request("three"),
                                         request("five")
@@ -521,7 +521,7 @@ public class LogFilterVerificationChainTest {
     }
 
     @Test
-    public void shouldFailVerificationChainWithThreeRequestsWrongOrder() {
+    public void shouldFailVerificationSequenceWithThreeRequestsWrongOrder() {
         // given
         LogFilter logFilter = new LogFilter();
 
@@ -534,7 +534,7 @@ public class LogFilterVerificationChainTest {
 
         // then - next to each other
         assertThat(logFilter.verify(
-                        new VerificationChain()
+                        new VerificationSequence()
                                 .withRequests(
                                         request("one"),
                                         request("four"),
@@ -561,7 +561,7 @@ public class LogFilterVerificationChainTest {
                         "  \"path\" : \"four\"" + System.getProperty("line.separator") +
                         "} ]>"));
         assertThat(logFilter.verify(
-                        new VerificationChain()
+                        new VerificationSequence()
                                 .withRequests(
                                         request("one"),
                                         request("multi"),
@@ -589,7 +589,7 @@ public class LogFilterVerificationChainTest {
                         "} ]>"));
         // then - not next to each other
         assertThat(logFilter.verify(
-                        new VerificationChain()
+                        new VerificationSequence()
                                 .withRequests(
                                         request("four"),
                                         request("one"),
@@ -616,7 +616,7 @@ public class LogFilterVerificationChainTest {
                         "  \"path\" : \"four\"" + System.getProperty("line.separator") +
                         "} ]>"));
         assertThat(logFilter.verify(
-                        new VerificationChain()
+                        new VerificationSequence()
                                 .withRequests(
                                         request("multi"),
                                         request("three"),
@@ -646,7 +646,7 @@ public class LogFilterVerificationChainTest {
     }
 
     @Test
-    public void shouldFailVerificationChainWithThreeRequestsDuplicateMissing() {
+    public void shouldFailVerificationSequenceWithThreeRequestsDuplicateMissing() {
         // given
         LogFilter logFilter = new LogFilter();
 
@@ -659,7 +659,7 @@ public class LogFilterVerificationChainTest {
 
         // then
         assertThat(logFilter.verify(
-                        new VerificationChain()
+                        new VerificationSequence()
                                 .withRequests(
                                         request("multi"),
                                         request("multi"),

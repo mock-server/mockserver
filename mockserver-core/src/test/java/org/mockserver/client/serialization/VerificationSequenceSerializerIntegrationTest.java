@@ -2,8 +2,8 @@ package org.mockserver.client.serialization;
 
 import org.junit.Test;
 import org.mockserver.client.serialization.model.HttpRequestDTO;
-import org.mockserver.client.serialization.model.VerificationChainDTO;
-import org.mockserver.verify.VerificationChain;
+import org.mockserver.client.serialization.model.VerificationSequenceDTO;
+import org.mockserver.verify.VerificationSequence;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -14,7 +14,7 @@ import static org.mockserver.model.HttpRequest.request;
 /**
  * @author jamesdbloom
  */
-public class VerificationChainSerializerIntegrationTest {
+public class VerificationSequenceSerializerIntegrationTest {
 
     @Test
     public void shouldIgnoreExtraFields() throws IOException {
@@ -28,14 +28,14 @@ public class VerificationChainSerializerIntegrationTest {
                 "}";
 
         // when
-        VerificationChain verificationChain = new VerificationChainSerializer().deserialize(requestBytes);
+        VerificationSequence verificationSequence = new VerificationSequenceSerializer().deserialize(requestBytes);
 
         // then
-        assertEquals(new VerificationChainDTO()
+        assertEquals(new VerificationSequenceDTO()
                 .setHttpRequests(Arrays.asList(
                         new HttpRequestDTO(request("some_path_one"))
                 ))
-                .buildObject(), verificationChain);
+                .buildObject(), verificationSequence);
     }
 
     @Test
@@ -58,17 +58,17 @@ public class VerificationChainSerializerIntegrationTest {
                 "}";
 
         // when
-        VerificationChain verificationChain = new VerificationChainSerializer().deserialize(requestBytes);
+        VerificationSequence verificationSequence = new VerificationSequenceSerializer().deserialize(requestBytes);
 
         // then
-        assertEquals(new VerificationChainDTO()
+        assertEquals(new VerificationSequenceDTO()
                 .setHttpRequests(Arrays.asList(
                         new HttpRequestDTO(request("some_path_one").withBody("some_body_one")),
                         new HttpRequestDTO(request("some_body_multiple").withBody("some_body_multiple")),
                         new HttpRequestDTO(request("some_path_three").withBody("some_body_three")),
                         new HttpRequestDTO(request("some_body_multiple").withBody("some_body_multiple"))
                 ))
-                .buildObject(), verificationChain);
+                .buildObject(), verificationSequence);
     }
 
     @Test
@@ -79,12 +79,12 @@ public class VerificationChainSerializerIntegrationTest {
                 "}";
 
         // when
-        VerificationChain verificationChain = new VerificationChainSerializer().deserialize(requestBytes);
+        VerificationSequence verificationSequence = new VerificationSequenceSerializer().deserialize(requestBytes);
 
         // then
-        assertEquals(new VerificationChainDTO()
+        assertEquals(new VerificationSequenceDTO()
                 .setHttpRequests(Arrays.<HttpRequestDTO>asList())
-                .buildObject(), verificationChain);
+                .buildObject(), verificationSequence);
     }
 
     @Test
@@ -97,21 +97,21 @@ public class VerificationChainSerializerIntegrationTest {
                 "}";
 
         // when
-        VerificationChain verificationChain = new VerificationChainSerializer().deserialize(requestBytes);
+        VerificationSequence verificationSequence = new VerificationSequenceSerializer().deserialize(requestBytes);
 
         // then
-        assertEquals(new VerificationChainDTO()
+        assertEquals(new VerificationSequenceDTO()
                 .setHttpRequests(Arrays.asList(
                         new HttpRequestDTO(request("some_path_one"))
                 ))
-                .buildObject(), verificationChain);
+                .buildObject(), verificationSequence);
     }
 
     @Test
     public void shouldSerializeCompleteObject() throws IOException {
         // when
-        String jsonExpectation = new VerificationChainSerializer().serialize(
-                new VerificationChainDTO()
+        String jsonExpectation = new VerificationSequenceSerializer().serialize(
+                new VerificationSequenceDTO()
                         .setHttpRequests(Arrays.asList(
                                 new HttpRequestDTO(request("some_path_one").withBody("some_body_one")),
                                 new HttpRequestDTO(request("some_body_multiple").withBody("some_body_multiple")),
@@ -142,8 +142,8 @@ public class VerificationChainSerializerIntegrationTest {
     @Test
     public void shouldSerializePartialObject() throws IOException {
         // when
-        String jsonExpectation = new VerificationChainSerializer().serialize(
-                new VerificationChainDTO()
+        String jsonExpectation = new VerificationSequenceSerializer().serialize(
+                new VerificationSequenceDTO()
                         .setHttpRequests(Arrays.asList(
                                 new HttpRequestDTO(request("some_path_one").withBody("some_body_one"))
                         ))
@@ -162,8 +162,8 @@ public class VerificationChainSerializerIntegrationTest {
     @Test
     public void shouldSerializeEmptyObject() throws IOException {
         // when
-        String jsonExpectation = new VerificationChainSerializer().serialize(
-                new VerificationChainDTO()
+        String jsonExpectation = new VerificationSequenceSerializer().serialize(
+                new VerificationSequenceDTO()
                         .setHttpRequests(Arrays.<HttpRequestDTO>asList())
                         .buildObject()
         );

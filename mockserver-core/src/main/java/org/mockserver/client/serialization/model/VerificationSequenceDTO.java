@@ -2,7 +2,7 @@ package org.mockserver.client.serialization.model;
 
 import org.mockserver.model.EqualsHashCodeToString;
 import org.mockserver.model.HttpRequest;
-import org.mockserver.verify.VerificationChain;
+import org.mockserver.verify.VerificationSequence;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,10 +10,10 @@ import java.util.List;
 /**
  * @author jamesdbloom
  */
-public class VerificationChainDTO extends EqualsHashCodeToString {
+public class VerificationSequenceDTO extends EqualsHashCodeToString {
     private List<HttpRequestDTO> httpRequests = new ArrayList<HttpRequestDTO>();
 
-    public VerificationChainDTO(VerificationChain verification) {
+    public VerificationSequenceDTO(VerificationSequence verification) {
         if (verification != null) {
             for (HttpRequest httpRequest : verification.getHttpRequests()) {
                 httpRequests.add(new HttpRequestDTO(httpRequest));
@@ -21,15 +21,15 @@ public class VerificationChainDTO extends EqualsHashCodeToString {
         }
     }
 
-    public VerificationChainDTO() {
+    public VerificationSequenceDTO() {
     }
 
-    public VerificationChain buildObject() {
+    public VerificationSequence buildObject() {
         List<HttpRequest> httpRequests = new ArrayList<HttpRequest>();
         for (HttpRequestDTO httpRequest : this.httpRequests) {
             httpRequests.add(httpRequest.buildObject());
         }
-        return new VerificationChain()
+        return new VerificationSequence()
                 .withRequests(httpRequests);
     }
 
@@ -37,7 +37,7 @@ public class VerificationChainDTO extends EqualsHashCodeToString {
         return httpRequests;
     }
 
-    public VerificationChainDTO setHttpRequests(List<HttpRequestDTO> httpRequests) {
+    public VerificationSequenceDTO setHttpRequests(List<HttpRequestDTO> httpRequests) {
         this.httpRequests = httpRequests;
         return this;
     }

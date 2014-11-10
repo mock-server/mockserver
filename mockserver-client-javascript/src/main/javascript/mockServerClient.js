@@ -122,14 +122,12 @@ var mockServerClient = function (host, port) {
         defaultResponseHeaders = headers;
     };
     /**
-     * Verify a request has been sent for example:
+     * Verify a request has been received for example:
      *
-     *   expect(client.verify({
-     *       'httpRequest': {
-     *           'method': 'POST',
-     *           'path': '/somePath'
-     *       }
-     *   })).toBeTruthy();
+     *   client.verify({
+     *      'method': 'POST',
+     *      'path': '/somePath'
+     *   });
      *
      * @param request the http request that must be matched for this verification to pass
      * @param count   the number of times this request must be matched
@@ -146,6 +144,41 @@ var mockServerClient = function (host, port) {
                 "count": count,
                 "exact": exact
             }
+        }));
+        if (xmlhttp.status !== 202) {
+            console && console.error && console.error(xmlhttp.responseText);
+            throw xmlhttp.responseText;
+        }
+        return _this;
+    };
+    /**
+     * Verify a sequence of requests has been received for example:
+     *
+     *   client.verify(
+     *       {
+     *          'method': 'POST',
+     *          'path': '/first_request'
+     *       },
+     *       {
+     *          'method': 'POST',
+     *          'path': '/second_request'
+     *       },
+     *       {
+     *          'method': 'POST',
+     *          'path': '/third_request'
+     *       }
+     *   );
+     *
+     * @param arguments the list of http requests that must be matched for this verification to pass
+     */
+    var verifySequence = function () {
+        xmlhttp.open("PUT", mockServerUrl + "/verifySequence", false);
+        var requestSequence = [];
+        for (var i = 0; i < arguments.length; i++) {
+            requestSequence.push(arguments[i]);
+        }
+        xmlhttp.send(JSON.stringify({
+            "httpRequests": requestSequence
         }));
         if (xmlhttp.status !== 202) {
             console && console.error && console.error(xmlhttp.responseText);
@@ -180,7 +213,7 @@ var mockServerClient = function (host, port) {
      */
     var dumpToLogs = function (path) {
         xmlhttp.open("PUT", mockServerUrl + "/dumpToLog", false);
-        xmlhttp.send(JSON.stringify(createExpectation(path || ".*", "")));
+        xmlhttp.send(JSON.stringify(createResponseMatcher(path || ".*")));
         return _this;
     };
 
@@ -189,6 +222,7 @@ var mockServerClient = function (host, port) {
         mockSimpleResponse: mockSimpleResponse,
         setDefaultHeaders: setDefaultHeaders,
         verify: verify,
+        verifySequence: verifySequence,
         reset: reset,
         clear: clear,
         dumpToLogs: dumpToLogs

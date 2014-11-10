@@ -2,8 +2,9 @@ package org.mockserver.server;
 
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
-import org.mockserver.client.serialization.VerificationChainSerializer;
+import org.mockserver.client.serialization.VerificationSequenceSerializer;
 import org.mockserver.client.serialization.VerificationSerializer;
+import org.mockserver.filters.LogFilter;
 import org.mockserver.mappers.HttpServletToMockServerRequestMapper;
 import org.mockserver.mappers.MockServerToHttpServletResponseMapper;
 import org.mockserver.mock.Expectation;
@@ -12,8 +13,9 @@ import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpStatusCode;
-import org.mockserver.filters.LogFilter;
 import org.mockserver.streams.IOStreamUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -24,8 +26,7 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class MockServerServlet extends HttpServlet {
 
-    private static final long serialVersionUID = 5058943788293770703L;
-
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     // mockserver
     private LogFilter logFilter = new LogFilter();
     private MockServerMatcher mockServerMatcher = new MockServerMatcher();
@@ -37,7 +38,7 @@ public class MockServerServlet extends HttpServlet {
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
     private VerificationSerializer verificationSerializer = new VerificationSerializer();
-    private VerificationChainSerializer verificationChainSerializer = new VerificationChainSerializer();
+    private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer();
 
     public void doGet(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
         mockResponse(httpServletRequest, httpServletResponse);
@@ -48,47 +49,75 @@ public class MockServerServlet extends HttpServlet {
     }
 
     public void doPut(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
-        String requestPath = retrieveRequestPath(httpServletRequest);
-        if (requestPath.equals("/stop")) {
-            httpServletResponse.setStatus(HttpStatusCode.NOT_IMPLEMENTED_501.code());
-        } else if (requestPath.equals("/dumpToLog")) {
-            mockServerMatcher.dumpToLog(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
-            httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
-        } else if (requestPath.equals("/reset")) {
-            logFilter.reset();
-            mockServerMatcher.reset();
-            httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
-        } else if (requestPath.equals("/clear")) {
-            HttpRequest httpRequest = httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest));
-            logFilter.clear(httpRequest);
-            mockServerMatcher.clear(httpRequest);
-            httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
-        } else if (requestPath.equals("/expectation")) {
-            Expectation expectation = expectationSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest));
-            mockServerMatcher.when(expectation.getHttpRequest(), expectation.getTimes()).thenRespond(expectation.getHttpResponse(false)).thenForward(expectation.getHttpForward()).thenCallback(expectation.getHttpCallback());
-            httpServletResponse.setStatus(HttpStatusCode.CREATED_201.code());
-        } else if (requestPath.equals("/retrieve")) {
-            Expectation[] expectations = logFilter.retrieve(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
-            IOStreamUtils.writeToOutputStream(expectationSerializer.serialize(expectations).getBytes(), httpServletResponse);
-            httpServletResponse.setStatus(HttpStatusCode.OK_200.code());
-        } else if (requestPath.equals("/verify")) {
-            String result = logFilter.verify(verificationSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
-            if (result.isEmpty()) {
+
+        try {
+            String requestPath = retrieveRequestPath(httpServletRequest);
+            if (requestPath.equals("/status")) {
+
+                httpServletResponse.setStatus(HttpStatusCode.OK_200.code());
+
+            } else if (requestPath.equals("/expectation")) {
+
+                Expectation expectation = expectationSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest));
+                mockServerMatcher.when(expectation.getHttpRequest(), expectation.getTimes()).thenRespond(expectation.getHttpResponse(false)).thenForward(expectation.getHttpForward()).thenCallback(expectation.getHttpCallback());
+                httpServletResponse.setStatus(HttpStatusCode.CREATED_201.code());
+
+            } else if (requestPath.equals("/clear")) {
+
+                HttpRequest httpRequest = httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest));
+                logFilter.clear(httpRequest);
+                mockServerMatcher.clear(httpRequest);
                 httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
-            } else {
-                IOStreamUtils.writeToOutputStream(result.getBytes(), httpServletResponse);
-                httpServletResponse.setStatus(HttpStatusCode.NOT_ACCEPTABLE_406.code());
-            }
-        } else if (requestPath.equals("/verifyChain")) {
-            String result = logFilter.verify(verificationChainSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
-            if (result.isEmpty()) {
+
+            } else if (requestPath.equals("/reset")) {
+
+                logFilter.reset();
+                mockServerMatcher.reset();
                 httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
+
+            } else if (requestPath.equals("/dumpToLog")) {
+
+                mockServerMatcher.dumpToLog(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
+                httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
+
+            } else if (requestPath.equals("/retrieve")) {
+
+                Expectation[] expectations = logFilter.retrieve(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
+                IOStreamUtils.writeToOutputStream(expectationSerializer.serialize(expectations).getBytes(), httpServletResponse);
+                httpServletResponse.setStatus(HttpStatusCode.OK_200.code());
+
+            } else if (requestPath.equals("/verify")) {
+
+                String result = logFilter.verify(verificationSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
+                if (result.isEmpty()) {
+                    httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
+                } else {
+                    IOStreamUtils.writeToOutputStream(result.getBytes(), httpServletResponse);
+                    httpServletResponse.setStatus(HttpStatusCode.NOT_ACCEPTABLE_406.code());
+                }
+
+            } else if (requestPath.equals("/verifySequence")) {
+
+                String result = logFilter.verify(verificationSequenceSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
+                if (result.isEmpty()) {
+                    httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
+                } else {
+                    IOStreamUtils.writeToOutputStream(result.getBytes(), httpServletResponse);
+                    httpServletResponse.setStatus(HttpStatusCode.NOT_ACCEPTABLE_406.code());
+                }
+
+            } else if (requestPath.equals("/stop")) {
+
+                httpServletResponse.setStatus(HttpStatusCode.NOT_IMPLEMENTED_501.code());
+
             } else {
-                IOStreamUtils.writeToOutputStream(result.getBytes(), httpServletResponse);
-                httpServletResponse.setStatus(HttpStatusCode.NOT_ACCEPTABLE_406.code());
+
+                mockResponse(httpServletRequest, httpServletResponse);
+
             }
-        } else {
-            mockResponse(httpServletRequest, httpServletResponse);
+        } catch (Exception e) {
+            logger.error("Exception processing " + httpServletRequest, e);
+            httpServletResponse.setStatus(HttpStatusCode.BAD_REQUEST_400.code());
         }
     }
 

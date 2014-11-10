@@ -4,6 +4,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.mockserver.client.http.ApacheHttpClient;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
+import org.mockserver.client.serialization.VerificationSequenceSerializer;
 import org.mockserver.client.serialization.VerificationSerializer;
 import org.mockserver.matchers.HttpResponseMatcher;
 import org.mockserver.matchers.Times;
@@ -11,6 +12,7 @@ import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.verify.Verification;
+import org.mockserver.verify.VerificationSequence;
 import org.mockserver.verify.VerificationTimes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +32,7 @@ public class MockServerClient {
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
     private VerificationSerializer verificationSerializer = new VerificationSerializer();
+    private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer();
 
     /**
      * Start the client communicating to a MockServer at the specified host and port
@@ -171,12 +174,15 @@ public class MockServerClient {
     }
 
     /**
-     * Verify a request has been sent at least once for example:
+     * Verify a list of requests have been sent in the order specified for example:
      *
      *   mockServerClient
      *           .verify(
      *                   request()
-     *                           .withPath("/some_path")
+     *                           .withPath("/first_request")
+     *                           .withBody("some_request_body"),
+     *                   request()
+     *                           .withPath("/second_request")
      *                           .withBody("some_request_body")
      *           );
      *
@@ -184,14 +190,21 @@ public class MockServerClient {
      * @throws AssertionError if the request has not been found
      */
     public MockServerClient verify(HttpRequest... httpRequests) throws AssertionError {
-        for (HttpRequest httpRequest : httpRequests) {
-            verify(httpRequest, VerificationTimes.atLeast(1));
+        if (httpRequests == null || httpRequests.length == 0) {
+            throw new IllegalArgumentException("verify(HttpRequest...) requires a non null non empty array of HttpRequest objects");
+        }
+
+        VerificationSequence verificationSequence = new VerificationSequence().withRequests(httpRequests);
+        String result = apacheHttpClient.sendPUTRequest(uriBase, "/verifySequence", verificationSequenceSerializer.serialize(verificationSequence));
+
+        if (result != null && !result.isEmpty()) {
+            throw new AssertionError(result);
         }
         return this;
     }
 
     /**
-     * Verify a request has been sent for example:
+     * Verify a single request has been sent for example:
      *
      *   mockServerClient
      *           .verify(
@@ -211,7 +224,7 @@ public class MockServerClient {
      * @param times the number of times this request must be matched
      * @throws AssertionError if the request has not been found
      */
-    public MockServerClient verify(HttpRequest httpRequest, final VerificationTimes times) throws AssertionError {
+    public MockServerClient verify(HttpRequest httpRequest, VerificationTimes times) throws AssertionError {
         if (httpRequest == null) {
             throw new IllegalArgumentException("verify(HttpRequest, VerificationTimes) requires a non null HttpRequest object");
         }

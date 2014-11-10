@@ -101,6 +101,89 @@ describe("proxyClient client:", function () {
         }).toThrow();
     });
 
+    it("should pass when correct sequence of requests have been sent", function () {
+        // given
+        var client = proxyClient("localhost", 1080);
+        xmlhttp.open("POST", "http://localhost:1080/one", false);
+        xmlhttp.send("someBody");
+        expect(xmlhttp.status).toEqual(404);
+        xmlhttp.open("GET", "http://localhost:1080/two", false);
+        xmlhttp.send();
+        expect(xmlhttp.status).toEqual(404);
+        xmlhttp.open("GET", "http://localhost:1080/three", false);
+        xmlhttp.send();
+        expect(xmlhttp.status).toEqual(404);
+
+        // when
+        client.verifySequence(
+            {
+                'method': 'POST',
+                'path': '/one',
+                'body': 'someBody'
+            },
+            {
+                'method': 'GET',
+                'path': '/two'
+            },
+            {
+                'method': 'GET',
+                'path': '/three'
+            }
+        );
+    });
+
+    it("should fail when incorrect sequence of requests have been sent", function () {
+        // given
+        var client = proxyClient("localhost", 1080);
+        xmlhttp.open("POST", "http://localhost:1080/one", false);
+        xmlhttp.send("someBody");
+        expect(xmlhttp.status).toEqual(404);
+        xmlhttp.open("GET", "http://localhost:1080/two", false);
+        xmlhttp.send();
+        expect(xmlhttp.status).toEqual(404);
+        xmlhttp.open("GET", "http://localhost:1080/three", false);
+        xmlhttp.send();
+        expect(xmlhttp.status).toEqual(404);
+
+        // when - wrong order
+        expect(function () {
+            client.verifySequence(
+                {
+                    'method': 'POST',
+                    'path': '/one',
+                    'body': 'someBody'
+                },
+                {
+                    'method': 'GET',
+                    'path': '/three'
+                },
+                {
+                    'method': 'GET',
+                    'path': '/two'
+                }
+            );
+        }).toThrow();
+
+        // when - first request incorrect body
+        expect(function () {
+            client.verifySequence(
+                {
+                    'method': 'POST',
+                    'path': '/one',
+                    'body': 'some_incorrect_body'
+                },
+                {
+                    'method': 'GET',
+                    'path': '/two'
+                },
+                {
+                    'method': 'GET',
+                    'path': '/three'
+                }
+            );
+        }).toThrow();
+    });
+
     it("should clear proxy", function () {
         // given
         var client = proxyClient("localhost", 1090);
