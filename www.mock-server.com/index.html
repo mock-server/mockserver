@@ -1276,6 +1276,29 @@ Hides the menu at `767px`, but modify this based on your app's needs.
     verify = function (request, count, exact),
 
     <span class="comment">/**
+     * Verify a sequence of requests has been sent for example:
+     *
+     *   client.verifySequence(
+     *       {
+     *          <span class="string_literal">'method'</span>: <span class="string_literal">'POST'</span>,
+     *          <span class="string_literal">'path'</span>: <span class="string_literal">'/first_request'</span>
+     *       },
+     *       {
+     *          <span class="string_literal">'method'</span>: <span class="string_literal">'POST'</span>,
+     *          <span class="string_literal">'path'</span>: <span class="string_literal">'/second_request'</span>
+     *       },
+     *       {
+     *          <span class="string_literal">'method'</span>: <span class="string_literal">'POST'</span>,
+     *          <span class="string_literal">'path'</span>: <span class="string_literal">'/third_request'</span>
+     *       }
+     *   );
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">arguments</span> the list of http requests that must be matched for this verification to pass
+     * <span class="javadoc_param_annotation">@throws</span> an error is the verify fails detailing which requests have been sent
+     */</span>
+    verifySequence = function (),
+
+    <span class="comment">/**
      * Reset MockServer by clearing all expectations
      */</span>
     reset = function (path),
@@ -1356,6 +1379,29 @@ Hides the menu at `767px`, but modify this based on your app's needs.
      * <span class="javadoc_param_annotation">@throws</span> an error is the verify fails detailing which requests have been sent
      */</span>
     verify = function (request, count, exact),
+
+    <span class="comment">/**
+     * Verify a sequence of requests has been sent for example:
+     *
+     *   client.verifySequence(
+     *       {
+     *          <span class="string_literal">'method'</span>: <span class="string_literal">'POST'</span>,
+     *          <span class="string_literal">'path'</span>: <span class="string_literal">'/first_request'</span>
+     *       },
+     *       {
+     *          <span class="string_literal">'method'</span>: <span class="string_literal">'POST'</span>,
+     *          <span class="string_literal">'path'</span>: <span class="string_literal">'/second_request'</span>
+     *       },
+     *       {
+     *          <span class="string_literal">'method'</span>: <span class="string_literal">'POST'</span>,
+     *          <span class="string_literal">'path'</span>: <span class="string_literal">'/third_request'</span>
+     *       }
+     *   );
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">arguments</span> the list of http requests that must be matched for this verification to pass
+     * <span class="javadoc_param_annotation">@throws</span> an error is the verify fails detailing which requests have been sent
+     */</span>
+    verifySequence = function (),
 
     <span class="comment">/**
      * Reset the proxy by clearing all recorded requests

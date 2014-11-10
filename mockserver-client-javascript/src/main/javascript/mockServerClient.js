@@ -122,7 +122,7 @@ var mockServerClient = function (host, port) {
         defaultResponseHeaders = headers;
     };
     /**
-     * Verify a request has been received for example:
+     * Verify a request has been sent for example:
      *
      *   client.verify({
      *      'method': 'POST',
@@ -152,9 +152,9 @@ var mockServerClient = function (host, port) {
         return _this;
     };
     /**
-     * Verify a sequence of requests has been received for example:
+     * Verify a sequence of requests has been sent for example:
      *
-     *   client.verify(
+     *   client.verifySequence(
      *       {
      *          'method': 'POST',
      *          'path': '/first_request'
