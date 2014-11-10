@@ -48,6 +48,12 @@
                             <directory>src/integration-tests/mockserver-run-stop-forked-from-command-line/target</directory>
                         </fileset>
                         <fileset>
+                            <directory>src/integration-tests/mockserver-start-using-plugin-stops-using-listener/target</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>src/integration-tests/mockserver-start-using-plugin-stops-using-listener-and-plugin/target</directory>
+                        </fileset>
+                        <fileset>
                             <directory>src/integration-tests/mockserver-starts-stops-forked-server-from-pom/target</directory>
                         </fileset>
                         <fileset>
