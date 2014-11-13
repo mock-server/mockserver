@@ -21,16 +21,6 @@
             <artifactId>javax.servlet-api</artifactId>
         </dependency>
 
-        <!-- Apache HTTP Client -->
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpcore</artifactId>
-        </dependency>
-
         <!-- Netty -->
         <dependency>
             <groupId>io.netty</groupId>

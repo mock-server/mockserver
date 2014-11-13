@@ -6,15 +6,22 @@ package org.mockserver.model;
 public class StringBody extends Body<String> {
 
     private final String value;
+    private final byte[] rawBinaryData;
 
-    public StringBody(String value) {
+    public StringBody(String value, byte[] rawBinaryData) {
         super(Type.STRING);
         this.value = value;
+        this.rawBinaryData = rawBinaryData;
     }
 
     public StringBody(String value, Type type) {
         super(type);
         this.value = value;
+        if (value != null) {
+            this.rawBinaryData = value.getBytes();
+        } else {
+            this.rawBinaryData = new byte[0];
+        }
     }
 
     public static StringBody exact(String body) {
@@ -35,6 +42,10 @@ public class StringBody extends Body<String> {
 
     public String getValue() {
         return value;
+    }
+
+    public byte[] getRawBytes() {
+        return rawBinaryData;
     }
 
     @Override

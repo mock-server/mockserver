@@ -17,6 +17,8 @@ public abstract class Body<T> extends EqualsHashCodeToString {
 
     public abstract T getValue();
 
+    public abstract byte[] getRawBytes();
+
     public enum Type {
         PARAMETERS,
         XPATH,

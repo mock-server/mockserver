@@ -22,6 +22,10 @@ public class BinaryBody extends Body<byte[]> {
         return value;
     }
 
+    public byte[] getRawBytes() {
+        return value;
+    }
+
     @Override
     public String toString() {
         return value != null ? Base64Converter.stringToBase64Bytes(value) : null;

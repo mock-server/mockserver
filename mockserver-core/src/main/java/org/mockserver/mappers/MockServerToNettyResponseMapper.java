@@ -19,7 +19,7 @@ import static io.netty.handler.codec.http.HttpHeaders.Names.SET_COOKIE;
  */
 public class MockServerToNettyResponseMapper {
 
-    public DefaultFullHttpResponse mapMockServerResponseToNettyResponse(HttpResponse httpResponse) {
+    public FullHttpResponse mapMockServerResponseToNettyResponse(HttpResponse httpResponse) {
         if (httpResponse != null) {
             DefaultFullHttpResponse defaultFullHttpResponse = new DefaultFullHttpResponse(
                     HttpVersion.HTTP_1_1,

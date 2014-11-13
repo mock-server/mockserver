@@ -1,9 +1,14 @@
 package org.mockserver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.base.Strings;
+import io.netty.handler.codec.http.QueryStringDecoder;
 import org.mockserver.client.serialization.ObjectMapperFactory;
+import org.mockserver.url.URLEncoder;
 
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.*;
 
@@ -16,7 +21,6 @@ public class HttpRequest extends EqualsHashCodeToString {
     private String path = "";
     private Map<String, Parameter> queryStringParameters = new LinkedHashMap<String, Parameter>();
     private Body body = null;
-    private byte[] rawBodyBytes = null;
     private Map<String, Header> headers = new LinkedHashMap<String, Header>();
     private Map<String, Cookie> cookies = new LinkedHashMap<String, Cookie>();
 
@@ -26,6 +30,7 @@ public class HttpRequest extends EqualsHashCodeToString {
     public static HttpRequest request() {
         return new HttpRequest();
     }
+
     public static HttpRequest request(String path) {
         return new HttpRequest().withPath(path);
     }
@@ -42,6 +47,14 @@ public class HttpRequest extends EqualsHashCodeToString {
 
     public String getMethod() {
         return method;
+    }
+
+    public String getMethod(String defaultValue) {
+        if (Strings.isNullOrEmpty(method)) {
+            return defaultValue;
+        } else {
+            return getMethod();
+        }
     }
 
     public String getURL() {
@@ -139,12 +152,9 @@ public class HttpRequest extends EqualsHashCodeToString {
         return body;
     }
 
+    @JsonIgnore
     public byte[] getRawBodyBytes() {
-        return rawBodyBytes;
-    }
-
-    public void setRawBodyBytes(byte[] bodyBytes) {
-        this.rawBodyBytes = bodyBytes;
+        return this.body != null ? this.body.getRawBytes() : new byte[0];
     }
 
     /**
@@ -159,6 +169,16 @@ public class HttpRequest extends EqualsHashCodeToString {
      */
     public HttpRequest withBody(String body) {
         this.body = new StringBody(body, Body.Type.STRING);
+        return this;
+    }
+
+    /**
+     * The body to match on as binary data such as a pdf or image
+     *
+     * @param body a byte array
+     */
+    public HttpRequest withBody(byte[] body) {
+        this.body = new BinaryBody(body);
         return this;
     }
 
@@ -219,9 +239,6 @@ public class HttpRequest extends EqualsHashCodeToString {
      * @param body an instance of one of the Body subclasses including StringBody, ParameterBody or BinaryBody
      */
     public HttpRequest withBody(Body body) {
-        if (body instanceof BinaryBody) {
-            setRawBodyBytes(((BinaryBody) body).getValue());
-        }
         this.body = body;
         return this;
     }

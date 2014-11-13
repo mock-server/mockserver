@@ -5,7 +5,7 @@ import com.google.common.net.MediaType;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockserver.client.http.ApacheHttpClient;
+import org.mockserver.client.http.NettyHttpClient;
 import org.mockserver.client.server.MockServerClient;
 import org.mockserver.integration.callback.PrecannedTestExpectationCallback;
 import org.mockserver.model.*;
@@ -39,12 +39,12 @@ public abstract class AbstractClientServerIntegrationTest {
 
     protected static MockServerClient mockServerClient;
     protected static String servletContext = "";
-    private final ApacheHttpClient apacheHttpClient;
+    // http client
+    private NettyHttpClient httpClient = new NettyHttpClient();
 
     public AbstractClientServerIntegrationTest() {
         bufferSize(1024);
         maxTimeout(TimeUnit.SECONDS.toMillis(10));
-        apacheHttpClient = new ApacheHttpClient(true);
     }
 
     public abstract int getMockServerPort();
@@ -83,8 +83,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body"),
                 makeRequest(
                         new HttpRequest()
-                                .withURL(baseURL(false) + ""),
-                        false
+                                .withURL(baseURL(false) + "")
                 )
         );
         // - in https
@@ -94,8 +93,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body"),
                 makeRequest(
                         new HttpRequest()
-                                .withURL(baseURL(true)),
-                        false
+                                .withURL(baseURL(true))
                 )
         );
     }
@@ -133,8 +131,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         new Header("X-Test", "test_headers_and_body"),
                                         new Header("Content-Type", "text/plain")
                                 )
-                                .withBody("an_example_body_http"),
-                        false
+                                .withBody("an_example_body_http")
                 )
         );
         // - in https
@@ -157,8 +154,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         new Header("Accept-Encoding", "gzip,deflate"),
                                         new Header("Content-Type", "text/plain")
                                 )
-                                .withBody("an_example_body_https"),
-                        false
+                                .withBody("an_example_body_https")
                 )
         );
     }
@@ -197,8 +193,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         new Header("X-Test", "test_headers_and_body"),
                                         new Header("Content-Type", "text/plain")
                                 )
-                                .withBody("an_example_body_http"),
-                        false
+                                .withBody("an_example_body_http")
                 )
         );
         // - in https
@@ -219,8 +214,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         new Header("X-Test", "test_headers_and_body"),
                                         new Header("Content-Type", "text/plain")
                                 )
-                                .withBody("an_example_body_https"),
-                        false
+                                .withBody("an_example_body_https")
                 )
         );
     }
@@ -269,8 +263,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         new Header("X-Test", "test_headers_and_body"),
                                         new Header("Content-Type", "text/plain")
                                 )
-                                .withBody("an_example_body"),
-                        false
+                                .withBody("an_example_body")
                 )
         );
         // - respond
@@ -280,8 +273,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body"),
                 makeRequest(
                         new HttpRequest()
-                                .withURL(baseURL(false) + "test_headers_and_body"),
-                        false
+                                .withURL(baseURL(false) + "test_headers_and_body")
                 )
         );
         // - no response or forward
@@ -290,8 +282,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         new HttpRequest()
-                                .withURL(baseURL(false) + "test_headers_and_body"),
-                        false
+                                .withURL(baseURL(false) + "test_headers_and_body")
                 )
         );
     }
@@ -322,8 +313,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         new Header("X-Test", "test_headers_and_body"),
                                         new Header("Content-Type", "text/plain")
                                 )
-                                .withBody("an_example_body_http"),
-                        false
+                                .withBody("an_example_body_http")
                 )
         );
 
@@ -340,8 +330,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         new Header("Accept-Encoding", "gzip,deflate"),
                                         new Header("Content-Type", "text/plain")
                                 )
-                                .withBody("an_example_body_https"),
-                        false
+                                .withBody("an_example_body_https")
                 )
         );
     }
@@ -365,8 +354,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withURL(baseURL(false) + "some_path")
-                                .withMethod("POST"),
-                        false
+                                .withMethod("POST")
                 )
         );
         // - in https
@@ -376,8 +364,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withURL(baseURL(true) + "some_path")
-                                .withMethod("POST"),
-                        false
+                                .withMethod("POST")
                 )
         );
     }
@@ -413,8 +400,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withURL(baseURL(false) + "some_path2")
-                                .withPath("/some_path2"),
-                        false
+                                .withPath("/some_path2")
                 )
         );
         assertEquals(
@@ -424,8 +410,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withURL(baseURL(false) + "some_path1")
-                                .withPath("/some_path1"),
-                        false
+                                .withPath("/some_path1")
                 )
         );
         // - in https
@@ -436,8 +421,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withURL(baseURL(true) + "some_path2")
-                                .withPath("/some_path2"),
-                        false
+                                .withPath("/some_path2")
                 )
         );
         assertEquals(
@@ -447,8 +431,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withURL(baseURL(true) + "some_path1")
-                                .withPath("/some_path1"),
-                        false
+                                .withPath("/some_path1")
                 )
         );
     }
@@ -467,8 +450,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withURL(baseURL(false) + "some_path")
-                                .withPath("/some_path"),
-                        false
+                                .withPath("/some_path")
                 )
         );
         // - in https
@@ -479,8 +461,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withURL(baseURL(true) + "some_path")
-                                .withPath("/some_path"),
-                        false
+                                .withPath("/some_path")
                 )
         );
         // - in http
@@ -490,8 +471,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withURL(baseURL(false) + "some_path")
-                                .withPath("/some_path"),
-                        false
+                                .withPath("/some_path")
                 )
         );
         // - in https
@@ -501,8 +481,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withURL(baseURL(true) + "some_path")
-                                .withPath("/some_path"),
-                        false
+                                .withPath("/some_path")
                 )
         );
     }
@@ -521,8 +500,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withURL(baseURL(false) + "some_path")
-                                .withPath("/some_path"),
-                        false
+                                .withPath("/some_path")
                 )
         );
         mockServerClient.verify(new HttpRequest()
@@ -540,8 +518,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withURL(baseURL(true) + "some_path")
-                                .withPath("/some_path"),
-                        false
+                                .withPath("/some_path")
                 )
         );
         mockServerClient.verify(new HttpRequest()
@@ -565,8 +542,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withURL(baseURL(false) + "some_path")
-                                .withPath("/some_path"),
-                        false
+                                .withPath("/some_path")
                 )
         );
         mockServerClient.verify(new HttpRequest()
@@ -590,8 +566,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withURL(baseURL(false) + "some_path")
-                                .withPath("/some_path"),
-                        false
+                                .withPath("/some_path")
                 )
         );
         try {
@@ -622,8 +597,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withURL(baseURL(false) + "some_path")
-                                .withPath("/some_path"),
-                        false
+                                .withPath("/some_path")
                 )
         );
         try {
@@ -654,8 +628,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withURL(baseURL(false) + "some_path")
-                                .withPath("/some_path"),
-                        false
+                                .withPath("/some_path")
                 )
         );
         try {
@@ -683,22 +656,19 @@ public abstract class AbstractClientServerIntegrationTest {
         assertEquals(
                 response("some_body"),
                 makeRequest(
-                        request().withURL(baseURL(false) + "some_path_one"),
-                        false
+                        request().withURL(baseURL(false) + "some_path_one")
                 )
         );
         assertEquals(
                 response("some_body"),
                 makeRequest(
-                        request().withURL(baseURL(false) + "some_path_two"),
-                        false
+                        request().withURL(baseURL(false) + "some_path_two")
                 )
         );
         assertEquals(
                 response("some_body"),
                 makeRequest(
-                        request().withURL(baseURL(false) + "some_path_three"),
-                        false
+                        request().withURL(baseURL(false) + "some_path_three")
                 )
         );
         mockServerClient.verify(request("/some_path_one"), request("/some_path_three"));
@@ -709,22 +679,19 @@ public abstract class AbstractClientServerIntegrationTest {
         assertEquals(
                 response("some_body"),
                 makeRequest(
-                        request().withURL(baseURL(true) + "some_path_one"),
-                        false
+                        request().withURL(baseURL(true) + "some_path_one")
                 )
         );
         assertEquals(
                 response("some_body"),
                 makeRequest(
-                        request().withURL(baseURL(true) + "some_path_two"),
-                        false
+                        request().withURL(baseURL(true) + "some_path_two")
                 )
         );
         assertEquals(
                 response("some_body"),
                 makeRequest(
-                        request().withURL(baseURL(true) + "some_path_three"),
-                        false
+                        request().withURL(baseURL(true) + "some_path_three")
                 )
         );
         mockServerClient.verify(request("/some_path_one"), request("/some_path_three"));
@@ -743,22 +710,19 @@ public abstract class AbstractClientServerIntegrationTest {
         assertEquals(
                 response("some_body"),
                 makeRequest(
-                        request().withURL(baseURL(false) + "some_path_one"),
-                        false
+                        request().withURL(baseURL(false) + "some_path_one")
                 )
         );
         assertEquals(
                 notFoundResponse(),
                 makeRequest(
-                        request().withURL(baseURL(false) + "not_found"),
-                        false
+                        request().withURL(baseURL(false) + "not_found")
                 )
         );
         assertEquals(
                 response("some_body"),
                 makeRequest(
-                        request().withURL(baseURL(false) + "some_path_three"),
-                        false
+                        request().withURL(baseURL(false) + "some_path_three")
                 )
         );
         mockServerClient.verify(request("/some_path_one"), request("/some_path_three"));
@@ -769,22 +733,19 @@ public abstract class AbstractClientServerIntegrationTest {
         assertEquals(
                 response("some_body"),
                 makeRequest(
-                        request().withURL(baseURL(true) + "some_path_one"),
-                        false
+                        request().withURL(baseURL(true) + "some_path_one")
                 )
         );
         assertEquals(
                 notFoundResponse(),
                 makeRequest(
-                        request().withURL(baseURL(true) + "not_found"),
-                        false
+                        request().withURL(baseURL(true) + "not_found")
                 )
         );
         assertEquals(
                 response("some_body"),
                 makeRequest(
-                        request().withURL(baseURL(true) + "some_path_three"),
-                        false
+                        request().withURL(baseURL(true) + "some_path_three")
                 )
         );
         mockServerClient.verify(request("/some_path_one"), request("/some_path_three"));
@@ -802,22 +763,19 @@ public abstract class AbstractClientServerIntegrationTest {
         assertEquals(
                 response("some_body"),
                 makeRequest(
-                        request().withURL(baseURL(false) + "some_path_one"),
-                        false
+                        request().withURL(baseURL(false) + "some_path_one")
                 )
         );
         assertEquals(
                 response("some_body"),
                 makeRequest(
-                        request().withURL(baseURL(false) + "some_path_two"),
-                        false
+                        request().withURL(baseURL(false) + "some_path_two")
                 )
         );
         assertEquals(
                 response("some_body"),
                 makeRequest(
-                        request().withURL(baseURL(false) + "some_path_three"),
-                        false
+                        request().withURL(baseURL(false) + "some_path_three")
                 )
         );
         try {
@@ -902,8 +860,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         "  <price>39.95</price>" + System.getProperty("line.separator") +
                                         "</book>" + System.getProperty("line.separator") +
                                         "" + System.getProperty("line.separator") +
-                                        "</bookstore>", Body.Type.STRING)),
-                        false
+                                        "</bookstore>", Body.Type.STRING))
                 )
         );
         // - in https
@@ -940,8 +897,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         "  <price>39.95</price>" + System.getProperty("line.separator") +
                                         "</book>" + System.getProperty("line.separator") +
                                         "" + System.getProperty("line.separator") +
-                                        "</bookstore>", Body.Type.STRING)),
-                        false
+                                        "</bookstore>", Body.Type.STRING))
                 )
         );
     }
@@ -1004,8 +960,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         "            }" + System.getProperty("line.separator") +
                                         "        }" + System.getProperty("line.separator") +
                                         "    }" + System.getProperty("line.separator") +
-                                        "}"),
-                        false
+                                        "}")
                 )
         );
         // - in https
@@ -1039,8 +994,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         "            }" + System.getProperty("line.separator") +
                                         "        }" + System.getProperty("line.separator") +
                                         "    }" + System.getProperty("line.separator") +
-                                        "}"),
-                        false
+                                        "}")
                 )
         );
     }
@@ -1078,9 +1032,8 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody(binary(pdfBytes)),
                 makeRequest(
                         new HttpRequest()
-                                .withURL(baseURL(false) + "/ws/rest/user/1/document/2.pdf")
-                                .withMethod("GET"),
-                        true
+                                .withURL(baseURL(false) + "ws/rest/user/1/document/2.pdf")
+                                .withMethod("GET")
                 )
         );
         // - in https
@@ -1094,9 +1047,8 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody(binary(pdfBytes)),
                 makeRequest(
                         new HttpRequest()
-                                .withURL(baseURL(true) + "/ws/rest/user/1/document/2.pdf")
-                                .withMethod("GET"),
-                        true
+                                .withURL(baseURL(true) + "ws/rest/user/1/document/2.pdf")
+                                .withMethod("GET")
                 )
         );
     }
@@ -1132,9 +1084,8 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody(binary(pngBytes)),
                 makeRequest(
                         new HttpRequest()
-                                .withURL(baseURL(false) + "/ws/rest/user/1/icon/1.png")
-                                .withMethod("GET"),
-                        true
+                                .withURL(baseURL(false) + "ws/rest/user/1/icon/1.png")
+                                .withMethod("GET")
                 )
         );
 
@@ -1148,9 +1099,8 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody(binary(pngBytes)),
                 makeRequest(
                         new HttpRequest()
-                                .withURL(baseURL(true) + "/ws/rest/user/1/icon/1.png")
-                                .withMethod("GET"),
-                        true
+                                .withURL(baseURL(true) + "ws/rest/user/1/icon/1.png")
+                                .withMethod("GET")
                 )
         );
     }
@@ -1189,8 +1139,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withURL(baseURL(false) + "ws/rest/user/1/document/2.pdf")
                                 .withBody(binary(pdfBytes))
-                                .withMethod("POST"),
-                        true
+                                .withMethod("POST")
                 )
         );
         // - in https
@@ -1206,8 +1155,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withURL(baseURL(true) + "ws/rest/user/1/document/2.pdf")
                                 .withBody(binary(pdfBytes))
-                                .withMethod("POST"),
-                        true
+                                .withMethod("POST")
                 )
         );
     }
@@ -1244,8 +1192,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withURL(baseURL(false) + "ws/rest/user/1/icon/1.png")
                                 .withBody(binary(pngBytes))
-                                .withMethod("POST"),
-                        true
+                                .withMethod("POST")
                 )
         );
         // - in https
@@ -1260,8 +1207,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         new HttpRequest()
                                 .withURL(baseURL(true) + "ws/rest/user/1/icon/1.png")
                                 .withBody(binary(pngBytes))
-                                .withMethod("POST"),
-                        true
+                                .withMethod("POST")
                 )
         );
     }
@@ -1295,8 +1241,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withURL(baseURL(false) + "some_path2")
-                                .withPath("/some_path2"),
-                        false
+                                .withPath("/some_path2")
                 )
         );
         assertEquals(
@@ -1306,8 +1251,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withURL(baseURL(false) + "some_path1")
-                                .withPath("/some_path1"),
-                        false
+                                .withPath("/some_path1")
                 )
         );
         // - in https
@@ -1318,8 +1262,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withURL(baseURL(true) + "some_path2")
-                                .withPath("/some_path2"),
-                        false
+                                .withPath("/some_path2")
                 )
         );
         assertEquals(
@@ -1329,8 +1272,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withURL(baseURL(true) + "some_path1")
-                                .withPath("/some_path1"),
-                        false
+                                .withPath("/some_path1")
                 )
         );
     }
@@ -1366,8 +1308,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
                                 )
                                 .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
-                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest")),
-                        false
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
                 )
         );
         // - in https
@@ -1385,8 +1326,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
                                 )
                                 .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
-                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest")),
-                        false
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
                 )
         );
     }
@@ -1428,8 +1368,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 )
                                 .withBody("some_bodyRequest")
                                 .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
-                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest")),
-                        false
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
                 )
         );
         // - in https
@@ -1451,8 +1390,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 )
                                 .withBody("some_bodyRequest")
                                 .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
-                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest")),
-                        false
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
                 )
         );
     }
@@ -1497,8 +1435,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
                                 )
                                 .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
-                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest")),
-                        false
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
                 )
         );
         // - in https
@@ -1516,8 +1453,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withURL(baseURL(true) + "some_pathRequest?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
                                 .withPath("/some_pathRequest")
                                 .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
-                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest")),
-                        false
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
                 )
         );
     }
@@ -1561,8 +1497,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         new Header("requestHeaderNameOne", "requestHeaderValueOne_One", "requestHeaderValueOne_Two"),
                                         new Header("requestHeaderNameTwo", "requestHeaderValueTwo")
                                 )
-                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest")),
-                        false
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
                 )
         );
         // - in https
@@ -1583,8 +1518,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         new Header("requestHeaderNameOne", "requestHeaderValueOne_One", "requestHeaderValueOne_Two"),
                                         new Header("requestHeaderNameTwo", "requestHeaderValueTwo")
                                 )
-                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest")),
-                        false
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
                 )
         );
     }
@@ -1636,8 +1570,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withCookies(
                                         new Cookie("requestCookieNameOne", "requestCookieValueOne_One", "requestCookieValueOne_Two"),
                                         new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
-                                ),
-                        false
+                                )
                 )
         );
         // - in http - cookie header
@@ -1660,8 +1593,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withHeaders(
                                         new Header("headerNameRequest", "headerValueRequest"),
                                         new Header("Cookie", "requestCookieNameOne=requestCookieValueOne_One; requestCookieNameOne=requestCookieValueOne_Two; requestCookieNameTwo=requestCookieValueTwo")
-                                ),
-                        false
+                                )
                 )
         );
         // - in https - cookie objects
@@ -1687,8 +1619,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withCookies(
                                         new Cookie("requestCookieNameOne", "requestCookieValueOne_One", "requestCookieValueOne_Two"),
                                         new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
-                                ),
-                        false
+                                )
                 )
         );
         // - in https - cookie header
@@ -1711,8 +1642,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withHeaders(
                                         new Header("headerNameRequest", "headerValueRequest"),
                                         new Header("Cookie", "requestCookieNameOne=requestCookieValueOne_One; requestCookieNameOne=requestCookieValueOne_Two; requestCookieNameTwo=requestCookieValueTwo")
-                                ),
-                        false
+                                )
                 )
         );
     }
@@ -1750,8 +1680,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         "&queryStringParameterOneName=queryStringParameterOneValueTwo" +
                                         "&queryStringParameterTwoName=queryStringParameterTwoValue")
                                 .withPath("/some_path")
-                                .withBody(params(new Parameter("bodyParameterName", "bodyParameterValue"))),
-                        false
+                                .withBody(params(new Parameter("bodyParameterName", "bodyParameterValue")))
                 )
         );
         // - in https - query string parameter objects
@@ -1768,8 +1697,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValueOne", "queryStringParameterOneValueTwo"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
                                 )
-                                .withBody(params(new Parameter("bodyParameterName=bodyParameterValue"))),
-                        false
+                                .withBody(params(new Parameter("bodyParameterName=bodyParameterValue")))
                 )
         );
     }
@@ -1817,8 +1745,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withPath("/some_pathRequest")
                                 .withBody("some_bodyRequest")
                                 .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
-                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest")),
-                        false
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
                 )
         );
         // - in http - query string parameter objects
@@ -1842,8 +1769,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 )
                                 .withBody("some_bodyRequest")
                                 .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
-                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest")),
-                        false
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
                 )
         );
         // - in https - url string and query string parameter objects
@@ -1870,8 +1796,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 )
                                 .withBody("some_bodyRequest")
                                 .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
-                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest")),
-                        false
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
                 )
         );
     }
@@ -1917,8 +1842,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         "&bodyParameterOneName=Parameter+One+Value+Two" +
                                         "&bodyParameterTwoName=Parameter+Two", Body.Type.STRING))
                                 .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
-                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest")),
-                        false
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
                 )
         );
         // - in http - body parameter objects
@@ -1941,8 +1865,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         new Parameter("bodyParameterTwoName", "Parameter Two")
                                 ))
                                 .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
-                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest")),
-                        false
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
                 )
         );
         // - in https - url string and query string parameter objects
@@ -1968,8 +1891,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         new Parameter("bodyParameterTwoName", "Parameter Two")
                                 ))
                                 .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
-                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest")),
-                        false
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
                 )
         );
     }
@@ -2018,8 +1940,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withHeaders(
                                         new Header("headerNameRequest", "headerValueRequest"),
                                         new Header("Cookie", "cookieNameRequest=cookieValueRequest")
-                                ),
-                        false
+                                )
                 )
         );
         // - in http - body parameter objects
@@ -2042,8 +1963,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         new Parameter("bodyParameterTwoName", "Parameter Two")
                                 ))
                                 .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
-                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest")),
-                        false
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
                 )
         );
     }
@@ -2088,8 +2008,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 )
                                 .withBody(exact("some_other_body"))
                                 .withHeaders(new Header("headerName", "headerValue"))
-                                .withCookies(new Cookie("cookieName", "cookieValue")),
-                        false
+                                .withCookies(new Cookie("cookieName", "cookieValue"))
                 )
         );
         // - in https
@@ -2107,8 +2026,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 )
                                 .withBody(exact("some_other_body"))
                                 .withHeaders(new Header("headerName", "headerValue"))
-                                .withCookies(new Cookie("cookieName", "cookieValue")),
-                        false
+                                .withCookies(new Cookie("cookieName", "cookieValue"))
                 )
         );
     }
@@ -2152,8 +2070,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         "  <price>31.95</price>" + System.getProperty("line.separator") +
                                         "</book>" + System.getProperty("line.separator") +
                                         "" + System.getProperty("line.separator") +
-                                        "</bookstore>", Body.Type.STRING)),
-                        false
+                                        "</bookstore>", Body.Type.STRING))
                 )
         );
         // - in https
@@ -2189,8 +2106,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         "  <price>31.95</price>" + System.getProperty("line.separator") +
                                         "</book>" + System.getProperty("line.separator") +
                                         "" + System.getProperty("line.separator") +
-                                        "</bookstore>", Body.Type.STRING)),
-                        false
+                                        "</bookstore>", Body.Type.STRING))
                 )
         );
     }
@@ -2253,8 +2169,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         "            }" + System.getProperty("line.separator") +
                                         "        }" + System.getProperty("line.separator") +
                                         "    }" + System.getProperty("line.separator") +
-                                        "}"),
-                        false
+                                        "}")
                 )
         );
         // - in https
@@ -2287,8 +2202,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         "            }" + System.getProperty("line.separator") +
                                         "        }" + System.getProperty("line.separator") +
                                         "    }" + System.getProperty("line.separator") +
-                                        "}"),
-                        false
+                                        "}")
                 )
         );
     }
@@ -2333,8 +2247,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 )
                                 .withBody(exact("some_body"))
                                 .withHeaders(new Header("headerName", "headerValue"))
-                                .withCookies(new Cookie("cookieName", "cookieValue")),
-                        false
+                                .withCookies(new Cookie("cookieName", "cookieValue"))
                 )
         );
         // - in https
@@ -2352,8 +2265,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 )
                                 .withBody(exact("some_body"))
                                 .withHeaders(new Header("headerName", "headerValue"))
-                                .withCookies(new Cookie("cookieName", "cookieValue")),
-                        false
+                                .withCookies(new Cookie("cookieName", "cookieValue"))
                 )
         );
     }
@@ -2395,8 +2307,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withPath("/some_pathRequest")
                                 .withBody("some_bodyRequest")
                                 .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
-                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest")),
-                        false
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
                 )
         );
     }
@@ -2437,8 +2348,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         new Parameter("bodyParameterTwoName", "Parameter Two")
                                 ))
                                 .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
-                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest")),
-                        false
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
                 )
         );
         // wrong query string parameter name
@@ -2454,8 +2364,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         "&bodyParameterOneName=Parameter+One+Value+Two" +
                                         "&bodyParameterTwoName=Parameter+Two", Body.Type.STRING))
                                 .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
-                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest")),
-                        false
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
                 )
         );
     }
@@ -2498,8 +2407,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 )
                                 .withBody("some_bodyRequest")
                                 .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
-                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest")),
-                        false
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
                 )
         );
     }
@@ -2540,8 +2448,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         new Parameter("bodyParameterTwoName", "Parameter Two")
                                 ))
                                 .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
-                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest")),
-                        false
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
                 )
         );
         // wrong body parameter value
@@ -2557,8 +2464,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         "&bodyParameterOneName=Parameter+One+Value+Two" +
                                         "&bodyParameterTwoName=Parameter+Two", Body.Type.STRING))
                                 .withHeaders(new Header("headerNameRequest", "headerValueRequest"))
-                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest")),
-                        false
+                                .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest"))
                 )
         );
     }
@@ -2603,8 +2509,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 )
                                 .withBody(exact("some_body"))
                                 .withHeaders(new Header("headerName", "headerValue"))
-                                .withCookies(new Cookie("cookieOtherName", "cookieValue")),
-                        false
+                                .withCookies(new Cookie("cookieOtherName", "cookieValue"))
                 )
         );
         // - in https
@@ -2622,8 +2527,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 )
                                 .withBody(exact("some_body"))
                                 .withHeaders(new Header("headerName", "headerValue"))
-                                .withCookies(new Cookie("cookieOtherName", "cookieValue")),
-                        false
+                                .withCookies(new Cookie("cookieOtherName", "cookieValue"))
                 )
         );
     }
@@ -2668,8 +2572,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 )
                                 .withBody(exact("some_body"))
                                 .withHeaders(new Header("headerName", "headerValue"))
-                                .withCookies(new Cookie("cookieName", "cookieOtherValue")),
-                        false
+                                .withCookies(new Cookie("cookieName", "cookieOtherValue"))
                 )
         );
         // - in https
@@ -2687,8 +2590,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 )
                                 .withBody(exact("some_body"))
                                 .withHeaders(new Header("headerName", "headerValue"))
-                                .withCookies(new Cookie("cookieName", "cookieOtherValue")),
-                        false
+                                .withCookies(new Cookie("cookieName", "cookieOtherValue"))
                 )
         );
     }
@@ -2733,8 +2635,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 )
                                 .withBody(exact("some_body"))
                                 .withHeaders(new Header("headerOtherName", "headerValue"))
-                                .withCookies(new Cookie("cookieName", "cookieValue")),
-                        false
+                                .withCookies(new Cookie("cookieName", "cookieValue"))
                 )
         );
         // - in https
@@ -2752,8 +2653,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 )
                                 .withBody(exact("some_body"))
                                 .withHeaders(new Header("headerOtherName", "headerValue"))
-                                .withCookies(new Cookie("cookieName", "cookieValue")),
-                        false
+                                .withCookies(new Cookie("cookieName", "cookieValue"))
                 )
         );
     }
@@ -2798,8 +2698,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 )
                                 .withBody(exact("some_body"))
                                 .withHeaders(new Header("headerName", "headerOtherValue"))
-                                .withCookies(new Cookie("cookieName", "cookieValue")),
-                        false
+                                .withCookies(new Cookie("cookieName", "cookieValue"))
                 )
         );
         // - in https
@@ -2817,8 +2716,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 )
                                 .withBody(exact("some_body"))
                                 .withHeaders(new Header("headerName", "headerOtherValue"))
-                                .withCookies(new Cookie("cookieName", "cookieValue")),
-                        false
+                                .withCookies(new Cookie("cookieName", "cookieValue"))
                 )
         );
     }
@@ -2861,8 +2759,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withURL(baseURL(false) + "some_path2")
-                                .withPath("/some_path2"),
-                        false
+                                .withPath("/some_path2")
                 )
         );
         assertEquals(
@@ -2871,8 +2768,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withURL(baseURL(false) + "some_path1")
-                                .withPath("/some_path1"),
-                        false
+                                .withPath("/some_path1")
                 )
         );
         // - in https
@@ -2883,8 +2779,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withURL(baseURL(true) + "some_path2")
-                                .withPath("/some_path2"),
-                        false
+                                .withPath("/some_path2")
                 )
         );
         assertEquals(
@@ -2893,8 +2788,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withURL(baseURL(true) + "some_path1")
-                                .withPath("/some_path1"),
-                        false
+                                .withPath("/some_path1")
                 )
         );
     }
@@ -2932,8 +2826,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withURL(baseURL(false) + "some_path1")
-                                .withPath("/some_path1"),
-                        false
+                                .withPath("/some_path1")
                 )
         );
         assertEquals(
@@ -2942,8 +2835,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withURL(baseURL(false) + "some_path2")
-                                .withPath("/some_path2"),
-                        false
+                                .withPath("/some_path2")
                 )
         );
         // - in https
@@ -2953,8 +2845,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withURL(baseURL(true) + "some_path1")
-                                .withPath("/some_path1"),
-                        false
+                                .withPath("/some_path1")
                 )
         );
         assertEquals(
@@ -2963,14 +2854,13 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         new HttpRequest()
                                 .withURL(baseURL(true) + "some_path2")
-                                .withPath("/some_path2"),
-                        false
+                                .withPath("/some_path2")
                 )
         );
     }
 
-    protected HttpResponse makeRequest(HttpRequest httpRequest, boolean binaryBody) {
-        HttpResponse httpResponse = apacheHttpClient.sendRequest(httpRequest, binaryBody);
+    protected HttpResponse makeRequest(HttpRequest httpRequest) {
+        HttpResponse httpResponse = httpClient.sendRequest(httpRequest);
         List<Header> headers = new ArrayList<Header>();
         for (Header header : httpResponse.getHeaders()) {
             if (!(header.getName().equalsIgnoreCase("Server") || header.getName().equalsIgnoreCase("Expires") || header.getName().equalsIgnoreCase("Date") || header.getName().equalsIgnoreCase("Connection") || header.getName().equalsIgnoreCase("User-Agent") || header.getName().equalsIgnoreCase("Content-Type"))) {

@@ -1,12 +1,11 @@
 package org.mockserver.client.server;
 
 import org.apache.commons.lang3.StringUtils;
-import org.mockserver.client.http.ApacheHttpClient;
+import org.mockserver.client.http.NettyHttpClient;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.client.serialization.VerificationSequenceSerializer;
 import org.mockserver.client.serialization.VerificationSerializer;
-import org.mockserver.matchers.HttpResponseMatcher;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
@@ -17,8 +16,7 @@ import org.mockserver.verify.VerificationTimes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
+import static org.mockserver.model.HttpRequest.request;
 
 /**
  * @author jamesdbloom
@@ -26,9 +24,8 @@ import java.util.List;
 public class MockServerClient {
     private static final Logger logger = LoggerFactory.getLogger(MockServerClient.class);
 
-    protected final int port;
     private final String uriBase;
-    private ApacheHttpClient apacheHttpClient;
+    private NettyHttpClient nettyHttpClient = new NettyHttpClient();
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
     private VerificationSerializer verificationSerializer = new VerificationSerializer();
@@ -64,9 +61,7 @@ public class MockServerClient {
         if (contextPath == null) {
             throw new IllegalArgumentException("ContextPath can not be null");
         }
-        this.port = port;
         this.uriBase = "http://" + host + ":" + port + (contextPath.length() > 0 && !contextPath.startsWith("/") ? "/" : "") + contextPath;
-        this.apacheHttpClient = new ApacheHttpClient(false);
     }
 
     /**
@@ -125,8 +120,7 @@ public class MockServerClient {
      * Pretty-print the json for all expectations to the log.  They are printed into a dedicated log called mockserver_request.log
      */
     public MockServerClient dumpToLog() {
-        dumpToLog(null);
-        return this;
+        return dumpToLog(null);
     }
 
     /**
@@ -135,7 +129,7 @@ public class MockServerClient {
      * @param httpRequest the http request that is matched against when deciding what to log if null all requests are logged
      */
     public MockServerClient dumpToLog(HttpRequest httpRequest) {
-        apacheHttpClient.sendPUTRequest(uriBase, "/dumpToLog", httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "");
+        nettyHttpClient.sendRequest(request().withMethod("PUT").withURL(uriBase + "/dumpToLog").withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : ""));
         return this;
     }
 
@@ -143,7 +137,7 @@ public class MockServerClient {
      * Reset MockServer by clearing all expectations
      */
     public MockServerClient reset() {
-        apacheHttpClient.sendPUTRequest(uriBase, "/reset", "");
+        nettyHttpClient.sendRequest(request().withMethod("PUT").withURL(uriBase + "/reset"));
         return this;
     }
 
@@ -152,7 +146,7 @@ public class MockServerClient {
      */
     public MockServerClient stop() {
         try {
-            apacheHttpClient.sendPUTRequest(uriBase, "/stop", "");
+            nettyHttpClient.sendRequest(request().withMethod("PUT").withURL(uriBase + "/stop"));
         } catch (Exception e) {
             logger.debug("Failed to send stop request to proxy " + e.getMessage());
         }
@@ -165,12 +159,12 @@ public class MockServerClient {
      * @param httpRequest the http request that is matched against when deciding whether to clear each expectation if null all expectations are cleared
      */
     public MockServerClient clear(HttpRequest httpRequest) {
-        apacheHttpClient.sendPUTRequest(uriBase, "/clear", httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "");
+        nettyHttpClient.sendRequest(request().withMethod("PUT").withURL(uriBase + "/clear").withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : ""));
         return this;
     }
 
     protected void sendExpectation(Expectation expectation) {
-        apacheHttpClient.sendPUTRequest(uriBase, "/expectation", expectation != null ? expectationSerializer.serialize(expectation) : "");
+        nettyHttpClient.sendRequest(request().withMethod("PUT").withURL(uriBase + "/expectation").withBody(expectation != null ? expectationSerializer.serialize(expectation) : ""));
     }
 
     /**
@@ -195,7 +189,7 @@ public class MockServerClient {
         }
 
         VerificationSequence verificationSequence = new VerificationSequence().withRequests(httpRequests);
-        String result = apacheHttpClient.sendPUTRequest(uriBase, "/verifySequence", verificationSequenceSerializer.serialize(verificationSequence));
+        String result = nettyHttpClient.sendRequest(request().withMethod("PUT").withURL(uriBase + "/verifySequence").withBody(verificationSequenceSerializer.serialize(verificationSequence))).getBodyAsString();
 
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -204,7 +198,7 @@ public class MockServerClient {
     }
 
     /**
-     * Verify a single request has been sent for example:
+     * Verify a request has been sent for example:
      *
      *   mockServerClient
      *           .verify(
@@ -233,7 +227,7 @@ public class MockServerClient {
         }
 
         Verification verification = new Verification().withRequest(httpRequest).withTimes(times);
-        String result = apacheHttpClient.sendPUTRequest(uriBase, "/verify", verificationSerializer.serialize(verification));
+        String result = nettyHttpClient.sendRequest(request().withMethod("PUT").withURL(uriBase + "/verify").withBody(verificationSerializer.serialize(verification))).getBodyAsString();
 
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -248,31 +242,8 @@ public class MockServerClient {
      * @return an array of all expectations that have been recorded by the proxy
      */
     public Expectation[] retrieveAsExpectations(HttpRequest httpRequest) {
-        return retrieveAsExpectations(httpRequest, null);
-    }
-
-    /**
-     * Retrieve the recorded requests that match the httpRequest parameter as expectations, use null for the parameter to retrieve all requests
-     *
-     * @param httpRequest the http request that is matched against when deciding whether to return each expectation, use null for the parameter to retrieve for all requests
-     * @param httpResponse the http response that is matched against when deciding whether to return each expectation, use null for the parameter to retrieve for all requests
-     * @return an array of all expectations that have been recorded by the proxy
-     */
-    public Expectation[] retrieveAsExpectations(HttpRequest httpRequest, HttpResponse httpResponse) {
-        Expectation[] expectations = expectationSerializer.deserializeArray(apacheHttpClient.sendPUTRequest(uriBase, "/retrieve", (httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "")));
-
-        if (httpResponse != null) {
-            List<Expectation> matchingExpectations = new ArrayList<Expectation>();
-            HttpResponseMatcher httpResponseMatcher = new HttpResponseMatcher(httpResponse);
-            for (Expectation expectation : expectations) {
-                if (httpResponseMatcher.matches(expectation.getHttpResponse(false))) {
-                    matchingExpectations.add(expectation);
-                }
-            }
-            expectations = matchingExpectations.toArray(new Expectation[matchingExpectations.size()]);
-        }
-
-        return expectations;
+        HttpResponse httpResponse = nettyHttpClient.sendRequest(request().withMethod("PUT").withURL(uriBase + "/retrieve").withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : ""));
+        return expectationSerializer.deserializeArray(httpResponse.getBodyAsString());
     }
 
     /**
@@ -282,6 +253,7 @@ public class MockServerClient {
      * @return a JSON array of all expectations that have been recorded by the proxy
      */
     public String retrieveAsJSON(HttpRequest httpRequest) {
-        return apacheHttpClient.sendPUTRequest(uriBase, "/retrieve", (httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : ""));
+        HttpResponse httpResponse = nettyHttpClient.sendRequest(request().withMethod("PUT").withURL(uriBase + "/retrieve").withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : ""));
+        return httpResponse.getBodyAsString();
     }
 }

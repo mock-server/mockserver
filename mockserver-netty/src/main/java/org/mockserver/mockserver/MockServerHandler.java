@@ -110,6 +110,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<FullHttpReque
             } else if (mappedRequest.matches(HttpMethod.PUT, "/stop")) {
 
                 writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
+                ctx.flush();
                 ctx.close();
                 server.stop();
 
@@ -139,7 +140,9 @@ public class MockServerHandler extends SimpleChannelInboundHandler<FullHttpReque
     }
 
     private void writeResponse(ChannelHandlerContext ctx, HttpMessage request, HttpResponseStatus responseStatus, ByteBuf responseContent) {
-        writeResponse(ctx, request, new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, responseStatus, responseContent));
+        DefaultFullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, responseStatus, responseContent);
+        response.headers().set(HttpHeaders.Names.CONTENT_TYPE, "application/json; charset=utf-8");
+        writeResponse(ctx, request, response);
     }
 
     private void writeResponse(ChannelHandlerContext ctx, HttpMessage request, FullHttpResponse response) {

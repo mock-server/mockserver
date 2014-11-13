@@ -4,19 +4,19 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.handler.codec.http.*;
-import org.mockserver.client.http.ApacheHttpClient;
+import org.mockserver.client.http.NettyHttpClient;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.client.serialization.VerificationSequenceSerializer;
 import org.mockserver.client.serialization.VerificationSerializer;
+import org.mockserver.filters.Filters;
+import org.mockserver.filters.HopByHopHeaderFilter;
+import org.mockserver.filters.LogFilter;
 import org.mockserver.mappers.MockServerToNettyResponseMapper;
 import org.mockserver.mappers.NettyToMockServerRequestMapper;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mockserver.MappedRequest;
 import org.mockserver.model.HttpResponse;
-import org.mockserver.filters.Filters;
-import org.mockserver.filters.HopByHopHeaderFilter;
-import org.mockserver.filters.LogFilter;
 import org.mockserver.proxy.http.connect.HttpConnectHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +38,8 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<FullHttpReques
     private final HttpProxy server;
     private final LogFilter logFilter;
     private final Filters filters = new Filters();
-    private final ApacheHttpClient apacheHttpClient = new ApacheHttpClient(true);
+    // http client
+    private NettyHttpClient httpClient = new NettyHttpClient();
     // mappers
     private NettyToMockServerRequestMapper nettyToMockServerRequestMapper = new NettyToMockServerRequestMapper();
     private MockServerToNettyResponseMapper mockServerToNettyResponseMapper = new MockServerToNettyResponseMapper();
@@ -119,6 +120,7 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<FullHttpReques
             } else if (mappedRequest.matches(HttpMethod.PUT, "/stop")) {
 
                 writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
+                ctx.flush();
                 ctx.close();
                 server.stop();
 
@@ -141,7 +143,7 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<FullHttpReques
     private FullHttpResponse sendRequest(final org.mockserver.model.HttpRequest httpRequest) {
         // if HttpRequest was set to null by a filter don't send request
         if (httpRequest != null) {
-            HttpResponse httpResponse = filters.applyOnResponseFilters(httpRequest, apacheHttpClient.sendRequest(httpRequest, false));
+            HttpResponse httpResponse = filters.applyOnResponseFilters(httpRequest, httpClient.sendRequest(httpRequest));
             return mockServerToNettyResponseMapper.mapMockServerResponseToNettyResponse(httpResponse);
         } else {
             return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_FOUND);
@@ -153,7 +155,9 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<FullHttpReques
     }
 
     private void writeResponse(ChannelHandlerContext ctx, HttpMessage request, HttpResponseStatus responseStatus, ByteBuf responseContent) {
-        writeResponse(ctx, request, new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, responseStatus, responseContent));
+        DefaultFullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, responseStatus, responseContent);
+        response.headers().set(HttpHeaders.Names.CONTENT_TYPE, "application/json; charset=utf-8");
+        writeResponse(ctx, request, response);
     }
 
     private void writeResponse(ChannelHandlerContext ctx, HttpMessage request, FullHttpResponse response) {

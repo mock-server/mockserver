@@ -2,6 +2,7 @@ package org.mockserver.mappers;
 
 import com.google.common.base.Charsets;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
+import io.netty.handler.codec.http.FullHttpResponse;
 import org.junit.Test;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
@@ -31,7 +32,7 @@ public class MockServerToNettyResponseMapperTest {
         httpResponse.withCookies(new Cookie("cookieName1", "cookieValue1"), new Cookie("cookieName2", "cookieValue2"));
 
         // when
-        DefaultFullHttpResponse defaultFullHttpResponse = new MockServerToNettyResponseMapper().mapMockServerResponseToNettyResponse(httpResponse);
+        FullHttpResponse defaultFullHttpResponse = new MockServerToNettyResponseMapper().mapMockServerResponseToNettyResponse(httpResponse);
 
         // then
         assertEquals(HttpStatusCode.OK_200.code(), defaultFullHttpResponse.getStatus().code());
@@ -55,7 +56,7 @@ public class MockServerToNettyResponseMapperTest {
         httpResponse.withCookies((Cookie[]) null);
 
         // when
-        DefaultFullHttpResponse defaultFullHttpResponse = new MockServerToNettyResponseMapper().mapMockServerResponseToNettyResponse(httpResponse);
+        FullHttpResponse defaultFullHttpResponse = new MockServerToNettyResponseMapper().mapMockServerResponseToNettyResponse(httpResponse);
 
         // then
         assertEquals(HttpStatusCode.OK_200.code(), defaultFullHttpResponse.getStatus().code());
@@ -66,7 +67,7 @@ public class MockServerToNettyResponseMapperTest {
     @Test
     public void shouldMapNullResponseToNettyResponse() {
         // when
-        DefaultFullHttpResponse defaultFullHttpResponse = new MockServerToNettyResponseMapper().mapMockServerResponseToNettyResponse(null);
+        FullHttpResponse defaultFullHttpResponse = new MockServerToNettyResponseMapper().mapMockServerResponseToNettyResponse(null);
 
         // then
         assertEquals(HttpStatusCode.NOT_FOUND_404.code(), defaultFullHttpResponse.getStatus().code());

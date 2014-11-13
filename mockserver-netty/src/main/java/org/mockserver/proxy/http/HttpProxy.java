@@ -13,6 +13,7 @@ import io.netty.handler.codec.socks.SocksInitRequestDecoder;
 import io.netty.handler.codec.socks.SocksMessageEncoder;
 import io.netty.handler.ssl.SslHandler;
 import org.mockserver.filters.LogFilter;
+import org.mockserver.logging.LoggingHandler;
 import org.mockserver.proxy.http.direct.DirectProxyUpstreamHandler;
 import org.mockserver.proxy.interceptor.RequestInterceptor;
 import org.mockserver.socket.SSLFactory;
@@ -169,6 +170,7 @@ public class HttpProxy {
                 ChannelPipeline pipeline = ch.pipeline();
 
                 // add HTTP decoder and encoder
+                pipeline.addLast("logger", new LoggingHandler());
                 pipeline.addLast(HttpServerCodec.class.getSimpleName(), new HttpServerCodec());
                 pipeline.addLast(HttpObjectAggregator.class.getSimpleName(), new HttpObjectAggregator(Integer.MAX_VALUE));
 

@@ -48,7 +48,7 @@
         <slf4j.version>1.7.7</slf4j.version>
         <tomcat.version>7.0.56</tomcat.version>
         <jackson.version>2.4.3</jackson.version>
-        <netty.version>4.0.23.Final</netty.version>
+        <netty.version>4.0.24.Final</netty.version>
         <skipTests>false</skipTests>
         <release.arguments />
     </properties>
@@ -180,11 +180,6 @@
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpclient</artifactId>
                 <version>4.3.5</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.httpcomponents</groupId>
-                <artifactId>httpasyncclient</artifactId>
-                <version>4.0.2</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.httpcomponents</groupId>

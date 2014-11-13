@@ -1,55 +1,47 @@
-package org.mockserver.mappers;
+package org.mockserver.client.http;
 
 import com.google.common.base.Charsets;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.util.EntityUtils;
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.MessageToMessageDecoder;
+import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.HttpHeaders;
+import org.mockserver.mappers.ContentTypeMapper;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.net.HttpCookie;
 import java.util.*;
 
 /**
  * @author jamesdbloom
  */
-public class ApacheHttpClientToMockServerResponseMapper {
+public class MockServerResponseDecoder extends MessageToMessageDecoder<FullHttpResponse> {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public HttpResponse mapApacheHttpClientResponseToMockServerResponse(CloseableHttpResponse clientResponse, boolean binaryBody) throws IOException {
+    @Override
+    protected void decode(ChannelHandlerContext ctx, FullHttpResponse fullHttpResponse, List<Object> out) throws Exception {
         HttpResponse httpResponse = new HttpResponse();
-        setStatusCode(httpResponse, clientResponse);
-        setHeaders(httpResponse, clientResponse);
-        setCookies(httpResponse);
-        if (binaryBody) {
-            if (clientResponse.getEntity() != null) {
-                setBody(httpResponse, EntityUtils.toByteArray(clientResponse.getEntity()));
-            }
-        } else {
-            if (clientResponse.getEntity() != null) {
-                setBody(httpResponse, EntityUtils.toString(clientResponse.getEntity(), Charsets.UTF_8));
-            }
+        if (fullHttpResponse != null) {
+            setStatusCode(httpResponse, fullHttpResponse);
+            setHeaders(httpResponse, fullHttpResponse);
+            setCookies(httpResponse);
+            setBody(httpResponse, fullHttpResponse);
         }
-        return httpResponse;
+        out.add(httpResponse);
     }
 
-    private void setStatusCode(HttpResponse httpResponse, CloseableHttpResponse clientResponse) {
-        if (clientResponse.getStatusLine() != null) {
-            httpResponse.withStatusCode(clientResponse.getStatusLine().getStatusCode());
-        }
+    private void setStatusCode(HttpResponse httpResponse, FullHttpResponse nettyHttpResponse) {
+        httpResponse.withStatusCode(nettyHttpResponse.getStatus().code());
     }
 
-    private void setHeaders(HttpResponse httpResponse, CloseableHttpResponse clientResponse) {
+    private void setHeaders(HttpResponse httpResponse, FullHttpResponse nettyHttpResponse) {
         Map<String, Header> mappedHeaders = new HashMap<String, Header>();
-        for (org.apache.http.Header header : clientResponse.getAllHeaders()) {
-            if (mappedHeaders.containsKey(header.getName())) {
-                mappedHeaders.get(header.getName()).addValue(header.getValue());
-            } else {
-                mappedHeaders.put(header.getName(), new Header(header.getName(), header.getValue()));
-            }
+        for (String headerName : nettyHttpResponse.headers().names()) {
+            mappedHeaders.put(headerName, new Header(headerName, nettyHttpResponse.headers().getAll(headerName)));
         }
         List<Header> headers = new ArrayList<Header>(mappedHeaders.values());
         List<String> headersToRemove = Arrays.asList("Content-Encoding", "Content-Length", "Transfer-Encoding");
@@ -83,11 +75,14 @@ public class ApacheHttpClientToMockServerResponseMapper {
         httpResponse.withCookies(new ArrayList<Cookie>(mappedCookies.values()));
     }
 
-    private void setBody(HttpResponse httpResponse, String content) {
-        httpResponse.withBody(content);
-    }
-
-    private void setBody(HttpResponse httpResponse, byte[] content) {
-        httpResponse.withBody(content);
+    private void setBody(HttpResponse httpResponse, FullHttpResponse nettyHttpResponse) {
+        if (nettyHttpResponse.content().readableBytes() > 0) {
+            ByteBuf byteBuf = nettyHttpResponse.content().readBytes(nettyHttpResponse.content().readableBytes());
+            if (ContentTypeMapper.isBinary(nettyHttpResponse.headers().get(HttpHeaders.Names.CONTENT_TYPE))) {
+                httpResponse.withBody(byteBuf.array());
+            } else {
+                httpResponse.withBody(byteBuf.toString(Charsets.UTF_8));
+            }
+        }
     }
 }

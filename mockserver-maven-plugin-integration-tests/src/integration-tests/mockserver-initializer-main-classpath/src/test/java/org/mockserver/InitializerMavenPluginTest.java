@@ -1,7 +1,7 @@
 package org.mockserver;
 
 import org.junit.Test;
-import org.mockserver.client.http.ApacheHttpClient;
+import org.mockserver.client.http.NettyHttpClient;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -22,12 +22,12 @@ public class InitializerMavenPluginTest {
 
     private final static int SERVER_HTTP_PORT = 8080;
     private final static int SERVER_HTTPS_PORT = 8081;
-    private final ApacheHttpClient apacheHttpClient;
+    // http client
+    private NettyHttpClient httpClient = new NettyHttpClient();
 
     public InitializerMavenPluginTest() {
         bufferSize(1024);
         maxTimeout(TimeUnit.SECONDS.toMillis(10));
-        apacheHttpClient = new ApacheHttpClient(true);
     }
 
     @Test
@@ -60,7 +60,7 @@ public class InitializerMavenPluginTest {
     }
 
     protected HttpResponse makeRequest(HttpRequest httpRequest) {
-        HttpResponse httpResponse = apacheHttpClient.sendRequest(httpRequest, false);
+        HttpResponse httpResponse = httpClient.sendRequest(httpRequest);
         List<Header> headers = new ArrayList<Header>();
         for (Header header : httpResponse.getHeaders()) {
             if (!(header.getName().equals("Server") || header.getName().equals("Expires") || header.getName().equals("Date") || header.getName().equals("Connection"))) {

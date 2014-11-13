@@ -59,8 +59,13 @@ public class NettyToMockServerRequestMapper {
         if (nettyHttpRequest.content() != null && nettyHttpRequest.content().readableBytes() > 0) {
             byte[] bodyBytes = new byte[nettyHttpRequest.content().readableBytes()];
             nettyHttpRequest.content().readBytes(bodyBytes);
-            httpRequest.setRawBodyBytes(bodyBytes);
-            httpRequest.withBody(new StringBody(new String(bodyBytes, Charsets.UTF_8), Body.Type.STRING));
+            if (bodyBytes.length > 0) {
+                if (ContentTypeMapper.isBinary(nettyHttpRequest.headers().get(HttpHeaders.Names.CONTENT_TYPE))) {
+                    httpRequest.withBody(new BinaryBody(bodyBytes));
+                } else {
+                    httpRequest.withBody(new StringBody(new String(bodyBytes, Charsets.UTF_8), bodyBytes));
+                }
+            }
         }
     }
 

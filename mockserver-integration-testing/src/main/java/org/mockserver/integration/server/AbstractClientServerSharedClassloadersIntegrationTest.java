@@ -46,8 +46,7 @@ public abstract class AbstractClientServerSharedClassloadersIntegrationTest exte
                                 new Header("X-Test", "test_headers_and_body"),
                                 new Header("Content-Type", "text/plain")
                         )
-                        .withBody("an_example_body_http"),
-                false
+                        .withBody("an_example_body_http")
         );
         assertEquals(
                 StaticTestExpectationCallback.httpResponse,
@@ -69,8 +68,7 @@ public abstract class AbstractClientServerSharedClassloadersIntegrationTest exte
                                         new Header("Accept-Encoding", "gzip,deflate"),
                                         new Header("Content-Type", "text/plain")
                                 )
-                                .withBody("an_example_body_https"),
-                        false
+                                .withBody("an_example_body_https")
                 )
         );
         assertEquals(StaticTestExpectationCallback.httpRequests.get(1).getBody().getValue(), "an_example_body_https");

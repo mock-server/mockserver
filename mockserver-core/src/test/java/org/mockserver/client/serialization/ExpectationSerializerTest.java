@@ -58,7 +58,7 @@ public class ExpectationSerializerTest {
             .setHttpResponse(
                     new HttpResponseDTO()
                             .setStatusCode(304)
-                            .setBody(new StringBodyDTO(new StringBody("responseBody")))
+                            .setBody(new StringBodyDTO(new StringBody("responseBody", Body.Type.STRING)))
                             .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("headerName", Arrays.asList("headerValue")))))
                             .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("cookieName", Arrays.asList("cookieValue")))))
                             .setDelay(

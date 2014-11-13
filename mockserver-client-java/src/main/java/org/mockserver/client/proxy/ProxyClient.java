@@ -1,18 +1,21 @@
 package org.mockserver.client.proxy;
 
 import org.apache.commons.lang3.StringUtils;
-import org.mockserver.client.http.ApacheHttpClient;
+import org.mockserver.client.http.NettyHttpClient;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.client.serialization.VerificationSequenceSerializer;
 import org.mockserver.client.serialization.VerificationSerializer;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpResponse;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.mockserver.verify.VerificationTimes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.mockserver.model.HttpRequest.request;
 
 /**
  * @author jamesdbloom
@@ -21,28 +24,43 @@ public class ProxyClient {
     private static final Logger logger = LoggerFactory.getLogger(ProxyClient.class);
 
     private final String uriBase;
-    private ApacheHttpClient apacheHttpClient;
+    private NettyHttpClient nettyHttpClient = new NettyHttpClient();
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
     private VerificationSerializer verificationSerializer = new VerificationSerializer();
     private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer();
 
     /**
-     * Start the client communicating to the proxy at the specified host and port
+     * Start the client communicating to a the proxy at the specified host and port
      * for example:
+     *
      *   ProxyClient mockServerClient = new ProxyClient("localhost", 1080);
+     *
+     * @param host the host for the MockServer to communicate with
+     * @param port the port for the MockServer to communicate with
+     */
+    public ProxyClient(String host, int port) {
+        this(host, port, "");
+    }
+
+    /**
+     * Start the client communicating to the proxy at the specified host and port
+     * and contextPath for example:
+     *
+     *   ProxyClient mockServerClient = new ProxyClient("localhost", 1080, "/proxy");
      *
      * @param host the host for the proxy to communicate with
      * @param port the port for the proxy to communicate with
+     * @param contextPath the context path that the proxy war is deployed to
      */
-    public ProxyClient(String host, int port) {
-        if (Boolean.parseBoolean(System.getProperty("defaultProxySet"))) {
-            uriBase = "https://" + host + ":" + port;
-            apacheHttpClient = new ApacheHttpClient(true);
-        } else {
-            uriBase = "http://" + host + ":" + port;
-            apacheHttpClient = new ApacheHttpClient(false);
+    public ProxyClient(String host, int port, String contextPath) {
+        if (StringUtils.isEmpty(host)) {
+            throw new IllegalArgumentException("Host can not be null or empty");
         }
+        if (contextPath == null) {
+            throw new IllegalArgumentException("ContextPath can not be null");
+        }
+        this.uriBase = "http" + (Boolean.parseBoolean(System.getProperty("defaultProxySet")) ? "s" : "") + "://" + host + ":" + port + (contextPath.length() > 0 && !contextPath.startsWith("/") ? "/" : "") + contextPath;
     }
 
     /**
@@ -60,7 +78,7 @@ public class ProxyClient {
      * @param httpRequest the http request that is matched against when deciding what to log if null all requests are logged
      */
     public ProxyClient dumpToLogAsJSON(HttpRequest httpRequest) {
-        apacheHttpClient.sendPUTRequest(uriBase, "/dumpToLog", httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "");
+        nettyHttpClient.sendRequest(request().withMethod("PUT").withURL(uriBase + "/dumpToLog").withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : ""));
         return this;
     }
 
@@ -79,7 +97,7 @@ public class ProxyClient {
      * @param httpRequest the http request that is matched against when deciding what to log if null all requests are logged
      */
     public ProxyClient dumpToLogAsJava(HttpRequest httpRequest) {
-        apacheHttpClient.sendPUTRequest(uriBase, "/dumpToLog?type=java", httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "");
+        nettyHttpClient.sendRequest(request().withMethod("PUT").withURL(uriBase + "/dumpToLog?type=java").withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : ""));
         return this;
     }
 
@@ -87,7 +105,7 @@ public class ProxyClient {
      * Reset the proxy by clearing recorded requests
      */
     public ProxyClient reset() {
-        apacheHttpClient.sendPUTRequest(uriBase, "/reset", "");
+        nettyHttpClient.sendRequest(request().withMethod("PUT").withURL(uriBase + "/reset"));
         return this;
     }
 
@@ -96,7 +114,7 @@ public class ProxyClient {
      */
     public ProxyClient stop() {
         try {
-            apacheHttpClient.sendPUTRequest(uriBase, "/stop", "");
+            nettyHttpClient.sendRequest(request().withMethod("PUT").withURL(uriBase + "/stop"));
         } catch (Exception e) {
             logger.debug("Failed to send stop request to proxy " + e.getMessage());
         }
@@ -109,7 +127,7 @@ public class ProxyClient {
      * @param httpRequest the http request that is matched against when deciding whether to clear recorded requests
      */
     public ProxyClient clear(HttpRequest httpRequest) {
-        apacheHttpClient.sendPUTRequest(uriBase, "/clear", httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "");
+        nettyHttpClient.sendRequest(request().withMethod("PUT").withURL(uriBase + "/clear").withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : ""));
         return this;
     }
 
@@ -135,7 +153,7 @@ public class ProxyClient {
         }
 
         VerificationSequence verificationSequence = new VerificationSequence().withRequests(httpRequests);
-        String result = apacheHttpClient.sendPUTRequest(uriBase, "/verifySequence", verificationSequenceSerializer.serialize(verificationSequence));
+        String result = nettyHttpClient.sendRequest(request().withMethod("PUT").withURL(uriBase + "/verifySequence").withBody(verificationSequenceSerializer.serialize(verificationSequence))).getBodyAsString();
 
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -173,17 +191,12 @@ public class ProxyClient {
         }
 
         Verification verification = new Verification().withRequest(httpRequest).withTimes(times);
-        String result = apacheHttpClient.sendPUTRequest(uriBase, "/verify", verificationSerializer.serialize(verification));
+        String result = nettyHttpClient.sendRequest(request().withMethod("PUT").withURL(uriBase + "/verify").withBody(verificationSerializer.serialize(verification))).getBodyAsString();
 
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
         }
         return this;
-    }
-
-    private String butFoundAssertionErrorMessage() {
-        String allRequests = apacheHttpClient.sendPUTRequest(uriBase, "/retrieve", "");
-        return " but " + (StringUtils.isNotEmpty(allRequests) ? "only found " + allRequests : "found no requests");
     }
 
     /**
@@ -193,7 +206,8 @@ public class ProxyClient {
      * @return an array of all expectations that have been recorded by the proxy
      */
     public Expectation[] retrieveAsExpectations(HttpRequest httpRequest) {
-        return expectationSerializer.deserializeArray(apacheHttpClient.sendPUTRequest(uriBase, "/retrieve", (httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "")));
+        HttpResponse httpResponse = nettyHttpClient.sendRequest(request().withMethod("PUT").withURL(uriBase + "/retrieve").withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : ""));
+        return expectationSerializer.deserializeArray(httpResponse.getBodyAsString());
     }
 
     /**
@@ -203,6 +217,7 @@ public class ProxyClient {
      * @return a JSON array of all expectations that have been recorded by the proxy
      */
     public String retrieveAsJSON(HttpRequest httpRequest) {
-        return apacheHttpClient.sendPUTRequest(uriBase, "/retrieve", (httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : ""));
+        HttpResponse httpResponse = nettyHttpClient.sendRequest(request().withMethod("PUT").withURL(uriBase + "/retrieve").withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : ""));
+        return httpResponse.getBodyAsString();
     }
 }

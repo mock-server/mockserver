@@ -1,5 +1,6 @@
 package org.mockserver.matchers;
 
+import com.google.common.base.Charsets;
 import org.mockserver.client.serialization.ObjectMapperFactory;
 import org.mockserver.model.*;
 
@@ -111,7 +112,7 @@ public class HttpRequestMatcher extends EqualsHashCodeToString implements Matche
             if (bodyMatcher instanceof BinaryMatcher) {
                 bodyMatches = matches(bodyMatcher, httpRequest.getRawBodyBytes());
             } else {
-                bodyMatches = matches(bodyMatcher, (httpRequest.getBody() != null ? httpRequest.getBody().toString() : ""));
+                bodyMatches = matches(bodyMatcher, (httpRequest.getBody() != null ? new String(httpRequest.getBody().getRawBytes(), Charsets.UTF_8) : ""));
             }
             boolean headersMatch = matches(headerMatcher, (httpRequest.getHeaders() != null ? new ArrayList<KeyToMultiValue>(httpRequest.getHeaders()) : null));
             boolean cookiesMatch = matches(cookieMatcher, (httpRequest.getCookies() != null ? new ArrayList<KeyToMultiValue>(httpRequest.getCookies()) : null));
