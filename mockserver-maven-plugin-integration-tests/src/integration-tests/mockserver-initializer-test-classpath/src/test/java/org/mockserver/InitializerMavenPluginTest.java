@@ -1,7 +1,7 @@
 package org.mockserver;
 
 import org.junit.Test;
-import org.mockserver.client.http.NettyHttpClient;
+import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
