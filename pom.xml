@@ -50,7 +50,7 @@
         <jackson.version>2.4.3</jackson.version>
         <netty.version>4.0.24.Final</netty.version>
         <skipTests>false</skipTests>
-        <release.arguments />
+        <release.arguments/>
     </properties>
 
     <modules>
@@ -71,50 +71,50 @@
         <dependencies>
             <!-- mockserver -->
             <dependency>
-                <groupId>org.mock-server</groupId>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>mockserver-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.mock-server</groupId>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>mockserver-war</artifactId>
                 <classifier>classes</classifier>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.mock-server</groupId>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>mockserver-proxy-war</artifactId>
                 <classifier>classes</classifier>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.mock-server</groupId>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>mockserver-netty</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.mock-server</groupId>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>mockserver-netty</artifactId>
                 <classifier>jar-with-dependencies</classifier>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.mock-server</groupId>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>mockserver-grunt</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.mock-server</groupId>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>mockserver-client-node</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.mock-server</groupId>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>mockserver-client-java</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.mock-server</groupId>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>mockserver-integration-testing</artifactId>
                 <version>${project.version}</version>
                 <!-- TODO why is mockserver-client not transitively included for tests in intelliJ but works from mvn directly -->
@@ -190,7 +190,37 @@
             <!-- Netty -->
             <dependency>
                 <groupId>io.netty</groupId>
-                <artifactId>netty-all</artifactId>
+                <artifactId>netty-buffer</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-codec</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-codec-http</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-codec-socks</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-common</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-handler</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-transport</artifactId>
                 <version>${netty.version}</version>
             </dependency>
 
@@ -277,6 +307,12 @@
                 <artifactId>junit</artifactId>
                 <version>4.11</version>
                 <scope>test</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.hamcrest</groupId>
+                        <artifactId>hamcrest-core</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.mockito</groupId>
@@ -295,7 +331,7 @@
             <dependency>
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-test</artifactId>
-                <version>3.2.11.RELEASE</version>
+                <version>4.0.5.RELEASE</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>
@@ -341,24 +377,6 @@
 
     <build>
         <plugins>
-            <!-- dependency analysis -->
-            <!--<plugin>-->
-            <!--<groupId>org.apache.maven.plugins</groupId>-->
-            <!--<artifactId>maven-dependency-plugin</artifactId>-->
-            <!--<executions>-->
-            <!--<execution>-->
-            <!--<id>break-on-dependency-warnings</id>-->
-            <!--<goals>-->
-            <!--<goal>analyze-only</goal>-->
-            <!--</goals>-->
-            <!--<phase>generate-sources</phase>-->
-            <!--<configuration>-->
-            <!--<failOnWarning>false</failOnWarning>-->
-            <!--<ignoreNonCompile>true</ignoreNonCompile>-->
-            <!--</configuration>-->
-            <!--</execution>-->
-            <!--</executions>-->
-            <!--</plugin>-->
             <!-- compile with correct warnings -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

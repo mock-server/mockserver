@@ -22,16 +22,16 @@
     <dependencies>
         <!-- mockserver -->
         <dependency>
-            <groupId>org.mock-server</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>mockserver-netty</artifactId>
             <!--<classifier>jar-with-dependencies</classifier>-->
         </dependency>
         <dependency>
-            <groupId>org.mock-server</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>mockserver-client-java</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.mock-server</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>mockserver-core</artifactId>
         </dependency>
 

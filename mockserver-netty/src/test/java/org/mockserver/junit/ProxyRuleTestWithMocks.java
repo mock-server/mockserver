@@ -11,8 +11,8 @@ import org.mockserver.integration.ClientAndProxy;
 import org.mockserver.socket.PortFactory;
 
 import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.sameInstance;
 import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsSame.theInstance;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -80,7 +80,7 @@ public class ProxyRuleTestWithMocks {
         mockServerRuleHttpPortOnly.apply(mockStatement, Description.EMPTY).evaluate();
 
         // then
-        assertThat((ClientAndProxy) mockServerClient, is(theInstance(mockClientAndProxy)));
+        assertThat((ClientAndProxy) mockServerClient, sameInstance(mockClientAndProxy));
         assertThat(mockServerRuleHttpPortOnly.getHttpPort(), is(httpPort));
         assertThat(mockServerRuleHttpPortOnly.getHttpsPort(), is(nullValue()));
         verify(mockStatement).evaluate();
@@ -93,7 +93,7 @@ public class ProxyRuleTestWithMocks {
         mockServerRuleBothPorts.apply(mockStatement, Description.EMPTY).evaluate();
 
         // then
-        assertThat((ClientAndProxy) mockServerClient, is(theInstance(mockClientAndProxy)));
+        assertThat((ClientAndProxy) mockServerClient, sameInstance(mockClientAndProxy));
         assertThat(mockServerRuleBothPorts.getHttpPort(), is(httpPort));
         assertThat(mockServerRuleBothPorts.getHttpsPort(), is(httpsPort));
         verify(mockStatement).evaluate();

@@ -17,15 +17,15 @@
     <dependencies>
         <!-- mockserver -->
         <dependency>
-            <groupId>org.mock-server</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>mockserver-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.mock-server</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>mockserver-client-java</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.mock-server</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>mockserver-integration-testing</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
