@@ -1,4 +1,4 @@
-package org.mockserver.client.http;
+package org.mockserver.client.netty;
 
 import com.google.common.util.concurrent.SettableFuture;
 import io.netty.channel.ChannelInitializer;
@@ -9,6 +9,7 @@ import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+import org.mockserver.client.netty.codec.MockServerClientCodec;
 import org.mockserver.model.HttpResponse;
 
 import javax.net.ssl.SSLException;
@@ -36,11 +37,9 @@ public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
 
         pipeline.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
 
-        pipeline.addLast(new MockServerResponseDecoder());
+        pipeline.addLast(new MockServerClientCodec());
 
         pipeline.addLast(httpClientHandler);
-
-        pipeline.addLast(new MockServerRequestEncoder());
     }
 
     public SettableFuture<HttpResponse> getResponseFuture() {

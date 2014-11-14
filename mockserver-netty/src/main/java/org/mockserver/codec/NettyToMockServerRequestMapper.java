@@ -1,4 +1,4 @@
-package org.mockserver.mappers;
+package org.mockserver.codec;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
@@ -6,6 +6,7 @@ import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import org.apache.commons.lang3.StringUtils;
+import org.mockserver.mappers.ContentTypeMapper;
 import org.mockserver.model.*;
 import org.mockserver.url.URLParser;
 

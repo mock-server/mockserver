@@ -4,16 +4,16 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.handler.codec.http.*;
-import org.mockserver.client.http.NettyHttpClient;
+import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.client.serialization.VerificationSequenceSerializer;
 import org.mockserver.client.serialization.VerificationSerializer;
+import org.mockserver.codec.MockServerToNettyResponseMapper;
+import org.mockserver.codec.NettyToMockServerRequestMapper;
 import org.mockserver.filters.Filters;
 import org.mockserver.filters.HopByHopHeaderFilter;
 import org.mockserver.filters.LogFilter;
-import org.mockserver.mappers.MockServerToNettyResponseMapper;
-import org.mockserver.mappers.NettyToMockServerRequestMapper;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mockserver.MappedRequest;
 import org.mockserver.model.HttpResponse;
@@ -144,10 +144,11 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<FullHttpReques
         // if HttpRequest was set to null by a filter don't send request
         if (httpRequest != null) {
             HttpResponse httpResponse = filters.applyOnResponseFilters(httpRequest, httpClient.sendRequest(httpRequest));
-            return mockServerToNettyResponseMapper.mapMockServerResponseToNettyResponse(httpResponse);
-        } else {
-            return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_FOUND);
+            if (httpResponse != null) {
+                return mockServerToNettyResponseMapper.mapMockServerResponseToNettyResponse(httpResponse);
+            }
         }
+        return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_FOUND);
     }
 
     private void writeResponse(ChannelHandlerContext ctx, HttpMessage request, HttpResponseStatus responseStatus) {

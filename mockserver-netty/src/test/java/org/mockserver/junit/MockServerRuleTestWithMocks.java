@@ -11,6 +11,7 @@ import org.mockserver.integration.ClientAndServer;
 import org.mockserver.socket.PortFactory;
 
 import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.sameInstance;
 import static org.hamcrest.Matchers.theInstance;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -80,7 +81,7 @@ public class MockServerRuleTestWithMocks {
         mockServerRuleHttpPortOnly.apply(mockStatement, Description.EMPTY).evaluate();
 
         // then
-        assertThat((ClientAndServer) mockServerClient, is(theInstance(mockClientAndServer)));
+        assertThat((ClientAndServer) mockServerClient, sameInstance(mockClientAndServer));
         assertThat(mockServerRuleHttpPortOnly.getHttpPort(), is(httpPort));
         assertThat(mockServerRuleHttpPortOnly.getHttpsPort(), is(nullValue()));
         verify(mockStatement).evaluate();
@@ -93,7 +94,7 @@ public class MockServerRuleTestWithMocks {
         mockServerRuleBothPorts.apply(mockStatement, Description.EMPTY).evaluate();
 
         // then
-        assertThat((ClientAndServer) mockServerClient, is(theInstance(mockClientAndServer)));
+        assertThat((ClientAndServer) mockServerClient, sameInstance(mockClientAndServer));
         assertThat(mockServerRuleBothPorts.getHttpPort(), is(httpPort));
         assertThat(mockServerRuleBothPorts.getHttpsPort(), is(httpsPort));
         verify(mockStatement).evaluate();

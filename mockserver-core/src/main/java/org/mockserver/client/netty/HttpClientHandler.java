@@ -1,4 +1,4 @@
-package org.mockserver.client.http;
+package org.mockserver.client.netty;
 
 import com.google.common.util.concurrent.SettableFuture;
 import io.netty.channel.ChannelHandlerContext;

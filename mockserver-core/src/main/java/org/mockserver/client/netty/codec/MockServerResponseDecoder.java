@@ -1,4 +1,4 @@
-package org.mockserver.client.http;
+package org.mockserver.client.netty.codec;
 
 import com.google.common.base.Charsets;
 import io.netty.buffer.ByteBuf;

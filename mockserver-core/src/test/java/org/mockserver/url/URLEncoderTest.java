@@ -1,4 +1,4 @@
-package org.mockserver.client.http;
+package org.mockserver.url;
 
 import org.junit.Test;
 import org.mockserver.url.URLEncoder;

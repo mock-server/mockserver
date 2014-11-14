@@ -1,4 +1,4 @@
-package org.mockserver.client.http;
+package org.mockserver.client.netty;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;

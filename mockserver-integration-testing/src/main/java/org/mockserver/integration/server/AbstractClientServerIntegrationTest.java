@@ -5,7 +5,7 @@ import com.google.common.net.MediaType;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockserver.client.http.NettyHttpClient;
+import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.server.MockServerClient;
 import org.mockserver.integration.callback.PrecannedTestExpectationCallback;
 import org.mockserver.model.*;

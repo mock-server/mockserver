@@ -1,4 +1,4 @@
-package org.mockserver.client.http;
+package org.mockserver.client.netty.codec;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;

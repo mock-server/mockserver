@@ -1,4 +1,4 @@
-package org.mockserver.mappers;
+package org.mockserver.codec;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;

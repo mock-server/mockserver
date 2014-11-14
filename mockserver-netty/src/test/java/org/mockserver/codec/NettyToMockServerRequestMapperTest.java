@@ -1,4 +1,4 @@
-package org.mockserver.mappers;
+package org.mockserver.codec;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;

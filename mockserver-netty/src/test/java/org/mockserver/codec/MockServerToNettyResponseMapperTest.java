@@ -1,7 +1,6 @@
-package org.mockserver.mappers;
+package org.mockserver.codec;
 
 import com.google.common.base.Charsets;
-import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpResponse;
 import org.junit.Test;
 import org.mockserver.model.Cookie;
