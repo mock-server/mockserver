@@ -6,6 +6,7 @@ import org.mockserver.model.HttpResponse;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Vector;
 
 import static org.mockserver.model.HttpResponse.response;
 
@@ -14,7 +15,7 @@ import static org.mockserver.model.HttpResponse.response;
  */
 public class StaticTestExpectationCallback implements ExpectationCallback {
 
-    public static List<HttpRequest> httpRequests = new ArrayList<HttpRequest>();
+    public static List<HttpRequest> httpRequests = new Vector<HttpRequest>();
     public static HttpResponse httpResponse = response();
 
     @Override

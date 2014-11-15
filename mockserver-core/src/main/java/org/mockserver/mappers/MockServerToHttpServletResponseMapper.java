@@ -1,6 +1,7 @@
 package org.mockserver.mappers;
 
 import io.netty.handler.codec.http.DefaultCookie;
+import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.ServerCookieEncoder;
 import org.mockserver.client.serialization.Base64Converter;
 import org.mockserver.model.BinaryBody;
@@ -34,8 +35,15 @@ public class MockServerToHttpServletResponseMapper {
     private void setHeaders(HttpResponse httpResponse, HttpServletResponse httpServletResponse) {
         if (httpResponse.getHeaders() != null) {
             for (Header header : httpResponse.getHeaders()) {
-                for (String value : header.getValues()) {
-                    httpServletResponse.addHeader(header.getName(), value);
+                String headerName = header.getName();
+                if (!headerName.equalsIgnoreCase(HttpHeaders.Names.CONTENT_LENGTH)
+                        && !headerName.equalsIgnoreCase(HttpHeaders.Names.TRANSFER_ENCODING)
+                        && !headerName.equalsIgnoreCase(HttpHeaders.Names.HOST)
+                        && !headerName.equalsIgnoreCase(HttpHeaders.Names.ACCEPT_ENCODING)
+                        && !headerName.equalsIgnoreCase(HttpHeaders.Names.CONNECTION)) {
+                    for (String value : header.getValues()) {
+                        httpServletResponse.addHeader(headerName, value);
+                    }
                 }
             }
         }

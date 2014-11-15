@@ -16,6 +16,13 @@ import java.util.List;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONNECTION;
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH;
+import static io.netty.handler.codec.http.HttpHeaders.Names.TRANSFER_ENCODING;
+import static io.netty.handler.codec.http.HttpHeaders.Names.HOST;
+import static io.netty.handler.codec.http.HttpHeaders.Names.ACCEPT_ENCODING;
+import static io.netty.handler.codec.http.HttpHeaders.Values.GZIP;
+import static io.netty.handler.codec.http.HttpHeaders.Values.DEFLATE;
+import static io.netty.handler.codec.http.HttpHeaders.Values.CLOSE;
+import static io.netty.handler.codec.http.HttpHeaders.Values.KEEP_ALIVE;
 import static io.netty.handler.codec.http.HttpHeaders.isKeepAlive;
 
 /**
@@ -46,7 +53,7 @@ public class MockServerRequestEncoder extends MessageToMessageEncoder<HttpReques
     private ByteBuf getBody(HttpRequest httpRequest) {
         ByteBuf content = Unpooled.buffer(0);
         if (httpRequest.getBody() != null) {
-            content = Unpooled.copiedBuffer(httpRequest.getRawBodyBytes());
+            content = Unpooled.copiedBuffer(httpRequest.getBodyAsRawBytes());
         }
         return content;
     }
@@ -74,11 +81,10 @@ public class MockServerRequestEncoder extends MessageToMessageEncoder<HttpReques
         for (Header header : httpRequest.getHeaders()) {
             String headerName = header.getName();
             // do not set hop-by-hop headers
-            if (!headerName.equalsIgnoreCase(HttpHeaders.Names.CONTENT_LENGTH)
-                    && !headerName.equalsIgnoreCase(HttpHeaders.Names.TRANSFER_ENCODING)
-                    && !headerName.equalsIgnoreCase(HttpHeaders.Names.HOST)
-                    && !headerName.equalsIgnoreCase(HttpHeaders.Names.CONNECTION)
-                    && !headerName.equalsIgnoreCase(HttpHeaders.Names.ACCEPT_ENCODING)) {
+            if (!headerName.equalsIgnoreCase(CONTENT_LENGTH)
+                    && !headerName.equalsIgnoreCase(TRANSFER_ENCODING)
+                    && !headerName.equalsIgnoreCase(HOST)
+                    && !headerName.equalsIgnoreCase(ACCEPT_ENCODING)) {
                 if (!header.getValues().isEmpty()) {
                     for (String headerValue : header.getValues()) {
                         request.headers().add(headerName, headerValue);
@@ -89,11 +95,11 @@ public class MockServerRequestEncoder extends MessageToMessageEncoder<HttpReques
             }
         }
 
-        request.headers().set(HttpHeaders.Names.HOST, StringUtils.substringAfter(uri.getRawAuthority(), (uri.getRawUserInfo() != null ? uri.getRawUserInfo() : "")));
-        request.headers().set(HttpHeaders.Names.ACCEPT_ENCODING, HttpHeaders.Values.GZIP + "," + HttpHeaders.Values.DEFLATE);
+        request.headers().set(HOST, StringUtils.substringAfter(uri.getRawAuthority(), (uri.getRawUserInfo() != null ? uri.getRawUserInfo() : "")));
+        request.headers().set(ACCEPT_ENCODING, GZIP + "," + DEFLATE);
+        request.headers().set(CONTENT_LENGTH, request.content().readableBytes());
         if (isKeepAlive(request)) {
-            request.headers().set(CONTENT_LENGTH, request.content().readableBytes());
-            request.headers().set(CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
+            request.headers().set(CONNECTION, KEEP_ALIVE);
         } else {
             request.headers().set(CONNECTION, HttpHeaders.Values.CLOSE);
         }

@@ -1,14 +1,11 @@
 package org.mockserver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
-import io.netty.handler.codec.http.QueryStringDecoder;
 import org.mockserver.client.serialization.ObjectMapperFactory;
-import org.mockserver.url.URLEncoder;
 
 import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.*;
 
@@ -23,6 +20,7 @@ public class HttpRequest extends EqualsHashCodeToString {
     private Body body = null;
     private Map<String, Header> headers = new LinkedHashMap<String, Header>();
     private Map<String, Cookie> cookies = new LinkedHashMap<String, Cookie>();
+    private boolean isKeepAlive = false;
 
     public HttpRequest() {
     }
@@ -89,6 +87,10 @@ public class HttpRequest extends EqualsHashCodeToString {
         return this;
     }
 
+    public boolean matches(String method, String path) {
+        return this.method.equals(method) && this.path.equals(path);
+    }
+
     /**
      * The query string parameters to match on as a list of Parameter objects where the values or keys of each parameter can be either a string or a regex
      * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
@@ -148,13 +150,22 @@ public class HttpRequest extends EqualsHashCodeToString {
         return new ArrayList<Parameter>(queryStringParameters.values());
     }
 
-    public Body getBody() {
-        return body;
-    }
-
-    @JsonIgnore
-    public byte[] getRawBodyBytes() {
-        return this.body != null ? this.body.getRawBytes() : new byte[0];
+    public boolean hasQueryStringParameter(String name, String expectedValue) {
+        if (Strings.isNullOrEmpty(name)) {
+            throw new IllegalArgumentException("Name must not be null or empty");
+        }
+        if (expectedValue == null) {
+            throw new IllegalArgumentException("Expected value must not be null");
+        }
+        Parameter parameter = queryStringParameters.get(name);
+        if (parameter != null) {
+            for (String actualValue : parameter.getValues()) {
+                if (expectedValue.equals(actualValue)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
@@ -243,6 +254,20 @@ public class HttpRequest extends EqualsHashCodeToString {
         return this;
     }
 
+    public Body getBody() {
+        return body;
+    }
+
+    @JsonIgnore
+    public byte[] getBodyAsRawBytes() {
+        return this.body != null ? this.body.getRawBytes() : new byte[0];
+    }
+
+    @JsonIgnore
+    public String getBodyAsString() {
+        return this.body != null ? new String(this.body.getRawBytes(), Charsets.UTF_8) : "";
+    }
+
     /**
      * The headers to match on as a list of Header objects where the values or keys of each header can be either a string or a regex
      * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
@@ -311,6 +336,16 @@ public class HttpRequest extends EqualsHashCodeToString {
      */
     public boolean containsHeader(String name) {
         return headers.containsKey(name);
+    }
+
+    @JsonIgnore
+    public boolean isKeepAlive() {
+        return isKeepAlive;
+    }
+
+    public HttpRequest setKeepAlive(boolean isKeepAlive) {
+        this.isKeepAlive = isKeepAlive;
+        return this;
     }
 
     /**

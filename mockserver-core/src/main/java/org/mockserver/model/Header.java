@@ -8,6 +8,10 @@ import java.util.List;
  */
 public class Header extends KeyToMultiValue {
 
+    public static Header header(String name, int value) {
+        return new Header(name, String.valueOf(value));
+    }
+
     public static Header header(String name, String... value) {
         return new Header(name, value);
     }

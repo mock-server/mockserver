@@ -10,6 +10,7 @@ import io.netty.handler.codec.socks.SocksInitRequestDecoder;
 import io.netty.handler.codec.socks.SocksMessageEncoder;
 import io.netty.handler.codec.socks.SocksProtocolVersion;
 import io.netty.handler.ssl.SslHandler;
+import org.mockserver.codec.MockServerServerCodec;
 import org.mockserver.filters.LogFilter;
 import org.mockserver.socket.SSLFactory;
 
@@ -107,28 +108,30 @@ public class ProxyUnificationHandler extends ByteToMessageDecoder {
         ChannelPipeline pipeline = ctx.pipeline();
         SSLEngine engine = SSLFactory.getInstance().sslContext().createSSLEngine();
         engine.setUseClientMode(false);
-        pipeline.addLast("ssl", new SslHandler(engine));
+        pipeline.addLast(new SslHandler(engine));
 
         // re-unify
-        pipeline.addLast("sslUnification", new ProxyUnificationHandler(false, socksEnabled, port));
+        pipeline.addLast(new ProxyUnificationHandler(false, socksEnabled, port));
         pipeline.remove(this);
     }
 
     private void enableSocks(ChannelHandlerContext ctx) {
         ChannelPipeline pipeline = ctx.pipeline();
-        pipeline.addLast(SocksInitRequestDecoder.class.getSimpleName(), new SocksInitRequestDecoder());
-        pipeline.addLast(SocksMessageEncoder.class.getSimpleName(), new SocksMessageEncoder());
-        pipeline.addLast(HttpProxyHandler.class.getSimpleName(), new HttpProxyHandler(logFilter, null, new InetSocketAddress(port), sslEnabled));
+        pipeline.addLast(new SocksInitRequestDecoder());
+        pipeline.addLast(new SocksMessageEncoder());
+        pipeline.addLast(new MockServerServerCodec(socksEnabled));
+        pipeline.addLast(new HttpProxyHandler(logFilter, null, new InetSocketAddress(port)));
 
         // re-unify
-        pipeline.addLast("socksUnification", new ProxyUnificationHandler(sslEnabled, false, port));
+        pipeline.addLast(new ProxyUnificationHandler(sslEnabled, false, port));
         pipeline.remove(this);
     }
 
     private void switchToHttp(ChannelHandlerContext ctx) {
         ChannelPipeline pipeline = ctx.pipeline();
-        pipeline.addLast(HttpServerCodec.class.getSimpleName(), new HttpServerCodec());
-        pipeline.addLast(HttpProxyHandler.class.getSimpleName(), new HttpProxyHandler(logFilter, null, new InetSocketAddress(port), sslEnabled));
+        pipeline.addLast(new HttpServerCodec());
+        pipeline.addLast(new MockServerServerCodec(socksEnabled));
+        pipeline.addLast(new HttpProxyHandler(logFilter, null, new InetSocketAddress(port)));
         pipeline.remove(this);
     }
 }

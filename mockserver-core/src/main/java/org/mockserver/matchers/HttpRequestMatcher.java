@@ -110,7 +110,7 @@ public class HttpRequestMatcher extends EqualsHashCodeToString implements Matche
             boolean queryStringParametersMatches = matches(queryStringParameterMatcher, (httpRequest.getQueryStringParameters() != null ? new ArrayList<KeyToMultiValue>(httpRequest.getQueryStringParameters()) : null));
             boolean bodyMatches;
             if (bodyMatcher instanceof BinaryMatcher) {
-                bodyMatches = matches(bodyMatcher, httpRequest.getRawBodyBytes());
+                bodyMatches = matches(bodyMatcher, httpRequest.getBodyAsRawBytes());
             } else {
                 bodyMatches = matches(bodyMatcher, (httpRequest.getBody() != null ? new String(httpRequest.getBody().getRawBytes(), Charsets.UTF_8) : ""));
             }

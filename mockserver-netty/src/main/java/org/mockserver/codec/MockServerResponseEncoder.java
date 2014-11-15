@@ -21,7 +21,7 @@ import static io.netty.handler.codec.http.HttpHeaders.Names.SET_COOKIE;
 public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpResponse> {
 
     @Override
-    protected void encode(ChannelHandlerContext ctx, HttpResponse httpResponse, List<Object> out) throws Exception {
+    protected void encode(ChannelHandlerContext ctx, HttpResponse httpResponse, List<Object> out) {
         DefaultFullHttpResponse defaultFullHttpResponse = new DefaultFullHttpResponse(
                 HttpVersion.HTTP_1_1,
                 HttpResponseStatus.valueOf((httpResponse.getStatusCode() != null ? httpResponse.getStatusCode() : 200)),

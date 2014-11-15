@@ -39,9 +39,6 @@ public class ResponseInterceptor implements Interceptor {
                 logger.debug("HTTP-FORMATTED -RESPONSE- " + httpChunk.getClass().getSimpleName() + " -- " + httpChunk);
                 if (!(httpChunk instanceof LastHttpContent)) {
                     List<Object> responseRawChunks = new ArrayList<Object>();
-//                    if(httpChunk instanceof DefaultHttpContent) {
-//                        httpChunk = ((DefaultHttpContent)httpChunk).content();
-//                    }
                     httpResponseEncoder.encode(ctx, httpChunk, responseRawChunks);
                     for (Object rawChunk : responseRawChunks) {
                         if (rawChunk instanceof ByteBuf) {

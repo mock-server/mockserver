@@ -7,6 +7,8 @@ import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.ssl.SslHandler;
+import org.mockserver.client.netty.codec.MockServerClientCodec;
+import org.mockserver.codec.MockServerServerCodec;
 import org.mockserver.logging.LoggingHandler;
 import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.filters.LogFilter;
@@ -40,20 +42,22 @@ public class MockServerInitializer extends ChannelInitializer<SocketChannel> {
         if (secure) {
             SSLEngine engine = SSLFactory.getInstance().sslContext().createSSLEngine();
             engine.setUseClientMode(false);
-            pipeline.addLast("ssl", new SslHandler(engine));
+            pipeline.addLast(new SslHandler(engine));
         }
 
         // add logging
         if (logger.isDebugEnabled()) {
-            pipeline.addLast("logger", new LoggingHandler());
+            pipeline.addLast(new LoggingHandler());
         }
 
         // add msg <-> HTTP
-        pipeline.addLast("decoder-encoder", new HttpServerCodec());
-        pipeline.addLast("decompressor", new HttpContentDecompressor());
-        pipeline.addLast("chunk-aggregator", new HttpObjectAggregator(Integer.MAX_VALUE));
+        pipeline.addLast(new HttpServerCodec());
+        pipeline.addLast(new HttpContentDecompressor());
+        pipeline.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
+
+        pipeline.addLast(new MockServerServerCodec(secure));
 
         // add mock server handlers
-        pipeline.addLast("handler", new MockServerHandler(mockServerMatcher, logFilter, mockServer, secure));
+        pipeline.addLast(new MockServerHandler(mockServerMatcher, logFilter, mockServer));
     }
 }

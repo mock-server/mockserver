@@ -12,6 +12,7 @@ import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.socks.SocksInitRequestDecoder;
 import io.netty.handler.codec.socks.SocksMessageEncoder;
 import io.netty.handler.ssl.SslHandler;
+import org.mockserver.codec.MockServerServerCodec;
 import org.mockserver.filters.LogFilter;
 import org.mockserver.logging.LoggingHandler;
 import org.mockserver.proxy.http.direct.DirectProxyUpstreamHandler;
@@ -171,11 +172,12 @@ public class HttpProxy {
 
                 // add HTTP decoder and encoder
                 pipeline.addLast("logger", new LoggingHandler());
-                pipeline.addLast(HttpServerCodec.class.getSimpleName(), new HttpServerCodec());
-                pipeline.addLast(HttpObjectAggregator.class.getSimpleName(), new HttpObjectAggregator(Integer.MAX_VALUE));
+                pipeline.addLast(new HttpServerCodec());
+                pipeline.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
+                pipeline.addLast(new MockServerServerCodec(false));
 
                 // add handlers
-                pipeline.addLast(HttpProxyHandler.class.getSimpleName(), new HttpProxyHandler(logFilter, HttpProxy.this, securePort != null ? new InetSocketAddress(securePort) : null, false));
+                pipeline.addLast(new HttpProxyHandler(logFilter, HttpProxy.this, securePort != null ? new InetSocketAddress(securePort) : null));
             }
         }, port, true);
     }
@@ -194,14 +196,15 @@ public class HttpProxy {
                 // add HTTPS support
                 SSLEngine engine = SSLFactory.getInstance().sslContext().createSSLEngine();
                 engine.setUseClientMode(false);
-                pipeline.addLast(SslHandler.class.getSimpleName(), new SslHandler(engine));
+                pipeline.addLast(new SslHandler(engine));
 
                 // add HTTP decoder and encoder
-                pipeline.addLast(HttpServerCodec.class.getSimpleName(), new HttpServerCodec());
-                pipeline.addLast(HttpObjectAggregator.class.getSimpleName(), new HttpObjectAggregator(Integer.MAX_VALUE));
+                pipeline.addLast(new HttpServerCodec());
+                pipeline.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
+                pipeline.addLast(new MockServerServerCodec(true));
 
                 // add handlers
-                pipeline.addLast(HttpProxyHandler.class.getSimpleName(), new HttpProxyHandler(logFilter, HttpProxy.this, securePort != null ? new InetSocketAddress(securePort) : null, true));
+                pipeline.addLast(new HttpProxyHandler(logFilter, HttpProxy.this, securePort != null ? new InetSocketAddress(securePort) : null));
             }
         }, securePort, true);
     }
@@ -218,11 +221,11 @@ public class HttpProxy {
                 ChannelPipeline pipeline = ch.pipeline();
 
                 // add SOCKS decoder and encoder
-                pipeline.addLast(SocksInitRequestDecoder.class.getSimpleName(), new SocksInitRequestDecoder());
-                pipeline.addLast(SocksMessageEncoder.class.getSimpleName(), new SocksMessageEncoder());
+                pipeline.addLast(new SocksInitRequestDecoder());
+                pipeline.addLast(new SocksMessageEncoder());
 
                 // add handlers
-                pipeline.addLast(SocksProxyHandler.class.getSimpleName(), new SocksProxyHandler(port != null ? new InetSocketAddress(port) : null, false));
+                pipeline.addLast(new SocksProxyHandler(port != null ? new InetSocketAddress(port) : null, false));
             }
         }, socksPort, true);
     }

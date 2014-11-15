@@ -34,22 +34,22 @@ public class MockServerResponseDecoder extends MessageToMessageDecoder<FullHttpR
         out.add(httpResponse);
     }
 
-    private void setStatusCode(HttpResponse httpResponse, FullHttpResponse nettyHttpResponse) {
-        httpResponse.withStatusCode(nettyHttpResponse.getStatus().code());
+    private void setStatusCode(HttpResponse httpResponse, FullHttpResponse fullHttpResponse) {
+        httpResponse.withStatusCode(fullHttpResponse.getStatus().code());
     }
 
-    private void setHeaders(HttpResponse httpResponse, FullHttpResponse nettyHttpResponse) {
+    private void setHeaders(HttpResponse httpResponse, FullHttpResponse fullHttpResponse) {
         Map<String, Header> mappedHeaders = new HashMap<String, Header>();
-        for (String headerName : nettyHttpResponse.headers().names()) {
-            mappedHeaders.put(headerName, new Header(headerName, nettyHttpResponse.headers().getAll(headerName)));
+        for (String headerName : fullHttpResponse.headers().names()) {
+            mappedHeaders.put(headerName, new Header(headerName, fullHttpResponse.headers().getAll(headerName)));
         }
         List<Header> headers = new ArrayList<Header>(mappedHeaders.values());
-        List<String> headersToRemove = Arrays.asList("Content-Encoding", "Content-Length", "Transfer-Encoding");
-        for (Header header : new ArrayList<Header>(headers)) {
-            if (headersToRemove.contains(header.getName())) {
-                headers.remove(header);
-            }
-        }
+//        List<String> headersToRemove = Arrays.asList("Content-Encoding", "Content-Length", "Transfer-Encoding");
+//        for (Header header : new ArrayList<Header>(headers)) {
+//            if (headersToRemove.contains(header.getName())) {
+//                headers.remove(header);
+//            }
+//        }
         httpResponse.withHeaders(headers);
     }
 
@@ -75,10 +75,10 @@ public class MockServerResponseDecoder extends MessageToMessageDecoder<FullHttpR
         httpResponse.withCookies(new ArrayList<Cookie>(mappedCookies.values()));
     }
 
-    private void setBody(HttpResponse httpResponse, FullHttpResponse nettyHttpResponse) {
-        if (nettyHttpResponse.content().readableBytes() > 0) {
-            ByteBuf byteBuf = nettyHttpResponse.content().readBytes(nettyHttpResponse.content().readableBytes());
-            if (ContentTypeMapper.isBinary(nettyHttpResponse.headers().get(HttpHeaders.Names.CONTENT_TYPE))) {
+    private void setBody(HttpResponse httpResponse, FullHttpResponse fullHttpResponse) {
+        if (fullHttpResponse.content().readableBytes() > 0) {
+            ByteBuf byteBuf = fullHttpResponse.content().readBytes(fullHttpResponse.content().readableBytes());
+            if (ContentTypeMapper.isBinary(fullHttpResponse.headers().get(HttpHeaders.Names.CONTENT_TYPE))) {
                 httpResponse.withBody(byteBuf.array());
             } else {
                 httpResponse.withBody(byteBuf.toString(Charsets.UTF_8));

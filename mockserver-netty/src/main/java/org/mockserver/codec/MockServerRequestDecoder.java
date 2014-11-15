@@ -12,9 +12,10 @@ import org.mockserver.mappers.ContentTypeMapper;
 import org.mockserver.model.*;
 import org.mockserver.url.URLParser;
 
-import java.util.*;
+import java.util.List;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.COOKIE;
+import static io.netty.handler.codec.http.HttpHeaders.isKeepAlive;
 
 /**
  * @author jamesdbloom
@@ -28,7 +29,7 @@ public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
     }
 
     @Override
-    protected void decode(ChannelHandlerContext ctx, FullHttpRequest fullHttpResponse, List<Object> out) throws Exception {
+    protected void decode(ChannelHandlerContext ctx, FullHttpRequest fullHttpResponse, List<Object> out) {
         HttpRequest httpRequest = new HttpRequest();
         if (fullHttpResponse != null) {
             setMethod(httpRequest, fullHttpResponse);
@@ -41,17 +42,19 @@ public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
             setBody(httpRequest, fullHttpResponse);
             setHeaders(httpRequest, fullHttpResponse);
             setCookies(httpRequest, fullHttpResponse);
+
+            httpRequest.setKeepAlive(isKeepAlive(fullHttpResponse));
         }
         out.add(httpRequest);
     }
 
-    private void setMethod(HttpRequest httpRequest, FullHttpRequest nettyHttpRequest) {
-        httpRequest.withMethod(nettyHttpRequest.getMethod().name());
+    private void setMethod(HttpRequest httpRequest, FullHttpRequest fullHttpResponse) {
+        httpRequest.withMethod(fullHttpResponse.getMethod().name());
     }
 
-    private void setUrl(HttpRequest httpRequest, boolean secure, FullHttpRequest nettyHttpRequest) {
-        String hostAndPort = nettyHttpRequest.headers().get(HttpHeaders.Names.HOST);
-        String uri = nettyHttpRequest.getUri();
+    private void setUrl(HttpRequest httpRequest, boolean secure, FullHttpRequest fullHttpResponse) {
+        String hostAndPort = fullHttpResponse.headers().get(HttpHeaders.Names.HOST);
+        String uri = (!httpRequest.getMethod().equals("CONNECT") ? fullHttpResponse.getUri() : "");
         if (URLParser.isFullUrl(uri)) {
             httpRequest.withURL(uri);
         } else {
@@ -67,12 +70,12 @@ public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
         httpRequest.withQueryStringParameters(queryStringDecoder.parameters());
     }
 
-    private void setBody(HttpRequest httpRequest, FullHttpRequest nettyHttpRequest) {
-        if (nettyHttpRequest.content() != null && nettyHttpRequest.content().readableBytes() > 0) {
-            byte[] bodyBytes = new byte[nettyHttpRequest.content().readableBytes()];
-            nettyHttpRequest.content().readBytes(bodyBytes);
+    private void setBody(HttpRequest httpRequest, FullHttpRequest fullHttpResponse) {
+        if (fullHttpResponse.content() != null && fullHttpResponse.content().readableBytes() > 0) {
+            byte[] bodyBytes = new byte[fullHttpResponse.content().readableBytes()];
+            fullHttpResponse.content().readBytes(bodyBytes);
             if (bodyBytes.length > 0) {
-                if (ContentTypeMapper.isBinary(nettyHttpRequest.headers().get(HttpHeaders.Names.CONTENT_TYPE))) {
+                if (ContentTypeMapper.isBinary(fullHttpResponse.headers().get(HttpHeaders.Names.CONTENT_TYPE))) {
                     httpRequest.withBody(new BinaryBody(bodyBytes));
                 } else {
                     httpRequest.withBody(new StringBody(new String(bodyBytes, Charsets.UTF_8), bodyBytes));
@@ -81,15 +84,15 @@ public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
         }
     }
 
-    private void setHeaders(HttpRequest httpRequest, FullHttpRequest nettyHttpRequest) {
-        HttpHeaders headers = nettyHttpRequest.headers();
+    private void setHeaders(HttpRequest httpRequest, FullHttpRequest fullHttpResponse) {
+        HttpHeaders headers = fullHttpResponse.headers();
         for (String headerName : headers.names()) {
             httpRequest.withHeader(new Header(headerName, headers.getAll(headerName)));
         }
     }
 
-    private void setCookies(HttpRequest httpRequest, FullHttpRequest nettyHttpRequest) {
-        for (String cookieHeader : nettyHttpRequest.headers().getAll(COOKIE)) {
+    private void setCookies(HttpRequest httpRequest, FullHttpRequest fullHttpResponse) {
+        for (String cookieHeader : fullHttpResponse.headers().getAll(COOKIE)) {
             for (String cookie : Splitter.on(";").split(cookieHeader)) {
                 if (!cookie.trim().isEmpty()) {
                     httpRequest.withCookie(new Cookie(

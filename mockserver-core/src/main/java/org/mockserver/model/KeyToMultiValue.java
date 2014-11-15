@@ -59,7 +59,11 @@ public class KeyToMultiValue extends EqualsHashCodeToString {
 
     public void addValues(List<String> values) {
         if (this.values != null) {
-            this.values.addAll(values);
+            for (String value : values) {
+                if (!this.values.contains(value)) {
+                    this.values.add(value);
+                }
+            }
         }
     }
 }
