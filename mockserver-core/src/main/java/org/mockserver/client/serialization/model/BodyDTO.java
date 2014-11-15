@@ -5,7 +5,7 @@ import org.mockserver.model.*;
 /**
  * @author jamesdbloom
  */
-public abstract class BodyDTO extends EqualsHashCodeToString {
+public abstract class BodyDTO extends ObjectWithReflectiveEqualsHashCodeToString {
 
     private Body.Type type;
 

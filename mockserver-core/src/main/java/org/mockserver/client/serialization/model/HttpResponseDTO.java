@@ -3,7 +3,7 @@ package org.mockserver.client.serialization.model;
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import org.mockserver.model.Cookie;
-import org.mockserver.model.EqualsHashCodeToString;
+import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpResponse;
 
@@ -13,7 +13,7 @@ import java.util.List;
 /**
  * @author jamesdbloom
  */
-public class HttpResponseDTO extends EqualsHashCodeToString {
+public class HttpResponseDTO extends ObjectWithReflectiveEqualsHashCodeToString {
     private Integer statusCode;
     private BodyDTO body;
     private List<CookieDTO> cookies = new ArrayList<CookieDTO>();

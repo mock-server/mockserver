@@ -212,18 +212,6 @@ public class HttpResponse extends Action {
     }
 
     @Override
-    public String toString() {
-        try {
-            return ObjectMapperFactory
-                    .createObjectMapper()
-                    .writerWithDefaultPrettyPrinter()
-                    .writeValueAsString(this);
-        } catch (Exception e) {
-            return super.toString();
-        }
-    }
-
-    @Override
     @JsonIgnore
     public Type getType() {
         return Type.RESPONSE;

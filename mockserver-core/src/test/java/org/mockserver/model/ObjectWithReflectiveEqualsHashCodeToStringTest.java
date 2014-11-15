@@ -10,7 +10,7 @@ import static org.junit.Assert.*;
  *
  * @author jamesdbloom
  */
-public class EqualsHashCodeToStringTest {
+public class ObjectWithReflectiveEqualsHashCodeToStringTest {
 
     @Test
     public void hashCodeIdentical() {

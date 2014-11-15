@@ -3,7 +3,6 @@ package org.mockserver.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
-import org.mockserver.client.serialization.ObjectMapperFactory;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -12,7 +11,7 @@ import java.util.*;
 /**
  * @author jamesdbloom
  */
-public class HttpRequest extends EqualsHashCodeToString {
+public class HttpRequest extends ObjectWithJsonToString {
     private String method = "";
     private String url = "";
     private String path = "";
@@ -412,17 +411,5 @@ public class HttpRequest extends EqualsHashCodeToString {
             }
         }
         return 80;
-    }
-
-    @Override
-    public String toString() {
-        try {
-            return ObjectMapperFactory
-                    .createObjectMapper()
-                    .writerWithDefaultPrettyPrinter()
-                    .writeValueAsString(this);
-        } catch (Exception e) {
-            return super.toString();
-        }
     }
 }

@@ -1,6 +1,6 @@
 package org.mockserver.client.serialization.model;
 
-import org.mockserver.model.EqualsHashCodeToString;
+import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 import org.mockserver.verify.Verification;
 
 import static org.mockserver.model.HttpRequest.request;
@@ -9,7 +9,7 @@ import static org.mockserver.verify.VerificationTimes.once;
 /**
  * @author jamesdbloom
  */
-public class VerificationDTO extends EqualsHashCodeToString {
+public class VerificationDTO extends ObjectWithReflectiveEqualsHashCodeToString {
     private HttpRequestDTO httpRequest;
     private VerificationTimesDTO times;
 

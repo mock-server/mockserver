@@ -1,7 +1,7 @@
 package org.mockserver.verify;
 
 import org.mockserver.client.serialization.ObjectMapperFactory;
-import org.mockserver.model.EqualsHashCodeToString;
+import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 import org.mockserver.model.HttpRequest;
 
 import java.util.ArrayList;
@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * @author jamesdbloom
  */
-public class VerificationSequence extends EqualsHashCodeToString {
+public class VerificationSequence extends ObjectWithReflectiveEqualsHashCodeToString {
     private List<HttpRequest> httpRequests = new ArrayList<HttpRequest>();
 
     public VerificationSequence withRequests(HttpRequest... httpRequests) {
@@ -26,17 +26,5 @@ public class VerificationSequence extends EqualsHashCodeToString {
 
     public List<HttpRequest> getHttpRequests() {
         return httpRequests;
-    }
-
-    @Override
-    public String toString() {
-        try {
-            return ObjectMapperFactory
-                    .createObjectMapper()
-                    .writerWithDefaultPrettyPrinter()
-                    .writeValueAsString(this);
-        } catch (Exception e) {
-            return super.toString();
-        }
     }
 }

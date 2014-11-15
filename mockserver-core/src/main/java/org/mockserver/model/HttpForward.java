@@ -67,18 +67,6 @@ public class HttpForward extends Action {
         return this;
     }
 
-    @Override
-    public String toString() {
-        try {
-            return ObjectMapperFactory
-                    .createObjectMapper()
-                    .writerWithDefaultPrettyPrinter()
-                    .writeValueAsString(this);
-        } catch (Exception e) {
-            return super.toString();
-        }
-    }
-
     public enum Scheme {
         HTTP,
         HTTPS

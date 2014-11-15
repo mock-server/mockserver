@@ -1,7 +1,7 @@
 package org.mockserver.collections;
 
 import org.mockserver.matchers.RegexStringMatcher;
-import org.mockserver.model.EqualsHashCodeToString;
+import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 
 import java.util.*;
 
@@ -10,7 +10,7 @@ import java.util.*;
  *
  * @author jamesdbloom
  */
-public class CaseInsensitiveRegexMultiMap extends EqualsHashCodeToString implements Map<String, String> {
+public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHashCodeToString implements Map<String, String> {
     private final CaseInsensitiveRegexHashMap<List<String>> backingMap = new CaseInsensitiveRegexHashMap<List<String>>();
 
     @Override
@@ -171,7 +171,7 @@ public class CaseInsensitiveRegexMultiMap extends EqualsHashCodeToString impleme
         return entrySet;
     }
 
-    class ImmutableEntry extends EqualsHashCodeToString implements Entry<String, String> {
+    class ImmutableEntry extends ObjectWithReflectiveEqualsHashCodeToString implements Entry<String, String> {
         private final String key;
         private final String value;
 

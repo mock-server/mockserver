@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 /**
  * @author jamesdbloom
  */
-public abstract class Action extends EqualsHashCodeToString {
+public abstract class Action extends ObjectWithJsonToString {
 
     @JsonIgnore
     public abstract Type getType();

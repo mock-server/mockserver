@@ -3,7 +3,7 @@ package org.mockserver.model;
 /**
  * @author jamesdbloom
  */
-public abstract class Body<T> extends EqualsHashCodeToString {
+public abstract class Body<T> extends ObjectWithReflectiveEqualsHashCodeToString {
 
     private final Type type;
 

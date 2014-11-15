@@ -1,12 +1,12 @@
 package org.mockserver.client.serialization.model;
 
-import org.mockserver.model.EqualsHashCodeToString;
+import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 import org.mockserver.model.HttpCallback;
 
 /**
  * @author jamesdbloom
  */
-public class HttpCallbackDTO extends EqualsHashCodeToString {
+public class HttpCallbackDTO extends ObjectWithReflectiveEqualsHashCodeToString {
 
     private String callbackClass;
 

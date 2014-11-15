@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * @author jamesdbloom
  */
-public class HttpRequestMatcher extends EqualsHashCodeToString implements Matcher<HttpRequest> {
+public class HttpRequestMatcher extends ObjectWithReflectiveEqualsHashCodeToString implements Matcher<HttpRequest> {
 
     private HttpRequest httpRequest;
     private RegexStringMatcher methodMatcher = null;

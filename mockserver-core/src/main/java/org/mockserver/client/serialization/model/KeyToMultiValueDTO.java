@@ -1,6 +1,6 @@
 package org.mockserver.client.serialization.model;
 
-import org.mockserver.model.EqualsHashCodeToString;
+import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 import org.mockserver.model.KeyToMultiValue;
 
 import java.util.List;
@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * @author jamesdbloom
  */
-public class KeyToMultiValueDTO extends EqualsHashCodeToString {
+public class KeyToMultiValueDTO extends ObjectWithReflectiveEqualsHashCodeToString {
     private String name;
     private List<String> values;
 

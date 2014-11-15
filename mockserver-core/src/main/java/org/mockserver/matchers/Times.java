@@ -1,11 +1,11 @@
 package org.mockserver.matchers;
 
-import org.mockserver.model.EqualsHashCodeToString;
+import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 
 /**
  * @author jamesdbloom
  */
-public class Times extends EqualsHashCodeToString {
+public class Times extends ObjectWithReflectiveEqualsHashCodeToString {
 
     private int remainingTimes;
     private boolean unlimited;

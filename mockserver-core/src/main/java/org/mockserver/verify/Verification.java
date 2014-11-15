@@ -1,7 +1,8 @@
 package org.mockserver.verify;
 
 import org.mockserver.client.serialization.ObjectMapperFactory;
-import org.mockserver.model.EqualsHashCodeToString;
+import org.mockserver.model.ObjectWithJsonToString;
+import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 import org.mockserver.model.HttpRequest;
 
 import static org.mockserver.model.HttpRequest.request;
@@ -9,7 +10,7 @@ import static org.mockserver.model.HttpRequest.request;
 /**
  * @author jamesdbloom
  */
-public class Verification extends EqualsHashCodeToString {
+public class Verification extends ObjectWithJsonToString {
     private HttpRequest httpRequest = request();
     private VerificationTimes times = VerificationTimes.atLeast(1);
 
@@ -29,17 +30,5 @@ public class Verification extends EqualsHashCodeToString {
 
     public VerificationTimes getTimes() {
         return times;
-    }
-
-    @Override
-    public String toString() {
-        try {
-            return ObjectMapperFactory
-                    .createObjectMapper()
-                    .writerWithDefaultPrettyPrinter()
-                    .writeValueAsString(this);
-        } catch (Exception e) {
-            return super.toString();
-        }
     }
 }

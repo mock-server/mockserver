@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * @author jamesdbloom
  */
-public class HttpRequestDTO extends EqualsHashCodeToString {
+public class HttpRequestDTO extends ObjectWithReflectiveEqualsHashCodeToString {
     private String method = "";
     private String url = "";
     private String path = "";

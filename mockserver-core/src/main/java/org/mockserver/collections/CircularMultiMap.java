@@ -1,6 +1,6 @@
 package org.mockserver.collections;
 
-import org.mockserver.model.EqualsHashCodeToString;
+import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 
 import java.util.*;
 
@@ -132,7 +132,7 @@ public class CircularMultiMap<K, V> implements Map<K, V> {
         return entrySet;
     }
 
-    class ImmutableEntry extends EqualsHashCodeToString implements Entry<K, V> {
+    class ImmutableEntry extends ObjectWithReflectiveEqualsHashCodeToString implements Entry<K, V> {
         private final K key;
         private final V value;
 

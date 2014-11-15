@@ -1,14 +1,12 @@
 package org.mockserver.client.serialization.model;
 
-import org.mockserver.model.EqualsHashCodeToString;
+import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 import org.mockserver.model.HttpForward;
-
-import java.util.List;
 
 /**
  * @author jamesdbloom
  */
-public class HttpForwardDTO extends EqualsHashCodeToString {
+public class HttpForwardDTO extends ObjectWithReflectiveEqualsHashCodeToString {
     private String host;
     private Integer port;
     private HttpForward.Scheme scheme;

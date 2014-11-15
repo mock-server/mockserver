@@ -5,7 +5,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author jamesdbloom
  */
-public class Delay extends EqualsHashCodeToString {
+public class Delay extends ObjectWithReflectiveEqualsHashCodeToString {
 
     private final TimeUnit timeUnit;
     private final long value;

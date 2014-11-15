@@ -1,12 +1,12 @@
 package org.mockserver.client.serialization.model;
 
-import org.mockserver.model.EqualsHashCodeToString;
+import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 import org.mockserver.verify.VerificationTimes;
 
 /**
  * @author jamesdbloom
  */
-public class VerificationTimesDTO extends EqualsHashCodeToString {
+public class VerificationTimesDTO extends ObjectWithReflectiveEqualsHashCodeToString {
 
     private int count;
     private boolean exact;

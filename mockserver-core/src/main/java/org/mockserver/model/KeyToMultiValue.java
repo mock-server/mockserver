@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * @author jamesdbloom
  */
-public class KeyToMultiValue extends EqualsHashCodeToString {
+public class KeyToMultiValue extends ObjectWithReflectiveEqualsHashCodeToString {
     private final String name;
     private final List<String> values;
 

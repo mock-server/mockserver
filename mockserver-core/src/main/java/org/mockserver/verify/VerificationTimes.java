@@ -1,11 +1,11 @@
 package org.mockserver.verify;
 
-import org.mockserver.model.EqualsHashCodeToString;
+import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 
 /**
  * @author jamesdbloom
  */
-public class VerificationTimes extends EqualsHashCodeToString {
+public class VerificationTimes extends ObjectWithReflectiveEqualsHashCodeToString {
 
     private final int count;
     private final boolean exact;

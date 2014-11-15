@@ -41,16 +41,4 @@ public class HttpCallback extends Action {
         this.callbackClass = callbackClass;
         return this;
     }
-
-    @Override
-    public String toString() {
-        try {
-            return ObjectMapperFactory
-                    .createObjectMapper()
-                    .writerWithDefaultPrettyPrinter()
-                    .writeValueAsString(this);
-        } catch (Exception e) {
-            return super.toString();
-        }
-    }
 }

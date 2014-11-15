@@ -8,7 +8,7 @@ import org.mockserver.model.*;
 /**
  * @author jamesdbloom
  */
-public class Expectation extends EqualsHashCodeToString {
+public class Expectation extends ObjectWithReflectiveEqualsHashCodeToString {
 
     private final HttpRequest httpRequest;
     private final Times times;

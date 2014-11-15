@@ -21,7 +21,7 @@ import java.util.regex.Pattern;
 /**
  * @author jamesdbloom
  */
-public class MockServerMatcher extends EqualsHashCodeToString {
+public class MockServerMatcher extends ObjectWithReflectiveEqualsHashCodeToString {
 
     protected final List<Expectation> expectations = new ArrayList<Expectation>();
     private Logger requestLogger = LoggerFactory.getLogger("REQUEST");
