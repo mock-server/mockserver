@@ -3,7 +3,9 @@ package org.mockserver.client.serialization;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.serialization.model.HttpRequestDTO;
@@ -16,7 +18,6 @@ import org.mockserver.verify.VerificationTimes;
 import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.same;
@@ -48,6 +49,9 @@ public class VerificationSerializerTest {
     @InjectMocks
     private VerificationSerializer verificationSerializer;
 
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
+
     @Before
     public void setupTestFixture() {
         verificationSerializer = spy(new VerificationSerializer());
@@ -70,14 +74,13 @@ public class VerificationSerializerTest {
     @Test
     public void deserializeHandleException() throws IOException {
         // given
+        thrown.expect(RuntimeException.class);
+        thrown.expectMessage("Exception while parsing response [requestBytes] for verification");
+        // and
         when(objectMapper.readValue(eq("requestBytes"), same(VerificationDTO.class))).thenThrow(new IOException("TEST EXCEPTION"));
 
-        try {
-            // when
-            verificationSerializer.deserialize("requestBytes");
-        } catch (Throwable t) {
-            fail();
-        }
+        // when
+        verificationSerializer.deserialize("requestBytes");
     }
 
     @Test
@@ -93,15 +96,23 @@ public class VerificationSerializerTest {
         verify(objectWriter).writeValueAsString(fullVerificationDTO);
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void serializeHandlesException() throws IOException {
         // given
-        Verification verification = mock(Verification.class);
+        thrown.expect(RuntimeException.class);
+        thrown.expectMessage("Exception while serializing verification to JSON with value {" + System.getProperty("line.separator") +
+                "  \"httpRequest\" : { }," + System.getProperty("line.separator") +
+                "  \"times\" : {" + System.getProperty("line.separator") +
+                "    \"count\" : 1," + System.getProperty("line.separator") +
+                "    \"exact\" : false" + System.getProperty("line.separator") +
+                "  }" + System.getProperty("line.separator") +
+                "}");
+        // and
         when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
-        when(objectWriter.writeValueAsString(any(VerificationDTO.class))).thenThrow(IOException.class);
+        when(objectWriter.writeValueAsString(any(VerificationDTO.class))).thenThrow(new RuntimeException("TEST EXCEPTION"));
 
         // when
-        verificationSerializer.serialize(verification);
+        verificationSerializer.serialize(new Verification());
     }
 
 }

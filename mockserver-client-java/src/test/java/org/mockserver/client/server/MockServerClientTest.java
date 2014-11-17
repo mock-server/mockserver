@@ -532,4 +532,24 @@ public class MockServerClientTest {
         // when
         mockServerClient.verify(request(), null);
     }
+
+    @Test
+    public void shouldHandleNullHttpRequestSequence() {
+        // then
+        exception.expect(IllegalArgumentException.class);
+        exception.expectMessage(containsString("verify(HttpRequest...) requires a non null non empty array of HttpRequest objects"));
+
+        // when
+        mockServerClient.verify(null);
+    }
+
+    @Test
+    public void shouldHandleEmptyHttpRequestSequence() {
+        // then
+        exception.expect(IllegalArgumentException.class);
+        exception.expectMessage(containsString("verify(HttpRequest...) requires a non null non empty array of HttpRequest objects"));
+
+        // when
+        mockServerClient.verify();
+    }
 }

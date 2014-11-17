@@ -20,9 +20,9 @@ public class VerificationSequenceSerializer {
             return objectMapper
                     .writerWithDefaultPrettyPrinter()
                     .writeValueAsString(new VerificationSequenceDTO(verificationSequence));
-        } catch (IOException ioe) {
-            logger.error(String.format("Exception while serializing verificationSequence to JSON with value %s", verificationSequence), ioe);
-            throw new RuntimeException(String.format("Exception while serializing verificationSequence to JSON with value %s", verificationSequence), ioe);
+        } catch (Exception e) {
+            logger.error("Exception while serializing verificationSequence to JSON with value " + verificationSequence, e);
+            throw new RuntimeException("Exception while serializing verificationSequence to JSON with value" + verificationSequence, e);
         }
     }
 
@@ -34,8 +34,9 @@ public class VerificationSequenceSerializer {
                 if (verificationDTO != null) {
                     verificationSequence = verificationDTO.buildObject();
                 }
-            } catch (IOException ioe) {
+            } catch (Exception ioe) {
                 logger.info("Exception while parsing response [" + jsonVerification + "] for verificationSequence", ioe);
+                throw new RuntimeException("Exception while parsing response [" + jsonVerification + "] for verificationSequence", ioe);
             }
         }
         return verificationSequence;

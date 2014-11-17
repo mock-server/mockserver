@@ -31,7 +31,7 @@ import static io.netty.handler.codec.http.HttpHeaders.isKeepAlive;
 public class MockServerRequestEncoder extends MessageToMessageEncoder<HttpRequest> {
 
     @Override
-    protected void encode(ChannelHandlerContext ctx, HttpRequest httpRequest, List<Object> out) throws Exception {
+    protected void encode(ChannelHandlerContext ctx, HttpRequest httpRequest, List<Object> out) {
         // url
         URI uri = URIMapper.getURI(httpRequest);
 
@@ -39,7 +39,7 @@ public class MockServerRequestEncoder extends MessageToMessageEncoder<HttpReques
         HttpMethod httpMethod = HttpMethod.valueOf(httpRequest.getMethod("GET"));
 
         // the request
-        DefaultFullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, httpMethod, StringUtils.substringAfter(uri.getRawSchemeSpecificPart(), uri.getRawAuthority()), getBody(httpRequest));
+        FullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, httpMethod, StringUtils.substringAfter(uri.getRawSchemeSpecificPart(), uri.getRawAuthority()), getBody(httpRequest));
 
         // headers
         setHeader(httpRequest, uri, request);
@@ -58,7 +58,7 @@ public class MockServerRequestEncoder extends MessageToMessageEncoder<HttpReques
         return content;
     }
 
-    private void setCookies(HttpRequest httpRequest, DefaultFullHttpRequest request) {
+    private void setCookies(HttpRequest httpRequest, FullHttpRequest request) {
         List<io.netty.handler.codec.http.Cookie> cookies = new ArrayList<Cookie>();
         for (org.mockserver.model.Cookie cookie : httpRequest.getCookies()) {
             if (!cookie.getValues().isEmpty()) {
@@ -77,7 +77,7 @@ public class MockServerRequestEncoder extends MessageToMessageEncoder<HttpReques
         }
     }
 
-    private void setHeader(HttpRequest httpRequest, URI uri, DefaultFullHttpRequest request) {
+    private void setHeader(HttpRequest httpRequest, URI uri, FullHttpRequest request) {
         for (Header header : httpRequest.getHeaders()) {
             String headerName = header.getName();
             // do not set hop-by-hop headers

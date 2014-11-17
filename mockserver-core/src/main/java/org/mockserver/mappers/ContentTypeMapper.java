@@ -18,6 +18,7 @@ public class ContentTypeMapper {
                     || contentType.contains("json")
                     || contentType.contains("ecmascript")
                     || contentType.contains("css")
+                    || contentType.contains("csv")
                     || contentType.contains("html")
                     || contentType.contains("xhtml")
                     || contentType.contains("xml");
@@ -35,7 +36,8 @@ public class ContentTypeMapper {
                         || contentType.contains("gzip")
                         || contentType.contains("nacl")
                         || contentType.contains("pnacl")
-                        || contentType.contains("vnd");
+                        || contentType.contains("vnd")
+                        || contentType.contains("application");
             }
         }
         return binary;

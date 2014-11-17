@@ -106,7 +106,7 @@ public abstract class AbstractClientServerIntegrationTest {
         mockServerClient
                 .when(
                         request()
-                                .withPath("/echo")
+                                .withPath(calculatePath("echo"))
                 )
                 .forward(
                         forward()
@@ -159,7 +159,7 @@ public abstract class AbstractClientServerIntegrationTest {
         mockServerClient
                 .when(
                         request()
-                                .withPath("/echo")
+                                .withPath(calculatePath("echo"))
                 )
                 .forward(
                         forward()
@@ -213,7 +213,7 @@ public abstract class AbstractClientServerIntegrationTest {
         mockServerClient
                 .when(
                         request()
-                                .withPath("/echo"),
+                                .withPath(calculatePath("echo")),
                         once()
                 )
                 .forward(
@@ -224,7 +224,7 @@ public abstract class AbstractClientServerIntegrationTest {
         mockServerClient
                 .when(
                         request()
-                                .withPath("/test_headers_and_body"),
+                                .withPath(calculatePath("test_headers_and_body")),
                         once()
                 )
                 .respond(
@@ -279,7 +279,7 @@ public abstract class AbstractClientServerIntegrationTest {
         mockServerClient
                 .when(
                         request()
-                                .withPath("/callback")
+                                .withPath(calculatePath("callback"))
                 )
                 .callback(
                         callback()
@@ -333,10 +333,13 @@ public abstract class AbstractClientServerIntegrationTest {
         // when
         mockServerClient
                 .when(
-                        request().withMethod("POST").withPath("/some_path")
+                        request()
+                                .withMethod("POST")
+                                .withPath(calculatePath("some_path"))
                 )
                 .respond(
-                        response().withStatusCode(200)
+                        response()
+                                .withStatusCode(200)
                 );
 
         // then
@@ -368,7 +371,7 @@ public abstract class AbstractClientServerIntegrationTest {
         mockServerClient
                 .when(
                         request()
-                                .withPath("/some_path1")
+                                .withPath(calculatePath("some_path1"))
                 )
                 .respond(
                         new HttpResponse()
@@ -377,7 +380,7 @@ public abstract class AbstractClientServerIntegrationTest {
         mockServerClient
                 .when(
                         request()
-                                .withPath("/some_path2")
+                                .withPath(calculatePath("some_path2"))
                 )
                 .respond(
                         new HttpResponse()
@@ -393,7 +396,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         request()
                                 .withURL(baseURL(false) + "some_path2")
-                                .withPath("/some_path2"),
+                                .withPath(calculatePath("some_path2")),
                         headersToIgnore)
         );
         assertEquals(
@@ -403,7 +406,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         request()
                                 .withURL(baseURL(false) + "some_path1")
-                                .withPath("/some_path1"),
+                                .withPath(calculatePath("some_path1")),
                         headersToIgnore)
         );
         // - in https
@@ -414,7 +417,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         request()
                                 .withURL(baseURL(true) + "some_path2")
-                                .withPath("/some_path2"),
+                                .withPath(calculatePath("some_path2")),
                         headersToIgnore)
         );
         assertEquals(
@@ -424,7 +427,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         request()
                                 .withURL(baseURL(true) + "some_path1")
-                                .withPath("/some_path1"),
+                                .withPath(calculatePath("some_path1")),
                         headersToIgnore)
         );
     }
@@ -432,7 +435,15 @@ public abstract class AbstractClientServerIntegrationTest {
     @Test
     public void clientCanCallServerMatchPathXTimes() {
         // when
-        mockServerClient.when(request().withPath("/some_path"), exactly(2)).respond(new HttpResponse().withBody("some_body"));
+        mockServerClient
+                .when(
+                        request()
+                                .withPath(calculatePath("some_path")), exactly(2)
+                )
+                .respond(
+                        new HttpResponse()
+                                .withBody("some_body")
+                );
 
         // then
         // - in http
@@ -443,7 +454,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         request()
                                 .withURL(baseURL(false) + "some_path")
-                                .withPath("/some_path"),
+                                .withPath(calculatePath("some_path")),
                         headersToIgnore)
         );
         // - in https
@@ -454,7 +465,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         request()
                                 .withURL(baseURL(true) + "some_path")
-                                .withPath("/some_path"),
+                                .withPath(calculatePath("some_path")),
                         headersToIgnore)
         );
         // - in http
@@ -464,7 +475,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         request()
                                 .withURL(baseURL(false) + "some_path")
-                                .withPath("/some_path"),
+                                .withPath(calculatePath("some_path")),
                         headersToIgnore)
         );
         // - in https
@@ -474,7 +485,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         request()
                                 .withURL(baseURL(true) + "some_path")
-                                .withPath("/some_path"),
+                                .withPath(calculatePath("some_path")),
                         headersToIgnore)
         );
     }
@@ -482,7 +493,15 @@ public abstract class AbstractClientServerIntegrationTest {
     @Test
     public void clientCanVerifyRequestsReceived() {
         // when
-        mockServerClient.when(request().withPath("/some_path"), exactly(2)).respond(new HttpResponse().withBody("some_body"));
+        mockServerClient
+                .when(
+                        request()
+                                .withPath(calculatePath("some_path")), exactly(2)
+                )
+                .respond(
+                        new HttpResponse()
+                                .withBody("some_body")
+                );
 
         // then
         // - in http
@@ -493,15 +512,15 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         request()
                                 .withURL(baseURL(false) + "some_path")
-                                .withPath("/some_path"),
+                                .withPath(calculatePath("some_path")),
                         headersToIgnore)
         );
         mockServerClient.verify(request()
                 .withURL(baseURL(false) + "some_path")
-                .withPath("/some_path"));
+                .withPath(calculatePath("some_path")));
         mockServerClient.verify(request()
                 .withURL(baseURL(false) + "some_path")
-                .withPath("/some_path"), VerificationTimes.exactly(1));
+                .withPath(calculatePath("some_path")), VerificationTimes.exactly(1));
 
         // - in https
         assertEquals(
@@ -511,21 +530,21 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         request()
                                 .withURL(baseURL(true) + "some_path")
-                                .withPath("/some_path"),
+                                .withPath(calculatePath("some_path")),
                         headersToIgnore)
         );
         mockServerClient.verify(request()
                 .withURL("https{0,1}\\:\\/\\/localhost\\:\\d*\\/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("\\/") ? "\\/" : "") + "some_path")
-                .withPath("/some_path"), VerificationTimes.atLeast(1));
+                .withPath(calculatePath("some_path")), VerificationTimes.atLeast(1));
         mockServerClient.verify(request()
                 .withURL("https{0,1}\\:\\/\\/localhost\\:\\d*\\/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("\\/") ? "\\/" : "") + "some_path")
-                .withPath("/some_path"), VerificationTimes.exactly(2));
+                .withPath(calculatePath("some_path")), VerificationTimes.exactly(2));
     }
 
     @Test
     public void clientCanVerifyRequestsReceivedWithNoBody() {
         // when
-        mockServerClient.when(request().withPath("/some_path"), exactly(2)).respond(new HttpResponse());
+        mockServerClient.when(request().withPath(calculatePath("some_path")), exactly(2)).respond(new HttpResponse());
 
         // then
         // - in http
@@ -535,21 +554,21 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         request()
                                 .withURL(baseURL(false) + "some_path")
-                                .withPath("/some_path"),
+                                .withPath(calculatePath("some_path")),
                         headersToIgnore)
         );
         mockServerClient.verify(request()
                 .withURL(baseURL(false) + "some_path")
-                .withPath("/some_path"));
+                .withPath(calculatePath("some_path")));
         mockServerClient.verify(request()
                 .withURL(baseURL(false) + "some_path")
-                .withPath("/some_path"), VerificationTimes.exactly(1));
+                .withPath(calculatePath("some_path")), VerificationTimes.exactly(1));
     }
 
     @Test
     public void clientCanVerifyNotEnoughRequestsReceived() {
         // when
-        mockServerClient.when(request().withPath("/some_path"), exactly(2)).respond(new HttpResponse().withBody("some_body"));
+        mockServerClient.when(request().withPath(calculatePath("some_path")), exactly(2)).respond(new HttpResponse().withBody("some_body"));
 
         // then
         assertEquals(
@@ -559,28 +578,28 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         request()
                                 .withURL(baseURL(false) + "some_path")
-                                .withPath("/some_path"),
+                                .withPath(calculatePath("some_path")),
                         headersToIgnore)
         );
         try {
             mockServerClient.verify(request()
                     .withURL(baseURL(false) + "some_path")
-                    .withPath("/some_path"), VerificationTimes.atLeast(2));
+                    .withPath(calculatePath("some_path")), VerificationTimes.atLeast(2));
         } catch (AssertionError ae) {
             assertThat(ae.getMessage(), startsWith("Request not found at least 2 times expected:<{" + System.getProperty("line.separator") +
                     "  \"url\" : \"http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path\"," + System.getProperty("line.separator") +
-                    "  \"path\" : \"/some_path\"" + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path") + "\"" + System.getProperty("line.separator") +
                     "}> but was:<{" + System.getProperty("line.separator") +
                     "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
                     "  \"url\" : \"http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path\"," + System.getProperty("line.separator") +
-                    "  \"path\" : \"/some_path\"," + System.getProperty("line.separator")));
+                    "  \"path\" : \"/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path\"," + System.getProperty("line.separator")));
         }
     }
 
     @Test
     public void clientCanVerifyTooManyRequestsReceived() {
         // when
-        mockServerClient.when(request().withPath("/some_path"), exactly(2)).respond(new HttpResponse().withBody("some_body"));
+        mockServerClient.when(request().withPath(calculatePath("some_path")), exactly(2)).respond(new HttpResponse().withBody("some_body"));
 
         // then
         assertEquals(
@@ -590,28 +609,28 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         request()
                                 .withURL(baseURL(false) + "some_path")
-                                .withPath("/some_path"),
+                                .withPath(calculatePath("some_path")),
                         headersToIgnore)
         );
         try {
             mockServerClient.verify(request()
                     .withURL(baseURL(false) + "some_path")
-                    .withPath("/some_path"), VerificationTimes.exactly(0));
+                    .withPath(calculatePath("some_path")), VerificationTimes.exactly(0));
         } catch (AssertionError ae) {
             assertThat(ae.getMessage(), startsWith("Request not found exactly 0 times expected:<{" + System.getProperty("line.separator") +
                     "  \"url\" : \"http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path\"," + System.getProperty("line.separator") +
-                    "  \"path\" : \"/some_path\"" + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path") + "\"" + System.getProperty("line.separator") +
                     "}> but was:<{" + System.getProperty("line.separator") +
                     "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
                     "  \"url\" : \"http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path\"," + System.getProperty("line.separator") +
-                    "  \"path\" : \"/some_path\"," + System.getProperty("line.separator")));
+                    "  \"path\" : \"/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path\"," + System.getProperty("line.separator")));
         }
     }
 
     @Test
     public void clientCanVerifyNotMatchingRequestsReceived() {
         // when
-        mockServerClient.when(request().withPath("/some_path"), exactly(2)).respond(new HttpResponse().withBody("some_body"));
+        mockServerClient.when(request().withPath(calculatePath("some_path")), exactly(2)).respond(new HttpResponse().withBody("some_body"));
 
         // then
         assertEquals(
@@ -621,28 +640,28 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         request()
                                 .withURL(baseURL(false) + "some_path")
-                                .withPath("/some_path"),
+                                .withPath(calculatePath("some_path")),
                         headersToIgnore)
         );
         try {
             mockServerClient.verify(request()
                     .withURL(baseURL(false) + "some_other_path")
-                    .withPath("/some_other_path"), VerificationTimes.exactly(2));
+                    .withPath(calculatePath("some_other_path")), VerificationTimes.exactly(2));
         } catch (AssertionError ae) {
             assertThat(ae.getMessage(), startsWith("Request not found exactly 2 times expected:<{" + System.getProperty("line.separator") +
                     "  \"url\" : \"http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_other_path\"," + System.getProperty("line.separator") +
-                    "  \"path\" : \"/some_other_path\"" + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_other_path") + "\"" + System.getProperty("line.separator") +
                     "}> but was:<{" + System.getProperty("line.separator") +
                     "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
                     "  \"url\" : \"http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path\"," + System.getProperty("line.separator") +
-                    "  \"path\" : \"/some_path\"," + System.getProperty("line.separator")));
+                    "  \"path\" : \"/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path\"," + System.getProperty("line.separator")));
         }
     }
 
     @Test
     public void clientCanVerifySequenceOfRequestsReceived() {
         // when
-        mockServerClient.when(request().withPath("/some_path.*"), exactly(6)).respond(new HttpResponse().withBody("some_body"));
+        mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(6)).respond(new HttpResponse().withBody("some_body"));
 
         // then
         // - in http
@@ -664,9 +683,9 @@ public abstract class AbstractClientServerIntegrationTest {
                         request().withURL(baseURL(false) + "some_path_three"),
                         headersToIgnore)
         );
-        mockServerClient.verify(request("/some_path_one"), request("/some_path_three"));
-        mockServerClient.verify(request("/some_path_one"), request("/some_path_two"));
-        mockServerClient.verify(request("/some_path_one"), request("/some_path_two"), request("/some_path_three"));
+        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_three")));
+        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_two")));
+        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_two")), request(calculatePath("some_path_three")));
 
         // - in https
         assertEquals(
@@ -687,16 +706,20 @@ public abstract class AbstractClientServerIntegrationTest {
                         request().withURL(baseURL(true) + "some_path_three"),
                         headersToIgnore)
         );
-        mockServerClient.verify(request("/some_path_one"), request("/some_path_three"));
-        mockServerClient.verify(request("/some_path_one"), request("/some_path_two"));
-        mockServerClient.verify(request("/some_path_one"), request("/some_path_two"), request("/some_path_three"));
+        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_three")));
+        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_two")));
+        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_two")), request(calculatePath("some_path_three")));
+    }
+
+    protected String calculatePath(String some_path_one) {
+        return "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + some_path_one;
     }
 
 
     @Test
     public void clientCanVerifySequenceOfRequestsReceivedEvenThoseNotMatchingAnException() {
         // when
-        mockServerClient.when(request().withPath("/some_path.*"), exactly(4)).respond(new HttpResponse().withBody("some_body"));
+        mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(4)).respond(new HttpResponse().withBody("some_body"));
 
         // then
         // - in http
@@ -718,9 +741,9 @@ public abstract class AbstractClientServerIntegrationTest {
                         request().withURL(baseURL(false) + "some_path_three"),
                         headersToIgnore)
         );
-        mockServerClient.verify(request("/some_path_one"), request("/some_path_three"));
-        mockServerClient.verify(request("/some_path_one"), request("/not_found"));
-        mockServerClient.verify(request("/some_path_one"), request("/not_found"), request("/some_path_three"));
+        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_three")));
+        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("not_found")));
+        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("not_found")), request(calculatePath("some_path_three")));
 
         // - in https
         assertEquals(
@@ -741,15 +764,15 @@ public abstract class AbstractClientServerIntegrationTest {
                         request().withURL(baseURL(true) + "some_path_three"),
                         headersToIgnore)
         );
-        mockServerClient.verify(request("/some_path_one"), request("/some_path_three"));
-        mockServerClient.verify(request("/some_path_one"), request("/not_found"));
-        mockServerClient.verify(request("/some_path_one"), request("/not_found"), request("/some_path_three"));
+        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_three")));
+        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("not_found")));
+        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("not_found")), request(calculatePath("some_path_three")));
     }
 
     @Test
     public void clientCanVerifySequenceOfRequestsNotReceived() {
         // when
-        mockServerClient.when(request().withPath("/some_path.*"), exactly(6)).respond(new HttpResponse().withBody("some_body"));
+        mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(6)).respond(new HttpResponse().withBody("some_body"));
 
         // then
         // - in http
@@ -772,44 +795,44 @@ public abstract class AbstractClientServerIntegrationTest {
                         headersToIgnore)
         );
         try {
-            mockServerClient.verify(request("/some_path_two"), request("/some_path_one"));
+            mockServerClient.verify(request(calculatePath("some_path_two")), request(calculatePath("some_path_one")));
         } catch (AssertionError ae) {
             assertThat(ae.getMessage(), startsWith("Request not found {" + System.getProperty("line.separator") +
-                    "  \"path\" : \"/some_path_one\"" + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path_one") + "\"" + System.getProperty("line.separator") +
                     "} expected:<[ {" + System.getProperty("line.separator") +
-                    "  \"path\" : \"/some_path_two\"" + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path_two") + "\"" + System.getProperty("line.separator") +
                     "}, {" + System.getProperty("line.separator") +
-                    "  \"path\" : \"/some_path_one\"" + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path_one") + "\"" + System.getProperty("line.separator") +
                     "} ]> but was:<[ {" + System.getProperty("line.separator") +
                     "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
                     "  \"url\" : \"http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path_one\"," + System.getProperty("line.separator") +
-                    "  \"path\" : \"/some_path_one\"," + System.getProperty("line.separator")));
+                    "  \"path\" : \"/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path_one\"," + System.getProperty("line.separator")));
         }
         try {
-            mockServerClient.verify(request("/some_path_three"), request("/some_path_two"));
+            mockServerClient.verify(request(calculatePath("some_path_three")), request(calculatePath("some_path_two")));
         } catch (AssertionError ae) {
             assertThat(ae.getMessage(), startsWith("Request not found {" + System.getProperty("line.separator") +
-                    "  \"path\" : \"/some_path_two\"" + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path_two") + "\"" + System.getProperty("line.separator") +
                     "} expected:<[ {" + System.getProperty("line.separator") +
-                    "  \"path\" : \"/some_path_three\"" + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path_three") + "\"" + System.getProperty("line.separator") +
                     "}, {" + System.getProperty("line.separator") +
-                    "  \"path\" : \"/some_path_two\"" + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path_two") + "\"" + System.getProperty("line.separator") +
                     "} ]> but was:<[ {" + System.getProperty("line.separator") +
                     "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
                     "  \"url\" : \"http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path_one\"," + System.getProperty("line.separator") +
-                    "  \"path\" : \"/some_path_one\"," + System.getProperty("line.separator")));
+                    "  \"path\" : \"/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path_one\"," + System.getProperty("line.separator")));
         }
         try {
-            mockServerClient.verify(request("/some_path_four"));
+            mockServerClient.verify(request(calculatePath("some_path_four")));
         } catch (AssertionError ae) {
             assertThat(ae.getMessage(), startsWith("Request not found {" + System.getProperty("line.separator") +
-                    "  \"path\" : \"/some_path_four\"" + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path_four") + "\"" + System.getProperty("line.separator") +
                     "} expected:<[ {" + System.getProperty("line.separator") +
-                    "  \"path\" : \"/some_path_four\"" + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path_four") + "\"" + System.getProperty("line.separator") +
                     "} ]> but was:<[ {" + System.getProperty("line.separator") +
                     "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
                     "  \"url\" : \"http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path_one\"," + System.getProperty("line.separator") +
-                    "  \"path\" : \"/some_path_one\"," + System.getProperty("line.separator")));
+                    "  \"path\" : \"/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "some_path_one\"," + System.getProperty("line.separator")));
         }
     }
 
@@ -1000,7 +1023,7 @@ public abstract class AbstractClientServerIntegrationTest {
         mockServerClient
                 .when(
                         request()
-                                .withPath("/ws/rest/user/[0-9]+/document/[0-9]+\\.pdf")
+                                .withPath(calculatePath("ws/rest/user/[0-9]+/document/[0-9]+\\.pdf"))
                 )
                 .respond(
                         response()
@@ -1054,7 +1077,7 @@ public abstract class AbstractClientServerIntegrationTest {
         mockServerClient
                 .when(
                         request()
-                                .withPath("/ws/rest/user/[0-9]+/icon/[0-9]+\\.png")
+                                .withPath(calculatePath("ws/rest/user/[0-9]+/icon/[0-9]+\\.png"))
                 )
                 .respond(
                         response()
@@ -1210,7 +1233,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // when
         mockServerClient.when(
                 request()
-                        .withPath("/some_path1")
+                        .withPath(calculatePath("some_path1"))
         ).respond(
                 new HttpResponse()
                         .withBody("some_body1")
@@ -1218,7 +1241,7 @@ public abstract class AbstractClientServerIntegrationTest {
         );
         mockServerClient.when(
                 request()
-                        .withPath("/some_path2")
+                        .withPath(calculatePath("some_path2"))
         ).respond(
                 new HttpResponse()
                         .withBody("some_body2")
@@ -1234,7 +1257,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         request()
                                 .withURL(baseURL(false) + "some_path2")
-                                .withPath("/some_path2"),
+                                .withPath(calculatePath("some_path2")),
                         headersToIgnore)
         );
         assertEquals(
@@ -1244,7 +1267,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         request()
                                 .withURL(baseURL(false) + "some_path1")
-                                .withPath("/some_path1"),
+                                .withPath(calculatePath("some_path1")),
                         headersToIgnore)
         );
         // - in https
@@ -1255,7 +1278,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         request()
                                 .withURL(baseURL(true) + "some_path2")
-                                .withPath("/some_path2"),
+                                .withPath(calculatePath("some_path2")),
                         headersToIgnore)
         );
         assertEquals(
@@ -1265,7 +1288,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         request()
                                 .withURL(baseURL(true) + "some_path1")
-                                .withPath("/some_path1"),
+                                .withPath(calculatePath("some_path1")),
                         headersToIgnore)
         );
     }
@@ -1277,7 +1300,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 .when(
                         request()
                                 .withMethod("GET")
-                                .withPath("/some_pathRequest")
+                                .withPath(calculatePath("some_pathRequest"))
                 )
                 .respond(
                         new HttpResponse()
@@ -1295,7 +1318,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withMethod("GET")
                                 .withURL(baseURL(false) + "some_pathRequest?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
-                                .withPath("/some_pathRequest")
+                                .withPath(calculatePath("some_pathRequest"))
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
@@ -1313,7 +1336,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withMethod("GET")
                                 .withURL(baseURL(true) + "some_pathRequest?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
-                                .withPath("/some_pathRequest")
+                                .withPath(calculatePath("some_pathRequest"))
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
@@ -1331,7 +1354,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 .when(
                         request()
                                 .withMethod("POST")
-                                .withPath("/some_pathRequest")
+                                .withPath(calculatePath("some_pathRequest"))
                                 .withBody("some_bodyRequest")
                 )
                 .respond(
@@ -1354,7 +1377,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withMethod("POST")
                                 .withURL(baseURL(false) + "some_pathRequest?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
-                                .withPath("/some_pathRequest")
+                                .withPath(calculatePath("some_pathRequest"))
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
@@ -1376,7 +1399,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withMethod("POST")
                                 .withURL(baseURL(true) + "some_pathRequest?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
-                                .withPath("/some_pathRequest")
+                                .withPath(calculatePath("some_pathRequest"))
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
@@ -1395,7 +1418,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 .when(
                         request()
                                 .withMethod("GET")
-                                .withPath("/some_pathRequest")
+                                .withPath(calculatePath("some_pathRequest"))
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
@@ -1422,7 +1445,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withMethod("GET")
                                 .withURL(baseURL(false) + "some_pathRequest")
-                                .withPath("/some_pathRequest")
+                                .withPath(calculatePath("some_pathRequest"))
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
@@ -1444,7 +1467,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withMethod("GET")
                                 .withURL(baseURL(true) + "some_pathRequest?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
-                                .withPath("/some_pathRequest")
+                                .withPath(calculatePath("some_pathRequest"))
                                 .withHeaders(header("headerNameRequest", "headerValueRequest"))
                                 .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest")),
                         headersToIgnore)
@@ -1458,7 +1481,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 .when(
                         request()
                                 .withMethod("GET")
-                                .withPath("/some_pathRequest")
+                                .withPath(calculatePath("some_pathRequest"))
                                 .withHeaders(
                                         header("requestHeaderNameOne", "requestHeaderValueOne_One", "requestHeaderValueOne_Two"),
                                         header("requestHeaderNameTwo", "requestHeaderValueTwo")
@@ -1485,7 +1508,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withMethod("GET")
                                 .withURL(baseURL(false) + "some_pathRequest")
-                                .withPath("/some_pathRequest")
+                                .withPath(calculatePath("some_pathRequest"))
                                 .withHeaders(
                                         header("requestHeaderNameOne", "requestHeaderValueOne_One", "requestHeaderValueOne_Two"),
                                         header("requestHeaderNameTwo", "requestHeaderValueTwo")
@@ -1506,7 +1529,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withMethod("GET")
                                 .withURL(baseURL(true) + "some_pathRequest")
-                                .withPath("/some_pathRequest")
+                                .withPath(calculatePath("some_pathRequest"))
                                 .withHeaders(
                                         header("requestHeaderNameOne", "requestHeaderValueOne_One", "requestHeaderValueOne_Two"),
                                         header("requestHeaderNameTwo", "requestHeaderValueTwo")
@@ -1523,7 +1546,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 .when(
                         request()
                                 .withMethod("GET")
-                                .withPath("/some_pathRequest")
+                                .withPath(calculatePath("some_pathRequest"))
                                 .withCookies(
                                         new Cookie("requestCookieNameOne", "requestCookieValueOne_One", "requestCookieValueOne_Two"),
                                         new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
@@ -1545,7 +1568,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 request()
                         .withMethod("GET")
                         .withURL(baseURL(false) + "some_pathRequest")
-                        .withPath("/some_pathRequest")
+                        .withPath(calculatePath("some_pathRequest"))
                         .withHeaders(
                                 header("headerNameRequest", "headerValueRequest")
                         )
@@ -1583,7 +1606,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withMethod("GET")
                                 .withURL(baseURL(false) + "some_pathRequest")
-                                .withPath("/some_pathRequest")
+                                .withPath(calculatePath("some_pathRequest"))
                                 .withHeaders(
                                         header("headerNameRequest", "headerValueRequest"),
                                         header("Cookie", "requestCookieNameOne=requestCookieValueOne_One; requestCookieNameOne=requestCookieValueOne_Two; requestCookieNameTwo=requestCookieValueTwo")
@@ -1606,7 +1629,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withMethod("GET")
                                 .withURL(baseURL(true) + "some_pathRequest")
-                                .withPath("/some_pathRequest")
+                                .withPath(calculatePath("some_pathRequest"))
                                 .withHeaders(
                                         header("headerNameRequest", "headerValueRequest")
                                 )
@@ -1632,7 +1655,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withMethod("GET")
                                 .withURL(baseURL(true) + "some_pathRequest")
-                                .withPath("/some_pathRequest")
+                                .withPath(calculatePath("some_pathRequest"))
                                 .withHeaders(
                                         header("headerNameRequest", "headerValueRequest"),
                                         header("Cookie", "requestCookieNameOne=requestCookieValueOne_One; requestCookieNameOne=requestCookieValueOne_Two; requestCookieNameTwo=requestCookieValueTwo")
@@ -1648,7 +1671,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 .when(
                         request()
                                 .withMethod("POST")
-                                .withPath("/some_path")
+                                .withPath(calculatePath("some_path"))
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValueOne", "queryStringParameterOneValueTwo"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
@@ -1673,7 +1696,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         "?queryStringParameterOneName=queryStringParameterOneValueOne" +
                                         "&queryStringParameterOneName=queryStringParameterOneValueTwo" +
                                         "&queryStringParameterTwoName=queryStringParameterTwoValue")
-                                .withPath("/some_path")
+                                .withPath(calculatePath("some_path"))
                                 .withBody(params(new Parameter("bodyParameterName", "bodyParameterValue"))),
                         headersToIgnore)
         );
@@ -1686,7 +1709,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withMethod("POST")
                                 .withURL(baseURL(true) + "some_path")
-                                .withPath("/some_path")
+                                .withPath(calculatePath("some_path"))
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValueOne", "queryStringParameterOneValueTwo"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
@@ -1703,7 +1726,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 .when(
                         request()
                                 .withMethod("POST")
-                                .withPath("/some_pathRequest")
+                                .withPath(calculatePath("some_pathRequest"))
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValueOne", "queryStringParameterOneValueTwo"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
@@ -1736,7 +1759,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         "?queryStringParameterOneName=queryStringParameterOneValueOne" +
                                         "&queryStringParameterOneName=queryStringParameterOneValueTwo" +
                                         "&queryStringParameterTwoName=queryStringParameterTwoValue")
-                                .withPath("/some_pathRequest")
+                                .withPath(calculatePath("some_pathRequest"))
                                 .withBody("some_bodyRequest")
                                 .withHeaders(header("headerNameRequest", "headerValueRequest"))
                                 .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest")),
@@ -1756,7 +1779,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withMethod("POST")
                                 .withURL(baseURL(false) + "some_pathRequest")
-                                .withPath("/some_pathRequest")
+                                .withPath(calculatePath("some_pathRequest"))
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValueOne", "queryStringParameterOneValueTwo"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
@@ -1783,7 +1806,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         "?queryStringParameterOneName=queryStringParameterOneValueOne" +
                                         "&queryStringParameterOneName=queryStringParameterOneValueTwo" +
                                         "&queryStringParameterTwoName=queryStringParameterTwoValue")
-                                .withPath("/some_pathRequest")
+                                .withPath(calculatePath("some_pathRequest"))
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValueOne", "queryStringParameterOneValueTwo"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
@@ -1802,7 +1825,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 .when(
                         request()
                                 .withMethod("POST")
-                                .withPath("/some_pathRequest")
+                                .withPath(calculatePath("some_pathRequest"))
                                 .withBody(params(
                                         new Parameter("bodyParameterOneName", "Parameter One Value One", "Parameter One Value Two"),
                                         new Parameter("bodyParameterTwoName", "Parameter Two")
@@ -1831,7 +1854,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withMethod("POST")
                                 .withURL(baseURL(false) + "some_pathRequest")
-                                .withPath("/some_pathRequest")
+                                .withPath(calculatePath("some_pathRequest"))
                                 .withBody(new StringBody("bodyParameterOneName=Parameter+One+Value+One" +
                                         "&bodyParameterOneName=Parameter+One+Value+Two" +
                                         "&bodyParameterTwoName=Parameter+Two", Body.Type.STRING))
@@ -1853,7 +1876,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withMethod("POST")
                                 .withURL(baseURL(false) + "some_pathRequest")
-                                .withPath("/some_pathRequest")
+                                .withPath(calculatePath("some_pathRequest"))
                                 .withBody(params(
                                         new Parameter("bodyParameterOneName", "Parameter One Value One", "Parameter One Value Two"),
                                         new Parameter("bodyParameterTwoName", "Parameter Two")
@@ -1879,7 +1902,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         "?bodyParameterOneName=bodyParameterOneValueOne" +
                                         "&bodyParameterOneName=bodyParameterOneValueTwo" +
                                         "&bodyParameterTwoName=bodyParameterTwoValue")
-                                .withPath("/some_pathRequest")
+                                .withPath(calculatePath("some_pathRequest"))
                                 .withBody(params(
                                         new Parameter("bodyParameterOneName", "Parameter One Value One", "Parameter One Value Two"),
                                         new Parameter("bodyParameterTwoName", "Parameter Two")
@@ -1897,7 +1920,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 .when(
                         request()
                                 .withMethod("PUT")
-                                .withPath("/some_pathRequest")
+                                .withPath(calculatePath("some_pathRequest"))
                                 .withBody(new StringBody("bodyParameterOneName=Parameter+One+Value+One" +
                                         "&bodyParameterOneName=Parameter+One+Value+Two" +
                                         "&bodyParameterTwoName=Parameter+Two", Body.Type.STRING))
@@ -1927,7 +1950,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withMethod("PUT")
                                 .withURL(baseURL(false) + "some_pathRequest")
-                                .withPath("/some_pathRequest")
+                                .withPath(calculatePath("some_pathRequest"))
                                 .withBody(new StringBody("bodyParameterOneName=Parameter+One+Value+One" +
                                         "&bodyParameterOneName=Parameter+One+Value+Two" +
                                         "&bodyParameterTwoName=Parameter+Two", Body.Type.STRING))
@@ -1951,7 +1974,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withMethod("PUT")
                                 .withURL(baseURL(false) + "some_pathRequest")
-                                .withPath("/some_pathRequest")
+                                .withPath(calculatePath("some_pathRequest"))
                                 .withBody(params(
                                         new Parameter("bodyParameterOneName", "Parameter One Value One", "Parameter One Value Two"),
                                         new Parameter("bodyParameterTwoName", "Parameter Two")
@@ -1969,7 +1992,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 .when(
                         request()
                                 .withMethod("GET")
-                                .withPath("/some_path")
+                                .withPath(calculatePath("some_path"))
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
@@ -1995,7 +2018,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withMethod("GET")
                                 .withURL(baseURL(false) + "some_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
-                                .withPath("/some_path")
+                                .withPath(calculatePath("some_path"))
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
@@ -2013,7 +2036,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withMethod("GET")
                                 .withURL(baseURL(true) + "some_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
-                                .withPath("/some_path")
+                                .withPath(calculatePath("some_path"))
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
@@ -2208,7 +2231,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 .when(
                         request()
                                 .withMethod("GET")
-                                .withPath("/some_path")
+                                .withPath(calculatePath("some_path"))
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
@@ -2234,7 +2257,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withMethod("GET")
                                 .withURL(baseURL(false) + "some_other_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
-                                .withPath("/some_other_path")
+                                .withPath(calculatePath("some_other_path"))
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
@@ -2252,7 +2275,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withMethod("GET")
                                 .withURL(baseURL(true) + "some_other_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
-                                .withPath("/some_other_path")
+                                .withPath(calculatePath("some_other_path"))
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
@@ -2271,7 +2294,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 .when(
                         request()
                                 .withMethod("POST")
-                                .withPath("/some_pathRequest")
+                                .withPath(calculatePath("some_pathRequest"))
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValueOne", "queryStringParameterOneValueTwo"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
@@ -2298,7 +2321,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         "?OTHERQueryStringParameterOneName=queryStringParameterOneValueOne" +
                                         "&queryStringParameterOneName=queryStringParameterOneValueTwo" +
                                         "&queryStringParameterTwoName=queryStringParameterTwoValue")
-                                .withPath("/some_pathRequest")
+                                .withPath(calculatePath("some_pathRequest"))
                                 .withBody("some_bodyRequest")
                                 .withHeaders(header("headerNameRequest", "headerValueRequest"))
                                 .withCookies(new Cookie("cookieNameRequest", "cookieValueRequest")),
@@ -2313,7 +2336,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 .when(
                         request()
                                 .withMethod("POST")
-                                .withPath("/some_pathRequest")
+                                .withPath(calculatePath("some_pathRequest"))
                                 .withBody(params(
                                         new Parameter("bodyParameterOneName", "Parameter One Value One", "Parameter One Value Two"),
                                         new Parameter("bodyParameterTwoName", "Parameter Two")
@@ -2336,7 +2359,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withMethod("POST")
                                 .withURL(baseURL(false) + "some_pathRequest")
-                                .withPath("/some_pathRequest")
+                                .withPath(calculatePath("some_pathRequest"))
                                 .withBody(params(
                                         new Parameter("OTHERBodyParameterOneName", "Parameter One Value One", "Parameter One Value Two"),
                                         new Parameter("bodyParameterTwoName", "Parameter Two")
@@ -2353,7 +2376,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withMethod("POST")
                                 .withURL(baseURL(false) + "some_pathRequest")
-                                .withPath("/some_pathRequest")
+                                .withPath(calculatePath("some_pathRequest"))
                                 .withBody(new StringBody("OTHERBodyParameterOneName=Parameter+One+Value+One" +
                                         "&bodyParameterOneName=Parameter+One+Value+Two" +
                                         "&bodyParameterTwoName=Parameter+Two", Body.Type.STRING))
@@ -2370,7 +2393,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 .when(
                         request()
                                 .withMethod("POST")
-                                .withPath("/some_pathRequest")
+                                .withPath(calculatePath("some_pathRequest"))
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValueOne", "queryStringParameterOneValueTwo"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
@@ -2394,7 +2417,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withMethod("POST")
                                 .withURL(baseURL(false) + "some_pathRequest")
-                                .withPath("/some_pathRequest")
+                                .withPath(calculatePath("some_pathRequest"))
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "OTHERqueryStringParameterOneValueOne", "queryStringParameterOneValueTwo"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
@@ -2413,7 +2436,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 .when(
                         request()
                                 .withMethod("POST")
-                                .withPath("/some_pathRequest")
+                                .withPath(calculatePath("some_pathRequest"))
                                 .withBody(params(
                                         new Parameter("bodyParameterOneName", "Parameter One Value One", "Parameter One Value Two"),
                                         new Parameter("bodyParameterTwoName", "Parameter Two")
@@ -2436,7 +2459,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withMethod("POST")
                                 .withURL(baseURL(false) + "some_pathRequest")
-                                .withPath("/some_pathRequest")
+                                .withPath(calculatePath("some_pathRequest"))
                                 .withBody(params(
                                         new Parameter("bodyParameterOneName", "Other Parameter One Value One", "Parameter One Value Two"),
                                         new Parameter("bodyParameterTwoName", "Parameter Two")
@@ -2453,7 +2476,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withMethod("POST")
                                 .withURL(baseURL(false) + "some_pathRequest")
-                                .withPath("/some_pathRequest")
+                                .withPath(calculatePath("some_pathRequest"))
                                 .withBody(new StringBody("bodyParameterOneName=Other Parameter+One+Value+One" +
                                         "&bodyParameterOneName=Parameter+One+Value+Two" +
                                         "&bodyParameterTwoName=Parameter+Two", Body.Type.STRING))
@@ -2470,7 +2493,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 .when(
                         request()
                                 .withMethod("GET")
-                                .withPath("/some_path")
+                                .withPath(calculatePath("some_path"))
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
@@ -2496,7 +2519,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withMethod("GET")
                                 .withURL(baseURL(false) + "some_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
-                                .withPath("/some_path")
+                                .withPath(calculatePath("some_path"))
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
@@ -2514,7 +2537,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withMethod("GET")
                                 .withURL(baseURL(true) + "some_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
-                                .withPath("/some_path")
+                                .withPath(calculatePath("some_path"))
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
@@ -2533,7 +2556,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 .when(
                         request()
                                 .withMethod("GET")
-                                .withPath("/some_path")
+                                .withPath(calculatePath("some_path"))
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
@@ -2559,7 +2582,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withMethod("GET")
                                 .withURL(baseURL(false) + "some_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
-                                .withPath("/some_path")
+                                .withPath(calculatePath("some_path"))
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
@@ -2577,7 +2600,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withMethod("GET")
                                 .withURL(baseURL(true) + "some_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
-                                .withPath("/some_path")
+                                .withPath(calculatePath("some_path"))
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
@@ -2596,7 +2619,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 .when(
                         request()
                                 .withMethod("GET")
-                                .withPath("/some_path")
+                                .withPath(calculatePath("some_path"))
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
@@ -2622,7 +2645,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withMethod("GET")
                                 .withURL(baseURL(false) + "some_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
-                                .withPath("/some_path")
+                                .withPath(calculatePath("some_path"))
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
@@ -2640,7 +2663,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withMethod("GET")
                                 .withURL(baseURL(true) + "some_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
-                                .withPath("/some_path")
+                                .withPath(calculatePath("some_path"))
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
@@ -2659,7 +2682,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 .when(
                         request()
                                 .withMethod("GET")
-                                .withPath("/some_path")
+                                .withPath(calculatePath("some_path"))
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
@@ -2685,7 +2708,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withMethod("GET")
                                 .withURL(baseURL(false) + "some_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
-                                .withPath("/some_path")
+                                .withPath(calculatePath("some_path"))
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
@@ -2703,7 +2726,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withMethod("GET")
                                 .withURL(baseURL(true) + "some_path?queryStringParameterOneName=queryStringParameterOneValue&queryStringParameterTwoName=queryStringParameterTwoValue")
-                                .withPath("/some_path")
+                                .withPath(calculatePath("some_path"))
                                 .withQueryStringParameters(
                                         new Parameter("queryStringParameterOneName", "queryStringParameterOneValue"),
                                         new Parameter("queryStringParameterTwoName", "queryStringParameterTwoValue")
@@ -2721,7 +2744,7 @@ public abstract class AbstractClientServerIntegrationTest {
         mockServerClient
                 .when(
                         request()
-                                .withPath("/some_path1")
+                                .withPath(calculatePath("some_path1"))
                 )
                 .respond(
                         new HttpResponse()
@@ -2730,7 +2753,7 @@ public abstract class AbstractClientServerIntegrationTest {
         mockServerClient
                 .when(
                         request()
-                                .withPath("/some_path2")
+                                .withPath(calculatePath("some_path2"))
                 )
                 .respond(
                         new HttpResponse()
@@ -2741,7 +2764,7 @@ public abstract class AbstractClientServerIntegrationTest {
         mockServerClient
                 .clear(
                         request()
-                                .withPath("/some_path1")
+                                .withPath(calculatePath("some_path1"))
                 );
 
         // then
@@ -2753,7 +2776,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         request()
                                 .withURL(baseURL(false) + "some_path2")
-                                .withPath("/some_path2"),
+                                .withPath(calculatePath("some_path2")),
                         headersToIgnore)
         );
         assertEquals(
@@ -2762,7 +2785,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         request()
                                 .withURL(baseURL(false) + "some_path1")
-                                .withPath("/some_path1"),
+                                .withPath(calculatePath("some_path1")),
                         headersToIgnore)
         );
         // - in https
@@ -2773,7 +2796,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         request()
                                 .withURL(baseURL(true) + "some_path2")
-                                .withPath("/some_path2"),
+                                .withPath(calculatePath("some_path2")),
                         headersToIgnore)
         );
         assertEquals(
@@ -2782,7 +2805,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         request()
                                 .withURL(baseURL(true) + "some_path1")
-                                .withPath("/some_path1"),
+                                .withPath(calculatePath("some_path1")),
                         headersToIgnore)
         );
     }
@@ -2793,7 +2816,7 @@ public abstract class AbstractClientServerIntegrationTest {
         mockServerClient
                 .when(
                         request()
-                                .withPath("/some_path1")
+                                .withPath(calculatePath("some_path1"))
                 )
                 .respond(
                         new HttpResponse()
@@ -2802,7 +2825,7 @@ public abstract class AbstractClientServerIntegrationTest {
         mockServerClient
                 .when(
                         request()
-                                .withPath("/some_path2")
+                                .withPath(calculatePath("some_path2"))
                 )
                 .respond(
                         new HttpResponse()
@@ -2820,7 +2843,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         request()
                                 .withURL(baseURL(false) + "some_path1")
-                                .withPath("/some_path1"),
+                                .withPath(calculatePath("some_path1")),
                         headersToIgnore)
         );
         assertEquals(
@@ -2829,7 +2852,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         request()
                                 .withURL(baseURL(false) + "some_path2")
-                                .withPath("/some_path2"),
+                                .withPath(calculatePath("some_path2")),
                         headersToIgnore)
         );
         // - in https
@@ -2839,7 +2862,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         request()
                                 .withURL(baseURL(true) + "some_path1")
-                                .withPath("/some_path1"),
+                                .withPath(calculatePath("some_path1")),
                         headersToIgnore)
         );
         assertEquals(
@@ -2848,7 +2871,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         request()
                                 .withURL(baseURL(true) + "some_path2")
-                                .withPath("/some_path2"),
+                                .withPath(calculatePath("some_path2")),
                         headersToIgnore)
         );
     }

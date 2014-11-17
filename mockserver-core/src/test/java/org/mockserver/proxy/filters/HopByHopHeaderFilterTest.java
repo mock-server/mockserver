@@ -5,6 +5,7 @@ import org.mockserver.filters.HopByHopHeaderFilter;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
 
+import static junit.framework.TestCase.assertNull;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -34,5 +35,10 @@ public class HopByHopHeaderFilterTest {
 
         // then
         assertEquals(httpRequest.getHeaders().size(), 1);
+    }
+
+    @Test
+    public void shouldNotHandleNullRequest() throws Exception {
+        assertNull(new HopByHopHeaderFilter().onRequest(null));
     }
 }

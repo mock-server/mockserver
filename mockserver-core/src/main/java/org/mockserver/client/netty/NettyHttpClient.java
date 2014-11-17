@@ -21,13 +21,8 @@ public class NettyHttpClient {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public static void main(String[] args) throws Exception {
-        NettyHttpClient nettyHttpClient = new NettyHttpClient();
-        nettyHttpClient.sendRequest(request().withURL("http://www.london-squash-league.com/login;jsessionid=A2F3AC58C0EA1E6D758FD05934806B91"));
-    }
-
     public HttpResponse sendRequest(final HttpRequest httpRequest) {
-        logger.debug("Sending request: " + httpRequest);
+        logger.debug("Sending request: {}", httpRequest);
 
         // determine request details
         URI uri = URIMapper.getURI(httpRequest);
@@ -45,17 +40,12 @@ public class NettyHttpClient {
                     .handler(channelInitializer)
                     .connect(uri.getHost(), uri.getPort()).sync().channel();
 
-            // logging
-            if (logger.isTraceEnabled()) {
-                logger.trace("Proxy sending request:" + System.getProperty("line.separator") + ObjectMapperFactory.createObjectMapper().writeValueAsString(httpRequest));
-            }
-
             // send the HTTP request
             channel.writeAndFlush(httpRequest);
 
             // wait for response
             HttpResponse httpResponse = channelInitializer.getResponseFuture().get();
-            logger.debug("Received response: " + httpResponse);
+            logger.debug("Received response: {}", httpResponse);
 
             // shutdown client
             group.shutdownGracefully(2, 15, TimeUnit.MILLISECONDS);

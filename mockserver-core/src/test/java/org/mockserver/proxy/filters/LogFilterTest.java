@@ -11,6 +11,7 @@ import java.util.List;
 
 import static org.junit.Assert.*;
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
 
 /**
@@ -20,7 +21,6 @@ public class LogFilterTest {
 
     public static final List<HttpRequest> EMPTY_REQUEST_LIST = Arrays.<HttpRequest>asList();
     public static final List<HttpResponse> EMPTY_RESPONSE_LIST = Arrays.<HttpResponse>asList();
-
 
     @Test
     public void shouldPassThroughRequestsUnchanged() {
@@ -82,10 +82,12 @@ public class LogFilterTest {
         logFilter.onResponse(request("some_path"), response("some_body"));
         logFilter.onResponse(request("some_other_path"), response("some_other_body"));
         logFilter.onResponse(request("some_path"), response("some_body"));
+        logFilter.onResponse(request("some_path"), null);
+        logFilter.onResponse(request("some_path"), notFoundResponse());
 
         // then - request-response log
-        assertEquals(logFilter.httpResponses(request()), Arrays.asList(response("some_body"), response("some_body"), response("some_other_body")));
-        assertEquals(logFilter.httpResponses(request("some_path")), Arrays.asList(response("some_body"), response("some_body")));
+        assertEquals(logFilter.httpResponses(request()), Arrays.asList(response("some_body"), response("some_body"), notFoundResponse(), notFoundResponse(), response("some_other_body")));
+        assertEquals(logFilter.httpResponses(request("some_path")), Arrays.asList(response("some_body"), response("some_body"), notFoundResponse(), notFoundResponse()));
         assertEquals(logFilter.httpResponses(request("some_other_path")), Arrays.asList(response("some_other_body")));
     }
 

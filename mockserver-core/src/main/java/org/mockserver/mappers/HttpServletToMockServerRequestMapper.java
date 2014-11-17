@@ -43,7 +43,7 @@ public class HttpServletToMockServerRequestMapper {
     }
 
     private void setPath(HttpRequest httpRequest, HttpServletRequest httpServletRequest) {
-        httpRequest.withPath(httpServletRequest.getPathInfo() != null && httpServletRequest.getContextPath() != null ? httpServletRequest.getPathInfo() : httpServletRequest.getRequestURI());
+        httpRequest.withPath(httpServletRequest.getRequestURI());
     }
 
     private void setQueryString(HttpRequest httpRequest, HttpServletRequest httpServletRequest) {

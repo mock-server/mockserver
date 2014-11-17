@@ -288,7 +288,9 @@ public class HttpRequest extends ObjectWithJsonToString {
      * @param headers the varags of Header objects where the values or keys of each header can be either a string or a regex
      */
     public HttpRequest withHeaders(Header... headers) {
-        withHeaders(Arrays.asList(headers));
+        if (headers != null) {
+            withHeaders(Arrays.asList(headers));
+        }
         return this;
     }
 
@@ -368,7 +370,9 @@ public class HttpRequest extends ObjectWithJsonToString {
      * @param cookies the varags Cookie objects where the values or keys of each cookie can be either a string or a regex
      */
     public HttpRequest withCookies(Cookie... cookies) {
-        withCookies(Arrays.asList(cookies));
+        if (cookies != null) {
+            withCookies(Arrays.asList(cookies));
+        }
         return this;
     }
 

@@ -25,7 +25,7 @@ public class PrecannedTestExpectationCallback implements ExpectationCallback {
 
     @Override
     public HttpResponse handle(HttpRequest httpRequest) {
-        if (httpRequest.getPath().equals("/callback")) {
+        if (httpRequest.getPath().endsWith("/callback")) {
             return httpResponse;
         } else {
             return notFoundResponse();

@@ -59,6 +59,28 @@ public class ProxyClientTest {
     }
 
     @Test
+    public void shouldHandleNullHostnameExceptions() {
+        // given
+        exception.expect(IllegalArgumentException.class);
+        exception.expectMessage(containsString("Host can not be null or empty"));
+
+
+        // when
+        new ProxyClient(null, 8080);
+    }
+
+    @Test
+    public void shouldHandleNullContextPathExceptions() {
+        // given
+        exception.expect(IllegalArgumentException.class);
+        exception.expectMessage(containsString("ContextPath can not be null"));
+
+
+        // when
+        new ProxyClient("localhost", 8080, null);
+    }
+
+    @Test
     public void shouldSendResetRequest() throws Exception {
         // when
         proxyClient.reset();
@@ -321,5 +343,25 @@ public class ProxyClientTest {
 
         // when
         proxyClient.verify(request(), null);
+    }
+
+    @Test
+    public void shouldHandleNullHttpRequestSequence() {
+        // then
+        exception.expect(IllegalArgumentException.class);
+        exception.expectMessage(containsString("verify(HttpRequest...) requires a non null non empty array of HttpRequest objects"));
+
+        // when
+        proxyClient.verify(null);
+    }
+
+    @Test
+    public void shouldHandleEmptyHttpRequestSequence() {
+        // then
+        exception.expect(IllegalArgumentException.class);
+        exception.expectMessage(containsString("verify(HttpRequest...) requires a non null non empty array of HttpRequest objects"));
+
+        // when
+        proxyClient.verify();
     }
 }

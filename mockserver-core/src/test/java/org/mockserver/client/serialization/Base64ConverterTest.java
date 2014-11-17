@@ -23,6 +23,11 @@ public class Base64ConverterTest {
     }
 
     @Test
+    public void shouldConvertBase64NullValueToString() {
+        assertThat(new String(Base64Converter.base64StringToBytes(null)), is(""));
+    }
+
+    @Test
     public void shouldNotConvertNoneBase64Value() {
         assertThat(new String(Base64Converter.base64StringToBytes("some_value")), is("some_value"));
     }

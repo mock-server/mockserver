@@ -1,15 +1,14 @@
 package org.mockserver.codec;
 
+import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.DefaultFullHttpRequest;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpVersion;
+import org.hamcrest.core.Is;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockserver.model.Cookie;
-import org.mockserver.model.Header;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.Parameter;
+import org.mockserver.model.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,9 +16,11 @@ import java.util.List;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.core.Is.is;
+import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.Cookie.cookie;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.Parameter.param;
+import static org.mockserver.model.StringBody.exact;
 
 /**
  * @author jamesdbloom
@@ -34,6 +35,19 @@ public class MockServerRequestDecoderTest {
     public void setupFixture() {
         mockServerRequestDecoder = new MockServerRequestDecoder(false);
         output = new ArrayList<Object>();
+    }
+
+    @Test
+    public void shouldDecodeMethod() {
+        // given
+        fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.OPTIONS, "/uri");
+
+        // when
+        mockServerRequestDecoder.decode(null, fullHttpRequest, output);
+
+        // then
+        String method = ((HttpRequest) output.get(0)).getMethod();
+        assertThat(method, is("OPTIONS"));
     }
 
     @Test
@@ -123,7 +137,7 @@ public class MockServerRequestDecoderTest {
         fullHttpRequest.headers().add("headerName2", "headerValue2");
 
         // when
-        new MockServerRequestDecoder(true).decode(null, fullHttpRequest, output);
+        mockServerRequestDecoder.decode(null, fullHttpRequest, output);
 
         // then
         List<Header> headers = ((HttpRequest) output.get(0)).getHeaders();
@@ -140,7 +154,7 @@ public class MockServerRequestDecoderTest {
         fullHttpRequest.headers().add("Connection", "keep-alive");
 
         // when
-        new MockServerRequestDecoder(true).decode(null, fullHttpRequest, output);
+        mockServerRequestDecoder.decode(null, fullHttpRequest, output);
 
         // then
         HttpRequest httpRequest = (HttpRequest) output.get(0);
@@ -154,7 +168,7 @@ public class MockServerRequestDecoderTest {
         fullHttpRequest.headers().add("Connection", "close");
 
         // when
-        new MockServerRequestDecoder(true).decode(null, fullHttpRequest, output);
+        mockServerRequestDecoder.decode(null, fullHttpRequest, output);
 
         // then
         HttpRequest httpRequest = (HttpRequest) output.get(0);
@@ -169,7 +183,7 @@ public class MockServerRequestDecoderTest {
         fullHttpRequest.headers().add("Cookie", "cookieName3  =cookieValue3_1; cookieName3=cookieValue3_2");
 
         // when
-        new MockServerRequestDecoder(true).decode(null, fullHttpRequest, output);
+        mockServerRequestDecoder.decode(null, fullHttpRequest, output);
 
         // then
         List<Cookie> cookies = ((HttpRequest) output.get(0)).getCookies();
@@ -178,6 +192,34 @@ public class MockServerRequestDecoderTest {
                 cookie("cookieName2", "cookieValue2"),
                 cookie("cookieName3", "cookieValue3_1", "cookieValue3_2")
         ));
+    }
+
+    @Test
+    public void shouldDecodeUTF8Body() {
+        // given
+        fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/uri", Unpooled.wrappedBuffer("some_random_string".getBytes()));
+        fullHttpRequest.headers().add("Content-Type", "plain/text");
+
+        // when
+        mockServerRequestDecoder.decode(null, fullHttpRequest, output);
+
+        // then
+        Body body = ((HttpRequest) output.get(0)).getBody();
+        assertThat(body, Is.<Body>is(exact("some_random_string")));
+    }
+
+    @Test
+    public void shouldDecodeBinaryBody() {
+        // given
+        fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/uri", Unpooled.wrappedBuffer("some_random_bytes".getBytes()));
+        fullHttpRequest.headers().add("Content-Type", "image/jpeg");
+
+        // when
+        mockServerRequestDecoder.decode(null, fullHttpRequest, output);
+
+        // then
+        Body body = ((HttpRequest) output.get(0)).getBody();
+        assertThat(body, Is.<Body>is(binary("some_random_bytes".getBytes())));
     }
 
 }

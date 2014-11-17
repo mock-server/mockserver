@@ -27,9 +27,9 @@ public class ExpectationSerializer {
             return objectMapper
                     .writerWithDefaultPrettyPrinter()
                     .writeValueAsString(new ExpectationDTO(expectation));
-        } catch (IOException ioe) {
-            logger.error(String.format("Exception while serializing expectation to JSON with value %s", expectation), ioe);
-            throw new RuntimeException(String.format("Exception while serializing expectation to JSON with value %s", expectation), ioe);
+        } catch (Exception e) {
+            logger.error(String.format("Exception while serializing expectation to JSON with value %s", expectation), e);
+            throw new RuntimeException(String.format("Exception while serializing expectation to JSON with value %s", expectation), e);
         }
     }
 
@@ -156,9 +156,9 @@ public class ExpectationSerializer {
                         .writeValueAsString(expectationDTOs);
             }
             return "";
-        } catch (IOException ioe) {
-            logger.error("Exception while serializing expectation to JSON with value " + Arrays.asList(expectation), ioe);
-            throw new RuntimeException("Exception while serializing expectation to JSON with value " + Arrays.asList(expectation), ioe);
+        } catch (Exception e) {
+            logger.error("Exception while serializing expectation to JSON with value " + Arrays.asList(expectation), e);
+            throw new RuntimeException("Exception while serializing expectation to JSON with value " + Arrays.asList(expectation), e);
         }
     }
 
@@ -172,9 +172,9 @@ public class ExpectationSerializer {
             if (expectationDTO != null) {
                 expectation = expectationDTO.buildObject();
             }
-        } catch (IOException ioe) {
-            logger.error("Exception while parsing response [" + jsonExpectation + "] for http response expectation", ioe);
-            throw new RuntimeException("Exception while parsing response [" + jsonExpectation + "] for http response expectation", ioe);
+        } catch (Exception e) {
+            logger.error("Exception while parsing response [" + jsonExpectation + "] for http response expectation", e);
+            throw new RuntimeException("Exception while parsing response [" + jsonExpectation + "] for http response expectation", e);
         }
         return expectation;
     }
@@ -190,9 +190,9 @@ public class ExpectationSerializer {
                         expectations[i] = expectationDTOs[i].buildObject();
                     }
                 }
-            } catch (IOException ioe) {
-                logger.error("Exception while parsing response [" + jsonExpectations + "] for http response expectation array", ioe);
-                throw new RuntimeException("Exception while parsing response [" + jsonExpectations + "] for http response expectation array", ioe);
+            } catch (Exception e) {
+                logger.error("Exception while parsing response [" + jsonExpectations + "] for http response expectation array", e);
+                throw new RuntimeException("Exception while parsing response [" + jsonExpectations + "] for http response expectation array", e);
             }
         }
         return expectations;

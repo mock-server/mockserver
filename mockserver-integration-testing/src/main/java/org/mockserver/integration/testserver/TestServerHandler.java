@@ -90,7 +90,7 @@ public class TestServerHandler extends SimpleChannelInboundHandler<Object> {
             response.headers().set("X-Test", "test_headers_only");
             response.headers().set(CONTENT_TYPE, "text/plain");
             response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
-        } else if (req.getUri().equals("/echo")) {
+        } else if (req.getUri().endsWith("/echo")) {
             // echo back body
             response = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.copiedBuffer(req.content()));
             // echo back headers

@@ -3,17 +3,21 @@ package org.mockserver.client.serialization;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.serialization.model.VerificationSequenceDTO;
-import org.mockserver.model.*;
+import org.mockserver.model.Body;
+import org.mockserver.model.Header;
+import org.mockserver.model.HttpRequest;
+import org.mockserver.model.StringBody;
 import org.mockserver.verify.VerificationSequence;
 
 import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.same;
@@ -46,6 +50,9 @@ public class VerificationSequenceSerializerTest {
     @InjectMocks
     private VerificationSequenceSerializer verificationSequenceSerializer;
 
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
+
     @Before
     public void setupTestFixture() {
         verificationSequenceSerializer = spy(new VerificationSequenceSerializer());
@@ -68,14 +75,13 @@ public class VerificationSequenceSerializerTest {
     @Test
     public void deserializeHandleException() throws IOException {
         // given
-        when(objectMapper.readValue(eq("requestBytes"), same(VerificationSequenceDTO.class))).thenThrow(new IOException("TEST EXCEPTION"));
+        thrown.expect(RuntimeException.class);
+        thrown.expectMessage("Exception while parsing response [requestBytes] for verificationSequence");
+        // and
+        when(objectMapper.readValue(eq("requestBytes"), same(VerificationSequenceDTO.class))).thenThrow(new RuntimeException("TEST EXCEPTION"));
 
-        try {
-            // when
-            verificationSequenceSerializer.deserialize("requestBytes");
-        } catch (Throwable t) {
-            fail();
-        }
+        // when
+        verificationSequenceSerializer.deserialize("requestBytes");
     }
 
     @Test
@@ -91,14 +97,16 @@ public class VerificationSequenceSerializerTest {
         verify(objectWriter).writeValueAsString(fullVerificationSequenceDTO);
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void serializeHandlesException() throws IOException {
         // given
-        VerificationSequence verification = mock(VerificationSequence.class);
+        thrown.expect(RuntimeException.class);
+        thrown.expectMessage("Exception while serializing verificationSequence to JSON with valueVerificationSequence[httpRequests=[]]");
+        // and
         when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
-        when(objectWriter.writeValueAsString(any(VerificationSequenceDTO.class))).thenThrow(IOException.class);
+        when(objectWriter.writeValueAsString(any(VerificationSequenceDTO.class))).thenThrow(new RuntimeException("TEST EXCEPTION"));
 
         // when
-        verificationSequenceSerializer.serialize(verification);
+        verificationSequenceSerializer.serialize(new VerificationSequence());
     }
 }

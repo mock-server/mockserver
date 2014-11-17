@@ -31,7 +31,7 @@ public abstract class AbstractClientServerSharedClassloadersIntegrationTest exte
         mockServerClient
                 .when(
                         request()
-                                .withPath("/callback")
+                                .withPath(calculatePath("callback"))
                 )
                 .callback(
                         callback()
@@ -58,7 +58,7 @@ public abstract class AbstractClientServerSharedClassloadersIntegrationTest exte
                         headersToIgnore)
         );
         assertEquals(StaticTestExpectationCallback.httpRequests.get(0).getBody().getValue(), "an_example_body_http");
-        assertEquals(StaticTestExpectationCallback.httpRequests.get(0).getPath(), "/callback");
+        assertEquals(StaticTestExpectationCallback.httpRequests.get(0).getPath(), calculatePath("callback"));
 
         // - in https
         assertEquals(
@@ -80,6 +80,6 @@ public abstract class AbstractClientServerSharedClassloadersIntegrationTest exte
                 )
         );
         assertEquals(StaticTestExpectationCallback.httpRequests.get(1).getBody().getValue(), "an_example_body_https");
-        assertEquals(StaticTestExpectationCallback.httpRequests.get(1).getPath(), "/callback");
+        assertEquals(StaticTestExpectationCallback.httpRequests.get(1).getPath(), calculatePath("callback"));
     }
 }

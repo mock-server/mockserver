@@ -1,6 +1,6 @@
 package org.mockserver.mappers;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.base.Strings;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.Parameter;
@@ -60,11 +60,19 @@ public class URIMapper {
                     port = 443;
                 }
             }
-            return new URI(fullURL.getProtocol(), fullURL.getUserInfo(), fullURL.getHost(), port, fullURL.getPath(), (queryString.toString().isEmpty() ? null : queryString.toString()), null);
+            String path = httpRequest.getPath();
+            if (Strings.isNullOrEmpty(path)) {
+               path = fullURL.getPath();
+            }
+            String query = queryString.toString();
+            if (Strings.isNullOrEmpty(query)) {
+                query = null;
+            }
+            return new URI(fullURL.getProtocol(), fullURL.getUserInfo(), fullURL.getHost(), port, path, query, null);
         } catch (URISyntaxException urise) {
-            throw new IllegalArgumentException("URISyntaxException while parsing \"" + URLEncoder.encodeURL(httpRequest.getURL()) + "\"");
+            throw new IllegalArgumentException("URISyntaxException while parsing \"" + URLEncoder.encodeURL(httpRequest.getURL()) + "\"", urise);
         } catch (MalformedURLException murle) {
-            throw new IllegalArgumentException("MalformedURLException while parsing \"" + URLEncoder.encodeURL(httpRequest.getURL()) + "\"");
+            throw new IllegalArgumentException("MalformedURLException while parsing \"" + URLEncoder.encodeURL(httpRequest.getURL()) + "\"", murle);
         }
     }
 }
