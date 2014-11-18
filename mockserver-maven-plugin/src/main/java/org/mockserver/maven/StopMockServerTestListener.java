@@ -15,48 +15,48 @@ import org.slf4j.LoggerFactory;
  * when a test fails this class can be used to guarantee that the MockServer
  * is stopped, for example:
  *
- * <plugin>
- *  <groupId>org.apache.maven.plugins</groupId>
- *  <artifactId>maven-surefire-plugin</artifactId>
- *  <version>2.17</version>
- *  <configuration>
- *      <properties>
- *          <property>
- *              <name>listener</name>
- *              <value>org.mockserver.maven.StopMockServerTestListener</value>
- *          </property>
- *      </properties>
- *  </configuration>
- * </plugin>
+ * &lt;plugin&gt;
+ *  &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+ *  &lt;artifactId&gt;maven-surefire-plugin&lt;/artifactId&gt;
+ *  &lt;version&gt;2.17&lt;/version&gt;
+ *  &lt;configuration&gt;
+ *      &lt;properties&gt;
+ *          &lt;property&gt;
+ *              &lt;name&gt;listener&lt;/name&gt;
+ *              &lt;value&gt;org.mockserver.maven.StopMockServerTestListener&lt;/value&gt;
+ *          &lt;/property&gt;
+ *      &lt;/properties&gt;
+ *  &lt;/configuration&gt;
+ * &lt;/plugin&gt;
  *
  * or:
  *
- * <plugin>
- *  <groupId>org.apache.maven.plugins</groupId>
- *  <artifactId>maven-failsafe-plugin</artifactId>
- *  <version>2.17</version>
- *  <configuration>
- *      <properties>
- *          <property>
- *              <name>listener</name>
- *              <value>org.mockserver.maven.StopMockServerTestListener</value>
- *          </property>
- *      </properties>
- *  </configuration>
- * </plugin>
+ * &lt;plugin&gt;
+ *  &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+ *  &lt;artifactId&gt;maven-failsafe-plugin&lt;/artifactId&gt;
+ *  &lt;version&gt;2.17&lt;/version&gt;
+ *  &lt;configuration&gt;
+ *      &lt;properties&gt;
+ *          &lt;property&gt;
+ *              &lt;name&gt;listener&lt;/name&gt;
+ *              &lt;value&gt;org.mockserver.maven.StopMockServerTestListener&lt;/value&gt;
+ *          &lt;/property&gt;
+ *      &lt;/properties&gt;
+ *  &lt;/configuration&gt;
+ * &lt;/plugin&gt;
  *
  * This will only work if the mockserver-maven-plugin dependency is also added:
  *
- * &ltdependencies&gt
+ * &lt;dependencies&gt;
  *  ...
- *  &ltdependency&gt
- *      &ltgroupId&gtorg.mock-server&lt/groupId&gt
- *      &ltartifactId&gtmockserver-maven-plugin&lt/artifactId&gt
- *      &ltversion&gt${mockserver.version}&lt/version&gt
- *      &ltscope&gttest&lt/scope&gt
- *  &lt/dependency&gt
+ *  &lt;dependency&gt;
+ *      &lt;groupId&gt;org.mock-server&lt;/groupId&gt;
+ *      &lt;artifactId&gt;mockserver-maven-plugin&lt;/artifactId&gt;
+ *      &lt;version&gt;${mockserver.version}&lt;/version&gt;
+ *      &lt;scope&gt;test&lt;/scope&gt;
+ *  &lt;/dependency&gt;
  *  ...
- * &lt/dependencies&gt
+ * &lt;/dependencies&gt;
  *
  */
 public class StopMockServerTestListener extends RunListener {

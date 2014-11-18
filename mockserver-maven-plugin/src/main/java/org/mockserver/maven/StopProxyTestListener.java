@@ -16,48 +16,48 @@ import org.slf4j.LoggerFactory;
  * when a test fails this class can be used to guarantee that the MockServer
  * is stopped, for example:
  *
- * &ltplugin&gt
- *  &ltgroupId&gtorg.apache.maven.plugins&lt/groupId&gt
- *  &ltartifactId&gtmaven-surefire-plugin&lt/artifactId&gt
- *  &ltversion&gt2.17&lt/version&gt
- *  &ltconfiguration&gt
- *      &ltproperties&gt
- *          &ltproperty&gt
- *              &ltname&gtlistener&lt/name&gt
- *              &ltvalue&gtorg.mockserver.maven.StopProxyTestListener&lt/value&gt
- *          &lt/property&gt
- *      &lt/properties&gt
- *  &lt/configuration&gt
- * &lt/plugin&gt
+ * &lt;plugin&gt;
+ *  &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+ *  &lt;artifactId&gt;maven-surefire-plugin&lt;/artifactId&gt;
+ *  &lt;version&gt;2.17&lt;/version&gt;
+ *  &lt;configuration&gt;
+ *      &lt;properties&gt;
+ *          &lt;property&gt;
+ *              &lt;name&gt;listener&lt;/name&gt;
+ *              &lt;value&gt;org.mockserver.maven.StopProxyTestListener&lt;/value&gt;
+ *          &lt;/property&gt;
+ *      &lt;/properties&gt;
+ *  &lt;/configuration&gt;
+ * &lt;/plugin&gt;
  *
  * or:
  *
- * &ltplugin&gt
- *  &ltgroupId&gtorg.apache.maven.plugins&lt/groupId&gt
- *  &ltartifactId&gtmaven-failsafe-plugin&lt/artifactId&gt
- *  &ltversion&gt2.17&lt/version&gt
- *  &ltconfiguration&gt
- *      &ltproperties&gt
- *          &ltproperty&gt
- *              &ltname&gtlistener&lt/name&gt
- *              &ltvalue&gtorg.mockserver.maven.StopProxyTestListener&lt/value&gt
- *          &lt/property&gt
- *      &lt/properties&gt
- *  &lt/configuration&gt
- * &lt/plugin&gt
+ * &lt;plugin&gt;
+ *  &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+ *  &lt;artifactId&gt;maven-failsafe-plugin&lt;/artifactId&gt;
+ *  &lt;version&gt;2.17&lt;/version&gt;
+ *  &lt;configuration&gt;
+ *      &lt;properties&gt;
+ *          &lt;property&gt;
+ *              &lt;name&gt;listener&lt;/name&gt;
+ *              &lt;value&gt;org.mockserver.maven.StopProxyTestListener&lt;/value&gt;
+ *          &lt;/property&gt;
+ *      &lt;/properties&gt;
+ *  &lt;/configuration&gt;
+ * &lt;/plugin&gt;
  *
  * This will only work if the mockserver-maven-plugin dependency is also added:
  *
- * &ltdependencies&gt
+ * &lt;dependencies&gt;
  *  ...
- *  &ltdependency&gt
- *      &ltgroupId&gtorg.mock-server&lt/groupId&gt
- *      &ltartifactId&gtmockserver-maven-plugin&lt/artifactId&gt
- *      &ltversion&gt${mockserver.version}&lt/version&gt
- *      &ltscope&gttest&lt/scope&gt
- *  &lt/dependency&gt
+ *  &lt;dependency&gt;
+ *      &lt;groupId&gt;org.mock-server&lt;/groupId&gt;
+ *      &lt;artifactId&gt;mockserver-maven-plugin&lt;/artifactId&gt;
+ *      &lt;version&gt;${mockserver.version}&lt;/version&gt;
+ *      &lt;scope&gt;test&lt;/scope&gt;
+ *  &lt;/dependency&gt;
  *  ...
- * &lt/dependencies&gt
+ * &lt;/dependencies&gt;
  *
  */
 public class StopProxyTestListener extends RunListener {
