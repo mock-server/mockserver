@@ -10,7 +10,6 @@ import org.mockserver.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -46,9 +45,6 @@ public class ExpectationSerializer {
                     "                request()");
             if (StringUtils.isNotEmpty(httpRequest.getMethod())) {
                 output.append(System.getProperty("line.separator") + "                        .withMethod(\"").append(httpRequest.getMethod()).append("\")");
-            }
-            if (StringUtils.isNotEmpty(httpRequest.getURL())) {
-                output.append(System.getProperty("line.separator") + "                        .withURL(\"").append(httpRequest.getURL()).append("\")");
             }
             if (StringUtils.isNotEmpty(httpRequest.getPath())) {
                 output.append(System.getProperty("line.separator") + "                        .withPath(\"").append(httpRequest.getPath()).append("\")");

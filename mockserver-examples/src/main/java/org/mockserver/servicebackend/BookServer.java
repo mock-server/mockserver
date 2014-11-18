@@ -49,7 +49,7 @@ public class BookServer {
         if (serverBootstrap == null) {
             try {
                 serverBootstrap = new ServerBootstrap()
-                        .group(new NioEventLoopGroup(1), new NioEventLoopGroup(1))
+                        .group(new NioEventLoopGroup(1))
                         .channel(NioServerSocketChannel.class)
                         .childHandler(new ChannelInitializer<SocketChannel>() {
                             @Override
@@ -60,12 +60,14 @@ public class BookServer {
                                 if (secure) {
                                     SSLEngine engine = SSLFactory.getInstance().sslContext().createSSLEngine();
                                     engine.setUseClientMode(false);
-                                    pipeline.addLast("ssl", new SslHandler(engine));
+                                    pipeline.addLast(new SslHandler(engine));
                                 }
 
                                 // pipeline.addLast("logger", new LoggingHandler("BOOK_HANDLER"));
-                                pipeline.addLast("http_codec", new HttpServerCodec());
-                                pipeline.addLast("simple_test_handler", new BookHandler());
+                                pipeline.addLast(new HttpServerCodec());
+                                pipeline.addLast(new HttpContentDecompressor());
+                                pipeline.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
+                                pipeline.addLast(new BookHandler());
                             }
                         });
 
@@ -118,7 +120,7 @@ public class BookServer {
 
     }
 
-    private class BookHandler extends SimpleChannelInboundHandler<Object> {
+    private class BookHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
         @Override
         public void channelReadComplete(ChannelHandlerContext ctx) {
@@ -126,43 +128,39 @@ public class BookServer {
         }
 
         @Override
-        public void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
-            if (msg instanceof HttpRequest) {
-                HttpRequest req = (HttpRequest) msg;
-
-                FullHttpResponse response = null;
-                if (req.getUri().startsWith("/get_books")) {
-                    response = new DefaultFullHttpResponse(HTTP_1_1, OK,
-                            Unpooled.wrappedBuffer(
-                                    objectMapper
-                                            .writerWithDefaultPrettyPrinter()
-                                            .writeValueAsBytes(booksDB.values())
-                            )
-                    );
-                    response.headers().set(CONTENT_TYPE, "application/json");
-                    response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
-                } else if (req.getUri().startsWith("/get_book")) {
-                    List<String> id = new QueryStringDecoder(req.getUri()).parameters().get("id");
-                    if (id != null && !id.isEmpty()) {
-                        Book book = booksDB.get(id.get(0));
-                        if (book != null) {
-                            response = new DefaultFullHttpResponse(HTTP_1_1, OK,
-                                    Unpooled.wrappedBuffer(
-                                            objectMapper
-                                                    .writerWithDefaultPrettyPrinter()
-                                                    .writeValueAsBytes(book)
-                                    )
-                            );
-                            response.headers().set(CONTENT_TYPE, "application/json");
-                            response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
-                        }
+        public void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {
+            FullHttpResponse response = null;
+            if (request.getUri().startsWith("/get_books")) {
+                response = new DefaultFullHttpResponse(HTTP_1_1, OK,
+                        Unpooled.wrappedBuffer(
+                                objectMapper
+                                        .writerWithDefaultPrettyPrinter()
+                                        .writeValueAsBytes(booksDB.values())
+                        )
+                );
+                response.headers().set(CONTENT_TYPE, "application/json");
+                response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
+            } else if (request.getUri().startsWith("/get_book")) {
+                List<String> id = new QueryStringDecoder(request.getUri()).parameters().get("id");
+                if (id != null && !id.isEmpty()) {
+                    Book book = booksDB.get(id.get(0));
+                    if (book != null) {
+                        response = new DefaultFullHttpResponse(HTTP_1_1, OK,
+                                Unpooled.wrappedBuffer(
+                                        objectMapper
+                                                .writerWithDefaultPrettyPrinter()
+                                                .writeValueAsBytes(book)
+                                )
+                        );
+                        response.headers().set(CONTENT_TYPE, "application/json");
+                        response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
                     }
                 }
-                if (response == null) {
-                    response = new DefaultFullHttpResponse(HTTP_1_1, NOT_FOUND);
-                }
-                ctx.write(response).addListener(ChannelFutureListener.CLOSE);
             }
+            if (response == null) {
+                response = new DefaultFullHttpResponse(HTTP_1_1, NOT_FOUND);
+            }
+            ctx.write(response).addListener(ChannelFutureListener.CLOSE);
         }
 
         @Override

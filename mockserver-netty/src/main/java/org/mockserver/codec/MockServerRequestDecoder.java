@@ -33,7 +33,6 @@ public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
         HttpRequest httpRequest = new HttpRequest();
         if (fullHttpResponse != null) {
             setMethod(httpRequest, fullHttpResponse);
-            setUrl(httpRequest, isSecure, fullHttpResponse);
 
             QueryStringDecoder queryStringDecoder = new QueryStringDecoder(fullHttpResponse.getUri());
             setPath(httpRequest, queryStringDecoder);
@@ -44,22 +43,13 @@ public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
             setCookies(httpRequest, fullHttpResponse);
 
             httpRequest.setKeepAlive(isKeepAlive(fullHttpResponse));
+            httpRequest.setSecure(isSecure);
         }
         out.add(httpRequest);
     }
 
     private void setMethod(HttpRequest httpRequest, FullHttpRequest fullHttpResponse) {
         httpRequest.withMethod(fullHttpResponse.getMethod().name());
-    }
-
-    private void setUrl(HttpRequest httpRequest, boolean secure, FullHttpRequest fullHttpResponse) {
-        String hostAndPort = fullHttpResponse.headers().get(HttpHeaders.Names.HOST);
-        String uri = (!httpRequest.getMethod().equals("CONNECT") ? fullHttpResponse.getUri() : "");
-        if (URLParser.isFullUrl(uri)) {
-            httpRequest.withURL(uri);
-        } else {
-            httpRequest.withURL("http" + (secure ? "s" : "") + "://" + (hostAndPort != null ? hostAndPort : "localhost") + uri);
-        }
     }
 
     private void setPath(HttpRequest httpRequest, QueryStringDecoder queryStringDecoder) {

@@ -15,10 +15,7 @@ import org.mockserver.filters.ResponseFilter;
 import org.mockserver.mappers.HttpServletToMockServerRequestMapper;
 import org.mockserver.mappers.MockServerToHttpServletResponseMapper;
 import org.mockserver.mock.Expectation;
-import org.mockserver.model.Header;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
-import org.mockserver.model.HttpStatusCode;
+import org.mockserver.model.*;
 import org.mockserver.filters.LogFilter;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
@@ -37,7 +34,9 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.OutboundHttpRequest.outboundRequest;
 
 public class ProxyServletTest {
 
@@ -61,9 +60,9 @@ public class ProxyServletTest {
     private ProxyServlet proxyServlet;
     private MockHttpServletRequest mockHttpServletRequest;
     private MockHttpServletResponse mockHttpServletResponse;
-    private HttpRequest httpRequest;
+    private OutboundHttpRequest outboundHttpRequest;
     private HttpResponse httpResponse;
-    private ArgumentCaptor<HttpRequest> httpRequestArgumentCaptor;
+    private ArgumentCaptor<OutboundHttpRequest> httpRequestArgumentCaptor;
 
     @Before
     public void setupMocks() {
@@ -74,12 +73,12 @@ public class ProxyServletTest {
         // additional mock objects
         mockHttpServletRequest = new MockHttpServletRequest();
         mockHttpServletResponse = new MockHttpServletResponse();
-        httpRequest = new HttpRequest().withPath("some_path");
+        outboundHttpRequest = outboundRequest("localhost", 80, request().withHeader(header("Host", "localhost")).withPath("some_path"));
         httpResponse = new HttpResponse();
 
         // mappers
-        when(mockHttpServletToMockServerRequestMapper.mapHttpServletRequestToMockServerRequest(any(MockHttpServletRequest.class))).thenReturn(httpRequest);
-        httpRequestArgumentCaptor = ArgumentCaptor.forClass(HttpRequest.class);
+        when(mockHttpServletToMockServerRequestMapper.mapHttpServletRequestToMockServerRequest(any(MockHttpServletRequest.class))).thenReturn(outboundHttpRequest);
+        httpRequestArgumentCaptor = ArgumentCaptor.forClass(OutboundHttpRequest.class);
         when(mockNettyHttpClient.sendRequest(httpRequestArgumentCaptor.capture())).thenReturn(httpResponse);
     }
 
@@ -91,7 +90,7 @@ public class ProxyServletTest {
         // then
         verify(mockHttpServletToMockServerRequestMapper).mapHttpServletRequestToMockServerRequest(same(mockHttpServletRequest));
         verify(mockMockServerToHttpServletResponseMapper).mapMockServerResponseToHttpServletResponse(same(httpResponse), same(mockHttpServletResponse));
-        verify(mockNettyHttpClient).sendRequest(same(httpRequest));
+        verify(mockNettyHttpClient).sendRequest(outboundHttpRequest);
     }
 
     @Test
@@ -102,7 +101,7 @@ public class ProxyServletTest {
         // then
         verify(mockHttpServletToMockServerRequestMapper).mapHttpServletRequestToMockServerRequest(same(mockHttpServletRequest));
         verify(mockMockServerToHttpServletResponseMapper).mapMockServerResponseToHttpServletResponse(same(httpResponse), same(mockHttpServletResponse));
-        verify(mockNettyHttpClient).sendRequest(same(httpRequest));
+        verify(mockNettyHttpClient).sendRequest(outboundHttpRequest);
     }
 
     @Test
@@ -113,7 +112,7 @@ public class ProxyServletTest {
         // then
         verify(mockHttpServletToMockServerRequestMapper).mapHttpServletRequestToMockServerRequest(same(mockHttpServletRequest));
         verify(mockMockServerToHttpServletResponseMapper).mapMockServerResponseToHttpServletResponse(same(httpResponse), same(mockHttpServletResponse));
-        verify(mockNettyHttpClient).sendRequest(same(httpRequest));
+        verify(mockNettyHttpClient).sendRequest(outboundHttpRequest);
     }
 
     @Test
@@ -124,7 +123,7 @@ public class ProxyServletTest {
         // then
         verify(mockHttpServletToMockServerRequestMapper).mapHttpServletRequestToMockServerRequest(same(mockHttpServletRequest));
         verify(mockMockServerToHttpServletResponseMapper).mapMockServerResponseToHttpServletResponse(same(httpResponse), same(mockHttpServletResponse));
-        verify(mockNettyHttpClient).sendRequest(same(httpRequest));
+        verify(mockNettyHttpClient).sendRequest(outboundHttpRequest);
     }
 
     @Test
@@ -135,7 +134,7 @@ public class ProxyServletTest {
         // then
         verify(mockHttpServletToMockServerRequestMapper).mapHttpServletRequestToMockServerRequest(same(mockHttpServletRequest));
         verify(mockMockServerToHttpServletResponseMapper).mapMockServerResponseToHttpServletResponse(same(httpResponse), same(mockHttpServletResponse));
-        verify(mockNettyHttpClient).sendRequest(same(httpRequest));
+        verify(mockNettyHttpClient).sendRequest(outboundHttpRequest);
     }
 
     @Test
@@ -146,7 +145,7 @@ public class ProxyServletTest {
         // then
         verify(mockHttpServletToMockServerRequestMapper).mapHttpServletRequestToMockServerRequest(same(mockHttpServletRequest));
         verify(mockMockServerToHttpServletResponseMapper).mapMockServerResponseToHttpServletResponse(same(httpResponse), same(mockHttpServletResponse));
-        verify(mockNettyHttpClient).sendRequest(same(httpRequest));
+        verify(mockNettyHttpClient).sendRequest(outboundHttpRequest);
     }
 
     @Test
@@ -157,7 +156,7 @@ public class ProxyServletTest {
         // then
         verify(mockHttpServletToMockServerRequestMapper).mapHttpServletRequestToMockServerRequest(same(mockHttpServletRequest));
         verify(mockMockServerToHttpServletResponseMapper).mapMockServerResponseToHttpServletResponse(same(httpResponse), same(mockHttpServletResponse));
-        verify(mockNettyHttpClient).sendRequest(same(httpRequest));
+        verify(mockNettyHttpClient).sendRequest(outboundHttpRequest);
     }
 
     @Test
@@ -165,9 +164,9 @@ public class ProxyServletTest {
         // given
         // - add first filter
         RequestFilter filter = mock(RequestFilter.class);
-        proxyServlet.withFilter(httpRequest, filter);
+        proxyServlet.withFilter(outboundHttpRequest, filter);
         // - add first filter with other request
-        HttpRequest someOtherRequest = new HttpRequest().withPath("some_other_path");
+        HttpRequest someOtherRequest = request().withPath("some_other_path");
         proxyServlet.withFilter(someOtherRequest, filter);
         // - add second filter
         RequestFilter someOtherFilter = mock(RequestFilter.class);
@@ -177,7 +176,7 @@ public class ProxyServletTest {
         proxyServlet.doGet(mockHttpServletRequest, mockHttpServletResponse);
 
         // then
-        verify(filter, times(1)).onRequest(same(httpRequest));
+        verify(filter, times(1)).onRequest(same(outboundHttpRequest));
         verify(filter, times(0)).onRequest(same(someOtherRequest));
         verifyZeroInteractions(someOtherFilter);
     }
@@ -188,9 +187,9 @@ public class ProxyServletTest {
         // - add first filter
         ResponseFilter filter = mock(ResponseFilter.class);
         when(filter.onResponse(any(HttpRequest.class), any(HttpResponse.class))).thenReturn(new HttpResponse());
-        proxyServlet.withFilter(httpRequest, filter);
+        proxyServlet.withFilter(outboundHttpRequest, filter);
         // - add first filter with other request
-        HttpRequest someOtherRequest = new HttpRequest().withPath("some_other_path");
+        HttpRequest someOtherRequest = request().withPath("some_other_path");
         proxyServlet.withFilter(someOtherRequest, filter);
         // - add second filter
         ResponseFilter someOtherFilter = mock(ResponseFilter.class);
@@ -200,7 +199,7 @@ public class ProxyServletTest {
         proxyServlet.doGet(mockHttpServletRequest, mockHttpServletResponse);
 
         // then
-        verify(filter, times(1)).onResponse(same(httpRequest), same(httpResponse));
+        verify(filter, times(1)).onResponse(same(outboundHttpRequest), same(httpResponse));
         verify(filter, times(0)).onResponse(same(someOtherRequest), same(httpResponse));
         verifyZeroInteractions(someOtherFilter);
     }
@@ -208,17 +207,18 @@ public class ProxyServletTest {
     @Test
     public void shouldNotForwardHopByHopHeaders() {
         // given
-        httpRequest.withHeaders(
-                new Header("some_other_header"),
-                new Header("proxy-connection"),
-                new Header("connection"),
-                new Header("keep-alive"),
-                new Header("transfer-encoding"),
-                new Header("te"),
-                new Header("trailer"),
-                new Header("proxy-authorization"),
-                new Header("proxy-authenticate"),
-                new Header("upgrade")
+        outboundHttpRequest.withHeaders(
+                header("host", "localhost"),
+                header("some_other_header"),
+                header("proxy-connection"),
+                header("connection"),
+                header("keep-alive"),
+                header("transfer-encoding"),
+                header("te"),
+                header("trailer"),
+                header("proxy-authorization"),
+                header("proxy-authenticate"),
+                header("upgrade")
         );
 
         // when
@@ -226,7 +226,7 @@ public class ProxyServletTest {
 
         // then
         HttpRequest actual = httpRequestArgumentCaptor.getValue();
-        assertEquals(actual.getHeaders().size(), 1);
+        assertEquals(actual.getHeaders().size(), 2);
     }
 
     @Test
@@ -234,13 +234,13 @@ public class ProxyServletTest {
         // given
         mockHttpServletRequest.setRequestURI("/dumpToLog");
         mockHttpServletRequest.setContent("body".getBytes());
-        when(mockHttpRequestSerializer.deserialize("body")).thenReturn(httpRequest);
+        when(mockHttpRequestSerializer.deserialize("body")).thenReturn(outboundHttpRequest);
 
         // when
         proxyServlet.doPut(mockHttpServletRequest, mockHttpServletResponse);
 
         // then
-        verify(mockLogFilter).dumpToLog(httpRequest, false);
+        verify(mockLogFilter).dumpToLog(outboundHttpRequest, false);
         assertEquals(HttpStatusCode.ACCEPTED_202.code(), mockHttpServletResponse.getStatus());
     }
 
@@ -250,13 +250,13 @@ public class ProxyServletTest {
         mockHttpServletRequest.setRequestURI("/dumpToLog");
         mockHttpServletRequest.setContent("body".getBytes());
         mockHttpServletRequest.addParameter("type", "java");
-        when(mockHttpRequestSerializer.deserialize("body")).thenReturn(httpRequest);
+        when(mockHttpRequestSerializer.deserialize("body")).thenReturn(outboundHttpRequest);
 
         // when
         proxyServlet.doPut(mockHttpServletRequest, mockHttpServletResponse);
 
         // then
-        verify(mockLogFilter).dumpToLog(httpRequest, true);
+        verify(mockLogFilter).dumpToLog(outboundHttpRequest, true);
         assertEquals(HttpStatusCode.ACCEPTED_202.code(), mockHttpServletResponse.getStatus());
     }
 
@@ -266,15 +266,15 @@ public class ProxyServletTest {
         Expectation[] expectations = new Expectation[]{};
         mockHttpServletRequest.setRequestURI("/retrieve");
         mockHttpServletRequest.setContent("body".getBytes());
-        when(mockHttpRequestSerializer.deserialize("body")).thenReturn(httpRequest);
-        when(mockLogFilter.retrieve(httpRequest)).thenReturn(expectations);
+        when(mockHttpRequestSerializer.deserialize("body")).thenReturn(outboundHttpRequest);
+        when(mockLogFilter.retrieve(outboundHttpRequest)).thenReturn(expectations);
         when(mockExpectationSerializer.serialize(aryEq(new Expectation[]{}))).thenReturn("expectationsArray");
 
         // when
         proxyServlet.doPut(mockHttpServletRequest, mockHttpServletResponse);
 
         // then
-        verify(mockLogFilter).retrieve(httpRequest);
+        verify(mockLogFilter).retrieve(outboundHttpRequest);
         assertEquals(HttpStatusCode.OK_200.code(), mockHttpServletResponse.getStatus());
         assertEquals("expectationsArray", mockHttpServletResponse.getContentAsString());
     }
@@ -284,7 +284,7 @@ public class ProxyServletTest {
         // given
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
         MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/verify");
-        Verification verification = new Verification().withRequest(new HttpRequest()).withTimes(VerificationTimes.once());
+        Verification verification = new Verification().withRequest(request()).withTimes(VerificationTimes.once());
 
         String requestBytes = "requestBytes";
         httpServletRequest.setContent(requestBytes.getBytes());
@@ -306,7 +306,7 @@ public class ProxyServletTest {
         // given
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
         MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/verify");
-        Verification verification = new Verification().withRequest(new HttpRequest()).withTimes(VerificationTimes.once());
+        Verification verification = new Verification().withRequest(request()).withTimes(VerificationTimes.once());
 
         String requestBytes = "requestBytes";
         httpServletRequest.setContent(requestBytes.getBytes());
@@ -385,13 +385,13 @@ public class ProxyServletTest {
         // given
         mockHttpServletRequest.setRequestURI("/clear");
         mockHttpServletRequest.setContent("body".getBytes());
-        when(mockHttpRequestSerializer.deserialize("body")).thenReturn(httpRequest);
+        when(mockHttpRequestSerializer.deserialize("body")).thenReturn(outboundHttpRequest);
 
         // when
         proxyServlet.doPut(mockHttpServletRequest, mockHttpServletResponse);
 
         // then
-        verify(mockLogFilter).clear(httpRequest);
+        verify(mockLogFilter).clear(outboundHttpRequest);
         assertEquals(HttpStatusCode.ACCEPTED_202.code(), mockHttpServletResponse.getStatus());
     }
 
@@ -402,13 +402,13 @@ public class ProxyServletTest {
         mockHttpServletRequest.setContextPath("/mockserver");
         mockHttpServletRequest.setRequestURI("/mockserver/clear");
         mockHttpServletRequest.setContent("body".getBytes());
-        when(mockHttpRequestSerializer.deserialize("body")).thenReturn(httpRequest);
+        when(mockHttpRequestSerializer.deserialize("body")).thenReturn(outboundHttpRequest);
 
         // when
         proxyServlet.doPut(mockHttpServletRequest, mockHttpServletResponse);
 
         // then
-        verify(mockLogFilter).clear(httpRequest);
+        verify(mockLogFilter).clear(outboundHttpRequest);
         assertEquals(HttpStatusCode.ACCEPTED_202.code(), mockHttpServletResponse.getStatus());
     }
 
@@ -419,13 +419,13 @@ public class ProxyServletTest {
         mockHttpServletRequest.setContextPath("/mockserver");
         mockHttpServletRequest.setRequestURI("/clear");
         mockHttpServletRequest.setContent("body".getBytes());
-        when(mockHttpRequestSerializer.deserialize("body")).thenReturn(httpRequest);
+        when(mockHttpRequestSerializer.deserialize("body")).thenReturn(outboundHttpRequest);
 
         // when
         proxyServlet.doPut(mockHttpServletRequest, mockHttpServletResponse);
 
         // then
-        verify(mockLogFilter).clear(httpRequest);
+        verify(mockLogFilter).clear(outboundHttpRequest);
         assertEquals(HttpStatusCode.ACCEPTED_202.code(), mockHttpServletResponse.getStatus());
     }
 }

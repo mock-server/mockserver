@@ -19,27 +19,17 @@ public class HttpServletToMockServerRequestMapper {
     public HttpRequest mapHttpServletRequestToMockServerRequest(HttpServletRequest httpServletRequest) {
         HttpRequest httpRequest = new HttpRequest();
         setMethod(httpRequest, httpServletRequest);
-        setUrl(httpRequest, httpServletRequest);
         setPath(httpRequest, httpServletRequest);
         setQueryString(httpRequest, httpServletRequest);
         setBody(httpRequest, httpServletRequest);
         setHeaders(httpRequest, httpServletRequest);
         setCookies(httpRequest, httpServletRequest);
+        httpRequest.setSecure(httpServletRequest.isSecure());
         return httpRequest;
     }
 
     private void setMethod(HttpRequest httpRequest, HttpServletRequest httpServletRequest) {
         httpRequest.withMethod(httpServletRequest.getMethod());
-    }
-
-    private void setUrl(HttpRequest httpRequest, HttpServletRequest httpServletRequest) {
-        StringBuilder url = new StringBuilder(httpServletRequest.getRequestURL());
-        String queryString = httpServletRequest.getQueryString();
-        if (queryString != null) {
-            url.append('?');
-            url.append(queryString);
-        }
-        httpRequest.withURL(url.toString());
     }
 
     private void setPath(HttpRequest httpRequest, HttpServletRequest httpServletRequest) {

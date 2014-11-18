@@ -29,7 +29,6 @@ public class HttpRequestSerializerTest {
     private final HttpRequest fullHttpRequest =
             new HttpRequest()
                     .withMethod("GET")
-                    .withURL("http://www.example.com")
                     .withPath("somepath")
                     .withQueryStringParameters(
                             new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
@@ -41,7 +40,6 @@ public class HttpRequestSerializerTest {
     private final HttpRequestDTO fullHttpRequestDTO =
             new HttpRequestDTO()
                     .setMethod("GET")
-                    .setURL("http://www.example.com")
                     .setPath("somepath")
                     .setQueryStringParameters(Arrays.asList(
                             new ParameterDTO(new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two")),

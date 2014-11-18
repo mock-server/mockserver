@@ -28,7 +28,6 @@ import static org.mockserver.model.HttpRequest.request;
 public class VerificationSerializerTest {
 
     private final HttpRequest request = request().withMethod("GET")
-            .withURL("http://www.example.com")
             .withPath("somepath")
             .withBody(new StringBody("somebody", Body.Type.STRING))
             .withHeaders(new Header("headerName", "headerValue"))

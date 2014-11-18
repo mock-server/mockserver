@@ -1,20 +1,12 @@
 package org.mockserver.mock.action;
 
-import com.google.common.base.Strings;
-import io.netty.handler.codec.http.HttpHeaders;
-import io.netty.handler.codec.http.QueryStringEncoder;
 import org.mockserver.client.netty.NettyHttpClient;
-import org.mockserver.model.HttpForward;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
-import org.mockserver.model.Parameter;
+import org.mockserver.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-
 import static org.mockserver.model.Header.header;
+import static org.mockserver.model.OutboundHttpRequest.outboundRequest;
 
 /**
  * @author jamesdbloom
@@ -26,37 +18,15 @@ public class HttpForwardActionHandler {
     private NettyHttpClient httpClient = new NettyHttpClient();
 
     public HttpResponse handle(HttpForward httpForward, HttpRequest httpRequest) {
-        updateURLAndHost(httpRequest, httpForward);
-        return sendRequest(httpRequest);
-    }
-
-    private void updateURLAndHost(HttpRequest httpRequest, HttpForward httpForward) {
-        try {
-            URI originalUri = new URI(httpRequest.getURL());
-            QueryStringEncoder queryStringEncoder = new QueryStringEncoder("");
-            for (Parameter parameter : httpRequest.getQueryStringParameters()) {
-                for (String value : parameter.getValues()) {
-                    queryStringEncoder.addParam(parameter.getName(), value);
-                }
-            }
-            URI updatedUri = new URI(
-                    httpForward.getScheme().name().toLowerCase(),
-                    originalUri.getUserInfo(),
-                    httpForward.getHost(),
-                    httpForward.getPort(),
-                    httpRequest.getPath().startsWith("/") ? httpRequest.getPath() : "/" + httpRequest.getPath(),
-                    (!Strings.isNullOrEmpty(queryStringEncoder.toString()) ? queryStringEncoder.toString() : null),
-                    null
-            );
-
-            httpRequest.withURL(updatedUri.toString());
-            httpRequest.replaceHeader(header(HttpHeaders.Names.HOST, String.format("%s:%d", updatedUri.getHost(), updatedUri.getPort())));
-        } catch (URISyntaxException e) {
-            logger.warn("URISyntaxException for url " + httpRequest.getURL(), e);
+        if (httpForward.getScheme().equals(HttpForward.Scheme.HTTPS)) {
+            httpRequest.setSecure(true);
+        } else {
+            httpRequest.setSecure(false);
         }
+        return sendRequest(outboundRequest(httpForward.getHost(), httpForward.getPort(), httpRequest));
     }
 
-    private HttpResponse sendRequest(HttpRequest httpRequest) {
+    private HttpResponse sendRequest(OutboundHttpRequest httpRequest) {
         if (httpRequest != null) {
             try {
                 return httpClient.sendRequest(httpRequest);

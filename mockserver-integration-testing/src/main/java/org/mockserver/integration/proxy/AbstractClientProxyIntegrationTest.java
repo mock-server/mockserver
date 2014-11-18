@@ -22,7 +22,8 @@ import java.io.OutputStream;
 import java.net.ProxySelector;
 import java.net.Socket;
 
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.core.StringStartsWith.startsWith;
+import static org.junit.Assert.*;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.test.Assert.assertContains;
 import static org.mockserver.verify.VerificationTimes.atLeast;
@@ -32,6 +33,8 @@ import static org.mockserver.verify.VerificationTimes.exactly;
  * @author jamesdbloom
  */
 public abstract class AbstractClientProxyIntegrationTest {
+
+    protected static String servletContext = "";
 
     protected HttpClient createHttpClient() throws Exception {
         HttpClientBuilder httpClientBuilder = HttpClients
@@ -57,6 +60,10 @@ public abstract class AbstractClientProxyIntegrationTest {
     public abstract int getServerPort();
 
     public abstract int getServerSecurePort();
+
+    protected String calculatePath(String some_path_one) {
+        return "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + some_path_one;
+    }
 
     @Test
     public void shouldForwardRequestsUsingSocketDirectly() throws Exception {
@@ -180,36 +187,36 @@ public abstract class AbstractClientProxyIntegrationTest {
                 .verify(
                         request()
                                 .withMethod("GET")
-                                .withPath("/test_headers_and_body")
+                                .withPath(calculatePath("test_headers_and_body"))
                 );
         proxyClient
                 .verify(
                         request()
                                 .withMethod("GET")
-                                .withPath("/test_headers_and_body"),
+                                .withPath(calculatePath("test_headers_and_body")),
                         exactly(1)
                 );
         proxyClient
                 .verify(
                         request()
-                                .withPath("/test_headers_.*"),
+                                .withPath(calculatePath("test_headers_.*")),
                         atLeast(1)
                 );
         proxyClient
                 .verify(
                         request()
-                                .withPath("/test_headers_.*"),
+                                .withPath(calculatePath("test_headers_.*")),
                         exactly(2)
                 );
         proxyClient
                 .verify(
                         request()
-                                .withPath("/other_path"),
+                                .withPath(calculatePath("other_path")),
                         exactly(0)
                 );
     }
 
-    @Test(expected = AssertionError.class)
+    @Test
     public void shouldVerifyZeroRequests() throws Exception {
         // given
         HttpClient httpClient = createHttpClient();
@@ -228,16 +235,20 @@ public abstract class AbstractClientProxyIntegrationTest {
         );
 
         // then
-        proxyClient
-                .verify(
-                        request()
-                                .withMethod("GET")
-                                .withPath("/test_headers_and_body"),
-                        exactly(0)
-                );
+        try {
+            proxyClient.verify(request()
+                    .withPath(calculatePath("test_headers_and_body")), exactly(0));
+            fail();
+        } catch (AssertionError ae) {
+            assertThat(ae.getMessage(), startsWith("Request not found exactly 0 times expected:<{" + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("test_headers_and_body") + "\"" + System.getProperty("line.separator") +
+                    "}> but was:<{" + System.getProperty("line.separator") +
+                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("test_headers_and_body") + "\"," + System.getProperty("line.separator")));
+        }
     }
 
-    @Test(expected = AssertionError.class)
+    @Test
     public void shouldVerifyNoRequestsExactly() throws Exception {
         // given
         HttpClient httpClient = createHttpClient();
@@ -256,16 +267,24 @@ public abstract class AbstractClientProxyIntegrationTest {
         );
 
         // then
-        proxyClient
-                .verify(
-                        request()
-                                .withMethod("GET")
-                                .withPath("/other_path"),
-                        exactly(1)
-                );
+        try {
+            proxyClient
+                    .verify(
+                            request()
+                                    .withPath(calculatePath("other_path")),
+                            exactly(1)
+                    );
+            fail();
+        } catch (AssertionError ae) {
+            assertThat(ae.getMessage(), startsWith("Request not found exactly once expected:<{" + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("other_path") + "\"" + System.getProperty("line.separator") +
+                    "}> but was:<{" + System.getProperty("line.separator") +
+                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("test_headers_and_body") + "\"," + System.getProperty("line.separator")));
+        }
     }
 
-    @Test(expected = AssertionError.class)
+    @Test
     public void shouldVerifyNoRequestsTimesNotSpecified() throws Exception {
         // given
         HttpClient httpClient = createHttpClient();
@@ -284,15 +303,23 @@ public abstract class AbstractClientProxyIntegrationTest {
         );
 
         // then
-        proxyClient
-                .verify(
-                        request()
-                                .withMethod("GET")
-                                .withPath("/other_path")
-                );
+        try {
+            proxyClient
+                    .verify(
+                            request()
+                                    .withPath(calculatePath("other_path"))
+                    );
+            fail();
+        } catch (AssertionError ae) {
+            assertThat(ae.getMessage(), startsWith("Request sequence not found expected:<[ {" + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("other_path") + "\"" + System.getProperty("line.separator") +
+                    "} ]> but was:<[ {" + System.getProperty("line.separator") +
+                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("test_headers_and_body") + "\"," + System.getProperty("line.separator")));
+        }
     }
 
-    @Test(expected = AssertionError.class)
+    @Test
     public void shouldVerifyNotEnoughRequests() throws Exception {
         // given
         HttpClient httpClient = createHttpClient();
@@ -321,12 +348,21 @@ public abstract class AbstractClientProxyIntegrationTest {
         );
 
         // then
-        proxyClient
-                .verify(
-                        request()
-                                .withPath("/test_headers_and_body"),
-                        atLeast(3)
-                );
+        try {
+            proxyClient
+                    .verify(
+                            request()
+                                    .withPath(calculatePath("test_headers_and_body")),
+                            atLeast(3)
+                    );
+            fail();
+        } catch (AssertionError ae) {
+            assertThat(ae.getMessage(), startsWith("Request not found at least 3 times expected:<{" + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("test_headers_and_body") + "\"" + System.getProperty("line.separator") +
+                    "}> but was:<[ {" + System.getProperty("line.separator") +
+                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("test_headers_and_body") + "\"," + System.getProperty("line.separator")));
+        }
     }
 
     @Test
@@ -359,7 +395,7 @@ public abstract class AbstractClientProxyIntegrationTest {
         proxyClient.clear(
                 request()
                         .withMethod("GET")
-                        .withPath("/test_headers_and_body")
+                        .withPath(calculatePath("test_headers_and_body"))
         );
 
         // then
@@ -367,13 +403,13 @@ public abstract class AbstractClientProxyIntegrationTest {
                 .verify(
                         request()
                                 .withMethod("GET")
-                                .withPath("/test_headers_and_body"),
+                                .withPath(calculatePath("test_headers_and_body")),
                         exactly(0)
                 );
         proxyClient
                 .verify(
                         request()
-                                .withPath("/test_headers_.*"),
+                                .withPath(calculatePath("test_headers_.*")),
                         exactly(1)
                 );
     }
@@ -412,19 +448,19 @@ public abstract class AbstractClientProxyIntegrationTest {
                 .verify(
                         request()
                                 .withMethod("GET")
-                                .withPath("/test_headers_and_body"),
+                                .withPath(calculatePath("test_headers_and_body")),
                         exactly(0)
                 );
         proxyClient
                 .verify(
                         request()
-                                .withPath("/test_headers_.*"),
+                                .withPath(calculatePath("test_headers_.*")),
                         atLeast(0)
                 );
         proxyClient
                 .verify(
                         request()
-                                .withPath("/test_headers_.*"),
+                                .withPath(calculatePath("test_headers_.*")),
                         exactly(0)
                 );
     }

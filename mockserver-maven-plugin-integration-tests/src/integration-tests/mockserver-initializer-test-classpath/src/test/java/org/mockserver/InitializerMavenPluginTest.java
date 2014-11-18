@@ -2,10 +2,7 @@ package org.mockserver;
 
 import org.junit.Test;
 import org.mockserver.client.netty.NettyHttpClient;
-import org.mockserver.model.Header;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
-import org.mockserver.model.HttpStatusCode;
+import org.mockserver.model.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.configuration.SystemProperties.bufferSize;
 import static org.mockserver.configuration.SystemProperties.maxTimeout;
+import static org.mockserver.model.OutboundHttpRequest.outboundRequest;
 
 /**
  * @author jamesdbloom
@@ -43,7 +41,7 @@ public class InitializerMavenPluginTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("POST")
-                                .withURL("http://localhost:" + SERVER_HTTP_PORT + "/test_initializer_path")
+                                .withPath("/test_initializer_path")
                                 .withBody("test_initializer_request_body"),
                         headersToIgnore
                 )
@@ -56,7 +54,7 @@ public class InitializerMavenPluginTest {
                 makeRequest(
                         new HttpRequest()
                                 .withMethod("POST")
-                                .withURL("https://localhost:" + SERVER_HTTPS_PORT + "/test_initializer_path")
+                                .withPath("/test_initializer_path")
                                 .withBody("test_initializer_request_body"),
                         headersToIgnore
                 )
@@ -77,7 +75,8 @@ public class InitializerMavenPluginTest {
     );
 
     protected HttpResponse makeRequest(HttpRequest httpRequest, Collection<String> headersToIgnore) {
-        HttpResponse httpResponse = httpClient.sendRequest(httpRequest);
+        int port = (httpRequest.isSecure() ? SERVER_HTTPS_PORT : SERVER_HTTP_PORT);
+        HttpResponse httpResponse = httpClient.sendRequest(outboundRequest("localhost", port, httpRequest));
         List<Header> headers = new ArrayList<Header>();
         for (Header header : httpResponse.getHeaders()) {
             if (!headersToIgnore.contains(header.getName().toLowerCase())) {

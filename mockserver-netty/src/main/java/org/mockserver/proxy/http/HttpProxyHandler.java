@@ -1,9 +1,8 @@
 package org.mockserver.proxy.http;
 
-import io.netty.buffer.Unpooled;
+import com.google.common.base.Strings;
 import io.netty.channel.*;
 import io.netty.handler.codec.http.HttpHeaders;
-import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.serialization.ExpectationSerializer;
@@ -27,6 +26,7 @@ import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.OutboundHttpRequest.outboundRequest;
 
 @ChannelHandler.Sharable
 public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
@@ -134,9 +134,21 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
     private HttpResponse sendRequest(HttpRequest httpRequest) {
         // if HttpRequest was set to null by a filter don't send request
         if (httpRequest != null) {
-            HttpResponse httpResponse = filters.applyOnResponseFilters(httpRequest, httpClient.sendRequest(httpRequest));
-            if (httpResponse != null) {
-                return httpResponse;
+            String hostHeader = httpRequest.getFirstHeader("Host");
+            if (!Strings.isNullOrEmpty(hostHeader)) {
+                String[] hostHeaderParts = hostHeader.split(":");
+
+                Integer port = (httpRequest.isSecure() ? 443 : 80); // default
+                if (hostHeaderParts.length > 1) {
+                    port = Integer.parseInt(hostHeaderParts[1]);  // non-default
+                }
+                HttpResponse httpResponse = filters.applyOnResponseFilters(httpRequest, httpClient.sendRequest(outboundRequest(hostHeaderParts[0], port, httpRequest)));
+                if (httpResponse != null) {
+                    return httpResponse;
+                }
+            } else {
+                logger.error("Host header must be provided for requests being forwarded, the following request does not include the \"Host\" header:\n" + httpRequest);
+                throw new IllegalArgumentException("Host header must be provided for requests being forwarded");
             }
         }
         return notFoundResponse();

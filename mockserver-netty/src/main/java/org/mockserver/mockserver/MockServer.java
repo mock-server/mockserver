@@ -27,8 +27,7 @@ public class MockServer {
     private final MockServerMatcher mockServerMatcher = new MockServerMatcher();
     private SettableFuture<String> hasStarted;
     // netty
-    private EventLoopGroup bossGroup;
-    private EventLoopGroup workerGroup;
+    private EventLoopGroup eventLoopGroup;
 
     /**
      * Start the instance using the ports provided
@@ -42,8 +41,7 @@ public class MockServer {
         }
 
         hasStarted = SettableFuture.create();
-        bossGroup = new NioEventLoopGroup();
-        workerGroup = new NioEventLoopGroup();
+        eventLoopGroup = new NioEventLoopGroup();
 
         Thread mockServerThread = new Thread(new Runnable() {
             @Override
@@ -59,7 +57,7 @@ public class MockServer {
                         httpChannel = new ServerBootstrap()
                                 .option(ChannelOption.SO_BACKLOG, 1024)
                                 .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-                                .group(bossGroup, workerGroup)
+                                .group(eventLoopGroup)
                                 .channel(NioServerSocketChannel.class)
                                 .childHandler(new MockServerInitializer(mockServerMatcher, logFilter, MockServer.this, false))
                                 .bind(port)
@@ -72,7 +70,7 @@ public class MockServer {
                         httpsChannel = new ServerBootstrap()
                                 .option(ChannelOption.SO_BACKLOG, 1024)
                                 .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-                                .group(bossGroup, workerGroup)
+                                .group(eventLoopGroup)
                                 .channel(NioServerSocketChannel.class)
                                 .childHandler(new MockServerInitializer(mockServerMatcher, logFilter, MockServer.this, true))
                                 .bind(securePort)
@@ -91,8 +89,7 @@ public class MockServer {
                 } catch (InterruptedException ie) {
                     logger.error("MockServer receive InterruptedException", ie);
                 } finally {
-                    bossGroup.shutdownGracefully();
-                    workerGroup.shutdownGracefully();
+                    eventLoopGroup.shutdownGracefully();
                 }
             }
         });
@@ -110,10 +107,9 @@ public class MockServer {
 
     public void stop() {
         try {
-            workerGroup.shutdownGracefully(1, 3, TimeUnit.SECONDS);
-            bossGroup.shutdownGracefully(1, 3, TimeUnit.SECONDS);
+            eventLoopGroup.shutdownGracefully(1, 3, TimeUnit.MILLISECONDS);
             // wait for shutdown
-            TimeUnit.SECONDS.sleep(3);
+            TimeUnit.SECONDS.sleep(1);
         } catch (Exception ie) {
             logger.trace("Exception while waiting for MockServer to stop", ie);
         }
@@ -122,11 +118,11 @@ public class MockServer {
     public boolean isRunning() {
         if (hasStarted.isDone()) {
             try {
-                TimeUnit.SECONDS.sleep(1);
+                TimeUnit.MILLISECONDS.sleep(500);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            return !bossGroup.isShuttingDown() && !workerGroup.isShuttingDown();
+            return !eventLoopGroup.isShuttingDown();
         } else {
             return false;
         }

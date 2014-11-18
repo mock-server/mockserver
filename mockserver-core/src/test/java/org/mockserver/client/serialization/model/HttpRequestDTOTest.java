@@ -31,15 +31,13 @@ public class HttpRequestDTOTest {
         String method = "METHOD";
         String path = "path";
         List<ParameterDTO> queryStringParameters = Arrays.asList(new ParameterDTO(new Parameter("name", "value")));
-        String url = "url";
         HttpRequest httpRequest = new HttpRequest()
                 .withBody("body")
                 .withCookies(new Cookie("name", "value"))
                 .withHeaders(new Header("name", "value"))
                 .withMethod(method)
                 .withPath(path)
-                .withQueryStringParameter(new Parameter("name", "value"))
-                .withURL(url);
+                .withQueryStringParameter(new Parameter("name", "value"));
 
         // when
         HttpRequestDTO httpRequestDTO = new HttpRequestDTO(httpRequest);
@@ -51,7 +49,6 @@ public class HttpRequestDTOTest {
         assertThat(httpRequestDTO.getMethod(), is(method));
         assertThat(httpRequestDTO.getPath(), is(path));
         assertThat(httpRequestDTO.getQueryStringParameters(), is(queryStringParameters));
-        assertThat(httpRequestDTO.getURL(), is(url));
     }
 
     @Test
@@ -63,15 +60,13 @@ public class HttpRequestDTOTest {
         String method = "METHOD";
         String path = "path";
         Parameter parameter = new Parameter("name", "value");
-        String url = "url";
         HttpRequest httpRequest = new HttpRequest()
                 .withBody(body)
                 .withCookies(cookie)
                 .withHeaders(header)
                 .withMethod(method)
                 .withPath(path)
-                .withQueryStringParameter(parameter)
-                .withURL(url);
+                .withQueryStringParameter(parameter);
 
         // when
         HttpRequest builtHttpRequest = new HttpRequestDTO(httpRequest).buildObject();
@@ -83,7 +78,6 @@ public class HttpRequestDTOTest {
         assertThat(builtHttpRequest.getMethod(), is(method));
         assertThat(builtHttpRequest.getPath(), is(path));
         assertThat(builtHttpRequest.getQueryStringParameters(), containsInAnyOrder(parameter));
-        assertThat(builtHttpRequest.getURL(), is(url));
     }
 
     @Test
@@ -95,7 +89,6 @@ public class HttpRequestDTOTest {
         String method = "METHOD";
         String path = "path";
         List<ParameterDTO> queryStringParameters = Arrays.asList(new ParameterDTO());
-        String url = "url";
         HttpRequest httpRequest = new HttpRequest();
 
         // when
@@ -106,7 +99,6 @@ public class HttpRequestDTOTest {
         httpRequestDTO.setMethod(method);
         httpRequestDTO.setPath(path);
         httpRequestDTO.setQueryStringParameters(queryStringParameters);
-        httpRequestDTO.setURL(url);
 
         // then
         assertThat(httpRequestDTO.getBody(), is(body));
@@ -115,7 +107,6 @@ public class HttpRequestDTOTest {
         assertThat(httpRequestDTO.getMethod(), is(method));
         assertThat(httpRequestDTO.getPath(), is(path));
         assertThat(httpRequestDTO.getQueryStringParameters(), is(queryStringParameters));
-        assertThat(httpRequestDTO.getURL(), is(url));
     }
 
 
@@ -131,7 +122,6 @@ public class HttpRequestDTOTest {
         assertThat(httpRequestDTO.getMethod(), is(""));
         assertThat(httpRequestDTO.getPath(), is(""));
         assertThat(httpRequestDTO.getQueryStringParameters(), is(empty()));
-        assertThat(httpRequestDTO.getURL(), is(""));
     }
 
     @Test
@@ -146,6 +136,5 @@ public class HttpRequestDTOTest {
         assertThat(httpRequestDTO.getMethod(), is(""));
         assertThat(httpRequestDTO.getPath(), is(""));
         assertThat(httpRequestDTO.getQueryStringParameters(), is(empty()));
-        assertThat(httpRequestDTO.getURL(), is(""));
     }
 }

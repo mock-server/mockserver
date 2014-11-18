@@ -39,7 +39,6 @@ public class HttpRequestSerializerIntegrationTest {
         // given
         String requestBytes = "{" + System.getProperty("line.separator") +
                 "  \"method\" : \"someMethod\"," + System.getProperty("line.separator") +
-                "  \"url\" : \"http://www.example.com\"," + System.getProperty("line.separator") +
                 "  \"path\" : \"somePath\"," + System.getProperty("line.separator") +
                 "  \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
                 "    \"name\" : \"queryParameterName\"," + System.getProperty("line.separator") +
@@ -65,7 +64,6 @@ public class HttpRequestSerializerIntegrationTest {
         // then
         assertEquals(new HttpRequestDTO()
                 .setMethod("someMethod")
-                .setURL("http://www.example.com")
                 .setPath("somePath")
                 .setQueryStringParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")))))
                 .setBody(BodyDTO.createDTO(new StringBody("somebody", Body.Type.STRING)))
@@ -239,7 +237,6 @@ public class HttpRequestSerializerIntegrationTest {
         String jsonExpectation = new HttpRequestSerializer().serialize(
                 new HttpRequestDTO()
                         .setMethod("someMethod")
-                        .setURL("http://www.example.com")
                         .setPath("somePath")
                         .setQueryStringParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")))))
                         .setBody(BodyDTO.createDTO(new StringBody("somebody", Body.Type.STRING)))
@@ -251,7 +248,6 @@ public class HttpRequestSerializerIntegrationTest {
         // then
         assertEquals("{" + System.getProperty("line.separator") +
                 "  \"method\" : \"someMethod\"," + System.getProperty("line.separator") +
-                "  \"url\" : \"http://www.example.com\"," + System.getProperty("line.separator") +
                 "  \"path\" : \"somePath\"," + System.getProperty("line.separator") +
                 "  \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
                 "    \"name\" : \"queryParameterName\"," + System.getProperty("line.separator") +

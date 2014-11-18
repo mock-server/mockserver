@@ -6,8 +6,10 @@ import org.junit.Test;
 import java.util.Arrays;
 import java.util.Collection;
 
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertThat;
 import static org.mockserver.model.HttpRequest.request;
 
 /**
@@ -59,16 +61,6 @@ public class HttpRequestTest {
         assertEquals(new Cookie("name", "value_one", "value_two"), new HttpRequest().withCookies(new Cookie("name", "value_one", "value_two")).getCookies().get(0));
         assertEquals(new Cookie("name", (Collection<String>) null), new HttpRequest().withCookies(new Cookie("name")).getCookies().get(0));
         assertEquals(new Cookie("name"), new HttpRequest().withCookies(new Cookie("name")).getCookies().get(0));
-    }
-
-    @Test
-    public void shouldReturnPort() {
-        assertEquals(80, new HttpRequest().withURL(null).getPort());
-        assertEquals(80, new HttpRequest().withURL("http://www.host.com/some_path").getPort());
-        assertEquals(90, new HttpRequest().withURL("http://www.host.com:90/some_path").getPort());
-        assertEquals(443, new HttpRequest().withURL("https://www.host.com/some_path").getPort());
-        assertEquals(543, new HttpRequest().withURL("https://www.host.com:543/some_path").getPort());
-        assertEquals(80, new HttpRequest().withURL("incorrect_scheme://www.host.com/some_path").getPort());
     }
 
     @Test

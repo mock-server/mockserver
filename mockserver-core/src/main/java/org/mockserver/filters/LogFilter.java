@@ -185,7 +185,7 @@ public class LogFilter implements ResponseFilter, RequestFilter {
                         }
                     }
                     if (!foundRequest) {
-                        return "Request not found " + verificationHttpRequest + " expected:<" + httpRequestSerializer.serialize(verificationSequence.getHttpRequests()) + "> but was:<" + httpRequestSerializer.serialize(requestLog) + ">";
+                        return "Request sequence not found expected:<" + httpRequestSerializer.serialize(verificationSequence.getHttpRequests()) + "> but was:<" + httpRequestSerializer.serialize(requestLog) + ">";
                     }
                 }
             }

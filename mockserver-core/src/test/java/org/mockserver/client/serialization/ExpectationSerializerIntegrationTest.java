@@ -265,7 +265,6 @@ public class ExpectationSerializerIntegrationTest {
         String requestBytes = ("{" + System.getProperty("line.separator") +
                 "  \"httpRequest\" : {" + System.getProperty("line.separator") +
                 "    \"method\" : \"someMethod\"," + System.getProperty("line.separator") +
-                "    \"url\" : \"http://www.example.com\"," + System.getProperty("line.separator") +
                 "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
                 "    \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
                 "      \"name\" : \"queryStringParameterNameOne\"," + System.getProperty("line.separator") +
@@ -317,7 +316,6 @@ public class ExpectationSerializerIntegrationTest {
                 .setHttpRequest(
                         new HttpRequestDTO()
                                 .setMethod("someMethod")
-                                .setURL("http://www.example.com")
                                 .setPath("somePath")
                                 .setQueryStringParameters(Arrays.asList(
                                         new ParameterDTO(new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two")),
@@ -348,7 +346,6 @@ public class ExpectationSerializerIntegrationTest {
         String requestBytes = ("{" + System.getProperty("line.separator") +
                 "  \"httpRequest\" : {" + System.getProperty("line.separator") +
                 "    \"method\" : \"someMethod\"," + System.getProperty("line.separator") +
-                "    \"url\" : \"http://www.example.com\"," + System.getProperty("line.separator") +
                 "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
                 "    \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
                 "      \"name\" : \"queryStringParameterNameOne\"," + System.getProperty("line.separator") +
@@ -389,7 +386,6 @@ public class ExpectationSerializerIntegrationTest {
                         .setHttpRequest(
                                 new HttpRequestDTO()
                                         .setMethod("someMethod")
-                                        .setURL("http://www.example.com")
                                         .setPath("somePath")
                                         .setQueryStringParameters(Arrays.asList(
                                                 new ParameterDTO(new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two")),
@@ -415,7 +411,6 @@ public class ExpectationSerializerIntegrationTest {
         String requestBytes = ("{" + System.getProperty("line.separator") +
                 "  \"httpRequest\" : {" + System.getProperty("line.separator") +
                 "    \"method\" : \"someMethod\"," + System.getProperty("line.separator") +
-                "    \"url\" : \"http://www.example.com\"," + System.getProperty("line.separator") +
                 "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
                 "    \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
                 "      \"name\" : \"queryStringParameterNameOne\"," + System.getProperty("line.separator") +
@@ -454,7 +449,6 @@ public class ExpectationSerializerIntegrationTest {
                         .setHttpRequest(
                                 new HttpRequestDTO()
                                         .setMethod("someMethod")
-                                        .setURL("http://www.example.com")
                                         .setPath("somePath")
                                         .setQueryStringParameters(Arrays.asList(
                                                 new ParameterDTO(new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two")),
@@ -582,7 +576,6 @@ public class ExpectationSerializerIntegrationTest {
                         .setHttpRequest(
                                 new HttpRequestDTO()
                                         .setMethod("someMethod")
-                                        .setURL("http://www.example.com")
                                         .setPath("somePath")
                                         .setQueryStringParameters(Arrays.asList(
                                                 new ParameterDTO(new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two")),
@@ -612,7 +605,6 @@ public class ExpectationSerializerIntegrationTest {
         assertEquals("{" + System.getProperty("line.separator") +
                 "  \"httpRequest\" : {" + System.getProperty("line.separator") +
                 "    \"method\" : \"someMethod\"," + System.getProperty("line.separator") +
-                "    \"url\" : \"http://www.example.com\"," + System.getProperty("line.separator") +
                 "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
                 "    \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
                 "      \"name\" : \"queryStringParameterNameOne\"," + System.getProperty("line.separator") +
@@ -662,7 +654,6 @@ public class ExpectationSerializerIntegrationTest {
                         .setHttpRequest(
                                 new HttpRequestDTO()
                                         .setMethod("someMethod")
-                                        .setURL("http://www.example.com")
                                         .setPath("somePath")
                                         .setQueryStringParameters(Arrays.asList(
                                                 new ParameterDTO(new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two")),
@@ -686,7 +677,6 @@ public class ExpectationSerializerIntegrationTest {
         assertEquals("{" + System.getProperty("line.separator") +
                 "  \"httpRequest\" : {" + System.getProperty("line.separator") +
                 "    \"method\" : \"someMethod\"," + System.getProperty("line.separator") +
-                "    \"url\" : \"http://www.example.com\"," + System.getProperty("line.separator") +
                 "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
                 "    \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
                 "      \"name\" : \"queryStringParameterNameOne\"," + System.getProperty("line.separator") +
@@ -723,7 +713,6 @@ public class ExpectationSerializerIntegrationTest {
                         .setHttpRequest(
                                 new HttpRequestDTO()
                                         .setMethod("someMethod")
-                                        .setURL("http://www.example.com")
                                         .setPath("somePath")
                                         .setQueryStringParameters(Arrays.asList(
                                                 new ParameterDTO(new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two")),
@@ -745,7 +734,6 @@ public class ExpectationSerializerIntegrationTest {
         assertEquals("{" + System.getProperty("line.separator") +
                 "  \"httpRequest\" : {" + System.getProperty("line.separator") +
                 "    \"method\" : \"someMethod\"," + System.getProperty("line.separator") +
-                "    \"url\" : \"http://www.example.com\"," + System.getProperty("line.separator") +
                 "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
                 "    \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
                 "      \"name\" : \"queryStringParameterNameOne\"," + System.getProperty("line.separator") +

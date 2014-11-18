@@ -30,14 +30,12 @@ public class VerificationSequenceSerializerTest {
     private final HttpRequest requestOne =
             request()
                     .withMethod("GET")
-                    .withURL("http://www.two.com")
                     .withPath("some_path_one")
                     .withBody(new StringBody("some_body_one", Body.Type.STRING))
                     .withHeaders(new Header("header_name_two", "header_value_two"));
     private final HttpRequest requestTwo =
             request()
                     .withMethod("GET")
-                    .withURL("http://www.two.com")
                     .withPath("some_path_two")
                     .withBody(new StringBody("some_body_two", Body.Type.STRING))
                     .withHeaders(new Header("header_name_one", "header_value_one"));

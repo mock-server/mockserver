@@ -1,34 +1,19 @@
 package org.mockserver.client.proxy;
 
-import org.apache.commons.lang3.StringUtils;
-import org.mockserver.client.netty.NettyHttpClient;
-import org.mockserver.client.serialization.ExpectationSerializer;
-import org.mockserver.client.serialization.HttpRequestSerializer;
-import org.mockserver.client.serialization.VerificationSequenceSerializer;
-import org.mockserver.client.serialization.VerificationSerializer;
+import org.mockserver.client.AbstractClient;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.mockserver.verify.VerificationTimes;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static org.mockserver.model.HttpRequest.request;
 
 /**
  * @author jamesdbloom
  */
-public class ProxyClient {
-    private static final Logger logger = LoggerFactory.getLogger(ProxyClient.class);
-
-    private final String uriBase;
-    private NettyHttpClient nettyHttpClient = new NettyHttpClient();
-    private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
-    private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
-    private VerificationSerializer verificationSerializer = new VerificationSerializer();
-    private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer();
+public class ProxyClient extends AbstractClient {
 
     /**
      * Start the client communicating to a the proxy at the specified host and port
@@ -54,13 +39,7 @@ public class ProxyClient {
      * @param contextPath the context path that the proxy war is deployed to
      */
     public ProxyClient(String host, int port, String contextPath) {
-        if (StringUtils.isEmpty(host)) {
-            throw new IllegalArgumentException("Host can not be null or empty");
-        }
-        if (contextPath == null) {
-            throw new IllegalArgumentException("ContextPath can not be null");
-        }
-        this.uriBase = "http" + (Boolean.parseBoolean(System.getProperty("defaultProxySet")) ? "s" : "") + "://" + host + ":" + port + (contextPath.length() > 0 && !contextPath.startsWith("/") ? "/" : "") + contextPath;
+        super(host, port, contextPath);
     }
 
     /**
@@ -78,7 +57,7 @@ public class ProxyClient {
      * @param httpRequest the http request that is matched against when deciding what to log if null all requests are logged
      */
     public ProxyClient dumpToLogAsJSON(HttpRequest httpRequest) {
-        nettyHttpClient.sendRequest(request().withMethod("PUT").withURL(uriBase + "/dumpToLog").withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : ""));
+        sendRequest(request().withMethod("PUT").withPath(calculatePath("dumpToLog")).withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : ""));
         return this;
     }
 
@@ -97,7 +76,7 @@ public class ProxyClient {
      * @param httpRequest the http request that is matched against when deciding what to log if null all requests are logged
      */
     public ProxyClient dumpToLogAsJava(HttpRequest httpRequest) {
-        nettyHttpClient.sendRequest(request().withMethod("PUT").withURL(uriBase + "/dumpToLog?type=java").withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : ""));
+        sendRequest(request().withMethod("PUT").withPath(calculatePath("dumpToLog?type=java")).withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : ""));
         return this;
     }
 
@@ -105,7 +84,7 @@ public class ProxyClient {
      * Reset the proxy by clearing recorded requests
      */
     public ProxyClient reset() {
-        nettyHttpClient.sendRequest(request().withMethod("PUT").withURL(uriBase + "/reset"));
+        sendRequest(request().withMethod("PUT").withPath(calculatePath("reset")));
         return this;
     }
 
@@ -114,7 +93,7 @@ public class ProxyClient {
      */
     public ProxyClient stop() {
         try {
-            nettyHttpClient.sendRequest(request().withMethod("PUT").withURL(uriBase + "/stop"));
+            sendRequest(request().withMethod("PUT").withPath(calculatePath("stop")));
         } catch (Exception e) {
             logger.debug("Failed to send stop request to proxy " + e.getMessage());
         }
@@ -127,7 +106,7 @@ public class ProxyClient {
      * @param httpRequest the http request that is matched against when deciding whether to clear recorded requests
      */
     public ProxyClient clear(HttpRequest httpRequest) {
-        nettyHttpClient.sendRequest(request().withMethod("PUT").withURL(uriBase + "/clear").withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : ""));
+        sendRequest(request().withMethod("PUT").withPath(calculatePath("clear")).withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : ""));
         return this;
     }
 
@@ -153,7 +132,7 @@ public class ProxyClient {
         }
 
         VerificationSequence verificationSequence = new VerificationSequence().withRequests(httpRequests);
-        String result = nettyHttpClient.sendRequest(request().withMethod("PUT").withURL(uriBase + "/verifySequence").withBody(verificationSequenceSerializer.serialize(verificationSequence))).getBodyAsString();
+        String result = sendRequest(request().withMethod("PUT").withPath(calculatePath("verifySequence")).withBody(verificationSequenceSerializer.serialize(verificationSequence))).getBodyAsString();
 
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -191,7 +170,7 @@ public class ProxyClient {
         }
 
         Verification verification = new Verification().withRequest(httpRequest).withTimes(times);
-        String result = nettyHttpClient.sendRequest(request().withMethod("PUT").withURL(uriBase + "/verify").withBody(verificationSerializer.serialize(verification))).getBodyAsString();
+        String result = sendRequest(request().withMethod("PUT").withPath(calculatePath("verify")).withBody(verificationSerializer.serialize(verification))).getBodyAsString();
 
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -206,7 +185,7 @@ public class ProxyClient {
      * @return an array of all expectations that have been recorded by the proxy
      */
     public Expectation[] retrieveAsExpectations(HttpRequest httpRequest) {
-        HttpResponse httpResponse = nettyHttpClient.sendRequest(request().withMethod("PUT").withURL(uriBase + "/retrieve").withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : ""));
+        HttpResponse httpResponse = sendRequest(request().withMethod("PUT").withPath(calculatePath("retrieve")).withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : ""));
         return expectationSerializer.deserializeArray(httpResponse.getBodyAsString());
     }
 
@@ -217,7 +196,7 @@ public class ProxyClient {
      * @return a JSON array of all expectations that have been recorded by the proxy
      */
     public String retrieveAsJSON(HttpRequest httpRequest) {
-        HttpResponse httpResponse = nettyHttpClient.sendRequest(request().withMethod("PUT").withURL(uriBase + "/retrieve").withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : ""));
+        HttpResponse httpResponse = sendRequest(request().withMethod("PUT").withPath(calculatePath("retrieve")).withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : ""));
         return httpResponse.getBodyAsString();
     }
 }

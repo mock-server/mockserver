@@ -12,7 +12,6 @@ import java.util.List;
  */
 public class HttpRequestDTO extends ObjectWithReflectiveEqualsHashCodeToString {
     private String method = "";
-    private String url = "";
     private String path = "";
     private List<ParameterDTO> queryStringParameters = new ArrayList<ParameterDTO>();
     private BodyDTO body;
@@ -22,7 +21,6 @@ public class HttpRequestDTO extends ObjectWithReflectiveEqualsHashCodeToString {
     public HttpRequestDTO(HttpRequest httpRequest) {
         if (httpRequest != null) {
             method = httpRequest.getMethod();
-            url = httpRequest.getURL();
             path = httpRequest.getPath();
             headers = Lists.transform(httpRequest.getHeaders(), new Function<Header, HeaderDTO>() {
                 public HeaderDTO apply(Header header) {
@@ -49,7 +47,6 @@ public class HttpRequestDTO extends ObjectWithReflectiveEqualsHashCodeToString {
     public HttpRequest buildObject() {
         return new HttpRequest()
                 .withMethod(method)
-                .withURL(url)
                 .withPath(path)
                 .withHeaders(Lists.transform(headers, new Function<HeaderDTO, Header>() {
                     public Header apply(HeaderDTO header) {
@@ -76,15 +73,6 @@ public class HttpRequestDTO extends ObjectWithReflectiveEqualsHashCodeToString {
 
     public HttpRequestDTO setMethod(String method) {
         this.method = method;
-        return this;
-    }
-
-    public String getURL() {
-        return url;
-    }
-
-    public HttpRequestDTO setURL(String url) {
-        this.url = url;
         return this;
     }
 

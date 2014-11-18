@@ -5,49 +5,66 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageEncoder;
 import io.netty.handler.codec.http.*;
-import org.apache.commons.lang3.StringUtils;
-import org.mockserver.mappers.URIMapper;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.OutboundHttpRequest;
+import org.mockserver.model.Parameter;
+import org.mockserver.url.URLEncoder;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
-import static io.netty.handler.codec.http.HttpHeaders.Names.CONNECTION;
-import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH;
-import static io.netty.handler.codec.http.HttpHeaders.Names.TRANSFER_ENCODING;
-import static io.netty.handler.codec.http.HttpHeaders.Names.HOST;
-import static io.netty.handler.codec.http.HttpHeaders.Names.ACCEPT_ENCODING;
-import static io.netty.handler.codec.http.HttpHeaders.Values.GZIP;
-import static io.netty.handler.codec.http.HttpHeaders.Values.DEFLATE;
-import static io.netty.handler.codec.http.HttpHeaders.Values.CLOSE;
-import static io.netty.handler.codec.http.HttpHeaders.Values.KEEP_ALIVE;
+import static io.netty.handler.codec.http.HttpHeaders.Names.*;
+import static io.netty.handler.codec.http.HttpHeaders.Values.*;
 import static io.netty.handler.codec.http.HttpHeaders.isKeepAlive;
 
 /**
  * @author jamesdbloom
  */
-public class MockServerRequestEncoder extends MessageToMessageEncoder<HttpRequest> {
+public class MockServerRequestEncoder extends MessageToMessageEncoder<OutboundHttpRequest> {
 
     @Override
-    protected void encode(ChannelHandlerContext ctx, HttpRequest httpRequest, List<Object> out) {
-        // url
-        URI uri = URIMapper.getURI(httpRequest);
-
+    protected void encode(ChannelHandlerContext ctx, OutboundHttpRequest httpRequest, List<Object> out) {
         // method
         HttpMethod httpMethod = HttpMethod.valueOf(httpRequest.getMethod("GET"));
 
         // the request
-        FullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, httpMethod, StringUtils.substringAfter(uri.getRawSchemeSpecificPart(), uri.getRawAuthority()), getBody(httpRequest));
+        FullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, httpMethod, getURI(httpRequest), getBody(httpRequest));
 
         // headers
-        setHeader(httpRequest, uri, request);
+        setHeader(httpRequest, request);
 
         // cookies
         setCookies(httpRequest, request);
 
         out.add(request);
+    }
+
+    public static String getURI(HttpRequest httpRequest) {
+        StringBuilder queryString = new StringBuilder();
+        List<Parameter> queryStringParameters = httpRequest.getQueryStringParameters();
+        for (int i = 0; i < queryStringParameters.size(); i++) {
+            Parameter parameter = queryStringParameters.get(i);
+            if (parameter.getValues().isEmpty()) {
+                queryString.append(URLEncoder.encodeURL(parameter.getName()));
+                queryString.append('=');
+            } else {
+                List<String> values = parameter.getValues();
+                for (int j = 0; j < values.size(); j++) {
+                    String value = values.get(j);
+                    queryString.append(URLEncoder.encodeURL(parameter.getName()));
+                    queryString.append('=');
+                    queryString.append(URLEncoder.encodeURL(value));
+                    if (j < (values.size() - 1)) {
+                        queryString.append('&');
+                    }
+                }
+            }
+            if (i < (queryStringParameters.size() - 1)) {
+                queryString.append('&');
+            }
+        }
+        return httpRequest.getPath() + (queryString.length() > 0 ? '?' + queryString.toString() : "");
     }
 
     private ByteBuf getBody(HttpRequest httpRequest) {
@@ -77,7 +94,7 @@ public class MockServerRequestEncoder extends MessageToMessageEncoder<HttpReques
         }
     }
 
-    private void setHeader(HttpRequest httpRequest, URI uri, FullHttpRequest request) {
+    private void setHeader(OutboundHttpRequest httpRequest, FullHttpRequest request) {
         for (Header header : httpRequest.getHeaders()) {
             String headerName = header.getName();
             // do not set hop-by-hop headers
@@ -95,7 +112,12 @@ public class MockServerRequestEncoder extends MessageToMessageEncoder<HttpReques
             }
         }
 
-        request.headers().set(HOST, StringUtils.substringAfter(uri.getRawAuthority(), (uri.getRawUserInfo() != null ? uri.getRawUserInfo() : "")));
+        String port = "";
+        if ((!httpRequest.isSecure() && httpRequest.getPort() != 80) ||
+                (httpRequest.isSecure() && httpRequest.getPort() != 443)) {
+            port = ":" + httpRequest.getPort();
+        }
+        request.headers().add(HOST, httpRequest.getHost() + port);
         request.headers().set(ACCEPT_ENCODING, GZIP + "," + DEFLATE);
         request.headers().set(CONTENT_LENGTH, request.content().readableBytes());
         if (isKeepAlive(request)) {

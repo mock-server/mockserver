@@ -36,7 +36,6 @@ public class HttpServletToMockServerRequestMapperTest {
         HttpRequest httpRequest = new HttpServletToMockServerRequestMapper().mapHttpServletRequestToMockServerRequest(httpServletRequest);
 
         // then
-        assertEquals("http://localhost/requestURI?queryStringParameterNameOne=queryStringParameterValueOne_One&queryStringParameterNameOne=queryStringParameterValueOne_Two&queryStringParameterNameTwo=queryStringParameterValueTwo_One", httpRequest.getURL());
         assertEquals("/requestURI", httpRequest.getPath());
         assertEquals(new ParameterBody(
                 new Parameter("bodyParameterNameOne", "bodyParameterValueOne_One"),

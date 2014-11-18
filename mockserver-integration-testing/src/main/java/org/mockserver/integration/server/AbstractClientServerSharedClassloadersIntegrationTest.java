@@ -49,7 +49,7 @@ public abstract class AbstractClientServerSharedClassloadersIntegrationTest exte
                         .withBody("a_callback_response"),
                 makeRequest(
                         request()
-                                .withURL("http://localhost:" + getMockServerPort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "callback")
+                                .withPath(calculatePath("callback"))
                                 .withMethod("POST")
                                 .withHeaders(
                                         header("X-Test", "test_headers_and_body")
@@ -70,7 +70,8 @@ public abstract class AbstractClientServerSharedClassloadersIntegrationTest exte
                         .withBody("a_callback_response"),
                 makeRequest(
                         request()
-                                .withURL("https://localhost:" + getMockServerSecurePort() + "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + "callback")
+                                .setSecure(true)
+                                .withPath(calculatePath("callback"))
                                 .withMethod("POST")
                                 .withHeaders(
                                         header("X-Test", "test_headers_and_body")

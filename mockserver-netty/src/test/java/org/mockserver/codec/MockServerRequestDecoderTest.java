@@ -71,37 +71,7 @@ public class MockServerRequestDecoderTest {
     }
 
     @Test
-    public void shouldDecodeURLAndPath() {
-        // given
-        fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/uri");
-        fullHttpRequest.headers().add("Host", "random.host");
-
-        // when
-        mockServerRequestDecoder.decode(null, fullHttpRequest, output);
-
-        // then
-        HttpRequest httpRequest = ((HttpRequest) output.get(0));
-        assertThat(httpRequest.getURL(), is("http://random.host/uri"));
-        assertThat(httpRequest.getPath(), is("/uri"));
-    }
-
-    @Test
-    public void shouldDecodeSecureURLAndPath() {
-        // given
-        fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/uri");
-        fullHttpRequest.headers().add("Host", "random.host");
-
-        // when
-        new MockServerRequestDecoder(true).decode(null, fullHttpRequest, output);
-
-        // then
-        HttpRequest httpRequest = ((HttpRequest) output.get(0));
-        assertThat(httpRequest.getURL(), is("https://random.host/uri"));
-        assertThat(httpRequest.getPath(), is("/uri"));
-    }
-
-    @Test
-    public void shouldDecodeURLAndPathWithNoHostHeader() {
+    public void shouldDecodePath() {
         // given
         fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/uri");
 
@@ -110,21 +80,6 @@ public class MockServerRequestDecoderTest {
 
         // then
         HttpRequest httpRequest = ((HttpRequest) output.get(0));
-        assertThat(httpRequest.getURL(), is("http://localhost/uri"));
-        assertThat(httpRequest.getPath(), is("/uri"));
-    }
-
-    @Test
-    public void shouldDecodeURLAndPathWithFullURL() {
-        // given
-        fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "http://random.host/uri");
-
-        // when
-        mockServerRequestDecoder.decode(null, fullHttpRequest, output);
-
-        // then
-        HttpRequest httpRequest = ((HttpRequest) output.get(0));
-        assertThat(httpRequest.getURL(), is("http://random.host/uri"));
         assertThat(httpRequest.getPath(), is("/uri"));
     }
 

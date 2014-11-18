@@ -27,6 +27,8 @@ public class ClientProxyWarPathIntegrationTest extends AbstractClientProxyIntegr
 
     @BeforeClass
     public static void setupFixture() throws Exception {
+        servletContext = "";
+
         // start server
         testServer.startServer(SERVER_HTTP_PORT, SERVER_HTTPS_PORT);
 
@@ -41,8 +43,8 @@ public class ClientProxyWarPathIntegrationTest extends AbstractClientProxyIntegr
         tomcat.setPort(PROXY_PORT);
 
         // add servlet
-        Context ctx = tomcat.addContext("/", new File(".").getAbsolutePath());
-        tomcat.addServlet("/", "mockServerServlet", new ProxyServlet());
+        Context ctx = tomcat.addContext("/" + servletContext, new File(".").getAbsolutePath());
+        tomcat.addServlet("/" + servletContext, "mockServerServlet", new ProxyServlet());
         ctx.addServletMapping("/*", "mockServerServlet");
 
         // start server

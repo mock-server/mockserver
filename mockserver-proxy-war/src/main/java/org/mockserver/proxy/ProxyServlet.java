@@ -1,5 +1,6 @@
 package org.mockserver.proxy;
 
+import com.google.common.base.Strings;
 import io.netty.handler.codec.http.HttpHeaders;
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.serialization.ExpectationSerializer;
@@ -20,6 +21,9 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import static org.mockserver.model.HttpResponse.notFoundResponse;
+import static org.mockserver.model.OutboundHttpRequest.outboundRequest;
 
 /**
  * @author jamesdbloom
@@ -164,15 +168,31 @@ public class ProxyServlet extends HttpServlet {
         forwardRequest(request, response);
     }
 
-    private void forwardRequest(HttpServletRequest request, HttpServletResponse response) {
-        sendRequest(filters.applyOnRequestFilters(httpServletToMockServerRequestMapper.mapHttpServletRequestToMockServerRequest(request)), response);
+    private void forwardRequest(HttpServletRequest request, HttpServletResponse httpServletResponse) {
+        HttpResponse httpResponse = sendRequest(filters.applyOnRequestFilters(httpServletToMockServerRequestMapper.mapHttpServletRequestToMockServerRequest(request)));
+        mockServerToHttpServletResponseMapper.mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
     }
 
-    private void sendRequest(final HttpRequest httpRequest, final HttpServletResponse httpServletResponse) {
+    private HttpResponse sendRequest(HttpRequest httpRequest) {
         // if HttpRequest was set to null by a filter don't send request
         if (httpRequest != null) {
-            HttpResponse httpResponse = filters.applyOnResponseFilters(httpRequest, httpClient.sendRequest(httpRequest));
-            mockServerToHttpServletResponseMapper.mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
+            String hostHeader = httpRequest.getFirstHeader("Host");
+            if (!Strings.isNullOrEmpty(hostHeader)) {
+                String[] hostHeaderParts = hostHeader.split(":");
+
+                Integer port = (httpRequest.isSecure() ? 443 : 80); // default
+                if (hostHeaderParts.length > 1) {
+                    port = Integer.parseInt(hostHeaderParts[1]);  // non-default
+                }
+                HttpResponse httpResponse = filters.applyOnResponseFilters(httpRequest, httpClient.sendRequest(outboundRequest(hostHeaderParts[0], port, httpRequest)));
+                if (httpResponse != null) {
+                    return httpResponse;
+                }
+            } else {
+                logger.error("Host header must be provided for requests being forwarded, the following request does not include the \"Host\" header:\n" + httpRequest);
+                throw new IllegalArgumentException("Host header must be provided for requests being forwarded");
+            }
         }
+        return notFoundResponse();
     }
 }

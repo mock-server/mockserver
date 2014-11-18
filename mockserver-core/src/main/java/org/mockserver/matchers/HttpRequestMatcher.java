@@ -25,7 +25,6 @@ public class HttpRequestMatcher extends ObjectWithReflectiveEqualsHashCodeToStri
         this.httpRequest = httpRequest;
         if (httpRequest != null) {
             withMethod(httpRequest.getMethod());
-            withURL(httpRequest.getURL());
             withPath(httpRequest.getPath());
             withQueryStringParameters(httpRequest.getQueryStringParameters());
             withBody(httpRequest.getBody());
@@ -105,7 +104,6 @@ public class HttpRequestMatcher extends ObjectWithReflectiveEqualsHashCodeToStri
             return true;
         } else if (httpRequest != null) {
             boolean methodMatches = matches(methodMatcher, httpRequest.getMethod());
-            boolean urlMatches = matches(urlMatcher, httpRequest.getURL());
             boolean pathMatches = matches(pathMatcher, httpRequest.getPath());
             boolean queryStringParametersMatches = matches(queryStringParameterMatcher, (httpRequest.getQueryStringParameters() != null ? new ArrayList<KeyToMultiValue>(httpRequest.getQueryStringParameters()) : null));
             boolean bodyMatches;
@@ -116,7 +114,7 @@ public class HttpRequestMatcher extends ObjectWithReflectiveEqualsHashCodeToStri
             }
             boolean headersMatch = matches(headerMatcher, (httpRequest.getHeaders() != null ? new ArrayList<KeyToMultiValue>(httpRequest.getHeaders()) : null));
             boolean cookiesMatch = matches(cookieMatcher, (httpRequest.getCookies() != null ? new ArrayList<KeyToMultiValue>(httpRequest.getCookies()) : null));
-            boolean result = methodMatches && urlMatches && pathMatches && queryStringParametersMatches && bodyMatches && headersMatch && cookiesMatch;
+            boolean result = methodMatches && pathMatches && queryStringParametersMatches && bodyMatches && headersMatch && cookiesMatch;
             if (!result && logger.isDebugEnabled()) {
                 logger.debug("\n\nMatcher:" + System.getProperty("line.separator") + System.getProperty("line.separator") +
                         "[" + this + "]" + System.getProperty("line.separator") + System.getProperty("line.separator") +
@@ -124,7 +122,6 @@ public class HttpRequestMatcher extends ObjectWithReflectiveEqualsHashCodeToStri
                         "[" + httpRequest + "]" + System.getProperty("line.separator") + System.getProperty("line.separator") +
                         "because:" + System.getProperty("line.separator") + System.getProperty("line.separator") +
                         "methodMatches = " + methodMatches + "" + System.getProperty("line.separator") +
-                        "urlMatches = " + urlMatches + "" + System.getProperty("line.separator") +
                         "pathMatches = " + pathMatches + "" + System.getProperty("line.separator") +
                         "queryStringParametersMatch = " + queryStringParametersMatches + "" + System.getProperty("line.separator") +
                         "bodyMatches = " + bodyMatches + "" + System.getProperty("line.separator") +

@@ -7,15 +7,19 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.HttpClientCodec;
 import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
+import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import org.mockserver.client.netty.codec.MockServerClientCodec;
 import org.mockserver.model.HttpResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLException;
 
 public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
 
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final boolean secure;
     private HttpClientHandler httpClientHandler = new HttpClientHandler();
 
@@ -29,6 +33,11 @@ public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
 
         if (secure) {
             pipeline.addLast(SslContext.newClientContext(InsecureTrustManagerFactory.INSTANCE).newHandler(channel.alloc()));
+        }
+
+        // add logging
+        if (logger.isDebugEnabled()) {
+            pipeline.addLast(new LoggingHandler());
         }
 
         pipeline.addLast(new HttpClientCodec());

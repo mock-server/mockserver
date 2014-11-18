@@ -12,16 +12,33 @@ import java.util.*;
  * @author jamesdbloom
  */
 public class HttpRequest extends ObjectWithJsonToString {
-    private String method = "";
-    private String url = "";
-    private String path = "";
-    private Map<String, Parameter> queryStringParameters = new LinkedHashMap<String, Parameter>();
-    private Body body = null;
-    private Map<String, Header> headers = new LinkedHashMap<String, Header>();
-    private Map<String, Cookie> cookies = new LinkedHashMap<String, Cookie>();
-    private boolean isKeepAlive = false;
+    String method = "";
+    String path = "";
+    Map<String, Parameter> queryStringParameters = new LinkedHashMap<String, Parameter>();
+    Body body = null;
+    Map<String, Header> headers = new LinkedHashMap<String, Header>();
+    Map<String, Cookie> cookies = new LinkedHashMap<String, Cookie>();
+    boolean isKeepAlive = false;
+    boolean secure;
 
-    public HttpRequest() {
+    public HttpRequest setKeepAlive(boolean isKeepAlive) {
+        this.isKeepAlive = isKeepAlive;
+        return this;
+    }
+
+    @JsonIgnore
+    public boolean isKeepAlive() {
+        return isKeepAlive;
+    }
+
+    public HttpRequest setSecure(boolean secure) {
+        this.secure = secure;
+        return this;
+    }
+
+    @JsonIgnore
+    public boolean isSecure() {
+        return secure;
     }
 
     public static HttpRequest request() {
@@ -52,22 +69,6 @@ public class HttpRequest extends ObjectWithJsonToString {
         } else {
             return getMethod();
         }
-    }
-
-    public String getURL() {
-        return url;
-    }
-
-    /**
-     * The URL to match on such as "http://localhost:9999/some_mocked_path" regex values are also supported
-     * such as ".*some_mocked_path", see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html
-     * for full details of the supported regex syntax
-     *
-     * @param url the full URL such as "http://localhost:9999/some_mocked_path" or a regex
-     */
-    public HttpRequest withURL(String url) {
-        this.url = url;
-        return this;
     }
 
     public String getPath() {
@@ -329,6 +330,20 @@ public class HttpRequest extends ObjectWithJsonToString {
         return new ArrayList<Header>(headers.values());
     }
 
+    public String getFirstHeader(String name) {
+        String firstHeadValue = "";
+        if (headers.containsKey(name) || headers.containsKey(name.toLowerCase())) {
+            Header header = headers.get(name);
+            if (header == null) {
+                header = headers.get(name.toLowerCase());
+            }
+            if (!header.getValues().isEmpty() && !Strings.isNullOrEmpty(header.getValues().get(0))) {
+                firstHeadValue = header.getValues().get(0);
+            }
+        }
+        return firstHeadValue;
+    }
+
     /**
      * Returns true if a header with the specified name has been added
      *
@@ -337,16 +352,6 @@ public class HttpRequest extends ObjectWithJsonToString {
      */
     public boolean containsHeader(String name) {
         return headers.containsKey(name);
-    }
-
-    @JsonIgnore
-    public boolean isKeepAlive() {
-        return isKeepAlive;
-    }
-
-    public HttpRequest setKeepAlive(boolean isKeepAlive) {
-        this.isKeepAlive = isKeepAlive;
-        return this;
     }
 
     /**
@@ -393,27 +398,5 @@ public class HttpRequest extends ObjectWithJsonToString {
 
     public List<Cookie> getCookies() {
         return new ArrayList<Cookie>(cookies.values());
-    }
-
-    @JsonIgnore
-    public int getPort() {
-        if (this.url != null) {
-            URL url = null;
-            try {
-                url = new URL(this.url);
-            } catch (MalformedURLException murle) {
-                logger.debug("MalformedURLException parsing uri [" + this.url + "]", murle);
-            }
-            if (url != null && url.getPort() != -1) {
-                return url.getPort();
-            } else {
-                if (this.url.startsWith("https")) {
-                    return 443;
-                } else {
-                    return 80;
-                }
-            }
-        }
-        return 80;
     }
 }

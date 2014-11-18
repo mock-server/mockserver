@@ -33,7 +33,6 @@ public class ExpectationSerializerTest {
     private final Expectation fullExpectation = new Expectation(
             new HttpRequest()
                     .withMethod("GET")
-                    .withURL("http://www.example.com")
                     .withPath("somePath")
                     .withQueryStringParameters(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")))
                     .withBody(new StringBody("somebody", Body.Type.STRING))
@@ -50,7 +49,6 @@ public class ExpectationSerializerTest {
             .setHttpRequest(
                     new HttpRequestDTO()
                             .setMethod("GET")
-                            .setURL("http://www.example.com")
                             .setPath("somePath")
                             .setQueryStringParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")))))
                             .setBody(BodyDTO.createDTO(new StringBody("somebody", Body.Type.STRING)))
@@ -108,7 +106,6 @@ public class ExpectationSerializerTest {
                         "        .when(" + System.getProperty("line.separator") +
                         "                request()" + System.getProperty("line.separator") +
                         "                        .withMethod(\"GET\")" + System.getProperty("line.separator") +
-                        "                        .withURL(\"http://www.example.com\")" + System.getProperty("line.separator") +
                         "                        .withPath(\"somePath\")" + System.getProperty("line.separator") +
                         "                        .withHeaders(" + System.getProperty("line.separator") +
                         "                                new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\")," + System.getProperty("line.separator") +
@@ -142,7 +139,6 @@ public class ExpectationSerializerTest {
                         new Expectation(
                                 new HttpRequest()
                                         .withMethod("GET")
-                                        .withURL("http://www.example.com")
                                         .withPath("somePath")
                                         .withQueryStringParameters(
                                                 new Parameter("requestQueryStringParameterNameOne", "requestQueryStringParameterValueOneOne", "requestQueryStringParameterValueOneTwo"),
@@ -251,7 +247,6 @@ public class ExpectationSerializerTest {
                         "        .when(" + System.getProperty("line.separator") +
                         "                request()" + System.getProperty("line.separator") +
                         "                        .withMethod(\"GET\")" + System.getProperty("line.separator") +
-                        "                        .withURL(\"http://www.example.com\")" + System.getProperty("line.separator") +
                         "                        .withPath(\"somePath\")" + System.getProperty("line.separator") +
                         "                        .withHeaders(" + System.getProperty("line.separator") +
                         "                                new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\")," + System.getProperty("line.separator") +
@@ -278,7 +273,6 @@ public class ExpectationSerializerTest {
                         new Expectation(
                                 new HttpRequest()
                                         .withMethod("GET")
-                                        .withURL("http://www.example.com")
                                         .withPath("somePath")
                                         .withQueryStringParameters(
                                                 new Parameter("requestQueryStringParameterNameOne", "requestQueryStringParameterValueOneOne", "requestQueryStringParameterValueOneTwo"),
@@ -312,7 +306,6 @@ public class ExpectationSerializerTest {
                         "        .when(" + System.getProperty("line.separator") +
                         "                request()" + System.getProperty("line.separator") +
                         "                        .withMethod(\"GET\")" + System.getProperty("line.separator") +
-                        "                        .withURL(\"http://www.example.com\")" + System.getProperty("line.separator") +
                         "                        .withPath(\"somePath\")" + System.getProperty("line.separator") +
                         "                        .withHeaders(" + System.getProperty("line.separator") +
                         "                                new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\")," + System.getProperty("line.separator") +
@@ -337,7 +330,6 @@ public class ExpectationSerializerTest {
                         new Expectation(
                                 new HttpRequest()
                                         .withMethod("GET")
-                                        .withURL("http://www.example.com")
                                         .withPath("somePath")
                                         .withQueryStringParameters(
                                                 new Parameter("requestQueryStringParameterNameOne", "requestQueryStringParameterValueOneOne", "requestQueryStringParameterValueOneTwo"),
