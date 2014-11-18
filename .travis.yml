@@ -8,7 +8,6 @@ script:
 
 jdk:
   - openjdk6
-  - oraclejdk8
 
 rvm:
   - "2.0.0"
