@@ -14,6 +14,7 @@
 
     <properties>
         <skipRubyRelease>true</skipRubyRelease>
+        <skipRubyBuild>false</skipRubyBuild>
     </properties>
 
     <build>
@@ -30,6 +31,7 @@
                             <goal>exec</goal>
                         </goals>
                         <configuration>
+                            <skip>${skipRubyBuild}</skip>
                             <executable>bundle</executable>
                             <arguments>
                                 <argument>install</argument>
@@ -48,6 +50,7 @@
                             <goal>exec</goal>
                         </goals>
                         <configuration>
+                            <skip>${skipRubyBuild}</skip>
                             <executable>bundle</executable>
                             <arguments>
                                 <argument>exec</argument>
