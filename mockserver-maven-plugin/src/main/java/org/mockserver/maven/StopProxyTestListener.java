@@ -3,7 +3,6 @@ package org.mockserver.maven;
 import org.junit.runner.Result;
 import org.junit.runner.notification.RunListener;
 import org.mockserver.client.proxy.ProxyClient;
-import org.mockserver.client.server.MockServerClient;
 import org.mockserver.configuration.SystemProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
