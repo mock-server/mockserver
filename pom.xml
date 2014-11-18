@@ -51,6 +51,7 @@
         <jackson.version>2.4.3</jackson.version>
         <netty.version>4.0.24.Final</netty.version>
         <skipTests>false</skipTests>
+        <nonReleaseBuild>true</nonReleaseBuild>
         <release.arguments/>
         <javadoc.additional.parameters/>
     </properties>
@@ -425,6 +426,9 @@
                         <goals>
                             <goal>jar</goal>
                         </goals>
+                        <configuration>
+                            <skipSource>${nonReleaseBuild}</skipSource>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -440,6 +444,7 @@
                             <goal>jar</goal>
                         </goals>
                         <configuration>
+                            <skip>${nonReleaseBuild}</skip>
                             <failOnError>false</failOnError>
                             <additionalparam>${javadoc.additional.parameters}</additionalparam>
                         </configuration>
