@@ -40,6 +40,7 @@
         </developer>
     </developers>
 
+
     <properties>
         <maven.compiler.source>1.6</maven.compiler.source>
         <maven.compiler.target>1.6</maven.compiler.target>
@@ -51,6 +52,7 @@
         <netty.version>4.0.24.Final</netty.version>
         <skipTests>false</skipTests>
         <release.arguments/>
+        <javadoc.additional.parameters/>
     </properties>
 
     <modules>
@@ -372,6 +374,16 @@
                 </plugins>
             </build>
         </profile>
+        <!-- disable javadoc linting only in java 8 -->
+        <profile>
+            <id>disable_javadoc_linting</id>
+            <activation>
+                <jdk>1.8</jdk>
+            </activation>
+            <properties>
+                <javadoc.additional.parameters>-Xdoclint:none</javadoc.additional.parameters>
+            </properties>
+        </profile>
     </profiles>
 
     <build>
@@ -429,7 +441,7 @@
                         </goals>
                         <configuration>
                             <failOnError>false</failOnError>
-                            <additionalparam>-Xdoclint:none</additionalparam>
+                            <additionalparam>${javadoc.additional.parameters}</additionalparam>
                         </configuration>
                     </execution>
                 </executions>
