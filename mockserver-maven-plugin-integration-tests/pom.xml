@@ -97,7 +97,7 @@
                 <configuration>
                     <skipInvocation>${skipTests}</skipInvocation>
                     <debug>false</debug>
-                    <parallelThreads>5</parallelThreads>
+                    <parallelThreads>2</parallelThreads>
                     <streamLogs>false</streamLogs>
                     <showErrors>true</showErrors>
                     <projectsDirectory>${basedir}/src/integration-tests/</projectsDirectory>
