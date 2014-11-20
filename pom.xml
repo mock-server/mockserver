@@ -10,7 +10,7 @@
 
     <groupId>org.mock-server</groupId>
     <artifactId>mockserver</artifactId>
-    <version>3.8.1-SNAPSHOT</version>
+    <version>3.8.1</version>
     <packaging>pom</packaging>
 
     <name>MockServer</name>
@@ -52,8 +52,8 @@
         <netty.version>4.0.24.Final</netty.version>
         <skipTests>false</skipTests>
         <nonReleaseBuild>true</nonReleaseBuild>
-        <release.arguments/>
-        <javadoc.additional.parameters/>
+        <release.arguments />
+        <javadoc.additional.parameters />
     </properties>
 
     <modules>
