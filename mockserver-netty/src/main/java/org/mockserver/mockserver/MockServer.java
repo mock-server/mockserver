@@ -8,8 +8,10 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import org.mockserver.mock.MockServerMatcher;
+import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.GenericFutureListener;
 import org.mockserver.filters.LogFilter;
+import org.mockserver.mock.MockServerMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +29,8 @@ public class MockServer {
     private final MockServerMatcher mockServerMatcher = new MockServerMatcher();
     private SettableFuture<String> hasStarted;
     // netty
-    private EventLoopGroup eventLoopGroup;
+    private EventLoopGroup bossGroup;
+    private EventLoopGroup workerGroup;
 
     /**
      * Start the instance using the ports provided
@@ -41,7 +44,8 @@ public class MockServer {
         }
 
         hasStarted = SettableFuture.create();
-        eventLoopGroup = new NioEventLoopGroup();
+        bossGroup = new NioEventLoopGroup();
+        workerGroup = new NioEventLoopGroup();
 
         Thread mockServerThread = new Thread(new Runnable() {
             @Override
@@ -57,7 +61,7 @@ public class MockServer {
                         httpChannel = new ServerBootstrap()
                                 .option(ChannelOption.SO_BACKLOG, 1024)
                                 .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-                                .group(eventLoopGroup)
+                                .group(bossGroup, workerGroup)
                                 .channel(NioServerSocketChannel.class)
                                 .childHandler(new MockServerInitializer(mockServerMatcher, logFilter, MockServer.this, false))
                                 .bind(port)
@@ -70,7 +74,7 @@ public class MockServer {
                         httpsChannel = new ServerBootstrap()
                                 .option(ChannelOption.SO_BACKLOG, 1024)
                                 .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-                                .group(eventLoopGroup)
+                                .group(bossGroup, workerGroup)
                                 .channel(NioServerSocketChannel.class)
                                 .childHandler(new MockServerInitializer(mockServerMatcher, logFilter, MockServer.this, true))
                                 .bind(securePort)
@@ -89,7 +93,8 @@ public class MockServer {
                 } catch (InterruptedException ie) {
                     logger.error("MockServer receive InterruptedException", ie);
                 } finally {
-                    eventLoopGroup.shutdownGracefully();
+                    bossGroup.shutdownGracefully();
+                    workerGroup.shutdownGracefully();
                 }
             }
         });
@@ -107,11 +112,12 @@ public class MockServer {
 
     public void stop() {
         try {
-            eventLoopGroup.shutdownGracefully(1, 3, TimeUnit.MILLISECONDS);
+            bossGroup.shutdownGracefully(1, 3, TimeUnit.MILLISECONDS);
+            workerGroup.shutdownGracefully(1, 3, TimeUnit.MILLISECONDS);
             // wait for shutdown
             TimeUnit.SECONDS.sleep(1);
         } catch (Exception ie) {
-            logger.trace("Exception while waiting for MockServer to stop", ie);
+            logger.trace("Exception while stopping MockServer", ie);
         }
     }
 
@@ -120,9 +126,9 @@ public class MockServer {
             try {
                 TimeUnit.MILLISECONDS.sleep(500);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                logger.trace("Exception while waiting for the proxy to confirm running status", e);
             }
-            return !eventLoopGroup.isShuttingDown();
+            return !bossGroup.isShuttingDown() && !workerGroup.isShuttingDown();
         } else {
             return false;
         }

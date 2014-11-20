@@ -45,7 +45,8 @@ public class HttpProxy {
     // jvm
     private ProxySelector previousProxySelector;
     // netty
-    private EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
+    private EventLoopGroup bossGroup = new NioEventLoopGroup();
+    private EventLoopGroup workerGroup = new NioEventLoopGroup();
 
     public static ProxySelector proxySelector() {
         if (Boolean.parseBoolean(System.getProperty("defaultProxySet"))) {
@@ -123,7 +124,8 @@ public class HttpProxy {
                 } catch (Exception ie) {
                     logger.error("Exception while running proxy channels", ie);
                 } finally {
-                    eventLoopGroup.shutdownGracefully();
+                    bossGroup.shutdownGracefully();
+                    workerGroup.shutdownGracefully();
                 }
             }
         });
@@ -274,7 +276,7 @@ public class HttpProxy {
         final SettableFuture<ChannelFuture> hasConnected = SettableFuture.create();
         if (condition) {
             new ServerBootstrap()
-                    .group(eventLoopGroup)
+                    .group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
                     .childHandler(childHandler)
                     .option(ChannelOption.SO_BACKLOG, 1024)
@@ -321,11 +323,12 @@ public class HttpProxy {
     public void stop() {
         try {
             proxyStopping();
-            eventLoopGroup.shutdownGracefully(1, 3, TimeUnit.MILLISECONDS);
+            bossGroup.shutdownGracefully(1, 3, TimeUnit.MILLISECONDS);
+            workerGroup.shutdownGracefully(1, 3, TimeUnit.MILLISECONDS);
             // wait for shutdown
             TimeUnit.SECONDS.sleep(1);
         } catch (Exception ie) {
-            logger.trace("Exception while waiting for MockServer to stop", ie);
+            logger.trace("Exception while waiting for the proxy to stop", ie);
         }
     }
 
@@ -334,9 +337,9 @@ public class HttpProxy {
             try {
                 TimeUnit.MILLISECONDS.sleep(500);
             } catch (InterruptedException e) {
-                logger.trace("Exception while waiting for MockServer to confirm running status", e);
+                logger.trace("Exception while waiting for the proxy to confirm running status", e);
             }
-            return !eventLoopGroup.isShuttingDown();
+            return !bossGroup.isShuttingDown() && !workerGroup.isShuttingDown();
         } else {
             return false;
         }
