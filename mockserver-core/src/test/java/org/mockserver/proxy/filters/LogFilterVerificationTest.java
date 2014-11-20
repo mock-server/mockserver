@@ -184,7 +184,7 @@ public class LogFilterVerificationTest {
                                         new HttpRequest().withPath("some_non_matching_path")
                                 )
                 ),
-                is("Request not found at least once expected:<{" + System.getProperty("line.separator") +
+                is("Request not found at least once, expected:<{" + System.getProperty("line.separator") +
                         "  \"path\" : \"some_non_matching_path\"" + System.getProperty("line.separator") +
                         "}> but was:<[ {" + System.getProperty("line.separator") +
                         "  \"path\" : \"some_path\"" + System.getProperty("line.separator") +
@@ -215,7 +215,7 @@ public class LogFilterVerificationTest {
                                 )
                                 .withTimes(atLeast(2))
                 ),
-                is("Request not found at least 2 times expected:<{" + System.getProperty("line.separator") +
+                is("Request not found at least 2 times, expected:<{" + System.getProperty("line.separator") +
                         "  \"path\" : \"some_other_path\"" + System.getProperty("line.separator") +
                         "}> but was:<[ {" + System.getProperty("line.separator") +
                         "  \"path\" : \"some_path\"" + System.getProperty("line.separator") +
@@ -247,7 +247,7 @@ public class LogFilterVerificationTest {
                                 )
                                 .withTimes(exactly(2))
                 ),
-                is("Request not found exactly 2 times expected:<{" + System.getProperty("line.separator") +
+                is("Request not found exactly 2 times, expected:<{" + System.getProperty("line.separator") +
                         "  \"path\" : \"some_other_path\"" + System.getProperty("line.separator") +
                         "}> but was:<[ {" + System.getProperty("line.separator") +
                         "  \"path\" : \"some_path\"" + System.getProperty("line.separator") +
@@ -272,7 +272,7 @@ public class LogFilterVerificationTest {
                                 )
                                 .withTimes(exactly(1))
                 ),
-                is("Request not found exactly once expected:<{" + System.getProperty("line.separator") +
+                is("Request not found exactly once, expected:<{" + System.getProperty("line.separator") +
                         "  \"path\" : \"some_other_path\"" + System.getProperty("line.separator") +
                         "}> but was:<>"));
     }
@@ -298,7 +298,7 @@ public class LogFilterVerificationTest {
                                 )
                                 .withTimes(exactly(0))
                 ),
-                is("Request not found exactly 0 times expected:<{" + System.getProperty("line.separator") +
+                is("Request not found exactly 0 times, expected:<{" + System.getProperty("line.separator") +
                         "  \"path\" : \"some_other_path\"" + System.getProperty("line.separator") +
                         "}> but was:<[ {" + System.getProperty("line.separator") +
                         "  \"path\" : \"some_path\"" + System.getProperty("line.separator") +

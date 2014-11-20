@@ -154,15 +154,15 @@ public class LogFilter implements ResponseFilter, RequestFilter {
 
             HttpRequest[] allRequestsArray = requestLog.toArray(new HttpRequest[requestLog.size()]);
             if (verification.getTimes().getCount() != 0 && matchingRequests.isEmpty()) {
-                return "Request not found " + verification.getTimes() + " expected:<" + httpRequestSerializer.serialize(verification.getHttpRequest()) + "> but was:<" + (allRequestsArray.length == 1 ? httpRequestSerializer.serialize(allRequestsArray[0]) : httpRequestSerializer.serialize(allRequestsArray)) + ">";
+                return "Request not found " + verification.getTimes() + ", expected:<" + httpRequestSerializer.serialize(verification.getHttpRequest()) + "> but was:<" + (allRequestsArray.length == 1 ? httpRequestSerializer.serialize(allRequestsArray[0]) : httpRequestSerializer.serialize(allRequestsArray)) + ">";
             }
             if (verification.getTimes().isExact()) {
                 if (matchingRequests.size() != verification.getTimes().getCount()) {
-                    return "Request not found " + verification.getTimes() + " expected:<" + httpRequestSerializer.serialize(verification.getHttpRequest()) + "> but was:<" + (allRequestsArray.length == 1 ? httpRequestSerializer.serialize(allRequestsArray[0]) : httpRequestSerializer.serialize(allRequestsArray)) + ">";
+                    return "Request not found " + verification.getTimes() + ", expected:<" + httpRequestSerializer.serialize(verification.getHttpRequest()) + "> but was:<" + (allRequestsArray.length == 1 ? httpRequestSerializer.serialize(allRequestsArray[0]) : httpRequestSerializer.serialize(allRequestsArray)) + ">";
                 }
             } else {
                 if (matchingRequests.size() < verification.getTimes().getCount()) {
-                    return "Request not found " + verification.getTimes() + " expected:<" + httpRequestSerializer.serialize(verification.getHttpRequest()) + "> but was:<" + (allRequestsArray.length == 1 ? httpRequestSerializer.serialize(allRequestsArray[0]) : httpRequestSerializer.serialize(allRequestsArray)) + ">";
+                    return "Request not found " + verification.getTimes() + ", expected:<" + httpRequestSerializer.serialize(verification.getHttpRequest()) + "> but was:<" + (allRequestsArray.length == 1 ? httpRequestSerializer.serialize(allRequestsArray[0]) : httpRequestSerializer.serialize(allRequestsArray)) + ">";
                 }
             }
         }
@@ -185,7 +185,7 @@ public class LogFilter implements ResponseFilter, RequestFilter {
                         }
                     }
                     if (!foundRequest) {
-                        return "Request sequence not found expected:<" + httpRequestSerializer.serialize(verificationSequence.getHttpRequests()) + "> but was:<" + httpRequestSerializer.serialize(requestLog) + ">";
+                        return "Request sequence not found, expected:<" + httpRequestSerializer.serialize(verificationSequence.getHttpRequests()) + "> but was:<" + httpRequestSerializer.serialize(requestLog) + ">";
                     }
                 }
             }

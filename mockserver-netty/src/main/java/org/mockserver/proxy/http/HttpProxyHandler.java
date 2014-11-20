@@ -87,8 +87,7 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
             } else if (request.matches("PUT", "/retrieve")) {
 
                 Expectation[] expectations = logFilter.retrieve(httpRequestSerializer.deserialize(request.getBodyAsString()));
-                String serialize = expectationSerializer.serialize(expectations);
-                writeResponse(ctx, request, HttpResponseStatus.OK, serialize);
+                writeResponse(ctx, request, HttpResponseStatus.OK, expectationSerializer.serialize(expectations), "application/json");
 
             } else if (request.matches("PUT", "/verify")) {
 
@@ -96,7 +95,7 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
                 if (result.isEmpty()) {
                     writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
                 } else {
-                    writeResponse(ctx, request, HttpResponseStatus.NOT_ACCEPTABLE, result);
+                    writeResponse(ctx, request, HttpResponseStatus.NOT_ACCEPTABLE, result, "plain/text");
                 }
 
             } else if (request.matches("PUT", "/verifySequence")) {
@@ -105,7 +104,7 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
                 if (result.isEmpty()) {
                     writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
                 } else {
-                    writeResponse(ctx, request, HttpResponseStatus.NOT_ACCEPTABLE, result);
+                    writeResponse(ctx, request, HttpResponseStatus.NOT_ACCEPTABLE, result, "plain/text");
                 }
 
             } else if (request.matches("PUT", "/stop")) {
@@ -155,15 +154,15 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
     }
 
     private void writeResponse(ChannelHandlerContext ctx, HttpRequest request, HttpResponseStatus responseStatus) {
-        writeResponse(ctx, request, responseStatus, "");
+        writeResponse(ctx, request, responseStatus, "", "application/json");
     }
 
-    private void writeResponse(ChannelHandlerContext ctx, HttpRequest request, HttpResponseStatus responseStatus, String body) {
+    private void writeResponse(ChannelHandlerContext ctx, HttpRequest request, HttpResponseStatus responseStatus, String body, String contentType) {
         writeResponse(ctx, request,
                 response()
                         .withStatusCode(responseStatus.code())
                         .withBody(body)
-                        .withHeader(header(HttpHeaders.Names.CONTENT_TYPE, "application/json; charset=utf-8"))
+                        .withHeader(header(HttpHeaders.Names.CONTENT_TYPE, contentType + "; charset=utf-8"))
         );
     }
 

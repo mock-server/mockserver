@@ -585,7 +585,7 @@ public abstract class AbstractClientServerIntegrationTest {
                     .withPath(calculatePath("some_path")), VerificationTimes.atLeast(2));
             fail();
         } catch (AssertionError ae) {
-            assertThat(ae.getMessage(), startsWith("Request not found at least 2 times expected:<{" + System.getProperty("line.separator") +
+            assertThat(ae.getMessage(), startsWith("Request not found at least 2 times, expected:<{" + System.getProperty("line.separator") +
                     "  \"path\" : \"" + calculatePath("some_path") + "\"" + System.getProperty("line.separator") +
                     "}> but was:<{" + System.getProperty("line.separator") +
                     "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
@@ -613,7 +613,7 @@ public abstract class AbstractClientServerIntegrationTest {
                     .withPath(calculatePath("some_path")), VerificationTimes.exactly(0));
             fail();
         } catch (AssertionError ae) {
-            assertThat(ae.getMessage(), startsWith("Request not found exactly 0 times expected:<{" + System.getProperty("line.separator") +
+            assertThat(ae.getMessage(), startsWith("Request not found exactly 0 times, expected:<{" + System.getProperty("line.separator") +
                     "  \"path\" : \"" + calculatePath("some_path") + "\"" + System.getProperty("line.separator") +
                     "}> but was:<{" + System.getProperty("line.separator") +
                     "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
@@ -641,7 +641,7 @@ public abstract class AbstractClientServerIntegrationTest {
                     .withPath(calculatePath("some_other_path")), VerificationTimes.exactly(2));
             fail();
         } catch (AssertionError ae) {
-            assertThat(ae.getMessage(), startsWith("Request not found exactly 2 times expected:<{" + System.getProperty("line.separator") +
+            assertThat(ae.getMessage(), startsWith("Request not found exactly 2 times, expected:<{" + System.getProperty("line.separator") +
                     "  \"path\" : \"" + calculatePath("some_other_path") + "\"" + System.getProperty("line.separator") +
                     "}> but was:<{" + System.getProperty("line.separator") +
                     "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
@@ -790,7 +790,7 @@ public abstract class AbstractClientServerIntegrationTest {
             mockServerClient.verify(request(calculatePath("some_path_two")), request(calculatePath("some_path_one")));
             fail();
         } catch (AssertionError ae) {
-            assertThat(ae.getMessage(), startsWith("Request sequence not found expected:<[ {" + System.getProperty("line.separator") +
+            assertThat(ae.getMessage(), startsWith("Request sequence not found, expected:<[ {" + System.getProperty("line.separator") +
                     "  \"path\" : \"" + calculatePath("some_path_two") + "\"" + System.getProperty("line.separator") +
                     "}, {" + System.getProperty("line.separator") +
                     "  \"path\" : \"" + calculatePath("some_path_one") + "\"" + System.getProperty("line.separator") +
@@ -802,7 +802,7 @@ public abstract class AbstractClientServerIntegrationTest {
             mockServerClient.verify(request(calculatePath("some_path_three")), request(calculatePath("some_path_two")));
             fail();
         } catch (AssertionError ae) {
-            assertThat(ae.getMessage(), startsWith("Request sequence not found expected:<[ {" + System.getProperty("line.separator") +
+            assertThat(ae.getMessage(), startsWith("Request sequence not found, expected:<[ {" + System.getProperty("line.separator") +
                     "  \"path\" : \"" + calculatePath("some_path_three") + "\"" + System.getProperty("line.separator") +
                     "}, {" + System.getProperty("line.separator") +
                     "  \"path\" : \"" + calculatePath("some_path_two") + "\"" + System.getProperty("line.separator") +
@@ -814,7 +814,7 @@ public abstract class AbstractClientServerIntegrationTest {
             mockServerClient.verify(request(calculatePath("some_path_four")));
             fail();
         } catch (AssertionError ae) {
-            assertThat(ae.getMessage(), startsWith("Request sequence not found expected:<[ {" + System.getProperty("line.separator") +
+            assertThat(ae.getMessage(), startsWith("Request sequence not found, expected:<[ {" + System.getProperty("line.separator") +
                     "  \"path\" : \"" + calculatePath("some_path_four") + "\"" + System.getProperty("line.separator") +
                     "} ]> but was:<[ {" + System.getProperty("line.separator") +
                     "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
