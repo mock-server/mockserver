@@ -616,7 +616,6 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 <h3>Requests can be matched on:</h3>
 
 <ul>
-	<li><strong>url</strong> - regex or plain text</li>
 	<li><strong>path</strong> - regex or plain text</li>
 	<li><strong>query string</strong> - regex or plain text</li>
 	<li><strong>headers</strong> - regex or plain text</li>
@@ -737,7 +736,6 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 <pre><code class="code">2014-01-11 13:08:54,225 {
     <span class="string_literal">"httpRequest"</span>: {
         <span class="string_literal">"method"</span>: <span class="string_literal">"POST"</span>,
-        <span class="string_literal">"url"</span>: <span class="string_literal">"http://localhost:2021/login"</span>,
         <span class="string_literal">"path"</span>: <span class="string_literal">"/login"</span>,
         <span class="string_literal">"body"</span>: {
             <span class="string_literal">"type"</span>: <span class="string_literal">"STRING"</span>,
@@ -1942,10 +1940,6 @@ vertx runmod org.mock-server~mockserver-vertx~2.9</code></pre>
 
 <p><strong>WAR Context Path</strong></p>
 
-<p>The WAR context path is ignored from all request matching except when matching on the full request url.</p>
-
-<p>Therefore when setting up expectations or verifying requests it is recommended to only match on request path (and not url) when the deployed WAR has a context path to avoid a dependency between the test code and the context path.</p>
-
 <p>The MockServerClient constructor includes an argument for the context path that the WAR has been deployed to, as follows:</p>
 
 <pre><code class="code"><span class="keyword">public</span> MockServerClient(String host, <span class="keyword">int</span> port, String contextPath)</code></pre>
@@ -2376,7 +2370,6 @@ xmlHttpRequest.send(JSON.stringify({
 <p>Requests can be matched on:</p>
 
 <ul>
-	<li><strong>url</strong> - regex or plain text</li>
 	<li><strong>path</strong> - regex or plain text</li>
 	<li><strong>query string</strong> - regex or plain text</li>
 	<li><strong>headers</strong> - regex or plain text</li>
@@ -2402,15 +2395,6 @@ xmlHttpRequest.send(JSON.stringify({
      * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">method</span> the HTTP method such as <span class="string_literal">"GET"</span> or <span class="string_literal">"POST"</span>
      */</span>
     <span class="keyword">public</span> HttpRequest withMethod(String method);
-
-    <span class="comment">/**
-     * The URL to match on such as <span class="string_literal">"http://localhost:9999/some_mocked_path"</span> regex values are also
-     * supported such as <span class="string_literal">".*some_mocked_path"</span>, see <a href="http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html</a>
-     * for full details of the supported regex syntax
-     *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">url</span> the full URL such as <span class="string_literal">"http://localhost:9999/some_mocked_path"</span> or a regex
-     */</span>
-    <span class="keyword">public</span> HttpRequest withURL(String url);
 
     <span class="comment">/**
      * The path to match on such as <span class="string_literal">"/some_mocked_path"</span> any servlet context path is ignored for matching and should not be specified here
@@ -3370,7 +3354,6 @@ AsyncHttpClient asyncHttpClient = <span class="keyword">new</span> AsyncHttpClie
         .when(
                 request()
                         .withMethod(<span class="string_literal">"GET"</span>)
-                        .withURL(<span class="string_literal">"http://localhost:8080/get_book?id=1"</span>)
                         .withPath(<span class="string_literal">"/get_book"</span>)
                         .withQueryString(<span class="string_literal">"id=1"</span>)
                         .withHeaders(
@@ -3402,7 +3385,6 @@ AsyncHttpClient asyncHttpClient = <span class="keyword">new</span> AsyncHttpClie
 <pre><code class="code">2014-01-12 21:46:33,299 {
     <span class="string_literal">"httpRequest"</span> : {
         <span class="string_literal">"method"</span> : <span class="string_literal">"GET"</span>,
-        <span class="string_literal">"url"</span> : <span class="string_literal">"http://localhost:8080/get_book?id=1"</span>,
         <span class="string_literal">"path"</span> : <span class="string_literal">"/get_book"</span>,
         <span class="string_literal">"queryString"</span> : <span class="string_literal">"id=1"</span>,
         <span class="string_literal">"headers"</span> : [
