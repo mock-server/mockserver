@@ -73,7 +73,7 @@ public class ProxyServletTest {
         // additional mock objects
         mockHttpServletRequest = new MockHttpServletRequest();
         mockHttpServletResponse = new MockHttpServletResponse();
-        outboundHttpRequest = outboundRequest("localhost", 80, request().withHeader(header("Host", "localhost")).withPath("some_path"));
+        outboundHttpRequest = outboundRequest("localhost", 80, "", request().withHeader(header("Host", "localhost")).withPath("some_path"));
         httpResponse = new HttpResponse();
 
         // mappers

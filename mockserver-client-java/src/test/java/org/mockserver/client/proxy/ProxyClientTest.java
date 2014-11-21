@@ -88,7 +88,7 @@ public class ProxyClientTest {
         proxyClient.reset();
 
         // then
-        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, request().withMethod("PUT").withPath("/reset")));
+        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, "", request().withMethod("PUT").withPath("/reset")));
     }
 
     @Test
@@ -97,7 +97,7 @@ public class ProxyClientTest {
         proxyClient.stop();
 
         // then
-        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, request().withMethod("PUT").withPath("/stop")));
+        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, "", request().withMethod("PUT").withPath("/stop")));
     }
 
     @Test
@@ -106,7 +106,7 @@ public class ProxyClientTest {
         proxyClient.dumpToLogAsJSON();
 
         // then
-        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, request().withMethod("PUT").withPath("/dumpToLog").withBody("")));
+        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, "", request().withMethod("PUT").withPath("/dumpToLog").withBody("")));
     }
 
     @Test
@@ -115,7 +115,7 @@ public class ProxyClientTest {
         proxyClient.dumpToLogAsJava();
 
         // then
-        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, request().withMethod("PUT").withPath("/dumpToLog?type=java").withBody("")));
+        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, "", request().withMethod("PUT").withPath("/dumpToLog?type=java").withBody("")));
     }
 
     @Test
@@ -129,7 +129,7 @@ public class ProxyClientTest {
                 );
 
         // then
-        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, request().withMethod("PUT").withPath("/clear").withBody("" +
+        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, "", request().withMethod("PUT").withPath("/clear").withBody("" +
                 "{" + System.getProperty("line.separator") +
                 "  \"path\" : \"/some_path\"," + System.getProperty("line.separator") +
                 "  \"body\" : \"some_request_body\"" + System.getProperty("line.separator") +
@@ -143,7 +143,7 @@ public class ProxyClientTest {
                 .clear(null);
 
         // then
-        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, request().withMethod("PUT").withPath("/clear").withBody("")));
+        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, "", request().withMethod("PUT").withPath("/clear").withBody("")));
     }
 
     @Test
@@ -162,7 +162,7 @@ public class ProxyClientTest {
                 ));
 
         // then
-        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, request().withMethod("PUT").withPath("/retrieve").withBody("" +
+        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, "", request().withMethod("PUT").withPath("/retrieve").withBody("" +
                 "{" + System.getProperty("line.separator") +
                 "  \"path\" : \"/some_path\"," + System.getProperty("line.separator") +
                 "  \"body\" : \"some_request_body\"" + System.getProperty("line.separator") +
@@ -181,7 +181,7 @@ public class ProxyClientTest {
         assertSame(expectations, proxyClient.retrieveAsExpectations(null));
 
         // then
-        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, request().withMethod("PUT").withPath("/retrieve").withBody("")));
+        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, "", request().withMethod("PUT").withPath("/retrieve").withBody("")));
         verify(mockExpectationSerializer).deserializeArray("body");
     }
 
@@ -200,7 +200,7 @@ public class ProxyClientTest {
                 ));
 
         // then
-        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, request().withMethod("PUT").withPath("/retrieve").withBody("" +
+        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, "", request().withMethod("PUT").withPath("/retrieve").withBody("" +
                 "{" + System.getProperty("line.separator") +
                 "  \"path\" : \"/some_path\"," + System.getProperty("line.separator") +
                 "  \"body\" : \"some_request_body\"" + System.getProperty("line.separator") +
@@ -217,7 +217,7 @@ public class ProxyClientTest {
         assertEquals(expectations, proxyClient.retrieveAsJSON(null));
 
         // then
-        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, request().withMethod("PUT").withPath("/retrieve").withBody("")));
+        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, "", request().withMethod("PUT").withPath("/retrieve").withBody("")));
     }
 
     @Test
@@ -236,7 +236,7 @@ public class ProxyClientTest {
             fail();
         } catch (AssertionError ae) {
             verify(mockVerificationSequenceSerializer).serialize(new VerificationSequence().withRequests(httpRequest));
-            verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, request().withMethod("PUT").withPath("/verifySequence").withBody("verification_json")));
+            verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, "", request().withMethod("PUT").withPath("/verifySequence").withBody("verification_json")));
             assertThat(ae.getMessage(), is("Request not found at least once expected:<foo> but was:<bar>"));
         }
     }
@@ -257,7 +257,7 @@ public class ProxyClientTest {
             fail();
         } catch (AssertionError ae) {
             verify(mockVerificationSequenceSerializer).serialize(new VerificationSequence().withRequests(httpRequest, httpRequest));
-            verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, request().withMethod("PUT").withPath("/verifySequence").withBody("verification_json")));
+            verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, "", request().withMethod("PUT").withPath("/verifySequence").withBody("verification_json")));
             assertThat(ae.getMessage(), is("Request not found at least once expected:<foo> but was:<bar>"));
         }
     }
@@ -281,7 +281,7 @@ public class ProxyClientTest {
 
         // then
         verify(mockVerificationSequenceSerializer).serialize(new VerificationSequence().withRequests(httpRequest));
-        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, request().withMethod("PUT").withPath("/verifySequence").withBody("verification_json")));
+        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, "", request().withMethod("PUT").withPath("/verifySequence").withBody("verification_json")));
     }
 
     @Test
@@ -303,7 +303,7 @@ public class ProxyClientTest {
 
         // then
         verify(mockVerificationSerializer).serialize(new Verification().withRequest(httpRequest).withTimes(once()));
-        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, request().withMethod("PUT").withPath("/verify").withBody("verification_json")));
+        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, "", request().withMethod("PUT").withPath("/verify").withBody("verification_json")));
     }
 
     @Test
@@ -322,7 +322,7 @@ public class ProxyClientTest {
             fail();
         } catch (AssertionError ae) {
             verify(mockVerificationSerializer).serialize(new Verification().withRequest(httpRequest).withTimes(atLeast(1)));
-            verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, request().withMethod("PUT").withPath("/verify").withBody("verification_json")));
+            verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, "", request().withMethod("PUT").withPath("/verify").withBody("verification_json")));
             assertThat(ae.getMessage(), is("Request not found at least once expected:<foo> but was:<bar>"));
         }
     }

@@ -1,5 +1,6 @@
 package org.mockserver.client.netty.codec;
 
+import com.google.common.base.Strings;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
@@ -40,7 +41,7 @@ public class MockServerRequestEncoder extends MessageToMessageEncoder<OutboundHt
         out.add(request);
     }
 
-    public static String getURI(HttpRequest httpRequest) {
+    public static String getURI(OutboundHttpRequest httpRequest) {
         StringBuilder queryString = new StringBuilder();
         List<Parameter> queryStringParameters = httpRequest.getQueryStringParameters();
         for (int i = 0; i < queryStringParameters.size(); i++) {
@@ -64,7 +65,16 @@ public class MockServerRequestEncoder extends MessageToMessageEncoder<OutboundHt
                 queryString.append('&');
             }
         }
-        return httpRequest.getPath() + (queryString.length() > 0 ? '?' + queryString.toString() : "");
+        String contextPath = httpRequest.getContextPath();
+        if (!Strings.isNullOrEmpty(contextPath)) {
+            if (contextPath.endsWith("/")) {
+                contextPath = contextPath.substring(0, contextPath.lastIndexOf("/"));
+            }
+            if (!contextPath.startsWith("/")) {
+                contextPath = "/" + contextPath;
+            }
+        }
+        return contextPath + httpRequest.getPath() + (queryString.length() > 0 ? '?' + queryString.toString() : "");
     }
 
     private ByteBuf getBody(HttpRequest httpRequest) {

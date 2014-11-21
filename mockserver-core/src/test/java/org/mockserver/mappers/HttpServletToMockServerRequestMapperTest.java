@@ -55,14 +55,14 @@ public class HttpServletToMockServerRequestMapperTest {
         // given
         MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("GET", "/requestURI");
         httpServletRequest.setContextPath("contextPath");
-        httpServletRequest.setPathInfo("pathInfo");
+        httpServletRequest.setPathInfo("/pathInfo");
         httpServletRequest.setContent("".getBytes());
 
         // when
         HttpRequest httpRequest = new HttpServletToMockServerRequestMapper().mapHttpServletRequestToMockServerRequest(httpServletRequest);
 
         // then
-        assertEquals("/requestURI", httpRequest.getPath());
+        assertEquals("/pathInfo", httpRequest.getPath());
     }
 
     @Test(expected = RuntimeException.class)

@@ -61,8 +61,8 @@ public abstract class AbstractClientProxyIntegrationTest {
 
     public abstract int getServerSecurePort();
 
-    protected String calculatePath(String some_path_one) {
-        return "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + some_path_one;
+    protected String calculatePath(String path) {
+        return "/" + path;
     }
 
     @Test

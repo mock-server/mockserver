@@ -23,7 +23,7 @@ public class HttpForwardActionHandler {
         } else {
             httpRequest.setSecure(false);
         }
-        return sendRequest(outboundRequest(httpForward.getHost(), httpForward.getPort(), httpRequest));
+        return sendRequest(outboundRequest(httpForward.getHost(), httpForward.getPort(), "", httpRequest));
     }
 
     private HttpResponse sendRequest(OutboundHttpRequest httpRequest) {

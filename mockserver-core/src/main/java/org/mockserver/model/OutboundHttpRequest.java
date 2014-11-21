@@ -7,10 +7,12 @@ public class OutboundHttpRequest extends HttpRequest {
 
     private final String host;
     private final Integer port;
+    private final String contextPath;
 
-    public OutboundHttpRequest(String host, Integer port, HttpRequest httpRequest) {
+    public OutboundHttpRequest(String host, Integer port, String contextPath, HttpRequest httpRequest) {
         this.host = host;
         this.port = port;
+        this.contextPath = contextPath;
         this.secure = httpRequest.secure;
         this.method = httpRequest.method;
         this.path = httpRequest.path;
@@ -21,8 +23,8 @@ public class OutboundHttpRequest extends HttpRequest {
         this.isKeepAlive = httpRequest.isKeepAlive;
     }
 
-    public static OutboundHttpRequest outboundRequest(String host, Integer port, HttpRequest httpRequest) {
-        return new OutboundHttpRequest(host, port, httpRequest);
+    public static OutboundHttpRequest outboundRequest(String host, Integer port, String contextPath, HttpRequest httpRequest) {
+        return new OutboundHttpRequest(host, port, contextPath, httpRequest);
     }
 
 
@@ -34,4 +36,7 @@ public class OutboundHttpRequest extends HttpRequest {
         return port;
     }
 
+    public String getContextPath() {
+        return contextPath;
+    }
 }

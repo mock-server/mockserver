@@ -184,7 +184,7 @@ public class ProxyServlet extends HttpServlet {
                 if (hostHeaderParts.length > 1) {
                     port = Integer.parseInt(hostHeaderParts[1]);  // non-default
                 }
-                HttpResponse httpResponse = filters.applyOnResponseFilters(httpRequest, httpClient.sendRequest(outboundRequest(hostHeaderParts[0], port, httpRequest)));
+                HttpResponse httpResponse = filters.applyOnResponseFilters(httpRequest, httpClient.sendRequest(outboundRequest(hostHeaderParts[0], port, "", httpRequest)));
                 if (httpResponse != null) {
                     return httpResponse;
                 }

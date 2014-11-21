@@ -65,14 +65,10 @@ public abstract class AbstractClient {
     }
 
     protected String calculatePath(String path) {
-        if (!Strings.isNullOrEmpty(contextPath)) {
-            return contextPath + path;
-        } else {
-            return "/" + path;
-        }
+        return "/" + path;
     }
 
     protected HttpResponse sendRequest(HttpRequest httpRequest) {
-        return nettyHttpClient.sendRequest(outboundRequest(host, port, httpRequest));
+        return nettyHttpClient.sendRequest(outboundRequest(host, port, contextPath, httpRequest));
     }
 }

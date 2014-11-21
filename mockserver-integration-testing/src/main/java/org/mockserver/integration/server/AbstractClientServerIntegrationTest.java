@@ -73,8 +73,8 @@ public abstract class AbstractClientServerIntegrationTest {
 
     public abstract int getTestServerSecurePort();
 
-    protected String calculatePath(String some_path_one) {
-        return "/" + servletContext + (servletContext.length() > 0 && !servletContext.endsWith("/") ? "/" : "") + some_path_one;
+    protected String calculatePath(String path) {
+        return "/" + path;
     }
 
     @Before
@@ -2843,7 +2843,7 @@ public abstract class AbstractClientServerIntegrationTest {
 
     protected HttpResponse makeRequest(HttpRequest httpRequest, Collection<String> headersToIgnore) {
         int port = (httpRequest.isSecure() ? getMockServerSecurePort() : getMockServerPort());
-        HttpResponse httpResponse = httpClient.sendRequest(outboundRequest("localhost", port, httpRequest));
+        HttpResponse httpResponse = httpClient.sendRequest(outboundRequest("localhost", port, servletContext, httpRequest));
         List<Header> headers = new ArrayList<Header>();
         for (Header header : httpResponse.getHeaders()) {
             if (!headersToIgnore.contains(header.getName().toLowerCase())) {
