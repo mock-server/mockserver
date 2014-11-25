@@ -20,7 +20,6 @@ import static org.mockito.MockitoAnnotations.initMocks;
 /**
  * @author jamesdbloom
  */
-@Ignore("@Spy is unreliable and fails the build randomly about 50% of the time")
 public class MockServerRunAndWaitMojoTest {
 
     @Mock
@@ -29,7 +28,6 @@ public class MockServerRunAndWaitMojoTest {
     private InstanceHolder mockEmbeddedJettyHolder;
     @Mock
     private MockServer mockServerRunner;
-    @Spy
     @InjectMocks
     private MockServerRunAndWaitMojo mockServerRunAndWaitMojo = new MockServerRunAndWaitMojo();
 
@@ -37,7 +35,7 @@ public class MockServerRunAndWaitMojoTest {
     public void setupMocks() {
         initMocks(this);
 
-        doReturn(objectSettableFuture).when(mockServerRunAndWaitMojo).newSettableFuture();
+        MockServerAbstractMojo.embeddedJettyHolder = mockEmbeddedJettyHolder;
     }
 
     @Test

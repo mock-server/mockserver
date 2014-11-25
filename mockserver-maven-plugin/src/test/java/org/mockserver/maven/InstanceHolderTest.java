@@ -13,6 +13,9 @@ import org.mockserver.mockserver.MockServerBuilder;
 import org.mockserver.proxy.http.HttpProxy;
 import org.mockserver.proxy.http.HttpProxyBuilder;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.Is.isA;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.*;
@@ -34,9 +37,9 @@ public class InstanceHolderTest {
     private MockServer mockMockServer;
 
     @Mock
-    private MockServerClient mockServerClient;
+    private MockServerClient mockMockServerClient;
     @Mock
-    private ProxyClient proxyClient;
+    private ProxyClient mockProxyClient;
 
     @InjectMocks
     private InstanceHolder instanceHolder;
@@ -46,9 +49,6 @@ public class InstanceHolderTest {
         instanceHolder = new InstanceHolder();
 
         initMocks(this);
-
-        InstanceHolder.mockServerBuilder = mockMockServerBuilder;
-        InstanceHolder.proxyBuilder = mockProxyBuilder;
 
         when(mockMockServerBuilder.withHTTPPort(anyInt())).thenReturn(mockMockServerBuilder);
         when(mockMockServerBuilder.withHTTPSPort(anyInt())).thenReturn(mockMockServerBuilder);
@@ -183,50 +183,70 @@ public class InstanceHolderTest {
     }
 
     @Test
-    @Ignore("spy function is unreliable and fails the build randomly about 50% of the time")
     public void shouldStopMockServerAndProxyRemotely() {
         // given
-        InstanceHolder embeddedJettyHolder = spy(instanceHolder);
-        doReturn(mockServerClient).when(embeddedJettyHolder).newMockServerClient(1);
-        doReturn(proxyClient).when(embeddedJettyHolder).newProxyClient(2);
+        InstanceHolder.mockServerClients.put(1, mockMockServerClient);
+        InstanceHolder.proxyClients.put(2, mockProxyClient);
 
         // when
-        embeddedJettyHolder.stop(1, 2);
+        instanceHolder.stop(1, 2);
 
         // then
-        verify(mockServerClient).stop();
-        verify(proxyClient).stop();
+        verify(mockMockServerClient).stop();
+        verify(mockProxyClient).stop();
+
+        // and - no new clients added
+        assertThat(InstanceHolder.mockServerClients.size(), is(1));
+        assertThat(InstanceHolder.proxyClients.size(), is(1));
     }
 
     @Test
-    @Ignore("spy function is unreliable and fails the build randomly about 50% of the time")
     public void shouldStopMockServerOnlyRemotely() {
         // given
-        InstanceHolder embeddedJettyHolder = spy(instanceHolder);
-        doReturn(mockServerClient).when(embeddedJettyHolder).newMockServerClient(1);
-        doReturn(proxyClient).when(embeddedJettyHolder).newProxyClient(2);
+        InstanceHolder.mockServerClients.put(1, mockMockServerClient);
+        InstanceHolder.proxyClients.put(2, mockProxyClient);
 
         // when
-        embeddedJettyHolder.stop(1, -1);
+        instanceHolder.stop(1, -1);
 
         // then
-        verify(mockServerClient).stop();
-        verify(proxyClient, times(0)).stop();
+        verify(mockMockServerClient).stop();
+        verify(mockProxyClient, times(0)).stop();
+
+        // and - no new clients added
+        assertThat(InstanceHolder.mockServerClients.size(), is(1));
+        assertThat(InstanceHolder.proxyClients.size(), is(1));
     }
 
     @Test
-    @Ignore("spy function is unreliable and fails the build randomly about 50% of the time")
     public void shouldStopProxyOnlyRemotely() {
         // given
-        InstanceHolder embeddedJettyHolder = spy(instanceHolder);
-        doReturn(mockServerClient).when(embeddedJettyHolder).newMockServerClient(1);
-        doReturn(proxyClient).when(embeddedJettyHolder).newProxyClient(2);
+        InstanceHolder.mockServerClients.put(1, mockMockServerClient);
+        InstanceHolder.proxyClients.put(2, mockProxyClient);
 
         // when
-        embeddedJettyHolder.stop(-1, 2);
+        instanceHolder.stop(-1, 2);
 
         // then
-        verify(mockServerClient, times(0)).stop();
-        verify(proxyClient).stop();
+        verify(mockMockServerClient, times(0)).stop();
+        verify(mockProxyClient).stop();
+
+        // and - no new clients added
+        assertThat(InstanceHolder.mockServerClients.size(), is(1));
+        assertThat(InstanceHolder.proxyClients.size(), is(1));
+    }
+
+    @Test
+    public void shouldStopMockServerAndProxyWhenNoClientExist() {
+        // given
+        InstanceHolder.mockServerClients.put(1, mockMockServerClient);
+        InstanceHolder.proxyClients.put(2, mockProxyClient);
+
+        // when
+        instanceHolder.stop(1, 2);
+
+        // then
+        assertThat(InstanceHolder.mockServerClients.get(1), isA(MockServerClient.class));
+        assertThat(InstanceHolder.proxyClients.get(2), isA(ProxyClient.class));
     }
 }
