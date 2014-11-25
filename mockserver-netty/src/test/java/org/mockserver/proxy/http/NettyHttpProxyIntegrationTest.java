@@ -25,7 +25,7 @@ public class NettyHttpProxyIntegrationTest extends AbstractClientSecureProxyInte
     private final static Integer PROXY_DIRECT_PORT = PortFactory.findFreePort();
     private final static Integer PROXY_DIRECT_SECURE_PORT = PortFactory.findFreePort();
     private static TestServer testServer = new TestServer();
-    private static HttpProxy httpProxy = new HttpProxy();
+    private static HttpProxy httpProxy;
     private static ProxyClient proxyClient;
 
     @BeforeClass
@@ -42,7 +42,7 @@ public class NettyHttpProxyIntegrationTest extends AbstractClientSecureProxyInte
         testServer.startServer(SERVER_HTTP_PORT, SERVER_HTTPS_PORT);
 
         // start proxy
-        httpProxy.start(PROXY_HTTP_PORT, PROXY_HTTPS_PORT, PROXY_SOCKS_PORT, PROXY_DIRECT_PORT, PROXY_DIRECT_SECURE_PORT, "127.0.0.1", SERVER_HTTP_PORT);
+        httpProxy = new HttpProxy(PROXY_HTTP_PORT, PROXY_HTTPS_PORT, PROXY_SOCKS_PORT, PROXY_DIRECT_PORT, PROXY_DIRECT_SECURE_PORT, "127.0.0.1", SERVER_HTTP_PORT);
 
         // start client
         proxyClient = new ProxyClient("localhost", PROXY_HTTP_PORT);

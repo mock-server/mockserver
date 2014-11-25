@@ -16,13 +16,13 @@ public class ClientServerNettyIntegrationTest extends AbstractClientServerShared
     private final static int TEST_SERVER_HTTPS_PORT = PortFactory.findFreePort();
     private final static int SERVER_HTTP_PORT = PortFactory.findFreePort();
     private final static int SERVER_HTTPS_PORT = PortFactory.findFreePort();
-    private static MockServer mockServer = new MockServer();
+    private static MockServer mockServer;
     private static TestServer testServer = new TestServer();
 
     @BeforeClass
     public static void startServer() throws Exception {
         // start mock server
-        mockServer.start(SERVER_HTTP_PORT, SERVER_HTTPS_PORT);
+        mockServer = new MockServer(SERVER_HTTP_PORT, SERVER_HTTPS_PORT);
 
         // start test server
         testServer.startServer(TEST_SERVER_HTTP_PORT, TEST_SERVER_HTTPS_PORT);

@@ -1,13 +1,10 @@
 package org.mockserver.mockserver;
 
-import org.junit.Ignore;
 import org.junit.Test;
+import org.mockserver.socket.PortFactory;
 
-import java.util.Random;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 
 /**
  * @author jamesdbloom
@@ -15,58 +12,56 @@ import static org.mockito.Mockito.*;
 public class MockServerBuilderTest {
 
     @Test
-    @Ignore("spy function is unreliable and fails the build randomly about 50% of the time")
+    public void shouldConfigureAllPorts() {
+        // given
+        Integer port = PortFactory.findFreePort();
+        Integer securePort = PortFactory.findFreePort();
+
+        // when
+        MockServer mockServer = new MockServerBuilder().withHTTPPort(port).withHTTPSPort(securePort).build();
+
+        try {
+            // then
+            assertThat(mockServer.getPort(), is(port));
+            assertThat(mockServer.getSecurePort(), is(securePort));
+        } finally {
+            mockServer.stop();
+        }
+    }
+
+    @Test
     public void shouldConfigureHTTPPort() {
         // given
-        // - some ports
-        Integer port = new Random().nextInt();
+        Integer port = PortFactory.findFreePort();
         Integer securePort = null;
-        // - a build and http proxy
-        MockServerBuilder mockServerBuilder = spy(new MockServerBuilder());
-        MockServer mockServer = mock(MockServer.class);
-        doReturn(mockServer).when(mockServerBuilder).newMockServer();
 
         // when
-        MockServer actual = mockServerBuilder.withHTTPPort(port).build();
+        MockServer mockServer = new MockServerBuilder().withHTTPPort(port).build();
 
-        // then
-        assertEquals(mockServer, actual);
-        verify(mockServer).start(
-                port,
-                securePort
-        );
+        try {
+            // then
+            assertThat(mockServer.getPort(), is(port));
+            assertThat(mockServer.getSecurePort(), is(securePort));
+        } finally {
+            mockServer.stop();
+        }
     }
 
     @Test
-    @Ignore("spy function is unreliable and fails the build randomly about 50% of the time")
     public void shouldConfigureHTTPSPort() {
         // given
-        // - some ports
         Integer port = null;
-        Integer securePort = new Random().nextInt();
-        // - a build and http proxy
-        MockServerBuilder mockServerBuilder = spy(new MockServerBuilder());
-        MockServer mockServer = mock(MockServer.class);
-        doReturn(mockServer).when(mockServerBuilder).newMockServer();
+        Integer securePort = PortFactory.findFreePort();
 
         // when
-        MockServer actual = mockServerBuilder.withHTTPSPort(securePort).build();
+        MockServer mockServer = new MockServerBuilder().withHTTPSPort(securePort).build();
 
-        // then
-        assertEquals(mockServer, actual);
-        verify(mockServer).start(
-                port,
-                securePort
-        );
-    }
-
-    @Test
-    public void shouldReturnCorrectObject() {
-        MockServer mockServer = new MockServerBuilder().withHTTPPort(9090).build();
-        assertTrue(mockServer instanceof MockServer);
-        mockServer.stop();
-        Thread thread = new MockServerBuilder().withHTTPPort(9090).buildAndReturnThread();
-        assertTrue(thread instanceof Thread);
-        thread.stop();
+        try {
+            // then
+            assertThat(mockServer.getPort(), is(port));
+            assertThat(mockServer.getSecurePort(), is(securePort));
+        } finally {
+            mockServer.stop();
+        }
     }
 }

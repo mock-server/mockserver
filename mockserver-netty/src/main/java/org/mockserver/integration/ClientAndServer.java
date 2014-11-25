@@ -9,7 +9,7 @@ import org.mockserver.socket.PortFactory;
  */
 public class ClientAndServer extends MockServerClient {
 
-    private MockServer mockServer = new MockServer();
+    private MockServer mockServer;
 
     public ClientAndServer() {
         this(PortFactory.findFreePort());
@@ -21,7 +21,7 @@ public class ClientAndServer extends MockServerClient {
 
     public ClientAndServer(Integer port, Integer securePort) {
         super("localhost", port);
-        mockServer.start(port, securePort);
+        mockServer = new MockServer(port, securePort);
     }
 
     public static ClientAndServer startClientAndServer(Integer port) {

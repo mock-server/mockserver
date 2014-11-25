@@ -10,21 +10,26 @@ import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 import org.mockserver.proxy.http.HttpProxy;
 import org.mockserver.proxy.http.HttpProxyBuilder;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
  * @author jamesdbloom
  */
 public class InstanceHolder extends ObjectWithReflectiveEqualsHashCodeToString {
 
     @VisibleForTesting
-    static HttpProxyBuilder proxyBuilder = new HttpProxyBuilder();
+    static Map<Integer, MockServerClient> mockServerClients = new ConcurrentHashMap<Integer, MockServerClient>();
     @VisibleForTesting
-    static MockServerBuilder mockServerBuilder = new MockServerBuilder();
+    static Map<Integer, ProxyClient> proxyClients = new ConcurrentHashMap<Integer, ProxyClient>();
+    private HttpProxyBuilder proxyBuilder = new HttpProxyBuilder();
+    private MockServerBuilder mockServerBuilder = new MockServerBuilder();
     private HttpProxy proxy;
     private MockServer mockServer;
 
     public static void runInitializationClass(int mockServerPort, ExpectationInitializer expectationInitializer) {
         if (mockServerPort != -1 && expectationInitializer != null) {
-            expectationInitializer.initializeExpectations(new MockServerClient("127.0.0.1", mockServerPort));
+            expectationInitializer.initializeExpectations(getMockServerClient(mockServerPort));
         }
     }
 
@@ -49,21 +54,25 @@ public class InstanceHolder extends ObjectWithReflectiveEqualsHashCodeToString {
 
     public void stop(final int mockServerPort, final int proxyPort) {
         if (mockServerPort != -1) {
-            newMockServerClient(mockServerPort).stop();
+            getMockServerClient(mockServerPort).stop();
         }
         if (proxyPort != -1) {
-            newProxyClient(proxyPort).stop();
+            getProxyClient(proxyPort).stop();
         }
     }
 
-    @VisibleForTesting
-    ProxyClient newProxyClient(int proxyStopPort) {
-        return new ProxyClient("127.0.0.1", proxyStopPort);
+    private static ProxyClient getProxyClient(int proxyStopPort) {
+        if (!proxyClients.containsKey(proxyStopPort)) {
+            proxyClients.put(proxyStopPort, new ProxyClient("127.0.0.1", proxyStopPort));
+        }
+        return proxyClients.get(proxyStopPort);
     }
 
-    @VisibleForTesting
-    MockServerClient newMockServerClient(int mockServerPort) {
-        return new MockServerClient("127.0.0.1", mockServerPort);
+    private static MockServerClient getMockServerClient(int mockServerPort) {
+        if (!mockServerClients.containsKey(mockServerPort)) {
+            mockServerClients.put(mockServerPort, new MockServerClient("127.0.0.1", mockServerPort));
+        }
+        return mockServerClients.get(mockServerPort);
     }
 
     public void stop() {

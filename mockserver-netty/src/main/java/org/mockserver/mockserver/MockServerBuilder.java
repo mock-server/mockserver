@@ -45,24 +45,6 @@ public class MockServerBuilder {
      * Build an instance of the HttpProxy
      */
     public MockServer build() {
-        MockServer mockServer = newMockServer();
-        mockServer.start(port, securePort);
-        return mockServer;
-    }
-
-    /**
-     * Build an instance of the HttpProxy
-     */
-    public Thread buildAndReturnThread() {
-        return newMockServer()
-                .start(
-                        port,
-                        securePort
-                );
-    }
-
-    @VisibleForTesting
-    MockServer newMockServer() {
-        return new MockServer();
+        return new MockServer(port, securePort);
     }
 }

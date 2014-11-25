@@ -1,13 +1,10 @@
 package org.mockserver.proxy.http;
 
-import org.junit.Ignore;
 import org.junit.Test;
+import org.mockserver.socket.PortFactory;
 
-import java.util.Random;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 
 /**
  * @author jamesdbloom
@@ -15,139 +12,165 @@ import static org.mockito.Mockito.*;
 public class HttpProxyBuilderTest {
 
     @Test
-    @Ignore("spy function is unreliable and fails the build randomly about 50% of the time")
+    public void shouldConfigureAllPortsProxy() {
+        // given
+        // - some ports
+        Integer port = PortFactory.findFreePort();
+        Integer securePort = PortFactory.findFreePort();
+        Integer socksPort = PortFactory.findFreePort();
+        Integer directLocalPort = PortFactory.findFreePort();
+        Integer directLocalSecurePort = PortFactory.findFreePort();
+        String directRemoteHost = "random.host";
+        Integer directRemotePort = PortFactory.findFreePort();
+
+        // when
+        HttpProxy httpProxy = new HttpProxyBuilder()
+                .withHTTPPort(port)
+                .withHTTPSPort(securePort)
+                .withSOCKSPort(socksPort)
+                .withDirect(directLocalPort, directRemoteHost, directRemotePort)
+                .withDirectSSL(directLocalSecurePort, directRemoteHost, directRemotePort)
+                .build();
+
+        try {
+            // then
+            assertThat(httpProxy.getPort(), is(port));
+            assertThat(httpProxy.getSecurePort(), is(securePort));
+            assertThat(httpProxy.getSocksPort(), is(socksPort));
+            assertThat(httpProxy.getDirectLocalPort(), is(directLocalPort));
+            assertThat(httpProxy.getDirectLocalSecurePort(), is(directLocalSecurePort));
+            assertThat(httpProxy.getDirectRemoteHost(), is(directRemoteHost));
+            assertThat(httpProxy.getDirectRemotePort(), is(directRemotePort));
+        } finally {
+            httpProxy.stop();
+        }
+    }
+
+    @Test
     public void shouldConfigureHTTPPort() {
         // given
         // - some ports
-        Integer port = new Random().nextInt();
+        Integer port = PortFactory.findFreePort();
         Integer securePort = null;
         Integer socksPort = null;
         Integer directLocalPort = null;
         Integer directLocalSecurePort = null;
         String directRemoteHost = null;
         Integer directRemotePort = null;
-        // - a build and http proxy
-        HttpProxyBuilder httpProxyBuilder = spy(new HttpProxyBuilder());
-        HttpProxy httpProxy = mock(HttpProxy.class);
-        doReturn(httpProxy).when(httpProxyBuilder).newHttpProxy();
 
         // when
-        HttpProxy actual = httpProxyBuilder.withHTTPPort(port).build();
+        HttpProxy httpProxy = new HttpProxyBuilder()
+                .withHTTPPort(port)
+                .build();
 
-        // then
-        assertEquals(httpProxy, actual);
-        verify(httpProxy).start(
-                port,
-                securePort,
-                socksPort,
-                directLocalPort,
-                directLocalSecurePort,
-                directRemoteHost,
-                directRemotePort
-        );
+        try {
+            // then
+            assertThat(httpProxy.getPort(), is(port));
+            assertThat(httpProxy.getSecurePort(), is(securePort));
+            assertThat(httpProxy.getSocksPort(), is(socksPort));
+            assertThat(httpProxy.getDirectLocalPort(), is(directLocalPort));
+            assertThat(httpProxy.getDirectLocalSecurePort(), is(directLocalSecurePort));
+            assertThat(httpProxy.getDirectRemoteHost(), is(directRemoteHost));
+            assertThat(httpProxy.getDirectRemotePort(), is(directRemotePort));
+        } finally {
+            httpProxy.stop();
+        }
     }
 
     @Test
-    @Ignore("spy function is unreliable and fails the build randomly about 50% of the time")
     public void shouldConfigureHTTPSPort() {
         // given
         // - some ports
         Integer port = null;
-        Integer securePort = new Random().nextInt();
+        Integer securePort = PortFactory.findFreePort();
         Integer socksPort = null;
         Integer directLocalPort = null;
         Integer directLocalSecurePort = null;
         String directRemoteHost = null;
         Integer directRemotePort = null;
-        // - a build and http proxy
-        HttpProxyBuilder httpProxyBuilder = spy(new HttpProxyBuilder());
-        HttpProxy httpProxy = mock(HttpProxy.class);
-        doReturn(httpProxy).when(httpProxyBuilder).newHttpProxy();
 
         // when
-        HttpProxy actual = httpProxyBuilder.withHTTPSPort(securePort).build();
+        HttpProxy httpProxy = new HttpProxyBuilder()
+                .withHTTPSPort(securePort)
+                .build();
 
-        // then
-        assertEquals(httpProxy, actual);
-        verify(httpProxy).start(
-                port,
-                securePort,
-                socksPort,
-                directLocalPort,
-                directLocalSecurePort,
-                directRemoteHost,
-                directRemotePort
-        );
+        try {
+            // then
+            assertThat(httpProxy.getPort(), is(port));
+            assertThat(httpProxy.getSecurePort(), is(securePort));
+            assertThat(httpProxy.getSocksPort(), is(socksPort));
+            assertThat(httpProxy.getDirectLocalPort(), is(directLocalPort));
+            assertThat(httpProxy.getDirectLocalSecurePort(), is(directLocalSecurePort));
+            assertThat(httpProxy.getDirectRemoteHost(), is(directRemoteHost));
+            assertThat(httpProxy.getDirectRemotePort(), is(directRemotePort));
+        } finally {
+            httpProxy.stop();
+        }
     }
 
     @Test
-    @Ignore("spy function is unreliable and fails the build randomly about 50% of the time")
     public void shouldConfigureSOCKSPort() {
         // given
         // - some ports
         Integer port = null;
         Integer securePort = null;
-        Integer socksPort = new Random().nextInt();
+        Integer socksPort = PortFactory.findFreePort();
         Integer directLocalPort = null;
         Integer directLocalSecurePort = null;
         String directRemoteHost = null;
         Integer directRemotePort = null;
-        // - a build and http proxy
-        HttpProxyBuilder httpProxyBuilder = spy(new HttpProxyBuilder());
-        HttpProxy httpProxy = mock(HttpProxy.class);
-        doReturn(httpProxy).when(httpProxyBuilder).newHttpProxy();
 
         // when
-        HttpProxy actual = httpProxyBuilder.withSOCKSPort(socksPort).build();
+        HttpProxy httpProxy = new HttpProxyBuilder()
+                .withSOCKSPort(socksPort)
+                .build();
 
-        // then
-        assertEquals(httpProxy, actual);
-        verify(httpProxy).start(
-                port,
-                securePort,
-                socksPort,
-                directLocalPort,
-                directLocalSecurePort,
-                directRemoteHost,
-                directRemotePort
-        );
+        try {
+            // then
+            assertThat(httpProxy.getPort(), is(port));
+            assertThat(httpProxy.getSecurePort(), is(securePort));
+            assertThat(httpProxy.getSocksPort(), is(socksPort));
+            assertThat(httpProxy.getDirectLocalPort(), is(directLocalPort));
+            assertThat(httpProxy.getDirectLocalSecurePort(), is(directLocalSecurePort));
+            assertThat(httpProxy.getDirectRemoteHost(), is(directRemoteHost));
+            assertThat(httpProxy.getDirectRemotePort(), is(directRemotePort));
+        } finally {
+            httpProxy.stop();
+        }
     }
 
     @Test
-    @Ignore("spy function is unreliable and fails the build randomly about 50% of the time")
     public void shouldConfigureDirectProxy() {
         // given
         // - some ports
         Integer port = null;
         Integer securePort = null;
         Integer socksPort = null;
-        Integer directLocalPort = new Random().nextInt();
+        Integer directLocalPort = PortFactory.findFreePort();
         Integer directLocalSecurePort = null;
         String directRemoteHost = "random.host";
-        Integer directRemotePort = new Random().nextInt();
-        // - a build and http proxy
-        HttpProxyBuilder httpProxyBuilder = spy(new HttpProxyBuilder());
-        HttpProxy httpProxy = mock(HttpProxy.class);
-        doReturn(httpProxy).when(httpProxyBuilder).newHttpProxy();
+        Integer directRemotePort = PortFactory.findFreePort();
 
         // when
-        HttpProxy actual = httpProxyBuilder.withDirect(directLocalPort, directRemoteHost, directRemotePort).build();
+        HttpProxy httpProxy = new HttpProxyBuilder()
+                .withDirect(directLocalPort, directRemoteHost, directRemotePort)
+                .build();
 
-        // then
-        assertEquals(httpProxy, actual);
-        verify(httpProxy).start(
-                port,
-                securePort,
-                socksPort,
-                directLocalPort,
-                directLocalSecurePort,
-                directRemoteHost,
-                directRemotePort
-        );
+        try {
+            // then
+            assertThat(httpProxy.getPort(), is(port));
+            assertThat(httpProxy.getSecurePort(), is(securePort));
+            assertThat(httpProxy.getSocksPort(), is(socksPort));
+            assertThat(httpProxy.getDirectLocalPort(), is(directLocalPort));
+            assertThat(httpProxy.getDirectLocalSecurePort(), is(directLocalSecurePort));
+            assertThat(httpProxy.getDirectRemoteHost(), is(directRemoteHost));
+            assertThat(httpProxy.getDirectRemotePort(), is(directRemotePort));
+        } finally {
+            httpProxy.stop();
+        }
     }
 
     @Test
-    @Ignore("spy function is unreliable and fails the build randomly about 50% of the time")
     public void shouldConfigureDirectSSLProxy() {
         // given
         // - some ports
@@ -155,37 +178,26 @@ public class HttpProxyBuilderTest {
         Integer securePort = null;
         Integer socksPort = null;
         Integer directLocalPort = null;
-        Integer directLocalSecurePort = new Random().nextInt();
+        Integer directLocalSecurePort = PortFactory.findFreePort();
         String directRemoteHost = "random.host";
-        Integer directRemotePort = new Random().nextInt();
-        // - a build and http proxy
-        HttpProxyBuilder httpProxyBuilder = spy(new HttpProxyBuilder());
-        HttpProxy httpProxy = mock(HttpProxy.class);
-        doReturn(httpProxy).when(httpProxyBuilder).newHttpProxy();
+        Integer directRemotePort = PortFactory.findFreePort();
 
         // when
-        HttpProxy actual = httpProxyBuilder.withDirectSSL(directLocalSecurePort, directRemoteHost, directRemotePort).build();
+        HttpProxy httpProxy = new HttpProxyBuilder()
+                .withDirectSSL(directLocalSecurePort, directRemoteHost, directRemotePort)
+                .build();
 
-        // then
-        assertEquals(httpProxy, actual);
-        verify(httpProxy).start(
-                port,
-                securePort,
-                socksPort,
-                directLocalPort,
-                directLocalSecurePort,
-                directRemoteHost,
-                directRemotePort
-        );
-    }
-
-    @Test
-    public void shouldReturnCorrectObject() {
-        HttpProxy httpProxy = new HttpProxyBuilder().build();
-        assertTrue(httpProxy instanceof HttpProxy);
-        httpProxy.stop();
-        Thread thread = new HttpProxyBuilder().buildAndReturnThread();
-        assertTrue(thread instanceof Thread);
-        thread.stop();
+        try {
+            // then
+            assertThat(httpProxy.getPort(), is(port));
+            assertThat(httpProxy.getSecurePort(), is(securePort));
+            assertThat(httpProxy.getSocksPort(), is(socksPort));
+            assertThat(httpProxy.getDirectLocalPort(), is(directLocalPort));
+            assertThat(httpProxy.getDirectLocalSecurePort(), is(directLocalSecurePort));
+            assertThat(httpProxy.getDirectRemoteHost(), is(directRemoteHost));
+            assertThat(httpProxy.getDirectRemotePort(), is(directRemotePort));
+        } finally {
+            httpProxy.stop();
+        }
     }
 }

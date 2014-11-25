@@ -16,6 +16,9 @@ import java.util.concurrent.TimeoutException;
 @Mojo(name = "run", requiresProject = false, threadSafe = false)
 public class MockServerRunAndWaitMojo extends MockServerAbstractMojo {
 
+    // used to simplify waiting logic
+    private SettableFuture settableFuture = SettableFuture.create();
+
     public void execute() throws MojoExecutionException {
         Logging.overrideLogLevel(logLevel);
         if (skip) {
@@ -33,13 +36,13 @@ public class MockServerRunAndWaitMojo extends MockServerAbstractMojo {
                 if (timeout > 0) {
                     getEmbeddedJettyHolder().start(serverPort, serverSecurePort, proxyPort, proxySecurePort, createInitializer());
                     try {
-                        newSettableFuture().get(timeout, TimeUnit.SECONDS);
+                        settableFuture.get(timeout, TimeUnit.SECONDS);
                     } catch (TimeoutException te) {
                         // do nothing this is an expected exception when the timeout expires
                     }
                 } else {
                     getEmbeddedJettyHolder().start(serverPort, serverSecurePort, proxyPort, proxySecurePort, createInitializer());
-                    newSettableFuture().get();
+                    settableFuture.get();
                 }
             } catch (Exception e) {
                 getLog().error("Exception while running MockServer", e);
@@ -48,8 +51,4 @@ public class MockServerRunAndWaitMojo extends MockServerAbstractMojo {
 
     }
 
-    @VisibleForTesting
-    SettableFuture<Object> newSettableFuture() {
-        return SettableFuture.create();
-    }
 }

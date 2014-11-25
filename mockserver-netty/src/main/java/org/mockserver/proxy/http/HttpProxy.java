@@ -39,38 +39,22 @@ import java.util.concurrent.TimeUnit;
 public class HttpProxy {
 
     private static final Logger logger = LoggerFactory.getLogger(HttpProxy.class);
+    // ports
+    private final Integer port;
+    private final Integer securePort;
+    private final Integer socksPort;
+    private final Integer directLocalPort;
+    private final Integer directLocalSecurePort;
+    private final String directRemoteHost;
+    private final Integer directRemotePort;
     // mockserver
     private final LogFilter logFilter = new LogFilter();
-    private SettableFuture<String> hasStarted;
+    private final SettableFuture<String> hasStarted;
     // jvm
     private ProxySelector previousProxySelector;
     // netty
-    private EventLoopGroup bossGroup = new NioEventLoopGroup();
-    private EventLoopGroup workerGroup = new NioEventLoopGroup();
-
-    public static ProxySelector proxySelector() {
-        if (Boolean.parseBoolean(System.getProperty("defaultProxySet"))) {
-            return java.net.ProxySelector.getDefault();
-        } else if (Boolean.parseBoolean(System.getProperty("proxySet"))) {
-            return createProxySelector(Proxy.Type.HTTP);
-        } else {
-            throw new IllegalStateException("ProxySelector can not be returned proxy has not been started yet");
-        }
-    }
-
-    private static ProxySelector createProxySelector(final Proxy.Type http) {
-        return new ProxySelector() {
-            @Override
-            public List<Proxy> select(URI uri) {
-                return Arrays.asList(new Proxy(http, new InetSocketAddress(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort")))));
-            }
-
-            @Override
-            public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {
-                logger.error("Connection could not be established to proxy at socket [" + sa + "]", ioe);
-            }
-        };
-    }
+    private final EventLoopGroup bossGroup = new NioEventLoopGroup();
+    private final EventLoopGroup workerGroup = new NioEventLoopGroup();
 
     /**
      * Start the instance using the ports provided, this method should not be used directly, instead use HttpProxyBuilder
@@ -85,18 +69,25 @@ public class HttpProxy {
      *
      * @see org.mockserver.proxy.http.HttpProxyBuilder
      */
-    Thread start(final Integer port,
-                 final Integer securePort,
-                 final Integer socksPort,
-                 final Integer directLocalPort,
-                 final Integer directLocalSecurePort,
-                 final String directRemoteHost,
-                 final Integer directRemotePort) {
+    HttpProxy(final Integer port,
+              final Integer securePort,
+              final Integer socksPort,
+              final Integer directLocalPort,
+              final Integer directLocalSecurePort,
+              final String directRemoteHost,
+              final Integer directRemotePort) {
 
+        this.port = port;
+        this.securePort = securePort;
+        this.socksPort = socksPort;
+        this.directLocalPort = directLocalPort;
+        this.directLocalSecurePort = directLocalSecurePort;
+        this.directRemoteHost = directRemoteHost;
+        this.directRemotePort = directRemotePort;
 
         hasStarted = SettableFuture.create();
 
-        Thread proxyThread = new Thread(new Runnable() {
+        new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -128,8 +119,7 @@ public class HttpProxy {
                     workerGroup.shutdownGracefully();
                 }
             }
-        });
-        proxyThread.start();
+        }).start();
 
         try {
             // wait for proxy to start all channels
@@ -137,8 +127,30 @@ public class HttpProxy {
         } catch (Exception e) {
             logger.debug("Exception while waiting for proxy to complete starting up", e);
         }
+    }
 
-        return proxyThread;
+    public static ProxySelector proxySelector() {
+        if (Boolean.parseBoolean(System.getProperty("defaultProxySet"))) {
+            return java.net.ProxySelector.getDefault();
+        } else if (Boolean.parseBoolean(System.getProperty("proxySet"))) {
+            return createProxySelector(Proxy.Type.HTTP);
+        } else {
+            throw new IllegalStateException("ProxySelector can not be returned proxy has not been started yet");
+        }
+    }
+
+    private static ProxySelector createProxySelector(final Proxy.Type http) {
+        return new ProxySelector() {
+            @Override
+            public List<Proxy> select(URI uri) {
+                return Arrays.asList(new Proxy(http, new InetSocketAddress(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort")))));
+            }
+
+            @Override
+            public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {
+                logger.error("Connection could not be established to proxy at socket [" + sa + "]", ioe);
+            }
+        };
     }
 
     /**
@@ -343,5 +355,33 @@ public class HttpProxy {
         } else {
             return false;
         }
+    }
+
+    public Integer getPort() {
+        return port;
+    }
+
+    public Integer getSecurePort() {
+        return securePort;
+    }
+
+    public Integer getSocksPort() {
+        return socksPort;
+    }
+
+    public Integer getDirectLocalPort() {
+        return directLocalPort;
+    }
+
+    public Integer getDirectLocalSecurePort() {
+        return directLocalSecurePort;
+    }
+
+    public String getDirectRemoteHost() {
+        return directRemoteHost;
+    }
+
+    public Integer getDirectRemotePort() {
+        return directRemotePort;
     }
 }

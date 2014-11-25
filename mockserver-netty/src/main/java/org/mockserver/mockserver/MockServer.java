@@ -24,13 +24,16 @@ import java.util.concurrent.TimeUnit;
 public class MockServer {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    // ports
+    private final Integer port;
+    private final Integer securePort;
     // mockserver
     private final LogFilter logFilter = new LogFilter();
     private final MockServerMatcher mockServerMatcher = new MockServerMatcher();
-    private SettableFuture<String> hasStarted;
+    private final SettableFuture<String> hasStarted;
     // netty
-    private EventLoopGroup bossGroup;
-    private EventLoopGroup workerGroup;
+    private final EventLoopGroup bossGroup;
+    private final EventLoopGroup workerGroup;
 
     /**
      * Start the instance using the ports provided
@@ -38,16 +41,18 @@ public class MockServer {
      * @param port the http port to use
      * @param securePort the secure https port to use
      */
-    public Thread start(final Integer port, final Integer securePort) {
+    public MockServer(final Integer port, final Integer securePort) {
         if (port == null && securePort == null) {
             throw new IllegalStateException("You must specify a port or a secure port");
         }
+        this.port = port;
+        this.securePort = securePort;
 
         hasStarted = SettableFuture.create();
         bossGroup = new NioEventLoopGroup();
         workerGroup = new NioEventLoopGroup();
 
-        Thread mockServerThread = new Thread(new Runnable() {
+        new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -97,8 +102,7 @@ public class MockServer {
                     workerGroup.shutdownGracefully();
                 }
             }
-        });
-        mockServerThread.start();
+        }).start();
 
         try {
             // wait for proxy to start all channels
@@ -106,8 +110,6 @@ public class MockServer {
         } catch (Exception e) {
             logger.debug("Exception while waiting for proxy to complete starting up", e);
         }
-
-        return mockServerThread;
     }
 
     public void stop() {
@@ -132,5 +134,13 @@ public class MockServer {
         } else {
             return false;
         }
+    }
+
+    public Integer getPort() {
+        return port;
+    }
+
+    public Integer getSecurePort() {
+        return securePort;
     }
 }

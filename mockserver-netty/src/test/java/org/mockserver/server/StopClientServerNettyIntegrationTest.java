@@ -19,8 +19,7 @@ public class StopClientServerNettyIntegrationTest {
     @Test
     public void canStartAndStopMultipleTimes() {
         // start server
-        MockServer mockServer = new MockServer();
-        mockServer.start(serverPort, serverSecurePort);
+        MockServer mockServer = new MockServer(serverPort, serverSecurePort);
 
         // start client
         MockServerClient mockServerClient = new MockServerClient("localhost", serverPort);
@@ -31,7 +30,7 @@ public class StopClientServerNettyIntegrationTest {
 
             // then
             assertFalse(mockServer.isRunning());
-            mockServer.start(serverPort, serverSecurePort);
+            mockServer = new MockServer(serverPort, serverSecurePort);
             assertTrue(mockServer.isRunning());
         }
 
@@ -43,8 +42,7 @@ public class StopClientServerNettyIntegrationTest {
     @Test
     public void canStartAndStopMultipleTimesWithNewProcess() {
         // start server
-        MockServer mockServer = new MockServer();
-        mockServer.start(serverPort, serverSecurePort);
+        MockServer mockServer = new MockServer(serverPort, serverSecurePort);
 
         // start client
         MockServerClient mockServerClient = new MockServerClient("localhost", serverPort);
@@ -55,8 +53,7 @@ public class StopClientServerNettyIntegrationTest {
 
             // then
             assertFalse(mockServer.isRunning());
-            mockServer = new MockServer();
-            mockServer.start(serverPort, serverSecurePort);
+            mockServer = new MockServer(serverPort, serverSecurePort);
             assertTrue(mockServer.isRunning());
         }
 
