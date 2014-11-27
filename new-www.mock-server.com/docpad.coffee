@@ -12,6 +12,7 @@ docpadConfig = {
 		# Specify some site properties
 		site:
 			# The production url of our website
+<<<<<<< HEAD
 			url: "http://website.com"
 
 			# Here are some old site urls that you would like to redirect from
@@ -26,15 +27,38 @@ docpadConfig = {
 			# The website description (for SEO)
 			description: """
 				When your website appears in search results in say Google, the text here will be shown underneath your website's title.
+=======
+			url: "http://www.mock-server.com"
+
+			# Here are some old site urls that you would like to redirect from
+			oldUrls: [
+				'www.mock-server.com'
+			]
+
+			# The default title of our website
+			title: "Mock Server"
+
+			# The website description (for SEO)
+			description: """
+				An API to easily mock any system or service you integrate with via HTTP or HTTPS from either Java or JavaScript.
+>>>>>>> added first cut of layout and build process for new website with an improved structure
 				"""
 
 			# The website keywords (for SEO) separated by commas
 			keywords: """
+<<<<<<< HEAD
 				place, your, website, keywoards, here, keep, them, related, to, the, content, of, your, website
 				"""
 
 			# The website author's name
 			author: "Your Name"
+=======
+				mockserver, mock server, mock http server, http mock server, mock-server, mock rest service, mock server java, mock api, java mock http server, server mock, java mock server, mock rest server, java mock web service, api mock, mock web service java, mock web server, mock service, mock rest api, mock http response, mock http server java, mock api server, json mock service, api mocking
+				"""
+
+			# The website author's name
+			author: "James D Bloom"
+>>>>>>> added first cut of layout and build process for new website with an improved structure
 
 			# The website author's email
 			email: "your@email.com"
@@ -42,12 +66,23 @@ docpadConfig = {
 			# Styles
 			styles: [
 				"http://yui.yahooapis.com/pure/0.5.0/pure-min.css"
+<<<<<<< HEAD
+=======
+        "//fonts.googleapis.com/css?family=Lato|Averia+Sans+Libre:300normal,300italic,400normal,400italic,700normal,700italic|Amatic+SC:400normal|Belleza:400normal|Belgrano:400normal|Open+Sans:400normal|Dosis:400normal|Codystar:400normal|Concert+One:400normal|Oswald:400normal|Economica:400normal|Duru+Sans:400normal&amp;subset=all"
+>>>>>>> added first cut of layout and build process for new website with an improved structure
 				"/styles/style.css"
 			]
 
 			# Scripts
+<<<<<<< HEAD
 			scripts: []
 
+=======
+			scripts: [
+        "/scripts/toggle_menu.js"
+        "/scripts/google_analytics.js"
+      ]
+>>>>>>> added first cut of layout and build process for new website with an improved structure
 
 
 		# -----------------------------
@@ -110,6 +145,20 @@ docpadConfig = {
 					res.redirect(newUrl+req.url, 301)
 				else
 					next()
+
+  plugins:
+    # build a sitemap file
+    sitemap:
+      cachetime: 600000
+      changefreq: 'weekly'
+      priority: 0.5
+      filePath: 'sitemap.xml'
+    # enable rss feed readers
+    rss:
+      default:
+        collection: 'pages'
+        url: '/rss.xml' # optional, this is the default
+
 }
 
 

@@ -1,50 +1,52 @@
 {
-	"name": "mockserver-homepage",
-	"version": "0.0.1",
-	"description": "the MockServer documentation & homepage",
-    "keywords": [
-        "mockserver",
-        "proxy",
-        "testing"
-    ],
-    "homepage": "https://github.com/jamesdbloom/mockserver",
-    "author": {
-        "name": "James Bloom",
-        "email": "jamesdbloom@gmail.com",
-        "url": "http://mock-server.com"
-    },
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/jamesdbloom/mockserver.git"
-    },
-    "bugs": {
-        "url": "https://github.com/jamesdbloom/mockserver/issues"
-    },
-    "licenses": [
-        {
-            "type": "Apache",
-            "url": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/license.txt"
-        }
-    ],
-	"engines" : {
-		"node": "0.10",
-		"npm": "1.2"
-	},
-	"dependencies": {
-		"docpad": "6.x",
-		"docpad-plugin-cleanurls": "2.x",
-		"docpad-plugin-coffeescript": "2.x",
-		"docpad-plugin-eco": "2.x",
-		"docpad-plugin-marked": "2.x",
-		"docpad-plugin-partials": "2.x",
-		"docpad-plugin-related": "2.x",
-		"docpad-plugin-text": "2.x"
-	},
-	"devDependencies": {
-		"docpad-plugin-livereload": "2.x"
-	},
-	"main": "node_modules/docpad/bin/docpad-server",
-	"scripts": {
-		"start": "node_modules/docpad/bin/docpad-server"
-	}
+  "name": "mockserver-homepage",
+  "version": "0.0.1",
+  "description": "the MockServer documentation & homepage",
+  "keywords": [
+    "mockserver",
+    "proxy",
+    "testing"
+  ],
+  "homepage": "https://github.com/jamesdbloom/mockserver",
+  "author": {
+    "name": "James Bloom",
+    "email": "jamesdbloom@gmail.com",
+    "url": "http://mock-server.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jamesdbloom/mockserver.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jamesdbloom/mockserver/issues"
+  },
+  "licenses": [
+    {
+      "type": "Apache",
+      "url": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/license.txt"
+    }
+  ],
+  "engines": {
+    "node": "0.10",
+    "npm": "1.2"
+  },
+  "dependencies": {
+    "docpad": "6.x",
+    "docpad-plugin-cleanurls": "2.x",
+    "docpad-plugin-coffeescript": "2.x",
+    "docpad-plugin-eco": "2.x",
+    "docpad-plugin-marked": "2.x",
+    "docpad-plugin-partials": "2.x",
+    "docpad-plugin-related": "2.x",
+    "docpad-plugin-rss": "^2.1.4",
+    "docpad-plugin-sitemap": "~2.2.0",
+    "docpad-plugin-text": "2.x"
+  },
+  "devDependencies": {
+    "docpad-plugin-livereload": "2.x"
+  },
+  "main": "node_modules/docpad/bin/docpad-server",
+  "scripts": {
+    "start": "node_modules/docpad/bin/docpad-server"
+  }
 }

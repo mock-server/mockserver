@@ -31,7 +31,6 @@ The content `<div>` is where all your content goes.
     margin: 0 auto;
     padding: 0 2em;
     max-width: 1350px;
-    margin-bottom: 10px;
     line-height: 1.6em;
 }
 
@@ -58,17 +57,23 @@ The content `<div>` is where all your content goes.
 
 .footer {
     display: block;
-    overflow: hidden
-}
-
-.footer span {
-    float: right;
+    overflow: hidden;
+    padding-top: 15px;
+    padding-bottom: 30px;
     font: 1.25em 'Lato', sans-serif;
-    color: #ccc;
+    color: #ccc
 }
 
-.footer span a {
-    text-decoration: none;
+.footer .left {
+    float: left
+}
+
+.footer .right {
+    float: right
+}
+
+.footer a {
+    text-decoration: none
 }
 
 /*
