@@ -55,12 +55,24 @@ The content `<div>` is where all your content goes.
     margin-top: 0;
 }
 
+.page_header {
+    margin: 0;
+    text-align: center;
+    padding: 2.5em 2em 0;
+    border-bottom: 1px solid #eee;
+}
+
+.page_header h1 {
+    margin: 0.2em 0;
+    font: 4em 'Gloria Hallelujah', 'Indie Flower', Helvetica, Arial, sans-serif;
+}
+
 .footer {
     display: block;
     overflow: hidden;
     padding-top: 15px;
     padding-bottom: 30px;
-    font: 1.25em 'Lato', sans-serif;
+    font: 1.25em 'Indie Flower', 'Lato', sans-serif;
     color: #ccc
 }
 
