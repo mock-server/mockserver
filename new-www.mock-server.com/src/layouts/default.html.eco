@@ -1,19 +1,4 @@
 <!DOCTYPE html>
-<<<<<<< HEAD
-<html lang="en">
-<head>
-	<!-- Meta -->
-	<meta charset="utf-8" />
-
-	<!-- Mobile viewport optimized: h5bp.com/viewport -->
-	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
-
-	<!-- Use the .htaccess and remove these lines to avoid edge case issues. More info: h5bp.com/i/378 -->
-	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-
-	<!-- Our site title and description -->
-=======
 <html lang="en" xmlns:og="http://ogp.me/ns#" prefix="og: http://ogp.me/ns#">
 <head>
 	<!-- meta tags -->
@@ -28,13 +13,10 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
 
 	<!-- site title and description -->
->>>>>>> added first cut of layout and build process for new website with an improved structure
 	<title><%= @getPreparedTitle() %></title>
 	<meta name="description" content="<%= @getPreparedDescription() %>" />
 	<meta name="keywords" content="<%= @getPreparedKeywords() %>" />
 	<meta name="author" content="<%= @site.author or '' %>" />
-<<<<<<< HEAD
-=======
     <meta name="title" content="<%= @site.title %>">
     <meta property="og:locale" content="en_GB">
     <meta property="og:type" content="website">
@@ -44,7 +26,6 @@
     <meta property="og:title" content="<%= @site.title %>">
     <meta property="og:description" content="<%= @site.description %>">
     <meta property="article:author" content="<%= @site.author %>">
->>>>>>> added first cut of layout and build process for new website with an improved structure
 
 	<!-- Output DocPad produced meta elements -->
 	<%- @getBlock('meta').toHTML() %>
@@ -59,10 +40,6 @@
 	<![endif]-->
 
 	<!-- Styles -->
-<<<<<<< HEAD
-	<link href="//fonts.googleapis.com/css?family=Lato|Averia+Sans+Libre:300normal,300italic,400normal,400italic,700normal,700italic|Amatic+SC:400normal|Belleza:400normal|Belgrano:400normal|Open+Sans:400normal|Dosis:400normal|Codystar:400normal|Concert+One:400normal|Oswald:400normal|Economica:400normal|Duru+Sans:400normal&amp;subset=all" rel="stylesheet" type="text/css">
-=======
->>>>>>> added first cut of layout and build process for new website with an improved structure
 	<%- @getBlock('styles').add(@site.styles).toHTML() %>
 	
 </head>
