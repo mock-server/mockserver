@@ -1,0 +1,445 @@
+body {
+  color: #000;
+  min-width: 345px;
+}
+
+/*
+Add transition to containers so they can push in and out.
+*/
+#layout,
+#menu,
+.menu-link {
+  -webkit-transition: all 0.2s ease-out;
+  -moz-transition: all 0.2s ease-out;
+  -ms-transition: all 0.2s ease-out;
+  -o-transition: all 0.2s ease-out;
+  transition: all 0.2s ease-out;
+}
+
+/*
+This is the parent `<div>` that contains the menu and the content area.
+*/
+#layout {
+  padding-left: 200px; /* left col width "#menu" */
+  left: 0;
+}
+
+/*
+The content `<div>` is where all your content goes.
+*/
+.content {
+  margin: 0 auto;
+  padding: 0 2em;
+  max-width: 1350px;
+  line-height: 1.6em;
+}
+
+.header {
+  margin: 0;
+  color: #333;
+  text-align: center;
+  padding: 2.5em 2em 0;
+  border-bottom: 1px solid #eee;
+}
+
+.header h1 {
+  margin: 0.2em 0;
+  font-weight: 300;
+  font: 4em 'Averia Sans Libre', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+.header h2 {
+  font-weight: 300;
+  color: #ccc;
+  padding: 0;
+  margin-top: 0;
+}
+
+.page_header {
+  margin: 0;
+  text-align: center;
+  padding: 2.5em 2em 0;
+  border-bottom: 1px solid #eee;
+}
+
+.page_header h1 {
+  margin: 0.2em 0;
+  font: 4em 'Gloria Hallelujah', 'Indie Flower', Helvetica, Arial, sans-serif;
+}
+
+.footer {
+  display: block;
+  overflow: hidden;
+  padding-top: 15px;
+  padding-bottom: 30px;
+  font: 1.25em 'Indie Flower', 'Lato', sans-serif;
+  color: #ccc
+}
+
+.footer .left {
+  float: left
+}
+
+.footer .right {
+  float: right
+}
+
+.footer a {
+  text-decoration: none
+}
+
+/*
+The `#menu` `<div>` is the parent `<div>` that contains the `.pure-menu` that
+appears on the left side of the page.
+
+By using the combination of `position: fixed; top: 0; bottom:0;`, we can make
+the menu have 100% height and be fixed on the page as the rest of it scrolls.
+*/
+#menu {
+  margin-left: -200px; /* this should be "#menu" width */
+  width: 200px;
+  position: fixed;
+  top: 0;
+  left: 200px; /* this should be "#menu" width */
+  bottom: 0;
+  z-index: 1; /* so the menu or its navicon stays above all content */
+  background: #191818;
+  overflow-y: auto;
+  -webkit-overflow-scroll: touch; /* for smooth scrolling on mobile */
+}
+
+/*
+All anchors inside the menu should be styled like this.
+*/
+#menu li a {
+  color: #999;
+  border: none;
+  padding: 0.6em 0 0.6em 0.6em;
+}
+
+/*
+Remove all background/borders, since we are applying them to #menu.
+*/
+#menu .pure-menu,
+#menu .pure-menu ul {
+  border: none;
+  background: transparent;
+}
+
+/*
+Add that light border to separate items into groups.
+*/
+#menu .pure-menu ul,
+#menu .pure-menu .menu-item-divided {
+
+}
+
+/*
+Change color of the anchor links on hover/focus.
+*/
+#menu .pure-menu li a:hover,
+#menu .pure-menu li a:focus {
+  background: #ffffff;
+  color: #000;
+}
+
+/*
+This styles the selected menu item `<li>`.
+*/
+#menu .pure-menu-selected,
+#menu .pure-menu-heading {
+  padding-left: 5px;
+  border-bottom: 1px solid #333;
+}
+
+#menu div:not(:first-of-type) .pure-menu-selected,
+#menu div:not(:first-of-type) .pure-menu-heading {
+  border-top: 1px solid #333;
+}
+
+#menu div:first-of-type .pure-menu-selected:first-of-type,
+#menu div:first-of-type .pure-menu-heading:first-of-type {
+  margin-top: 5px;
+}
+
+#menu div:last-of-type li:last-of-type {
+  margin-bottom: 25px;
+}
+
+/*
+This styles a link within a selected menu item `<li>`.
+*/
+#menu .pure-menu-selected a {
+  color: #fff;
+}
+
+/*
+This styles the menu heading.
+*/
+#menu .pure-menu-heading {
+  font: 110% 'Averia Sans Libre', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  color: #ffffff;
+  padding: 10px 10px;
+  margin: 0;
+}
+
+/* -- Dynamic Button For Responsive Menu -------------------------------------*/
+
+/*
+The button to open/close the Menu is custom-made and not part of Pure. Here's
+how it works:
+*/
+
+/*
+`.menu-link` represents the responsive menu toggle that shows/hides on
+small screens.
+*/
+.menu-link {
+  display: none; /* show this only on small screens */
+  top: 0;
+  left: 200px; /* `#menu`'s width */
+  background: #000;
+  font-size: 10px; /* change this value to increase/decrease button size */
+  z-index: 10;
+  width: 2em;
+  height: auto;
+  padding: 2.2em 1.6em;
+}
+
+.menu-link:hover,
+.menu-link:focus {
+  background: #000;
+}
+
+.menu-link span {
+  position: relative;
+  display: block;
+}
+
+.menu-link span,
+.menu-link span:before,
+.menu-link span:after {
+  background-color: #fff;
+  width: 100%;
+  height: 0.2em;
+}
+
+.menu-link span:before,
+.menu-link span:after {
+  position: absolute;
+  margin-top: -0.6em;
+  content: " ";
+}
+
+.menu-link span:after {
+  margin-top: 0.6em;
+}
+
+a.anchor, a.anchor:hover, a.anchor:active, a.anchor:focus {
+  display: block;
+  margin-bottom: 10px;
+  text-decoration: none;
+  border: 0 none;
+  outline: 0;
+  cursor: default;
+}
+
+pre {
+  white-space: pre;
+  word-wrap: normal !important;
+}
+
+ul, ol {
+  margin-left: 1%;
+  padding-left: 1%;
+}
+
+.code {
+  display: block;
+  white-space: pre;
+  overflow: auto;
+  width: 95%;
+  margin: 1em auto;
+  padding: 1%;
+  background-color: #0f0101;
+  color: #F1F1F1;
+  -moz-border-radius: 8px;
+  -webkit-border-radius: 8px;
+  -o-border-radius: 8px;
+  -ms-border-radius: 8px;
+  -khtml-border-radius: 8px;
+  border-radius: 8px;
+  font-family: Menlo, Monaco, "Courier New", monospace;
+  font-size: 1em;
+  border: 1px solid #888;
+}
+
+.inline {
+  display: inline-block;
+  white-space: pre;
+  word-wrap: normal;
+  overflow: auto;
+  margin: 0;
+}
+
+.xml {
+  color: #C9C9C9;
+}
+
+span.keyword {
+  color: #5B93DA;
+}
+
+span.annotation {
+  color: #bdb76b;
+}
+
+span.numeric_literal {
+  color: #008dff;
+}
+
+span.final,
+span.constant {
+  color: #e28964;
+  font-style: italic;
+}
+
+span.string_literal,
+span.command_line_argument_switch {
+  color: #5BA382;
+}
+
+span.this_value {
+  color: #CF0808;
+}
+
+span.element {
+  color: #89bdff;
+  font-size: 0.9em;
+}
+
+span.attribute_name,
+span.comment,
+span.command_line_argument_placeholder {
+  color: #9c9c9c;
+  font-style: italic;
+  font-size: 0.9em;
+}
+
+span.comment a {
+  color: #6391c3;
+  text-decoration: none;
+}
+
+span.comment.bold {
+  color: gray;
+}
+
+span.javadoc_param_name {
+  color: #c5c5c5;
+}
+
+span.javadoc_param_annotation {
+  color: #9c9c9c;
+  text-decoration: underline;
+}
+
+span.element_value {
+  font-size: 1.15em;
+  color: #E2642F;
+}
+
+span.attribute_value {
+  color: blue;
+}
+
+.sub_title {
+  margin-top: 3em;
+  font-weight: bold;
+}
+
+/* -- Responsive Styles (Media Queries) ------------------------------------- */
+
+/*
+Hides the menu at `767px`, but modify this based on your app's needs.
+*/
+@media (max-width: 767px) {
+
+  html {
+    font-size: 75%;
+  }
+
+  .header {
+    /*text-align: left;*/
+  }
+
+  .header h1 {
+    font-size: 2.5em;
+  }
+
+  .header h2 {
+    font-size: 1.25em;
+  }
+
+  /*
+  Navigation Push styles.
+  */
+  #layout {
+    position: relative;
+    padding-left: 0;
+  }
+
+  #layout.active {
+    position: relative;
+    left: 200px;
+  }
+
+  #layout.active #menu {
+    left: 200px;
+    width: 200px;
+  }
+
+  #menu {
+    left: 0;
+  }
+
+  .menu-link {
+    position: fixed;
+    left: 0;
+    display: block; /* show the button on small screens */
+  }
+
+  #layout.active .menu-link {
+    left: 200px;
+  }
+
+  a.anchor, a.anchor:hover, a.anchor:active, a.anchor:focus {
+    margin-bottom: 35px;
+  }
+
+  ul, ol {
+    margin-left: 2%;
+    padding-left: 2%;
+  }
+
+  .content {
+    padding: 0 1.5%
+  }
+
+  .code {
+    padding: 1%;
+    font-size: 0.65em;
+  }
+}
+
+@media (max-width: 568px) {
+
+  ul, ol {
+    margin-left: 4%;
+    padding-left: 4%;
+  }
+
+  .code {
+    padding: 2%;
+  }
+}
