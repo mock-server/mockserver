@@ -1,0 +1,80 @@
+---
+title: Expectations Overview - JavaScript
+layout: page
+pageOrder: 3.2
+section: 'Mock Server'
+subsection: false
+---
+
+<p>To setup an expectation that responds to a request:</p>
+
+<pre><code class="code"><span class="keyword">var</span> xmlHttpRequest = <span class="keyword">new</span> XMLHttpRequest();
+xmlHttpRequest.open(<span class="string_literal">"PUT"</span>, <span class="string_literal">"http://localhost:8080/expectation"</span>, <span class="keyword">false</span>);
+xmlHttpRequest.setRequestHeader(<span class="string_literal">"Content-Type"</span>, <span class="string_literal">"application/json; charset=utf-8"</span>);
+xmlHttpRequest.send(JSON.stringify({
+    <span class="string_literal">"httpRequest"</span>: {
+        <span class="string_literal">"method"</span>: <span class="string_literal">"POST"</span>,
+        <span class="string_literal">"path"</span>: <span class="string_literal">"/login"</span>,
+        <span class="string_literal">"queryStringParameters"</span>: [
+            {
+                <span class="string_literal">"name"</span>: <span class="string_literal">"returnUrl"</span>,
+                <span class="string_literal">"values"</span>: [<span class="string_literal">"/account"</span>]
+            }
+        ],
+        <span class="string_literal">"cookies"</span>: [
+            {
+                <span class="string_literal">"name"</span>: <span class="string_literal">"sessionId"</span>,
+                <span class="string_literal">"values"</span>: [<span class="string_literal">"2By8LOhBmaW5nZXJwcmludCIlMDAzMW"</span>]
+            }
+        ],
+        <span class="string_literal">"body"</span>: {
+            <span class="string_literal">"type"</span>: <span class="string_literal">"JSON"</span>,
+            <span class="string_literal">"value"</span>: JSON.stringify({ username: <span class="string_literal">"foo"</span>, password: <span class="string_literal">"bar"</span> })
+        }
+    },
+    <span class="string_literal">"httpResponse"</span>: {
+        <span class="string_literal">"statusCode"</span>: <span class="numeric_literal">401</span>,
+        <span class="string_literal">"headers"</span>: [
+            {
+                <span class="string_literal">"name"</span>: <span class="string_literal">"Content-Type"</span>,
+                <span class="string_literal">"values"</span>: [<span class="string_literal">"application/json; charset=utf-8"</span>]
+            },
+            {
+                <span class="string_literal">"name"</span>: <span class="string_literal">"Cache-Control"</span>,
+                <span class="string_literal">"values"</span>: [<span class="string_literal">"public, max-age=86400"</span>]
+            }
+        ],
+        <span class="string_literal">"body"</span>: JSON.stringify({ message: <span class="string_literal">"incorrect username and password combination"</span> }),
+        <span class="string_literal">"delay"</span>: {
+            <span class="string_literal">"timeUnit"</span>: <span class="string_literal">"SECONDS"</span>,
+            <span class="string_literal">"value"</span>: <span class="numeric_literal">1</span>
+        }
+    },
+    <span class="string_literal">"times"</span>: {
+        <span class="string_literal">"remainingTimes"</span>: <span class="numeric_literal">1</span>,
+        <span class="string_literal">"unlimited"</span>: <span class="keyword">false</span>
+    }
+}));
+</code></pre>
+
+<p>To setup an expectation that forwards to a request:</p>
+
+<pre><code class="code"><span class="keyword">var</span> xmlHttpRequest = <span class="keyword">new</span> XMLHttpRequest();
+xmlHttpRequest.open(<span class="string_literal">"PUT"</span>, <span class="string_literal">"http://localhost:8080/expectation"</span>, <span class="keyword">false</span>);
+xmlHttpRequest.setRequestHeader(<span class="string_literal">"Content-Type"</span>, <span class="string_literal">"application/json; charset=utf-8"</span>);
+xmlHttpRequest.send(JSON.stringify({
+    <span class="string_literal">"httpRequest"</span>: {
+        <span class="string_literal">"method"</span>: <span class="string_literal">"GET"</span>,
+        <span class="string_literal">"path"</span>: <span class="string_literal">"/index.html"</span>
+    },
+    <span class="string_literal">"httpForward"</span>: {
+        <span class="string_literal">"host"</span>: <span class="string_literal">"www.mock-server.com"</span>,
+        <span class="string_literal">"port"</span>: <span class="numeric_literal">80</span>,
+        <span class="string_literal">"scheme"</span>: <span class="string_literal">"HTTP"</span>
+    },
+    <span class="string_literal">"times"</span>: {
+        <span class="string_literal">"remainingTimes"</span>: <span class="numeric_literal">1</span>,
+        <span class="string_literal">"unlimited"</span>: <span class="keyword">false</span>
+    }
+}));
+</code></pre>

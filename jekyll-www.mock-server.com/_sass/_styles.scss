@@ -4,19 +4,6 @@ body {
 }
 
 /*
-Add transition to containers so they can push in and out.
-*/
-#layout,
-#menu,
-.menu-link {
-  -webkit-transition: all 0.2s ease-out;
-  -moz-transition: all 0.2s ease-out;
-  -ms-transition: all 0.2s ease-out;
-  -o-transition: all 0.2s ease-out;
-  transition: all 0.2s ease-out;
-}
-
-/*
 This is the parent `<div>` that contains the menu and the content area.
 */
 #layout {
@@ -70,7 +57,7 @@ The content `<div>` is where all your content goes.
 .footer {
   display: block;
   overflow: hidden;
-  padding-top: 15px;
+  padding-top: 55px;
   padding-bottom: 30px;
   font: 1.25em 'Indie Flower', 'Lato', sans-serif;
   color: #ccc
@@ -139,8 +126,28 @@ Change color of the anchor links on hover/focus.
 */
 #menu .pure-menu li a:hover,
 #menu .pure-menu li a:focus {
-  background: #ffffff;
+  background: #fff;
   color: #000;
+}
+
+#menu #siteMapLink a {
+  padding: 0;
+  color: #fff;
+}
+
+/*
+Change color of the anchor links on hover/focus.
+*/
+#menu #siteMapLink:hover,
+#menu #siteMapLink:focus {
+  background: #999;
+}
+
+#menu #siteMapLink:hover a,
+#menu #siteMapLink:focus a {
+  background: #999;
+  color: #111;
+  font-weight: 900;
 }
 
 /*
@@ -186,15 +193,9 @@ This styles the menu heading.
 /* -- Dynamic Button For Responsive Menu -------------------------------------*/
 
 /*
-The button to open/close the Menu is custom-made and not part of Pure. Here's
-how it works:
+`.menu-link` represents the responsive menu toggle that shows/hides on small screens.
 */
-
-/*
-`.menu-link` represents the responsive menu toggle that shows/hides on
-small screens.
-*/
-.menu-link {
+#menuLink {
   display: none; /* show this only on small screens */
   top: 0;
   left: 200px; /* `#menu`'s width */
@@ -206,33 +207,38 @@ small screens.
   padding: 2.2em 1.6em;
 }
 
-.menu-link:hover,
-.menu-link:focus {
+#menuLink:hover,
+#menuLink:focus {
   background: #000;
 }
 
-.menu-link span {
+#menuLink span {
   position: relative;
   display: block;
 }
 
-.menu-link span,
-.menu-link span:before,
-.menu-link span:after {
+#menuLink span,
+#menuLink span:before,
+#menuLink span:after {
   background-color: #fff;
   width: 100%;
   height: 0.2em;
 }
 
-.menu-link span:before,
-.menu-link span:after {
+#menuLink span:before,
+#menuLink span:after {
   position: absolute;
   margin-top: -0.6em;
   content: " ";
 }
 
-.menu-link span:after {
+#menuLink span:after {
   margin-top: 0.6em;
+}
+
+h2 {
+  margin: .83em 0;
+  font: 2em 'Gloria Hallelujah', 'Indie Flower', Helvetica, Arial, sans-serif;
 }
 
 a.anchor, a.anchor:hover, a.anchor:active, a.anchor:focus {
@@ -358,12 +364,16 @@ span.attribute_value {
   font-weight: bold;
 }
 
+.sitemap .subsection_subpage {
+  padding-left: 20px;
+}
+
 /* -- Responsive Styles (Media Queries) ------------------------------------- */
 
 /*
 Hides the menu at `767px`, but modify this based on your app's needs.
 */
-@media (max-width: 767px) {
+@media (max-width: 765px) {
 
   html {
     font-size: 75%;
@@ -379,6 +389,17 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 
   .header h2 {
     font-size: 1.25em;
+  }
+
+  /* Add transition to containers so they can push in and out. */
+  #layout,
+  #menu,
+  #menuLink {
+    -webkit-transition: all 0.25s ease-in-out;
+    -moz-transition: all 0.25s ease-in-out;
+    -ms-transition: all 0.25s ease-in-out;
+    -o-transition: all 0.25s ease-in-out;
+    transition: all 0.25s ease-in-out;
   }
 
   /*
@@ -403,13 +424,18 @@ Hides the menu at `767px`, but modify this based on your app's needs.
     left: 0;
   }
 
-  .menu-link {
-    position: fixed;
+  #menuLink {
+    float: left;
     left: 0;
     display: block; /* show the button on small screens */
   }
 
-  #layout.active .menu-link {
+  #menuLink {
+    text-decoration: none;
+    outline: none;
+  }
+
+  #layout.active #menuLink {
     left: 200px;
   }
 

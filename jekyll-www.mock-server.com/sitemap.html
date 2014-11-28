@@ -1,0 +1,44 @@
+---
+title: Sitemap
+layout: page
+---
+
+<nav class="sitemap">
+	{% assign url = page.url|remove:'index.html' %} {% assign sorted_pages = site.pages | sort:"pageOrder" %}
+	<ul>
+		<li><span>What?</span>
+			<ul>
+				<li><a href="/#what-is-mockserver">What is MockServer</a></li>
+				<li><a href="/#why-use-mockserver">Why use MockServer</a></li>
+			</ul>
+		</li>
+		<li><span>Mock Server - How?</span>
+			<ul>
+				{% for page in sorted_pages %} {% if page.section == 'Mock Server'%}
+				<li typeof="sioc:Page" about="{{ page.url | prepend: site.baseurl }}" class="{% if page.subsection != true %}subsection_subpage{% endif %}">
+					<a href="{{ page.url | prepend: site.baseurl }}" property="dc:title">{{ page.title }}</a>
+				</li>
+				{% endif %} {% endfor %}
+			</ul>
+		</li>
+		<li><span>Proxy - How?</span>
+			<ul>
+				{% for page in sorted_pages %} {% if page.section == 'Proxy'%}
+				<li typeof="sioc:Page" about="{{ page.url | prepend: site.baseurl }}" class="{% if page.subsection != true %}subsection_subpage{% endif %}">
+					<a href="{{ page.url | prepend: site.baseurl }}" property="dc:title">{{ page.title }}</a>
+				</li>
+				{% endif %} {% endfor %}
+			</ul>
+		</li>
+		<li><span>Where?</span>
+			<ul>
+				{% for page in sorted_pages %} {% if page.section == 'Where'%}
+				<li typeof="sioc:Page" about="{{ page.url | prepend: site.baseurl }}" class="{% if page.subsection != true %}subsection_subpage{% endif %}">
+					<a href="{{ page.url | prepend: site.baseurl }}" property="dc:title">{{ page.title }}</a>
+				</li>
+				{% endif %} {% endfor %}
+			</ul>
+		</li>
+	</ul>
+
+</nav>

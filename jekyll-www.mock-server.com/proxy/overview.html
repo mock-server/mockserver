@@ -3,4 +3,343 @@ title: Overview
 layout: page
 pageOrder: 1
 section: 'Proxy'
+subsection: true
 ---
+
+<p>MockServer also provides an HTTP / HTTPS proxy that can be used to record requests / responses.</p>
+
+<p>Once requests / responses have been recorded:</p>
+
+<ul>
+	<li>They can be queried pragmatically to confirm what requests have been sent and what responses have been received.
+		<ul>
+			<li>This supports test assertions that confirm what requests the system-under-test has been sending during a test.</li>
+		</ul>
+	</li>
+	<li>They can be output in JSON format to log what request the system under has sent and what responses it received.
+		<ul>
+			<li>This is useful for analysing an existing system prior to writing automated tests.</li>
+			<li>This is also useful to simplify the creation of test setup code as the JSON output is in MockServer expectation format.</li>
+		</ul>
+	</li>
+	<li>They can be output in human readable Java code format that can be pasted directly into a test setup method.
+		<ul>
+			<li>This is useful to simplify the creation of expectations in test setup methods as the code can be easily pasted directly into a test setup method and then modified as appropriate for the needs of the test scenario.</li>
+		</ul>
+	</li>
+</ul>
+
+<p>For example to use the proxy to verify a request has been sent:</p>
+
+<pre><code class="code"><span class="keyword">new</span> ProxyClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">9999</span>)
+        .verify(
+                request()
+                        .withMethod(<span class="string_literal">"POST"</span>)
+                        .withPath(<span class="string_literal">"/login"</span>)
+                        .withBody(<span class="string_literal">"{username: 'foo', password: 'bar'}"</span>),
+                VerificationTimes.exactly(<span class="numeric_literal">1</span>)
+        );</code></pre>
+
+<p>For example to use the proxy to print recorded requests and response to the log as JSON:</p>
+
+<pre><code class="code"><span class="keyword">new</span> ProxyClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">9999</span>)
+        .dumpToLogAsJSON(
+                request()
+                        .withPath(<span class="string_literal">"/login"</span>)
+        );</code></pre>
+
+<p>This would result in entries in the <strong>mockserver_request.log</strong> file of the following format:</p>
+
+<pre><code class="code">2014-01-11 13:08:54,225 {
+    <span class="string_literal">"httpRequest"</span>: {
+        <span class="string_literal">"method"</span>: <span class="string_literal">"POST"</span>,
+        <span class="string_literal">"path"</span>: <span class="string_literal">"/login"</span>,
+        <span class="string_literal">"body"</span>: {
+            <span class="string_literal">"type"</span>: <span class="string_literal">"STRING"</span>,
+            <span class="string_literal">"value"</span>: <span class="string_literal">"{username: 'foo', password: 'bar'}"</span>,
+        },
+        <span class="string_literal">"cookies"</span>: [
+            {
+                <span class="string_literal">"name"</span>: <span class="string_literal">"sid"</span>,
+                <span class="string_literal">"values"</span>: [ <span class="string_literal">"05F1A3D2F2143C49727"</span> ]
+            }
+        ],
+        <span class="string_literal">"headers"</span>: [
+            {
+                <span class="string_literal">"name"</span>: <span class="string_literal">"Accept-Language"</span>,
+                <span class="string_literal">"values"</span>: [ <span class="string_literal">"en-US,en;q=0.8,fa;q=0.6"</span> ]
+            },
+            {
+                <span class="string_literal">"name"</span>: <span class="string_literal">"Cookie"</span>,
+                <span class="string_literal">"values"</span>: [ <span class="string_literal">"sid=05F1A3D2F2143C49727"</span> ]
+            },
+            {
+                <span class="string_literal">"name"</span>: <span class="string_literal">"Host"</span>,
+                <span class="string_literal">"values"</span>: [ <span class="string_literal">"localhost:2021"</span> ]
+            },
+            {
+                <span class="string_literal">"name"</span>: <span class="string_literal">"Content-Length"</span>,
+                <span class="string_literal">"values"</span>: [ <span class="string_literal">"34"</span> ]
+            },
+            {
+                <span class="string_literal">"name"</span>: <span class="string_literal">"Accept-Encoding"</span>,
+                <span class="string_literal">"values"</span>: [ <span class="string_literal">"gzip,deflate,sdch"</span> ]
+            },
+            {
+                <span class="string_literal">"name"</span>: <span class="string_literal">"User-Agent"</span>,
+                <span class="string_literal">"values"</span>: [ <span class="string_literal">"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.63 Safari/537.36"</span> ]
+            },
+            {
+                <span class="string_literal">"name"</span>: <span class="string_literal">"Accept"</span>,
+                <span class="string_literal">"values"</span>: [ <span class="string_literal">"*/*"</span> ]
+            },
+            {
+                <span class="string_literal">"name"</span>: <span class="string_literal">"Content-Type"</span>,
+                <span class="string_literal">"values"</span>: [ <span class="string_literal">"text/plain"</span> ]
+            }
+        ]
+    },
+    <span class="string_literal">"httpResponse"</span>: {
+        <span class="string_literal">"statusCode"</span>: <span class="numeric_literal">200</span>,
+        <span class="string_literal">"body"</span>: <span class="string_literal">"{ message: 'success' }"</span>,
+        <span class="string_literal">"headers"</span>: [
+            {
+                <span class="string_literal">"name"</span>: <span class="string_literal">"Content-Type"</span>,
+                <span class="string_literal">"values"</span>: [ <span class="string_literal">"application/json; charset=utf-8"</span> ]
+            },
+            {
+                <span class="string_literal">"name"</span>: <span class="string_literal">"Cache-Control"</span>,
+                <span class="string_literal">"values"</span>: [ <span class="string_literal">"no-cache, no-store"</span> ]
+            }
+        ]
+    },
+    <span class="string_literal">"times"</span>: {
+        <span class="string_literal">"remainingTimes"</span>: <span class="numeric_literal">1</span>,
+        <span class="string_literal">"unlimited"</span>: <span class="keyword">false</span>
+    }
+}</code></pre>
+
+<h2>Requirements</h2>
+
+<ul>
+	<li><strong>Java 6+</strong>&nbsp;&nbsp;&nbsp;to use the Netty version, the Maven Plugin and MockServer WAR and proxy WAR</li>
+	<li><strong>Java 7+</strong>&nbsp;&nbsp;&nbsp;to use the Vert.X module or the Embedded Jetty version as both Jetty 9 and Vert.X in turn require Java 7 (<strong>Note:</strong> all features provided in the Embedded Jetty version are also available using the Netty version)</li>
+</ul>
+
+<p><strong>Java Proxy Client</strong></p>
+
+<p>To simplest way to interact with proxy from Java is to use <strong>org.mockserver.client.proxy.ProxyClient</strong> which provides the following API:</p>
+
+<pre><code class="code"><span class="keyword">public class</span> ProxyClient {
+
+    <span class="comment">/**
+     * Start the client communicating to the proxy at the specified host and port
+     * for example:
+     *   ProxyClient mockServerClient = <span class="keyword">new</span> ProxyClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1080</span>);
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">host</span> the host for the proxy to communicate with
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">port</span> the port for the proxy to communicate with
+     */</span>
+    <span class="keyword">public</span> ProxyClient(String host, <span class="keyword">int</span> port);
+
+    <span class="comment">/**
+     * Pretty-print the json for all requests / responses as Expectations to the log.
+     * They are printed into a dedicated log called mockserver_request.log
+     */</span>
+    <span class="keyword">public</span> ProxyClient dumpToLogAsJSON();
+
+    <span class="comment">/**
+     * Pretty-print the json for matching requests and their responses as Expectations to the log.
+     * They are printed into a dedicated log called mockserver_request.log
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpRequest</span> the http request that is matched against when deciding what to log if null all requests are logged
+     */</span>
+    <span class="keyword">public</span> ProxyClient dumpToLogAsJSON(HttpRequest httpRequest);
+
+    <span class="comment">/**
+     * Output Java code for creating all requests / responses as Expectations to the log.
+     * They are printed into a dedicated log called mockserver_request.log
+     */</span>
+    <span class="keyword">public</span> ProxyClient dumpToLogAsJava();
+
+    <span class="comment">/**
+     * Output Java code for creating matching requests and their responses as Expectations to the log.
+     * They are printed into a dedicated log called mockserver_request.log
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpRequest</span> the http request that is matched against when deciding what to log if null all requests are logged
+     */</span>
+    <span class="keyword">public</span> ProxyClient dumpToLogAsJava(HttpRequest httpRequest);
+
+    <span class="comment">/**
+     * Reset the proxy by clearing recorded requests
+     */</span>
+    <span class="keyword">public</span> ProxyClient reset();
+
+    <span class="comment">/**
+     * Stop the proxy gracefully (only support for Netty and Vert.X versions, not supported for WAR version)
+     */</span>
+    <span class="keyword">public</span> ProxyClient stop();
+
+    <span class="comment">/**
+     * Clear all recorded requests that match the httpRequest parameter
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpRequest</span> the http request that is matched against when deciding whether to clear recorded requests
+     */</span>
+    <span class="keyword">public</span> ProxyClient clear(HttpRequest httpRequest);
+
+    <span class="comment">/**
+     * Verify a request has been sent for example:
+     *
+     *   <span class="this_value">mockServerClient</span>
+     *           .verify(
+     *                   request()
+     *                           .withPath(<span class="string_literal">"/some_path"</span>)
+     *                           .withBody(<span class="string_literal">"some_request_body"</span>)
+     *           );
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpRequest</span> the http request that must be matched for this verification to pass
+     * @throws AssertionError if the request has not been found
+     */</span>
+    <span class="keyword">public</span> ProxyClient verify(HttpRequest httpRequest); <span class="keyword">throws</span> AssertionError
+
+    <span class="comment">/**
+     * Verify a request has been sent for example:
+     *
+     *   <span class="this_value">mockServerClient</span>
+     *           .verify(
+     *                   request()
+     *                           .withPath(<span class="string_literal">"/some_path"</span>)
+     *                           .withBody(<span class="string_literal">"some_request_body"</span>),
+     *                   VerificationTimes.exactly(<span class="numeric_literal">3</span>)
+     *           );
+     *
+     * Times supports multiple static factory methods:
+     *
+     *   once()      - verify the request was only received once
+     *   exactly(<span class="numeric_literal">n</span>)  - verify the request was only received exactly <span class="numeric_literal">n</span> times
+     *   atLeast(<span class="numeric_literal">n</span>)  - verify the request was only received at least <span class="numeric_literal">n</span> times
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpRequest</span> the http request that must be matched for this verification to pass
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">times</span>       the number of times this request must be matched
+     * @throws AssertionError if the request has not been found
+     */</span>
+    <span class="keyword">public</span> ProxyClient verify(HttpRequest httpRequest, Times times); <span class="keyword">throws</span> AssertionError
+
+    <span class="comment">/**
+     * Retrieve the recorded requests that match the httpRequest parameter as expectations, use null for the parameter to retrieve all requests
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpRequest</span> the http request that is matched against when deciding whether to return each expectation, use null for the parameter to retrieve for all requests
+     * @return an array of all expectations that have been recorded by the proxy
+     */</span>
+    <span class="keyword">public</span> Expectation[] retrieveAsExpectations(HttpRequest httpRequest);
+
+    <span class="comment">/**
+     * Retrieve the recorded requests that match the httpRequest parameter as a JSON array, use null for the parameter to retrieve all requests
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpRequest</span> the http request that is matched against when deciding whether to return each expectation, use null for the parameter to retrieve for all requests
+     * @return a JSON array of all expectations that have been recorded by the proxy
+     */</span>
+    <span class="keyword">public</span> String retrieveAsJSON(HttpRequest httpRequest);
+}</code></pre>
+
+<a name="javascript-proxy-client" class="anchor" href="#javascript-proxy-client">&nbsp;</a>
+
+<p><strong>JavaScript Proxy Client</strong></p>
+
+<p>To interact with the proxy from JavaScript it is possible to use either:</p>
+
+<ul>
+	<li>a browser based API file <a href="https://rawgit.com/jamesdbloom/mockserver/master/mockserver-javascript-client/src/main/javascript/proxyClient.js"><strong>proxyClient.js</strong></a></li>
+	<li>a Node.js npm module <a href="https://www.npmjs.org/package/mockserver-client"><strong>mockserver-client</strong></a><br/><a href="https://www.npmjs.org/package/mockserver-client"><img src="https://nodei.co/npm/mockserver-client.png?downloads=true&downloadRank=true&stars=true" alt="mockserver-client-node"/></a></li>
+</ul>
+
+<p>To include this file is an HTML page use one of the following script tag to load the file from <a href="http://www.maxcdn.com/">MaxCDN</a>:</p>
+
+<pre><code class="code">&lt;<span class="annotation">script</span> <span class="keyword">type</span>=<span class="string_literal">"text/javascript"</span> <span class="keyword">src</span>=<span class="string_literal">"https://cdn.rawgit.com/jamesdbloom/mockserver/cd04edaf0ad132e3639af355d2ab4887f85e98ae/mockserver-client-javascript/src/main/javascript/proxyClient.js"</span>&gt;&lt;/<span class="annotation">script</span>&gt;</code></pre>
+
+<p>To use the Node.js module add the following code to your node project:</p>
+
+<pre><code class="code"><span class="keyword">var</span> mockServer = require(<span class="string_literal">'mockserver-client'</span>),
+    proxyClient = mockServer.proxyClient;</code></pre>
+
+<p>Both versions of <strong>proxyClient</strong> provide the same API as follows:</p>
+
+<pre><code class="code"><span class="keyword">var</span> proxyClient = function (host, port) {
+    <span class="string_literal">"use strict"</span>;
+
+    <span class="comment">/**
+     * Retrieve the recorded requests that match the httpRequest parameter as a JSON array, use null for the parameter to retrieve all requests
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">request</span> the http request that is matched against when deciding whether to return each expectation, use null for the parameter to retrieve for all requests
+     * <span class="javadoc_param_annotation">@param</span> a JSON array of all expectations that have been recorded by the proxy
+     */</span>
+    <span class="keyword">var</span> retrieve = function (request),
+
+    <span class="comment">/**
+     * Verify a request has been sent for example:
+     *
+     *   client.verify({
+     *       <span class="string_literal">'httpRequest'</span>: {
+     *           <span class="string_literal">'method'</span>: <span class="string_literal">'POST'</span>,
+     *           <span class="string_literal">'path'</span>: <span class="string_literal">'/somePath'</span>
+     *       }
+     *   }, 2, true);
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">request</span> the http request that must be matched for this verification to pass
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">count</span>   the number of times this request must be matched
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">exact</span>   true if the count is matched as "equal to" or false if the count is matched as "greater than or equal to"
+     * <span class="javadoc_param_annotation">@throws</span> an error is the verify fails detailing which requests have been sent
+     */</span>
+    verify = function (request, count, exact),
+
+    <span class="comment">/**
+     * Verify a sequence of requests has been sent for example:
+     *
+     *   client.verifySequence(
+     *       {
+     *          <span class="string_literal">'method'</span>: <span class="string_literal">'POST'</span>,
+     *          <span class="string_literal">'path'</span>: <span class="string_literal">'/first_request'</span>
+     *       },
+     *       {
+     *          <span class="string_literal">'method'</span>: <span class="string_literal">'POST'</span>,
+     *          <span class="string_literal">'path'</span>: <span class="string_literal">'/second_request'</span>
+     *       },
+     *       {
+     *          <span class="string_literal">'method'</span>: <span class="string_literal">'POST'</span>,
+     *          <span class="string_literal">'path'</span>: <span class="string_literal">'/third_request'</span>
+     *       }
+     *   );
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">arguments</span> the list of http requests that must be matched for this verification to pass
+     * <span class="javadoc_param_annotation">@throws</span> an error is the verify fails detailing which requests have been sent
+     */</span>
+    verifySequence = function (),
+
+    <span class="comment">/**
+     * Reset the proxy by clearing all recorded requests
+     */</span>
+    reset = function (),
+
+    <span class="comment">/**
+     * Clear all recorded requests that match the specified path
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">path</span> the path to decide which expectations to cleared
+     */</span>
+    clear = function (path),
+
+    <span class="comment">/**
+     * Pretty-print the json for all requests / responses that match the specified path
+     * as Expectations to the log. They are printed into a dedicated log called mockserver_request.log
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">path</span> the path to decide which expectations to dump to the log
+     */</span>
+    dumpToLogs = function (path);
+
+    <span class="keyword">return</span> {
+        retrieve: retrieve,
+        verify: verify,
+        reset: reset,
+        clear: clear,
+        dumpToLogs: dumpToLogs
+    };
+};</code></pre>

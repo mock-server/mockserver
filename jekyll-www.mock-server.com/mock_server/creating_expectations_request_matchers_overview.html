@@ -1,0 +1,27 @@
+---
+title: Request Matchers Overview
+layout: page
+pageOrder: 3.3
+section: 'Mock Server'
+subsection: false
+---
+
+<p>To specify when a response should be mocked a request matcher must be provided in each expectation.</p>
+
+<p>When an incoming request matches the request matcher in an expectation MockServer will return the response for that expectation.</p>
+
+<p>Requests can be matched on:</p>
+
+<ul>
+	<li><strong>path</strong> - regex or plain text</li>
+	<li><strong>query string</strong> - regex or plain text</li>
+	<li><strong>headers</strong> - regex or plain text</li>
+	<li><strong>cookies</strong> - regex or plain text</li>
+	<li><strong>body</strong> - XPath, json, regex, plain text (exact match), or body parameters</li>
+</ul>
+
+<p>The body can be matched using plain text, a json expression, an XPath expression or a regular expression, see <a href="http://saxon.sourceforge.net/saxon6.5.3/expressions.html">XPath Expression Syntax</a> for supported XPath syntax.</p>
+
+<p>A json expressions is a valid json object. When a json expression is matched against a request body only fields in the json expression are matched, any extra fields in the request body not specified in the json expression will be ignored, in addition the order of fields in the body will be ignored.</p>
+
+<p>All other matching can be done using plain text or a regular expression, see <a href="http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html">Pattern (Java Platform SE 6)</a> for supported regular expression syntax.</p>

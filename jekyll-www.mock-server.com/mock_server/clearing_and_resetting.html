@@ -3,4 +3,39 @@ title: Clearing & Resetting
 layout: page
 pageOrder: 5
 section: 'Mock Server'
+subsection: true
 ---
+
+<p>To clear <strong>all expectations</strong> (without restarting) use <strong>reset</strong> as follows:</p>
+
+<p><strong>Java</strong></p>
+
+<pre><code class="code">mockServerClient.reset()</code></pre>
+
+<p><strong>JavaScript</strong></p>
+
+<pre><code class="code"><span class="keyword">var</span> xmlHttpRequest = <span class="keyword">new</span> XMLHttpRequest();
+xmlHttpRequest.open(<span class="string_literal">"PUT"</span>, <span class="string_literal">"http://localhost:9999/reset"</span>, <span class="keyword">false</span>);
+xmlHttpRequest.send();</code></pre>
+
+<p>To clear <strong>only specific</strong> expectations use <strong>clear</strong> as follows:</p>
+
+<p><strong>Java</strong></p>
+
+<pre><code class="code">mockServerClient.clear(
+        request()
+                .withMethod(<span class="string_literal">"POST"</span>)
+                .withPath(<span class="string_literal">"/login"</span>)
+);</code></pre>
+
+<p><strong>JavaScript</strong></p>
+
+<pre><code class="code"><span class="keyword">var</span> xmlHttpRequest = <span class="keyword">new</span> XMLHttpRequest();
+xmlHttpRequest.open(<span class="string_literal">"PUT"</span>, <span class="string_literal">"http://localhost:9999/clear"</span>, <span class="keyword">false</span>);
+xmlHttpRequest.setRequestHeader(<span class="string_literal">"Content-Type"</span>, <span class="string_literal">"application/json; charset=utf-8"</span>);
+xmlHttpRequest.send(JSON.stringify({
+    <span class="string_literal">"method"</span>: <span class="string_literal">"POST"</span>,
+    <span class="string_literal">"path"</span>: <span class="string_literal">"/login"</span>,
+}));</code></pre>
+
+<p>The example above clears all expectations that will match incoming requests with a <strong>POST</strong> method on the path <strong>/login</strong>.</p>

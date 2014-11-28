@@ -3,4 +3,40 @@ title: Debugging Issues
 layout: page
 pageOrder: 7
 section: 'Mock Server'
+subsection: true
 ---
+
+<p>To simplify debugging MockServer expectations can be dumped to the log at WARN level using pretty-printed JSON.</p>
+
+<p>To dump <strong>all expectations</strong> to the log use <strong>dumpToLog</strong> as follows:</p>
+
+<p><strong>Java</strong></p>
+
+<pre><code class="code">mockServerClient.dumpToLog()</code></pre>
+
+<p><strong>JavaScript</strong></p>
+
+<pre><code class="code"><span class="keyword">var</span> xmlHttpRequest = <span class="keyword">new</span> XMLHttpRequest();
+xmlHttpRequest.open(<span class="string_literal">"PUT"</span>, <span class="string_literal">"http://localhost:9999/dumpToLog"</span>, <span class="keyword">false</span>);
+xmlHttpRequest.send();</code></pre>
+
+<p>To dump <strong>only specific</strong> expectations to the log use <strong>dumpToLog</strong> as follows:</p>
+
+<p><strong>Java</strong></p>
+
+<pre><code class="code">mockServerClient.dumpToLog(
+        request()
+                .withMethod(<span class="string_literal">"POST"</span>)
+                .withPath(<span class="string_literal">"/login"</span>)
+);</code></pre>
+
+<p><strong>JavaScript</strong></p>
+
+<pre><code class="code"><span class="keyword">var</span> xmlHttpRequest = <span class="keyword">new</span> XMLHttpRequest();
+xmlHttpRequest.open(<span class="string_literal">"PUT"</span>, <span class="string_literal">"http://localhost:9999/dumpToLog"</span>, <span class="keyword">false</span>);
+xmlHttpRequest.send(JSON.stringify({
+    <span class="string_literal">"method"</span>: <span class="string_literal">"POST"</span>,
+    <span class="string_literal">"path"</span>: <span class="string_literal">"/login"</span>,
+}));</code></pre>
+
+<p>The example above dumps all expectations that match incoming requests with a <strong>POST</strong> method on the path <strong>/login</strong>.</p>

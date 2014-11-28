@@ -3,4 +3,405 @@ title: Creating Expectations
 layout: page
 pageOrder: 3
 section: 'Mock Server'
+subsection: true
 ---
+
+<p>To create an expectation you need to define:</p>
+<ul>
+	<li>the <a href="#request-matchers">request matcher</a> and</li>
+	<li>what <a href="#mock-response">response</a> should be returned or</li>
+	<li>what <a href="#callback">callback</a> should be executed or</li>
+	<li>where the request should be <a href="#mock-forward">forwarded</a>.</li>
+</ul>
+
+<p>MockServer will play expectations in the exact order they are setup. For example, if an expectation <span class="annotation">A</span> is setup to response (or forward) <strong>3</strong> times then expectation <span class="annotation">B</span> is setup to response (or forward)
+	<strong>2</strong> times for the same request MockServer will response (or forward) in the following order <span class="annotation">A</span>, <span class="annotation">A</span>, <span class="annotation">A</span>, <span class="annotation">B</span>, <span class="annotation">B</span>.</p>
+
+<p><strong>Java</strong></p>
+
+{% include_relative creating_expectations_java_overview.html %}
+
+<p><strong>JavaScript</strong></p>
+
+{% include_relative creating_expectations_javascript_overview.html %}
+
+<h3>Request Matcher</h3>
+
+{% include_relative creating_expectations_request_matchers_overview.html %}
+
+<p><strong>Java</strong></p>
+
+{% include_relative creating_expectations_java_request_matchers.html %}
+
+<p><strong>JavaScript</strong></p>
+
+{% include_relative creating_expectations_javascript_request_matchers.html %}
+
+<a name="mock-response" class="anchor" href="#mock-response">&nbsp;</a>
+
+<h3>Mock Responses</h3>
+
+<p>Response actions contain:</p>
+
+<ul>
+	<li><strong>status code</strong> i.e. 200, 302, 404, etc</li>
+	<li><strong>body</strong> - a UTF-8 encoded sequence of bytes containing any content</li>
+	<li><strong>headers</strong> - each with a name and one or more values</li>
+	<li><strong>cookies</strong> - each with a name and with one or more values, more complex cookies can be modelled by using the a Set-Cookie header</li>
+</ul>
+
+<p>Responses can be further controlled using:</p>
+
+<ul>
+	<li>a delay before the response is sent</li>
+	<li>the number of times the response is sent (including unlimited)</li>
+</ul>
+
+<p><strong>Java</strong></p>
+
+<p>To mock a response in Java use the <strong>org.mockserver.model.HttpResponse</strong> class which specifies the details of each HTTP response with a fluent API:</p>
+
+<pre><code class="code"><span class="keyword">public class</span> HttpResponse {
+
+    <span class="comment">/**
+     * The status code to return, such as <span class="numeric_literal">200</span>, <span class="numeric_literal">404</span>, the status code specified
+     * here will result in the default status message for this status code for
+     * example for <span class="numeric_literal">200</span> the status message <span class="string_literal">"OK"</span> is used
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">statusCode</span> an integer such as <span class="numeric_literal">200</span> or <span class="numeric_literal">404</span>
+     */</span>
+    <span class="keyword">public</span> HttpResponse withStatusCode(Integer responseCode);
+
+    <span class="comment">/**
+     * The cookies to return as Set-Cookie headers as a list of Cookie objects
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">cookies</span> a list of Cookie objects
+     */</span>
+    <span class="keyword">public</span> HttpResponse withCookies(List&lt;Cookie&gt; cookies);
+    <span class="comment">/**
+     * The cookies to return as Set-Cookie headers as a varargs of Cookie objects
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">cookies</span> a varargs of Cookie objects
+     */</span>
+    <span class="keyword">public</span> HttpResponse withCookies(Cookie... cookies);
+
+    <span class="comment">/**
+     * Add cookie to return as Set-Cookie header
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">cookie</span> a Cookie object
+     */</span>
+    <span class="keyword">public</span> HttpResponse withCookie(Cookie cookie);
+
+    <span class="comment">/**
+     * The headers to return as a list of Header objects
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">headers</span> a list of Header objects
+     */</span>
+    <span class="keyword">public</span> HttpResponse withHeaders(List&lt;Header&gt; headers);
+    <span class="comment">/**
+     * The headers to return as a varargs of Header objects
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">headers</span> a varargs of Header objects
+     */</span>
+    <span class="keyword">public</span> HttpResponse withHeaders(Header... headers);
+
+    <span class="comment">/**
+     * A header to return as a Header objects
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">header</span> a Header objects
+     */</span>
+    <span class="keyword">public</span> HttpResponse withHeader(Header header)
+
+    <span class="comment">/**
+     * Set response body to return as a simple UTF-8 string response body
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">body</span> a <span class="string_literal">"UTF-8"</span> string
+     */</span>
+    <span class="keyword">public</span> HttpResponse withBody(String body);
+
+    <span class="comment">/**
+     * * Set response body to return as binary such as a pdf or image
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">body</span> a byte array
+     */</span>
+    <span class="keyword">public</span> HttpResponse withBody(<span class="keyword">byte</span>[] body);
+
+    <span class="comment">/**
+     * Set the body to return for example:
+     *
+     * string body:
+     *   - exact(<span class="string_literal">"&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;div&gt;a simple string body&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;"</span>); or
+     *   - new StringBody(<span class="string_literal">"&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;div&gt;a simple string body&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;"</span>)
+     *
+     * binary body:
+     *   - binary(IOUtils.readFully(getClass().getClassLoader().getResourceAsStream(<span class="string_literal">"example.pdf"</span>), <span class="numeric_literal">1024</span>)); or
+     *   - new BinaryBody(IOUtils.readFully(getClass().getClassLoader().getResourceAsStream(<span class="string_literal">"example.pdf"</span>), <span class="numeric_literal">1024</span>));
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">body</span> an instance of one of the Body subclasses including StringBody or BinaryBody
+     */</span>
+    <span class="keyword">public</span> HttpResponse withBody(Body body);
+
+    <span class="comment">/**
+     * The delay before responding with this request as a Delay object, for example <span class="keyword">new</span> Delay(TimeUnit.<span class="constant">SECONDS</span>, <span class="numeric_literal">3</span>)
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">delay</span> a Delay object, for example <span class="keyword">new</span> Delay(TimeUnit.<span class="constant">SECONDS</span>, <span class="numeric_literal">3</span>)
+     */</span>
+    <span class="keyword">public</span> HttpResponse withDelay(Delay delay);
+}</code></pre>
+
+<p>For example:</p>
+
+<pre><code class="code">HttpResponse httpResponse =
+        response()
+                .withStatusCode(<span class="numeric_literal">401</span>)
+                .withHeaders(
+                        <span class="keyword">new</span> Header(<span class="string_literal">"Content-Type"</span>, <span class="string_literal">"application/json; charset=utf-8"</span>),
+                        <span class="keyword">new</span> Header(<span class="string_literal">"Cache-Control"</span>, <span class="string_literal">"public, max-age=86400"</span>)
+                )
+                .withBody(<span class="string_literal">"{ message: 'incorrect username and password combination' }"</span>)
+                .withDelay(<span class="keyword">new</span> Delay(TimeUnit.<span class="constant">SECONDS</span>, <span class="numeric_literal">1</span>));
+</code></pre>
+
+<p><strong>JavaScript</strong></p>
+
+<p>To mock a response in javascript use JSON to specify the details with the following format: </p>
+
+<pre><code class="code"><span class="string_literal">"httpResponse"</span>: {
+    <span class="string_literal">"statusCode"</span>: <span class="numeric_literal">200</span>,
+    <span class="string_literal">"body"</span>: <span class="string_literal">""</span>,
+    <span class="string_literal">"cookies"</span>: [],
+    <span class="string_literal">"headers"</span>: [],
+    <span class="string_literal">"delay"</span>: {
+        <span class="string_literal">"timeUnit"</span>: <span class="string_literal">"MICROSECONDS"</span>,
+        <span class="string_literal">"value"</span>: <span class="numeric_literal">0</span>
+    }
+}
+</code></pre>
+
+<p>Each cookie or header array entry has the following syntax:</p>
+
+<pre><code class="code">{
+    <span class="string_literal">"name"</span>: <span class="string_literal">"someName"</span>,
+    <span class="string_literal">"values"</span>: [<span class="string_literal">"someValueOne"</span>, <span class="string_literal">"someValueTwo"</span>, ...]
+}</code></pre>
+
+<p>The "timeUnit" value in "delay" can be:</p>
+
+<pre><code class="code"><span class="string_literal">"NANOSECONDS"</span>
+<span class="string_literal">"MICROSECONDS"</span>
+<span class="string_literal">"MILLISECONDS"</span>
+<span class="string_literal">"SECONDS"</span>
+<span class="string_literal">"MINUTES"</span>
+<span class="string_literal">"HOURS"</span>
+<span class="string_literal">"DAYS"</span></code></pre>
+
+<p>The same example as above would be:</p>
+
+<pre><code class="code"><span class="string_literal">"httpResponse"</span>: {
+    <span class="string_literal">"statusCode"</span>: <span class="numeric_literal">401</span>,
+    <span class="string_literal">"headers"</span>: [
+        {
+            <span class="string_literal">"name"</span>: <span class="string_literal">"Content-Type"</span>,
+            <span class="string_literal">"values"</span>: [<span class="string_literal">"application/json; charset=utf-8"</span>]
+        },
+        {
+            <span class="string_literal">"name"</span>: <span class="string_literal">"Cache-Control"</span>,
+            <span class="string_literal">"values"</span>: [<span class="string_literal">"public, max-age=86400"</span>]
+        }
+    ],
+    <span class="string_literal">"body"</span>: JSON.stringify({ message: <span class="string_literal">"incorrect username and password combination"</span> }),
+    <span class="string_literal">"delay"</span>: {
+        <span class="string_literal">"timeUnit"</span>: <span class="string_literal">"SECONDS"</span>,
+        <span class="string_literal">"value"</span>: <span class="numeric_literal">1</span>
+    }
+}</code></pre>
+
+<a name="mock-forward" class="anchor" href="#mock-forward">&nbsp;</a>
+
+<h3>Mock Forward</h3>
+
+<p>Forward actions contain:</p>
+
+<ul>
+	<li><strong>host</strong> - the host to forward to i.e. www.mock-server.com</li>
+	<li><strong>port</strong> - the port to forward to, this defaults to 80 if not specified</li>
+	<li><strong>scheme</strong> - the scheme to use, either HTTP or HTTPS, this defaults to HTTP if not specified</li>
+</ul>
+
+<p>Forward can be further controlled using:</p>
+
+<ul>
+	<li>the number of times the request is forwarded (including unlimited)</li>
+</ul>
+
+<p><strong>Java</strong></p>
+
+<p>To setup a forward in Java use the <strong>org.mockserver.model.HttpForward</strong> class which specifies the details of each HTTP(S) forward with a fluent API:</p>
+
+<pre><code class="code"><span class="keyword">public class</span> HttpForward {
+
+    <span class="comment">/**
+     * The host or ip address to forward the request to i.e. <span class="string_literal">"www.mock-server.com"</span>
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">host</span> a hostname or ip address as a string
+     */</span>
+    <span class="keyword">public</span> HttpForward withHost(String host);
+
+    <span class="comment">/**
+     * The port to forward the request to i.e. <span class="numeric_literal">80</span>.  If not specified the port defaults to <span class="numeric_literal">80</span>.
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">port</span> a port as an integer
+     */</span>
+    <span class="keyword">public</span> HttpForward withPort(Integer port);
+
+    <span class="comment">/**
+     * The scheme to use when forwarded the request, either <span class="constant">HTTP</span> or <span class="constant">HTTPS</span>.  If not specified the scheme defaults to HTTP.
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">scheme</span> the scheme as a HttpForward.Scheme value
+     */</span>
+    <span class="keyword">public</span> HttpForward withScheme(Scheme scheme);
+}</code></pre>
+
+<p>For example:</p>
+
+<pre><code class="code">HttpForward httpForward =
+        forward()
+                .withHost(<span class="string_literal">"www.mock-server.com"</span>)
+                .withPort(<span class="numeric_literal">80</span>)
+                .withScheme(HttpForward.Scheme.<span class="constant">HTTP</span>);
+</code></pre>
+
+<p><strong>JavaScript</strong></p>
+
+<p>To mock a response in javascript use JSON to specify the details with the following format: </p>
+
+<pre><code class="code"><span class="string_literal">"httpForward"</span>: {
+    <span class="string_literal">"host"</span>: <span class="string_literal">""</span>,
+    <span class="string_literal">"port"</span>: <span class="numeric_literal">80</span>,
+    <span class="string_literal">"scheme"</span>: <span class="string_literal">"HTTP"</span>
+}
+</code></pre>
+
+<p>The "scheme" value in can be:</p>
+
+<pre><code class="code"><span class="string_literal">"HTTP"</span>
+<span class="string_literal">"HTTPS"</span></code></pre>
+
+<p>The same example as above would be:</p>
+
+<pre><code class="code"><span class="string_literal">"httpForward"</span>: {
+    <span class="string_literal">"host"</span>: <span class="string_literal">"www.mock-server.com"</span>,
+    <span class="string_literal">"port"</span>: <span class="numeric_literal">80</span>,
+    <span class="string_literal">"scheme"</span>: <span class="string_literal">"HTTP"</span>
+}
+</code></pre>
+
+
+<a name="callback" class="anchor" href="#callback">&nbsp;</a>
+
+<h3>Callback</h3>
+
+<p>A callback specifies a class that will be called for each matching request and can be used to dynamically generate the response.<p>
+<p>Callback actions contain:</p>
+
+<ul>
+	<li><strong>callbackClass</strong></li>
+</ul>
+
+<p>The callback class must:</p>
+
+<ul>
+	<li>have a default constructor</li>
+	<li>implement <strong>org.mockserver.mock.action.ExpectationCallback</strong></li>
+	<li>be available on the classpath (see below)</li>
+</ul>
+
+<strong>Classpath Visibility</strong>
+
+<p>If MockServer is started using the JUnitRule <strong>org.mockserver.junit.MockServerRule</strong> or using <strong>org.mockserver.integration.ClientAndServer</strong> or directly using the <strong>org.mockserver.mockserver.MockServerBuilder</strong> then any class present in the main or test classpaths will be visible to MockServer.</p>
+<p>If MockServer is started using the plugin only the non-forked goals (such as <span class="element_value">runAndWait</span> and <span class="element_value">start</span>) will be able to load classes from the main and test classpaths.  It is possible to use classes from a separate maven dependency, however, this dependency must be specified in the plugin configuration <span class="element">dependencies</span> section.  Any dependency added to the plugin configuration <span class="element">dependencies</span> section will then be visible to MockServer run using both forked and non-forked goals.</p>
+
+<p>The following configuration shows how to use classes from a separate maven dependency in callback actions.</p>
+
+<pre><code class="code xml"> &lt;<span class="element">plugin</span>&gt;
+     &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;
+     &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-maven-plugin</span>&lt;/<span class="element">artifactId</span>&gt;
+     &lt;<span class="element">version</span>&gt;<span class="element_value">3.8.2</span>&lt;/<span class="element">version</span>&gt;
+     &lt;<span class="element">configuration</span>&gt;
+        &lt;<span class="element">serverPort</span>&gt;<span class="element_value">1080</span>&lt;/<span class="element">serverPort</span>&gt;
+        &lt;<span class="element">logLevel</span>&gt;<span class="element_value">DEBUG</span>&lt;/<span class="element">logLevel</span>&gt;
+        &lt;<span class="element">pipeLogToConsole</span>&gt;<span class="element_value">true</span>&lt;/<span class="element">pipeLogToConsole</span>&gt;
+     &lt;/<span class="element">configuration</span>&gt;
+     &lt;<span class="element">executions</span>&gt;
+         &lt;<span class="element">execution</span>&gt;
+             &lt;<span class="element">id</span>&gt;<span class="element_value">pre-integration-test</span>&lt;/<span class="element">id</span>&gt;
+             &lt;<span class="element">phase</span>&gt;<span class="element_value">pre-integration-test</span>&lt;/<span class="element">phase</span>&gt;
+             &lt;<span class="element">goals</span>&gt;
+                 &lt;<span class="element">goal</span>&gt;<span class="element_value">runForked</span>&lt;/<span class="element">goal</span>&gt;
+             &lt;/<span class="element">goals</span>&gt;
+         &lt;/<span class="element">execution</span>&gt;
+         &lt;<span class="element">execution</span>&gt;
+             &lt;<span class="element">id</span>&gt;<span class="element_value">post-integration-test</span>&lt;/<span class="element">id</span>&gt;
+             &lt;<span class="element">phase</span>&gt;<span class="element_value">post-integration-test</span>&lt;/<span class="element">phase</span>&gt;
+             &lt;<span class="element">goals</span>&gt;
+                 &lt;<span class="element">goal</span>&gt;<span class="element_value">stopForked</span>&lt;/<span class="element">goal</span>&gt;
+             &lt;/<span class="element">goals</span>&gt;
+         &lt;/<span class="element">execution</span>&gt;
+     &lt;/<span class="element">executions</span>&gt;
+     &lt;<span class="element">dependencies</span>&gt;
+         &lt;<span class="element">dependency</span>&gt;
+             &lt;<span class="element">groupId</span>&gt;<span class="element_value">com.my-domain</span>&lt;/<span class="element">groupId</span>&gt;
+             &lt;<span class="element">artifactId</span>&gt;<span class="element_value">my-callback-dependency</span>&lt;/<span class="element">artifactId</span>&gt;
+             &lt;<span class="element">version</span>&gt;<span class="element_value">1.0.0</span>&lt;/<span class="element">version</span>&gt;
+         &lt;/<span class="element">dependency</span>&gt;
+     &lt;/<span class="element">dependencies</span>&gt;
+ &lt;/<span class="element">plugin</span>&gt;</code></pre>
+
+<p>If MockServer is started using the command line then the callback classes must be added to the JVM using the classpath command line switch (<strong>cp</strong> or <strong>classpath</strong>).  The <strong>classpath</strong> switch is ignored by the JVM if the <strong>jar</strong> switch is used.  So to run the MockServer from the command line directly (with mockserver-netty-3.8.2-jar-with-dependencies.jar) you must specify the <strong>org.mockserver.cli.Main</strong> main class specifically and not use the <strong>jar</strong> switch as follows.</p>
+
+<pre><code class="code">java -Dfile.encoding=UTF-8 -cp mockserver-netty-3.8.2-jar-with-dependencies.jar:my-callback-dependency.jar org.mockserver.cli.Main -serverPort 1080</code></pre>
+
+<p><strong>Java</strong></p>
+
+<p>To setup a callback in Java use the <strong>org.mockserver.model.HttpCallback</strong> class which specifies the details class to callback as follows:</p>
+
+<pre><code class="code"><span class="keyword">public class</span> HttpCallback {
+
+    <span class="comment">/**
+     * The class to callback as a fully qualified class name
+     *
+     * This calls must:
+     *  - implement org.mockserver.mock.action.ExpectationCallback
+     *  - have a zero argument constructor
+     *  - be available in the classpath of the MockServer
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">callbackClass</span> class to callback as a fully qualified class name, i.e. <span class="string_literal">"com.foo.MyExpectationCallback"</span>
+     */</span>
+    <span class="keyword">public</span> HttpCallback withCallbackClass(String callbackClass);
+
+}</code></pre>
+
+<p>The class specified must implement the <strong>org.mockserver.mock.action.ExpectationCallback</strong> interface as follows:</p>
+
+<pre><code class="code"><span class="keyword">public interface</span> ExpectationCallback {
+
+    <span class="comment">/**
+     * Called for every request when expectation condition has been satisfied.
+     * The request that satisfied the expectation condition is passed as the
+     * parameter and the return value is the response that will be returned to the client.
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpRequest</span> the request that satisfied the expectation condition
+     * <span class="javadoc_param_annotation">@return</span> the response that will be returned to the client
+     */</span>
+    <span class="keyword">public</span> HttpResponse handle(HttpRequest httpRequest);
+
+}</code></pre>
+
+<p><strong>JavaScript</strong></p>
+
+<p>To setup a callback in javascript use JSON to specify the details with the following format: </p>
+
+<pre><code class="code"><span class="string_literal">"httpCallback"</span>: {
+    <span class="string_literal">"callbackClass"</span>: <span class="string_literal">"org.mypackage.MyCallbackClass"</span>
+}
+</code></pre>

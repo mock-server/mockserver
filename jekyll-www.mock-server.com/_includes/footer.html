@@ -2,16 +2,18 @@
 
 	<div class="footer">
 		<span class="right">&copy; MockServer {{ 'now' | date: "%Y" }}</span>
-		<span class="left"><a href="https://plus.google.com/110954472544793839756?rel=author">{{ site.author }}</a> - <a href="http://blog.jamesdbloom.com">Blog</a></span>
+		<span class="left"><a href="{{ site.author.google_plus }}">{{ site.author.name.full }}</a> - <a href="{{ site.author.blog }}">Blog</a></span>
                 <span itemprop="author" itemscope itemtype="http://schema.org/Person">
-                    <meta itemprop="name" content="{{ site.author }}">
+                    <meta itemprop="name" content="{{ site.author.name.full }}">
                     <meta itemprop="image" content="http://blog.jamesdbloom.com/jamesdbloom.jpg">
-                    <meta itemprop="givenName" content="James">
-                    <meta itemprop="familyName" content="Bloom">
-                    <meta itemprop="gender" content="male">
+                    <meta itemprop="givenName" content="{{ site.author.name.given }}">
+                    <meta itemprop="familyName" content="{{ site.author.name.family }}">
+                    <meta itemprop="gender" content="{{ site.author.gender }}">
                 </span>
 		<meta itemprop="name" content="{{ site.title }}">
 		<meta itemprop="description" content="{{ site.description }}">
 	</div>
+	<script defer="defer"  src="/scripts/toggle_menu.js"></script>
+	<script defer="defer"  src="/scripts/google_analytics.js"></script>
 
 </footer>

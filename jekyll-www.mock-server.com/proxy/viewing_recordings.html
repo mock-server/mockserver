@@ -1,6 +1,83 @@
 ---
 title: Viewing Recordings
 layout: page
-pageOrder: 3
+pageOrder: 4
 section: 'Proxy'
+subsection: true
 ---
+
+<p>Write the recorded request to the log as Java code, as follows:</p>
+
+<pre><code class="code"><span class="keyword">new</span> ProxyClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">9090</span>).dumpToLogAsJava(
+        request()
+                .withMethod(<span class="string_literal">"POST"</span>)
+                .withPath(<span class="string_literal">"/login"</span>)
+);</code></pre>
+
+<p>The Java code format that requests are written to the logs is as follows:</p>
+
+<pre><code class="code">2014-01-12 21:46:33,305
+<span class="keyword">new</span> MockServerClient()
+        .when(
+                request()
+                        .withMethod(<span class="string_literal">"GET"</span>)
+                        .withPath(<span class="string_literal">"/get_book"</span>)
+                        .withQueryString(<span class="string_literal">"id=1"</span>)
+                        .withHeaders(
+                                <span class="keyword">new</span> Header(<span class="string_literal">"Accept-Encoding"</span>, <span class="string_literal">"gzip"</span>),
+                                <span class="keyword">new</span> Header(<span class="string_literal">"Host"</span>, <span class="string_literal">"localhost:1090"</span>),
+                                <span class="keyword">new</span> Header(<span class="string_literal">"User-Agent"</span>, <span class="string_literal">"Jetty/8.1.13.v20130916"</span>)
+                        ),
+                Times.once()
+        )
+        .thenRespond(
+                response()
+                        .withStatusCode(<span class="numeric_literal">200</span>)
+                        .withHeaders(
+                                <span class="keyword">new</span> Header(<span class="string_literal">"Server"</span>, <span class="string_literal">"Jetty(8.1.13.v20130916)"</span>)
+                        )
+                        .withBody(<span class="string_literal">"{\n        \"id\": \"1\",\n        \"title\": \"Xenophon's imperial fiction : on the education of Cyrus\",\n        \"author\": \"James Tatum\",\n        \"isbn\": \"0691067570\",\n        \"publicationDate\": \"1989\"\n    }"</span>)
+        );</code></pre>
+
+<p>Write the recorded request to the log as JSON, as follows:</p>
+
+<pre><code class="code"><span class="keyword">new</span> ProxyClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">9090</span>).dumpToLogAsJSON(
+        request()
+                .withMethod(<span class="string_literal">"POST"</span>)
+                .withPath(<span class="string_literal">"/login"</span>)
+);</code></pre>
+
+<p>The JSON format that requests are written to the logs is as follows:</p>
+
+<pre><code class="code">2014-01-12 21:46:33,299 {
+    <span class="string_literal">"httpRequest"</span> : {
+        <span class="string_literal">"method"</span> : <span class="string_literal">"GET"</span>,
+        <span class="string_literal">"path"</span> : <span class="string_literal">"/get_book"</span>,
+        <span class="string_literal">"queryString"</span> : <span class="string_literal">"id=1"</span>,
+        <span class="string_literal">"headers"</span> : [
+            {
+                <span class="string_literal">"name"</span> : <span class="string_literal">"Accept-Encoding"</span>,
+                <span class="string_literal">"values"</span> : [ <span class="string_literal">"gzip"</span> ]
+            },
+            {
+                <span class="string_literal">"name"</span> : <span class="string_literal">"Host"</span>,
+                <span class="string_literal">"values"</span> : [ <span class="string_literal">"localhost:8080"</span> ]
+            },
+            {
+                <span class="string_literal">"name"</span> : <span class="string_literal">"User-Agent"</span>,
+                <span class="string_literal">"values"</span> : [ <span class="string_literal">"Jetty/8.1.13.v20130916"</span> ]
+            } ]
+    },
+    <span class="string_literal">"httpResponse"</span> : {
+        <span class="string_literal">"statusCode"</span> : <span class="numeric_literal">200</span>,
+        <span class="string_literal">"body"</span> : <span class="string_literal">"{\n    \"id\": \"1\",\n    \"title\": \"Xenophon's imperial fiction : on the education of Cyrus\",\n    \"author\": \"James Tatum\",\n    \"isbn\": \"0691067570\",\n    \"publicationDate\": \"1989\"\n}"</span>,
+        <span class="string_literal">"headers"</span> : [ {
+            <span class="string_literal">"name"</span> : <span class="string_literal">"Server"</span>,
+            <span class="string_literal">"values"</span> : [ <span class="string_literal">"Jetty(8.1.13.v20130916)"</span> ]
+        } ]
+    },
+    <span class="string_literal">"times"</span> : {
+        <span class="string_literal">"remainingTimes"</span> : <span class="numeric_literal">1</span>,
+        <span class="string_literal">"unlimited"</span> : <span class="keyword">false</span>
+    }
+}</code></pre>

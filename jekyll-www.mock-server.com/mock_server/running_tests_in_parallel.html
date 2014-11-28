@@ -3,4 +3,9 @@ title: Running Tests In Parallel
 layout: page
 pageOrder: 6
 section: 'Mock Server'
+subsection: true
 ---
+
+<p>To ensure all tests can run in parallel with completely isolated independent data it is important to include a value unique to each test for the request matcher. </p>
+
+<p>For example the code above has a sessionId cookie in the request matcher. If each test generates a different value (i.e. a UUID) for the sessionId cookie then each test can receive completely independent response. Instead of a cookie value a query parameter or header (such as the Referer header) can also be used to ensure mock responses are unique to each test.</p>

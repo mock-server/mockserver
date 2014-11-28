@@ -1,8 +1,7 @@
 # Site settings
 title: Mock Server
 email: jamesdbloom@gmail.com
-description: >
-  An API to easily mock any system or service you integrate with via HTTP or HTTPS from either Java or JavaScript.
+description: An API to easily mock any system or service you integrate with via HTTP or HTTPS from either Java or JavaScript.
 keywords: >
   mockserver, mock server, mock http server, http mock server, mock-server, mock rest service, mock server java,
   mock api, java mock http server, server mock, java mock server, mock rest server, java mock web service, api mock,
@@ -10,7 +9,15 @@ keywords: >
   mock api server, json mock service, api mocking
 baseurl: "" # the subpath of your site, e.g. /blog/
 url: "http://www.mock-server.com"
-author: James D Bloom
+author:
+  name:
+    full: James D Bloom
+    given: James
+    faimly: Bloom
+  image: http://blog.jamesdbloom.com/jamesdbloom.jpg
+  gender: male
+  blog: http://blog.jamesdbloom.com
+  google_plus: https://plus.google.com/110954472544793839756?rel=author
 
 # Build settings
 markdown: kramdown

@@ -3,4 +3,66 @@ title: Verifications
 layout: page
 pageOrder: 3
 section: 'Proxy'
+subsection: true
 ---
+
+<p>The proxy allows the verification of requests by specifying:</p>
+<ul>
+	<li>an amount of a single type of request</li>
+	<li>a sequence of requests that is verified in order</li>
+</ul>
+
+<p>The proxy supports exactly the same features for verifying requests <a href="#verify-behaviour-with-mockserver">described above</a> for the MockServer.</p>
+<p>However, with the proxy, it it also possible to verify requests being sent to other HTTP/HTTPS endpoints. To do this the system under test must be configured to use the proxy.  The proxy will then all outgoing and request and responses.</p>
+
+<h4>Verifying Repeating Requests</h4>
+
+<p>To verify that the system under test has sent an inidividual request to MockServer use the verify method of the MockServerClient as follows:</p>
+
+<pre><code class="code"><span class="keyword">new</span> MockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">9090</span>).verify(
+        request()
+                .withMethod(<span class="string_literal">"POST"</span>)
+                .withPath(<span class="string_literal">"/login"</span>)
+                .withBody(exact(<span class="string_literal">"{username: 'foo', password: 'bar'}"</span>))
+                .withCookies(
+                        <span class="keyword">new</span> Cookie(<span class="string_literal">"sessionId"</span>, <span class="string_literal">".*"</span>)
+                ),
+        VerificationTimes.exactly(<span class="numeric_literal">1</span>)
+);</code></pre>
+
+<p>The <strong>org.mockserver.verify.VerificationTimes</strong> class is used to specify how many times you want MockServer to match a request:</p>
+
+<p>To create an instance of VerificationTimes use one of the static factory methods:</p>
+
+<pre><code class="code">VerificationTimes.once();
+VerificationTimes.exactly(<span class="keyword">int</span> count);
+VerificationTimes.atLeast(<span class="keyword">int</span> count);</code></pre>
+
+<h4>Verifying Request Sequences</h4>
+
+<p>To verify that the system under test has sent a sequence of requests to MockServer use the verify method of the MockServerClient as follows:</p>
+
+<pre><code class="code"><span class="keyword">new</span> MockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">9090</span>).verify(
+        request()
+                .withMethod(<span class="string_literal">"POST"</span>)
+                .withPath(<span class="string_literal">"/login"</span>)
+                .withBody(exact(<span class="string_literal">"{username: 'foo', password: 'bar'}"</span>))
+                .withCookies(
+                        <span class="keyword">new</span> Cookie(<span class="string_literal">"sessionId"</span>, <span class="string_literal">".*"</span>)
+                ),
+        request()
+                .withMethod(<span class="string_literal">"POST"</span>)
+                .withPath(<span class="string_literal">"/deposit"</span>)
+                .withBody(exact(<span class="string_literal">"{acccount: '123456789', card: '1234 5678 9012 3456', amount: '10.00'}"</span>))
+                .withCookies(
+                        <span class="keyword">new</span> Cookie(<span class="string_literal">"sessionId"</span>, <span class="string_literal">".*"</span>)
+                ),
+        request()
+                .withMethod(<span class="string_literal">"POST"</span>)
+                .withPath(<span class="string_literal">"/logout"</span>)
+                .withCookies(
+                        <span class="keyword">new</span> Cookie(<span class="string_literal">"sessionId"</span>, <span class="string_literal">".*"</span>)
+                )
+);</code></pre>
+
+<p>The each request in the sequence will be verified to have been received at least once, in the exact order specified.</p>

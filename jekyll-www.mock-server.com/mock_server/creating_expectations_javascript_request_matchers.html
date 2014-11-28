@@ -1,0 +1,134 @@
+---
+title: Request Matchers - JavaScript
+layout: page
+pageOrder: 3.5
+section: 'Mock Server'
+subsection: false
+---
+
+<p>To specify a request matcher in JavaScript use JSON to specify the details with the following format: </p>
+
+<pre><code class="code"><span class="string_literal">"httpRequest"</span>: {
+    <span class="string_literal">"method"</span>: <span class="string_literal">""</span>,
+    <span class="string_literal">"path"</span>: <span class="string_literal">""</span>,
+    <span class="string_literal">"queryParameters"</span>: []
+    <span class="string_literal">"body"</span>: {
+       <span class="string_literal">"type"</span>: <span class="annotation">&lt;</span><span class="string_literal">"STRING"</span> <span class="annotation">or</span> <span class="string_literal">"REGEX"</span> <span class="annotation">or</span> <span class="string_literal">"JSON"</span> <span class="annotation">or</span> <span class="string_literal">"XPATH"</span> <span class="annotation">or</span> <span class="string_literal">"PARAMETERS"</span><span class="annotation">&gt;</span>,
+       <span class="string_literal">"value"</span>: <span class="string_literal">""</span> <span class="annotation">( or</span> <span class="string_literal">"parameters"</span> <span class="annotation">as shown in more detail below )</span>
+    },
+    <span class="string_literal">"cookies"</span>: [],
+    <span class="string_literal">"headers"</span>: [],
+}</code></pre>
+
+<p><strong>Note:</strong> Only values which are matched on need to be specified, if a value is missing then it will not be matched on. For example, below both the parameters and headers fields are not specified.</p>
+
+<p>Each cookie, header or parameter array entry has the following syntax:</p>
+
+<pre><code class="code">{
+    <span class="string_literal">"name"</span>: <span class="string_literal">"someName"</span>,
+    <span class="string_literal">"values"</span>: [<span class="string_literal">"someValueOne"</span>, <span class="string_literal">"someValueTwo"</span>, ...]
+}</code></pre>
+
+<p>The same example, as in Java above, in JavaScript would be :</p>
+
+<pre><code class="code"><span class="string_literal">"httpRequest"</span>: {
+    <span class="string_literal">"method"</span>: <span class="string_literal">"POST"</span>,
+    <span class="string_literal">"path"</span>: <span class="string_literal">"/login"</span>,
+    <span class="string_literal">"queryStringParameters"</span>: [
+        {
+            <span class="string_literal">"name"</span>: <span class="string_literal">"returnUrl"</span>,
+            <span class="string_literal">"values"</span>: [<span class="string_literal">"/account"</span>]
+        }
+    ],
+    <span class="string_literal">"cookies"</span>: [
+        {
+            <span class="string_literal">"name"</span>: <span class="string_literal">"sessionId"</span>,
+            <span class="string_literal">"values"</span>: [<span class="string_literal">"2By8LOhBmaW5nZXJwcmludCIlMDAzMW"</span>]
+        }
+    ],
+    <span class="string_literal">"body"</span>: {
+        <span class="string_literal">"type"</span>: <span class="string_literal">"STRING"</span>,
+        <span class="string_literal">"value"</span>: <span class="string_literal">"{username: 'foo', password: 'bar'}"</span>
+    }
+}</code></pre>
+
+<p>The <span class="string_literal">"type"</span> value in <span class="string_literal">"body"</span> can be:</p>
+
+<pre><code class="code"><span class="string_literal">"STRING"</span>
+<span class="string_literal">"REGEX"</span>
+<span class="string_literal">"JSON"</span>
+<span class="string_literal">"XPATH"</span>
+<span class="string_literal">"PARAMETERS"</span></code></pre>
+
+<p>When the <span class="string_literal">"type"</span> field has a value of <span class="string_literal">"STRING"</span>, <span class="string_literal">"REGEX"</span>, <span class="string_literal">"JSON"</span> or <span class="string_literal">"XPATH"</span> the other field of
+	<span class="string_literal">"body"</span>" should be <span class="string_literal">"value"</span> and it should provide a string to perform the match against, as shown in the example above.</p>
+
+<p>When the <span class="string_literal">"type"</span> field has a value of <span class="string_literal">"PARAMETERS"</span> the other field of <span class="string_literal">"body"</span> should be
+	<span class="string_literal">"parameters"</span> and it should provide a list of body parameters using the following syntax:</p>
+
+<pre><code class="code">{
+    <span class="string_literal">"name"</span>: <span class="string_literal">"someName"</span>,
+    <span class="string_literal">"values"</span>: [<span class="string_literal">"someValueOne"</span>, <span class="string_literal">"someValueTwo"</span>, ...]
+}</code></pre>
+
+<p>For example:</p>
+
+<pre><code class="code"><span class="string_literal">"httpRequest"</span>: {
+    <span class="string_literal">"method"</span>: <span class="string_literal">"POST"</span>,
+    <span class="string_literal">"path"</span>: <span class="string_literal">"/login"</span>,
+    <span class="string_literal">"queryStringParameters"</span>: [
+        {
+            <span class="string_literal">"name"</span>: <span class="string_literal">"returnUrl"</span>,
+            <span class="string_literal">"values"</span>: [<span class="string_literal">"/account"</span>]
+        }
+    ],
+    <span class="string_literal">"cookies"</span>: [
+        {
+            <span class="string_literal">"name"</span>: <span class="string_literal">"sessionId"</span>,
+            <span class="string_literal">"values"</span>: [<span class="string_literal">"2By8LOhBmaW5nZXJwcmludCIlMDAzMW"</span>]
+        }
+    ],
+    <span class="string_literal">"body"</span>: {
+        <span class="string_literal">"type"</span>: <span class="string_literal">"PARAMETERS"</span>,
+        <span class="string_literal">"parameters"</span>: [
+            {
+                <span class="string_literal">"name"</span>: <span class="string_literal">"username"</span>,
+                <span class="string_literal">"values"</span>: [<span class="string_literal">"foo"</span>]
+            },
+            {
+                <span class="string_literal">"name"</span>: <span class="string_literal">"password"</span>,
+                <span class="string_literal">"values"</span>: [<span class="string_literal">"bar"</span>]
+            }
+        ]
+    }
+}</code></pre>
+
+<p>When the <span class="string_literal">"type"</span> field has a value of <span class="string_literal">"STRING"</span> a short hand can be used where the <span class="string_literal">"body"</span> is only specified as a string literal for example:</p>
+
+<pre><code class="code"><span class="string_literal">"httpRequest"</span>: {
+    <span class="string_literal">"method"</span>: <span class="string_literal">"POST"</span>,
+    <span class="string_literal">"path"</span>: <span class="string_literal">"/login"</span>,
+    <span class="string_literal">"queryStringParameters"</span>: [
+        {
+            <span class="string_literal">"name"</span>: <span class="string_literal">"returnUrl"</span>,
+            <span class="string_literal">"values"</span>: [<span class="string_literal">"/account"</span>]
+        }
+    ],
+    <span class="string_literal">"cookies"</span>: [
+        {
+            <span class="string_literal">"name"</span>: <span class="string_literal">"sessionId"</span>,
+            <span class="string_literal">"values"</span>: [<span class="string_literal">"2By8LOhBmaW5nZXJwcmludCIlMDAzMW"</span>]
+        }
+    ],
+    <span class="string_literal">"body"</span>: <span class="string_literal">"a string body showing the short-hand way to specify a simple string body"</span>
+}</code></pre>
+
+<p><strong>Times</strong></p>
+
+<p>The org.mockserver.matchers.Times class is used to specify how many times you want MockServer to match a request:</p>
+
+<p>To create an instance of Times use one of the static factory methods:</p>
+
+<pre><code class="code">Times.unlimited();
+Times.once();
+Times.exactly(<span class="keyword">int</span> count);</code></pre>

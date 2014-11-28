@@ -1,0 +1,60 @@
+---
+title: Expectations Overview - Java
+layout: page
+pageOrder: 3.1
+section: 'Mock Server'
+subsection: false
+---
+
+<p>To setup an expectation that responds to a request:</p>
+
+<pre><code class="code"><span class="keyword">new</span> MockServerClient(<span class="string_literal">"127.0.0.1"</span>, <span class="numeric_literal">8080</span>)
+        .when(
+                request()
+                        .withMethod(<span class="string_literal">"POST"</span>)
+                        .withPath(<span class="string_literal">"/login"</span>)
+                        .withQueryStringParameters(
+                                <span class="keyword">new</span> Parameter(<span class="string_literal">"returnUrl"</span>, <span class="string_literal">"/account"</span>)
+                        )
+                        .withCookies(
+                                <span class="keyword">new</span> Cookie(<span class="string_literal">"sessionId"</span>, <span class="string_literal">"2By8LOhBmaW5nZXJwcmludCIlMDAzMW"</span>)
+                        )
+                        .withBody(exact(<span class="string_literal">"{username: 'foo', password: 'bar'}"</span>)),
+                exactly(<span class="numeric_literal">1</span>)
+        )
+        .respond(
+                response()
+                        .withStatusCode(<span class="numeric_literal">401</span>)
+                        .withHeaders(
+                                <span class="keyword">new</span> Header(<span class="string_literal">"Content-Type"</span>, <span class="string_literal">"application/json; charset=utf-8"</span>),
+                                <span class="keyword">new</span> Header(<span class="string_literal">"Cache-Control"</span>, <span class="string_literal">"public, max-age=86400"</span>)
+                        )
+                        .withBody(<span class="string_literal">"{ message: 'incorrect username and password combination' }"</span>)
+                        .withDelay(<span class="keyword">new</span> Delay(<span class="constant">SECONDS</span>, <span class="numeric_literal">1</span>))
+        );</code></pre>
+
+<p>To setup an expectation that forwards to a request:</p>
+
+<pre><code class="code"><span class="keyword">new</span> MockServerClient(<span class="string_literal">"127.0.0.1"</span>, <span class="numeric_literal">8080</span>)
+        .when(
+                request()
+                        .withMethod(<span class="string_literal">"GET"</span>)
+                        .withPath(<span class="string_literal">"/index.html"</span>),
+                exactly(<span class="numeric_literal">1</span>)
+        )
+        .forward(
+                forward()
+                        .withHost(<span class="string_literal">"www.mock-server.com"</span>)
+                        .withPort(<span class="numeric_literal">80</span>)
+                        .withScheme(<span class="constant">HTTP</span>)
+        );</code></pre>
+
+<p><strong>Note:</strong> this requires the use of these static imports as follows:</p>
+<code class="code"><span class="keyword">import static</span> org.mockserver.model.HttpRequest.request;
+<span class="keyword">import static</span> org.mockserver.model.HttpResponse.response;
+<span class="keyword">import static</span> org.mockserver.model.HttpForward.forward;
+<span class="keyword">import static</span> org.mockserver.matchers.Times.exactly;
+<span class="keyword">import static</span> java.util.concurrent.TimeUnit.SECONDS;
+<span class="keyword">import static</span> org.mockserver.model.HttpForward.Scheme.HTTP;</code>
+
+<p>The <a href="https://github.com/jamesdbloom/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example test called <a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-examples/src/test/java/org/mockserver/web/controller/BooksPageIntegrationTest.java">BookPageIntegrationTest</a> that demonstrates a fully working example.</p>
