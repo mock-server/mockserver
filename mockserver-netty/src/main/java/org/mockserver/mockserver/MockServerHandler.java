@@ -123,12 +123,13 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
     }
 
     private void writeResponse(ChannelHandlerContext ctx, HttpRequest request, HttpResponseStatus responseStatus, String body, String contentType) {
-        writeResponse(ctx, request,
-                response()
-                        .withStatusCode(responseStatus.code())
-                        .withBody(body)
-                        .withHeader(header(HttpHeaders.Names.CONTENT_TYPE, contentType + "; charset=utf-8"))
-        );
+        HttpResponse response = response()
+                .withStatusCode(responseStatus.code())
+                .withBody(body);
+        if (!body.isEmpty()) {
+            response.withHeader(header(HttpHeaders.Names.CONTENT_TYPE, contentType + "; charset=utf-8"));
+        }
+        writeResponse(ctx, request, response);
     }
 
     private void writeResponse(ChannelHandlerContext ctx, HttpRequest request, HttpResponse response) {
