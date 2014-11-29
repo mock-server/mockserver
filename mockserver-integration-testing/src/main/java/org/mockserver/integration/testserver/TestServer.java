@@ -6,6 +6,7 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.ssl.SslHandler;
@@ -44,10 +45,11 @@ public class TestServer {
                                 public void initChannel(SocketChannel ch) throws Exception {
                                     ChannelPipeline pipeline = ch.pipeline();
 
-                                    pipeline.addLast("logger", new LoggingHandler("TEST_SERVER"));
-                                    pipeline.addLast("codec", new HttpServerCodec());
-                                    pipeline.addLast("chunk-aggregator", new HttpObjectAggregator(10 * 1024 * 1024));
-                                    pipeline.addLast("handler", new TestServerHandler());
+                                    pipeline.addLast(new LoggingHandler("TEST_SERVER"));
+                                    pipeline.addLast(new HttpServerCodec());
+                                    pipeline.addLast(new HttpContentDecompressor());
+                                    pipeline.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
+                                    pipeline.addLast(new TestServerHandler());
                                 }
                             })
                             .bind(port).addListener(new ChannelFutureListener() {
@@ -71,14 +73,14 @@ public class TestServer {
                                 public void initChannel(SocketChannel ch) throws Exception {
                                     ChannelPipeline pipeline = ch.pipeline();
 
-                                    pipeline.addLast("raw logger", new LoggingHandler("RAW TEST_SERVER_SSL"));
                                     SSLEngine engine = SSLFactory.getInstance().sslContext().createSSLEngine();
                                     engine.setUseClientMode(false);
-                                    pipeline.addLast("ssl", new SslHandler(engine));
-                                    pipeline.addLast("logger", new LoggingHandler("TEST_SERVER_SSL"));
-                                    pipeline.addLast("codec", new HttpServerCodec());
-                                    pipeline.addLast("chunk-aggregator", new HttpObjectAggregator(10 * 1024 * 1024));
-                                    pipeline.addLast("handler", new TestServerHandler());
+                                    pipeline.addLast(new SslHandler(engine));
+                                    pipeline.addLast(new LoggingHandler("TEST_SERVER_SSL"));
+                                    pipeline.addLast(new HttpServerCodec());
+                                    pipeline.addLast(new HttpContentDecompressor());
+                                    pipeline.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
+                                    pipeline.addLast(new TestServerHandler());
                                 }
                             })
                             .bind(securePort).addListener(new ChannelFutureListener() {

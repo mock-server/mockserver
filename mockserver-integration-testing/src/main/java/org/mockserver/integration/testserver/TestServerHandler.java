@@ -1,38 +1,25 @@
-/*
- * Copyright 2013 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package org.mockserver.integration.testserver;
 
 import com.google.common.base.Charsets;
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http.DefaultFullHttpResponse;
+import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.HttpHeaders;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.*;
-import static io.netty.handler.codec.http.HttpHeaders.is100ContinueExpected;
 import static io.netty.handler.codec.http.HttpHeaders.isKeepAlive;
-import static io.netty.handler.codec.http.HttpResponseStatus.*;
+import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
+import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
-public class TestServerHandler extends SimpleChannelInboundHandler<Object> {
+public class TestServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
     @Override
     public void channelReadComplete(ChannelHandlerContext ctx) {
@@ -40,73 +27,46 @@ public class TestServerHandler extends SimpleChannelInboundHandler<Object> {
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, Object msg) {
-        if (msg instanceof FullHttpMessage && ((HttpObject) msg).getDecoderResult().isSuccess()) {
-            HttpRequest request = (HttpRequest) msg;
+    protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) {
 
-            ByteBuf requestContent = Unpooled.copiedBuffer(((HttpContent) msg).content());
-
-            DefaultFullHttpRequest mockServerHttpRequest = new DefaultFullHttpRequest(request.getProtocolVersion(), request.getMethod(), request.getUri(), requestContent);
-            mockServerHttpRequest.headers().add(request.headers());
-
-            LastHttpContent trailer = (LastHttpContent) msg;
-            if (!trailer.trailingHeaders().isEmpty()) {
-                mockServerHttpRequest.headers().entries().addAll(trailer.trailingHeaders().entries());
+        FullHttpResponse response1;
+        if (request.getUri().equals("/unknown")) {
+            response1 = new DefaultFullHttpResponse(HTTP_1_1, NOT_FOUND);
+        } else if (request.getUri().equals("/test_headers_and_body")) {
+            response1 = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.wrappedBuffer("an_example_body".getBytes(Charsets.UTF_8)));
+            response1.headers().set("X-Test", "test_headers_and_body");
+            response1.headers().set(CONTENT_TYPE, "text/plain");
+            response1.headers().set(CONTENT_LENGTH, response1.content().readableBytes());
+        } else if (request.getUri().equals("/test_headers_only")) {
+            response1 = new DefaultFullHttpResponse(HTTP_1_1, OK);
+            response1.headers().set("X-Test", "test_headers_only");
+            response1.headers().set(CONTENT_TYPE, "text/plain");
+            response1.headers().set(CONTENT_LENGTH, response1.content().readableBytes());
+        } else if (request.getUri().endsWith("/echo")) {
+            // echo back body
+            response1 = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.copiedBuffer(request.content()));
+            // echo back headers
+            List<String> headerNames = new ArrayList<String>(request.headers().names());
+            Collections.sort(headerNames);
+            for (String headerName : headerNames) {
+                response1.headers().set(headerName.toLowerCase(), request.headers().get(headerName));
             }
-
-            writeResponse(ctx, handleRequest(mockServerHttpRequest), isKeepAlive(request), is100ContinueExpected(request));
+            response1.headers().set(CONTENT_LENGTH, response1.content().readableBytes());
         } else {
-            ctx.write(new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.BAD_REQUEST));
+            response1 = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.wrappedBuffer("Hello World".getBytes(Charsets.UTF_8)));
+            response1.headers().set(CONTENT_TYPE, "text/plain");
+            response1.headers().set(CONTENT_LENGTH, response1.content().readableBytes());
         }
-    }
+        FullHttpResponse response = response1;
 
-    private void writeResponse(ChannelHandlerContext ctx, FullHttpResponse response, boolean isKeepAlive, boolean is100ContinueExpected) {
-        if (isKeepAlive) {
-            // Add 'Content-Length' header only for a keep-alive connection.
-            response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
-            // Add keep alive header as per:
-            // - http://www.w3.org/Protocols/HTTP/1.1/draft-ietf-http-v11-spec-01.html#Connection
+        response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
+        if (isKeepAlive(request)) {
             response.headers().set(CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
-        }
-        if (is100ContinueExpected) {
-            ctx.write(new DefaultFullHttpResponse(HTTP_1_1, CONTINUE));
         }
         ctx.write(response);
         ctx.flush();
     }
 
-
-    public FullHttpResponse handleRequest(DefaultFullHttpRequest req) {
-        FullHttpResponse response;
-        if (req.getUri().equals("/unknown")) {
-            response = new DefaultFullHttpResponse(HTTP_1_1, NOT_FOUND);
-        } else if (req.getUri().equals("/test_headers_and_body")) {
-            response = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.wrappedBuffer("an_example_body".getBytes(Charsets.UTF_8)));
-            response.headers().set("X-Test", "test_headers_and_body");
-            response.headers().set(CONTENT_TYPE, "text/plain");
-            response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
-        } else if (req.getUri().equals("/test_headers_only")) {
-            response = new DefaultFullHttpResponse(HTTP_1_1, OK);
-            response.headers().set("X-Test", "test_headers_only");
-            response.headers().set(CONTENT_TYPE, "text/plain");
-            response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
-        } else if (req.getUri().endsWith("/echo")) {
-            // echo back body
-            response = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.copiedBuffer(req.content()));
-            // echo back headers
-            List<String> headerNames = new ArrayList<String>(req.headers().names());
-            Collections.sort(headerNames);
-            for (String headerName : headerNames) {
-                response.headers().set(headerName.toLowerCase(), req.headers().get(headerName));
-            }
-            response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
-        } else {
-            response = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.wrappedBuffer("Hello World".getBytes(Charsets.UTF_8)));
-            response.headers().set(CONTENT_TYPE, "text/plain");
-            response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
-        }
-        return response;
-    }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
