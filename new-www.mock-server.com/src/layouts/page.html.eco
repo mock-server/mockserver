@@ -1,9 +1,0 @@
----
-layout: default
----
-
-<div class="page_header">
-	<h1><%= @document.title %></h1>
-</div>
-
-<%- @content %>
