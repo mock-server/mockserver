@@ -176,22 +176,9 @@
         </dependency>
 
         <!-- logging -->
-        <dependency>
+        <dependency> <!-- will map to any underlying logging framework -->
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-jcl</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-jdk14</artifactId>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>

@@ -85,7 +85,7 @@
         </dependency>
 
         <!-- logging -->
-        <dependency>
+        <dependency> <!-- will map to any underlying logging framework -->
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>

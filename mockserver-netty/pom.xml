@@ -72,7 +72,6 @@
         <dependency> <!-- will map to any underlying logging framework -->
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
