@@ -244,13 +244,19 @@ h2 {
 a.anchor,
 a.anchor:hover,
 a.anchor:active,
-a.anchor:focus,
-a.anchor img,
-a.anchor:hover img,
-a.anchor:active img,
-a.anchor:focus img {
+a.anchor:focus {
   display: block;
   margin-bottom: 10px;
+  text-decoration: none;
+  border: 0 none;
+  outline: 0;
+  cursor: default;
+}
+
+a img,
+a:hover img,
+a:active img,
+a:focus img {
   text-decoration: none;
   border: 0 none;
   outline: 0;
@@ -260,6 +266,11 @@ a.anchor:focus img {
 .build_tag {
   float: right;
   overflow: hidden;
+}
+
+.build_tag img {
+  width: 80px;
+  height: 18px;
 }
 
 pre {
