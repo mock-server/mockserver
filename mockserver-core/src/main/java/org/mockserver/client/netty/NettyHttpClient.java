@@ -1,7 +1,8 @@
 package org.mockserver.client.netty;
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
@@ -10,34 +11,50 @@ import org.mockserver.model.OutboundHttpRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.net.ConnectException;
+import java.net.UnknownHostException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.OutboundHttpRequest.outboundRequest;
 
 public class NettyHttpClient {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public HttpResponse sendRequest(final OutboundHttpRequest httpRequest) {
+    public static void main(String[] args) {
+        NettyHttpClient nettyHttpClient = new NettyHttpClient();
+        nettyHttpClient.sendRequest(outboundRequest("127.0.0.1", 80, "", request()));
+    }
+
+    public HttpResponse sendRequest(final OutboundHttpRequest httpRequest) throws SocketConnectionException {
         logger.debug("Sending request: {}", httpRequest);
 
         // configure the client
         EventLoopGroup group = new NioEventLoopGroup();
 
         try {
-            HttpClientInitializer channelInitializer = new HttpClientInitializer(httpRequest.isSecure());
+            final HttpClientInitializer channelInitializer = new HttpClientInitializer(httpRequest.isSecure());
 
             // make the connection attempt
-            Channel channel = new Bootstrap()
+            new Bootstrap()
                     .group(group)
                     .channel(NioSocketChannel.class)
                     .handler(channelInitializer)
                     .connect(httpRequest.getHost(), httpRequest.getPort())
-                    .sync()
-                    .channel();
-
-            // send the HTTP request
-            channel.writeAndFlush(httpRequest);
+                    .addListener(new ChannelFutureListener() {
+                        @Override
+                        public void operationComplete(ChannelFuture future) throws Exception {
+                            if (future.isSuccess()) {
+                                // send the HTTP request
+                                future.channel().writeAndFlush(httpRequest);
+                            } else {
+                                channelInitializer.getResponseFuture().setException(future.cause());
+                            }
+                        }
+                    });
 
             // wait for response
             HttpResponse httpResponse = channelInitializer.getResponseFuture().get();
@@ -48,7 +65,17 @@ public class NettyHttpClient {
 
             return httpResponse;
 
-        } catch (Exception e) {
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof ConnectException) {
+                throw new SocketConnectionException("Unable to connect to socket " + httpRequest.getHost() + ":" + httpRequest.getPort(), e.getCause());
+            } else if (e.getCause() instanceof UnknownHostException) {
+                throw new SocketConnectionException("Unable to resolve host " + httpRequest.getHost(), e.getCause());
+            } else if (e.getCause() instanceof IOException) {
+                throw new SocketCommunicationException("Error while communicating to " + httpRequest.getHost() + ":" + httpRequest.getPort(), e.getCause());
+            } else {
+                throw new RuntimeException("Exception while sending request", e);
+            }
+        } catch (InterruptedException e) {
             throw new RuntimeException("Exception while sending request", e);
         } finally {
             // shut down executor threads to exit

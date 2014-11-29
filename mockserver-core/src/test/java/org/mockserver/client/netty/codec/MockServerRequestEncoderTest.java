@@ -90,7 +90,7 @@ public class MockServerRequestEncoderTest {
         String uri = ((FullHttpRequest) output.get(0)).getUri();
         assertThat(uri, is("/uri?" +
                 "parameter%20name%20with%20spaces=a%20value%20with%20double%20%22quotes%22%20and%20spaces&" +
-                "another%20parameter=a%20value%20with%20single%20'quotes'%20and%20spaces"));
+                "another%20parameter=a%20value%20with%20single%20%27quotes%27%20and%20spaces"));
     }
 
     @Test

@@ -1,7 +1,7 @@
 package org.mockserver.socket;
 
-import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author jamesdbloom
@@ -13,8 +13,10 @@ public class PortFactory {
             ServerSocket server = new ServerSocket(0);
             port = server.getLocalPort();
             server.close();
-        } catch (IOException ioe) {
-            throw new RuntimeException("Exception while trying to find a free port", ioe);
+            // allow time for the socket to be released
+            TimeUnit.MILLISECONDS.sleep(150);
+        } catch (Exception e) {
+            throw new RuntimeException("Exception while trying to find a free port", e);
         }
         return port;
     }
