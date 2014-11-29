@@ -241,13 +241,25 @@ h2 {
   font: 2em 'Gloria Hallelujah', 'Indie Flower', Helvetica, Arial, sans-serif;
 }
 
-a.anchor, a.anchor:hover, a.anchor:active, a.anchor:focus {
+a.anchor,
+a.anchor:hover,
+a.anchor:active,
+a.anchor:focus,
+a.anchor img,
+a.anchor:hover img,
+a.anchor:active img,
+a.anchor:focus img {
   display: block;
   margin-bottom: 10px;
   text-decoration: none;
   border: 0 none;
   outline: 0;
   cursor: default;
+}
+
+.build_tag {
+  float: right;
+  overflow: hidden;
 }
 
 pre {
