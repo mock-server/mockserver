@@ -17,17 +17,9 @@ import java.net.UnknownHostException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import static org.mockserver.model.HttpRequest.request;
-import static org.mockserver.model.OutboundHttpRequest.outboundRequest;
-
 public class NettyHttpClient {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-
-    public static void main(String[] args) {
-        NettyHttpClient nettyHttpClient = new NettyHttpClient();
-        nettyHttpClient.sendRequest(outboundRequest("127.0.0.1", 80, "", request()));
-    }
 
     public HttpResponse sendRequest(final OutboundHttpRequest httpRequest) throws SocketConnectionException {
         logger.debug("Sending request: {}", httpRequest);
@@ -61,7 +53,7 @@ public class NettyHttpClient {
             logger.debug("Received response: {}", httpResponse);
 
             // shutdown client
-            group.shutdownGracefully(2, 15, TimeUnit.MILLISECONDS);
+            group.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
 
             return httpResponse;
 
@@ -79,7 +71,7 @@ public class NettyHttpClient {
             throw new RuntimeException("Exception while sending request", e);
         } finally {
             // shut down executor threads to exit
-            group.shutdownGracefully(2, 15, TimeUnit.MILLISECONDS);
+            group.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
         }
     }
 }
