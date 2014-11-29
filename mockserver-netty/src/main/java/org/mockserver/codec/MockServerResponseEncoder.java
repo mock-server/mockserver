@@ -56,14 +56,14 @@ public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpRespo
 
     private void setCookies(HttpResponse httpResponse, DefaultFullHttpResponse httpServletResponse) {
         if (httpResponse.getCookies() != null) {
-            List<String> cookieValues = new ArrayList<String>();
+            List<Cookie> cookieValues = new ArrayList<Cookie>();
             for (org.mockserver.model.Cookie cookie : httpResponse.getCookies()) {
                 for (String value : cookie.getValues()) {
-                    cookieValues.add(ServerCookieEncoder.encode(new DefaultCookie(cookie.getName(), value)));
+                    cookieValues.add(new DefaultCookie(cookie.getName(), value));
                 }
             }
             if (!cookieValues.isEmpty()) {
-                httpServletResponse.headers().add(SET_COOKIE, cookieValues);
+                httpServletResponse.headers().add(SET_COOKIE, ServerCookieEncoder.encode(cookieValues));
             }
         }
     }

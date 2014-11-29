@@ -1,5 +1,6 @@
 package org.mockserver.client.netty.codec;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -10,7 +11,6 @@ import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.OutboundHttpRequest;
 import org.mockserver.model.Parameter;
-import org.mockserver.url.URLEncoder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,30 +41,7 @@ public class MockServerRequestEncoder extends MessageToMessageEncoder<OutboundHt
         out.add(request);
     }
 
-    public static String getURI(OutboundHttpRequest httpRequest) {
-        StringBuilder queryString = new StringBuilder();
-        List<Parameter> queryStringParameters = httpRequest.getQueryStringParameters();
-        for (int i = 0; i < queryStringParameters.size(); i++) {
-            Parameter parameter = queryStringParameters.get(i);
-            if (parameter.getValues().isEmpty()) {
-                queryString.append(URLEncoder.encodeURL(parameter.getName()));
-                queryString.append('=');
-            } else {
-                List<String> values = parameter.getValues();
-                for (int j = 0; j < values.size(); j++) {
-                    String value = values.get(j);
-                    queryString.append(URLEncoder.encodeURL(parameter.getName()));
-                    queryString.append('=');
-                    queryString.append(URLEncoder.encodeURL(value));
-                    if (j < (values.size() - 1)) {
-                        queryString.append('&');
-                    }
-                }
-            }
-            if (i < (queryStringParameters.size() - 1)) {
-                queryString.append('&');
-            }
-        }
+    public String getURI(OutboundHttpRequest httpRequest) {
         String contextPath = httpRequest.getContextPath();
         if (!Strings.isNullOrEmpty(contextPath)) {
             if (contextPath.endsWith("/")) {
@@ -74,7 +51,13 @@ public class MockServerRequestEncoder extends MessageToMessageEncoder<OutboundHt
                 contextPath = "/" + contextPath;
             }
         }
-        return contextPath + httpRequest.getPath() + (queryString.length() > 0 ? '?' + queryString.toString() : "");
+        QueryStringEncoder queryStringEncoder = new QueryStringEncoder(contextPath + httpRequest.getPath());
+        for (Parameter parameter : httpRequest.getQueryStringParameters()) {
+            for (String value : parameter.getValues()) {
+                queryStringEncoder.addParam(parameter.getName(), value);
+            }
+        }
+        return queryStringEncoder.toString();
     }
 
     private ByteBuf getBody(HttpRequest httpRequest) {
