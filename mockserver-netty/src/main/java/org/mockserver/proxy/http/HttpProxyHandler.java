@@ -15,11 +15,11 @@ import org.mockserver.filters.LogFilter;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
-import org.mockserver.proxy.http.connect.HttpConnectHandler;
+import org.mockserver.proxy.Proxy;
+import org.mockserver.proxy.connect.HttpConnectHandler;
+import org.mockserver.proxy.unification.PortUnificationHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.net.InetSocketAddress;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONNECTION;
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH;
@@ -33,9 +33,7 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     // mockserver
-    private final InetSocketAddress connectSocket;
-    private final HttpProxy server;
-    private final LogFilter logFilter;
+    private final Proxy server;
     private final Filters filters = new Filters();
     // http client
     private NettyHttpClient httpClient = new NettyHttpClient();
@@ -45,13 +43,11 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
     private VerificationSerializer verificationSerializer = new VerificationSerializer();
     private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer();
 
-    public HttpProxyHandler(LogFilter logFilter, HttpProxy server, InetSocketAddress connectSocket) {
-        super(false); // TODO(jamesdbloom): why does this need to be autorelease false??
-        this.logFilter = logFilter;
+    public HttpProxyHandler(Proxy server) {
+        super(false);
         this.server = server;
-        this.connectSocket = connectSocket;
         filters.withFilter(new org.mockserver.model.HttpRequest(), new HopByHopHeaderFilter());
-        filters.withFilter(new org.mockserver.model.HttpRequest(), logFilter);
+        filters.withFilter(new org.mockserver.model.HttpRequest(), LogFilter.PROXY_INSTANCE);
     }
 
     @Override
@@ -59,9 +55,11 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
         try {
 
-            if (connectSocket != null && request.getMethod().equals("CONNECT")) {
+            if (request.getMethod().equals("CONNECT")) {
 
-                ctx.pipeline().addAfter(ctx.name(), HttpConnectHandler.class.getSimpleName(), new HttpConnectHandler(connectSocket, true));
+                // assume CONNECT always for SSL
+                ctx.channel().attr(PortUnificationHandler.SSL_ENABLED).set(Boolean.TRUE);
+                ctx.pipeline().addLast(new HttpConnectHandler());
                 ctx.pipeline().remove(this);
                 ctx.fireChannelRead(request);
 
@@ -71,27 +69,27 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
             } else if (request.matches("PUT", "/clear")) {
 
-                logFilter.clear(httpRequestSerializer.deserialize(request.getBodyAsString()));
+                LogFilter.PROXY_INSTANCE.clear(httpRequestSerializer.deserialize(request.getBodyAsString()));
                 writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
 
             } else if (request.matches("PUT", "/reset")) {
 
-                logFilter.reset();
+                LogFilter.PROXY_INSTANCE.reset();
                 writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
 
             } else if (request.matches("PUT", "/dumpToLog")) {
 
-                logFilter.dumpToLog(httpRequestSerializer.deserialize(request.getBodyAsString()), request.hasQueryStringParameter("type", "java"));
+                LogFilter.PROXY_INSTANCE.dumpToLog(httpRequestSerializer.deserialize(request.getBodyAsString()), request.hasQueryStringParameter("type", "java"));
                 writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
 
             } else if (request.matches("PUT", "/retrieve")) {
 
-                Expectation[] expectations = logFilter.retrieve(httpRequestSerializer.deserialize(request.getBodyAsString()));
+                Expectation[] expectations = LogFilter.PROXY_INSTANCE.retrieve(httpRequestSerializer.deserialize(request.getBodyAsString()));
                 writeResponse(ctx, request, HttpResponseStatus.OK, expectationSerializer.serialize(expectations), "application/json");
 
             } else if (request.matches("PUT", "/verify")) {
 
-                String result = logFilter.verify(verificationSerializer.deserialize(request.getBodyAsString()));
+                String result = LogFilter.PROXY_INSTANCE.verify(verificationSerializer.deserialize(request.getBodyAsString()));
                 if (result.isEmpty()) {
                     writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
                 } else {
@@ -100,7 +98,7 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
             } else if (request.matches("PUT", "/verifySequence")) {
 
-                String result = logFilter.verify(verificationSequenceSerializer.deserialize(request.getBodyAsString()));
+                String result = LogFilter.PROXY_INSTANCE.verify(verificationSequenceSerializer.deserialize(request.getBodyAsString()));
                 if (result.isEmpty()) {
                     writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
                 } else {

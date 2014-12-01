@@ -28,7 +28,6 @@ public class MockServer {
     private final Integer port;
     private final Integer securePort;
     // mockserver
-    private final LogFilter logFilter = new LogFilter();
     private final MockServerMatcher mockServerMatcher = new MockServerMatcher();
     private final SettableFuture<String> hasStarted;
     // netty
@@ -68,7 +67,7 @@ public class MockServer {
                                 .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                                 .group(bossGroup, workerGroup)
                                 .channel(NioServerSocketChannel.class)
-                                .childHandler(new MockServerInitializer(mockServerMatcher, logFilter, MockServer.this, false))
+                                .childHandler(new MockServerInitializer(mockServerMatcher, MockServer.this, false))
                                 .bind(port)
                                 .sync()
                                 .channel();
@@ -81,7 +80,7 @@ public class MockServer {
                                 .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                                 .group(bossGroup, workerGroup)
                                 .channel(NioServerSocketChannel.class)
-                                .childHandler(new MockServerInitializer(mockServerMatcher, logFilter, MockServer.this, true))
+                                .childHandler(new MockServerInitializer(mockServerMatcher, MockServer.this, true))
                                 .bind(securePort)
                                 .sync()
                                 .channel();

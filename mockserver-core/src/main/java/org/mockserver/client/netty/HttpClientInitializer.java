@@ -7,11 +7,14 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.HttpClientCodec;
 import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
+import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import org.mockserver.client.netty.codec.MockServerClientCodec;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.socket.SSLFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,12 +35,12 @@ public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
         ChannelPipeline pipeline = channel.pipeline();
 
         if (secure) {
-            pipeline.addLast(SslContext.newClientContext(InsecureTrustManagerFactory.INSTANCE).newHandler(channel.alloc()));
+            pipeline.addLast(new SslHandler(SSLFactory.createClientSSLEngine()));
         }
 
         // add logging
         if (logger.isDebugEnabled()) {
-            pipeline.addLast(new LoggingHandler());
+            pipeline.addLast(new LoggingHandler("HttpClientInitializer -->"));
         }
 
         pipeline.addLast(new HttpClientCodec());

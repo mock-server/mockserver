@@ -28,20 +28,17 @@ public class ProxyRuleTestWithMocks {
     @Mock
     private ClientAndProxy mockClientAndProxy;
 
-    private ProxyClient mockServerClient;
+    private ProxyClient proxyClient;
 
     @Mock
     private ProxyRule.ClientAndProxyFactory clientAndProxyFactory;
 
     private int httpPort;
-    private int httpsPort;
 
     @InjectMocks
     private ProxyRule mockServerRuleDynamicPorts;
     @InjectMocks
-    private ProxyRule mockServerRuleHttpPortOnly;
-    @InjectMocks
-    private ProxyRule mockServerRuleBothPorts;
+    private ProxyRule mockServerRuleHttpPort;
     @InjectMocks
     private ProxyRule mockServerRulePerSuite;
     @InjectMocks
@@ -50,13 +47,11 @@ public class ProxyRuleTestWithMocks {
     @Before
     public void setupFixture() {
         httpPort = PortFactory.findFreePort();
-        httpsPort = PortFactory.findFreePort();
 
         mockServerRuleDynamicPorts = new ProxyRule(this);
-        mockServerRuleHttpPortOnly = new ProxyRule(httpPort, null, this, false);
-        mockServerRuleBothPorts = new ProxyRule(httpPort, httpsPort, this, false);
-        mockServerRulePerSuite = new ProxyRule(httpPort, httpsPort, this, true);
-        mockServerRulePerSuiteDuplicate = new ProxyRule(httpPort, httpsPort, this, true);
+        mockServerRuleHttpPort = new ProxyRule(httpPort, this, false);
+        mockServerRulePerSuite = new ProxyRule(httpPort, this, true);
+        mockServerRulePerSuiteDuplicate = new ProxyRule(httpPort, this, true);
 
         initMocks(this);
 
@@ -69,33 +64,19 @@ public class ProxyRuleTestWithMocks {
         mockServerRuleDynamicPorts.apply(mockStatement, Description.EMPTY).evaluate();
 
         // then
-        assertThat((ClientAndProxy) mockServerClient, is(mockClientAndProxy));
+        assertThat((ClientAndProxy) proxyClient, is(mockClientAndProxy));
         verify(mockStatement).evaluate();
         verify(mockClientAndProxy).stop();
     }
 
     @Test
-    public void shouldStartAndStopProxyWithHTTPPortOnly() throws Throwable {
+    public void shouldStartAndStopProxy() throws Throwable {
         // when
-        mockServerRuleHttpPortOnly.apply(mockStatement, Description.EMPTY).evaluate();
+        mockServerRuleHttpPort.apply(mockStatement, Description.EMPTY).evaluate();
 
         // then
-        assertThat((ClientAndProxy) mockServerClient, sameInstance(mockClientAndProxy));
-        assertThat(mockServerRuleHttpPortOnly.getHttpPort(), is(httpPort));
-        assertThat(mockServerRuleHttpPortOnly.getHttpsPort(), is(nullValue()));
-        verify(mockStatement).evaluate();
-        verify(mockClientAndProxy).stop();
-    }
-
-    @Test
-    public void shouldStartAndStopProxyWithHTTPAndHTTPSPort() throws Throwable {
-        // when
-        mockServerRuleBothPorts.apply(mockStatement, Description.EMPTY).evaluate();
-
-        // then
-        assertThat((ClientAndProxy) mockServerClient, sameInstance(mockClientAndProxy));
-        assertThat(mockServerRuleBothPorts.getHttpPort(), is(httpPort));
-        assertThat(mockServerRuleBothPorts.getHttpsPort(), is(httpsPort));
+        assertThat((ClientAndProxy) proxyClient, sameInstance(mockClientAndProxy));
+        assertThat(mockServerRuleHttpPort.getHttpPort(), is(httpPort));
         verify(mockStatement).evaluate();
         verify(mockClientAndProxy).stop();
     }
@@ -106,9 +87,8 @@ public class ProxyRuleTestWithMocks {
         mockServerRulePerSuite.apply(mockStatement, Description.EMPTY).evaluate();
 
         // then
-        assertThat((ClientAndProxy) mockServerClient, is(mockClientAndProxy));
+        assertThat((ClientAndProxy) proxyClient, is(mockClientAndProxy));
         assertThat(mockServerRulePerSuite.getHttpPort(), is(httpPort));
-        assertThat(mockServerRulePerSuite.getHttpsPort(), is(httpsPort));
         verify(mockStatement).evaluate();
         verify(clientAndProxyFactory, times(1)).newClientAndProxy();
         verify(mockClientAndProxy, times(0)).stop();
@@ -119,9 +99,8 @@ public class ProxyRuleTestWithMocks {
         mockServerRulePerSuiteDuplicate.apply(mockStatement, Description.EMPTY).evaluate();
 
         // then
-        assertThat((ClientAndProxy) mockServerClient, is(mockClientAndProxy));
+        assertThat((ClientAndProxy) proxyClient, is(mockClientAndProxy));
         assertThat(mockServerRulePerSuiteDuplicate.getHttpPort(), is(httpPort));
-        assertThat(mockServerRulePerSuiteDuplicate.getHttpsPort(), is(httpsPort));
         verify(mockStatement).evaluate();
         verify(clientAndProxyFactory, times(0)).newClientAndProxy();
         verify(mockClientAndProxy, times(0)).stop();

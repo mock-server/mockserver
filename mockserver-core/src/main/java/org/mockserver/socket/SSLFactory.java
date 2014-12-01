@@ -153,4 +153,15 @@ public class SSLFactory {
         }
     }
 
+    public static SSLEngine createClientSSLEngine() {
+        SSLEngine engine = SSLFactory.getInstance().sslContext().createSSLEngine();
+        engine.setUseClientMode(true);
+        return engine;
+    }
+
+    public static SSLEngine createServerSSLEngine() {
+        SSLEngine engine = SSLFactory.getInstance().sslContext().createSSLEngine();
+        engine.setUseClientMode(false);
+        return engine;
+    }
 }

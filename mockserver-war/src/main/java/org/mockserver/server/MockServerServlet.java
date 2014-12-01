@@ -29,9 +29,8 @@ public class MockServerServlet extends HttpServlet {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     // mockserver
-    private LogFilter logFilter = new LogFilter();
     private MockServerMatcher mockServerMatcher = new MockServerMatcher();
-    private ActionHandler actionHandler = new ActionHandler(logFilter);
+    private ActionHandler actionHandler = new ActionHandler();
     // mappers
     private HttpServletToMockServerRequestMapper httpServletToMockServerRequestMapper = new HttpServletToMockServerRequestMapper();
     private MockServerToHttpServletResponseMapper mockServerToHttpServletResponseMapper = new MockServerToHttpServletResponseMapper();
@@ -66,13 +65,13 @@ public class MockServerServlet extends HttpServlet {
             } else if (requestPath.equals("/clear")) {
 
                 HttpRequest httpRequest = httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest));
-                logFilter.clear(httpRequest);
+                LogFilter.SERVER_INSTANCE.clear(httpRequest);
                 mockServerMatcher.clear(httpRequest);
                 httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
 
             } else if (requestPath.equals("/reset")) {
 
-                logFilter.reset();
+                LogFilter.SERVER_INSTANCE.reset();
                 mockServerMatcher.reset();
                 httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
 
@@ -83,14 +82,14 @@ public class MockServerServlet extends HttpServlet {
 
             } else if (requestPath.equals("/retrieve")) {
 
-                Expectation[] expectations = logFilter.retrieve(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
+                Expectation[] expectations = LogFilter.SERVER_INSTANCE.retrieve(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
                 httpServletResponse.setStatus(HttpStatusCode.OK_200.code());
                 httpServletResponse.setHeader(HttpHeaders.Names.CONTENT_TYPE, "application/json; charset=utf-8");
                 IOStreamUtils.writeToOutputStream(expectationSerializer.serialize(expectations).getBytes(), httpServletResponse);
 
             } else if (requestPath.equals("/verify")) {
 
-                String result = logFilter.verify(verificationSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
+                String result = LogFilter.SERVER_INSTANCE.verify(verificationSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
                 if (result.isEmpty()) {
                     httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
                 } else {
@@ -101,7 +100,7 @@ public class MockServerServlet extends HttpServlet {
 
             } else if (requestPath.equals("/verifySequence")) {
 
-                String result = logFilter.verify(verificationSequenceSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
+                String result = LogFilter.SERVER_INSTANCE.verify(verificationSequenceSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
                 if (result.isEmpty()) {
                     httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
                 } else {

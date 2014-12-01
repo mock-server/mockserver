@@ -58,9 +58,7 @@ public class BookServer {
 
                                 // add HTTPS support
                                 if (secure) {
-                                    SSLEngine engine = SSLFactory.getInstance().sslContext().createSSLEngine();
-                                    engine.setUseClientMode(false);
-                                    pipeline.addLast(new SslHandler(engine));
+                                    pipeline.addLast(new SslHandler(SSLFactory.createServerSSLEngine()));
                                 }
 
                                 // pipeline.addLast("logger", new LoggingHandler("BOOK_HANDLER"));

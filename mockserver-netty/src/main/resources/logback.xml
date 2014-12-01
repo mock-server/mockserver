@@ -43,7 +43,7 @@
     </logger>
 
     <logger name="org.mockserver" level="WARN"/>
-    <logger name="org.mockserver.proxy.http.HttpProxy" level="INFO"/>
+    <logger name="org.mockserver.proxy.Proxy" level="INFO"/>
     <logger name="org.mockserver.mockserver.MockServer" level="INFO"/>
 
     <root level="WARN">

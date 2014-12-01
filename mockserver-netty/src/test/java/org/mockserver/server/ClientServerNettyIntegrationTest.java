@@ -3,7 +3,7 @@ package org.mockserver.server;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.mockserver.client.server.MockServerClient;
-import org.mockserver.integration.testserver.TestServer;
+import org.mockserver.echo.EchoServer;
 import org.mockserver.mockserver.MockServer;
 import org.mockserver.socket.PortFactory;
 
@@ -13,11 +13,10 @@ import org.mockserver.socket.PortFactory;
 public class ClientServerNettyIntegrationTest extends AbstractClientServerSharedClassloadersAndTestClasspathIntegrationTest {
 
     private final static int TEST_SERVER_HTTP_PORT = PortFactory.findFreePort();
-    private final static int TEST_SERVER_HTTPS_PORT = PortFactory.findFreePort();
     private final static int SERVER_HTTP_PORT = PortFactory.findFreePort();
     private final static int SERVER_HTTPS_PORT = PortFactory.findFreePort();
     private static MockServer mockServer;
-    private static TestServer testServer = new TestServer();
+    private static EchoServer echoServer;
 
     @BeforeClass
     public static void startServer() throws Exception {
@@ -25,7 +24,7 @@ public class ClientServerNettyIntegrationTest extends AbstractClientServerShared
         mockServer = new MockServer(SERVER_HTTP_PORT, SERVER_HTTPS_PORT);
 
         // start test server
-        testServer.startServer(TEST_SERVER_HTTP_PORT, TEST_SERVER_HTTPS_PORT);
+        echoServer = new EchoServer(TEST_SERVER_HTTP_PORT);
 
         // start client
         mockServerClient = new MockServerClient("localhost", SERVER_HTTP_PORT, servletContext);
@@ -34,14 +33,10 @@ public class ClientServerNettyIntegrationTest extends AbstractClientServerShared
     @AfterClass
     public static void stopServer() throws Exception {
         // stop mock server
-        if (mockServer != null) {
-            mockServer.stop();
-        }
+        mockServer.stop();
 
         // stop test server
-        if (testServer != null) {
-            testServer.stop();
-        }
+        echoServer.stop();
     }
 
     @Override
@@ -58,11 +53,5 @@ public class ClientServerNettyIntegrationTest extends AbstractClientServerShared
     public int getTestServerPort() {
         return TEST_SERVER_HTTP_PORT;
     }
-
-    @Override
-    public int getTestServerSecurePort() {
-        return TEST_SERVER_HTTPS_PORT;
-    }
-
 
 }

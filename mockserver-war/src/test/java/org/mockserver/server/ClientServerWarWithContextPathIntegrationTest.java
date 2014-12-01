@@ -7,7 +7,7 @@ import org.apache.catalina.startup.Tomcat;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.mockserver.client.server.MockServerClient;
-import org.mockserver.integration.testserver.TestServer;
+import org.mockserver.echo.EchoServer;
 import org.mockserver.socket.PortFactory;
 import org.mockserver.socket.SSLFactory;
 
@@ -21,9 +21,8 @@ public class ClientServerWarWithContextPathIntegrationTest extends AbstractClien
     private final static int SERVER_HTTP_PORT = PortFactory.findFreePort();
     private final static int SERVER_HTTPS_PORT = PortFactory.findFreePort();
     private final static int TEST_SERVER_HTTP_PORT = PortFactory.findFreePort();
-    private final static int TEST_SERVER_HTTPS_PORT = PortFactory.findFreePort();
     private static Tomcat tomcat;
-    private static TestServer testServer = new TestServer();
+    private static EchoServer echoServer;
 
     @BeforeClass
     public static void startServer() throws Exception {
@@ -62,7 +61,7 @@ public class ClientServerWarWithContextPathIntegrationTest extends AbstractClien
         tomcat.start();
 
         // start test server
-        testServer.startServer(TEST_SERVER_HTTP_PORT, TEST_SERVER_HTTPS_PORT);
+        echoServer = new EchoServer(TEST_SERVER_HTTP_PORT);
 
         // start client
         mockServerClient = new MockServerClient("localhost", SERVER_HTTP_PORT, servletContext);
@@ -75,9 +74,7 @@ public class ClientServerWarWithContextPathIntegrationTest extends AbstractClien
         tomcat.getServer().await();
 
         // stop test server
-        if (testServer != null) {
-            testServer.stop();
-        }
+        echoServer.stop();
     }
 
     @Override
@@ -93,10 +90,5 @@ public class ClientServerWarWithContextPathIntegrationTest extends AbstractClien
     @Override
     public int getTestServerPort() {
         return TEST_SERVER_HTTP_PORT;
-    }
-
-    @Override
-    public int getTestServerSecurePort() {
-        return TEST_SERVER_HTTPS_PORT;
     }
 }

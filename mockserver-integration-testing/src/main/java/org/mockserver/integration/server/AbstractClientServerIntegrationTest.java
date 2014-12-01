@@ -4,6 +4,7 @@ import com.google.common.net.HttpHeaders;
 import com.google.common.net.MediaType;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.server.MockServerClient;
@@ -70,8 +71,6 @@ public abstract class AbstractClientServerIntegrationTest {
     public abstract int getMockServerSecurePort();
 
     public abstract int getTestServerPort();
-
-    public abstract int getTestServerSecurePort();
 
     protected String calculatePath(String path) {
         return "/" + path;
@@ -176,7 +175,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 .forward(
                         forward()
                                 .withHost("127.0.0.1")
-                                .withPort(getTestServerSecurePort())
+                                .withPort(getTestServerPort())
                                 .withScheme(HttpForward.Scheme.HTTPS)
                 );
 

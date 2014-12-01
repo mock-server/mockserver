@@ -3,6 +3,7 @@ package org.mockserver.proxy.http;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -20,10 +21,9 @@ import org.mockserver.model.HttpCallback;
 import org.mockserver.model.HttpForward;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.proxy.Proxy;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
-
-import java.net.InetSocketAddress;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -58,7 +58,7 @@ public class HttpProxyHandlerTest {
     private VerificationSequence mockVerificationSequence;
     // mockserver
     private LogFilter mockLogFilter;
-    private HttpProxy mockHttpProxy;
+    private Proxy mockHttpProxy;
     @Mock
     private ActionHandler mockActionHandler;
     // serializers
@@ -81,8 +81,9 @@ public class HttpProxyHandlerTest {
     public void setupFixture() {
         // given - a mock server handler
         mockLogFilter = mock(LogFilter.class);
-        mockHttpProxy = mock(HttpProxy.class);
-        httpProxyHandler = new HttpProxyHandler(mockLogFilter, mockHttpProxy, new InetSocketAddress(1234));
+        mockHttpProxy = mock(Proxy.class);
+        LogFilter.PROXY_INSTANCE = mockLogFilter;
+        httpProxyHandler = new HttpProxyHandler(mockHttpProxy);
 
         initMocks(this);
 
@@ -107,6 +108,11 @@ public class HttpProxyHandlerTest {
         when(mockExpectation.getHttpResponse(anyBoolean())).thenReturn(mockHttpResponse);
         when(mockExpectation.getHttpForward()).thenReturn(mockHttpForward);
         when(mockExpectation.getHttpCallback()).thenReturn(mockHttpCallback);
+    }
+
+    @After
+    public void tearDownFixture() {
+        LogFilter.resetProxyInstance();
     }
 
     @Test

@@ -5,8 +5,10 @@ import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.conn.ssl.AllowAllHostnameVerifier;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
@@ -59,8 +61,6 @@ public abstract class AbstractClientProxyIntegrationTest {
 
     public abstract int getServerPort();
 
-    public abstract int getServerSecurePort();
-
     protected String calculatePath(String path) {
         return "/" + path;
     }
@@ -79,24 +79,29 @@ public abstract class AbstractClientProxyIntegrationTest {
             output.write(("" +
                     "GET /test_headers_only HTTP/1.1\r\n" +
                     "Host: localhost:" + getServerPort() + "\r\n" +
+                    "x-test: test_headers_only\r\n" +
+                    "Connection: keep-alive\r\n" +
                     "\r\n"
             ).getBytes(Charsets.UTF_8));
             output.flush();
 
             // then
-            assertContains(IOStreamUtils.readInputStreamToString(socket), "X-Test: test_headers_only");
+            assertContains(IOStreamUtils.readInputStreamToString(socket), "x-test: test_headers_only");
 
             // - send GET request for headers and body
             output.write(("" +
                     "GET /test_headers_and_body HTTP/1.1\r\n" +
                     "Host: localhost:" + getServerPort() + "\r\n" +
-                    "\r\n"
+                    "Content-Length: " + "an_example_body".getBytes(Charsets.UTF_8).length + "\r\n" +
+                    "x-test: test_headers_and_body\r\n" +
+                    "\r\n" +
+                    "an_example_body"
             ).getBytes(Charsets.UTF_8));
             output.flush();
 
             // then
             String response = IOStreamUtils.readInputStreamToString(socket);
-            assertContains(response, "X-Test: test_headers_and_body");
+            assertContains(response, "x-test: test_headers_and_body");
             assertContains(response, "an_example_body");
         } finally {
             if (socket != null) {
@@ -111,16 +116,16 @@ public abstract class AbstractClientProxyIntegrationTest {
         HttpClient httpClient = createHttpClient();
 
         // when
-        HttpResponse response = httpClient.execute(
-                new HttpGet(
-                        new URIBuilder()
-                                .setScheme("http")
-                                .setHost("localhost")
-                                .setPort(getServerPort())
-                                .setPath("/test_headers_and_body")
-                                .build()
-                )
+        HttpPost request = new HttpPost(
+                new URIBuilder()
+                        .setScheme("http")
+                        .setHost("localhost")
+                        .setPort(getServerPort())
+                        .setPath("/test_headers_and_body")
+                        .build()
         );
+        request.setEntity(new StringEntity("an_example_body"));
+        HttpResponse response = httpClient.execute(request);
 
         // then
         assertEquals(HttpStatusCode.OK_200.code(), response.getStatusLine().getStatusCode());
@@ -138,7 +143,7 @@ public abstract class AbstractClientProxyIntegrationTest {
             // when
             // - send GET request
             output.write(("" +
-                    "GET /unknown HTTP/1.1\r\n" +
+                    "GET /not_found HTTP/1.1\r\n" +
                     "Host: localhost:" + getServerPort() + "\r\n" +
                     "Connection: close\r\n" +
                     "\r\n"

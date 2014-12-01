@@ -22,13 +22,11 @@ public class MockServerInitializer extends ChannelInitializer<SocketChannel> {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final MockServerMatcher mockServerMatcher;
-    private final LogFilter logFilter;
     private final boolean secure;
     private final MockServer mockServer;
 
-    public MockServerInitializer(MockServerMatcher mockServerMatcher, LogFilter logFilter, MockServer mockServer, boolean secure) {
+    public MockServerInitializer(MockServerMatcher mockServerMatcher, MockServer mockServer, boolean secure) {
         this.mockServerMatcher = mockServerMatcher;
-        this.logFilter = logFilter;
         this.secure = secure;
         this.mockServer = mockServer;
     }
@@ -40,9 +38,7 @@ public class MockServerInitializer extends ChannelInitializer<SocketChannel> {
 
         // add HTTPS support
         if (secure) {
-            SSLEngine engine = SSLFactory.getInstance().sslContext().createSSLEngine();
-            engine.setUseClientMode(false);
-            pipeline.addLast(new SslHandler(engine));
+            pipeline.addLast(new SslHandler(SSLFactory.createServerSSLEngine()));
         }
 
         // add logging
@@ -58,6 +54,6 @@ public class MockServerInitializer extends ChannelInitializer<SocketChannel> {
         pipeline.addLast(new MockServerServerCodec(secure));
 
         // add mock server handlers
-        pipeline.addLast(new MockServerHandler(mockServerMatcher, logFilter, mockServer));
+        pipeline.addLast(new MockServerHandler(mockServerMatcher, mockServer));
     }
 }

@@ -15,7 +15,6 @@ public class ProxyRule implements TestRule {
     private static ClientAndProxy perTestSuiteClientAndProxy;
     private final Object target;
     private final Integer httpPort;
-    private final Integer httpsPort;
     private final boolean perTestSuite;
     private ClientAndProxyFactory clientAndProxyFactory;
 
@@ -51,48 +50,28 @@ public class ProxyRule implements TestRule {
      * @param target an instance of the test being executed
      */
     public ProxyRule(Integer httpPort, Object target) {
-        this(httpPort, null, target, false);
-    }
-
-    /**
-     * Start the proxy prior to test execution and stop the proxy after the tests have completed.
-     * This constructor dynamically create a proxy that accepts HTTP requests on the specified port
-     *
-     * @param httpPort the HTTP port for the proxy
-     * @param target an instance of the test being executed
-     * @param perTestSuite indicates how many instances of the proxy are created
-     *                     if true a single proxy is created per JVM
-     *                     if false one instance per test class is created
-     */
-    public ProxyRule(Integer httpPort, Object target, boolean perTestSuite) {
-        this(httpPort, null, target, perTestSuite);
+        this(httpPort, target, false);
     }
 
     /**
      * Start the proxy prior to test execution and stop the proxy after the tests have completed.
      * This constructor dynamically create a proxy that accepts HTTP and HTTPS requests on the specified ports
      *
-     * @param httpPort the HTTP port for the proxy
-     * @param httpsPort the HTTPS port for the proxy
+     * @param httpPort the HTTP(S) port for the proxy
      * @param target an instance of the test being executed
      * @param perTestSuite indicates how many instances of the proxy are created
      *                     if true a single proxy is created per JVM
      *                     if false one instance per test class is created
      */
-    public ProxyRule(Integer httpPort, Integer httpsPort, Object target, boolean perTestSuite) {
+    public ProxyRule(Integer httpPort, Object target, boolean perTestSuite) {
         this.httpPort = httpPort;
-        this.httpsPort = httpsPort;
         this.target = target;
         this.perTestSuite = perTestSuite;
-        this.clientAndProxyFactory = new ClientAndProxyFactory(httpPort, httpsPort);
+        this.clientAndProxyFactory = new ClientAndProxyFactory(httpPort);
     }
 
     public Integer getHttpPort() {
         return httpPort;
-    }
-
-    public Integer getHttpsPort() {
-        return httpsPort;
     }
 
     public Statement apply(Statement base, Description description) {
@@ -146,19 +125,13 @@ public class ProxyRule implements TestRule {
     @VisibleForTesting
     class ClientAndProxyFactory {
         private final Integer httpPort;
-        private final Integer httpsPort;
 
-        public ClientAndProxyFactory(Integer httpPort, Integer httpsPort) {
+        public ClientAndProxyFactory(Integer httpPort) {
             this.httpPort = httpPort;
-            this.httpsPort = httpsPort;
         }
 
         public ClientAndProxy newClientAndProxy() {
-            if (httpsPort == null) {
-                return ClientAndProxy.startClientAndProxy(httpPort);
-            } else {
-                return ClientAndProxy.startClientAndProxy(httpPort, httpsPort);
-            }
+            return ClientAndProxy.startClientAndProxy(httpPort);
         }
     }
 }

@@ -1,6 +1,5 @@
 package org.mockserver.maven;
 
-import com.google.common.annotations.VisibleForTesting;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.mockserver.logging.Logging;
@@ -34,14 +33,14 @@ public class MockServerRunAndWaitMojo extends MockServerAbstractMojo {
             }
             try {
                 if (timeout > 0) {
-                    getEmbeddedJettyHolder().start(serverPort, serverSecurePort, proxyPort, proxySecurePort, createInitializer());
+                    getEmbeddedJettyHolder().start(serverPort, serverSecurePort, proxyPort, createInitializer());
                     try {
                         settableFuture.get(timeout, TimeUnit.SECONDS);
                     } catch (TimeoutException te) {
                         // do nothing this is an expected exception when the timeout expires
                     }
                 } else {
-                    getEmbeddedJettyHolder().start(serverPort, serverSecurePort, proxyPort, proxySecurePort, createInitializer());
+                    getEmbeddedJettyHolder().start(serverPort, serverSecurePort, proxyPort, createInitializer());
                     settableFuture.get();
                 }
             } catch (Exception e) {

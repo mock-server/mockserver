@@ -7,11 +7,13 @@
         </encoder>
     </appender>
 
-    <logger name="org.mockserver" level="WARN"/>
-    <logger name="org.mockserver.proxy.http.HttpProxy" level="INFO"/>
-    <logger name="org.mockserver.mockserver.MockServer" level="INFO"/>
+    <logger name="org.mockserver" level="TRACE"/>
+    <!--<logger name="org.mockserver.proxy.http.HttpProxy" level="INFO"/>-->
+    <!--<logger name="org.mockserver.mockserver.MockServer" level="INFO"/>-->
+    <logger name="io.netty.channel.nio.NioEventLoop" level="WARN"/>
+    <logger name="io.netty.util.internal" level="WARN"/>
 
-    <root level="WARN">
+    <root level="TRACE">
         <appender-ref ref="FILE"/>
     </root>
 </configuration>

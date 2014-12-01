@@ -2,7 +2,7 @@ package org.mockserver.integration;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.mockserver.integration.testserver.TestServer;
+import org.mockserver.echo.EchoServer;
 import org.mockserver.server.AbstractClientServerSharedClassloadersAndTestClasspathIntegrationTest;
 import org.mockserver.socket.PortFactory;
 
@@ -18,16 +18,15 @@ public class ClientAndServerIntegrationTest extends AbstractClientServerSharedCl
     private static final int SERVER_HTTP_PORT = PortFactory.findFreePort();
     private static final int SERVER_HTTPS_PORT = PortFactory.findFreePort();
     private final static int TEST_SERVER_HTTP_PORT = PortFactory.findFreePort();
-    private final static int TEST_SERVER_HTTPS_PORT = PortFactory.findFreePort();
-    private static TestServer testServer = new TestServer();
+    private static EchoServer httpEchoServer;
 
     @BeforeClass
     public static void startServer() throws InterruptedException, ExecutionException {
         // start mock server and client
         mockServerClient = startClientAndServer(SERVER_HTTP_PORT, SERVER_HTTPS_PORT);
 
-        // start test server
-        testServer.startServer(TEST_SERVER_HTTP_PORT, TEST_SERVER_HTTPS_PORT);
+        // start echo servers
+        httpEchoServer = new EchoServer(TEST_SERVER_HTTP_PORT);
     }
 
     @AfterClass
@@ -37,10 +36,8 @@ public class ClientAndServerIntegrationTest extends AbstractClientServerSharedCl
             mockServerClient.stop();
         }
 
-        // stop test server
-        if (testServer != null) {
-            testServer.stop();
-        }
+        // stop echo server
+        httpEchoServer.stop();
     }
 
     @Override
@@ -56,10 +53,5 @@ public class ClientAndServerIntegrationTest extends AbstractClientServerSharedCl
     @Override
     public int getTestServerPort() {
         return TEST_SERVER_HTTP_PORT;
-    }
-
-    @Override
-    public int getTestServerSecurePort() {
-        return TEST_SERVER_HTTPS_PORT;
     }
 }

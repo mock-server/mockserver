@@ -23,6 +23,10 @@ import java.util.List;
 @SuppressWarnings("deprecation")
 public class KeyStoreFactory {
 
+    static {
+        Security.addProvider(new BouncyCastleProvider());
+    }
+
     /**
      * Create a random 2048 bit RSA key pair
      */

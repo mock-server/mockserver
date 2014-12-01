@@ -3,6 +3,7 @@ package org.mockserver.mockserver;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -82,7 +83,8 @@ public class MockServerHandlerTest {
         // given - a mock server handler
         mockLogFilter = mock(LogFilter.class);
         mockMockServerMatcher = mock(MockServerMatcher.class);
-        mockServerHandler = new MockServerHandler(mockMockServerMatcher, mockLogFilter, mockMockServer);
+        LogFilter.SERVER_INSTANCE  = mockLogFilter;
+        mockServerHandler = new MockServerHandler(mockMockServerMatcher, mockMockServer);
 
         initMocks(this);
 
@@ -108,6 +110,11 @@ public class MockServerHandlerTest {
         when(mockExpectation.getHttpResponse(anyBoolean())).thenReturn(mockHttpResponse);
         when(mockExpectation.getHttpForward()).thenReturn(mockHttpForward);
         when(mockExpectation.getHttpCallback()).thenReturn(mockHttpCallback);
+    }
+
+    @After
+    public void tearDownFixture() {
+        LogFilter.resetServerInstance();
     }
 
     @Test

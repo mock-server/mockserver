@@ -31,7 +31,7 @@ public class NettyHttpClientTest {
     @BeforeClass
     public static void startEchoServer() {
         freePort = PortFactory.findFreePort();
-        echoServer = new EchoServer(freePort, false);
+        echoServer = new EchoServer(freePort);
     }
 
     @AfterClass
@@ -100,19 +100,6 @@ public class NettyHttpClientTest {
 
         // when
         nettyHttpClient.sendRequest(outboundRequest("127.0.0.1", freePort, "", request()));
-    }
-
-    @Test
-    public void shouldThrowSocketCommunicationExceptionForUnknownHostException() {
-        // given
-        NettyHttpClient nettyHttpClient = new NettyHttpClient();
-
-        // then
-        exception.expect(SocketConnectionException.class);
-        exception.expectMessage(containsString("Unable to connect to socket not.real.mock-server.com:" + freePort));
-
-        // when
-        nettyHttpClient.sendRequest(outboundRequest("not.real.mock-server.com", freePort, "", request()));
     }
 
 }

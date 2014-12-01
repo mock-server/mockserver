@@ -5,9 +5,9 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockserver.integration.testserver.TestServer;
-import org.mockserver.proxy.http.HttpProxy;
-import org.mockserver.proxy.http.HttpProxyBuilder;
+import org.mockserver.echo.EchoServer;
+import org.mockserver.proxy.Proxy;
+import org.mockserver.proxy.ProxyBuilder;
 import org.mockserver.socket.PortFactory;
 import org.mockserver.socket.SSLFactory;
 import org.mockserver.streams.IOStreamUtils;
@@ -25,37 +25,32 @@ import static org.mockserver.test.Assert.assertContains;
  */
 public class NettyDirectSecureProxyIntegrationTest {
 
-    static {
-        Security.addProvider(new BouncyCastleProvider());
-    }
-
     private final static Logger logger = LoggerFactory.getLogger(NettyDirectSecureProxyIntegrationTest.class);
 
-    private final static Integer SERVER_HTTP_PORT = PortFactory.findFreePort();
     private final static Integer SERVER_HTTPS_PORT = PortFactory.findFreePort();
     private final static Integer PROXY_DIRECT_SECURE_PORT = PortFactory.findFreePort();
-    private static TestServer testServer = new TestServer();
-    private static HttpProxy httpProxy;
+    private static EchoServer echoServer;
+    private static Proxy httpProxy;
 
     @BeforeClass
     public static void setupFixture() throws Exception {
-        logger.debug("SERVER_HTTP_PORT = " + SERVER_HTTP_PORT);
         logger.debug("SERVER_HTTPS_PORT = " + SERVER_HTTPS_PORT);
         logger.debug("PROXY_DIRECT_SECURE_PORT = " + PROXY_DIRECT_SECURE_PORT);
 
         // start server
-        testServer.startServer(SERVER_HTTP_PORT, SERVER_HTTPS_PORT);
+        echoServer = new EchoServer(SERVER_HTTPS_PORT);
 
         // start proxy
-        httpProxy = new HttpProxyBuilder()
-                .withDirectSSL(PROXY_DIRECT_SECURE_PORT, "127.0.0.1", SERVER_HTTPS_PORT)
+        httpProxy = new ProxyBuilder()
+                .withLocalPort(PROXY_DIRECT_SECURE_PORT)
+                .withDirect("127.0.0.1", SERVER_HTTPS_PORT)
                 .build();
     }
 
     @AfterClass
     public static void shutdownFixture() {
         // stop server
-        testServer.stop();
+        echoServer.stop();
 
         // stop proxy
         httpProxy.stop();
@@ -73,9 +68,10 @@ public class NettyDirectSecureProxyIntegrationTest {
             // when
             // - send GET request for headers only
             output.write(("" +
-                    "GET /test_headers_only HTTP/1.1\r" + System.getProperty("line.separator") +
-                    "Host: localhost:" + SERVER_HTTP_PORT + "\r" + System.getProperty("line.separator") +
-                    "\r" + System.getProperty("line.separator")
+                    "GET /test_headers_only HTTP/1.1\r\n" +
+                    "Host: localhost:" + SERVER_HTTPS_PORT + "\r\n" +
+                    "X-Test: test_headers_only\r\n" +
+                    "\r\n"
             ).getBytes(Charsets.UTF_8));
             output.flush();
 
@@ -100,9 +96,12 @@ public class NettyDirectSecureProxyIntegrationTest {
 
             // - send GET request for headers and body
             output.write(("" +
-                    "GET /test_headers_and_body HTTP/1.1\r" + System.getProperty("line.separator") +
-                    "Host: localhost:" + SERVER_HTTP_PORT + "\r" + System.getProperty("line.separator") +
-                    "\r" + System.getProperty("line.separator")
+                    "GET /test_headers_and_body HTTP/1.1\r\n" +
+                    "Host: localhost:" + SERVER_HTTPS_PORT + "\r\n" +
+                    "X-Test: test_headers_and_body\r\n" +
+                    "Content-Length:" + "an_example_body".getBytes(Charsets.UTF_8).length + "\r\n" +
+                    "\r\n" +
+                    "an_example_body" + "\r\n"
             ).getBytes(Charsets.UTF_8));
             output.flush();
 
@@ -129,9 +128,9 @@ public class NettyDirectSecureProxyIntegrationTest {
 
             // - send GET request for headers and body
             output.write(("" +
-                    "GET /unknown HTTP/1.1\r" + System.getProperty("line.separator") +
-                    "Host: localhost:" + SERVER_HTTP_PORT + "\r" + System.getProperty("line.separator") +
-                    "\r" + System.getProperty("line.separator")
+                    "GET /not_found HTTP/1.1\r\n" +
+                    "Host: localhost:" + SERVER_HTTPS_PORT + "\r\n" +
+                    "\r\n"
             ).getBytes(Charsets.UTF_8));
             output.flush();
 

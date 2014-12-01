@@ -17,9 +17,9 @@ public class ActionHandler {
     private HttpResponseActionHandler httpResponseActionHandler = new HttpResponseActionHandler();
     private Filters filters = new Filters();
 
-    public ActionHandler(LogFilter logFilter) {
+    public ActionHandler() {
         filters.withFilter(new org.mockserver.model.HttpRequest(), new HopByHopHeaderFilter());
-        filters.withFilter(new org.mockserver.model.HttpRequest(), logFilter);
+        filters.withFilter(new org.mockserver.model.HttpRequest(), LogFilter.SERVER_INSTANCE);
     }
 
     public synchronized HttpResponse processAction(Action action, HttpRequest httpRequest) {
