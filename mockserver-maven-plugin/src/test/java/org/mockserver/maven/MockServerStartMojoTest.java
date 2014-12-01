@@ -43,7 +43,7 @@ public class MockServerStartMojoTest {
         mockServerStartMojo.execute();
 
         // then
-        verify(mockEmbeddedJettyHolder).start(eq(1), eq(2), eq(3), eq(4), any(ExampleInitializationClass.class));
+        verify(mockEmbeddedJettyHolder).start(eq(1), eq(2), eq(3), any(ExampleInitializationClass.class));
     }
 
     @Test

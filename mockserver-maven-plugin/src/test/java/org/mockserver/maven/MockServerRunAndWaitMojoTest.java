@@ -2,11 +2,9 @@ package org.mockserver.maven;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockserver.mockserver.MockServer;
 
 import java.util.concurrent.ExecutionException;
@@ -52,7 +50,7 @@ public class MockServerRunAndWaitMojoTest {
         mockServerRunAndWaitMojo.execute();
 
         // then
-        verify(mockEmbeddedJettyHolder).start(eq(1), eq(2), eq(3), eq(4), any(ExampleInitializationClass.class));
+        verify(mockEmbeddedJettyHolder).start(eq(1), eq(2), eq(3), any(ExampleInitializationClass.class));
         verify(objectSettableFuture).get();
     }
 
@@ -84,7 +82,7 @@ public class MockServerRunAndWaitMojoTest {
         mockServerRunAndWaitMojo.execute();
 
         // then
-        verify(mockEmbeddedJettyHolder).start(eq(1), eq(2), eq(3), eq(4), any(ExampleInitializationClass.class));
+        verify(mockEmbeddedJettyHolder).start(eq(1), eq(2), eq(3), any(ExampleInitializationClass.class));
         verify(objectSettableFuture).get(2, TimeUnit.SECONDS);
     }
 

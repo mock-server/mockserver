@@ -25,6 +25,9 @@ public class MockServerStopForkedMojo extends MockServerAbstractMojo {
             if (proxyPort != -1) {
                 getLog().info("Stopped the proxy running on port [" + proxyPort + "]");
             }
+            if (proxySecurePort != -1) {
+                getLog().info("Stopped the secure proxy running on port [" + proxySecurePort + "]");
+            }
         }
     }
 }

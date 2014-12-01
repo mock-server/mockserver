@@ -1,21 +1,10 @@
 package org.mockserver.maven;
 
-import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.apache.maven.project.MavenProject;
 import org.mockserver.logging.Logging;
-
-import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 /**
  * Start the MockServer in the initialize phase of the build and continue build so that tests can run that rely on the MockServer
@@ -43,7 +32,7 @@ public class MockServerStartMojo extends MockServerAbstractMojo {
                         + (proxySecurePort != -1 ? " proxySecurePort " + proxySecurePort : "")
                 );
             }
-            getEmbeddedJettyHolder().start(serverPort, serverSecurePort, proxyPort, proxySecurePort, createInitializer());
+            getEmbeddedJettyHolder().start(serverPort, serverSecurePort, proxyPort, createInitializer());
         }
 
     }

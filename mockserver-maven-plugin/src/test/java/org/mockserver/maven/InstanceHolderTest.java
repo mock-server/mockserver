@@ -2,7 +2,6 @@ package org.mockserver.maven;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -10,10 +9,11 @@ import org.mockserver.client.proxy.ProxyClient;
 import org.mockserver.client.server.MockServerClient;
 import org.mockserver.mockserver.MockServer;
 import org.mockserver.mockserver.MockServerBuilder;
-import org.mockserver.proxy.http.HttpProxy;
-import org.mockserver.proxy.http.HttpProxyBuilder;
+import org.mockserver.proxy.Proxy;
+import org.mockserver.proxy.ProxyBuilder;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.AnyOf.anyOf;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.Is.isA;
 import static org.junit.Assert.assertNotNull;
@@ -27,12 +27,12 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class InstanceHolderTest {
 
     @Mock
-    private HttpProxyBuilder mockProxyBuilder;
+    private ProxyBuilder mockProxyBuilder;
     @Mock
     private MockServerBuilder mockMockServerBuilder;
 
     @Mock
-    private HttpProxy mockProxy;
+    private Proxy mockProxy;
     @Mock
     private MockServer mockMockServer;
 
@@ -52,8 +52,7 @@ public class InstanceHolderTest {
 
         when(mockMockServerBuilder.withHTTPPort(anyInt())).thenReturn(mockMockServerBuilder);
         when(mockMockServerBuilder.withHTTPSPort(anyInt())).thenReturn(mockMockServerBuilder);
-        when(mockProxyBuilder.withHTTPPort(anyInt())).thenReturn(mockProxyBuilder);
-        when(mockProxyBuilder.withHTTPSPort(anyInt())).thenReturn(mockProxyBuilder);
+        when(mockProxyBuilder.withLocalPort(anyInt())).thenReturn(mockProxyBuilder);
 
         when(mockProxy.isRunning()).thenReturn(false);
         when(mockMockServer.isRunning()).thenReturn(false);
@@ -67,19 +66,18 @@ public class InstanceHolderTest {
     @Test
     public void shouldStartServerAndProxyOnBothPorts() {
         // when
-        instanceHolder.start(1, 2, 3, 4, null);
+        instanceHolder.start(1, 2, 3, null);
 
         // then
         verify(mockMockServerBuilder).withHTTPPort(1);
         verify(mockMockServerBuilder).withHTTPSPort(2);
-        verify(mockProxyBuilder).withHTTPPort(3);
-        verify(mockProxyBuilder).withHTTPSPort(4);
+        verify(mockProxyBuilder).withLocalPort(3);
     }
 
     @Test
     public void shouldStartOnlyServerOnBothPorts() {
         // when
-        instanceHolder.start(1, 2, -1, -1, null);
+        instanceHolder.start(1, 2, -1, null);
 
         // then
         verify(mockMockServerBuilder).withHTTPPort(1);
@@ -91,7 +89,7 @@ public class InstanceHolderTest {
     public void shouldStartOnlyServerOnHttpPort() {
         // when
         ExampleInitializationClass.mockServerClient = null;
-        instanceHolder.start(1, -1, -1, -1, new ExampleInitializationClass());
+        instanceHolder.start(1, -1, -1, new ExampleInitializationClass());
 
         // then
         verify(mockMockServerBuilder).withHTTPPort(1);
@@ -104,7 +102,7 @@ public class InstanceHolderTest {
     public void shouldStartOnlyServerOnHttpsPort() {
         // when
         ExampleInitializationClass.mockServerClient = null;
-        instanceHolder.start(-1, 1, -1, -1, new ExampleInitializationClass());
+        instanceHolder.start(-1, 1, -1, new ExampleInitializationClass());
 
         // then
         verify(mockMockServerBuilder).withHTTPPort(-1);
@@ -117,12 +115,11 @@ public class InstanceHolderTest {
     public void shouldStartOnlyProxyOnBothPorts() {
         // when
         ExampleInitializationClass.mockServerClient = null;
-        instanceHolder.start(-1, -1, 3, 4, new ExampleInitializationClass());
+        instanceHolder.start(-1, -1, 3, new ExampleInitializationClass());
 
         // then
         verifyNoMoreInteractions(mockMockServerBuilder);
-        verify(mockProxyBuilder).withHTTPPort(3);
-        verify(mockProxyBuilder).withHTTPSPort(4);
+        verify(mockProxyBuilder).withLocalPort(3);
         assertNull(ExampleInitializationClass.mockServerClient);
     }
 
@@ -132,7 +129,7 @@ public class InstanceHolderTest {
         ExampleInitializationClass.mockServerClient = null;
 
         // when
-        instanceHolder.start(1, 2, -1, -1, new ExampleInitializationClass());
+        instanceHolder.start(1, 2, -1, new ExampleInitializationClass());
 
         // then
         assertNotNull(ExampleInitializationClass.mockServerClient);
@@ -142,7 +139,7 @@ public class InstanceHolderTest {
     public void shouldNotStartServerOrProxy() {
         // when
         ExampleInitializationClass.mockServerClient = null;
-        instanceHolder.start(-1, -1, -1, -1, new ExampleInitializationClass());
+        instanceHolder.start(-1, -1, -1, new ExampleInitializationClass());
 
         // then
         verifyNoMoreInteractions(mockMockServerBuilder);
@@ -156,7 +153,7 @@ public class InstanceHolderTest {
         when(mockMockServer.isRunning()).thenReturn(true);
 
         // when
-        instanceHolder.start(1, 2, 3, 4, null);
+        instanceHolder.start(1, 2, 3, null);
     }
 
     @Test(expected = IllegalStateException.class)
@@ -165,7 +162,7 @@ public class InstanceHolderTest {
         when(mockProxy.isRunning()).thenReturn(true);
 
         // when
-        instanceHolder.start(1, 2, 3, 4, null);
+        instanceHolder.start(1, 2, 3, null);
     }
 
     @Test
@@ -237,11 +234,25 @@ public class InstanceHolderTest {
     }
 
     @Test
-    public void shouldStopMockServerAndProxyWhenNoClientExist() {
+    public void shouldStopSecureProxyOnlyRemotely() {
         // given
         InstanceHolder.mockServerClients.put(1, mockMockServerClient);
         InstanceHolder.proxyClients.put(2, mockProxyClient);
 
+        // when
+        instanceHolder.stop(-1, -1);
+
+        // then
+        verify(mockMockServerClient, times(0)).stop();
+        verify(mockProxyClient, times(0)).stop();
+
+        // and - no new clients added
+        assertThat(InstanceHolder.mockServerClients.size(), is(1));
+        assertThat(InstanceHolder.proxyClients.size(), is(1));
+    }
+
+    @Test
+    public void shouldStopMockServerAndProxyWhenNoClientExist() {
         // when
         instanceHolder.stop(1, 2);
 
