@@ -1,8 +1,8 @@
 image: jamesdbloom/mockserver:build
 
 script:
-  - git clone -b travis `git config --get remote.origin.url` target/travis
-  - mvn deploy --settings target/travis/settings.xml
+  - mvn install -q -Dmaven.test.skip=true -DskipTests -DskipITs -DskipRubyBuild=true
+  - mvn install
 
 notify:
   email:
