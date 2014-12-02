@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.mock-server.integration-test</groupId>
-    <artifactId>proxy-starts-using-plugins-stops-using-listener</artifactId>
+    <artifactId>proxy-starts-using-plugin-stops-using-listener</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <properties>
@@ -13,6 +13,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <maven.compiler.source>1.6</maven.compiler.source>
         <maven.compiler.target>1.6</maven.compiler.target>
+        <mockserver.version>3.8.3-SNAPSHOT</mockserver.version>
     </properties>
 
     <dependencies>
@@ -39,7 +40,6 @@
                 <configuration>
                     <logLevel>INFO</logLevel>
                     <proxyPort>9098</proxyPort>
-                    <proxySecurePort>9099</proxySecurePort>
                     <pipeLogToConsole>true</pipeLogToConsole>
                 </configuration>
                 <executions>
