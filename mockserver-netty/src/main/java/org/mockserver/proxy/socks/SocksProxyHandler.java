@@ -20,13 +20,13 @@ public class SocksProxyHandler extends SimpleChannelInboundHandler<SocksRequest>
 
             case INIT:
 
-                ctx.pipeline().addFirst(SocksCmdRequestDecoder.getName(), new SocksCmdRequestDecoder());
+                ctx.pipeline().addFirst(new SocksCmdRequestDecoder());
                 ctx.write(new SocksInitResponse(SocksAuthScheme.NO_AUTH));
                 break;
 
             case AUTH:
 
-                ctx.pipeline().addFirst(SocksCmdRequestDecoder.getName(), new SocksCmdRequestDecoder());
+                ctx.pipeline().addFirst(new SocksCmdRequestDecoder());
                 ctx.write(new SocksAuthResponse(SocksAuthStatus.SUCCESS));
                 break;
 

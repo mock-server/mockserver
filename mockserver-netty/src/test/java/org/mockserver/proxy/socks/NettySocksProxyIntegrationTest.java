@@ -24,7 +24,6 @@ import java.util.List;
 /**
  * @author jamesdbloom
  */
-@Ignore
 public class NettySocksProxyIntegrationTest extends AbstractClientProxyIntegrationTest {
 
     private final static Logger logger = LoggerFactory.getLogger(NettySocksProxyIntegrationTest.class);
