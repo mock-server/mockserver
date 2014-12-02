@@ -262,7 +262,7 @@ public class MockServerRunForkedMojoTest {
     @Test
     public void shouldHandleProcessException() throws IOException {
         // given
-        when(mockProcessBuildFactory.create(anyListOf(String.class))).thenReturn(new ProcessBuilder("fail"));
+        when(mockProcessBuildFactory.create(anyListOf(String.class))).thenReturn(new ProcessBuilder("TEST FAIL"));
 
         // when
         try {
