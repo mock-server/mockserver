@@ -12,6 +12,10 @@
     <description>A javascript client for the MockServer</description>
     <url>http://www.mock-server.com</url>
 
+    <properties>
+        <skipJasmineProxyTests>false</skipJasmineProxyTests>
+    </properties>
+
     <build>
         <resources>
             <resource>
@@ -72,6 +76,7 @@
                             <goal>test</goal>
                         </goals>
                         <configuration>
+                            <skipJasmineTests>${skipJasmineProxyTests}</skipJasmineTests>
                             <specIncludes>
                                 <include>with_proxy/**</include>
                             </specIncludes>
