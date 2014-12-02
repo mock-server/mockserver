@@ -150,8 +150,8 @@ public class HttpProxy implements Proxy {
 //        System.setProperty("socksProxyVersion", "5");
         System.setProperty("http.proxyHost", "127.0.0.1");
         System.setProperty("http.proxyPort", port.toString());
-        System.setProperty("https.proxyHost", "127.0.0.1");
-        System.setProperty("https.proxyPort", port.toString());
+//        System.setProperty("https.proxyHost", "127.0.0.1");
+//        System.setProperty("https.proxyPort", port.toString());
 //        previousProxySelector = ProxySelector.getDefault();
 //        ProxySelector.setDefault(createProxySelector("127.0.0.1", port));
 //        System.setProperty("socksProxySet", "true");
