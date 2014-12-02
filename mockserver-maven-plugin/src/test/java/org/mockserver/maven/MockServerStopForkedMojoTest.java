@@ -30,7 +30,6 @@ public class MockServerStopForkedMojoTest {
         // given
         mockServerStopForkedMojo.serverPort = 1;
         mockServerStopForkedMojo.proxyPort = 2;
-        mockServerStopForkedMojo.proxySecurePort = 3;
 
         // when
         mockServerStopForkedMojo.execute();
