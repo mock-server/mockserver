@@ -3,7 +3,6 @@ package org.mockserver.proxy.socks;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.socks.*;
-import org.mockserver.proxy.socks.SocksConnectHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
