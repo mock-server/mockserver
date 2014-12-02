@@ -116,7 +116,8 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
             } else {
 
-                writeResponse(ctx, request, forwardRequest(request));
+                HttpResponse response = sendRequest(filters.applyOnRequestFilters(request));
+                writeResponse(ctx, request, response);
 
             }
         } catch (Exception e) {
@@ -124,10 +125,6 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
             writeResponse(ctx, request, HttpResponseStatus.BAD_REQUEST);
         }
 
-    }
-
-    private HttpResponse forwardRequest(HttpRequest httpRequest) {
-        return sendRequest(filters.applyOnRequestFilters(httpRequest));
     }
 
     private HttpResponse sendRequest(HttpRequest httpRequest) {

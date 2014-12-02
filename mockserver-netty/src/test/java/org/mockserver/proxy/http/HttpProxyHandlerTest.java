@@ -1,12 +1,10 @@
 package org.mockserver.proxy.http;
 
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.serialization.ExpectationSerializer;
@@ -32,7 +30,6 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.model.HttpRequest.request;
-import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.Parameter.param;
 
 /**
@@ -70,12 +67,10 @@ public class HttpProxyHandlerTest {
     private VerificationSerializer mockVerificationSerializer;
     @Mock
     private VerificationSequenceSerializer mockVerificationSequenceSerializer;
-    // netty
-    @Mock
-    private ChannelHandlerContext mockChannelHandlerContext;
 
     @InjectMocks
     private HttpProxyHandler httpProxyHandler;
+    private EmbeddedChannel embeddedChannel;
 
     @Before
     public void setupFixture() {
@@ -83,12 +78,9 @@ public class HttpProxyHandlerTest {
         mockLogFilter = mock(LogFilter.class);
         mockHttpProxy = mock(Proxy.class);
         httpProxyHandler = new HttpProxyHandler(mockHttpProxy, mockLogFilter);
+        embeddedChannel = new EmbeddedChannel(httpProxyHandler);
 
         initMocks(this);
-
-        // given - channel handle context
-        when(mockChannelHandlerContext.writeAndFlush(any(HttpResponse.class))).thenReturn(mock(ChannelFuture.class));
-        when(mockChannelHandlerContext.write(any(HttpResponse.class))).thenReturn(mock(ChannelFuture.class));
 
         // given - serializers
         when(mockExpectationSerializer.deserialize(anyString())).thenReturn(mockExpectation);
@@ -109,21 +101,24 @@ public class HttpProxyHandlerTest {
         when(mockExpectation.getHttpCallback()).thenReturn(mockHttpCallback);
     }
 
+    @After
+    public void closeEmbeddedChanel() {
+        assertThat(embeddedChannel.finish(), is(false));
+    }
+
     @Test
     public void shouldResetExpectations() {
         // given
         HttpRequest request = request("/reset").withMethod("PUT");
 
         // when
-        httpProxyHandler.channelRead0(mockChannelHandlerContext, request);
+        embeddedChannel.writeInbound(request);
 
         // then - filter and matcher is reset
         verify(mockLogFilter).reset();
 
         // and - correct response written to ChannelHandlerContext
-        ArgumentCaptor<HttpResponse> responseCaptor = ArgumentCaptor.forClass(HttpResponse.class);
-        verify(mockChannelHandlerContext).writeAndFlush(responseCaptor.capture());
-        HttpResponse httpResponse = responseCaptor.getValue();
+        HttpResponse httpResponse = (HttpResponse)embeddedChannel.readOutbound();
         assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.ACCEPTED.code()));
         assertThat(httpResponse.getBodyAsString(), is(""));
     }
@@ -134,7 +129,7 @@ public class HttpProxyHandlerTest {
         HttpRequest request = request("/clear").withMethod("PUT").withBody("some_content");
 
         // when
-        httpProxyHandler.channelRead0(mockChannelHandlerContext, request);
+        embeddedChannel.writeInbound(request);
 
         // then - request deserialized
         verify(mockHttpRequestSerializer).deserialize("some_content");
@@ -143,9 +138,7 @@ public class HttpProxyHandlerTest {
         verify(mockLogFilter).clear(mockHttpRequest);
 
         // and - correct response written to ChannelHandlerContext
-        ArgumentCaptor<HttpResponse> responseCaptor = ArgumentCaptor.forClass(HttpResponse.class);
-        verify(mockChannelHandlerContext).writeAndFlush(responseCaptor.capture());
-        HttpResponse httpResponse = responseCaptor.getValue();
+        HttpResponse httpResponse = (HttpResponse)embeddedChannel.readOutbound();
         assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.ACCEPTED.code()));
         assertThat(httpResponse.getBodyAsString(), is(""));
     }
@@ -156,7 +149,7 @@ public class HttpProxyHandlerTest {
         HttpRequest request = request("/dumpToLog").withMethod("PUT").withBody("some_content");
 
         // when
-        httpProxyHandler.channelRead0(mockChannelHandlerContext, request);
+        embeddedChannel.writeInbound(request);
 
         // then - request deserialized
         verify(mockHttpRequestSerializer).deserialize("some_content");
@@ -165,9 +158,7 @@ public class HttpProxyHandlerTest {
         verify(mockLogFilter).dumpToLog(mockHttpRequest, false);
 
         // and - correct response written to ChannelHandlerContext
-        ArgumentCaptor<HttpResponse> responseCaptor = ArgumentCaptor.forClass(HttpResponse.class);
-        verify(mockChannelHandlerContext).writeAndFlush(responseCaptor.capture());
-        HttpResponse httpResponse = responseCaptor.getValue();
+        HttpResponse httpResponse = (HttpResponse)embeddedChannel.readOutbound();
         assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.ACCEPTED.code()));
         assertThat(httpResponse.getBodyAsString(), is(""));
     }
@@ -178,7 +169,7 @@ public class HttpProxyHandlerTest {
         HttpRequest request = request("/dumpToLog").withQueryStringParameter(param("type", "java")).withMethod("PUT").withBody("some_content");
 
         // when
-        httpProxyHandler.channelRead0(mockChannelHandlerContext, request);
+        embeddedChannel.writeInbound(request);
 
         // then - request deserialized
         verify(mockHttpRequestSerializer).deserialize("some_content");
@@ -187,9 +178,7 @@ public class HttpProxyHandlerTest {
         verify(mockLogFilter).dumpToLog(mockHttpRequest, true);
 
         // and - correct response written to ChannelHandlerContext
-        ArgumentCaptor<HttpResponse> responseCaptor = ArgumentCaptor.forClass(HttpResponse.class);
-        verify(mockChannelHandlerContext).writeAndFlush(responseCaptor.capture());
-        HttpResponse httpResponse = responseCaptor.getValue();
+        HttpResponse httpResponse = (HttpResponse)embeddedChannel.readOutbound();
         assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.ACCEPTED.code()));
         assertThat(httpResponse.getBodyAsString(), is(""));
     }
@@ -203,7 +192,7 @@ public class HttpProxyHandlerTest {
         HttpRequest request = request("/retrieve").withMethod("PUT").withBody("some_content");
 
         // when
-        httpProxyHandler.channelRead0(mockChannelHandlerContext, request);
+        embeddedChannel.writeInbound(request);
 
         // then - request deserialized
         verify(mockHttpRequestSerializer).deserialize("some_content");
@@ -212,9 +201,7 @@ public class HttpProxyHandlerTest {
         verify(mockLogFilter).retrieve(mockHttpRequest);
 
         // and - correct response written to ChannelHandlerContext
-        ArgumentCaptor<HttpResponse> responseCaptor = ArgumentCaptor.forClass(HttpResponse.class);
-        verify(mockChannelHandlerContext).writeAndFlush(responseCaptor.capture());
-        HttpResponse httpResponse = responseCaptor.getValue();
+        HttpResponse httpResponse = (HttpResponse)embeddedChannel.readOutbound();
         assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.OK.code()));
         assertThat(httpResponse.getBodyAsString(), is("expectations"));
     }
@@ -226,12 +213,10 @@ public class HttpProxyHandlerTest {
         when(mockLogFilter.onRequest(request)).thenThrow(new RuntimeException("TEST EXCEPTION"));
 
         // when
-        httpProxyHandler.channelRead0(mockChannelHandlerContext, request);
+        embeddedChannel.writeInbound(request);
 
         // and - correct response written to ChannelHandlerContext
-        ArgumentCaptor<HttpResponse> responseCaptor = ArgumentCaptor.forClass(HttpResponse.class);
-        verify(mockChannelHandlerContext).writeAndFlush(responseCaptor.capture());
-        HttpResponse httpResponse = responseCaptor.getValue();
+        HttpResponse httpResponse = (HttpResponse)embeddedChannel.readOutbound();
         assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.BAD_REQUEST.code()));
         assertThat(httpResponse.getBodyAsString(), is(""));
     }
@@ -243,12 +228,10 @@ public class HttpProxyHandlerTest {
         when(mockLogFilter.onRequest(request)).thenReturn(null);
 
         // when
-        httpProxyHandler.channelRead0(mockChannelHandlerContext, request);
+        embeddedChannel.writeInbound(request);
 
         // and - correct response written to ChannelHandlerContext
-        ArgumentCaptor<HttpResponse> responseCaptor = ArgumentCaptor.forClass(HttpResponse.class);
-        verify(mockChannelHandlerContext).writeAndFlush(responseCaptor.capture());
-        HttpResponse httpResponse = responseCaptor.getValue();
+        HttpResponse httpResponse = (HttpResponse)embeddedChannel.readOutbound();
         assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.NOT_FOUND.code()));
         assertThat(httpResponse.getBodyAsString(), is(""));
     }
@@ -262,7 +245,7 @@ public class HttpProxyHandlerTest {
         HttpRequest request = request("/verify").withMethod("PUT").withBody("some_content");
 
         // when
-        httpProxyHandler.channelRead0(mockChannelHandlerContext, request);
+        embeddedChannel.writeInbound(request);
 
         // then - request deserialized
         verify(mockVerificationSerializer).deserialize("some_content");
@@ -271,9 +254,7 @@ public class HttpProxyHandlerTest {
         verify(mockLogFilter).verify(mockVerification);
 
         // and - correct response written to ChannelHandlerContext
-        ArgumentCaptor<HttpResponse> responseCaptor = ArgumentCaptor.forClass(HttpResponse.class);
-        verify(mockChannelHandlerContext).writeAndFlush(responseCaptor.capture());
-        HttpResponse httpResponse = responseCaptor.getValue();
+        HttpResponse httpResponse = (HttpResponse)embeddedChannel.readOutbound();
         assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.ACCEPTED.code()));
         assertThat(httpResponse.getBodyAsString(), is(""));
     }
@@ -287,7 +268,7 @@ public class HttpProxyHandlerTest {
         HttpRequest request = request("/verify").withMethod("PUT").withBody("some_content");
 
         // when
-        httpProxyHandler.channelRead0(mockChannelHandlerContext, request);
+        embeddedChannel.writeInbound(request);
 
         // then - request deserialized
         verify(mockVerificationSerializer).deserialize("some_content");
@@ -296,9 +277,7 @@ public class HttpProxyHandlerTest {
         verify(mockLogFilter).verify(mockVerification);
 
         // and - correct response written to ChannelHandlerContext
-        ArgumentCaptor<HttpResponse> responseCaptor = ArgumentCaptor.forClass(HttpResponse.class);
-        verify(mockChannelHandlerContext).writeAndFlush(responseCaptor.capture());
-        HttpResponse httpResponse = responseCaptor.getValue();
+        HttpResponse httpResponse = (HttpResponse)embeddedChannel.readOutbound();
         assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.NOT_ACCEPTABLE.code()));
         assertThat(httpResponse.getBodyAsString(), is("failure response"));
     }
@@ -312,7 +291,7 @@ public class HttpProxyHandlerTest {
         HttpRequest request = request("/verifySequence").withMethod("PUT").withBody("some_content");
 
         // when
-        httpProxyHandler.channelRead0(mockChannelHandlerContext, request);
+        embeddedChannel.writeInbound(request);
 
         // then - request deserialized
         verify(mockVerificationSequenceSerializer).deserialize("some_content");
@@ -321,9 +300,7 @@ public class HttpProxyHandlerTest {
         verify(mockLogFilter).verify(mockVerificationSequence);
 
         // and - correct response written to ChannelHandlerContext
-        ArgumentCaptor<HttpResponse> responseCaptor = ArgumentCaptor.forClass(HttpResponse.class);
-        verify(mockChannelHandlerContext).writeAndFlush(responseCaptor.capture());
-        HttpResponse httpResponse = responseCaptor.getValue();
+        HttpResponse httpResponse = (HttpResponse)embeddedChannel.readOutbound();
         assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.ACCEPTED.code()));
         assertThat(httpResponse.getBodyAsString(), is(""));
     }
@@ -337,7 +314,7 @@ public class HttpProxyHandlerTest {
         HttpRequest request = request("/verifySequence").withMethod("PUT").withBody("some_content");
 
         // when
-        httpProxyHandler.channelRead0(mockChannelHandlerContext, request);
+        embeddedChannel.writeInbound(request);
 
         // then - request deserialized
         verify(mockVerificationSequenceSerializer).deserialize("some_content");
@@ -346,9 +323,7 @@ public class HttpProxyHandlerTest {
         verify(mockLogFilter).verify(mockVerificationSequence);
 
         // and - correct response written to ChannelHandlerContext
-        ArgumentCaptor<HttpResponse> responseCaptor = ArgumentCaptor.forClass(HttpResponse.class);
-        verify(mockChannelHandlerContext).writeAndFlush(responseCaptor.capture());
-        HttpResponse httpResponse = responseCaptor.getValue();
+        HttpResponse httpResponse = (HttpResponse)embeddedChannel.readOutbound();
         assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.NOT_ACCEPTABLE.code()));
         assertThat(httpResponse.getBodyAsString(), is("failure response"));
     }
@@ -359,15 +334,13 @@ public class HttpProxyHandlerTest {
         HttpRequest request = request("/stop").withMethod("PUT").withBody("some_content");
 
         // when
-        httpProxyHandler.channelRead0(mockChannelHandlerContext, request);
+        embeddedChannel.writeInbound(request);
 
         // then - mock server is stopped
         verify(mockHttpProxy).stop();
 
         // and - correct response written to ChannelHandlerContext
-        ArgumentCaptor<HttpResponse> responseCaptor = ArgumentCaptor.forClass(HttpResponse.class);
-        verify(mockChannelHandlerContext).writeAndFlush(responseCaptor.capture());
-        HttpResponse httpResponse = responseCaptor.getValue();
+        HttpResponse httpResponse = (HttpResponse)embeddedChannel.readOutbound();
         assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.ACCEPTED.code()));
         assertThat(httpResponse.getBodyAsString(), is(""));
     }

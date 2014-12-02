@@ -123,6 +123,25 @@ public class HttpProxy implements Proxy {
         return port;
     }
 
+    private static ProxySelector previousProxySelector;
+
+    private static ProxySelector createProxySelector(final String host, final int port) {
+        return new ProxySelector() {
+            @Override
+            public List<java.net.Proxy> select(URI uri) {
+                return Arrays.asList(
+                        new java.net.Proxy(java.net.Proxy.Type.SOCKS, new InetSocketAddress(host, port)),
+                        new java.net.Proxy(java.net.Proxy.Type.HTTP, new InetSocketAddress(host, port))
+                );
+            }
+
+            @Override
+            public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {
+                logger.error("Connection could not be established to proxy at socket [" + sa + "]", ioe);
+            }
+        };
+    }
+
     protected void proxyStarted(Integer port) {
         SystemProperties.proxyHttpPort(port);
         System.setProperty("proxySet", "true");
@@ -133,6 +152,9 @@ public class HttpProxy implements Proxy {
         System.setProperty("http.proxyPort", port.toString());
         System.setProperty("https.proxyHost", "127.0.0.1");
         System.setProperty("https.proxyPort", port.toString());
+//        previousProxySelector = ProxySelector.getDefault();
+//        ProxySelector.setDefault(createProxySelector("127.0.0.1", port));
+//        System.setProperty("socksProxySet", "true");
     }
 
     protected void proxyStopping() {
@@ -143,5 +165,6 @@ public class HttpProxy implements Proxy {
         System.clearProperty("http.proxyPort");
         System.clearProperty("https.proxyHost");
         System.clearProperty("https.proxyPort");
+//        ProxySelector.setDefault(previousProxySelector);
     }
 }

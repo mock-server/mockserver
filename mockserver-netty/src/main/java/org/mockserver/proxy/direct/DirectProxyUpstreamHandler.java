@@ -1,16 +1,15 @@
 package org.mockserver.proxy.direct;
 
 import io.netty.bootstrap.Bootstrap;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.ssl.SslHandler;
-import org.mockserver.codec.MockServerServerCodec;
 import org.mockserver.logging.LoggingHandler;
 import org.mockserver.proxy.http.HttpProxy;
 import org.mockserver.proxy.relay.DownstreamProxyRelayHandler;
-import org.mockserver.proxy.relay.ProxyRelayHandler;
 import org.mockserver.proxy.relay.UpstreamProxyRelayHandler;
 import org.mockserver.proxy.unification.PortUnificationHandler;
 import org.mockserver.socket.SSLFactory;
@@ -18,7 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
-import java.util.Random;
 
 public class DirectProxyUpstreamHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
@@ -75,7 +73,7 @@ public class DirectProxyUpstreamHandler extends SimpleChannelInboundHandler<Full
                     future.channel().writeAndFlush(request);
                 } else {
                     logger.error("Exception while connecting to ", remoteSocket);
-                    ProxyRelayHandler.closeOnFlush(ctx.channel());
+                    closeOnFlush(ctx.channel());
                 }
             }
         });
@@ -83,12 +81,21 @@ public class DirectProxyUpstreamHandler extends SimpleChannelInboundHandler<Full
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
-        ProxyRelayHandler.closeOnFlush(ctx.channel());
+        closeOnFlush(ctx.channel());
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         logger.error("Exception while reading from channel", cause);
-        ProxyRelayHandler.closeOnFlush(ctx.channel());
+        closeOnFlush(ctx.channel());
+    }
+
+    /**
+     * Closes the specified channel after all queued write requests are flushed.
+     */
+    public static void closeOnFlush(Channel ch) {
+        if (ch != null && ch.isActive()) {
+            ch.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+        }
     }
 }
