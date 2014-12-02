@@ -29,7 +29,6 @@
                     <serverPort>1080</serverPort>
                     <serverSecurePort>1082</serverSecurePort>
                     <proxyPort>1090</proxyPort>
-                    <proxySecurePort>1092</proxySecurePort>
                 </configuration>
                 <executions>
                     <execution>
