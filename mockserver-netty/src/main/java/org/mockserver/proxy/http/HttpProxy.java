@@ -94,23 +94,6 @@ public class HttpProxy implements Proxy {
         }
     }
 
-    private static ProxySelector createProxySelector(final String host, final int port) {
-        return new ProxySelector() {
-            @Override
-            public List<java.net.Proxy> select(URI uri) {
-                return Arrays.asList(
-                        new java.net.Proxy(java.net.Proxy.Type.SOCKS, new InetSocketAddress(host, port)),
-                        new java.net.Proxy(java.net.Proxy.Type.HTTP, new InetSocketAddress(host, port))
-                );
-            }
-
-            @Override
-            public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {
-                logger.error("Connection could not be established to proxy at socket [" + sa + "]", ioe);
-            }
-        };
-    }
-
     public void stop() {
         try {
             proxyStopping();
