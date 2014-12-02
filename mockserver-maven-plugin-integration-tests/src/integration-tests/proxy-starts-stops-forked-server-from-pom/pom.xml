@@ -13,6 +13,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <maven.compiler.source>1.6</maven.compiler.source>
         <maven.compiler.target>1.6</maven.compiler.target>
+        <mockserver.version>3.8.3-SNAPSHOT</mockserver.version>
     </properties>
 
     <dependencies>
@@ -34,7 +35,6 @@
                 <configuration>
                     <logLevel>INFO</logLevel>
                     <proxyPort>9094</proxyPort>
-                    <proxySecurePort>9095</proxySecurePort>
                     <pipeLogToConsole>true</pipeLogToConsole>
                 </configuration>
                 <executions>

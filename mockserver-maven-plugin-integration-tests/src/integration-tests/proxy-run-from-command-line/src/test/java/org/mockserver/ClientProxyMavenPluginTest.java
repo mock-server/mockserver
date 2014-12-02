@@ -4,8 +4,8 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.mockserver.client.proxy.ProxyClient;
+import org.mockserver.echo.EchoServer;
 import org.mockserver.integration.proxy.AbstractClientProxyIntegrationTest;
-import org.mockserver.integration.testserver.TestServer;
 import org.mockserver.socket.PortFactory;
 
 /**
@@ -13,24 +13,20 @@ import org.mockserver.socket.PortFactory;
  */
 public class ClientProxyMavenPluginTest extends AbstractClientProxyIntegrationTest {
 
-    private final static int SERVER_HTTP_PORT = PortFactory.findFreePort();
-    private final static int SERVER_HTTPS_PORT = PortFactory.findFreePort();
+    private final static int ECHO_SERVER_HTTP_PORT = PortFactory.findFreePort();
     private final static int PROXY_HTTP_PORT = 9090;
-    private final static int PROXY_HTTPS_PORT = 9091;
-    private static TestServer testServer = new TestServer();
+    private static EchoServer echoServer;
     private static ProxyClient proxyClient;
 
     @BeforeClass
     public static void startServer() throws Exception {
-        testServer.startServer(SERVER_HTTP_PORT, SERVER_HTTPS_PORT);
-
-        // start client
-        proxyClient = new ProxyClient("localhost", PROXY_HTTP_PORT);
+        echoServer = new EchoServer(ECHO_SERVER_HTTP_PORT);
+        proxyClient = new ProxyClient("127.0.0.1", PROXY_HTTP_PORT);
     }
 
     @AfterClass
     public static void stopServer() throws Exception {
-        testServer.stop();
+        echoServer.stop();
     }
 
     @Before
@@ -44,13 +40,13 @@ public class ClientProxyMavenPluginTest extends AbstractClientProxyIntegrationTe
     }
 
     @Override
-    public int getServerPort() {
-        return SERVER_HTTP_PORT;
+    public ProxyClient getProxyClient() {
+        return proxyClient;
     }
 
     @Override
-    public int getServerSecurePort() {
-        return SERVER_HTTPS_PORT;
+    public int getServerPort() {
+        return ECHO_SERVER_HTTP_PORT;
     }
 
 }

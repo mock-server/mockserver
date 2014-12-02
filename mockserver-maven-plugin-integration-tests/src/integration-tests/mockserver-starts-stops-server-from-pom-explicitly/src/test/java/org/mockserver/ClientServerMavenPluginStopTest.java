@@ -12,8 +12,8 @@ import java.util.concurrent.TimeUnit;
  */
 public class ClientServerMavenPluginStopTest {
 
-    @Test(expected = RuntimeException.class)
-    public void shouldNotBeAbleToReachMockServer() throws InterruptedException {
+        @Test(expected = RuntimeException.class)
+    public void shouldNotBeAbleToReachMockServer() {
         new MockServerClient("127.0.0.1", 8094).reset();
     }
 
