@@ -7,16 +7,13 @@ import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.ssl.SslHandler;
-import org.mockserver.client.netty.codec.MockServerClientCodec;
 import org.mockserver.codec.MockServerServerCodec;
 import org.mockserver.logging.LoggingHandler;
 import org.mockserver.mock.MockServerMatcher;
-import org.mockserver.filters.LogFilter;
+import org.mockserver.proxy.Proxy;
 import org.mockserver.socket.SSLFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.net.ssl.SSLEngine;
 
 public class MockServerInitializer extends ChannelInitializer<SocketChannel> {
 
@@ -54,6 +51,6 @@ public class MockServerInitializer extends ChannelInitializer<SocketChannel> {
         pipeline.addLast(new MockServerServerCodec(secure));
 
         // add mock server handlers
-        pipeline.addLast(new MockServerHandler(mockServerMatcher, mockServer));
+        pipeline.addLast(new MockServerHandler(mockServer, mockServerMatcher, ch.attr(MockServer.LOG_FILTER).get()));
     }
 }

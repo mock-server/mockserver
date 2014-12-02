@@ -34,6 +34,7 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     // mockserver
     private final Proxy server;
+    private final LogFilter logFilter;
     private final Filters filters = new Filters();
     // http client
     private NettyHttpClient httpClient = new NettyHttpClient();
@@ -43,11 +44,12 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
     private VerificationSerializer verificationSerializer = new VerificationSerializer();
     private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer();
 
-    public HttpProxyHandler(Proxy server) {
+    public HttpProxyHandler(Proxy server, LogFilter logFilter) {
         super(false);
         this.server = server;
+        this.logFilter = logFilter;
         filters.withFilter(new org.mockserver.model.HttpRequest(), new HopByHopHeaderFilter());
-        filters.withFilter(new org.mockserver.model.HttpRequest(), LogFilter.PROXY_INSTANCE);
+        filters.withFilter(new org.mockserver.model.HttpRequest(), logFilter);
     }
 
     @Override
@@ -69,27 +71,27 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
             } else if (request.matches("PUT", "/clear")) {
 
-                LogFilter.PROXY_INSTANCE.clear(httpRequestSerializer.deserialize(request.getBodyAsString()));
+                logFilter.clear(httpRequestSerializer.deserialize(request.getBodyAsString()));
                 writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
 
             } else if (request.matches("PUT", "/reset")) {
 
-                LogFilter.PROXY_INSTANCE.reset();
+                logFilter.reset();
                 writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
 
             } else if (request.matches("PUT", "/dumpToLog")) {
 
-                LogFilter.PROXY_INSTANCE.dumpToLog(httpRequestSerializer.deserialize(request.getBodyAsString()), request.hasQueryStringParameter("type", "java"));
+                logFilter.dumpToLog(httpRequestSerializer.deserialize(request.getBodyAsString()), request.hasQueryStringParameter("type", "java"));
                 writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
 
             } else if (request.matches("PUT", "/retrieve")) {
 
-                Expectation[] expectations = LogFilter.PROXY_INSTANCE.retrieve(httpRequestSerializer.deserialize(request.getBodyAsString()));
+                Expectation[] expectations = logFilter.retrieve(httpRequestSerializer.deserialize(request.getBodyAsString()));
                 writeResponse(ctx, request, HttpResponseStatus.OK, expectationSerializer.serialize(expectations), "application/json");
 
             } else if (request.matches("PUT", "/verify")) {
 
-                String result = LogFilter.PROXY_INSTANCE.verify(verificationSerializer.deserialize(request.getBodyAsString()));
+                String result = logFilter.verify(verificationSerializer.deserialize(request.getBodyAsString()));
                 if (result.isEmpty()) {
                     writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
                 } else {
@@ -98,7 +100,7 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
             } else if (request.matches("PUT", "/verifySequence")) {
 
-                String result = LogFilter.PROXY_INSTANCE.verify(verificationSequenceSerializer.deserialize(request.getBodyAsString()));
+                String result = logFilter.verify(verificationSequenceSerializer.deserialize(request.getBodyAsString()));
                 if (result.isEmpty()) {
                     writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
                 } else {

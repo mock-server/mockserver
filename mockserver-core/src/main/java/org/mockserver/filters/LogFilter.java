@@ -28,18 +28,10 @@ import static org.mockserver.model.HttpResponse.notFoundResponse;
  */
 public class LogFilter implements ResponseFilter, RequestFilter {
 
-    public static LogFilter SERVER_INSTANCE = new LogFilter();
-    public static LogFilter PROXY_INSTANCE = new LogFilter();
-
     private final CircularMultiMap<HttpRequest, HttpResponse> requestResponseLog = new CircularMultiMap<HttpRequest, HttpResponse>(100, 100);
     private final CircularLinkedList<HttpRequest> requestLog = new CircularLinkedList<HttpRequest>(100);
     private final MatcherBuilder matcherBuilder = new MatcherBuilder();
     private Logger requestLogger = LoggerFactory.getLogger("REQUEST");
-
-    @VisibleForTesting
-    LogFilter() {
-        // package protected so that this class can be tested
-    }
 
     @Override
     public synchronized HttpResponse onResponse(HttpRequest httpRequest, HttpResponse httpResponse) {
@@ -82,18 +74,6 @@ public class LogFilter implements ResponseFilter, RequestFilter {
     public synchronized void reset() {
         requestResponseLog.clear();
         requestLog.clear();
-    }
-
-    @VisibleForTesting
-    public static synchronized void resetServerInstance() {
-        SERVER_INSTANCE.reset();
-        SERVER_INSTANCE = new LogFilter();
-    }
-
-    @VisibleForTesting
-    public static synchronized void resetProxyInstance() {
-        PROXY_INSTANCE.reset();
-        PROXY_INSTANCE = new LogFilter();
     }
 
     public synchronized void clear(HttpRequest httpRequest) {

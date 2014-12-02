@@ -36,7 +36,6 @@ public class MockServerStartMojoTest {
         mockServerStartMojo.serverPort = 1;
         mockServerStartMojo.serverSecurePort = 2;
         mockServerStartMojo.proxyPort = 3;
-        mockServerStartMojo.proxySecurePort = 4;
         mockServerStartMojo.initializationClass = "org.mockserver.maven.ExampleInitializationClass";
 
         // when

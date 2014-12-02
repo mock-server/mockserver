@@ -28,7 +28,6 @@ public class MockServerRunAndWaitMojo extends MockServerAbstractMojo {
                         + (serverPort != -1 ? " serverPort " + serverPort : "")
                         + (serverSecurePort != -1 ? " serverSecurePort " + serverSecurePort : "")
                         + (proxyPort != -1 ? " proxyPort " + proxyPort : "")
-                        + (proxySecurePort != -1 ? " proxySecurePort " + proxySecurePort : "")
                 );
             }
             try {

@@ -30,6 +30,8 @@ public class NettyHttpProxyIntegrationTest extends AbstractClientProxyIntegratio
         logger.debug("SERVER_HTTP_PORT = " + SERVER_HTTP_PORT);
         logger.debug("PROXY_HTTP_PORT = " + PROXY_HTTP_PORT);
 
+        servletContext = "";
+
         // start server
         echoServer = new EchoServer(SERVER_HTTP_PORT);
 
@@ -59,6 +61,11 @@ public class NettyHttpProxyIntegrationTest extends AbstractClientProxyIntegratio
     @Override
     public int getProxyPort() {
         return PROXY_HTTP_PORT;
+    }
+
+    @Override
+    public ProxyClient getProxyClient() {
+        return proxyClient;
     }
 
     @Override

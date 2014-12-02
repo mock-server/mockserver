@@ -42,7 +42,6 @@ public class MockServerRunAndWaitMojoTest {
         mockServerRunAndWaitMojo.serverPort = 1;
         mockServerRunAndWaitMojo.serverSecurePort = 2;
         mockServerRunAndWaitMojo.proxyPort = 3;
-        mockServerRunAndWaitMojo.proxySecurePort = 4;
         mockServerRunAndWaitMojo.timeout = 0;
         mockServerRunAndWaitMojo.initializationClass = "org.mockserver.maven.ExampleInitializationClass";
 
@@ -60,7 +59,6 @@ public class MockServerRunAndWaitMojoTest {
         mockServerRunAndWaitMojo.serverPort = 1;
         mockServerRunAndWaitMojo.serverSecurePort = 2;
         mockServerRunAndWaitMojo.proxyPort = 3;
-        mockServerRunAndWaitMojo.proxySecurePort = 4;
         mockServerRunAndWaitMojo.timeout = 0;
         doThrow(new InterruptedException("TEST EXCEPTION")).when(objectSettableFuture).get();
 
@@ -74,7 +72,6 @@ public class MockServerRunAndWaitMojoTest {
         mockServerRunAndWaitMojo.serverPort = 1;
         mockServerRunAndWaitMojo.serverSecurePort = 2;
         mockServerRunAndWaitMojo.proxyPort = 3;
-        mockServerRunAndWaitMojo.proxySecurePort = 4;
         mockServerRunAndWaitMojo.timeout = 2;
         mockServerRunAndWaitMojo.initializationClass = "org.mockserver.maven.ExampleInitializationClass";
 
@@ -92,7 +89,6 @@ public class MockServerRunAndWaitMojoTest {
         mockServerRunAndWaitMojo.serverPort = 1;
         mockServerRunAndWaitMojo.serverSecurePort = 2;
         mockServerRunAndWaitMojo.proxyPort = 3;
-        mockServerRunAndWaitMojo.proxySecurePort = 4;
         mockServerRunAndWaitMojo.timeout = 2;
         when(objectSettableFuture.get(2, TimeUnit.SECONDS)).thenThrow(new InterruptedException("TEST EXCEPTION"));
 

@@ -30,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 @Mojo(name = "runForked", requiresProject = false, threadSafe = false)
 public class MockServerRunForkedMojo extends MockServerAbstractMojo {
 
+    private ProcessBuildFactory processBuildFactory = new ProcessBuildFactory();
     /**
      * Get a list of artifacts used by this plugin
      */
@@ -67,7 +68,6 @@ public class MockServerRunForkedMojo extends MockServerAbstractMojo {
                                 + (serverPort != -1 ? " serverPort " + serverPort : "")
                                 + (serverSecurePort != -1 ? " serverSecurePort " + serverSecurePort : "")
                                 + (proxyPort != -1 ? " proxyPort " + proxyPort : "")
-                                + (proxySecurePort != -1 ? " proxySecurePort " + proxySecurePort : "")
                 );
             }
             List<String> arguments = new ArrayList<String>(Arrays.asList(getJavaBin()));
@@ -98,16 +98,12 @@ public class MockServerRunForkedMojo extends MockServerAbstractMojo {
                 arguments.add("" + proxyPort);
                 SystemProperties.proxyHttpPort(proxyPort);
             }
-            if (proxySecurePort != -1) {
-                arguments.add("-proxySecurePort");
-                arguments.add("" + proxySecurePort);
-            }
             getLog().info(" ");
             getLog().info(StringUtils.rightPad("", 72, "-"));
             getLog().info("Running MockServer: " + Joiner.on(" ").join(arguments));
             getLog().info(StringUtils.rightPad("", 72, "-"));
             getLog().info(" ");
-            ProcessBuilder processBuilder = newProcessBuilder(arguments);
+            ProcessBuilder processBuilder = processBuildFactory.create(arguments);
             if (pipeLogToConsole) {
                 processBuilder.redirectErrorStream(true);
             }
@@ -124,11 +120,6 @@ public class MockServerRunForkedMojo extends MockServerAbstractMojo {
             InstanceHolder.runInitializationClass(serverPort, createInitializer());
         }
 
-    }
-
-    @VisibleForTesting
-    ProcessBuilder newProcessBuilder(List<String> arguments) {
-        return new ProcessBuilder(arguments);
     }
 
     @VisibleForTesting

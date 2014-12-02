@@ -84,8 +84,8 @@ public class DirectProxy implements Proxy {
                 } catch (Exception ie) {
                     logger.error("Exception while running proxy channels", ie);
                 } finally {
-                    bossGroup.shutdownGracefully();
-                    workerGroup.shutdownGracefully();
+                    bossGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
+                    workerGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
                 }
             }
         }).start();
@@ -99,10 +99,10 @@ public class DirectProxy implements Proxy {
 
     public void stop() {
         try {
-            bossGroup.shutdownGracefully(1, 3, TimeUnit.MILLISECONDS);
-            workerGroup.shutdownGracefully(1, 3, TimeUnit.MILLISECONDS);
-            // wait for shutdown
-            TimeUnit.SECONDS.sleep(1);
+            bossGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
+            workerGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
+            // wait for socket to be released
+            TimeUnit.MILLISECONDS.sleep(500);
         } catch (Exception ie) {
             logger.trace("Exception while waiting for the proxy to stop", ie);
         }

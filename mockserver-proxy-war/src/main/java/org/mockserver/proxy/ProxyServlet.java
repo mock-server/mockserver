@@ -33,6 +33,7 @@ public class ProxyServlet extends HttpServlet {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     // mockserver
     private Filters filters = new Filters();
+    public LogFilter logFilter = new LogFilter();
     // http client
     private NettyHttpClient httpClient = new NettyHttpClient();
     // mappers
@@ -46,7 +47,7 @@ public class ProxyServlet extends HttpServlet {
 
     public ProxyServlet() {
         filters.withFilter(new HttpRequest(), new HopByHopHeaderFilter());
-        filters.withFilter(new HttpRequest(), LogFilter.PROXY_INSTANCE);
+        filters.withFilter(new HttpRequest(), logFilter);
     }
 
     /**
@@ -97,29 +98,29 @@ public class ProxyServlet extends HttpServlet {
 
             } else if (requestPath.equals("/clear")) {
 
-                LogFilter.PROXY_INSTANCE.clear(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
+                logFilter.clear(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
                 httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
 
             } else if (requestPath.equals("/reset")) {
 
-                LogFilter.PROXY_INSTANCE.reset();
+                logFilter.reset();
                 httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
 
             } else if (requestPath.equals("/dumpToLog")) {
 
-                LogFilter.PROXY_INSTANCE.dumpToLog(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)), "java".equals(httpServletRequest.getParameter("type")));
+                logFilter.dumpToLog(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)), "java".equals(httpServletRequest.getParameter("type")));
                 httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
 
             } else if (requestPath.equals("/retrieve")) {
 
-                Expectation[] expectations = LogFilter.PROXY_INSTANCE.retrieve(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
+                Expectation[] expectations = logFilter.retrieve(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
                 httpServletResponse.setStatus(HttpStatusCode.OK_200.code());
                 httpServletResponse.setHeader(HttpHeaders.Names.CONTENT_TYPE, "application/json; charset=utf-8");
                 IOStreamUtils.writeToOutputStream(expectationSerializer.serialize(expectations).getBytes(), httpServletResponse);
 
             } else if (requestPath.equals("/verify")) {
 
-                String result = LogFilter.PROXY_INSTANCE.verify(verificationSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
+                String result = logFilter.verify(verificationSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
                 if (result.isEmpty()) {
                     httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
                 } else {
@@ -130,7 +131,7 @@ public class ProxyServlet extends HttpServlet {
 
             } else if (requestPath.equals("/verifySequence")) {
 
-                String result = LogFilter.PROXY_INSTANCE.verify(verificationSequenceSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
+                String result = logFilter.verify(verificationSequenceSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
                 if (result.isEmpty()) {
                     httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
                 } else {

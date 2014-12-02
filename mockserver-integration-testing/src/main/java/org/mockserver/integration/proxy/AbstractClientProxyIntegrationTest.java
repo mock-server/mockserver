@@ -7,6 +7,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.conn.routing.HttpRoutePlanner;
 import org.apache.http.conn.ssl.AllowAllHostnameVerifier;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -43,11 +44,12 @@ public abstract class AbstractClientProxyIntegrationTest {
                 .custom()
                 .setSslcontext(SSLFactory.getInstance().sslContext())
                 .setHostnameVerifier(new AllowAllHostnameVerifier());
-        if (Boolean.parseBoolean(System.getProperty("defaultProxySet"))) {
-            httpClientBuilder.setRoutePlanner(new SystemDefaultRoutePlanner(ProxySelector.getDefault())).build();
+        if (Boolean.parseBoolean(System.getProperty("socksProxySet"))) {
+            HttpRoutePlanner routePlanner = new SystemDefaultRoutePlanner(ProxySelector.getDefault());
+            httpClientBuilder.setRoutePlanner(routePlanner).build();
         } else if (Boolean.parseBoolean(System.getProperty("proxySet"))) {
             HttpHost httpHost = new HttpHost(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort")));
-            DefaultProxyRoutePlanner defaultProxyRoutePlanner = new DefaultProxyRoutePlanner(httpHost);
+            HttpRoutePlanner defaultProxyRoutePlanner = new DefaultProxyRoutePlanner(httpHost);
             httpClientBuilder.setRoutePlanner(defaultProxyRoutePlanner).build();
         } else {
             HttpHost httpHost = new HttpHost("localhost", getProxyPort());
@@ -59,10 +61,12 @@ public abstract class AbstractClientProxyIntegrationTest {
 
     public abstract int getProxyPort();
 
+    public abstract ProxyClient getProxyClient();
+
     public abstract int getServerPort();
 
     protected String calculatePath(String path) {
-        return "/" + path;
+        return "/" + servletContext.replaceAll("/", "") + "/" + path;
     }
 
     @Test
@@ -77,7 +81,7 @@ public abstract class AbstractClientProxyIntegrationTest {
             // when
             // - send GET request for headers only
             output.write(("" +
-                    "GET /test_headers_only HTTP/1.1\r\n" +
+                    "GET " + calculatePath("test_headers_only") + " HTTP/1.1\r\n" +
                     "Host: localhost:" + getServerPort() + "\r\n" +
                     "x-test: test_headers_only\r\n" +
                     "Connection: keep-alive\r\n" +
@@ -90,7 +94,7 @@ public abstract class AbstractClientProxyIntegrationTest {
 
             // - send GET request for headers and body
             output.write(("" +
-                    "GET /test_headers_and_body HTTP/1.1\r\n" +
+                    "GET " + calculatePath("test_headers_and_body") + " HTTP/1.1\r\n" +
                     "Host: localhost:" + getServerPort() + "\r\n" +
                     "Content-Length: " + "an_example_body".getBytes(Charsets.UTF_8).length + "\r\n" +
                     "x-test: test_headers_and_body\r\n" +
@@ -121,7 +125,7 @@ public abstract class AbstractClientProxyIntegrationTest {
                         .setScheme("http")
                         .setHost("localhost")
                         .setPort(getServerPort())
-                        .setPath("/test_headers_and_body")
+                        .setPath(calculatePath("test_headers_and_body"))
                         .build()
         );
         request.setEntity(new StringEntity("an_example_body"));
@@ -163,7 +167,6 @@ public abstract class AbstractClientProxyIntegrationTest {
     public void shouldVerifyRequests() throws Exception {
         // given
         HttpClient httpClient = createHttpClient();
-        ProxyClient proxyClient = new ProxyClient("127.0.0.1", getProxyPort()).reset();
 
         // when
         httpClient.execute(
@@ -172,7 +175,7 @@ public abstract class AbstractClientProxyIntegrationTest {
                                 .setScheme("http")
                                 .setHost("localhost")
                                 .setPort(getServerPort())
-                                .setPath("/test_headers_and_body")
+                                .setPath(calculatePath("test_headers_and_body"))
                                 .build()
                 )
         );
@@ -182,41 +185,41 @@ public abstract class AbstractClientProxyIntegrationTest {
                                 .setScheme("http")
                                 .setHost("localhost")
                                 .setPort(getServerPort())
-                                .setPath("/test_headers_only")
+                                .setPath(calculatePath("test_headers_only"))
                                 .build()
                 )
         );
 
         // then
-        proxyClient
+        getProxyClient()
                 .verify(
                         request()
                                 .withMethod("GET")
-                                .withPath(calculatePath("test_headers_and_body"))
+                                .withPath("/test_headers_and_body")
                 );
-        proxyClient
+        getProxyClient()
                 .verify(
                         request()
                                 .withMethod("GET")
-                                .withPath(calculatePath("test_headers_and_body")),
+                                .withPath("/test_headers_and_body"),
                         exactly(1)
                 );
-        proxyClient
+        getProxyClient()
                 .verify(
                         request()
-                                .withPath(calculatePath("test_headers_.*")),
+                                .withPath("/test_headers_.*"),
                         atLeast(1)
                 );
-        proxyClient
+        getProxyClient()
                 .verify(
                         request()
-                                .withPath(calculatePath("test_headers_.*")),
+                                .withPath("/test_headers_.*"),
                         exactly(2)
                 );
-        proxyClient
+        getProxyClient()
                 .verify(
                         request()
-                                .withPath(calculatePath("other_path")),
+                                .withPath("/other_path"),
                         exactly(0)
                 );
     }
@@ -225,7 +228,6 @@ public abstract class AbstractClientProxyIntegrationTest {
     public void shouldVerifyZeroRequests() throws Exception {
         // given
         HttpClient httpClient = createHttpClient();
-        ProxyClient proxyClient = new ProxyClient("127.0.0.1", getProxyPort()).reset();
 
         // when
         httpClient.execute(
@@ -234,22 +236,25 @@ public abstract class AbstractClientProxyIntegrationTest {
                                 .setScheme("http")
                                 .setHost("localhost")
                                 .setPort(getServerPort())
-                                .setPath("/test_headers_and_body")
+                                .setPath(calculatePath("test_headers_and_body"))
                                 .build()
                 )
         );
 
         // then
         try {
-            proxyClient.verify(request()
-                    .withPath(calculatePath("test_headers_and_body")), exactly(0));
+            getProxyClient()
+                    .verify(
+                            request()
+                                    .withPath("/test_headers_and_body"), exactly(0)
+                    );
             fail();
         } catch (AssertionError ae) {
             assertThat(ae.getMessage(), startsWith("Request not found exactly 0 times, expected:<{" + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("test_headers_and_body") + "\"" + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + "/test_headers_and_body" + "\"" + System.getProperty("line.separator") +
                     "}> but was:<{" + System.getProperty("line.separator") +
                     "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("test_headers_and_body") + "\"," + System.getProperty("line.separator")));
+                    "  \"path\" : \"" + "/test_headers_and_body" + "\"," + System.getProperty("line.separator")));
         }
     }
 
@@ -257,7 +262,6 @@ public abstract class AbstractClientProxyIntegrationTest {
     public void shouldVerifyNoRequestsExactly() throws Exception {
         // given
         HttpClient httpClient = createHttpClient();
-        ProxyClient proxyClient = new ProxyClient("127.0.0.1", getProxyPort()).reset();
 
         // when
         httpClient.execute(
@@ -266,26 +270,26 @@ public abstract class AbstractClientProxyIntegrationTest {
                                 .setScheme("http")
                                 .setHost("localhost")
                                 .setPort(getServerPort())
-                                .setPath("/test_headers_and_body")
+                                .setPath(calculatePath("test_headers_and_body"))
                                 .build()
                 )
         );
 
         // then
         try {
-            proxyClient
+            getProxyClient()
                     .verify(
                             request()
-                                    .withPath(calculatePath("other_path")),
+                                    .withPath("/other_path"),
                             exactly(1)
                     );
             fail();
         } catch (AssertionError ae) {
             assertThat(ae.getMessage(), startsWith("Request not found exactly once, expected:<{" + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("other_path") + "\"" + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + "/other_path" + "\"" + System.getProperty("line.separator") +
                     "}> but was:<{" + System.getProperty("line.separator") +
                     "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("test_headers_and_body") + "\"," + System.getProperty("line.separator")));
+                    "  \"path\" : \"" + "/test_headers_and_body" + "\"," + System.getProperty("line.separator")));
         }
     }
 
@@ -293,7 +297,6 @@ public abstract class AbstractClientProxyIntegrationTest {
     public void shouldVerifyNoRequestsTimesNotSpecified() throws Exception {
         // given
         HttpClient httpClient = createHttpClient();
-        ProxyClient proxyClient = new ProxyClient("127.0.0.1", getProxyPort()).reset();
 
         // when
         httpClient.execute(
@@ -302,25 +305,25 @@ public abstract class AbstractClientProxyIntegrationTest {
                                 .setScheme("http")
                                 .setHost("localhost")
                                 .setPort(getServerPort())
-                                .setPath("/test_headers_and_body")
+                                .setPath(calculatePath("test_headers_and_body"))
                                 .build()
                 )
         );
 
         // then
         try {
-            proxyClient
+            getProxyClient()
                     .verify(
                             request()
-                                    .withPath(calculatePath("other_path"))
+                                    .withPath("/other_path")
                     );
             fail();
         } catch (AssertionError ae) {
             assertThat(ae.getMessage(), startsWith("Request sequence not found, expected:<[ {" + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("other_path") + "\"" + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + "/other_path" + "\"" + System.getProperty("line.separator") +
                     "} ]> but was:<[ {" + System.getProperty("line.separator") +
                     "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("test_headers_and_body") + "\"," + System.getProperty("line.separator")));
+                    "  \"path\" : \"" + "/test_headers_and_body" + "\"," + System.getProperty("line.separator")));
         }
     }
 
@@ -328,7 +331,6 @@ public abstract class AbstractClientProxyIntegrationTest {
     public void shouldVerifyNotEnoughRequests() throws Exception {
         // given
         HttpClient httpClient = createHttpClient();
-        ProxyClient proxyClient = new ProxyClient("127.0.0.1", getProxyPort()).reset();
 
         // when
         httpClient.execute(
@@ -337,7 +339,7 @@ public abstract class AbstractClientProxyIntegrationTest {
                                 .setScheme("http")
                                 .setHost("localhost")
                                 .setPort(getServerPort())
-                                .setPath("/test_headers_and_body")
+                                .setPath(calculatePath("test_headers_and_body"))
                                 .build()
                 )
         );
@@ -347,26 +349,26 @@ public abstract class AbstractClientProxyIntegrationTest {
                                 .setScheme("http")
                                 .setHost("localhost")
                                 .setPort(getServerPort())
-                                .setPath("/test_headers_and_body")
+                                .setPath(calculatePath("test_headers_and_body"))
                                 .build()
                 )
         );
 
         // then
         try {
-            proxyClient
+            getProxyClient()
                     .verify(
                             request()
-                                    .withPath(calculatePath("test_headers_and_body")),
+                                    .withPath("/test_headers_and_body"),
                             atLeast(3)
                     );
             fail();
         } catch (AssertionError ae) {
             assertThat(ae.getMessage(), startsWith("Request not found at least 3 times, expected:<{" + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("test_headers_and_body") + "\"" + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + "/test_headers_and_body" + "\"" + System.getProperty("line.separator") +
                     "}> but was:<[ {" + System.getProperty("line.separator") +
                     "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("test_headers_and_body") + "\"," + System.getProperty("line.separator")));
+                    "  \"path\" : \"" + "/test_headers_and_body" + "\"," + System.getProperty("line.separator")));
         }
     }
 
@@ -374,7 +376,6 @@ public abstract class AbstractClientProxyIntegrationTest {
     public void shouldClearRequests() throws Exception {
         // given
         HttpClient httpClient = createHttpClient();
-        ProxyClient proxyClient = new ProxyClient("127.0.0.1", getProxyPort()).reset();
 
         // when
         httpClient.execute(
@@ -383,7 +384,7 @@ public abstract class AbstractClientProxyIntegrationTest {
                                 .setScheme("http")
                                 .setHost("localhost")
                                 .setPort(getServerPort())
-                                .setPath("/test_headers_and_body")
+                                .setPath(calculatePath("test_headers_and_body"))
                                 .build()
                 )
         );
@@ -393,28 +394,29 @@ public abstract class AbstractClientProxyIntegrationTest {
                                 .setScheme("http")
                                 .setHost("localhost")
                                 .setPort(getServerPort())
-                                .setPath("/test_headers_only")
+                                .setPath(calculatePath("test_headers_only"))
                                 .build()
                 )
         );
-        proxyClient.clear(
-                request()
-                        .withMethod("GET")
-                        .withPath(calculatePath("test_headers_and_body"))
-        );
+        getProxyClient()
+                .clear(
+                        request()
+                                .withMethod("GET")
+                                .withPath("/test_headers_and_body")
+                );
 
         // then
-        proxyClient
+        getProxyClient()
                 .verify(
                         request()
                                 .withMethod("GET")
-                                .withPath(calculatePath("test_headers_and_body")),
+                                .withPath("/test_headers_and_body"),
                         exactly(0)
                 );
-        proxyClient
+        getProxyClient()
                 .verify(
                         request()
-                                .withPath(calculatePath("test_headers_.*")),
+                                .withPath("/test_headers_.*"),
                         exactly(1)
                 );
     }
@@ -423,7 +425,6 @@ public abstract class AbstractClientProxyIntegrationTest {
     public void shouldResetRequests() throws Exception {
         // given
         HttpClient httpClient = createHttpClient();
-        ProxyClient proxyClient = new ProxyClient("127.0.0.1", getProxyPort()).reset();
 
         // when
         httpClient.execute(
@@ -432,7 +433,7 @@ public abstract class AbstractClientProxyIntegrationTest {
                                 .setScheme("http")
                                 .setHost("localhost")
                                 .setPort(getServerPort())
-                                .setPath("/test_headers_and_body")
+                                .setPath(calculatePath("test_headers_and_body"))
                                 .build()
                 )
         );
@@ -442,30 +443,30 @@ public abstract class AbstractClientProxyIntegrationTest {
                                 .setScheme("http")
                                 .setHost("localhost")
                                 .setPort(getServerPort())
-                                .setPath("/test_headers_only")
+                                .setPath(calculatePath("test_headers_only"))
                                 .build()
                 )
         );
-        proxyClient.reset();
+        getProxyClient().reset();
 
         // then
-        proxyClient
+        getProxyClient()
                 .verify(
                         request()
                                 .withMethod("GET")
-                                .withPath(calculatePath("test_headers_and_body")),
+                                .withPath("/test_headers_and_body"),
                         exactly(0)
                 );
-        proxyClient
+        getProxyClient()
                 .verify(
                         request()
-                                .withPath(calculatePath("test_headers_.*")),
+                                .withPath("/test_headers_.*"),
                         atLeast(0)
                 );
-        proxyClient
+        getProxyClient()
                 .verify(
                         request()
-                                .withPath(calculatePath("test_headers_.*")),
+                                .withPath("/test_headers_.*"),
                         exactly(0)
                 );
     }

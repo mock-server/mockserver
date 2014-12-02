@@ -82,8 +82,7 @@ public class HttpProxyHandlerTest {
         // given - a mock server handler
         mockLogFilter = mock(LogFilter.class);
         mockHttpProxy = mock(Proxy.class);
-        LogFilter.PROXY_INSTANCE = mockLogFilter;
-        httpProxyHandler = new HttpProxyHandler(mockHttpProxy);
+        httpProxyHandler = new HttpProxyHandler(mockHttpProxy, mockLogFilter);
 
         initMocks(this);
 
@@ -108,11 +107,6 @@ public class HttpProxyHandlerTest {
         when(mockExpectation.getHttpResponse(anyBoolean())).thenReturn(mockHttpResponse);
         when(mockExpectation.getHttpForward()).thenReturn(mockHttpForward);
         when(mockExpectation.getHttpCallback()).thenReturn(mockHttpCallback);
-    }
-
-    @After
-    public void tearDownFixture() {
-        LogFilter.resetProxyInstance();
     }
 
     @Test

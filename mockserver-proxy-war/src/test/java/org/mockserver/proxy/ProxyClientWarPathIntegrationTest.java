@@ -50,7 +50,7 @@ public class ProxyClientWarPathIntegrationTest extends AbstractClientProxyIntegr
         tomcat.start();
 
         // start client
-        proxyClient = new ProxyClient("localhost", PROXY_PORT);
+        proxyClient = new ProxyClient("localhost", PROXY_PORT, servletContext);
     }
 
     @AfterClass
@@ -74,6 +74,11 @@ public class ProxyClientWarPathIntegrationTest extends AbstractClientProxyIntegr
     @Override
     public int getProxyPort() {
         return PROXY_PORT;
+    }
+
+    @Override
+    public ProxyClient getProxyClient() {
+        return proxyClient;
     }
 
     @Override

@@ -42,7 +42,7 @@ public class EchoServer {
                                     hasStarted.set("STARTED");
                                 } else {
                                     hasStarted.setException(future.cause());
-                                    eventLoopGroup.shutdownGracefully();
+                                    eventLoopGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
                                 }
                             }
                         });
@@ -59,6 +59,6 @@ public class EchoServer {
     }
 
     public void stop() {
-        eventLoopGroup.shutdownGracefully(0, 2, TimeUnit.MILLISECONDS);
+        eventLoopGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
     }
 }

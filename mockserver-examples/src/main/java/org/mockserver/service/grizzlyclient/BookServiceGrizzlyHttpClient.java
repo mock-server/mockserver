@@ -10,11 +10,17 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.mockserver.model.Book;
 import org.mockserver.proxy.http.HttpProxy;
 import org.mockserver.service.BookService;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
+import sun.net.spi.DefaultProxySelector;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import java.io.IOException;
+import java.net.*;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.Future;
 
 /**
@@ -59,7 +65,17 @@ public class BookServiceGrizzlyHttpClient implements BookService {
     private AsyncHttpClient createHttpClient() {
         AsyncHttpClientConfig.Builder clientConfigBuilder = new AsyncHttpClientConfig.Builder();
         if (Boolean.parseBoolean(System.getProperty("proxySet"))) {
-            clientConfigBuilder.setProxyServerSelector(ProxyUtils.createProxyServerSelector(HttpProxy.proxySelector()));
+            clientConfigBuilder.setProxyServerSelector(ProxyUtils.createProxyServerSelector(new ProxySelector() {
+                @Override
+                public List<Proxy> select(URI uri) {
+                    return Arrays.asList(new java.net.Proxy(Proxy.Type.HTTP, new InetSocketAddress(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort")))));
+                }
+
+                @Override
+                public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {
+                    LoggerFactory.getLogger(this.getClass()).error("Connection could not be established to proxy at socket [" + sa + "]", ioe);
+                }
+            }));
         }
         return new AsyncHttpClient(clientConfigBuilder.build());
     }

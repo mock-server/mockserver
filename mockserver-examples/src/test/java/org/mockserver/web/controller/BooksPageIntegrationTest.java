@@ -69,7 +69,6 @@ public abstract class BooksPageIntegrationTest {
         // for debugging test
         proxy.dumpToLogAsJSON();
         proxy.dumpToLogAsJava();
-
     }
 
     @Test

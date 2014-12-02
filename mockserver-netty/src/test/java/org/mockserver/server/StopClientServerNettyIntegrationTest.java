@@ -30,7 +30,7 @@ public class StopClientServerNettyIntegrationTest {
 
             // then
             assertFalse(mockServer.isRunning());
-            mockServer = new MockServer(serverPort, serverSecurePort);
+            mockServer = new MockServer(serverPort, null);
             assertTrue(mockServer.isRunning());
         }
 
@@ -40,7 +40,7 @@ public class StopClientServerNettyIntegrationTest {
     }
 
     @Test
-    public void canStartAndStopMultipleTimesWithNewProcess() {
+    public void canStartAndStopMultipleTimesWithSSL() {
         // start server
         MockServer mockServer = new MockServer(serverPort, serverSecurePort);
 

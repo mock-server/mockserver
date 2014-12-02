@@ -13,6 +13,14 @@ import org.mockserver.socket.PortFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.ProxySelector;
+import java.net.SocketAddress;
+import java.net.URI;
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * @author jamesdbloom
  */
@@ -28,6 +36,24 @@ public class NettySocksProxyIntegrationTest extends AbstractClientProxyIntegrati
     private static EchoServer echoServer;
     private static Proxy httpProxy;
     private static ProxyClient proxyClient;
+    private static ProxySelector previousProxySelector;
+
+    private static ProxySelector createProxySelector(final String host, final int port) {
+        return new ProxySelector() {
+            @Override
+            public List<java.net.Proxy> select(URI uri) {
+                return Arrays.asList(
+                        new java.net.Proxy(java.net.Proxy.Type.SOCKS, new InetSocketAddress(host, port)),
+                        new java.net.Proxy(java.net.Proxy.Type.HTTP, new InetSocketAddress(host, port))
+                );
+            }
+
+            @Override
+            public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {
+                logger.error("Connection could not be established to proxy at socket [" + sa + "]", ioe);
+            }
+        };
+    }
 
     @BeforeClass
     public static void setupFixture() throws Exception {
@@ -35,6 +61,8 @@ public class NettySocksProxyIntegrationTest extends AbstractClientProxyIntegrati
         logger.debug("SERVER_HTTPS_PORT = " + SERVER_HTTPS_PORT);
         logger.debug("PROXY_HTTP_PORT = " + PROXY_HTTP_PORT);
         logger.debug("PROXY_DIRECT_PORT = " + PROXY_DIRECT_PORT);
+
+        servletContext = "";
 
         // start server
         echoServer = new EchoServer(SERVER_HTTP_PORT);
@@ -46,6 +74,10 @@ public class NettySocksProxyIntegrationTest extends AbstractClientProxyIntegrati
 
         // start client
         proxyClient = new ProxyClient("localhost", PROXY_HTTP_PORT);
+
+        previousProxySelector = ProxySelector.getDefault();
+        ProxySelector.setDefault(createProxySelector("127.0.0.1", PROXY_HTTP_PORT));
+        System.setProperty("socksProxySet", "true");
     }
 
     @AfterClass
@@ -55,6 +87,8 @@ public class NettySocksProxyIntegrationTest extends AbstractClientProxyIntegrati
 
         // stop proxy
         httpProxy.stop();
+
+        ProxySelector.setDefault(previousProxySelector);
     }
 
     @Before
@@ -65,6 +99,11 @@ public class NettySocksProxyIntegrationTest extends AbstractClientProxyIntegrati
     @Override
     public int getProxyPort() {
         return PROXY_HTTP_PORT;
+    }
+
+    @Override
+    public ProxyClient getProxyClient() {
+        return proxyClient;
     }
 
     @Override

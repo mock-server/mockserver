@@ -7,12 +7,21 @@ import org.slf4j.Logger;
 public abstract class ProxyRelayHandler<T> extends SimpleChannelInboundHandler<T> {
 
     private final Logger logger;
-    private volatile Channel inboundChannel;
+    private volatile Channel outboundChannel;
 
-    public ProxyRelayHandler(Channel inboundChannel, Logger logger) {
+    public ProxyRelayHandler(Channel outboundChannel, Logger logger) {
         super(false);
-        this.inboundChannel = inboundChannel;
+        this.outboundChannel = outboundChannel;
         this.logger = logger;
+    }
+
+    /**
+     * Closes the specified channel after all queued write requests are flushed.
+     */
+    public static void closeOnFlush(Channel ch) {
+        if (ch != null && ch.isActive()) {
+            ch.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+        }
     }
 
     @Override
@@ -23,7 +32,7 @@ public abstract class ProxyRelayHandler<T> extends SimpleChannelInboundHandler<T
 
     @Override
     public void channelRead0(final ChannelHandlerContext ctx, final T msg) {
-        inboundChannel.writeAndFlush(msg).addListener(new ChannelFutureListener() {
+        outboundChannel.writeAndFlush(msg).addListener(new ChannelFutureListener() {
             @Override
             public void operationComplete(ChannelFuture future) {
                 if (future.isSuccess()) {
@@ -38,22 +47,13 @@ public abstract class ProxyRelayHandler<T> extends SimpleChannelInboundHandler<T
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
-        closeOnFlush(inboundChannel);
+        closeOnFlush(outboundChannel);
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         logger.error("Exception while reading from channel", cause);
         closeOnFlush(ctx.channel());
-    }
-
-    /**
-     * Closes the specified channel after all queued write requests are flushed.
-     */
-    public static void closeOnFlush(Channel ch) {
-        if (ch != null && ch.isActive()) {
-            ch.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
-        }
     }
 
 }

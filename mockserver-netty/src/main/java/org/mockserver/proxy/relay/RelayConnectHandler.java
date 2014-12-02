@@ -24,23 +24,24 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Override
-    public void channelRead0(final ChannelHandlerContext ctx, final T request) throws Exception {
-        final Channel inboundChannel = ctx.channel();
+    public void channelRead0(final ChannelHandlerContext serverCtx, final T request) throws Exception {
+        final Channel inboundChannel = serverCtx.channel();
         Bootstrap bootstrap = new Bootstrap()
                 .group(inboundChannel.eventLoop())
                 .channel(NioSocketChannel.class)
-                .handler(new ChannelInitializer<SocketChannel>() {
+                .handler(new ChannelInboundHandlerAdapter() {
                     @Override
-                    public void initChannel(final SocketChannel socketChannel) throws Exception {
-                        ctx.channel().writeAndFlush(successResponse(request))
+                    public void channelActive(final ChannelHandlerContext clientCtx) throws Exception {
+                        serverCtx.channel()
+                                .writeAndFlush(successResponse(request))
                                 .addListener(new ChannelFutureListener() {
                                     @Override
                                     public void operationComplete(ChannelFuture channelFuture) throws Exception {
-                                        removeCodecSupport(ctx);
+                                        removeCodecSupport(serverCtx);
 
                                         // downstream
-                                        ChannelPipeline downstreamPipeline = socketChannel.pipeline();
-                                        if (PortUnificationHandler.isSslEnabled(ctx)) {
+                                        ChannelPipeline downstreamPipeline = clientCtx.channel().pipeline();
+                                        if (PortUnificationHandler.isSslEnabled(serverCtx)) {
                                             downstreamPipeline.addLast(new SslHandler(SSLFactory.createClientSSLEngine()));
                                         }
 
@@ -54,12 +55,12 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
 
                                         downstreamPipeline.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
 
-                                        downstreamPipeline.addLast(new DownstreamProxyRelayHandler(ctx.channel(), logger));
+                                        downstreamPipeline.addLast(new DownstreamProxyRelayHandler(serverCtx.channel(), logger));
 
 
                                         // upstream
-                                        ChannelPipeline upstreamPipeline = ctx.channel().pipeline();
-                                        if (PortUnificationHandler.isSslEnabled(ctx)) {
+                                        ChannelPipeline upstreamPipeline = serverCtx.channel().pipeline();
+                                        if (PortUnificationHandler.isSslEnabled(serverCtx)) {
                                             upstreamPipeline.addLast(new SslHandler(SSLFactory.createServerSSLEngine()));
                                         }
 
@@ -73,18 +74,18 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
 
                                         upstreamPipeline.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
 
-                                        upstreamPipeline.addLast(new UpstreamProxyRelayHandler(socketChannel, logger));
+                                        upstreamPipeline.addLast(new UpstreamProxyRelayHandler(clientCtx.channel(), logger));
                                     }
                                 });
                     }
                 });
 
-        final InetSocketAddress remoteSocket = ctx.channel().attr(HttpProxy.REMOTE_SOCKET).get();
+        final InetSocketAddress remoteSocket = serverCtx.channel().attr(HttpProxy.REMOTE_SOCKET).get();
         bootstrap.connect(remoteSocket).addListener(new ChannelFutureListener() {
             @Override
             public void operationComplete(ChannelFuture future) throws Exception {
                 if (!future.isSuccess()) {
-                    failure("Connection failed to 127.0.0.1:" + remoteSocket, future.cause(), ctx, failureResponse(request));
+                    failure("Connection failed to 127.0.0.1:" + remoteSocket, future.cause(), serverCtx, failureResponse(request));
                 }
             }
         });

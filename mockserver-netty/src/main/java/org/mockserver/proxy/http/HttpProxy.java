@@ -1,6 +1,5 @@
 package org.mockserver.proxy.http;
 
-import ch.qos.logback.classic.Level;
 import com.google.common.util.concurrent.SettableFuture;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
@@ -9,11 +8,16 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import org.mockserver.filters.LogFilter;
+import org.mockserver.proxy.Proxy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.net.*;
+import java.net.InetSocketAddress;
+import java.net.ProxySelector;
+import java.net.SocketAddress;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -25,12 +29,12 @@ import java.util.concurrent.TimeUnit;
  *
  * @author jamesdbloom
  */
-public class HttpProxy implements org.mockserver.proxy.Proxy {
+public class HttpProxy implements Proxy {
 
     private static final Logger logger = LoggerFactory.getLogger(HttpProxy.class);
     // proxy
     private final SettableFuture<String> hasStarted = SettableFuture.create();
-    private ProxySelector previousProxySelector;
+    private final LogFilter logFilter = new LogFilter();
     // netty
     private final EventLoopGroup bossGroup = new NioEventLoopGroup();
     private final EventLoopGroup workerGroup = new NioEventLoopGroup();
@@ -57,12 +61,14 @@ public class HttpProxy implements org.mockserver.proxy.Proxy {
                             .childHandler(new HttpProxyUnificationHandler())
                             .childAttr(HTTP_PROXY, HttpProxy.this)
                             .childAttr(REMOTE_SOCKET, new InetSocketAddress(port))
+                            .childAttr(LOG_FILTER, logFilter)
                             .bind(port)
                             .addListener(new ChannelFutureListener() {
                                 @Override
                                 public void operationComplete(ChannelFuture future) throws Exception {
                                     if (future.isSuccess()) {
                                         hasStarted.set("STARTED");
+                                        proxyStarted(port);
                                     } else {
                                         hasStarted.setException(future.cause());
                                     }
@@ -74,8 +80,8 @@ public class HttpProxy implements org.mockserver.proxy.Proxy {
                 } catch (Exception ie) {
                     logger.error("Exception while running proxy channels", ie);
                 } finally {
-                    bossGroup.shutdownGracefully();
-                    workerGroup.shutdownGracefully();
+                    bossGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
+                    workerGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
                 }
             }
         }).start();
@@ -87,13 +93,30 @@ public class HttpProxy implements org.mockserver.proxy.Proxy {
         }
     }
 
+    private static ProxySelector createProxySelector(final String host, final int port) {
+        return new ProxySelector() {
+            @Override
+            public List<java.net.Proxy> select(URI uri) {
+                return Arrays.asList(
+                        new java.net.Proxy(java.net.Proxy.Type.SOCKS, new InetSocketAddress(host, port)),
+                        new java.net.Proxy(java.net.Proxy.Type.HTTP, new InetSocketAddress(host, port))
+                );
+            }
+
+            @Override
+            public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {
+                logger.error("Connection could not be established to proxy at socket [" + sa + "]", ioe);
+            }
+        };
+    }
+
     public void stop() {
         try {
             proxyStopping();
-            bossGroup.shutdownGracefully(1, 3, TimeUnit.MILLISECONDS);
-            workerGroup.shutdownGracefully(1, 3, TimeUnit.MILLISECONDS);
-            // wait for shutdown
-            TimeUnit.SECONDS.sleep(1);
+            bossGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
+            workerGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
+            // wait for socket to be released
+            TimeUnit.MILLISECONDS.sleep(500);
         } catch (Exception ie) {
             logger.trace("Exception while waiting for the proxy to stop", ie);
         }
@@ -116,62 +139,24 @@ public class HttpProxy implements org.mockserver.proxy.Proxy {
         return port;
     }
 
-    /**
-     * Override the debug WARN logging level
-     *
-     * @param level the log level, which can be ALL, DEBUG, INFO, WARN, ERROR, OFF
-     */
-    public void overrideLogLevel(String level) {
-        Logger rootLogger = LoggerFactory.getLogger("org.mockserver");
-        if (rootLogger instanceof ch.qos.logback.classic.Logger) {
-            ((ch.qos.logback.classic.Logger) rootLogger).setLevel(Level.toLevel(level));
-        }
-    }
-
-    public static ProxySelector proxySelector() {
-        if (Boolean.parseBoolean(System.getProperty("defaultProxySet"))) {
-            return ProxySelector.getDefault();
-        } else if (Boolean.parseBoolean(System.getProperty("proxySet"))) {
-            return createProxySelector(java.net.Proxy.Type.HTTP);
-        } else {
-            throw new IllegalStateException("ProxySelector can not be returned proxy has not been started yet");
-        }
-    }
-
-    private static ProxySelector createProxySelector(final java.net.Proxy.Type http) {
-        return new ProxySelector() {
-            @Override
-            public List<java.net.Proxy> select(URI uri) {
-                return Arrays.asList(new java.net.Proxy(http, new InetSocketAddress(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort")))));
-            }
-
-            @Override
-            public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {
-                logger.error("Connection could not be established to proxy at socket [" + sa + "]", ioe);
-            }
-        };
-    }
-
-    protected void proxyStarted(final Integer port, boolean socksProxy) {
+    protected void proxyStarted(Integer port) {
         System.setProperty("proxySet", "true");
+        System.setProperty("socksProxyHost", "127.0.0.1");
+        System.setProperty("socksProxyPort", port.toString());
+        System.setProperty("socksProxyVersion", "5");
         System.setProperty("http.proxyHost", "127.0.0.1");
-        System.setProperty("java.net.useSystemProxies", "true");
         System.setProperty("http.proxyPort", port.toString());
-        if (socksProxy) {
-            previousProxySelector = ProxySelector.getDefault();
-            System.setProperty("defaultProxySet", "true");
-            System.setProperty("socksProxyHost", "127.0.0.1");
-            System.setProperty("socksProxyPort", port.toString());
-            ProxySelector.setDefault(createProxySelector(java.net.Proxy.Type.SOCKS));
-        }
+        System.setProperty("https.proxyHost", "127.0.0.1");
+        System.setProperty("https.proxyPort", port.toString());
     }
 
     protected void proxyStopping() {
-        ProxySelector.setDefault(previousProxySelector);
         System.clearProperty("proxySet");
-        System.clearProperty("defaultProxySet");
+        System.clearProperty("socksProxyHost");
+        System.clearProperty("socksProxyPort");
         System.clearProperty("http.proxyHost");
         System.clearProperty("http.proxyPort");
-        System.clearProperty("java.net.useSystemProxies");
+        System.clearProperty("https.proxyHost");
+        System.clearProperty("https.proxyPort");
     }
 }

@@ -14,6 +14,7 @@ import io.netty.handler.codec.socks.SocksMessageEncoder;
 import io.netty.handler.codec.socks.SocksProtocolVersion;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.util.AttributeKey;
+import org.mockserver.logging.LoggingHandler;
 import org.mockserver.proxy.Proxy;
 import org.mockserver.proxy.connect.HttpConnectHandler;
 import org.mockserver.proxy.http.HttpProxyHandler;
@@ -35,7 +36,7 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) throws Exception {
         // Will use the first five bytes to detect a protocol.
-        if (msg.readableBytes() < 5) {
+        if (msg.readableBytes() < 4) {
             return;
         }
 
@@ -54,11 +55,11 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
     }
 
     private boolean isSsl(ByteBuf buf) {
-        return SslHandler.isEncrypted(buf);
+        return buf.readableBytes() >= 5 && SslHandler.isEncrypted(buf);
     }
 
     private boolean isSocks(ByteBuf msg) {
-        switch (SocksProtocolVersion.fromByte(msg.getByte(msg.readerIndex()))) {
+        switch (SocksProtocolVersion.valueOf(msg.getByte(msg.readerIndex()))) {
             case SOCKS5:
             case SOCKS4a:
                 break;
@@ -68,7 +69,7 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
 
         byte numberOfAuthenticationMethods = msg.getByte(msg.readerIndex() + 1);
         for (int i = 0; i < numberOfAuthenticationMethods; i++) {
-            switch (SocksAuthScheme.fromByte(msg.getByte(msg.readerIndex() + 1 + i))) {
+            switch (SocksAuthScheme.valueOf(msg.getByte(msg.readerIndex() + 1 + i))) {
                 case NO_AUTH:
                 case AUTH_PASSWORD:
                 case AUTH_GSSAPI:

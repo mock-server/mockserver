@@ -83,8 +83,7 @@ public class MockServerHandlerTest {
         // given - a mock server handler
         mockLogFilter = mock(LogFilter.class);
         mockMockServerMatcher = mock(MockServerMatcher.class);
-        LogFilter.SERVER_INSTANCE  = mockLogFilter;
-        mockServerHandler = new MockServerHandler(mockMockServerMatcher, mockMockServer);
+        mockServerHandler = new MockServerHandler(mockMockServer, mockMockServerMatcher, mockLogFilter);
 
         initMocks(this);
 
@@ -110,11 +109,6 @@ public class MockServerHandlerTest {
         when(mockExpectation.getHttpResponse(anyBoolean())).thenReturn(mockHttpResponse);
         when(mockExpectation.getHttpForward()).thenReturn(mockHttpForward);
         when(mockExpectation.getHttpCallback()).thenReturn(mockHttpCallback);
-    }
-
-    @After
-    public void tearDownFixture() {
-        LogFilter.resetServerInstance();
     }
 
     @Test

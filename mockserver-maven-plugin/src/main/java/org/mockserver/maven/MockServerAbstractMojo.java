@@ -43,11 +43,6 @@ public abstract class MockServerAbstractMojo extends AbstractMojo {
     @Parameter(property = "mockserver.proxyPort", defaultValue = "-1")
     protected int proxyPort = -1;
     /**
-     * The secure port to run the proxy on
-     */
-    @Parameter(property = "mockserver.proxySecurePort", defaultValue = "-1")
-    protected int proxySecurePort = -1;
-    /**
      * Timeout to wait before stopping MockServer, to run MockServer indefinitely do not set a value
      */
     @Parameter(property = "mockserver.timeout")

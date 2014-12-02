@@ -8,10 +8,12 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 import org.mockserver.filters.LogFilter;
 import org.mockserver.mock.MockServerMatcher;
+import org.mockserver.proxy.Proxy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,12 +25,14 @@ import java.util.concurrent.TimeUnit;
  */
 public class MockServer {
 
+    public static final AttributeKey<LogFilter> LOG_FILTER = AttributeKey.valueOf("SERVER_LOG_FILTER");
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     // ports
     private final Integer port;
     private final Integer securePort;
     // mockserver
     private final MockServerMatcher mockServerMatcher = new MockServerMatcher();
+    private final LogFilter logFilter = new LogFilter();
     private final SettableFuture<String> hasStarted;
     // netty
     private final EventLoopGroup bossGroup;
@@ -63,11 +67,12 @@ public class MockServer {
                     Channel httpChannel = null;
                     if (port != null) {
                         httpChannel = new ServerBootstrap()
-                                .option(ChannelOption.SO_BACKLOG, 1024)
-                                .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                                 .group(bossGroup, workerGroup)
                                 .channel(NioServerSocketChannel.class)
+                                .option(ChannelOption.SO_BACKLOG, 1024)
                                 .childHandler(new MockServerInitializer(mockServerMatcher, MockServer.this, false))
+                                .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+                                .childAttr(LOG_FILTER, logFilter)
                                 .bind(port)
                                 .sync()
                                 .channel();
@@ -76,11 +81,12 @@ public class MockServer {
                     Channel httpsChannel = null;
                     if (securePort != null) {
                         httpsChannel = new ServerBootstrap()
-                                .option(ChannelOption.SO_BACKLOG, 1024)
-                                .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                                 .group(bossGroup, workerGroup)
                                 .channel(NioServerSocketChannel.class)
+                                .option(ChannelOption.SO_BACKLOG, 1024)
                                 .childHandler(new MockServerInitializer(mockServerMatcher, MockServer.this, true))
+                                .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+                                .childAttr(LOG_FILTER, logFilter)
                                 .bind(securePort)
                                 .sync()
                                 .channel();
@@ -97,8 +103,8 @@ public class MockServer {
                 } catch (InterruptedException ie) {
                     logger.error("MockServer receive InterruptedException", ie);
                 } finally {
-                    bossGroup.shutdownGracefully();
-                    workerGroup.shutdownGracefully();
+                    bossGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
+                    workerGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
                 }
             }
         }).start();
@@ -113,10 +119,10 @@ public class MockServer {
 
     public void stop() {
         try {
-            bossGroup.shutdownGracefully(1, 3, TimeUnit.MILLISECONDS);
-            workerGroup.shutdownGracefully(1, 3, TimeUnit.MILLISECONDS);
-            // wait for shutdown
-            TimeUnit.SECONDS.sleep(1);
+            bossGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
+            workerGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
+            // wait for socket to be released
+            TimeUnit.MILLISECONDS.sleep(500);
         } catch (Exception ie) {
             logger.trace("Exception while stopping MockServer", ie);
         }
