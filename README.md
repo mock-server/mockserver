@@ -9,7 +9,8 @@ MockServer
 
 [![Still Maintained](http://stillmaintained.com/jamesdbloom/mockserver.png)](http://stillmaintained.com/jamesdbloom/mockserver) [![Stories in Backlog](https://badge.waffle.io/jamesdbloom/mockserver.png?label=proposal&title=Proposals)](https://waffle.io/jamesdbloom/mockserver) [![Stories in Backlog](https://badge.waffle.io/jamesdbloom/mockserver.png?label=ready&title=Ready)](https://waffle.io/jamesdbloom/mockserver) [![Stories in Backlog](https://badge.waffle.io/jamesdbloom/mockserver.png?label=in%20progress&title=In%20Progress)](https://waffle.io/jamesdbloom/mockserver)
 
-**For information on how to use the MockServer please see http://www.mock-server.com/**
+# For information on how to use the MockServer please see http://www.mock-server.com/
+## For information on how to use the MockServer please see http://www.mock-server.com/
 
 # Versions
 
