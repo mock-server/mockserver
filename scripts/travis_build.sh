@@ -13,7 +13,7 @@ if [ $JAVA_VER -eq 16 ]; then
     echo
     rm -rf $current_directory/target/travis
     git clone -b travis `git config --get remote.origin.url` $current_directory/target/travis
-    mvn deploy --settings $current_directory/target/travis/settings.xml -DskipJasmineProxyTests=true
+    mvn deploy --settings $current_directory/target/travis/settings.xml
 fi
 
 if [ $JAVA_VER -eq 17 ]; then
