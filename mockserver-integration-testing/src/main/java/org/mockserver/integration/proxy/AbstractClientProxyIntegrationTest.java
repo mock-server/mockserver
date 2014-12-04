@@ -231,7 +231,7 @@ public abstract class AbstractClientProxyIntegrationTest {
         HttpClient httpClient = createHttpClient();
 
         // when
-        HttpResponse httpResponse = httpClient.execute(
+        httpClient.execute(
                 new HttpGet(
                         new URIBuilder()
                                 .setScheme("http")
@@ -241,7 +241,6 @@ public abstract class AbstractClientProxyIntegrationTest {
                                 .build()
                 )
         );
-        assertThat(httpResponse.getStatusLine().getStatusCode(), is(200));
 
         // then
         try {
@@ -257,7 +256,6 @@ public abstract class AbstractClientProxyIntegrationTest {
                     "}> but was:<{" + System.getProperty("line.separator") +
                     "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
                     "  \"path\" : \"" + "/test_headers_and_body" + "\"," + System.getProperty("line.separator")));
-            printEnvironment();
         }
     }
 
@@ -267,7 +265,7 @@ public abstract class AbstractClientProxyIntegrationTest {
         HttpClient httpClient = createHttpClient();
 
         // when
-        HttpResponse httpResponse = httpClient.execute(
+        httpClient.execute(
                 new HttpGet(
                         new URIBuilder()
                                 .setScheme("http")
@@ -277,7 +275,6 @@ public abstract class AbstractClientProxyIntegrationTest {
                                 .build()
                 )
         );
-        assertThat(httpResponse.getStatusLine().getStatusCode(), is(200));
 
         // then
         try {
@@ -294,7 +291,6 @@ public abstract class AbstractClientProxyIntegrationTest {
                     "}> but was:<{" + System.getProperty("line.separator") +
                     "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
                     "  \"path\" : \"" + "/test_headers_and_body" + "\"," + System.getProperty("line.separator")));
-            printEnvironment();
         }
     }
 
@@ -304,7 +300,7 @@ public abstract class AbstractClientProxyIntegrationTest {
         HttpClient httpClient = createHttpClient();
 
         // when
-        HttpResponse httpResponse = httpClient.execute(
+        httpClient.execute(
                 new HttpGet(
                         new URIBuilder()
                                 .setScheme("http")
@@ -314,7 +310,6 @@ public abstract class AbstractClientProxyIntegrationTest {
                                 .build()
                 )
         );
-        assertThat(httpResponse.getStatusLine().getStatusCode(), is(200));
 
         // then
         try {
@@ -330,13 +325,7 @@ public abstract class AbstractClientProxyIntegrationTest {
                     "} ]> but was:<[ {" + System.getProperty("line.separator") +
                     "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
                     "  \"path\" : \"" + "/test_headers_and_body" + "\"," + System.getProperty("line.separator")));
-            printEnvironment();
         }
-    }
-
-    private void printEnvironment() {
-        System.out.println("Environment Variables:\n" + System.getenv());
-        System.out.println("Java Properties:\n" + System.getProperties());
     }
 
     @Test
