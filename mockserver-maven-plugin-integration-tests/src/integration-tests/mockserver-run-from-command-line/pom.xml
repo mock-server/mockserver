@@ -34,7 +34,6 @@
                 <configuration>
                     <logLevel>INFO</logLevel>
                     <serverPort>8084</serverPort>
-                    <serverSecurePort>8085</serverSecurePort>
                     <timeout>${mockserver.timeout}</timeout>
                     <pipeLogToConsole>true</pipeLogToConsole>
                 </configuration>

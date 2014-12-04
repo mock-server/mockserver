@@ -33,7 +33,6 @@
                 <configuration>
                     <logLevel>INFO</logLevel>
                     <serverPort>8080</serverPort>
-                    <serverSecurePort>8081</serverSecurePort>
                     <initializationClass>org.mockserver.MainClasspathInitializationClass</initializationClass>
                     <pipeLogToConsole>true</pipeLogToConsole>
                 </configuration>

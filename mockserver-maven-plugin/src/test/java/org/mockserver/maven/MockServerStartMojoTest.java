@@ -34,7 +34,6 @@ public class MockServerStartMojoTest {
     public void shouldStartMockServer() throws MojoExecutionException {
         // given
         mockServerStartMojo.serverPort = 1;
-        mockServerStartMojo.serverSecurePort = 2;
         mockServerStartMojo.proxyPort = 3;
         mockServerStartMojo.initializationClass = "org.mockserver.maven.ExampleInitializationClass";
 
@@ -42,7 +41,7 @@ public class MockServerStartMojoTest {
         mockServerStartMojo.execute();
 
         // then
-        verify(mockEmbeddedJettyHolder).start(eq(1), eq(2), eq(3), any(ExampleInitializationClass.class));
+        verify(mockEmbeddedJettyHolder).start(eq(1), eq(3), any(ExampleInitializationClass.class));
     }
 
     @Test

@@ -33,11 +33,6 @@ public abstract class MockServerAbstractMojo extends AbstractMojo {
     @Parameter(property = "mockserver.serverPort", defaultValue = "-1")
     protected int serverPort = -1;
     /**
-     * The secure port to run MockServer on
-     */
-    @Parameter(property = "mockserver.serverSecurePort", defaultValue = "-1")
-    protected int serverSecurePort = -1;
-    /**
      * The port to run the proxy on
      */
     @Parameter(property = "mockserver.proxyPort", defaultValue = "-1")
