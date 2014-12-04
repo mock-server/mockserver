@@ -60,10 +60,10 @@
         <module>mockserver-client-java</module>
         <module>mockserver-client-ruby</module>
         <module>mockserver-core</module>
-        <module>mockserver-war</module>
-        <module>mockserver-proxy-war</module>
         <module>mockserver-integration-testing</module>
         <module>mockserver-netty</module>
+        <module>mockserver-war</module>
+        <module>mockserver-proxy-war</module>
         <module>mockserver-maven-plugin</module>
         <module>mockserver-maven-plugin-integration-tests</module>
         <module>mockserver-client-javascript</module>
