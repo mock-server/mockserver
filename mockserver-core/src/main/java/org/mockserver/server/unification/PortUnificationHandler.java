@@ -8,9 +8,12 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
+import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.util.AttributeKey;
 import org.mockserver.socket.SSLFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author jamesdbloom
@@ -19,6 +22,7 @@ import org.mockserver.socket.SSLFactory;
 public abstract class PortUnificationHandler extends SimpleChannelInboundHandler<ByteBuf> {
 
     public static final AttributeKey<Boolean> SSL_ENABLED = AttributeKey.valueOf("SERVER_SSL_ENABLED");
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public PortUnificationHandler() {
         super(false);
@@ -84,6 +88,9 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
         pipeline.addLast(new HttpServerCodec());
         pipeline.addLast(new HttpContentDecompressor());
         pipeline.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
+        if (logger.isDebugEnabled()) {
+            pipeline.addLast(new LoggingHandler());
+        }
         configurePipeline(ctx, pipeline);
         pipeline.remove(this);
 

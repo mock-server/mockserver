@@ -33,7 +33,6 @@
                 <version>${mockserver.version}</version>
                 <configuration>
                     <serverPort>8094</serverPort>
-                    <serverSecurePort>8095</serverSecurePort>
                     <pipeLogToConsole>true</pipeLogToConsole>
                 </configuration>
                 <executions>

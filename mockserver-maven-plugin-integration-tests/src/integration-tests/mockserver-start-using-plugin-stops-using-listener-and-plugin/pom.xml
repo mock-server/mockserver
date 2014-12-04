@@ -39,7 +39,6 @@
                 <configuration>
                     <logLevel>INFO</logLevel>
                     <serverPort>8090</serverPort>
-                    <serverSecurePort>8091</serverSecurePort>
                     <pipeLogToConsole>true</pipeLogToConsole>
                 </configuration>
                 <executions>

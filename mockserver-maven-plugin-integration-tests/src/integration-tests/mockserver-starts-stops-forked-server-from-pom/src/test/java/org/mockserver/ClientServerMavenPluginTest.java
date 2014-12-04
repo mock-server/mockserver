@@ -15,7 +15,6 @@ public class ClientServerMavenPluginTest extends AbstractClientServerIntegration
 
     private final static int ECHO_SERVER_HTTP_PORT = PortFactory.findFreePort();
     private final static int SERVER_HTTP_PORT = 8092;
-    private final static int SERVER_HTTPS_PORT = 8093;
     private static EchoServer echoServer;
 
     @BeforeClass
@@ -41,7 +40,7 @@ public class ClientServerMavenPluginTest extends AbstractClientServerIntegration
 
     @Override
     public int getMockServerSecurePort() {
-        return SERVER_HTTPS_PORT;
+        return SERVER_HTTP_PORT;
     }
 
     @Override

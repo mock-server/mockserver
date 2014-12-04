@@ -1,5 +1,6 @@
 package org.mockserver.mockserver;
 
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
@@ -11,11 +12,12 @@ import org.mockserver.codec.MockServerServerCodec;
 import org.mockserver.logging.LoggingHandler;
 import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.proxy.Proxy;
+import org.mockserver.server.unification.PortUnificationHandler;
 import org.mockserver.socket.SSLFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MockServerInitializer extends ChannelInitializer<SocketChannel> {
+public class MockServerInitializer extends PortUnificationHandler {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final MockServerMatcher mockServerMatcher;
@@ -29,28 +31,15 @@ public class MockServerInitializer extends ChannelInitializer<SocketChannel> {
     }
 
     @Override
-    public void initChannel(SocketChannel ch) throws Exception {
-        // Create a default pipeline implementation.
-        ChannelPipeline pipeline = ch.pipeline();
-
-        // add HTTPS support
-        if (secure) {
-            pipeline.addLast(new SslHandler(SSLFactory.createServerSSLEngine()));
-        }
-
+    protected void configurePipeline(ChannelHandlerContext ctx, ChannelPipeline pipeline) {
         // add logging
         if (logger.isDebugEnabled()) {
             pipeline.addLast(new LoggingHandler());
         }
 
-        // add msg <-> HTTP
-        pipeline.addLast(new HttpServerCodec());
-        pipeline.addLast(new HttpContentDecompressor());
-        pipeline.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
-
         pipeline.addLast(new MockServerServerCodec(secure));
 
         // add mock server handlers
-        pipeline.addLast(new MockServerHandler(mockServer, mockServerMatcher, ch.attr(MockServer.LOG_FILTER).get()));
+        pipeline.addLast(new MockServerHandler(mockServer, mockServerMatcher, ctx.channel().attr(MockServer.LOG_FILTER).get()));
     }
 }

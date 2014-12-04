@@ -47,10 +47,10 @@ public class InstanceHolder extends ObjectWithReflectiveEqualsHashCodeToString {
         return mockServerClients.get(mockServerPort);
     }
 
-    public void start(final int mockServerPort, final int mockServerSecurePort, final int proxyPort, ExpectationInitializer expectationInitializer) {
+    public void start(final int mockServerPort, final int proxyPort, ExpectationInitializer expectationInitializer) {
         if (mockServer == null || !mockServer.isRunning()) {
-            if (mockServerPort != -1 || mockServerSecurePort != -1) {
-                mockServer = mockServerBuilder.withHTTPPort(mockServerPort).withHTTPSPort(mockServerSecurePort).build();
+            if (mockServerPort != -1) {
+                mockServer = mockServerBuilder.withHTTPPort(mockServerPort).build();
             }
             runInitializationClass(mockServerPort, expectationInitializer);
         } else {

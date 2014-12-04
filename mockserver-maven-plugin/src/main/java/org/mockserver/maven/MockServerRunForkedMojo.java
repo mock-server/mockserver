@@ -66,7 +66,6 @@ public class MockServerRunForkedMojo extends MockServerAbstractMojo {
             if (getLog().isInfoEnabled()) {
                 getLog().info("mockserver:runForked about to start MockServer on: "
                                 + (serverPort != -1 ? " serverPort " + serverPort : "")
-                                + (serverSecurePort != -1 ? " serverSecurePort " + serverSecurePort : "")
                                 + (proxyPort != -1 ? " proxyPort " + proxyPort : "")
                 );
             }
@@ -88,10 +87,6 @@ public class MockServerRunForkedMojo extends MockServerAbstractMojo {
                 arguments.add("-serverPort");
                 arguments.add("" + serverPort);
                 SystemProperties.mockServerHttpPort(serverPort);
-            }
-            if (serverSecurePort != -1) {
-                arguments.add("-serverSecurePort");
-                arguments.add("" + serverSecurePort);
             }
             if (proxyPort != -1) {
                 arguments.add("-proxyPort");

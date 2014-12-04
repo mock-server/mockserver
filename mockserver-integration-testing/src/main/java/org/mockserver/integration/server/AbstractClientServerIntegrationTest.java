@@ -4,12 +4,14 @@ import com.google.common.net.HttpHeaders;
 import com.google.common.net.MediaType;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockserver.client.netty.NettyHttpClient;
+import org.mockserver.client.netty.SocketConnectionException;
 import org.mockserver.client.server.MockServerClient;
 import org.mockserver.model.*;
 import org.mockserver.verify.VerificationTimes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -19,9 +21,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.core.StringStartsWith.startsWith;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 import static org.mockserver.configuration.SystemProperties.bufferSize;
 import static org.mockserver.configuration.SystemProperties.maxTimeout;
 import static org.mockserver.matchers.Times.exactly;
@@ -44,6 +44,7 @@ import static org.mockserver.model.StringBody.*;
  */
 public abstract class AbstractClientServerIntegrationTest {
 
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     protected static MockServerClient mockServerClient;
     protected static String servletContext = "";
     protected List<String> headersToIgnore = Arrays.asList(
@@ -2841,15 +2842,29 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     protected HttpResponse makeRequest(HttpRequest httpRequest, Collection<String> headersToIgnore) {
-        int port = (httpRequest.isSecure() ? getMockServerSecurePort() : getMockServerPort());
-        HttpResponse httpResponse = httpClient.sendRequest(outboundRequest("localhost", port, servletContext, httpRequest));
-        List<Header> headers = new ArrayList<Header>();
-        for (Header header : httpResponse.getHeaders()) {
-            if (!headersToIgnore.contains(header.getName().toLowerCase())) {
-                headers.add(header);
+        int attemptsRemaining = 10;
+        while (attemptsRemaining > 0) {
+            try {
+                int port = (httpRequest.isSecure() ? getMockServerSecurePort() : getMockServerPort());
+                HttpResponse httpResponse = httpClient.sendRequest(outboundRequest("localhost", port, servletContext, httpRequest));
+                List<Header> headers = new ArrayList<Header>();
+                for (Header header : httpResponse.getHeaders()) {
+                    if (!headersToIgnore.contains(header.getName().toLowerCase())) {
+                        headers.add(header);
+                    }
+                }
+                httpResponse.withHeaders(headers);
+                return httpResponse;
+            } catch (SocketConnectionException caught) {
+                attemptsRemaining--;
+                logger.info("Retrying connection to mock server, attempts remaining: " + attemptsRemaining);
+                try {
+                    TimeUnit.MILLISECONDS.sleep(500);
+                } catch (InterruptedException e) {
+                    // do nothing
+                }
             }
         }
-        httpResponse.withHeaders(headers);
-        return httpResponse;
+        throw new RuntimeException("Failed to send request:\n" + httpRequest);
     }
 }

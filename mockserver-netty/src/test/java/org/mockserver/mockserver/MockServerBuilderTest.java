@@ -15,25 +15,6 @@ public class MockServerBuilderTest {
     public void shouldConfigureAllPorts() {
         // given
         Integer port = PortFactory.findFreePort();
-        Integer securePort = PortFactory.findFreePort();
-
-        // when
-        MockServer mockServer = new MockServerBuilder().withHTTPPort(port).withHTTPSPort(securePort).build();
-
-        try {
-            // then
-            assertThat(mockServer.getPort(), is(port));
-            assertThat(mockServer.getSecurePort(), is(securePort));
-        } finally {
-            mockServer.stop();
-        }
-    }
-
-    @Test
-    public void shouldConfigureHTTPPort() {
-        // given
-        Integer port = PortFactory.findFreePort();
-        Integer securePort = null;
 
         // when
         MockServer mockServer = new MockServerBuilder().withHTTPPort(port).build();
@@ -41,27 +22,9 @@ public class MockServerBuilderTest {
         try {
             // then
             assertThat(mockServer.getPort(), is(port));
-            assertThat(mockServer.getSecurePort(), is(securePort));
         } finally {
             mockServer.stop();
         }
     }
-
-    @Test
-    public void shouldConfigureHTTPSPort() {
-        // given
-        Integer port = null;
-        Integer securePort = PortFactory.findFreePort();
-
-        // when
-        MockServer mockServer = new MockServerBuilder().withHTTPSPort(securePort).build();
-
-        try {
-            // then
-            assertThat(mockServer.getPort(), is(port));
-            assertThat(mockServer.getSecurePort(), is(securePort));
-        } finally {
-            mockServer.stop();
-        }
-    }
+    
 }

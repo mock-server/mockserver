@@ -26,7 +26,6 @@ public class MockServer {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     // ports
     private final Integer port;
-    private final Integer securePort;
     // mockserver
     private final MockServerMatcher mockServerMatcher = new MockServerMatcher();
     private final LogFilter logFilter = new LogFilter();
@@ -39,14 +38,12 @@ public class MockServer {
      * Start the instance using the ports provided
      *
      * @param port the http port to use
-     * @param securePort the secure https port to use
      */
-    public MockServer(final Integer port, final Integer securePort) {
-        if (port == null && securePort == null) {
-            throw new IllegalStateException("You must specify a port or a secure port");
+    public MockServer(final Integer port) {
+        if (port == null) {
+            throw new IllegalStateException("You must specify a port");
         }
         this.port = port;
-        this.securePort = securePort;
 
         hasStarted = SettableFuture.create();
         bossGroup = new NioEventLoopGroup();
@@ -56,46 +53,23 @@ public class MockServer {
             @Override
             public void run() {
                 try {
-                    logger.info("MockServer starting up"
-                                    + (port != null ? " serverPort " + port : "")
-                                    + (securePort != null ? " secureServerPort " + securePort : "")
-                    );
+                    logger.info("MockServer starting up on port: " + port);
 
-                    Channel httpChannel = null;
-                    if (port != null) {
-                        httpChannel = new ServerBootstrap()
-                                .group(bossGroup, workerGroup)
-                                .channel(NioServerSocketChannel.class)
-                                .option(ChannelOption.SO_BACKLOG, 1024)
-                                .childHandler(new MockServerInitializer(mockServerMatcher, MockServer.this, false))
-                                .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-                                .childAttr(LOG_FILTER, logFilter)
-                                .bind(port)
-                                .sync()
-                                .channel();
-                    }
-
-                    Channel httpsChannel = null;
-                    if (securePort != null) {
-                        httpsChannel = new ServerBootstrap()
-                                .group(bossGroup, workerGroup)
-                                .channel(NioServerSocketChannel.class)
-                                .option(ChannelOption.SO_BACKLOG, 1024)
-                                .childHandler(new MockServerInitializer(mockServerMatcher, MockServer.this, true))
-                                .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-                                .childAttr(LOG_FILTER, logFilter)
-                                .bind(securePort)
-                                .sync()
-                                .channel();
-                    }
+                    Channel httpChannel = new ServerBootstrap()
+                            .group(bossGroup, workerGroup)
+                            .channel(NioServerSocketChannel.class)
+                            .option(ChannelOption.SO_BACKLOG, 1024)
+                            .childHandler(new MockServerInitializer(mockServerMatcher, MockServer.this, false))
+                            .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+                            .childAttr(LOG_FILTER, logFilter)
+                            .bind(port)
+                            .sync()
+                            .channel();
 
                     hasStarted.set("STARTED");
 
                     if (httpChannel != null) {
                         httpChannel.closeFuture().sync();
-                    }
-                    if (httpsChannel != null) {
-                        httpsChannel.closeFuture().sync();
                     }
                 } catch (InterruptedException ie) {
                     logger.error("MockServer receive InterruptedException", ie);
@@ -140,9 +114,5 @@ public class MockServer {
 
     public Integer getPort() {
         return port;
-    }
-
-    public Integer getSecurePort() {
-        return securePort;
     }
 }

@@ -19,9 +19,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class MainTest {
 
     private final static Integer SERVER_HTTP_PORT = PortFactory.findFreePort();
-    private final static Integer SERVER_HTTPS_PORT = PortFactory.findFreePort();
     private final static Integer PROXY_HTTP_PORT = PortFactory.findFreePort();
-    private final static Integer PROXY_HTTPS_PORT = PortFactory.findFreePort();
 
     @Mock
     private ProxyBuilder mockProxyBuilder;
@@ -39,60 +37,34 @@ public class MainTest {
         Main.shutdownOnUsage = false;
 
         when(mockMockServerBuilder.withHTTPPort(anyInt())).thenReturn(mockMockServerBuilder);
-        when(mockMockServerBuilder.withHTTPSPort(anyInt())).thenReturn(mockMockServerBuilder);
         when(mockProxyBuilder.withLocalPort(anyInt())).thenReturn(mockProxyBuilder);
     }
 
     @Test
-    public void shouldParseArgumentsForAllThreePortsAndNoSecureFlag() {
-        Main.main("-serverPort", SERVER_HTTP_PORT.toString(), "-serverSecurePort", SERVER_HTTPS_PORT.toString(), "-proxyPort", PROXY_HTTP_PORT.toString());
-
-        verify(mockMockServerBuilder).withHTTPPort(SERVER_HTTP_PORT);
-        verify(mockMockServerBuilder).withHTTPSPort(SERVER_HTTPS_PORT);
-        verify(mockMockServerBuilder).build();
-        verify(mockProxyBuilder).withLocalPort(PROXY_HTTP_PORT);
-        verify(mockProxyBuilder).build();
-    }
-
-    @Test
-    public void shouldParseArgumentsForAllFourPortsInReverseOrder() {
-        Main.main("-proxyPort", PROXY_HTTP_PORT.toString(), "-serverSecurePort", SERVER_HTTPS_PORT.toString(), "-serverPort", SERVER_HTTP_PORT.toString());
-
-        verify(mockMockServerBuilder).withHTTPPort(SERVER_HTTP_PORT);
-        verify(mockMockServerBuilder).withHTTPSPort(SERVER_HTTPS_PORT);
-        verify(mockMockServerBuilder).build();
-        verify(mockProxyBuilder).withLocalPort(PROXY_HTTP_PORT);
-        verify(mockProxyBuilder).build();
-    }
-
-    @Test
-    public void shouldParseArgumentsForProxyAndServerOnlyNonSecurePorts() {
+    public void shouldParseArgumentsForAllPortsAndNoSecureFlag() {
         Main.main("-serverPort", SERVER_HTTP_PORT.toString(), "-proxyPort", PROXY_HTTP_PORT.toString());
 
         verify(mockMockServerBuilder).withHTTPPort(SERVER_HTTP_PORT);
-        verify(mockMockServerBuilder).withHTTPSPort(null);
         verify(mockMockServerBuilder).build();
         verify(mockProxyBuilder).withLocalPort(PROXY_HTTP_PORT);
         verify(mockProxyBuilder).build();
     }
 
     @Test
-    public void shouldParseArgumentsForProxyAndServerOnlySecurePorts() {
-        Main.main("-serverSecurePort", SERVER_HTTPS_PORT.toString(), "-proxyPort", PROXY_HTTP_PORT.toString());
-
-        verify(mockMockServerBuilder).withHTTPPort(null);
-        verify(mockMockServerBuilder).withHTTPSPort(SERVER_HTTPS_PORT);
-        verify(mockMockServerBuilder).build();
-        verify(mockProxyBuilder).withLocalPort(PROXY_HTTP_PORT);
-        verify(mockProxyBuilder).build();
-    }
-
-    @Test
-    public void shouldParseArgumentsForServerOnlyBothPorts() {
-        Main.main("-serverPort", SERVER_HTTP_PORT.toString(), "-serverSecurePort", SERVER_HTTPS_PORT.toString());
+    public void shouldParseArgumentsForAllPortsInReverseOrder() {
+        Main.main("-proxyPort", PROXY_HTTP_PORT.toString(), "-serverPort", SERVER_HTTP_PORT.toString());
 
         verify(mockMockServerBuilder).withHTTPPort(SERVER_HTTP_PORT);
-        verify(mockMockServerBuilder).withHTTPSPort(SERVER_HTTPS_PORT);
+        verify(mockMockServerBuilder).build();
+        verify(mockProxyBuilder).withLocalPort(PROXY_HTTP_PORT);
+        verify(mockProxyBuilder).build();
+    }
+
+    @Test
+    public void shouldParseArgumentsForServerOnly() {
+        Main.main("-serverPort", SERVER_HTTP_PORT.toString());
+
+        verify(mockMockServerBuilder).withHTTPPort(SERVER_HTTP_PORT);
         verify(mockMockServerBuilder).build();
         verifyZeroInteractions(mockProxyBuilder);
     }

@@ -20,21 +20,18 @@ import java.util.Map;
 public class Main {
     public static final String PROXY_PORT_KEY = "proxyPort";
     public static final String SERVER_PORT_KEY = "serverPort";
-    public static final String SERVER_SECURE_PORT_KEY = "serverSecurePort";
     public static final String USAGE = "" +
-            "   java -jar <path to mockserver-jetty-jar-with-dependencies.jar> [-serverPort <port>] [-serverSecurePort <port>] [-proxyPort <port>] [-proxySecurePort <port>]" + System.getProperty("line.separator") +
+            "   java -jar <path to mockserver-jetty-jar-with-dependencies.jar> [-serverPort <port>] [-proxyPort <port>]" + System.getProperty("line.separator") +
             "   " + System.getProperty("line.separator") +
             "     valid options are:" + System.getProperty("line.separator") +
-            "        -serverPort <port>           specifies the HTTP port for the MockServer        " + System.getProperty("line.separator") +
-            "                                     if neither serverPort or serverSecurePort         " + System.getProperty("line.separator") +
-            "                                     are provide the MockServer is not started         " + System.getProperty("line.separator") +
-            "        -serverSecurePort <port>     specifies the HTTPS port for the MockServer       " + System.getProperty("line.separator") +
-            "                                     if neither serverPort or serverSecurePort         " + System.getProperty("line.separator") +
-            "                                     are provide the MockServer is not started         " + System.getProperty("line.separator") +
+            "        -serverPort <port>           specifies the HTTP and HTTPS port for the         " + System.getProperty("line.separator") +
+            "                                     MockServer port unification is used to            " + System.getProperty("line.separator") +
+            "                                     support HTTP and HTTPS on the same port           " + System.getProperty("line.separator") +
             "                                                                                       " + System.getProperty("line.separator") +
             "        -proxyPort <path>            specifies the HTTP, HTTPS, SOCKS and HTTP         " + System.getProperty("line.separator") +
             "                                     CONNECT port for proxy, port unification          " + System.getProperty("line.separator") +
-            "                                     support for all protocols on the same port        " + System.getProperty("line.separator");
+            "                                     supports for all protocols on the same port       " + System.getProperty("line.separator");
+
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
     @VisibleForTesting
     static ProxyBuilder httpProxyBuilder = new ProxyBuilder();
@@ -70,8 +67,8 @@ public class Main {
             if (parseIntegerArguments.containsKey(PROXY_PORT_KEY)) {
                 httpProxyBuilder.withLocalPort(parseIntegerArguments.get(PROXY_PORT_KEY)).build();
             }
-            if (parseIntegerArguments.containsKey(SERVER_PORT_KEY) || parseIntegerArguments.containsKey(SERVER_SECURE_PORT_KEY)) {
-                mockServerBuilder.withHTTPPort(parseIntegerArguments.get(SERVER_PORT_KEY)).withHTTPSPort(parseIntegerArguments.get(SERVER_SECURE_PORT_KEY)).build();
+            if (parseIntegerArguments.containsKey(SERVER_PORT_KEY)) {
+                mockServerBuilder.withHTTPPort(parseIntegerArguments.get(SERVER_PORT_KEY)).build();
             }
         } else {
             showUsage();
@@ -85,7 +82,6 @@ public class Main {
             if (argumentsIterator.hasNext()) {
                 String argumentValue = argumentsIterator.next();
                 if (!parsePort(parsedIntegerArguments, SERVER_PORT_KEY, argumentName, argumentValue)
-                        && !parsePort(parsedIntegerArguments, SERVER_SECURE_PORT_KEY, argumentName, argumentValue)
                         && !parsePort(parsedIntegerArguments, PROXY_PORT_KEY, argumentName, argumentValue)) {
                     showUsage();
                 }

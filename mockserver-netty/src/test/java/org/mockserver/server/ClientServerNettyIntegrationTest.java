@@ -14,14 +14,13 @@ public class ClientServerNettyIntegrationTest extends AbstractClientServerShared
 
     private final static int TEST_SERVER_HTTP_PORT = PortFactory.findFreePort();
     private final static int SERVER_HTTP_PORT = PortFactory.findFreePort();
-    private final static int SERVER_HTTPS_PORT = PortFactory.findFreePort();
     private static MockServer mockServer;
     private static EchoServer echoServer;
 
     @BeforeClass
     public static void startServer() throws Exception {
         // start mock server
-        mockServer = new MockServer(SERVER_HTTP_PORT, SERVER_HTTPS_PORT);
+        mockServer = new MockServer(SERVER_HTTP_PORT);
 
         // start test server
         echoServer = new EchoServer(TEST_SERVER_HTTP_PORT);
@@ -46,7 +45,7 @@ public class ClientServerNettyIntegrationTest extends AbstractClientServerShared
 
     @Override
     public int getMockServerSecurePort() {
-        return SERVER_HTTPS_PORT;
+        return SERVER_HTTP_PORT;
     }
 
     @Override

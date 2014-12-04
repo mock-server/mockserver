@@ -32,8 +32,6 @@ import static org.mockserver.test.Assert.assertContains;
  */
 public abstract class AbstractClientSecureProxyIntegrationTest {
 
-    protected static String servletContext = "";
-
     protected HttpClient createHttpClient() throws Exception {
         HttpClientBuilder httpClientBuilder = HttpClients
                 .custom()

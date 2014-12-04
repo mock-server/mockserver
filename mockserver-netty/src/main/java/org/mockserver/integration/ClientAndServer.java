@@ -16,20 +16,12 @@ public class ClientAndServer extends MockServerClient {
     }
 
     public ClientAndServer(Integer port) {
-        this(port, null);
-    }
-
-    public ClientAndServer(Integer port, Integer securePort) {
         super("localhost", port);
-        mockServer = new MockServer(port, securePort);
+        mockServer = new MockServer(port);
     }
 
     public static ClientAndServer startClientAndServer(Integer port) {
         return new ClientAndServer(port);
-    }
-
-    public static ClientAndServer startClientAndServer(Integer port, Integer securePort) {
-        return new ClientAndServer(port, securePort);
     }
 
     public boolean isRunning() {

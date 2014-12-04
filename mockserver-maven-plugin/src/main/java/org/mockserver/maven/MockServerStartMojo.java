@@ -27,11 +27,10 @@ public class MockServerStartMojo extends MockServerAbstractMojo {
             if (getLog().isInfoEnabled()) {
                 getLog().info("mockserver:start about to start MockServer on: "
                         + (serverPort != -1 ? " serverPort " + serverPort : "")
-                        + (serverSecurePort != -1 ? " serverSecurePort " + serverSecurePort : "")
                         + (proxyPort != -1 ? " proxyPort " + proxyPort : "")
                 );
             }
-            getEmbeddedJettyHolder().start(serverPort, serverSecurePort, proxyPort, createInitializer());
+            getEmbeddedJettyHolder().start(serverPort, proxyPort, createInitializer());
         }
 
     }

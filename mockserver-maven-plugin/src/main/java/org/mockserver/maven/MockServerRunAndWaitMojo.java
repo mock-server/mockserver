@@ -26,20 +26,19 @@ public class MockServerRunAndWaitMojo extends MockServerAbstractMojo {
             if (getLog().isInfoEnabled()) {
                 getLog().info("mockserver:runAndWait about to start MockServer on: "
                         + (serverPort != -1 ? " serverPort " + serverPort : "")
-                        + (serverSecurePort != -1 ? " serverSecurePort " + serverSecurePort : "")
                         + (proxyPort != -1 ? " proxyPort " + proxyPort : "")
                 );
             }
             try {
                 if (timeout > 0) {
-                    getEmbeddedJettyHolder().start(serverPort, serverSecurePort, proxyPort, createInitializer());
+                    getEmbeddedJettyHolder().start(serverPort, proxyPort, createInitializer());
                     try {
                         settableFuture.get(timeout, TimeUnit.SECONDS);
                     } catch (TimeoutException te) {
                         // do nothing this is an expected exception when the timeout expires
                     }
                 } else {
-                    getEmbeddedJettyHolder().start(serverPort, serverSecurePort, proxyPort, createInitializer());
+                    getEmbeddedJettyHolder().start(serverPort, proxyPort, createInitializer());
                     settableFuture.get();
                 }
             } catch (Exception e) {
