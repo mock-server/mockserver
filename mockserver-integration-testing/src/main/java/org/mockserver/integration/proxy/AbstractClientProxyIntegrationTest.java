@@ -15,7 +15,6 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
 import org.apache.http.impl.conn.SystemDefaultRoutePlanner;
 import org.apache.http.util.EntityUtils;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockserver.client.proxy.ProxyClient;
 import org.mockserver.model.HttpStatusCode;
@@ -26,6 +25,7 @@ import java.io.OutputStream;
 import java.net.ProxySelector;
 import java.net.Socket;
 
+import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.StringStartsWith.startsWith;
 import static org.junit.Assert.*;
 import static org.mockserver.model.HttpRequest.request;
@@ -165,7 +165,6 @@ public abstract class AbstractClientProxyIntegrationTest {
     }
 
     @Test
-    @Ignore("ignoring several tests until drone.io is fixed to stop the incorrect forcing the use of HTTP CONNECT protocol")
     public void shouldVerifyRequests() throws Exception {
         // given
         HttpClient httpClient = createHttpClient();
@@ -227,13 +226,12 @@ public abstract class AbstractClientProxyIntegrationTest {
     }
 
     @Test
-    @Ignore("ignoring several tests until drone.io is fixed to stop the incorrect forcing the use of HTTP CONNECT protocol")
     public void shouldVerifyZeroRequests() throws Exception {
         // given
         HttpClient httpClient = createHttpClient();
 
         // when
-        httpClient.execute(
+        HttpResponse httpResponse = httpClient.execute(
                 new HttpGet(
                         new URIBuilder()
                                 .setScheme("http")
@@ -243,6 +241,7 @@ public abstract class AbstractClientProxyIntegrationTest {
                                 .build()
                 )
         );
+        assertThat(httpResponse.getStatusLine().getStatusCode(), is(200));
 
         // then
         try {
@@ -258,17 +257,17 @@ public abstract class AbstractClientProxyIntegrationTest {
                     "}> but was:<{" + System.getProperty("line.separator") +
                     "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
                     "  \"path\" : \"" + "/test_headers_and_body" + "\"," + System.getProperty("line.separator")));
+            printEnvironment();
         }
     }
 
     @Test
-    @Ignore("ignoring several tests until drone.io is fixed to stop the incorrect forcing the use of HTTP CONNECT protocol")
     public void shouldVerifyNoRequestsExactly() throws Exception {
         // given
         HttpClient httpClient = createHttpClient();
 
         // when
-        httpClient.execute(
+        HttpResponse httpResponse = httpClient.execute(
                 new HttpGet(
                         new URIBuilder()
                                 .setScheme("http")
@@ -278,6 +277,7 @@ public abstract class AbstractClientProxyIntegrationTest {
                                 .build()
                 )
         );
+        assertThat(httpResponse.getStatusLine().getStatusCode(), is(200));
 
         // then
         try {
@@ -294,17 +294,17 @@ public abstract class AbstractClientProxyIntegrationTest {
                     "}> but was:<{" + System.getProperty("line.separator") +
                     "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
                     "  \"path\" : \"" + "/test_headers_and_body" + "\"," + System.getProperty("line.separator")));
+            printEnvironment();
         }
     }
 
     @Test
-    @Ignore("ignoring several tests until drone.io is fixed to stop the incorrect forcing the use of HTTP CONNECT protocol")
     public void shouldVerifyNoRequestsTimesNotSpecified() throws Exception {
         // given
         HttpClient httpClient = createHttpClient();
 
         // when
-        httpClient.execute(
+        HttpResponse httpResponse = httpClient.execute(
                 new HttpGet(
                         new URIBuilder()
                                 .setScheme("http")
@@ -314,6 +314,7 @@ public abstract class AbstractClientProxyIntegrationTest {
                                 .build()
                 )
         );
+        assertThat(httpResponse.getStatusLine().getStatusCode(), is(200));
 
         // then
         try {
@@ -329,11 +330,16 @@ public abstract class AbstractClientProxyIntegrationTest {
                     "} ]> but was:<[ {" + System.getProperty("line.separator") +
                     "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
                     "  \"path\" : \"" + "/test_headers_and_body" + "\"," + System.getProperty("line.separator")));
+            printEnvironment();
         }
     }
 
+    private void printEnvironment() {
+        System.out.println("Environment Variables:\n" + System.getenv());
+        System.out.println("Java Properties:\n" + System.getProperties());
+    }
+
     @Test
-    @Ignore("ignoring several tests until drone.io is fixed to stop the incorrect forcing the use of HTTP CONNECT protocol")
     public void shouldVerifyNotEnoughRequests() throws Exception {
         // given
         HttpClient httpClient = createHttpClient();
@@ -379,7 +385,6 @@ public abstract class AbstractClientProxyIntegrationTest {
     }
 
     @Test
-    @Ignore("ignoring several tests until drone.io is fixed to stop the incorrect forcing the use of HTTP CONNECT protocol")
     public void shouldClearRequests() throws Exception {
         // given
         HttpClient httpClient = createHttpClient();
@@ -429,7 +434,6 @@ public abstract class AbstractClientProxyIntegrationTest {
     }
 
     @Test
-    @Ignore("ignoring several tests until drone.io is fixed to stop the incorrect forcing the use of HTTP CONNECT protocol")
     public void shouldResetRequests() throws Exception {
         // given
         HttpClient httpClient = createHttpClient();
