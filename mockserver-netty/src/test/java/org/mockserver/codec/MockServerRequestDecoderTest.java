@@ -135,7 +135,7 @@ public class MockServerRequestDecoderTest {
         // given
         fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/uri");
         fullHttpRequest.headers().add("Cookie", "cookieName1=cookieValue1  ; cookieName2=cookieValue2;   ");
-        fullHttpRequest.headers().add("Cookie", "cookieName3  =cookieValue3_1; cookieName3=cookieValue3_2");
+        fullHttpRequest.headers().add("Cookie", "cookieName3  =cookieValue3        ;");
 
         // when
         mockServerRequestDecoder.decode(null, fullHttpRequest, output);
@@ -145,7 +145,7 @@ public class MockServerRequestDecoderTest {
         assertThat(cookies, containsInAnyOrder(
                 cookie("cookieName1", "cookieValue1"),
                 cookie("cookieName2", "cookieValue2"),
-                cookie("cookieName3", "cookieValue3_1", "cookieValue3_2")
+                cookie("cookieName3", "cookieValue3")
         ));
     }
 

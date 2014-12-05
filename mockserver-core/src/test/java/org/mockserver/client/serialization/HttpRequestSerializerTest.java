@@ -47,7 +47,7 @@ public class HttpRequestSerializerTest {
                     ))
                     .setBody(BodyDTO.createDTO(new StringBody("somebody", Body.Type.STRING)))
                     .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("headerName", Arrays.asList("headerValue")))))
-                    .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("cookieName", Arrays.asList("cookieValue")))));
+                    .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("cookieName", "cookieValue"))));
     @Mock
     private ObjectMapper objectMapper;
     @Mock

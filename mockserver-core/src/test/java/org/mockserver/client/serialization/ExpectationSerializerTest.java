@@ -53,14 +53,14 @@ public class ExpectationSerializerTest {
                             .setQueryStringParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")))))
                             .setBody(BodyDTO.createDTO(new StringBody("somebody", Body.Type.STRING)))
                             .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("headerName", Arrays.asList("headerValue")))))
-                            .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("cookieName", Arrays.asList("cookieValue")))))
+                            .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("cookieName", "cookieValue"))))
             )
             .setHttpResponse(
                     new HttpResponseDTO()
                             .setStatusCode(304)
                             .setBody(new StringBodyDTO(new StringBody("responseBody", Body.Type.STRING)))
                             .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("headerName", Arrays.asList("headerValue")))))
-                            .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("cookieName", Arrays.asList("cookieValue")))))
+                            .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("cookieName", "cookieValue"))))
                             .setDelay(
                                     new DelayDTO()
                                             .setTimeUnit(TimeUnit.MICROSECONDS)
@@ -112,7 +112,7 @@ public class ExpectationSerializerTest {
                         "                                new Header(\"requestHeaderNameTwo\", \"requestHeaderValueTwo\")" + System.getProperty("line.separator") +
                         "                        )" + System.getProperty("line.separator") +
                         "                        .withCookies(" + System.getProperty("line.separator") +
-                        "                                new Cookie(\"requestCookieNameOne\", \"requestCookieValueOneOne\", \"requestCookieValueOneTwo\")," + System.getProperty("line.separator") +
+                        "                                new Cookie(\"requestCookieNameOne\", \"requestCookieValueOne\")," + System.getProperty("line.separator") +
                         "                                new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")" + System.getProperty("line.separator") +
                         "                        )" + System.getProperty("line.separator") +
                         "                        .withQueryStringParameters(" + System.getProperty("line.separator") +
@@ -130,7 +130,7 @@ public class ExpectationSerializerTest {
                         "                                new Header(\"responseHeaderNameTwo\", \"responseHeaderValueTwo\")" + System.getProperty("line.separator") +
                         "                        )" + System.getProperty("line.separator") +
                         "                        .withCookies(" + System.getProperty("line.separator") +
-                        "                                new Cookie(\"responseCookieNameOne\", \"responseCookieValueOneOne\", \"responseCookieValueOneTwo\")," + System.getProperty("line.separator") +
+                        "                                new Cookie(\"responseCookieNameOne\", \"responseCookieValueOne\")," + System.getProperty("line.separator") +
                         "                                new Cookie(\"responseCookieNameTwo\", \"responseCookieValueTwo\")" + System.getProperty("line.separator") +
                         "                        )" + System.getProperty("line.separator") +
                         "                        .withBody(\"responseBody\")" + System.getProperty("line.separator") +
@@ -149,7 +149,7 @@ public class ExpectationSerializerTest {
                                                 new Header("requestHeaderNameTwo", "requestHeaderValueTwo")
                                         )
                                         .withCookies(
-                                                new Cookie("requestCookieNameOne", "requestCookieValueOneOne", "requestCookieValueOneTwo"),
+                                                new Cookie("requestCookieNameOne", "requestCookieValueOne"),
                                                 new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
                                         )
                                         .withBody(new StringBody("somebody", Body.Type.STRING)),
@@ -162,7 +162,7 @@ public class ExpectationSerializerTest {
                                                 new Header("responseHeaderNameTwo", "responseHeaderValueTwo")
                                         )
                                         .withCookies(
-                                                new Cookie("responseCookieNameOne", "responseCookieValueOneOne", "responseCookieValueOneTwo"),
+                                                new Cookie("responseCookieNameOne", "responseCookieValueOne"),
                                                 new Cookie("responseCookieNameTwo", "responseCookieValueTwo")
                                         )
                                         .withBody("responseBody")
@@ -253,7 +253,7 @@ public class ExpectationSerializerTest {
                         "                                new Header(\"requestHeaderNameTwo\", \"requestHeaderValueTwo\")" + System.getProperty("line.separator") +
                         "                        )" + System.getProperty("line.separator") +
                         "                        .withCookies(" + System.getProperty("line.separator") +
-                        "                                new Cookie(\"requestCookieNameOne\", \"requestCookieValueOneOne\", \"requestCookieValueOneTwo\")," + System.getProperty("line.separator") +
+                        "                                new Cookie(\"requestCookieNameOne\", \"requestCookieValueOne\")," + System.getProperty("line.separator") +
                         "                                new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")" + System.getProperty("line.separator") +
                         "                        )" + System.getProperty("line.separator") +
                         "                        .withQueryStringParameters(" + System.getProperty("line.separator") +
@@ -283,7 +283,7 @@ public class ExpectationSerializerTest {
                                                 new Header("requestHeaderNameTwo", "requestHeaderValueTwo")
                                         )
                                         .withCookies(
-                                                new Cookie("requestCookieNameOne", "requestCookieValueOneOne", "requestCookieValueOneTwo"),
+                                                new Cookie("requestCookieNameOne", "requestCookieValueOne"),
                                                 new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
                                         )
                                         .withBody(new StringBody("somebody", Body.Type.STRING)),
@@ -312,7 +312,7 @@ public class ExpectationSerializerTest {
                         "                                new Header(\"requestHeaderNameTwo\", \"requestHeaderValueTwo\")" + System.getProperty("line.separator") +
                         "                        )" + System.getProperty("line.separator") +
                         "                        .withCookies(" + System.getProperty("line.separator") +
-                        "                                new Cookie(\"requestCookieNameOne\", \"requestCookieValueOneOne\", \"requestCookieValueOneTwo\")," + System.getProperty("line.separator") +
+                        "                                new Cookie(\"requestCookieNameOne\", \"requestCookieValueOne\")," + System.getProperty("line.separator") +
                         "                                new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")" + System.getProperty("line.separator") +
                         "                        )" + System.getProperty("line.separator") +
                         "                        .withQueryStringParameters(" + System.getProperty("line.separator") +
@@ -340,7 +340,7 @@ public class ExpectationSerializerTest {
                                                 new Header("requestHeaderNameTwo", "requestHeaderValueTwo")
                                         )
                                         .withCookies(
-                                                new Cookie("requestCookieNameOne", "requestCookieValueOneOne", "requestCookieValueOneTwo"),
+                                                new Cookie("requestCookieNameOne", "requestCookieValueOne"),
                                                 new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
                                         )
                                         .withBody(new StringBody("somebody", Body.Type.STRING)),

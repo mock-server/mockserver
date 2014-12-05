@@ -14,12 +14,11 @@ public class HttpRequestMatcher extends ObjectWithReflectiveEqualsHashCodeToStri
 
     private HttpRequest httpRequest;
     private RegexStringMatcher methodMatcher = null;
-    private RegexStringMatcher urlMatcher = null;
     private RegexStringMatcher pathMatcher = null;
-    private MapMatcher queryStringParameterMatcher = null;
+    private MultiValueMapMatcher queryStringParameterMatcher = null;
     private BodyMatcher bodyMatcher = null;
-    private MapMatcher headerMatcher = null;
-    private MapMatcher cookieMatcher = null;
+    private MultiValueMapMatcher headerMatcher = null;
+    private HashMapMatcher cookieMatcher = null;
 
     public HttpRequestMatcher(HttpRequest httpRequest) {
         this.httpRequest = httpRequest;
@@ -38,18 +37,13 @@ public class HttpRequestMatcher extends ObjectWithReflectiveEqualsHashCodeToStri
         return this;
     }
 
-    private HttpRequestMatcher withURL(String url) {
-        this.urlMatcher = new RegexStringMatcher(url);
-        return this;
-    }
-
     private HttpRequestMatcher withPath(String path) {
         this.pathMatcher = new RegexStringMatcher(path);
         return this;
     }
 
     private HttpRequestMatcher withQueryStringParameters(List<Parameter> parameters) {
-        this.queryStringParameterMatcher = new MapMatcher(KeyToMultiValue.toMultiMap(parameters));
+        this.queryStringParameterMatcher = new MultiValueMapMatcher(KeyToMultiValue.toMultiMap(parameters));
         return this;
     }
 
@@ -80,22 +74,22 @@ public class HttpRequestMatcher extends ObjectWithReflectiveEqualsHashCodeToStri
     }
 
     private HttpRequestMatcher withHeaders(Header... headers) {
-        this.headerMatcher = new MapMatcher(KeyToMultiValue.toMultiMap(headers));
+        this.headerMatcher = new MultiValueMapMatcher(KeyToMultiValue.toMultiMap(headers));
         return this;
     }
 
     private HttpRequestMatcher withHeaders(List<Header> headers) {
-        this.headerMatcher = new MapMatcher(KeyToMultiValue.toMultiMap(headers));
+        this.headerMatcher = new MultiValueMapMatcher(KeyToMultiValue.toMultiMap(headers));
         return this;
     }
 
     private HttpRequestMatcher withCookies(Cookie... cookies) {
-        this.cookieMatcher = new MapMatcher(KeyToMultiValue.toMultiMap(cookies));
+        this.cookieMatcher = new HashMapMatcher(KeyAndValue.toHashMap(cookies));
         return this;
     }
 
     private HttpRequestMatcher withCookies(List<Cookie> cookies) {
-        this.cookieMatcher = new MapMatcher(KeyToMultiValue.toMultiMap(cookies));
+        this.cookieMatcher = new HashMapMatcher(KeyAndValue.toHashMap(cookies));
         return this;
     }
 
@@ -113,7 +107,7 @@ public class HttpRequestMatcher extends ObjectWithReflectiveEqualsHashCodeToStri
                 bodyMatches = matches(bodyMatcher, (httpRequest.getBody() != null ? new String(httpRequest.getBody().getRawBytes(), Charsets.UTF_8) : ""));
             }
             boolean headersMatch = matches(headerMatcher, (httpRequest.getHeaders() != null ? new ArrayList<KeyToMultiValue>(httpRequest.getHeaders()) : null));
-            boolean cookiesMatch = matches(cookieMatcher, (httpRequest.getCookies() != null ? new ArrayList<KeyToMultiValue>(httpRequest.getCookies()) : null));
+            boolean cookiesMatch = matches(cookieMatcher, (httpRequest.getCookies() != null ? new ArrayList<KeyAndValue>(httpRequest.getCookies()) : null));
             boolean result = methodMatches && pathMatches && queryStringParametersMatches && bodyMatches && headersMatch && cookiesMatch;
             if (!result && logger.isDebugEnabled()) {
                 logger.debug("\n\nMatcher:" + System.getProperty("line.separator") + System.getProperty("line.separator") +

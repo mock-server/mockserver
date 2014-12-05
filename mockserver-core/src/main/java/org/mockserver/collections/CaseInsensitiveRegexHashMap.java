@@ -9,8 +9,36 @@ import java.util.*;
  *
  * @author jamesdbloom
  */
-class CaseInsensitiveRegexHashMap<V> extends LinkedHashMap<String, V> implements Map<String, V> {
+public class CaseInsensitiveRegexHashMap<V> extends LinkedHashMap<String, V> implements Map<String, V> {
     static final long serialVersionUID = 1530623482381786485L;
+
+    public boolean containsAll(CaseInsensitiveRegexHashMap<String> subSet) {
+        for (String subSetKey : subSet.keySet()) {
+            if (!containsKey(subSetKey)) { // check if sub-set key exists in super-set
+                return false;
+            } else { // check if sub-set value matches at least one super-set value using regex
+                for (String subSetValue : subSet.getAll(subSetKey)) {
+                    if (!containsKeyValue(subSetKey, subSetValue)) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    public synchronized boolean containsKeyValue(String key, String value) {
+        for (String matcherKey : keySet()) {
+            for (Object matcherKeyValue : getAll(matcherKey)) {
+                if (matcherKeyValue instanceof String) {
+                    if (RegexStringMatcher.matches(matcherKey, key, true) && RegexStringMatcher.matches(value, (String) matcherKeyValue, false)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
 
     @Override
     public synchronized boolean containsKey(Object key) {

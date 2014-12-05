@@ -441,30 +441,21 @@ public class MockServerMatcherBasicResponsesTest {
     }
 
     @Test
-    public void respondWhenCookieWithMultipleValuesMatchesExactly() {
+    public void doNotRespondWhenCookieDoesNotMatchValue() {
         // when
-        mockServerMatcher.when(httpRequest.withCookies(new Cookie("name", "value1", "value2"))).thenRespond(httpResponse.withBody("someBody"));
+        mockServerMatcher.when(httpRequest.withCookies(new Cookie("name", "value1"))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withCookies(new Cookie("name", "value1", "value2"))));
+        assertNull(mockServerMatcher.handle(new HttpRequest().withCookies(new Cookie("name", "value2"))));
     }
 
     @Test
-    public void doNotRespondWhenCookieWithMultipleValuesDoesNotMatch() {
+    public void doNotRespondWhenCookieDoesNotMatchName() {
         // when
-        mockServerMatcher.when(httpRequest.withCookies(new Cookie("name", "value1", "value2"))).thenRespond(httpResponse.withBody("someBody"));
+        mockServerMatcher.when(httpRequest.withCookies(new Cookie("name1", "value"))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertNull(mockServerMatcher.handle(new HttpRequest().withCookies(new Cookie("name", "value1", "value3"))));
-    }
-
-    @Test
-    public void doNotRespondWhenCookieWithMultipleValuesHasMissingValue() {
-        // when
-        mockServerMatcher.when(httpRequest.withCookies(new Cookie("name", "value1", "value2"))).thenRespond(httpResponse.withBody("someBody"));
-
-        // then
-        assertNull(mockServerMatcher.handle(new HttpRequest().withCookies(new Cookie("name", "value1"))));
+        assertNull(mockServerMatcher.handle(new HttpRequest().withCookies(new Cookie("name2", "value"))));
     }
 
     @Test

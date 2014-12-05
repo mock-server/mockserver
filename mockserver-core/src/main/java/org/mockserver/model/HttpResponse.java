@@ -1,7 +1,6 @@
 package org.mockserver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.mockserver.client.serialization.ObjectMapperFactory;
 
 import java.util.*;
 
@@ -21,9 +20,11 @@ public class HttpResponse extends Action {
     public static HttpResponse response() {
         return new HttpResponse();
     }
+
     public static HttpResponse response(String body) {
         return new HttpResponse().withBody(body);
     }
+
     public static HttpResponse notFoundResponse() {
         return new HttpResponse().withStatusCode(404);
     }
@@ -177,11 +178,7 @@ public class HttpResponse extends Action {
      * @param cookie a Cookie object
      */
     public HttpResponse withCookie(Cookie cookie) {
-        if (this.cookies.containsKey(cookie.getName())) {
-            this.cookies.get(cookie.getName()).addValues(cookie.getValues());
-        } else {
-            this.cookies.put(cookie.getName(), cookie);
-        }
+        this.cookies.put(cookie.getName(), cookie);
         return this;
     }
 

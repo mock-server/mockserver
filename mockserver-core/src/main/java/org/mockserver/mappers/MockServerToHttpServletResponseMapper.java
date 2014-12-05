@@ -52,9 +52,7 @@ public class MockServerToHttpServletResponseMapper {
     private void setCookies(HttpResponse httpResponse, HttpServletResponse httpServletResponse) {
         if (httpResponse.getCookies() != null) {
             for (Cookie cookie : httpResponse.getCookies()) {
-                for (String value : cookie.getValues()) {
-                    httpServletResponse.addHeader(SET_COOKIE, ServerCookieEncoder.encode(new DefaultCookie(cookie.getName(), value)));
-                }
+                httpServletResponse.addHeader(SET_COOKIE, ServerCookieEncoder.encode(new DefaultCookie(cookie.getName(), cookie.getValue())));
             }
         }
     }

@@ -55,11 +55,7 @@ public class MockServerResponseDecoder extends MessageToMessageDecoder<FullHttpR
                     for (io.netty.handler.codec.http.Cookie httpCookie : CookieDecoder.decode(cookieHeader)) {
                         String name = httpCookie.getName().trim();
                         String value = httpCookie.getValue().trim();
-                        if (mappedCookies.containsKey(name)) {
-                            mappedCookies.get(name).addValue(value);
-                        } else {
-                            mappedCookies.put(name, new Cookie(name, value));
-                        }
+                        mappedCookies.put(name, new Cookie(name, value));
                     }
                 }
             }

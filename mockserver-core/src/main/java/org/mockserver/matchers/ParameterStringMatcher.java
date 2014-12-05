@@ -13,10 +13,10 @@ import java.util.Map;
  * @author jamesdbloom
  */
 public class ParameterStringMatcher extends BodyMatcher<String> implements Matcher<String> {
-    private final MapMatcher matcher;
+    private final MultiValueMapMatcher matcher;
 
     public ParameterStringMatcher(List<Parameter> parameters) {
-        this.matcher = new MapMatcher(KeyToMultiValue.toMultiMap(parameters));
+        this.matcher = new MultiValueMapMatcher(KeyToMultiValue.toMultiMap(parameters));
     }
 
     public boolean matches(String matched) {

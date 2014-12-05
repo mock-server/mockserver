@@ -1538,7 +1538,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withMethod("GET")
                                 .withPath(calculatePath("some_pathRequest"))
                                 .withCookies(
-                                        cookie("requestCookieNameOne", "requestCookieValueOne_One", "requestCookieValueOne_Two"),
+                                        cookie("requestCookieNameOne", "requestCookieValueOne"),
                                         cookie("requestCookieNameTwo", "requestCookieValueTwo")
                                 )
                 )
@@ -1547,7 +1547,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
                                 .withBody("some_bodyResponse")
                                 .withCookies(
-                                        cookie("responseCookieNameOne", "responseCookieValueOne_One", "responseCookieValueOne_Two"),
+                                        cookie("responseCookieNameOne", "responseCookieValueOne"),
                                         cookie("responseCookieNameTwo", "responseCookieValueTwo")
                                 )
                 );
@@ -1562,7 +1562,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 header("headerNameRequest", "headerValueRequest")
                         )
                         .withCookies(
-                                cookie("requestCookieNameOne", "requestCookieValueOne_One", "requestCookieValueOne_Two"),
+                                cookie("requestCookieNameOne", "requestCookieValueOne"),
                                 cookie("requestCookieNameTwo", "requestCookieValueTwo")
                         ),
                 headersToIgnore);
@@ -1571,11 +1571,11 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
                         .withBody("some_bodyResponse")
                         .withCookies(
-                                cookie("responseCookieNameOne", "responseCookieValueOne_One", "responseCookieValueOne_Two"),
+                                cookie("responseCookieNameOne", "responseCookieValueOne"),
                                 cookie("responseCookieNameTwo", "responseCookieValueTwo")
                         )
                         .withHeaders(
-                                header("Set-Cookie", "responseCookieNameOne=responseCookieValueOne_One", "responseCookieNameOne=responseCookieValueOne_Two", "responseCookieNameTwo=responseCookieValueTwo")
+                                header("Set-Cookie", "responseCookieNameOne=responseCookieValueOne", "responseCookieNameTwo=responseCookieValueTwo")
                         ),
                 actual
         );
@@ -1585,11 +1585,11 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
                         .withBody("some_bodyResponse")
                         .withCookies(
-                                cookie("responseCookieNameOne", "responseCookieValueOne_One", "responseCookieValueOne_Two"),
+                                cookie("responseCookieNameOne", "responseCookieValueOne"),
                                 cookie("responseCookieNameTwo", "responseCookieValueTwo")
                         )
                         .withHeaders(
-                                header("Set-Cookie", "responseCookieNameOne=responseCookieValueOne_One", "responseCookieNameOne=responseCookieValueOne_Two", "responseCookieNameTwo=responseCookieValueTwo")
+                                header("Set-Cookie", "responseCookieNameOne=responseCookieValueOne", "responseCookieNameTwo=responseCookieValueTwo")
                         ),
                 makeRequest(
                         request()
@@ -1597,7 +1597,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withPath(calculatePath("some_pathRequest"))
                                 .withHeaders(
                                         header("headerNameRequest", "headerValueRequest"),
-                                        header("Cookie", "requestCookieNameOne=requestCookieValueOne_One; requestCookieNameOne=requestCookieValueOne_Two; requestCookieNameTwo=requestCookieValueTwo")
+                                        header("Cookie", "requestCookieNameOne=requestCookieValueOne; requestCookieNameTwo=requestCookieValueTwo")
                                 ),
                         headersToIgnore)
         );
@@ -1607,11 +1607,11 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
                         .withBody("some_bodyResponse")
                         .withCookies(
-                                cookie("responseCookieNameOne", "responseCookieValueOne_One", "responseCookieValueOne_Two"),
+                                cookie("responseCookieNameOne", "responseCookieValueOne"),
                                 cookie("responseCookieNameTwo", "responseCookieValueTwo")
                         )
                         .withHeaders(
-                                header("Set-Cookie", "responseCookieNameOne=responseCookieValueOne_One", "responseCookieNameOne=responseCookieValueOne_Two", "responseCookieNameTwo=responseCookieValueTwo")
+                                header("Set-Cookie", "responseCookieNameOne=responseCookieValueOne", "responseCookieNameTwo=responseCookieValueTwo")
                         ),
                 makeRequest(
                         request()
@@ -1622,7 +1622,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         header("headerNameRequest", "headerValueRequest")
                                 )
                                 .withCookies(
-                                        cookie("requestCookieNameOne", "requestCookieValueOne_One", "requestCookieValueOne_Two"),
+                                        cookie("requestCookieNameOne", "requestCookieValueOne"),
                                         cookie("requestCookieNameTwo", "requestCookieValueTwo")
                                 ),
                         headersToIgnore)
@@ -1633,11 +1633,11 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
                         .withBody("some_bodyResponse")
                         .withCookies(
-                                cookie("responseCookieNameOne", "responseCookieValueOne_One", "responseCookieValueOne_Two"),
+                                cookie("responseCookieNameOne", "responseCookieValueOne"),
                                 cookie("responseCookieNameTwo", "responseCookieValueTwo")
                         )
                         .withHeaders(
-                                header("Set-Cookie", "responseCookieNameOne=responseCookieValueOne_One", "responseCookieNameOne=responseCookieValueOne_Two", "responseCookieNameTwo=responseCookieValueTwo")
+                                header("Set-Cookie", "responseCookieNameOne=responseCookieValueOne", "responseCookieNameTwo=responseCookieValueTwo")
                         ),
                 makeRequest(
                         request()
@@ -1646,7 +1646,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withPath(calculatePath("some_pathRequest"))
                                 .withHeaders(
                                         header("headerNameRequest", "headerValueRequest"),
-                                        header("Cookie", "requestCookieNameOne=requestCookieValueOne_One; requestCookieNameOne=requestCookieValueOne_Two; requestCookieNameTwo=requestCookieValueTwo")
+                                        header("Cookie", "requestCookieNameOne=requestCookieValueOne; requestCookieNameTwo=requestCookieValueTwo")
                                 ),
                         headersToIgnore)
         );

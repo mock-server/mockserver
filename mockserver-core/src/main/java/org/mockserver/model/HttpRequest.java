@@ -4,8 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.*;
 
 /**
@@ -21,9 +19,12 @@ public class HttpRequest extends ObjectWithJsonToString {
     boolean isKeepAlive = false;
     boolean secure;
 
-    public HttpRequest setKeepAlive(boolean isKeepAlive) {
-        this.isKeepAlive = isKeepAlive;
-        return this;
+    public static HttpRequest request() {
+        return new HttpRequest();
+    }
+
+    public static HttpRequest request(String path) {
+        return new HttpRequest().withPath(path);
     }
 
     @JsonIgnore
@@ -31,8 +32,8 @@ public class HttpRequest extends ObjectWithJsonToString {
         return isKeepAlive;
     }
 
-    public HttpRequest setSecure(boolean secure) {
-        this.secure = secure;
+    public HttpRequest setKeepAlive(boolean isKeepAlive) {
+        this.isKeepAlive = isKeepAlive;
         return this;
     }
 
@@ -41,12 +42,9 @@ public class HttpRequest extends ObjectWithJsonToString {
         return secure;
     }
 
-    public static HttpRequest request() {
-        return new HttpRequest();
-    }
-
-    public static HttpRequest request(String path) {
-        return new HttpRequest().withPath(path);
+    public HttpRequest setSecure(boolean secure) {
+        this.secure = secure;
+        return this;
     }
 
     /**
@@ -388,11 +386,7 @@ public class HttpRequest extends ObjectWithJsonToString {
      * @param cookie the Cookie object which can have a values list of strings or regular expressions
      */
     public HttpRequest withCookie(Cookie cookie) {
-        if (this.cookies.containsKey(cookie.getName())) {
-            this.cookies.get(cookie.getName()).addValues(cookie.getValues());
-        } else {
-            this.cookies.put(cookie.getName(), cookie);
-        }
+        this.cookies.put(cookie.getName(), cookie);
         return this;
     }
 

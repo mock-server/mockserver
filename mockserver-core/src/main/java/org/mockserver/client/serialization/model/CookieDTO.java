@@ -5,7 +5,7 @@ import org.mockserver.model.Cookie;
 /**
  * @author jamesdbloom
  */
-public class CookieDTO extends KeyToMultiValueDTO {
+public class CookieDTO extends KeyAndValueDTO {
 
     public CookieDTO(Cookie cookie) {
         super(cookie);
@@ -15,6 +15,6 @@ public class CookieDTO extends KeyToMultiValueDTO {
     }
 
     public Cookie buildObject() {
-        return new Cookie(getName(), getValues());
+        return new Cookie(getName(), getValue());
     }
 }

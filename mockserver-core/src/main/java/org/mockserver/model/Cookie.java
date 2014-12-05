@@ -6,21 +6,13 @@ import java.util.List;
 /**
  * @author jamesdbloom
  */
-public class Cookie extends KeyToMultiValue {
+public class Cookie extends KeyAndValue {
 
-    public static Cookie cookie(String name, String... value) {
+    public static Cookie cookie(String name, String value) {
         return new Cookie(name, value);
     }
 
-    public static Cookie cookie(String name, List<String> value) {
-        return new Cookie(name, value);
-    }
-
-    public Cookie(String name, String... value) {
-        super(name, value);
-    }
-
-    public Cookie(String name, Collection<String> value) {
+    public Cookie(String name, String value) {
         super(name, value);
     }
 }

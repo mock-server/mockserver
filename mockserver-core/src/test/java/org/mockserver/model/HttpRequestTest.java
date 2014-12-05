@@ -55,12 +55,13 @@ public class HttpRequestTest {
     @Test
     public void returnsCookies() {
         assertEquals(new Cookie("name", "value"), new HttpRequest().withCookies(new Cookie("name", "value")).getCookies().get(0));
+        assertEquals(new Cookie("name", ""), new HttpRequest().withCookies(new Cookie("name", "")).getCookies().get(0));
+        assertEquals(new Cookie("name", null), new HttpRequest().withCookies(new Cookie("name", null)).getCookies().get(0));
+
         assertEquals(new Cookie("name", "value"), new HttpRequest().withCookies(Arrays.asList(new Cookie("name", "value"))).getCookies().get(0));
         assertEquals(new Cookie("name", "value"), new HttpRequest().withCookie(new Cookie("name", "value")).getCookies().get(0));
-        assertEquals(new Cookie("name", "value_one", "value_two"), new HttpRequest().withCookie(new Cookie("name", "value_one")).withCookie(new Cookie("name", "value_two")).getCookies().get(0));
-        assertEquals(new Cookie("name", "value_one", "value_two"), new HttpRequest().withCookies(new Cookie("name", "value_one", "value_two")).getCookies().get(0));
-        assertEquals(new Cookie("name", (Collection<String>) null), new HttpRequest().withCookies(new Cookie("name")).getCookies().get(0));
-        assertEquals(new Cookie("name"), new HttpRequest().withCookies(new Cookie("name")).getCookies().get(0));
+        assertEquals(new Cookie("name", ""), new HttpRequest().withCookie(new Cookie("name", "")).getCookies().get(0));
+        assertEquals(new Cookie("name", null), new HttpRequest().withCookie(new Cookie("name", null)).getCookies().get(0));
     }
 
     @Test
@@ -73,7 +74,7 @@ public class HttpRequestTest {
                         "  } ]," + System.getProperty("line.separator") +
                         "  \"cookies\" : [ {" + System.getProperty("line.separator") +
                         "    \"name\" : \"name\"," + System.getProperty("line.separator") +
-                        "    \"values\" : [ \"[A-Z]{0,10}\" ]" + System.getProperty("line.separator") +
+                        "    \"value\" : \"[A-Z]{0,10}\"" + System.getProperty("line.separator") +
                         "  } ]" + System.getProperty("line.separator") +
                         "}",
                 request()

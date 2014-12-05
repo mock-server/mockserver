@@ -58,9 +58,7 @@ public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpRespo
         if (httpResponse.getCookies() != null) {
             List<Cookie> cookieValues = new ArrayList<Cookie>();
             for (org.mockserver.model.Cookie cookie : httpResponse.getCookies()) {
-                for (String value : cookie.getValues()) {
-                    cookieValues.add(new DefaultCookie(cookie.getName(), value));
-                }
+                cookieValues.add(new DefaultCookie(cookie.getName(), cookie.getValue()));
             }
             if (!cookieValues.isEmpty()) {
                 httpServletResponse.headers().add(SET_COOKIE, ServerCookieEncoder.encode(cookieValues));

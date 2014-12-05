@@ -279,7 +279,7 @@ public class ExpectationSerializerIntegrationTest {
                 "    }," + System.getProperty("line.separator") +
                 "    \"cookies\" : [ {" + System.getProperty("line.separator") +
                 "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"someCookieValue\" ]" + System.getProperty("line.separator") +
+                "      \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
                 "    } ]," + System.getProperty("line.separator") +
                 "    \"headers\" : [ {" + System.getProperty("line.separator") +
                 "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
@@ -291,7 +291,7 @@ public class ExpectationSerializerIntegrationTest {
                 "    \"body\" : \"someBody\"," + System.getProperty("line.separator") +
                 "    \"cookies\" : [ {" + System.getProperty("line.separator") +
                 "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"someCookieValue\" ]" + System.getProperty("line.separator") +
+                "      \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
                 "    } ]," + System.getProperty("line.separator") +
                 "    \"headers\" : [ {" + System.getProperty("line.separator") +
                 "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
@@ -323,14 +323,14 @@ public class ExpectationSerializerIntegrationTest {
                                 ))
                                 .setBody(new StringBodyDTO(new StringBody("someBody", Body.Type.STRING)))
                                 .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
-                                .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", Arrays.asList("someCookieValue")))))
+                                .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
                 )
                 .setHttpResponse(
                         new HttpResponseDTO()
                                 .setStatusCode(304)
                                 .setBody(new StringBodyDTO(new StringBody("someBody", Body.Type.STRING)))
                                 .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
-                                .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", Arrays.asList("someCookieValue")))))
+                                .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
                                 .setDelay(
                                         new DelayDTO()
                                                 .setTimeUnit(TimeUnit.MICROSECONDS)
@@ -360,7 +360,7 @@ public class ExpectationSerializerIntegrationTest {
                 "    }," + System.getProperty("line.separator") +
                 "    \"cookies\" : [ {" + System.getProperty("line.separator") +
                 "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"someCookieValue\" ]" + System.getProperty("line.separator") +
+                "      \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
                 "    } ]," + System.getProperty("line.separator") +
                 "    \"headers\" : [ {" + System.getProperty("line.separator") +
                 "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
@@ -393,7 +393,7 @@ public class ExpectationSerializerIntegrationTest {
                                         ))
                                         .setBody(new StringBodyDTO(new StringBody("someBody", Body.Type.STRING)))
                                         .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
-                                        .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", Arrays.asList("someCookieValue")))))
+                                        .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
                         )
                         .setHttpForward(
                                 new HttpForwardDTO()
@@ -425,7 +425,7 @@ public class ExpectationSerializerIntegrationTest {
                 "    }," + System.getProperty("line.separator") +
                 "    \"cookies\" : [ {" + System.getProperty("line.separator") +
                 "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"someCookieValue\" ]" + System.getProperty("line.separator") +
+                "      \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
                 "    } ]," + System.getProperty("line.separator") +
                 "    \"headers\" : [ {" + System.getProperty("line.separator") +
                 "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
@@ -456,7 +456,7 @@ public class ExpectationSerializerIntegrationTest {
                                         ))
                                         .setBody(new StringBodyDTO(new StringBody("someBody", Body.Type.STRING)))
                                         .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
-                                        .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", Arrays.asList("someCookieValue")))))
+                                        .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
                         )
                         .setHttpCallback(
                                 new HttpCallbackDTO()
@@ -583,14 +583,14 @@ public class ExpectationSerializerIntegrationTest {
                                         ))
                                         .setBody(new StringBodyDTO(new StringBody("someBody", Body.Type.STRING)))
                                         .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
-                                        .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", Arrays.asList("someCookieValue")))))
+                                        .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
                         )
                         .setHttpResponse(
                                 new HttpResponseDTO()
                                         .setStatusCode(304)
                                         .setBody(new StringBodyDTO(new StringBody("someBody", Body.Type.STRING)))
                                         .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
-                                        .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", Arrays.asList("someCookieValue")))))
+                                        .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
                                         .setDelay(
                                                 new DelayDTO()
                                                         .setTimeUnit(TimeUnit.MICROSECONDS)
@@ -616,7 +616,7 @@ public class ExpectationSerializerIntegrationTest {
                 "    \"body\" : \"someBody\"," + System.getProperty("line.separator") +
                 "    \"cookies\" : [ {" + System.getProperty("line.separator") +
                 "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"someCookieValue\" ]" + System.getProperty("line.separator") +
+                "      \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
                 "    } ]," + System.getProperty("line.separator") +
                 "    \"headers\" : [ {" + System.getProperty("line.separator") +
                 "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
@@ -628,7 +628,7 @@ public class ExpectationSerializerIntegrationTest {
                 "    \"body\" : \"someBody\"," + System.getProperty("line.separator") +
                 "    \"cookies\" : [ {" + System.getProperty("line.separator") +
                 "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"someCookieValue\" ]" + System.getProperty("line.separator") +
+                "      \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
                 "    } ]," + System.getProperty("line.separator") +
                 "    \"headers\" : [ {" + System.getProperty("line.separator") +
                 "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
@@ -661,7 +661,7 @@ public class ExpectationSerializerIntegrationTest {
                                         ))
                                         .setBody(new StringBodyDTO(new StringBody("someBody", Body.Type.STRING)))
                                         .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
-                                        .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", Arrays.asList("someCookieValue")))))
+                                        .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
                         )
                         .setHttpForward(
                                 new HttpForwardDTO()
@@ -688,7 +688,7 @@ public class ExpectationSerializerIntegrationTest {
                 "    \"body\" : \"someBody\"," + System.getProperty("line.separator") +
                 "    \"cookies\" : [ {" + System.getProperty("line.separator") +
                 "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"someCookieValue\" ]" + System.getProperty("line.separator") +
+                "      \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
                 "    } ]," + System.getProperty("line.separator") +
                 "    \"headers\" : [ {" + System.getProperty("line.separator") +
                 "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
@@ -720,7 +720,7 @@ public class ExpectationSerializerIntegrationTest {
                                         ))
                                         .setBody(new StringBodyDTO(new StringBody("someBody", Body.Type.STRING)))
                                         .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
-                                        .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", Arrays.asList("someCookieValue")))))
+                                        .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
                         )
                         .setHttpCallback(
                                 new HttpCallbackDTO()

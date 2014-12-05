@@ -16,14 +16,14 @@ import static org.junit.Assert.assertTrue;
  */
 public class MapMatcherTest {
 
-    private MapMatcher mapMatcher;
+    private MultiValueMapMatcher mapMatcher;
     private CaseInsensitiveRegexMultiMap multimap;
     private List<KeyToMultiValue> keyToMultiValues;
 
     @Before
     public void setupTestFixture() {
         multimap = new CaseInsensitiveRegexMultiMap();
-        mapMatcher = new MapMatcher(multimap);
+        mapMatcher = new MultiValueMapMatcher(multimap);
         keyToMultiValues = new ArrayList<KeyToMultiValue>();
     }
 

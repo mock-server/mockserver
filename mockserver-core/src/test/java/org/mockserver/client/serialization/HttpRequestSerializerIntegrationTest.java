@@ -50,7 +50,7 @@ public class HttpRequestSerializerIntegrationTest {
                 "  }," + System.getProperty("line.separator") +
                 "  \"cookies\" : [ {" + System.getProperty("line.separator") +
                 "    \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
-                "    \"values\" : [ \"someCookieValue\" ]" + System.getProperty("line.separator") +
+                "    \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
                 "  } ]," + System.getProperty("line.separator") +
                 "  \"headers\" : [ {" + System.getProperty("line.separator") +
                 "    \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
@@ -68,7 +68,7 @@ public class HttpRequestSerializerIntegrationTest {
                 .setQueryStringParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")))))
                 .setBody(BodyDTO.createDTO(new StringBody("somebody", Body.Type.STRING)))
                 .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
-                .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", Arrays.asList("someCookieValue")))))
+                .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
                 .buildObject(), expectation);
     }
 
@@ -241,7 +241,7 @@ public class HttpRequestSerializerIntegrationTest {
                         .setQueryStringParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")))))
                         .setBody(BodyDTO.createDTO(new StringBody("somebody", Body.Type.STRING)))
                         .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
-                        .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", Arrays.asList("someCookieValue")))))
+                        .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
                         .buildObject()
         );
 
@@ -256,7 +256,7 @@ public class HttpRequestSerializerIntegrationTest {
                 "  \"body\" : \"somebody\"," + System.getProperty("line.separator") +
                 "  \"cookies\" : [ {" + System.getProperty("line.separator") +
                 "    \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
-                "    \"values\" : [ \"someCookieValue\" ]" + System.getProperty("line.separator") +
+                "    \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
                 "  } ]," + System.getProperty("line.separator") +
                 "  \"headers\" : [ {" + System.getProperty("line.separator") +
                 "    \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +

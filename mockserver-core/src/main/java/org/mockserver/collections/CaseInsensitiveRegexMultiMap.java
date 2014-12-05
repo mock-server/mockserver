@@ -28,6 +28,21 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
         return backingMap.containsKey(key);
     }
 
+    public boolean containsAll(CaseInsensitiveRegexMultiMap subSet) {
+        for (String subSetKey : subSet.keySet()) {
+            if (!containsKey(subSetKey)) { // check if sub-set key exists in super-set
+                return false;
+            } else { // check if sub-set value matches at least one super-set value using regex
+                for (String subSetValue : subSet.getAll(subSetKey)) {
+                    if (!containsKeyValue(subSetKey, subSetValue)) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
     public synchronized boolean containsKeyValue(String key, String value) {
         for (String matcherKey : backingMap.keySet()) {
             for (List<String> allMatcherKeyValues : backingMap.getAll(matcherKey)) {
@@ -55,21 +70,6 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
             }
         }
         return false;
-    }
-
-    public boolean containsAll(CaseInsensitiveRegexMultiMap subSet) {
-        for (String subSetKey : subSet.keySet()) {
-            if (!containsKey(subSetKey)) { // check if sub-set key exists in super-set
-                return false;
-            } else { // check if sub-set value matches at least one super-set value using regex
-                for (String subSetValue : subSet.getAll(subSetKey)) {
-                    if (!containsKeyValue(subSetKey, subSetValue)) {
-                        return false;
-                    }
-                }
-            }
-        }
-        return true;
     }
 
     @Override

@@ -47,9 +47,13 @@ public class HttpResponseTest {
     @Test
     public void returnsCookies() {
         assertEquals(new Cookie("name", "value"), new HttpResponse().withCookies(new Cookie("name", "value")).getCookies().get(0));
+        assertEquals(new Cookie("name", ""), new HttpResponse().withCookies(new Cookie("name", "")).getCookies().get(0));
+        assertEquals(new Cookie("name", null), new HttpResponse().withCookies(new Cookie("name", null)).getCookies().get(0));
+
         assertEquals(new Cookie("name", "value"), new HttpResponse().withCookies(Arrays.asList(new Cookie("name", "value"))).getCookies().get(0));
-        assertEquals(new Cookie("name", "value"), new HttpRequest().withCookie(new Cookie("name", "value")).getCookies().get(0));
-        assertEquals(new Cookie("name", "value_one", "value_two"), new HttpRequest().withCookie(new Cookie("name", "value_one")).withCookie(new Cookie("name", "value_two")).getCookies().get(0));
+        assertEquals(new Cookie("name", "value"), new HttpResponse().withCookie(new Cookie("name", "value")).getCookies().get(0));
+        assertEquals(new Cookie("name", ""), new HttpResponse().withCookie(new Cookie("name", "")).getCookies().get(0));
+        assertEquals(new Cookie("name", null), new HttpResponse().withCookie(new Cookie("name", null)).getCookies().get(0));
     }
 
     @Test
@@ -90,7 +94,7 @@ public class HttpResponseTest {
                         "  } ]," + System.getProperty("line.separator") +
                         "  \"cookies\" : [ {" + System.getProperty("line.separator") +
                         "    \"name\" : \"name\"," + System.getProperty("line.separator") +
-                        "    \"values\" : [ \"[A-Z]{0,10}\" ]" + System.getProperty("line.separator") +
+                        "    \"value\" : \"[A-Z]{0,10}\"" + System.getProperty("line.separator") +
                         "  } ]" + System.getProperty("line.separator") +
                         "}",
                 response()

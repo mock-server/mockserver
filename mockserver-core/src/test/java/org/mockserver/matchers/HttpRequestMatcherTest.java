@@ -322,7 +322,7 @@ public class HttpRequestMatcherTest {
                         "  } ]," + System.getProperty("line.separator") +
                         "  \"cookies\" : [ {" + System.getProperty("line.separator") +
                         "    \"name\" : \"name\"," + System.getProperty("line.separator") +
-                        "    \"values\" : [ \"[A-Z]{0,10}\" ]" + System.getProperty("line.separator") +
+                        "    \"value\" : \"[A-Z]{0,10}\"" + System.getProperty("line.separator") +
                         "  } ]" + System.getProperty("line.separator") +
                         "}",
                 new HttpRequestMatcher(
@@ -347,7 +347,7 @@ public class HttpRequestMatcherTest {
                         "  } ]," + System.getProperty("line.separator") +
                         "  \"cookies\" : [ {" + System.getProperty("line.separator") +
                         "    \"name\" : \"name\"," + System.getProperty("line.separator") +
-                        "    \"values\" : [ \"[A-Z]{0,10}\" ]" + System.getProperty("line.separator") +
+                        "    \"value\" : \"[A-Z]{0,10}\"" + System.getProperty("line.separator") +
                         "  } ]" + System.getProperty("line.separator") +
                         "}",
                 new HttpRequestMatcher(

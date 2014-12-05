@@ -53,7 +53,7 @@ public class ExpectationSerializer {
                 serializeAsJavaKeyToMultiValue(output, "Header", new ArrayList<KeyToMultiValue>(httpRequest.getHeaders()));
             }
             if (httpRequest.getCookies().size() > 0) {
-                serializeAsJavaKeyToMultiValue(output, "Cookie", new ArrayList<KeyToMultiValue>(httpRequest.getCookies()));
+                serializeAsJavaKeyAndValue(output, "Cookie", new ArrayList<KeyAndValue>(httpRequest.getCookies()));
             }
             if (httpRequest.getQueryStringParameters().size() > 0) {
                 serializeAsJavaKeyToMultiValue(output, "QueryStringParameter", new ArrayList<KeyToMultiValue>(httpRequest.getQueryStringParameters()));
@@ -84,7 +84,7 @@ public class ExpectationSerializer {
                     serializeAsJavaKeyToMultiValue(output, "Header", new ArrayList<KeyToMultiValue>(httpResponse.getHeaders()));
                 }
                 if (httpResponse.getCookies().size() > 0) {
-                    serializeAsJavaKeyToMultiValue(output, "Cookie", new ArrayList<KeyToMultiValue>(httpResponse.getCookies()));
+                    serializeAsJavaKeyAndValue(output, "Cookie", new ArrayList<KeyAndValue>(httpResponse.getCookies()));
                 }
                 if (httpResponse.getBodyAsString() != null && httpResponse.getBodyAsString().length() > 0) {
                     output.append(System.getProperty("line.separator") + "                        .withBody(\"").append(StringEscapeUtils.escapeJava(httpResponse.getBodyAsString())).append("\")");
@@ -134,6 +134,26 @@ public class ExpectationSerializer {
             }
             output.append(")");
             if (i < (keyToMultiValues.size() - 1)) {
+                output.append(",");
+            }
+            output.append(System.getProperty("line.separator"));
+        }
+    }
+
+    private void serializeAsJavaKeyAndValue(StringBuffer output, String name, List<KeyAndValue> keyAndValues) {
+        output.append(System.getProperty("line.separator") + "                        .with").append(name).append("s(" + System.getProperty("line.separator"));
+        serializeAsJavaKeyAndValueList(output, name, keyAndValues, 32);
+        output.append("                        )");
+    }
+
+    private void serializeAsJavaKeyAndValueList(StringBuffer output, String name, List<KeyAndValue> keyAndValues, int indent) {
+        for (int i = 0; i < keyAndValues.size(); i++) {
+            KeyAndValue keyAndValue = keyAndValues.get(i);
+            output.append(Strings.padStart("", indent, ' '));
+            output.append("new ").append(name).append("(\"").append(keyAndValue.getName()).append("\"");
+            output.append(", \"").append(keyAndValue.getValue()).append("\"");
+            output.append(")");
+            if (i < (keyAndValues.size() - 1)) {
                 output.append(",");
             }
             output.append(System.getProperty("line.separator"));

@@ -38,7 +38,7 @@ public class ObjectMapperFactoryTest {
                 "    }," + System.getProperty("line.separator") +
                 "    \"cookies\" : [ {" + System.getProperty("line.separator") +
                 "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"someCookieValue\" ]" + System.getProperty("line.separator") +
+                "      \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
                 "    } ]," + System.getProperty("line.separator") +
                 "    \"headers\" : [ {" + System.getProperty("line.separator") +
                 "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
@@ -50,7 +50,7 @@ public class ObjectMapperFactoryTest {
                 "    \"body\" : \"someBody\"," + System.getProperty("line.separator") +
                 "    \"cookies\" : [ {" + System.getProperty("line.separator") +
                 "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"someCookieValue\" ]" + System.getProperty("line.separator") +
+                "      \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
                 "    } ]," + System.getProperty("line.separator") +
                 "    \"headers\" : [ {" + System.getProperty("line.separator") +
                 "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
@@ -82,14 +82,14 @@ public class ObjectMapperFactoryTest {
                                 ))
                                 .setBody(new StringBodyDTO(new StringBody("someBody", Body.Type.STRING)))
                                 .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
-                                .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", Arrays.asList("someCookieValue")))))
+                                .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
                 )
                 .setHttpResponse(
                         new HttpResponseDTO()
                                 .setStatusCode(304)
                                 .setBody(new StringBodyDTO(new StringBody("someBody", Body.Type.STRING)))
                                 .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
-                                .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", Arrays.asList("someCookieValue")))))
+                                .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
                                 .setDelay(
                                         new DelayDTO()
                                                 .setTimeUnit(TimeUnit.MICROSECONDS)

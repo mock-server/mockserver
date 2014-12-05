@@ -1,6 +1,5 @@
 package org.mockserver.client.netty.codec;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -71,13 +70,7 @@ public class MockServerRequestEncoder extends MessageToMessageEncoder<OutboundHt
     private void setCookies(HttpRequest httpRequest, FullHttpRequest request) {
         List<io.netty.handler.codec.http.Cookie> cookies = new ArrayList<Cookie>();
         for (org.mockserver.model.Cookie cookie : httpRequest.getCookies()) {
-            if (!cookie.getValues().isEmpty()) {
-                for (String value : cookie.getValues()) {
-                    cookies.add(new DefaultCookie(cookie.getName(), value));
-                }
-            } else {
-                cookies.add(new DefaultCookie(cookie.getName(), ""));
-            }
+            cookies.add(new DefaultCookie(cookie.getName(), cookie.getValue()));
         }
         if (cookies.size() > 0) {
             request.headers().set(

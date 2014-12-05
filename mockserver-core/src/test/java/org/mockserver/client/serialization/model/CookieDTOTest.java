@@ -3,10 +3,8 @@ package org.mockserver.client.serialization.model;
 import org.junit.Test;
 import org.mockserver.model.Cookie;
 
-import java.util.Arrays;
-
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.core.Is.is;
 
 /**
  * @author jamesdbloom
@@ -16,10 +14,12 @@ public class CookieDTOTest {
     @Test
     public void shouldReturnValueSetInConstructor() {
         // when
-        CookieDTO cookie = new CookieDTO(new Cookie("first", "first_one", "first_two"));
+        CookieDTO cookie = new CookieDTO(new Cookie("name", "value"));
 
         // then
-        assertThat(cookie.getValues(), containsInAnyOrder("first_one", "first_two"));
-        assertThat(cookie.buildObject().getValues(), containsInAnyOrder("first_one", "first_two"));
+        assertThat(cookie.getValue(), is("value"));
+        assertThat(cookie.getName(), is("name"));
+        assertThat(cookie.buildObject().getName(), is("name"));
+        assertThat(cookie.buildObject().getValue(), is("value"));
     }
 }

@@ -1,18 +1,18 @@
 package org.mockserver.matchers;
 
 import org.mockserver.collections.CaseInsensitiveRegexMultiMap;
-import org.mockserver.model.KeyToMultiValue;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
+import org.mockserver.model.KeyToMultiValue;
 
 import java.util.List;
 
 /**
  * @author jamesdbloom
  */
-public class MapMatcher extends ObjectWithReflectiveEqualsHashCodeToString implements Matcher<List<KeyToMultiValue>> {
+public class MultiValueMapMatcher extends ObjectWithReflectiveEqualsHashCodeToString implements Matcher<List<KeyToMultiValue>> {
     private final CaseInsensitiveRegexMultiMap multiMap;
 
-    public MapMatcher(CaseInsensitiveRegexMultiMap multiMap) {
+    public MultiValueMapMatcher(CaseInsensitiveRegexMultiMap multiMap) {
         this.multiMap = multiMap;
     }
 
