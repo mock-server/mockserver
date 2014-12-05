@@ -23,6 +23,10 @@ public class RegexStringMatcher extends BodyMatcher<String> implements Matcher<S
         if (Strings.isNullOrEmpty(matcher)) {
             result = true;
         } else if (matched != null) {
+            // match as exact string
+            if (matched.equals(matcher)) {
+                result = true;
+            }
             // match as regex - matcher -> matched
             try {
                 if (matched.matches(matcher)) {
@@ -41,6 +45,10 @@ public class RegexStringMatcher extends BodyMatcher<String> implements Matcher<S
             }
             // case insensitive comparison is mainly to improve matching in web containers like Tomcat that convert header names to lower case
             if (ignoreCase) {
+                // match as exact string lower-case
+                if (matched.equalsIgnoreCase(matcher)) {
+                    result = true;
+                }
                 // match as regex - matcher -> matched
                 try {
                     if (matched.toLowerCase().matches(matcher.toLowerCase())) {

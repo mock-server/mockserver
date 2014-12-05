@@ -16,6 +16,11 @@ public class RegexStringMatcherTest {
     }
 
     @Test
+    public void shouldMatchMatchingStringWithRegexSymbols() {
+        assertTrue(new RegexStringMatcher("text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8").matches("text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"));
+    }
+
+    @Test
     public void shouldMatchMatchingRegex() {
         assertTrue(new RegexStringMatcher("some_[a-z]{5}").matches("some_value"));
     }
@@ -36,6 +41,11 @@ public class RegexStringMatcherTest {
     }
 
     @Test
+    public void shouldNotMatchIncorrectStringWithRegexSymbols() {
+        assertFalse(new RegexStringMatcher("text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8").matches("text/html,application/xhtml+xml,application/xml;q=0.9;q=0.8"));
+    }
+
+    @Test
     public void shouldNotMatchIncorrectRegex() {
         assertFalse(new RegexStringMatcher("some_[a-z]{4}").matches("some_value"));
     }
@@ -52,7 +62,7 @@ public class RegexStringMatcherTest {
 
     @Test
     public void shouldHandleIllegalRegexPatternForExpectationAndTest() {
-        assertFalse(new RegexStringMatcher("/{}").matches("/{}"));
+        assertFalse(new RegexStringMatcher("/{}").matches("/{{}"));
         assertFalse(new RegexStringMatcher("/{}").matches("some_value"));
         assertFalse(new RegexStringMatcher("some_value").matches("/{}"));
     }
