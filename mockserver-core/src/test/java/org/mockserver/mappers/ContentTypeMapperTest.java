@@ -93,7 +93,7 @@ public class ContentTypeMapperTest {
     @Test
     public void shouldNotDetectAsBinaryBody() {
         for (String contentType : utf8ContentTypes) {
-            assertThat(contentType + " should not be binary", ContentTypeMapper.isBinary(contentType), is(false));
+            assertThat(contentType + " should not be binary", new ContentTypeMapper().isBinary(contentType), is(false));
         }
     }
 

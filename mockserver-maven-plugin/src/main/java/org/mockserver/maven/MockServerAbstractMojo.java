@@ -137,17 +137,4 @@ public abstract class MockServerAbstractMojo extends AbstractMojo {
         }
         return null;
     }
-
-    /**
-     * Logs the plugin classpath.
-     */
-    protected void logPluginClasspath() {
-        if (getLog().isDebugEnabled()) {
-            StringBuilder sb = new StringBuilder();
-            for (Artifact artifact : pluginArtifacts) {
-                sb.append(artifact.getFile());
-            }
-            getLog().debug("Plugin classpath:\n" + sb.toString());
-        }
-    }
 }
