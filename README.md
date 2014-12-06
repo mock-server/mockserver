@@ -19,7 +19,7 @@ MockServer
 
 Maven Central contains the following MockServer artifacts:
 
-* [mockserver-netty](https://maven-badges.herokuapp.com/maven-central/org.mock-server/mockserver-netty) - a HTTP(S) web server that mocks and records requests and responses
+* [mockserver-netty](https://maven-badges.herokuapp.com/maven-central/org.mock-server/mockserver-netty) - an HTTP(S) web server that mocks and records requests and responses
 * [mockserver-netty:jar-with-dependencies](https://maven-badges.herokuapp.com/maven-central/org.mock-server/mockserver-netty) - mockserver-netty (as above) with all dependencies embedded
 * [mockserver-war](https://maven-badges.herokuapp.com/maven-central/org.mock-server/mockserver-war) - a deployable WAR for mocking HTTP(S) responses (for any JEE web server)
 * [mockserver-proxy-war](https://maven-badges.herokuapp.com/maven-central/org.mock-server/mockserver-proxy-war) - a deployable WAR that records requests and responses (for any JEE web server)
@@ -33,6 +33,7 @@ In addition MockServer SNAPSHOT artifacts can also be found on [Sonatype](https:
 NPM Registry contains the following module:
 
 * [MockServer Grunt Plugin ![mockserver-grunt](https://nodei.co/npm/mockserver-grunt.png?mini=true)](https://www.npmjs.org/package/mockserver-grunt) - a Node.js module and Grunt plugin to start and stop MockServer
+* [mockserver-client-node ![mockserver-client-node](https://nodei.co/npm/mockserver-client.png?mini=true)](https://www.npmjs.org/package/mockserver-client) - a Node.js client for both the MockServer and the proxy 
 
 ### Docker Index
 
