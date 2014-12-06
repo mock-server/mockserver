@@ -283,6 +283,12 @@ ul, ol {
   padding-left: 1%;
 }
 
+ul pre,
+ol pre {
+  margin-right: 7%;
+  padding-right: 7%;
+}
+
 .code {
   display: block;
   white-space: pre;
