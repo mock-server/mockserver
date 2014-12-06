@@ -32,8 +32,8 @@ In addition MockServer SNAPSHOT artifacts can also be found on [Sonatype](https:
 
 NPM Registry contains the following module:
 
-* [MockServer Grunt Plugin ![mockserver-grunt](https://nodei.co/npm/mockserver-grunt.png?mini=true)](https://www.npmjs.org/package/mockserver-grunt) - a Node.js module and Grunt plugin to start and stop MockServer
-* [mockserver-client-node ![mockserver-client-node](https://nodei.co/npm/mockserver-client.png?mini=true)](https://www.npmjs.org/package/mockserver-client) - a Node.js client for both the MockServer and the proxy 
+* [MockServer Grunt Plugin](https://www.npmjs.org/package/mockserver-grunt) - a Node.js module and Grunt plugin to start and stop MockServer <br/> [![mockserver-grunt](https://nodei.co/npm/mockserver-grunt.png)](https://www.npmjs.org/package/mockserver-grunt)
+* [mockserver-client-node](https://www.npmjs.org/package/mockserver-client) - a Node.js client for both the MockServer and the proxy <br/> [![mockserver-client-node](https://nodei.co/npm/mockserver-client.png)](https://www.npmjs.org/package/mockserver-client)
 
 ### Docker Index
 
