@@ -19,16 +19,12 @@ MockServer
 
 Maven Central contains the following MockServer artifacts:
 
-* [mockserver-maven-plugin](https://maven-badges.herokuapp.com/maven-central/org.mock-server/mockserver-maven-plugin) - a set of maven plugins to start, stop and fork MockServer using maven
-* [mockserver-vertx](https://maven-badges.herokuapp.com/maven-central/org.mock-server/mockserver-vertx) - a Vert.X module that mocks HTTP and HTTPS requests
-* [mockserver-netty](https://maven-badges.herokuapp.com/maven-central/org.mock-server/mockserver-netty) - an NIO web server that mocks HTTP and HTTPS requests (using Netty)
+* [mockserver-netty](https://maven-badges.herokuapp.com/maven-central/org.mock-server/mockserver-netty) - an NIO (Netty) web server that mocks HTTP and HTTPS requests and proxy that allows the recording and querying of requests and responses
 * [mockserver-netty:jar-with-dependencies](https://maven-badges.herokuapp.com/maven-central/org.mock-server/mockserver-netty) - a fully stand alone NIO web server embedded with all dependencies that mocks HTTP and HTTPS requests (using Netty)
-* [mockserver-jetty](https://maven-badges.herokuapp.com/maven-central/org.mock-server/mockserver-jetty) - a web server that mocks HTTP and HTTPS requests (using Embedded Jetty)
-* [mockserver-jetty:jar-with-dependencies](https://maven-badges.herokuapp.com/maven-central/org.mock-server/mockserver-jetty) - a fully stand alone web server embedded with all dependencies that mocks HTTP and HTTPS requests (using Embedded Jetty)
 * [mockserver-war](https://maven-badges.herokuapp.com/maven-central/org.mock-server/mockserver-war) - a deployable WAR for mocking HTTP and HTTP requests (that runs on any JEE web server)
-* [mockserver-proxy](https://maven-badges.herokuapp.com/maven-central/org.mock-server/mockserver-proxy) - an HTTP / HTTPS proxy that allows the recording and querying of requests and response
+* [mockserver-proxy-war](https://maven-badges.herokuapp.com/maven-central/org.mock-server/mockserver-proxy-war) - a deployable WAR proxy that allows the recording and querying of requests and responses
+* [mockserver-maven-plugin](https://maven-badges.herokuapp.com/maven-central/org.mock-server/mockserver-maven-plugin) - a set of maven plugins to start, stop and fork MockServer using maven
 * [mockserver-client-java](https://maven-badges.herokuapp.com/maven-central/org.mock-server/mockserver-client-java) - a Java client to communicate with both the server and the proxy
-* [mockserver-client-javascript](https://maven-badges.herokuapp.com/maven-central/org.mock-server/mockserver-client-javascript) - a Java client to communicate with both the server and the proxy
 
 In addition MockServer SNAPSHOT artifacts can also be found on [Sonatype](https://oss.sonatype.org/index.html#nexus-search;quick~mockserver).
 

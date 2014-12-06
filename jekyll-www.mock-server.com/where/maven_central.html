@@ -11,15 +11,55 @@ subsection: true
 <p>Maven Central contains the following MockServer artifacts:</p>
 
 <ul>
-	<li><a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver-netty">mockserver-netty</a> - a web server for mocking and proxying using Netty</li>
-	<li><a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver-netty">mockserver-netty:jar-with-dependencies</a> - as above using Netty that includes all dependencies are bundled into the jar file</li>
-	<li><a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver-jetty">mockserver-jetty</a> - a web server for mocking and proxying using Embedded Jetty</li>
-	<li><a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver-jetty">mockserver-jetty:jar-with-dependencies</a> - as above using Jetty that includes all dependencies are bundled into the jar file</li>
-	<li><a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver-vertx">mockserver-vertx</a> - a Vert.X module for mocking and proxying</li>
-	<li><a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver-war">mockserver-war</a> - a deployable WAR for mocking and proxying that can be deployed to any JEE web server</li>
-	<li><a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver-maven-plugin">mockserver-maven-plugin</a> - a set of maven plugins to start, stop and fork MockServer using maven</li>
-	<li><a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver-client-java">mockserver-client-java</a> - a Java client to communicate with both the server and the proxy</li>
-	<li><a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver-client-javascript">mockserver-client-javascript</a> - a JavaScript client to communicate with both the server and the proxy</li>
+	<li><a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver-netty">mockserver-netty</a> - a web server for mocking and proxying using Netty, can be added to a maven build as follows:
+
+<pre><code class="code xml">&lt;<span class="element">dependency</span>&gt;
+	&lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;
+	&lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-netty</span>&lt;/<span class="element">artifactId</span>&gt;
+	&lt;<span class="element">version</span>&gt;<span class="element_value">RELEASE</span>&lt;/<span class="element">version</span>&gt;
+&lt;/<span class="element">dependency</span>&gt;</code></pre></li>
+
+	<li><a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver-netty">mockserver-netty:jar-with-dependencies</a> - as above using Netty that includes all dependencies are bundled into the jar file, this artifact  <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/3.9.1/mockserver-netty-3.9.1-jar-with-dependencies.jar">can be downloaded</a>.</li>
+
+	<li><a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver-vertx">mockserver-vertx</a> - a Vert.X module for mocking and proxying, this artifact  <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-vertx/2.9/mockserver-vertx-2.9-mod.zip">can be downloaded</a>.</li>
+
+	<li><a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver-war">mockserver-war</a> - a deployable WAR for mocking that can be deployed to any JEE web server, this artifact  <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-war/3.9.1/mockserver-war-3.9.1.war">can be downloaded</a>.</li>
+
+	<li><a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver-proxy-war">mockserver-proxy-war</a> - a deployable WAR for proxying that can be deployed to any JEE web server, this artifact  <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-proxy-war/3.9.1/mockserver-proxy-war-3.9.1.war">can be downloaded</a>.</li>
+
+	<li><a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver-maven-plugin">mockserver-maven-plugin</a> - a set of maven plugins to start, stop and fork MockServer using maven, can be added to a maven build as follows:
+
+<pre><code class="code xml">&lt;<span class="element">plugin</span>&gt;
+    &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;
+    &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-maven-plugin</span>&lt;/<span class="element">artifactId</span>&gt;
+    &lt;<span class="element">version</span>&gt;<span class="element_value">RELEASE</span>&lt;/<span class="element">version</span>&gt;
+    &lt;<span class="element">configuration</span>&gt;
+        &lt;<span class="element">serverPort</span>&gt;<span class="element_value">1080</span>&lt;/<span class="element">serverPort</span>&gt;
+        &lt;<span class="element">pipeLogToConsole</span>&gt;<span class="element_value">true</span>&lt;/<span class="element">pipeLogToConsole</span>&gt;
+&lt;/<span class="element">plugin</span>&gt;</code></pre>
+
+	<li><a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver-client-java">mockserver-client-java</a> - a Java client to communicate with both the server and the proxy, can be added to a maven build as follows:
+
+<pre><code class="code xml">&lt;<span class="element">dependency</span>&gt;
+	&lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;
+	&lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-client-java</span>&lt;/<span class="element">artifactId</span>&gt;
+	&lt;<span class="element">version</span>&gt;<span class="element_value">RELEASE</span>&lt;/<span class="element">version</span>&gt;
+&lt;/<span class="element">dependency</span>&gt;</code></pre></li>
 </ul>
 
-<p>In addition MockServer SNAPSHOT artifacts can also be found at <a href="https://oss.sonatype.org/index.html#nexus-search;quick%7Emockserver">https://oss.sonatype.org/index.html#nexus-search;quick~mockserver</a>.</p>
+<p>In addition the continuous integration build on Travis deploys a SNAPSHOT version on every github commit these SNAPSHOT artifacts can be found at <a href="https://oss.sonatype.org/index.html#nexus-search;quick%7Emockserver">https://oss.sonatype.org/index.html#nexus-search;quick~mockserver</a> by adding the correct repository to maven:</p>
+
+<pre><code class="code xml">&lt;<span class="element">repositories</span>&gt;
+	&lt;<span class="element">repository</span>&gt;
+		&lt;<span class="element">id</span>&gt;<span class="element_value">sonatype-snapshots</span>&lt;/<span class="element">id</span>&gt;
+		&lt;<span class="element">url</span>&gt;<span class="element_value">https://oss.sonatype.org/content/repositories/snapshots</span>&lt;/<span class="element">url</span>&gt;
+	&lt;/<span class="element">repository</span>&gt;
+&lt;/<span class="element">repositories</span>&gt;</code></pre>
+
+<p>then specifying the latest SNAPSHOT build, for example for <strong>mockserver-netty</strong> this would be as follows:</p>
+
+<pre><code class="code xml">&lt;<span class="element">dependency</span>&gt;
+	&lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;
+	&lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-netty</span>&lt;/<span class="element">artifactId</span>&gt;
+	&lt;<span class="element">version</span>&gt;<span class="element_value">SNAPSHOT</span>&lt;/<span class="element">version</span>&gt;
+&lt;/<span class="element">dependency</span>&gt;</code></pre>
