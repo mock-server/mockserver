@@ -3,13 +3,14 @@ package org.mockserver.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
 
 /**
  * @author jamesdbloom
  */
-public class HttpRequest extends ObjectWithJsonToString {
+public class HttpRequest extends ObjectWithJsonToString implements Comparable<HttpRequest> {
     String method = "";
     String path = "";
     Map<String, Parameter> queryStringParameters = new LinkedHashMap<String, Parameter>();
@@ -392,5 +393,33 @@ public class HttpRequest extends ObjectWithJsonToString {
 
     public List<Cookie> getCookies() {
         return new ArrayList<Cookie>(cookies.values());
+    }
+
+    @Override
+    public int compareTo(HttpRequest request) {
+        return paramsInUse(request).compareTo(paramsInUse(this));
+    }
+
+    private Integer paramsInUse(HttpRequest httpRequest) {
+        Integer params = 0;
+        if (httpRequest == null) {
+            return params;
+        }
+        if (StringUtils.isNotEmpty(httpRequest.method)) {
+            params++;
+        }
+        if (StringUtils.isNotEmpty(httpRequest.path)) {
+            params++;
+        }
+        if (httpRequest.queryStringParameters != null && !httpRequest.queryStringParameters.isEmpty()) {
+            params++;
+        }
+        if (httpRequest.headers != null && !httpRequest.headers.isEmpty()) {
+            params++;
+        }
+        if (httpRequest.cookies != null && !httpRequest.cookies.isEmpty()) {
+            params++;
+        }
+        return params;
     }
 }
