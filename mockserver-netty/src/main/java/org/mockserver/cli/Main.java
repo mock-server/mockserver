@@ -96,13 +96,13 @@ public class Main {
                 showUsage(options);
             }
 
-            SSLFactory.KEY_STORE_PASSWORD = cmd.getOptionValue(KEY_STORE_PASSWORD);
+            SSLFactory.keyStorePassword = cmd.getOptionValue(KEY_STORE_PASSWORD);
         }
     }
 
     private static void showUsage(Options options) {
         HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp( "mockserver", options );
+        formatter.printHelp("mockserver", options);
         if (shutdownOnUsage) {
             System.exit(1);
         }
