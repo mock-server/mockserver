@@ -21,7 +21,7 @@ public class SSLFactory {
 
     public static final String KEY_STORE_CERT_ALIAS = "certAlias";
     public static final String KEY_STORE_CA_ALIAS = "caAlias";
-    public static String KEY_STORE_PASSWORD = "changeit";
+    public static String keyStorePassword = "changeit";
     public static final String KEY_STORE_FILENAME = "keystore.jks";
     private static final SSLFactory sslFactory = new SSLFactory();
     private static final Logger logger = LoggerFactory.getLogger(SSLFactory.class);
@@ -56,7 +56,7 @@ public class SSLFactory {
         try {
             // key manager
             KeyManagerFactory keyManagerFactory = getKeyManagerFactoryInstance(KeyManagerFactory.getDefaultAlgorithm());
-            keyManagerFactory.init(buildKeyStore(), KEY_STORE_PASSWORD.toCharArray());
+            keyManagerFactory.init(buildKeyStore(), keyStorePassword.toCharArray());
 
             // ssl context
             SSLContext sslContext = getSSLContextInstance("TLS");
@@ -106,7 +106,7 @@ public class SSLFactory {
             keystore = new KeyStoreFactory().generateCertificate(
                     KEY_STORE_CERT_ALIAS,
                     KEY_STORE_CA_ALIAS,
-                    KEY_STORE_PASSWORD.toCharArray(),
+                    keyStorePassword.toCharArray(),
                     "localhost", null, null
             );
         } catch (Exception e) {
@@ -121,7 +121,7 @@ public class SSLFactory {
                 fileInputStream = new FileInputStream(KEY_STORE_FILENAME);
                 logger.trace("Loading key store from file [" + keyStoreFile + "]");
                 keystore = KeyStore.getInstance(KeyStore.getDefaultType());
-                keystore.load(fileInputStream, KEY_STORE_PASSWORD.toCharArray());
+                keystore.load(fileInputStream, keyStorePassword.toCharArray());
             } finally {
                 if (fileInputStream != null) {
                     fileInputStream.close();
@@ -135,7 +135,7 @@ public class SSLFactory {
     private void saveKeyStore() {
         try {
             ByteArrayOutputStream bout = new ByteArrayOutputStream();
-            keystore.store(bout, KEY_STORE_PASSWORD.toCharArray());
+            keystore.store(bout, keyStorePassword.toCharArray());
             File keyStoreFile = new File(KEY_STORE_FILENAME);
             logger.trace("Saving key store to file [" + keyStoreFile + "]");
             FileOutputStream fileOutputStream = null;
