@@ -21,7 +21,7 @@ public class SSLFactory {
 
     public static final String KEY_STORE_CERT_ALIAS = "certAlias";
     public static final String KEY_STORE_CA_ALIAS = "caAlias";
-    public static final String KEY_STORE_PASSWORD = "changeit";
+    public static String KEY_STORE_PASSWORD = "changeit";
     public static final String KEY_STORE_FILENAME = "keystore.jks";
     private static final SSLFactory sslFactory = new SSLFactory();
     private static final Logger logger = LoggerFactory.getLogger(SSLFactory.class);
