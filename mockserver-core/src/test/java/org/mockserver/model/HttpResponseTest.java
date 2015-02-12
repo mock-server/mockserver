@@ -7,6 +7,9 @@ import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 import static junit.framework.TestCase.assertNull;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 import static org.mockito.Mockito.*;
@@ -42,6 +45,23 @@ public class HttpResponseTest {
         assertEquals(new Header("name", "value"), new HttpResponse().withHeaders(Arrays.asList(new Header("name", "value"))).getHeaders().get(0));
         assertEquals(new Header("name", "value"), new HttpRequest().withHeader(new Header("name", "value")).getHeaders().get(0));
         assertEquals(new Header("name", "value_one", "value_two"), new HttpRequest().withHeader(new Header("name", "value_one")).withHeader(new Header("name", "value_two")).getHeaders().get(0));
+    }
+
+    @Test
+    public void returnsHeaderByName() {
+        assertThat(new HttpResponse().withHeaders(new Header("name", "value")).getHeader("name"), containsInAnyOrder("value"));
+        assertThat(new HttpResponse().withHeaders(new Header("name", "valueOne", "valueTwo")).getHeader("name"), containsInAnyOrder("valueOne", "valueTwo"));
+        assertThat(new HttpResponse().withHeaders(new Header("name", "valueOne", "valueTwo")).getHeader("otherName"), hasSize(0));
+    }
+
+    @Test
+    public void addDuplicateHeader() {
+        assertThat(new HttpResponse().withHeader(new Header("name", "valueOne")).withHeader(new Header("name", "valueTwo")).getHeaders(), containsInAnyOrder(new Header("name", "valueOne", "valueTwo")));
+    }
+
+    @Test
+    public void updatesExistingHeader() {
+        assertThat(new HttpResponse().withHeader(new Header("name", "valueOne")).updateHeader(new Header("name", "valueTwo")).getHeaders(), containsInAnyOrder(new Header("name", "valueTwo")));
     }
 
     @Test

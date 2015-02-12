@@ -69,20 +69,20 @@ public class HttpResponse extends Action {
 
     /**
      * Set the body to return for example:
-     *
+     * <p/>
      * string body:
-     *   - exact("<html><head/><body><div>a simple string body</div></body></html>");
-     *
-     *   or
-     *
-     *   - new StringBody("<html><head/><body><div>a simple string body</div></body></html>")
-     *
+     * - exact("<html><head/><body><div>a simple string body</div></body></html>");
+     * <p/>
+     * or
+     * <p/>
+     * - new StringBody("<html><head/><body><div>a simple string body</div></body></html>")
+     * <p/>
      * binary body:
-     *   - binary(IOUtils.readFully(getClass().getClassLoader().getResourceAsStream("example.pdf"), 1024));
-     *
-     *   or
-     *
-     *   - new BinaryBody(IOUtils.readFully(getClass().getClassLoader().getResourceAsStream("example.pdf"), 1024));
+     * - binary(IOUtils.readFully(getClass().getClassLoader().getResourceAsStream("example.pdf"), 1024));
+     * <p/>
+     * or
+     * <p/>
+     * - new BinaryBody(IOUtils.readFully(getClass().getClassLoader().getResourceAsStream("example.pdf"), 1024));
      *
      * @param body an instance of one of the Body subclasses including StringBody or BinaryBody
      */
@@ -130,7 +130,9 @@ public class HttpResponse extends Action {
     }
 
     /**
-     * A header to return as a Header objects
+     * Add a header to return as a Header object, if a header with
+     * the same name already exists this will NOT be modified but
+     * two headers will exist
      *
      * @param header a Header objects
      */
@@ -143,8 +145,27 @@ public class HttpResponse extends Action {
         return this;
     }
 
+    /**
+     * Update header to return as a Header object, if a header with
+     * the same name already exists it will be modified
+     *
+     * @param header a Header objects
+     */
+    public HttpResponse updateHeader(Header header) {
+        this.headers.put(header.getName(), header);
+        return this;
+    }
+
     public List<Header> getHeaders() {
         return new ArrayList<Header>(headers.values());
+    }
+
+    public List<String> getHeader(String name) {
+        List<String> headerValues = new ArrayList<String>();
+        if (headers.containsKey(name)) {
+            headerValues.addAll(headers.get(name).getValues());
+        }
+        return headerValues;
     }
 
     /**
