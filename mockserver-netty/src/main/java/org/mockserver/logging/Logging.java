@@ -1,13 +1,16 @@
 package org.mockserver.logging;
 
-import ch.qos.logback.classic.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.lang.reflect.Method;
 
 /**
  * @author jamesdbloom
  */
 public class Logging {
+    private static final Logger logger = LoggerFactory.getLogger(Logging.class);
+
     /**
      * Override the debug WARN logging level
      *
@@ -15,8 +18,18 @@ public class Logging {
      */
     public static void overrideLogLevel(String level) {
         Logger rootLogger = LoggerFactory.getLogger("org.mockserver");
-        if (rootLogger instanceof ch.qos.logback.classic.Logger) {
-            ((ch.qos.logback.classic.Logger) rootLogger).setLevel(Level.toLevel(level));
+
+        try {
+            // create level instance
+            Class logbackLevelClass = Logging.class.getClassLoader().loadClass("ch.qos.logback.classic.Level");
+            Method toLevelMethod = logbackLevelClass.getMethod("toLevel", String.class);
+            Object levelInstance = toLevelMethod.invoke(logbackLevelClass, level);
+
+            // update root level
+            Method setLevelMethod = rootLogger.getClass().getMethod("setLevel", logbackLevelClass);
+            setLevelMethod.invoke(rootLogger, levelInstance);
+        } catch (Exception e) {
+            logger.warn("Exception updating logging level using reflection, likely cause is Logback is not on the classpath");
         }
     }
 }

@@ -46,7 +46,7 @@
         <maven.compiler.target>1.6</maven.compiler.target>
         <project.build.sourceEncoding>UTF8</project.build.sourceEncoding>
         <jetty.version>8.1.16.v20140903</jetty.version>
-        <slf4j.version>1.7.7</slf4j.version>
+        <slf4j.version>1.7.10</slf4j.version>
         <tomcat.version>7.0.56</tomcat.version>
         <jackson.version>2.4.3</jackson.version>
         <netty.version>4.0.24.Final</netty.version>
@@ -289,8 +289,7 @@
                 <artifactId>logback-classic</artifactId>
                 <version>1.1.2</version>
                 <scope>runtime</scope>
-                <optional>true</optional>
-                <!-- do not impose on project importing mock-server -->
+                <optional>true</optional> <!-- do not impose on project importing mock-server -->
             </dependency>
 
             <!-- test -->
