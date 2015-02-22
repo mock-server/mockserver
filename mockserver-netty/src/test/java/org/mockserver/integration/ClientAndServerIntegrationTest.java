@@ -15,14 +15,17 @@ import static org.mockserver.integration.ClientAndServer.startClientAndServer;
  */
 public class ClientAndServerIntegrationTest extends AbstractClientServerSharedClassloadersAndTestClasspathIntegrationTest {
 
-    private static final int SERVER_HTTP_PORT = PortFactory.findFreePort();
+    private static int serverHttpPort;
     private final static int TEST_SERVER_HTTP_PORT = PortFactory.findFreePort();
     private static EchoServer httpEchoServer;
 
     @BeforeClass
     public static void startServer() throws InterruptedException, ExecutionException {
         // start mock server and client
-        mockServerClient = startClientAndServer(SERVER_HTTP_PORT);
+        ClientAndServer clientAndServer = startClientAndServer(0);
+
+        serverHttpPort = clientAndServer.getPort();
+        mockServerClient = clientAndServer;
 
         // start echo servers
         httpEchoServer = new EchoServer(TEST_SERVER_HTTP_PORT);
@@ -41,12 +44,12 @@ public class ClientAndServerIntegrationTest extends AbstractClientServerSharedCl
 
     @Override
     public int getMockServerPort() {
-        return SERVER_HTTP_PORT;
+        return serverHttpPort;
     }
 
     @Override
     public int getMockServerSecurePort() {
-        return SERVER_HTTP_PORT;
+        return serverHttpPort;
     }
 
     @Override
