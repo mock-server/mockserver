@@ -1,7 +1,10 @@
 package org.mockserver.cli;
 
+import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.contrib.java.lang.system.StandardOutputStreamLog;
 import org.mockito.Mock;
 import org.mockserver.mockserver.MockServerBuilder;
 import org.mockserver.proxy.ProxyBuilder;
@@ -20,20 +23,19 @@ public class MainTest {
 
     private final static Integer SERVER_HTTP_PORT = PortFactory.findFreePort();
     private final static Integer PROXY_HTTP_PORT = PortFactory.findFreePort();
-
+    private final static String WHITESPACE_IN_OUTPUT = "\n                         ";
     @Mock
     private ProxyBuilder mockProxyBuilder;
     @Mock
     private MockServerBuilder mockMockServerBuilder;
-    @Mock
-    private PrintStream mockPrintStream;
+    @Rule
+    public final StandardOutputStreamLog log = new StandardOutputStreamLog();
 
     @Before
     public void setupMocks() {
         initMocks(this);
         Main.mockServerBuilder = mockMockServerBuilder;
         Main.httpProxyBuilder = mockProxyBuilder;
-        Main.outputPrintStream = mockPrintStream;
         Main.shutdownOnUsage = false;
 
         when(mockMockServerBuilder.withHTTPPort(anyInt())).thenReturn(mockMockServerBuilder);
@@ -82,21 +84,33 @@ public class MainTest {
     public void shouldPrintOutUsageForInvalidPort() {
         Main.main("-proxyPort", "1", "-invalidOption", "2");
 
-        verify(mockPrintStream).println(Main.USAGE);
+        assert log.getLog().contains("specifies the HTTP and HTTPS port for the"
+                + WHITESPACE_IN_OUTPUT
+                + "MockServer port unification is used to support"
+                + WHITESPACE_IN_OUTPUT
+                + "HTTP and HTTPS on the same port");
     }
 
     @Test
     public void shouldPrintOutUsageForMissingLastPort() {
         Main.main("-serverPort", "1", "-proxyPort");
 
-        verify(mockPrintStream).println(Main.USAGE);
+        assert log.getLog().contains("specifies the HTTP, HTTPS, SOCKS and HTTP CONNECT"
+            + WHITESPACE_IN_OUTPUT
+            + "port for proxy, port unification supports for all"
+            + WHITESPACE_IN_OUTPUT
+            + "protocols on the same port");
     }
 
     @Test
     public void shouldPrintOutUsageForMissingFirstPort() {
         Main.main("-serverPort", "-proxyPort", "2");
 
-        verify(mockPrintStream).println(Main.USAGE);
+        assert log.getLog().contains("specifies the HTTP, HTTPS, SOCKS and HTTP CONNECT"
+                + WHITESPACE_IN_OUTPUT
+                + "port for proxy, port unification supports for all"
+                + WHITESPACE_IN_OUTPUT
+                + "protocols on the same port");
     }
 
     @Test
@@ -104,8 +118,45 @@ public class MainTest {
         // using non static reference and constructor for coverage
         new Main().main();
 
-        verify(mockPrintStream).println(Main.USAGE);
+        assert log.getLog().contains("specifies the HTTP, HTTPS, SOCKS and HTTP CONNECT"
+                + WHITESPACE_IN_OUTPUT
+                + "port for proxy, port unification supports for all"
+                + WHITESPACE_IN_OUTPUT
+                + "protocols on the same port");
         verifyZeroInteractions(mockMockServerBuilder);
         verifyZeroInteractions(mockProxyBuilder);
+    }
+
+    @Test
+    public void shouldPrintOutUsageForJksPathAndNoPassword() {
+        Main.main("-proxyPort", "2", "-jksPath", "/dev/null");
+
+        assert log.getLog().contains("specifies the HTTP, HTTPS, SOCKS and HTTP CONNECT"
+                + WHITESPACE_IN_OUTPUT
+                + "port for proxy, port unification supports for all"
+                + WHITESPACE_IN_OUTPUT
+                + "protocols on the same port");
+    }
+
+    @Test
+    public void shouldPrintOutUsageForPasswordAndNoJksPath() {
+        Main.main("-proxyPort", "2", "-keyPassword", "password");
+
+        assert log.getLog().contains("specifies the HTTP, HTTPS, SOCKS and HTTP CONNECT"
+                + WHITESPACE_IN_OUTPUT
+                + "port for proxy, port unification supports for all"
+                + WHITESPACE_IN_OUTPUT
+                + "protocols on the same port");
+    }
+
+    @Test
+    public void shouldPrintOutUsageForInvalidJksPath() {
+        Main.main("-proxyPort", "2", "-jksPath", "/tmp/thisFileDoesNotExist");
+
+        assert log.getLog().contains("specifies the HTTP, HTTPS, SOCKS and HTTP CONNECT"
+                + WHITESPACE_IN_OUTPUT
+                + "port for proxy, port unification supports for all"
+                + WHITESPACE_IN_OUTPUT
+                + "protocols on the same port");
     }
 }

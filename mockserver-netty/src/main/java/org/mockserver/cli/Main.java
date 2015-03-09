@@ -2,16 +2,18 @@ package org.mockserver.cli;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
+import org.apache.commons.cli.*;
+import org.apache.commons.io.FileUtils;
 import org.mockserver.logging.Logging;
 import org.mockserver.mockserver.MockServerBuilder;
 import org.mockserver.proxy.ProxyBuilder;
+import org.mockserver.socket.SSLFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.PrintStream;
-import java.util.Arrays;
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -19,26 +21,24 @@ import java.util.Map;
  */
 public class Main {
     public static final String PROXY_PORT_KEY = "proxyPort";
+    public static final String PROXY_PORT_KEY_DESCRIPTION = "specifies the HTTP and HTTPS port for the MockServer port unification is used to support HTTP and HTTPS on the same port";
+
     public static final String SERVER_PORT_KEY = "serverPort";
-    public static final String USAGE = "" +
-            "   java -jar <path to mockserver-jetty-jar-with-dependencies.jar> [-serverPort <port>] [-proxyPort <port>]" + System.getProperty("line.separator") +
-            "   " + System.getProperty("line.separator") +
-            "     valid options are:" + System.getProperty("line.separator") +
-            "        -serverPort <port>           specifies the HTTP and HTTPS port for the         " + System.getProperty("line.separator") +
-            "                                     MockServer port unification is used to            " + System.getProperty("line.separator") +
-            "                                     support HTTP and HTTPS on the same port           " + System.getProperty("line.separator") +
-            "                                                                                       " + System.getProperty("line.separator") +
-            "        -proxyPort <path>            specifies the HTTP, HTTPS, SOCKS and HTTP         " + System.getProperty("line.separator") +
-            "                                     CONNECT port for proxy, port unification          " + System.getProperty("line.separator") +
-            "                                     supports for all protocols on the same port       " + System.getProperty("line.separator");
+    public static final String SERVER_PORT_KEY_DESCRIPTION = "specifies the HTTP, HTTPS, SOCKS and HTTP CONNECT port for proxy, port unification supports for all protocols on the same port";
+
+    public static final String FILE_LOCATION_KEY = "jksPath";
+    public static final String FILE_LOCATION_KEY_DESCRIPTION = "Path to a Java KeyStore file containing your SSL Certificate. If jksPath is provided, keyPassword is also required";
+
+    public static final String KEY_STORE_PASSWORD = "keyPassword";
+    public static final String KEY_STORE_PASSWORD_DESCRIPTION = "KeyStore password";
+
 
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
     @VisibleForTesting
     static ProxyBuilder httpProxyBuilder = new ProxyBuilder();
     @VisibleForTesting
     static MockServerBuilder mockServerBuilder = new MockServerBuilder();
-    @VisibleForTesting
-    static PrintStream outputPrintStream = System.out;
+
     @VisibleForTesting
     static boolean shutdownOnUsage = true;
     private static boolean usagePrinted = false;
@@ -53,65 +53,61 @@ public class Main {
     public static void main(String... arguments) {
         usagePrinted = false;
 
-        Map<String, Integer> parseIntegerArguments = new HashMap<String, Integer>();
+        Map<String, String> parseStringArguments = new HashMap<String, String>();
+        Options options = new Options();
+        options.addOption(OptionBuilder.withArgName("integer").hasArg().withDescription(SERVER_PORT_KEY_DESCRIPTION).create(SERVER_PORT_KEY));
+        options.addOption(OptionBuilder.withArgName("integer").hasArg().withDescription(PROXY_PORT_KEY_DESCRIPTION).create(PROXY_PORT_KEY));
+        options.addOption(OptionBuilder.withArgName("string").hasArg().withDescription(FILE_LOCATION_KEY_DESCRIPTION).create(FILE_LOCATION_KEY));
+        options.addOption(OptionBuilder.withArgName("string").hasArg().withDescription(KEY_STORE_PASSWORD_DESCRIPTION).create(KEY_STORE_PASSWORD));
 
-        parseArguments(parseIntegerArguments, arguments);
+        CommandLineParser parser = new BasicParser();
+        CommandLine cmd;
+        try {
+            cmd = parser.parse(options, arguments);
+        } catch (ParseException e) {
+            showUsage(options);
+            return;
+        }
 
         if (logger.isDebugEnabled()) {
             logger.debug(System.getProperty("line.separator") + System.getProperty("line.separator") + "Using command line options: " +
-                    Joiner.on(", ").withKeyValueSeparator("=").join(parseIntegerArguments) + System.getProperty("line.separator"));
+                    Joiner.on(", ").withKeyValueSeparator("=").join(parseStringArguments) + System.getProperty("line.separator"));
         }
         Logging.overrideLogLevel(System.getProperty("mockserver.logLevel"));
 
-        if (parseIntegerArguments.size() > 0) {
-            if (parseIntegerArguments.containsKey(PROXY_PORT_KEY)) {
-                httpProxyBuilder.withLocalPort(parseIntegerArguments.get(PROXY_PORT_KEY)).build();
-            }
-            if (parseIntegerArguments.containsKey(SERVER_PORT_KEY)) {
-                mockServerBuilder.withHTTPPort(parseIntegerArguments.get(SERVER_PORT_KEY)).build();
-            }
-        } else {
-            showUsage();
+        if (!(cmd.hasOption(PROXY_PORT_KEY) || cmd.hasOption(SERVER_PORT_KEY))) {
+            showUsage(options);
         }
-    }
 
-    private static Map<String, Integer> parseArguments(Map<String, Integer> parsedIntegerArguments, String... arguments) {
-        Iterator<String> argumentsIterator = Arrays.asList(arguments).iterator();
-        while (argumentsIterator.hasNext()) {
-            String argumentName = argumentsIterator.next();
-            if (argumentsIterator.hasNext()) {
-                String argumentValue = argumentsIterator.next();
-                if (!parsePort(parsedIntegerArguments, SERVER_PORT_KEY, argumentName, argumentValue)
-                        && !parsePort(parsedIntegerArguments, PROXY_PORT_KEY, argumentName, argumentValue)) {
-                    showUsage();
-                }
-            } else {
-                showUsage();
-            }
+        if (cmd.hasOption(PROXY_PORT_KEY)) {
+            httpProxyBuilder.withLocalPort(Integer.parseInt(cmd.getOptionValue(PROXY_PORT_KEY))).build();
         }
-        return parsedIntegerArguments;
-    }
+        if (cmd.hasOption(SERVER_PORT_KEY)) {
+            mockServerBuilder.withHTTPPort(Integer.parseInt(cmd.getOptionValue(SERVER_PORT_KEY))).build();
+        }
 
-    private static boolean parsePort(Map<String, Integer> parsedArguments, final String key, final String argumentName, final String argumentValue) {
-        if (argumentName.equals("-" + key)) {
+        if ((cmd.hasOption(FILE_LOCATION_KEY) ^ cmd.hasOption(KEY_STORE_PASSWORD))) {
+            showUsage(options);
+        } else if (cmd.hasOption(FILE_LOCATION_KEY) && cmd.hasOption(KEY_STORE_PASSWORD)) {
             try {
-                parsedArguments.put(key, Integer.parseInt(argumentValue));
-                return true;
-            } catch (NumberFormatException nfe) {
-                logger.error("Please provide a value integer for -" + key + ", [" + argumentValue + "] is not a valid integer", nfe);
+                FileUtils.copyFile(new File(cmd.getOptionValue(FILE_LOCATION_KEY)), new File(SSLFactory.KEY_STORE_FILENAME));
+            } catch (IOException e) {
+                logger.error("Error copying keystore" + e.getMessage());
+                showUsage(options);
             }
+
+            SSLFactory.keyStorePassword = cmd.getOptionValue(KEY_STORE_PASSWORD);
         }
-        return false;
     }
 
-    private static void showUsage() {
-        if (!usagePrinted) {
-            outputPrintStream.println(USAGE);
-            if (shutdownOnUsage) {
-                System.exit(1);
-            }
-            usagePrinted = true;
+    private static void showUsage(Options options) {
+        HelpFormatter formatter = new HelpFormatter();
+        formatter.printHelp("mockserver", options);
+        if (shutdownOnUsage) {
+            System.exit(1);
         }
     }
+
+
 
 }

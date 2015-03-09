@@ -40,7 +40,7 @@ public class ClientServerWarNoContextPathIntegrationTest extends AbstractClientS
         httpsConnector.setPort(SERVER_HTTPS_PORT);
         httpsConnector.setSecure(true);
         httpsConnector.setAttribute("keyAlias", SSLFactory.KEY_STORE_CERT_ALIAS);
-        httpsConnector.setAttribute("keystorePass", SSLFactory.KEY_STORE_PASSWORD);
+        httpsConnector.setAttribute("keystorePass", SSLFactory.keyStorePassword);
         httpsConnector.setAttribute("keystoreFile", new File(SSLFactory.KEY_STORE_FILENAME).getAbsoluteFile());
         httpsConnector.setAttribute("sslProtocol", "TLS");
         httpsConnector.setAttribute("clientAuth", false);
