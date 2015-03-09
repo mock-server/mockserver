@@ -3,17 +3,18 @@ package org.mockserver.mockserver;
 import com.google.common.util.concurrent.SettableFuture;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
-import io.netty.channel.*;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.util.AttributeKey;
-import io.netty.util.concurrent.Future;
-import io.netty.util.concurrent.GenericFutureListener;
 import org.mockserver.filters.LogFilter;
 import org.mockserver.mock.MockServerMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.InetSocketAddress;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -24,8 +25,6 @@ public class MockServer {
 
     public static final AttributeKey<LogFilter> LOG_FILTER = AttributeKey.valueOf("SERVER_LOG_FILTER");
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    // ports
-    private final Integer port;
     // mockserver
     private final MockServerMatcher mockServerMatcher = new MockServerMatcher();
     private final LogFilter logFilter = new LogFilter();
@@ -44,7 +43,6 @@ public class MockServer {
         if (port == null) {
             throw new IllegalStateException("You must specify a port");
         }
-        this.port = port;
 
         hasStarted = SettableFuture.create();
 
@@ -52,7 +50,11 @@ public class MockServer {
             @Override
             public void run() {
                 try {
-                    logger.info("MockServer starting up on port: " + port);
+                    if (port == 0) {
+                        logger.info("MockServer starting up on a free port");
+                    } else {
+                        logger.info("MockServer starting up on port: {}", port);
+                    }
 
                     channel = new ServerBootstrap()
                             .group(bossGroup, workerGroup)
@@ -64,6 +66,8 @@ public class MockServer {
                             .bind(port)
                             .sync()
                             .channel();
+
+                    logger.info("MockServer successfully started on port: {}", ((InetSocketAddress) channel.localAddress()).getPort());
 
                     hasStarted.set("STARTED");
 
@@ -111,6 +115,6 @@ public class MockServer {
     }
 
     public Integer getPort() {
-        return port;
+        return ((InetSocketAddress) channel.localAddress()).getPort();
     }
 }
