@@ -3,12 +3,12 @@ package org.mockserver.mockserver;
 import com.google.common.util.concurrent.SettableFuture;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.util.AttributeKey;
+import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.GenericFutureListener;
 import org.mockserver.filters.LogFilter;
 import org.mockserver.mock.MockServerMatcher;
 import org.slf4j.Logger;
@@ -31,8 +31,9 @@ public class MockServer {
     private final LogFilter logFilter = new LogFilter();
     private final SettableFuture<String> hasStarted;
     // netty
-    private final EventLoopGroup bossGroup;
-    private final EventLoopGroup workerGroup;
+    private final EventLoopGroup bossGroup = new NioEventLoopGroup();
+    private final EventLoopGroup workerGroup = new NioEventLoopGroup();
+    private Channel channel;
 
     /**
      * Start the instance using the ports provided
@@ -46,8 +47,6 @@ public class MockServer {
         this.port = port;
 
         hasStarted = SettableFuture.create();
-        bossGroup = new NioEventLoopGroup();
-        workerGroup = new NioEventLoopGroup();
 
         new Thread(new Runnable() {
             @Override
@@ -55,7 +54,7 @@ public class MockServer {
                 try {
                     logger.info("MockServer starting up on port: " + port);
 
-                    Channel httpChannel = new ServerBootstrap()
+                    channel = new ServerBootstrap()
                             .group(bossGroup, workerGroup)
                             .channel(NioServerSocketChannel.class)
                             .option(ChannelOption.SO_BACKLOG, 1024)
@@ -68,9 +67,7 @@ public class MockServer {
 
                     hasStarted.set("STARTED");
 
-                    if (httpChannel != null) {
-                        httpChannel.closeFuture().sync();
-                    }
+                    channel.closeFuture().sync();
                 } catch (InterruptedException ie) {
                     logger.error("MockServer receive InterruptedException", ie);
                 } finally {
@@ -84,7 +81,7 @@ public class MockServer {
             // wait for proxy to start all channels
             hasStarted.get();
         } catch (Exception e) {
-            logger.debug("Exception while waiting for proxy to complete starting up", e);
+            logger.debug("Exception while waiting for MockServer to complete starting up", e);
         }
     }
 
@@ -92,6 +89,7 @@ public class MockServer {
         try {
             bossGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
             workerGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
+            channel.close();
             // wait for socket to be released
             TimeUnit.MILLISECONDS.sleep(500);
         } catch (Exception ie) {
