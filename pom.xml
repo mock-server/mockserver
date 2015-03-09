@@ -458,6 +458,9 @@
                             <directory>${basedir}/tomcat_mockserver</directory>
                         </fileset>
                         <fileset>
+                            <directory>${basedir}/tomcat_proxy</directory>
+                        </fileset>
+                        <fileset>
                             <directory>${basedir}/.extract</directory>
                         </fileset>
                         <fileset>
