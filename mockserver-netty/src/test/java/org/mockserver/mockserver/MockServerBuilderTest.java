@@ -5,6 +5,7 @@ import org.mockserver.socket.PortFactory;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNot.not;
 
 /**
  * @author jamesdbloom
@@ -22,6 +23,19 @@ public class MockServerBuilderTest {
         try {
             // then
             assertThat(mockServer.getPort(), is(port));
+        } finally {
+            mockServer.stop();
+        }
+    }
+
+    @Test
+    public void testPortZero() {
+        // when
+        MockServer mockServer = new MockServerBuilder().withHTTPPort(0).build();
+
+        try {
+            // then
+            assertThat(mockServer.getPort(), not(0));
         } finally {
             mockServer.stop();
         }

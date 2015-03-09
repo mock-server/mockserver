@@ -14,7 +14,9 @@ import org.mockserver.mock.MockServerMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.InetSocketAddress;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * An HTTP server that sends back the content of the received HTTP request
@@ -44,15 +46,21 @@ public class MockServer {
         if (port == null) {
             throw new IllegalStateException("You must specify a port");
         }
-        this.port = port;
 
         hasStarted = SettableFuture.create();
+
+        // capture the assigned port from the separate thread that starts the server
+        final AtomicInteger assignedPort = new AtomicInteger(port);
 
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    logger.info("MockServer starting up on port: " + port);
+                    if (port == 0) {
+                        logger.info("MockServer starting up on a JVM-assigned port");
+                    } else {
+                        logger.info("MockServer starting up on port: {}", port);
+                    }
 
                     channel = new ServerBootstrap()
                             .group(bossGroup, workerGroup)
@@ -64,6 +72,16 @@ public class MockServer {
                             .bind(port)
                             .sync()
                             .channel();
+
+                    // cast the localAddress to an InetSocketAddress, as instructed by the localAddress() javadoc
+                    InetSocketAddress localAddress = (InetSocketAddress) httpChannel.localAddress();
+
+                    // get the actual assigned port from netty. if the passed-in port parameter was non-zero, this should be the same (assuming
+                    // the port is free and the server was started successfully). if the incoming port was zero, the JVM will assign a free
+                    // port automatically.
+                    assignedPort.set(localAddress.getPort());
+
+                    logger.info("MockServer successfully started on port: {}", assignedPort.get());
 
                     hasStarted.set("STARTED");
 
@@ -83,6 +101,8 @@ public class MockServer {
         } catch (Exception e) {
             logger.debug("Exception while waiting for MockServer to complete starting up", e);
         }
+
+        this.port = assignedPort.get();
     }
 
     public void stop() {
