@@ -122,7 +122,7 @@ public abstract class MockServerAbstractMojo extends AbstractMojo {
     }
 
     private ClassLoader setupClasspath() throws MalformedURLException {
-        if (compileClasspath != null) {
+        if (compileClasspath != null && testClasspath != null) {
             URL[] urls = new URL[compileClasspath.size() + testClasspath.size()];
             for (int i = 0; i < compileClasspath.size(); i++) {
                 urls[i] = new File(compileClasspath.get(i)).toURI().toURL();
