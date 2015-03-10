@@ -5,7 +5,6 @@ import org.mockserver.client.server.MockServerClient;
 import org.mockserver.mockserver.MockServer;
 import org.mockserver.socket.PortFactory;
 import org.mockserver.socket.SSLFactory;
-import sun.security.ntlm.Client;
 
 import java.io.File;
 import java.io.IOException;
