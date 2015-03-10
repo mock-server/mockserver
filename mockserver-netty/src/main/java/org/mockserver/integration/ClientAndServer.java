@@ -2,22 +2,25 @@ package org.mockserver.integration;
 
 import org.mockserver.client.server.MockServerClient;
 import org.mockserver.mockserver.MockServer;
-import org.mockserver.socket.PortFactory;
 
 /**
  * @author jamesdbloom
  */
 public class ClientAndServer extends MockServerClient {
 
-    private MockServer mockServer;
+    private final MockServer mockServer;
 
     public ClientAndServer() {
-        this(PortFactory.findFreePort());
+        this(0);
     }
 
     public ClientAndServer(Integer port) {
-        super("localhost", port);
-        mockServer = new MockServer(port);
+        this(new MockServer(port));
+    }
+
+    protected ClientAndServer(MockServer server) {
+        super("localhost", server.getPort());
+        this.mockServer = server;
     }
 
     public static ClientAndServer startClientAndServer(Integer port) {
@@ -26,6 +29,10 @@ public class ClientAndServer extends MockServerClient {
 
     public boolean isRunning() {
         return mockServer.isRunning();
+    }
+
+    public Integer getPort() {
+        return mockServer.getPort();
     }
 
 }
