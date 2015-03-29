@@ -30,6 +30,8 @@ test.csv
 # Runtime artifacts #
 #####################
 keystore.jks
+keystore.pkcs12
+*.pem
 
 # OS generated files #
 ######################
