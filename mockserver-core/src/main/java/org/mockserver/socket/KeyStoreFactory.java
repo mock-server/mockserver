@@ -1,16 +1,28 @@
 package org.mockserver.socket;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
+import com.google.common.base.Charsets;
+import org.apache.commons.io.IOUtils;
+import org.bouncycastle.asn1.*;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x509.*;
+import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.cert.X509v3CertificateBuilder;
+import org.bouncycastle.cert.bc.BcX509ExtensionUtils;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
+import org.bouncycastle.operator.ContentSigner;
+import org.bouncycastle.operator.OperatorCreationException;
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
+import org.mockserver.configuration.ConfigurationProperties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.*;
 import java.math.BigInteger;
-import java.security.Key;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.KeyStore;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.SecureRandom;
-import java.security.Security;
+import java.security.*;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
@@ -18,34 +30,12 @@ import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
-import org.apache.commons.io.IOUtils;
-import org.bouncycastle.asn1.ASN1Encodable;
-import org.bouncycastle.asn1.ASN1EncodableVector;
-import org.bouncycastle.asn1.ASN1InputStream;
-import org.bouncycastle.asn1.ASN1Sequence;
-import org.bouncycastle.asn1.DERSequence;
-import org.bouncycastle.asn1.x500.X500Name;
-import org.bouncycastle.asn1.x509.BasicConstraints;
-import org.bouncycastle.asn1.x509.Extension;
-import org.bouncycastle.asn1.x509.GeneralName;
-import org.bouncycastle.asn1.x509.KeyPurposeId;
-import org.bouncycastle.asn1.x509.KeyUsage;
-import org.bouncycastle.asn1.x509.SubjectKeyIdentifier;
-import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
-import org.bouncycastle.cert.X509v3CertificateBuilder;
-import org.bouncycastle.cert.bc.BcX509ExtensionUtils;
-import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
-import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.operator.ContentSigner;
-import org.bouncycastle.operator.OperatorCreationException;
-import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
-
 /**
- * @author jamesdbloom
- * @author ganskef
+ * @author jamesdbloom, ganskef
  */
 public class KeyStoreFactory {
+
+    private static final Logger logger = LoggerFactory.getLogger(SSLFactory.class);
 
     private static final String PROVIDER_NAME = BouncyCastleProvider.PROVIDER_NAME;
 
@@ -58,8 +48,7 @@ public class KeyStoreFactory {
     private static final String KEYGEN_ALGORITHM = "RSA";
 
     /**
-     * Generates an 2048 bit RSA key pair using SHA1PRNG for the Certificate
-     * Authority.
+     * Generates an 2048 bit RSA key pair using SHA1PRNG for the Certificate Authority.
      */
     private static final int ROOT_KEYSIZE = 2048;
 
@@ -76,15 +65,10 @@ public class KeyStoreFactory {
      */
     private static final Date NOT_BEFORE = new Date(System.currentTimeMillis() - 86400000L * 365);
 
-    /** The maximum possible value in X.509 specification: 9999-12-31 23:59:59 */
-    private static final Date NOT_AFTER = new Date(253402300799000L);
-
     /**
-     * Create a random 2048 bit RSA key pair
+     * The maximum possible value in X.509 specification: 9999-12-31 23:59:59
      */
-    public static KeyPair generateRSAKeyPair() throws Exception {
-        return generateKeyPair(ROOT_KEYSIZE);
-    }
+    private static final Date NOT_AFTER = new Date(253402300799000L);
 
     /**
      * Create a random 2048 bit RSA key pair with the given length
@@ -95,19 +79,47 @@ public class KeyStoreFactory {
         return generator.generateKeyPair();
     }
 
+    private static SubjectKeyIdentifier createSubjectKeyIdentifier(Key key) throws IOException {
+        ASN1InputStream is = null;
+        try {
+            is = new ASN1InputStream(new ByteArrayInputStream(key.getEncoded()));
+            ASN1Sequence seq = (ASN1Sequence) is.readObject();
+            SubjectPublicKeyInfo info = new SubjectPublicKeyInfo(seq);
+            return new BcX509ExtensionUtils().createSubjectKeyIdentifier(info);
+        } finally {
+            IOUtils.closeQuietly(is);
+        }
+    }
+
+    private static X509Certificate signCertificate(X509v3CertificateBuilder certificateBuilder, PrivateKey signedWithPrivateKey) throws OperatorCreationException, CertificateException {
+        ContentSigner signer = new JcaContentSignerBuilder(SIGNATURE_ALGORITHM).setProvider(PROVIDER_NAME).build(signedWithPrivateKey);
+        return new JcaX509CertificateConverter().setProvider(PROVIDER_NAME).getCertificate(certificateBuilder.build(signer));
+    }
+
     /**
-     * Create a certificate to use by a Certificate Authority, signed by a self
-     * signed certificate.
+     * Create a certificate to use by a Certificate Authority, signed by a self signed certificate.
      */
     public X509Certificate createCACert(PublicKey publicKey, PrivateKey privateKey) throws Exception {
 
-        String issuer = "CN=www.mockserver.com, O=MockServer, L=London, ST=England, C=UK";
+        //
+        // signers name
+        //
+        X500Name issuerName = new X500Name("CN=www.mockserver.com, O=MockServer, L=London, ST=England, C=UK");
 
-        X500Name issuerName = new X500Name(issuer);
-        BigInteger serial = BigInteger.valueOf(new Random().nextInt());
+        //
+        // subjects name - the same as we are self signed.
+        //
         X500Name subjectName = issuerName;
-        X509v3CertificateBuilder builder = new JcaX509v3CertificateBuilder(issuerName, serial, NOT_BEFORE, NOT_AFTER, subjectName, publicKey);
 
+        //
+        // serial
+        //
+        BigInteger serial = BigInteger.valueOf(new Random().nextInt());
+
+        //
+        // create the certificate - version 3
+        //
+        X509v3CertificateBuilder builder = new JcaX509v3CertificateBuilder(issuerName, serial, NOT_BEFORE, NOT_AFTER, subjectName, publicKey);
         builder.addExtension(Extension.subjectKeyIdentifier, false, createSubjectKeyIdentifier(publicKey));
         builder.addExtension(Extension.basicConstraints, true, new BasicConstraints(true));
 
@@ -121,37 +133,45 @@ public class KeyStoreFactory {
         builder.addExtension(Extension.extendedKeyUsage, false, new DERSequence(purposes));
 
         X509Certificate cert = signCertificate(builder, privateKey);
-
         cert.checkValidity(new Date());
-
         cert.verify(publicKey);
 
         return cert;
     }
 
     /**
-     * Create a server certificate for the given domain and subject alternative
-     * names, signed by the given Certificate Authority.
+     * Create a server certificate for the given domain and subject alternative names, signed by the given Certificate Authority.
      */
-    public X509Certificate createClientCert(PublicKey publicKey, PrivateKey certificateAuthorityPrivateKey, PublicKey certificateAuthorityPublicKey, String domain, String[] subjectAlternativeNameDomains, String[] subjectAlternativeNameIps) throws Exception {
+    public X509Certificate createClientCert(PublicKey publicKey, X509Certificate certificateAuthorityCert, PrivateKey certificateAuthorityPrivateKey, PublicKey certificateAuthorityPublicKey, String domain, String[] subjectAlternativeNameDomains, String[] subjectAlternativeNameIps) throws Exception {
 
-        // TODO(ganskef) the issuer should be taken from the CA certificate
-        // X500Name issuer = new
-        // X509CertificateHolder(cert.getEncoded()).getSubject();
+        //
+        // signers name
+        //
+        X500Name issuer = new X509CertificateHolder(certificateAuthorityCert.getEncoded()).getSubject();
 
-        X500Name issuer = new X500Name("CN=www.mockserver.com, O=MockServer, L=London, ST=England, C=UK");
-
+        //
+        // subjects name - the same as we are self signed.
+        //
         X500Name subject = new X500Name("CN=" + domain + ", O=MockServer, L=London, ST=England, C=UK");
 
+        //
+        // serial
+        //
         BigInteger serial = BigInteger.valueOf(new Random().nextInt());
 
+        //
+        // create the certificate - version 3
+        //
         X509v3CertificateBuilder builder = new JcaX509v3CertificateBuilder(issuer, serial, NOT_BEFORE, NOT_AFTER, subject, publicKey);
-
         builder.addExtension(Extension.subjectKeyIdentifier, false, createSubjectKeyIdentifier(publicKey));
         builder.addExtension(Extension.basicConstraints, false, new BasicConstraints(false));
 
+        //
+        // subject alternative name
+        //
         List<ASN1Encodable> subjectAlternativeNames = new ArrayList<ASN1Encodable>();
         if (subjectAlternativeNameDomains != null) {
+            subjectAlternativeNames.add(new GeneralName(GeneralName.dNSName, domain));
             for (String subjectAlternativeName : subjectAlternativeNameDomains) {
                 subjectAlternativeNames.add(new GeneralName(GeneralName.dNSName, subjectAlternativeName));
             }
@@ -175,53 +195,110 @@ public class KeyStoreFactory {
     }
 
     /**
-     * Create a KeyStore with a server certificate for the given domain and
-     * subject alternative names.
-     * 
-     * TODO(ganskef) This method creates a new Certificate Authority every time.
-     * It should be possible to persist it separately. Also it must be given as
-     * a parameter.
-     * 
-     * TODO(ganskef) It should be possible to export the Certificate Authority
-     * into a PEM (and P12 file for Windows)
+     * Create a KeyStore with a server certificate for the given domain and subject alternative names.
      */
     KeyStore generateCertificate(String certificationAlias, String certificateAuthorityAlias, char[] keyStorePassword, String domain, String[] subjectAlternativeNameDomains, String[] subjectAlternativeNameIps) throws Exception {
 
+        //
+        // personal keys
+        //
         KeyPair keyPair = generateKeyPair(FAKE_KEYSIZE);
         PrivateKey privateKey = keyPair.getPrivate();
         PublicKey publicKey = keyPair.getPublic();
 
+        //
+        // ca keys
+        //
         KeyPair caKeyPair = generateKeyPair(ROOT_KEYSIZE);
         PrivateKey caPrivateKey = caKeyPair.getPrivate();
         PublicKey caPublicKey = caKeyPair.getPublic();
 
+        //
+        // generate certificates
+        //
         X509Certificate caCert = createCACert(caPublicKey, caPrivateKey);
-        X509Certificate clientCert = createClientCert(publicKey, caPrivateKey, caPublicKey, domain, subjectAlternativeNameDomains, subjectAlternativeNameIps);
+        X509Certificate clientCert = createClientCert(publicKey, caCert, caPrivateKey, caPublicKey, domain, subjectAlternativeNameDomains, subjectAlternativeNameIps);
 
-        KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-        keyStore.load(null, keyStorePassword);
+        // save certificates as PEM files
+        saveCertificateAsPEMFile(clientCert, "mockserverClientCertificate.pem");
+        saveCertificateAsPEMFile(caCert, "mockserverCertificateAuthorityCertificate.pem");
 
-        keyStore.setKeyEntry(certificationAlias, privateKey, keyStorePassword, new X509Certificate[] { clientCert, caCert });
-
-        return keyStore;
+        saveCertificateAsPKCS12File(certificationAlias, privateKey, keyStorePassword, new X509Certificate[]{clientCert, caCert});
+        return saveCertificateAsJKSKeyStore(certificationAlias, privateKey, keyStorePassword, new X509Certificate[]{clientCert, caCert});
     }
 
-    private static SubjectKeyIdentifier createSubjectKeyIdentifier(Key key) throws IOException {
-        ASN1InputStream is = null;
+    /**
+     * Saves X509Certificate as Base-64 encoded PEM file.
+     */
+    public void saveCertificateAsPEMFile(X509Certificate x509Certificate, String filename) throws IOException {
+        StringWriter stringWriter = new StringWriter();
+        JcaPEMWriter jcaPEMWriter = null;
         try {
-            is = new ASN1InputStream(new ByteArrayInputStream(key.getEncoded()));
-            ASN1Sequence seq = (ASN1Sequence) is.readObject();
-            SubjectPublicKeyInfo info = new SubjectPublicKeyInfo(seq);
-            return new BcX509ExtensionUtils().createSubjectKeyIdentifier(info);
+            jcaPEMWriter = new JcaPEMWriter(stringWriter);
+            jcaPEMWriter.writeObject(x509Certificate);
         } finally {
-            IOUtils.closeQuietly(is);
+            IOUtils.closeQuietly(jcaPEMWriter);
+        }
+        IOUtils.write(stringWriter.toString(), new FileOutputStream(filename), Charsets.UTF_8);
+    }
+
+    /**
+     * Save X509Certificate in JKS KeyStore file.
+     */
+    private KeyStore saveCertificateAsJKSKeyStore(String certificationAlias, Key privateKey, char[] keyStorePassword, Certificate[] chain) {
+        try {
+            // create new key store
+            KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+            keyStore.load(null, keyStorePassword);
+
+            // add certification
+            keyStore.setKeyEntry(certificationAlias, privateKey, keyStorePassword, chain);
+
+            // save as JKS file
+            File keyStoreFile = new File(ConfigurationProperties.javaKeyStoreFilePath());
+            FileOutputStream fileOutputStream = null;
+            try {
+                fileOutputStream = new FileOutputStream(keyStoreFile);
+                keyStore.store(fileOutputStream, ConfigurationProperties.javaKeyStorePassword().toCharArray());
+                logger.trace("Saving key store to file [" + ConfigurationProperties.javaKeyStoreFilePath() + "]");
+            } finally {
+                IOUtils.closeQuietly(fileOutputStream);
+            }
+            keyStoreFile.deleteOnExit();
+
+            return keyStore;
+        } catch (Exception e) {
+            throw new RuntimeException("Exception while saving KeyStore", e);
         }
     }
 
-    private static X509Certificate signCertificate(X509v3CertificateBuilder certificateBuilder, PrivateKey signedWithPrivateKey) throws OperatorCreationException, CertificateException {
-        ContentSigner signer = new JcaContentSignerBuilder(SIGNATURE_ALGORITHM).setProvider(PROVIDER_NAME).build(signedWithPrivateKey);
-        X509Certificate cert = new JcaX509CertificateConverter().setProvider(PROVIDER_NAME).getCertificate(certificateBuilder.build(signer));
-        return cert;
+    /**
+     * Save X509Certificate in PKCS12 file.
+     */
+    public KeyStore saveCertificateAsPKCS12File(String certificationAlias, Key privateKey, char[] keyStorePassword, Certificate[] chain) throws Exception {
+        try {
+            // create new key store
+            KeyStore keyStore = KeyStore.getInstance("PKCS12");
+            keyStore.load(null, keyStorePassword);
+
+            // add certification
+            keyStore.setKeyEntry(certificationAlias, privateKey, keyStorePassword, chain);
+
+            // save as JKS file
+            File keyStoreFile = new File(ConfigurationProperties.pkcs12KeyStoreFilePath());
+            FileOutputStream fileOutputStream = null;
+            try {
+                fileOutputStream = new FileOutputStream(keyStoreFile);
+                keyStore.store(fileOutputStream, ConfigurationProperties.javaKeyStorePassword().toCharArray());
+                logger.trace("Saving key store to file [" + ConfigurationProperties.javaKeyStoreFilePath() + "]");
+            } finally {
+                IOUtils.closeQuietly(fileOutputStream);
+            }
+
+            return keyStore;
+        } catch (Exception e) {
+            throw new RuntimeException("Exception while saving KeyStore", e);
+        }
     }
 
 }

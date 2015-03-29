@@ -7,7 +7,6 @@ import org.junit.Test;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
@@ -15,7 +14,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author jamesdbloom
  */
-public class SystemPropertiesTest {
+public class ConfigurationPropertiesTest {
 
     String propertiesBeforeTest;
 
@@ -28,7 +27,7 @@ public class SystemPropertiesTest {
 
     @After
     public void restoreProperties() throws IOException {
-        Properties properties = new Properties();
+        java.util.Properties properties = new java.util.Properties();
         properties.load(new StringReader(propertiesBeforeTest));
         System.setProperties(properties);
     }
@@ -39,11 +38,11 @@ public class SystemPropertiesTest {
         System.clearProperty("mockserver.maxTimeout");
 
         // when
-        assertEquals(TimeUnit.SECONDS.toMillis(SystemProperties.DEFAULT_MAX_TIMEOUT), new SystemProperties().maxTimeout());
-        SystemProperties.maxTimeout(100);
+        assertEquals(TimeUnit.SECONDS.toMillis(ConfigurationProperties.DEFAULT_MAX_TIMEOUT), new ConfigurationProperties().maxTimeout());
+        ConfigurationProperties.maxTimeout(100);
 
         // then
-        assertEquals(100, SystemProperties.maxTimeout());
+        assertEquals(100, ConfigurationProperties.maxTimeout());
     }
 
     @Test
@@ -52,7 +51,7 @@ public class SystemPropertiesTest {
         System.setProperty("mockserver.maxTimeout", "invalid");
 
         // then
-        assertEquals(TimeUnit.SECONDS.toMillis(SystemProperties.DEFAULT_MAX_TIMEOUT), SystemProperties.maxTimeout());
+        assertEquals(TimeUnit.SECONDS.toMillis(ConfigurationProperties.DEFAULT_MAX_TIMEOUT), ConfigurationProperties.maxTimeout());
     }
 
     @Test
@@ -61,11 +60,11 @@ public class SystemPropertiesTest {
         System.clearProperty("mockserver.requestBufferSize");
 
         // when
-        assertEquals(SystemProperties.DEFAULT_BUFFER_SIZE, SystemProperties.bufferSize());
-        SystemProperties.bufferSize(100);
+        assertEquals(ConfigurationProperties.DEFAULT_BUFFER_SIZE, ConfigurationProperties.bufferSize());
+        ConfigurationProperties.bufferSize(100);
 
         // then
-        assertEquals(100, SystemProperties.bufferSize());
+        assertEquals(100, ConfigurationProperties.bufferSize());
     }
 
     @Test
@@ -74,7 +73,7 @@ public class SystemPropertiesTest {
         System.setProperty("mockserver.requestBufferSize", "invalid");
 
         // then
-        assertEquals(SystemProperties.DEFAULT_BUFFER_SIZE, SystemProperties.bufferSize());
+        assertEquals(ConfigurationProperties.DEFAULT_BUFFER_SIZE, ConfigurationProperties.bufferSize());
     }
 
     @Test
@@ -83,11 +82,11 @@ public class SystemPropertiesTest {
         System.clearProperty("mockserver.mockServerHttpPort");
 
         // when
-        assertEquals(-1, SystemProperties.mockServerHttpPort());
-        SystemProperties.mockServerHttpPort(10);
+        assertEquals(-1, ConfigurationProperties.mockServerPort());
+        ConfigurationProperties.mockServerPort(10);
 
         // then
-        assertEquals(10, SystemProperties.mockServerHttpPort());
+        assertEquals(10, ConfigurationProperties.mockServerPort());
     }
 
     @Test
@@ -96,7 +95,7 @@ public class SystemPropertiesTest {
         System.setProperty("mockserver.mockServerHttpPort", "invalid");
 
         // then
-        assertEquals(-1, SystemProperties.mockServerHttpPort());
+        assertEquals(-1, ConfigurationProperties.mockServerPort());
     }
 
     @Test
@@ -105,11 +104,11 @@ public class SystemPropertiesTest {
         System.clearProperty("mockserver.proxyHttpPort");
 
         // when
-        assertEquals(-1, SystemProperties.proxyHttpPort());
-        SystemProperties.proxyHttpPort(10);
+        assertEquals(-1, ConfigurationProperties.proxyPort());
+        ConfigurationProperties.proxyPort(10);
 
         // then
-        assertEquals(10, SystemProperties.proxyHttpPort());
+        assertEquals(10, ConfigurationProperties.proxyPort());
     }
 
     @Test
@@ -118,6 +117,6 @@ public class SystemPropertiesTest {
         System.setProperty("mockserver.proxyHttpPort", "invalid");
 
         // then
-        assertEquals(-1, SystemProperties.proxyHttpPort());
+        assertEquals(-1, ConfigurationProperties.proxyPort());
     }
 }

@@ -13,7 +13,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.repository.RepositorySystem;
 import org.mockserver.cli.Main;
-import org.mockserver.configuration.SystemProperties;
+import org.mockserver.configuration.ConfigurationProperties;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,7 +21,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -86,12 +85,12 @@ public class MockServerRunForkedMojo extends MockServerAbstractMojo {
             if (serverPort != -1) {
                 arguments.add("-serverPort");
                 arguments.add("" + serverPort);
-                SystemProperties.mockServerHttpPort(serverPort);
+                ConfigurationProperties.mockServerPort(serverPort);
             }
             if (proxyPort != -1) {
                 arguments.add("-proxyPort");
                 arguments.add("" + proxyPort);
-                SystemProperties.proxyHttpPort(proxyPort);
+                ConfigurationProperties.proxyPort(proxyPort);
             }
             getLog().info(" ");
             getLog().info(StringUtils.rightPad("", 72, "-"));
@@ -151,7 +150,7 @@ public class MockServerRunForkedMojo extends MockServerAbstractMojo {
     String getVersion() {
         String version = "3.9.1";
         try {
-            Properties p = new Properties();
+            java.util.Properties p = new java.util.Properties();
             InputStream is = getClass().getResourceAsStream("/META-INF/maven/org.mock-server/mockserver-maven-plugin/pom.properties");
             if (is != null) {
                 p.load(is);

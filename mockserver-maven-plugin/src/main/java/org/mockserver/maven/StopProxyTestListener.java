@@ -3,7 +3,7 @@ package org.mockserver.maven;
 import org.junit.runner.Result;
 import org.junit.runner.notification.RunListener;
 import org.mockserver.client.proxy.ProxyClient;
-import org.mockserver.configuration.SystemProperties;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,9 +65,9 @@ public class StopProxyTestListener extends RunListener {
 
     @Override
     public void testRunFinished(Result result) throws Exception {
-        if (SystemProperties.proxyHttpPort() != -1) {
+        if (ConfigurationProperties.proxyPort() != -1) {
             logger.info("Stopping the MockServer proxy");
-            new ProxyClient("127.0.0.1", SystemProperties.proxyHttpPort()).stop();
+            new ProxyClient("127.0.0.1", ConfigurationProperties.proxyPort()).stop();
         } else {
             logger.info("Failed to stop MockServer proxy as HTTP port is unknown");
         }

@@ -1,14 +1,13 @@
 package org.mockserver.socket;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.apache.commons.io.IOUtils;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.*;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.*;
 import java.net.Socket;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
@@ -23,6 +22,8 @@ public class SSLFactory {
     public static final String KEY_STORE_CA_ALIAS = "caAlias";
     public static final String KEY_STORE_PASSWORD = "changeit";
     public static final String KEY_STORE_FILENAME = "keystore.jks";
+    public static final String PKCS12_FILENAME = "keystore.pkcs12";
+    public static final String CERTIFICATE_DOMAIN = "localhost";
     private static final SSLFactory sslFactory = new SSLFactory();
     private static final Logger logger = LoggerFactory.getLogger(SSLFactory.class);
     private static final TrustManager DUMMY_TRUST_MANAGER = new X509TrustManager() {
@@ -52,11 +53,23 @@ public class SSLFactory {
         return sslFactory;
     }
 
+    public static SSLEngine createClientSSLEngine() {
+        SSLEngine engine = SSLFactory.getInstance().sslContext().createSSLEngine();
+        engine.setUseClientMode(true);
+        return engine;
+    }
+
+    public static SSLEngine createServerSSLEngine() {
+        SSLEngine engine = SSLFactory.getInstance().sslContext().createSSLEngine();
+        engine.setUseClientMode(false);
+        return engine;
+    }
+
     public SSLContext sslContext() {
         try {
             // key manager
             KeyManagerFactory keyManagerFactory = getKeyManagerFactoryInstance(KeyManagerFactory.getDefaultAlgorithm());
-            keyManagerFactory.init(buildKeyStore(), KEY_STORE_PASSWORD.toCharArray());
+            keyManagerFactory.init(buildKeyStore(), ConfigurationProperties.javaKeyStorePassword().toCharArray());
 
             // ssl context
             SSLContext sslContext = getSSLContextInstance("TLS");
@@ -80,12 +93,11 @@ public class SSLFactory {
 
     public KeyStore buildKeyStore() {
         if (keystore == null) {
-            File keyStoreFile = new File(KEY_STORE_FILENAME);
+            File keyStoreFile = new File(ConfigurationProperties.javaKeyStoreFilePath());
             if (keyStoreFile.exists()) {
                 loadKeyStore(keyStoreFile);
             } else {
                 dynamicallyCreateKeyStore();
-                saveKeyStore();
             }
         }
         return keystore;
@@ -106,8 +118,10 @@ public class SSLFactory {
             keystore = new KeyStoreFactory().generateCertificate(
                     KEY_STORE_CERT_ALIAS,
                     KEY_STORE_CA_ALIAS,
-                    KEY_STORE_PASSWORD.toCharArray(),
-                    "localhost", null, null
+                    ConfigurationProperties.javaKeyStorePassword().toCharArray(),
+                    ConfigurationProperties.sslCertificateDomainName(),
+                    ConfigurationProperties.sslSubjectAlternativeNameDomains(),
+                    ConfigurationProperties.sslSubjectAlternativeNameIps()
             );
         } catch (Exception e) {
             throw new RuntimeException("Exception while building KeyStore dynamically", e);
@@ -118,10 +132,10 @@ public class SSLFactory {
         try {
             FileInputStream fileInputStream = null;
             try {
-                fileInputStream = new FileInputStream(KEY_STORE_FILENAME);
+                fileInputStream = new FileInputStream(ConfigurationProperties.javaKeyStoreFilePath());
                 logger.trace("Loading key store from file [" + keyStoreFile + "]");
                 keystore = KeyStore.getInstance(KeyStore.getDefaultType());
-                keystore.load(fileInputStream, KEY_STORE_PASSWORD.toCharArray());
+                keystore.load(fileInputStream, ConfigurationProperties.javaKeyStorePassword().toCharArray());
             } finally {
                 if (fileInputStream != null) {
                     fileInputStream.close();
@@ -132,36 +146,4 @@ public class SSLFactory {
         }
     }
 
-    private void saveKeyStore() {
-        try {
-            ByteArrayOutputStream bout = new ByteArrayOutputStream();
-            keystore.store(bout, KEY_STORE_PASSWORD.toCharArray());
-            File keyStoreFile = new File(KEY_STORE_FILENAME);
-            logger.trace("Saving key store to file [" + keyStoreFile + "]");
-            FileOutputStream fileOutputStream = null;
-            try {
-                fileOutputStream = new FileOutputStream(keyStoreFile);
-                fileOutputStream.write(bout.toByteArray());
-            } finally {
-                if (fileOutputStream != null) {
-                    fileOutputStream.close();
-                }
-            }
-            keyStoreFile.deleteOnExit();
-        } catch (Exception e) {
-            throw new RuntimeException("Exception while saving KeyStore", e);
-        }
-    }
-
-    public static SSLEngine createClientSSLEngine() {
-        SSLEngine engine = SSLFactory.getInstance().sslContext().createSSLEngine();
-        engine.setUseClientMode(true);
-        return engine;
-    }
-
-    public static SSLEngine createServerSSLEngine() {
-        SSLEngine engine = SSLFactory.getInstance().sslContext().createSSLEngine();
-        engine.setUseClientMode(false);
-        return engine;
-    }
 }

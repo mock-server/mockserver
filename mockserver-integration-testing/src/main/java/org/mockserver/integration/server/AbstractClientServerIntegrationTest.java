@@ -22,8 +22,6 @@ import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.core.StringStartsWith.startsWith;
 import static org.junit.Assert.*;
-import static org.mockserver.configuration.SystemProperties.bufferSize;
-import static org.mockserver.configuration.SystemProperties.maxTimeout;
 import static org.mockserver.matchers.Times.exactly;
 import static org.mockserver.matchers.Times.once;
 import static org.mockserver.model.BinaryBody.binary;
@@ -61,11 +59,6 @@ public abstract class AbstractClientServerIntegrationTest {
     );
     // http client
     private NettyHttpClient httpClient = new NettyHttpClient();
-
-    public AbstractClientServerIntegrationTest() {
-        bufferSize(1024);
-        maxTimeout(TimeUnit.SECONDS.toMillis(10));
-    }
 
     public abstract int getMockServerPort();
 

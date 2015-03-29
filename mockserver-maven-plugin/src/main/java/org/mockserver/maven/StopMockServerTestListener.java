@@ -3,7 +3,7 @@ package org.mockserver.maven;
 import org.junit.runner.Result;
 import org.junit.runner.notification.RunListener;
 import org.mockserver.client.server.MockServerClient;
-import org.mockserver.configuration.SystemProperties;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,9 +65,9 @@ public class StopMockServerTestListener extends RunListener {
 
     @Override
     public void testRunFinished(Result result) throws Exception {
-        if (SystemProperties.mockServerHttpPort() != -1) {
+        if (ConfigurationProperties.mockServerPort() != -1) {
             logger.info("Stopping the MockServer");
-            new MockServerClient("127.0.0.1", SystemProperties.mockServerHttpPort()).stop();
+            new MockServerClient("127.0.0.1", ConfigurationProperties.mockServerPort()).stop();
         } else {
             logger.info("Failed to stop MockServer as HTTP port is unknown");
         }

@@ -8,7 +8,7 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import org.mockserver.configuration.SystemProperties;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.filters.LogFilter;
 import org.mockserver.proxy.Proxy;
 import org.slf4j.Logger;
@@ -143,7 +143,7 @@ public class HttpProxy implements Proxy {
     }
 
     protected void proxyStarted(Integer port) {
-        SystemProperties.proxyHttpPort(port);
+        ConfigurationProperties.proxyPort(port);
         System.setProperty("proxySet", "true");
 //        System.setProperty("socksProxyHost", "127.0.0.1");
 //        System.setProperty("socksProxyPort", port.toString());

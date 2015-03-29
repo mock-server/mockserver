@@ -1,7 +1,6 @@
 package org.mockserver.mockserver;
 
-import com.google.common.annotations.VisibleForTesting;
-import org.mockserver.configuration.SystemProperties;
+import org.mockserver.configuration.ConfigurationProperties;
 
 /**
  * @author jamesdbloom
@@ -17,7 +16,7 @@ public class MockServerBuilder {
      */
     public MockServerBuilder withHTTPPort(Integer port) {
         if (port != null && port != -1) {
-            SystemProperties.mockServerHttpPort(port);
+            ConfigurationProperties.mockServerPort(port);
             this.port = port;
         } else {
             this.port = null;
