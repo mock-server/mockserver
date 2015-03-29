@@ -11,8 +11,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockserver.configuration.SystemProperties.bufferSize;
-import static org.mockserver.configuration.SystemProperties.maxTimeout;
 import static org.mockserver.model.OutboundHttpRequest.outboundRequest;
 
 /**
@@ -24,11 +22,6 @@ public class InitializerMavenPluginTest {
     private final static int SERVER_HTTPS_PORT = 8083;
     // http client
     private NettyHttpClient httpClient = new NettyHttpClient();
-
-    public InitializerMavenPluginTest() {
-        bufferSize(1024);
-        maxTimeout(TimeUnit.SECONDS.toMillis(10));
-    }
 
     @Test
     public void clientCanCallServer() {
