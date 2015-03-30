@@ -7,6 +7,7 @@ import org.apache.catalina.startup.Tomcat;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.mockserver.client.server.MockServerClient;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.echo.EchoServer;
 import org.mockserver.socket.PortFactory;
 import org.mockserver.socket.SSLFactory;
@@ -40,8 +41,8 @@ public class ClientServerWarNoContextPathIntegrationTest extends AbstractClientS
         httpsConnector.setPort(SERVER_HTTPS_PORT);
         httpsConnector.setSecure(true);
         httpsConnector.setAttribute("keyAlias", SSLFactory.KEY_STORE_CERT_ALIAS);
-        httpsConnector.setAttribute("keystorePass", SSLFactory.KEY_STORE_PASSWORD);
-        httpsConnector.setAttribute("keystoreFile", new File(SSLFactory.KEY_STORE_FILENAME).getAbsoluteFile());
+        httpsConnector.setAttribute("keystorePass", ConfigurationProperties.javaKeyStorePassword());
+        httpsConnector.setAttribute("keystoreFile", new File(ConfigurationProperties.javaKeyStoreFilePath()).getAbsoluteFile());
         httpsConnector.setAttribute("sslProtocol", "TLS");
         httpsConnector.setAttribute("clientAuth", false);
         httpsConnector.setAttribute("SSLEnabled", true);

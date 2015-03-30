@@ -1,7 +1,6 @@
 package org.mockserver.socket;
 
 import com.google.common.annotations.VisibleForTesting;
-import org.apache.commons.io.IOUtils;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,14 +17,13 @@ import java.security.cert.X509Certificate;
  */
 public class SSLFactory {
 
-    public static final String KEY_STORE_CERT_ALIAS = "certAlias";
-    public static final String KEY_STORE_CA_ALIAS = "caAlias";
-    public static final String KEY_STORE_PASSWORD = "changeit";
-    public static final String KEY_STORE_FILENAME = "keystore.jks";
-    public static final String PKCS12_FILENAME = "keystore.pkcs12";
-    public static final String CERTIFICATE_DOMAIN = "localhost";
-    private static final SSLFactory sslFactory = new SSLFactory();
     private static final Logger logger = LoggerFactory.getLogger(SSLFactory.class);
+
+    public static final String KEY_STORE_PASSWORD = "changeit";
+    public static final String CERTIFICATE_DOMAIN = "localhost";
+    public static final String KEY_STORE_CERT_ALIAS = "certAlias";
+    private static final String KEY_STORE_CA_ALIAS = "caAlias";
+    private static final SSLFactory SSL_FACTORY = new SSLFactory();
     private static final TrustManager DUMMY_TRUST_MANAGER = new X509TrustManager() {
         @Override
         public X509Certificate[] getAcceptedIssuers() {
@@ -44,13 +42,24 @@ public class SSLFactory {
     };
     private KeyStore keystore;
 
-    @VisibleForTesting
-    SSLFactory() {
+    public static String defaultKeyStoreFileName() {
+        if ("jks".equalsIgnoreCase(ConfigurationProperties.javaKeyStoreType())) {
+            return "keystore.jks";
+        } else if ("pkcs12".equalsIgnoreCase(ConfigurationProperties.javaKeyStoreType())) {
+            return "keystore.p12";
+        } else if ("jceks".equalsIgnoreCase(ConfigurationProperties.javaKeyStoreType())) {
+            return "keystore.jceks";
+        } else {
+             throw new IllegalArgumentException(ConfigurationProperties.javaKeyStoreType() + " is not a supported keystore type");
+        }
+    }
+
+    private SSLFactory() {
 
     }
 
     public static SSLFactory getInstance() {
-        return sslFactory;
+        return SSL_FACTORY;
     }
 
     public static SSLEngine createClientSSLEngine() {
@@ -103,13 +112,11 @@ public class SSLFactory {
         return keystore;
     }
 
-    @VisibleForTesting
-    SSLContext getSSLContextInstance(String protocol) throws NoSuchAlgorithmException {
+    private SSLContext getSSLContextInstance(String protocol) throws NoSuchAlgorithmException {
         return SSLContext.getInstance(protocol);
     }
 
-    @VisibleForTesting
-    KeyManagerFactory getKeyManagerFactoryInstance(String algorithm) throws NoSuchAlgorithmException {
+    private KeyManagerFactory getKeyManagerFactoryInstance(String algorithm) throws NoSuchAlgorithmException {
         return KeyManagerFactory.getInstance(algorithm);
     }
 

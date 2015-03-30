@@ -49,7 +49,7 @@
         <slf4j.version>1.7.10</slf4j.version>
         <tomcat.version>7.0.56</tomcat.version>
         <jackson.version>2.4.3</jackson.version>
-        <netty.version>4.0.24.Final</netty.version>
+        <netty.version>4.0.26.Final</netty.version>
         <skipTests>false</skipTests>
         <nonReleaseBuild>true</nonReleaseBuild>
         <release.arguments />
@@ -451,7 +451,7 @@
                             <includes>
                                 <include>**/*.log</include>
                                 <include>**/keystore.jks</include>
-                                <include>**/keystore.pkcs12</include>
+                                <include>**/keystore.p12</include>
                                 <include>**/*.pem</include>
                             </includes>
                         </fileset>

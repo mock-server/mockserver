@@ -43,7 +43,7 @@ public class KeyStoreFactory {
         Security.addProvider(new BouncyCastleProvider());
     }
 
-    private static final String SIGNATURE_ALGORITHM = "SHA1WithRSAEncryption";
+    private static final String SIGNATURE_ALGORITHM = "SHA256WithRSAEncryption";
 
     private static final String KEYGEN_ALGORITHM = "RSA";
 
@@ -219,12 +219,13 @@ public class KeyStoreFactory {
         X509Certificate caCert = createCACert(caPublicKey, caPrivateKey);
         X509Certificate clientCert = createClientCert(publicKey, caCert, caPrivateKey, caPublicKey, domain, subjectAlternativeNameDomains, subjectAlternativeNameIps);
 
-        // save certificates as PEM files
-        saveCertificateAsPEMFile(clientCert, "mockserverClientCertificate.pem");
-        saveCertificateAsPEMFile(caCert, "mockserverCertificateAuthorityCertificate.pem");
+        if (ConfigurationProperties.saveCertificatesAsPEMFiles()) {
+            // save certificates as PEM files
+            saveCertificateAsPEMFile(clientCert, "mockserverClientCertificate.pem");
+            saveCertificateAsPEMFile(caCert, "mockserverCertificateAuthorityCertificate.pem");
+        }
 
-        saveCertificateAsPKCS12File(certificationAlias, privateKey, keyStorePassword, new X509Certificate[]{clientCert, caCert});
-        return saveCertificateAsJKSKeyStore(certificationAlias, privateKey, keyStorePassword, new X509Certificate[]{clientCert, caCert});
+        return saveCertificateAsKeyStore(certificationAlias, privateKey, keyStorePassword, new X509Certificate[]{clientCert, caCert});
     }
 
     /**
@@ -243,9 +244,9 @@ public class KeyStoreFactory {
     }
 
     /**
-     * Save X509Certificate in JKS KeyStore file.
+     * Save X509Certificate in KeyStore file.
      */
-    private KeyStore saveCertificateAsJKSKeyStore(String certificationAlias, Key privateKey, char[] keyStorePassword, Certificate[] chain) {
+    private KeyStore saveCertificateAsKeyStore(String certificationAlias, Key privateKey, char[] keyStorePassword, Certificate[] chain) {
         try {
             // create new key store
             KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
@@ -264,35 +265,8 @@ public class KeyStoreFactory {
             } finally {
                 IOUtils.closeQuietly(fileOutputStream);
             }
-            keyStoreFile.deleteOnExit();
-
-            return keyStore;
-        } catch (Exception e) {
-            throw new RuntimeException("Exception while saving KeyStore", e);
-        }
-    }
-
-    /**
-     * Save X509Certificate in PKCS12 file.
-     */
-    public KeyStore saveCertificateAsPKCS12File(String certificationAlias, Key privateKey, char[] keyStorePassword, Certificate[] chain) throws Exception {
-        try {
-            // create new key store
-            KeyStore keyStore = KeyStore.getInstance("PKCS12");
-            keyStore.load(null, keyStorePassword);
-
-            // add certification
-            keyStore.setKeyEntry(certificationAlias, privateKey, keyStorePassword, chain);
-
-            // save as JKS file
-            File keyStoreFile = new File(ConfigurationProperties.pkcs12KeyStoreFilePath());
-            FileOutputStream fileOutputStream = null;
-            try {
-                fileOutputStream = new FileOutputStream(keyStoreFile);
-                keyStore.store(fileOutputStream, ConfigurationProperties.javaKeyStorePassword().toCharArray());
-                logger.trace("Saving key store to file [" + ConfigurationProperties.javaKeyStoreFilePath() + "]");
-            } finally {
-                IOUtils.closeQuietly(fileOutputStream);
+            if (ConfigurationProperties.deleteGeneratedKeyStoreOnExit()) {
+                keyStoreFile.deleteOnExit();
             }
 
             return keyStore;

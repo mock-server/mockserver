@@ -10,6 +10,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.KeyStore;
 import java.util.Enumeration;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
@@ -30,25 +31,17 @@ public class ConfigurationProperties {
     }
 
     // socket config
-    public static long maxTimeout() {
-        return readLongProperty("mockserver.maxTimeout", TimeUnit.SECONDS.toMillis(DEFAULT_MAX_TIMEOUT));
+    public static long maxSocketTimeout() {
+        return readLongProperty("mockserver.maxSocketTimeout", TimeUnit.SECONDS.toMillis(DEFAULT_MAX_TIMEOUT));
     }
 
-    public static void maxTimeout(long timeout) {
-        System.setProperty("mockserver.maxTimeout", "" + timeout);
-    }
-
-    public static int bufferSize() {
-        return readIntegerProperty("mockserver.requestBufferSize", DEFAULT_BUFFER_SIZE);
-    }
-
-    public static void bufferSize(int size) {
-        System.setProperty("mockserver.requestBufferSize", "" + size);
+    public static void maxSocketTimeout(long milliseconds) {
+        System.setProperty("mockserver.maxSocketTimeout", "" + milliseconds);
     }
 
     // ssl config
     public static String javaKeyStoreFilePath() {
-        return readPropertyHierarchically("mockserver.javaKeyStoreFilePath", SSLFactory.KEY_STORE_FILENAME);
+        return readPropertyHierarchically("mockserver.javaKeyStoreFilePath", SSLFactory.defaultKeyStoreFileName());
     }
 
     public static void javaKeyStoreFilePath(String keyStoreFilePath) {
@@ -63,12 +56,28 @@ public class ConfigurationProperties {
         System.setProperty("mockserver.javaKeyStorePassword", keyStorePassword);
     }
 
-    public static String pkcs12KeyStoreFilePath() {
-        return readPropertyHierarchically("mockserver.pkcs12KeyStoreFilePath", SSLFactory.PKCS12_FILENAME);
+    public static String javaKeyStoreType() {
+        return readPropertyHierarchically("mockserver.javaKeyStoreType", KeyStore.getDefaultType());
     }
 
-    public static void pkcs12KeyStoreFilePath(String keyStoreFilePath) {
-        System.setProperty("mockserver.pkcs12KeyStoreFilePath", keyStoreFilePath);
+    public static void javaKeyStoreType(String keyStoreType) {
+        System.setProperty("mockserver.javaKeyStoreType", keyStoreType);
+    }
+
+    public static boolean saveCertificatesAsPEMFiles() {
+        return Boolean.parseBoolean(readPropertyHierarchically("mockserver.saveCertificatesAsPEMFiles", "" + false));
+    }
+
+    public static void saveCertificatesAsPEMFiles(boolean saveCertificatesAsPEMFiles) {
+        System.setProperty("mockserver.saveCertificatesAsPEMFiles", "" + saveCertificatesAsPEMFiles);
+    }
+
+    public static boolean deleteGeneratedKeyStoreOnExit() {
+        return Boolean.parseBoolean(readPropertyHierarchically("mockserver.deleteGeneratedKeyStoreOnExit", "" + true));
+    }
+
+    public static void deleteGeneratedKeyStoreOnExit(boolean deleteGeneratedKeyStoreOnExit) {
+        System.setProperty("mockserver.deleteGeneratedKeyStoreOnExit", "" + deleteGeneratedKeyStoreOnExit);
     }
 
     public static String sslCertificateDomainName() {
@@ -173,7 +182,7 @@ public class ConfigurationProperties {
             propertiesLogDump.append("Reading properties from property file [").append(propertyFile()).append("]:\n");
             while (propertyNames.hasMoreElements()) {
                 String propertyName = String.valueOf(propertyNames.nextElement());
-                propertiesLogDump.append(propertyName).append(" = ").append(properties.getProperty(propertyName));
+                propertiesLogDump.append("\t").append(propertyName).append(" = ").append(properties.getProperty(propertyName)).append("\n");
             }
             logger.info(propertiesLogDump.toString());
         }

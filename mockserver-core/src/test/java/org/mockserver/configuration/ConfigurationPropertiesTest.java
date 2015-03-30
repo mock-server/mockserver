@@ -38,11 +38,11 @@ public class ConfigurationPropertiesTest {
         System.clearProperty("mockserver.maxTimeout");
 
         // when
-        assertEquals(TimeUnit.SECONDS.toMillis(ConfigurationProperties.DEFAULT_MAX_TIMEOUT), new ConfigurationProperties().maxTimeout());
-        ConfigurationProperties.maxTimeout(100);
+        assertEquals(TimeUnit.SECONDS.toMillis(ConfigurationProperties.DEFAULT_MAX_TIMEOUT), new ConfigurationProperties().maxSocketTimeout());
+        ConfigurationProperties.maxSocketTimeout(100);
 
         // then
-        assertEquals(100, ConfigurationProperties.maxTimeout());
+        assertEquals(100, ConfigurationProperties.maxSocketTimeout());
     }
 
     @Test
@@ -51,29 +51,7 @@ public class ConfigurationPropertiesTest {
         System.setProperty("mockserver.maxTimeout", "invalid");
 
         // then
-        assertEquals(TimeUnit.SECONDS.toMillis(ConfigurationProperties.DEFAULT_MAX_TIMEOUT), ConfigurationProperties.maxTimeout());
-    }
-
-    @Test
-    public void shouldSetAndReadBufferSize() {
-        // given
-        System.clearProperty("mockserver.requestBufferSize");
-
-        // when
-        assertEquals(ConfigurationProperties.DEFAULT_BUFFER_SIZE, ConfigurationProperties.bufferSize());
-        ConfigurationProperties.bufferSize(100);
-
-        // then
-        assertEquals(100, ConfigurationProperties.bufferSize());
-    }
-
-    @Test
-    public void shouldThrowRuntimeExceptionForInvalidBufferSize() {
-        // given
-        System.setProperty("mockserver.requestBufferSize", "invalid");
-
-        // then
-        assertEquals(ConfigurationProperties.DEFAULT_BUFFER_SIZE, ConfigurationProperties.bufferSize());
+        assertEquals(TimeUnit.SECONDS.toMillis(ConfigurationProperties.DEFAULT_MAX_TIMEOUT), ConfigurationProperties.maxSocketTimeout());
     }
 
     @Test
