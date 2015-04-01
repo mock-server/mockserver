@@ -22,7 +22,6 @@ public class ConfigurationProperties {
 
     private static final Logger logger = LoggerFactory.getLogger(ConfigurationProperties.class);
     static final long DEFAULT_MAX_TIMEOUT = 120;
-    static final int DEFAULT_BUFFER_SIZE = 1024 * 1500;
     static final Properties PROPERTIES = readPropertyFile();
 
     // property file config
@@ -62,14 +61,6 @@ public class ConfigurationProperties {
 
     public static void javaKeyStoreType(String keyStoreType) {
         System.setProperty("mockserver.javaKeyStoreType", keyStoreType);
-    }
-
-    public static boolean saveCertificatesAsPEMFiles() {
-        return Boolean.parseBoolean(readPropertyHierarchically("mockserver.saveCertificatesAsPEMFiles", "" + false));
-    }
-
-    public static void saveCertificatesAsPEMFiles(boolean saveCertificatesAsPEMFiles) {
-        System.setProperty("mockserver.saveCertificatesAsPEMFiles", "" + saveCertificatesAsPEMFiles);
     }
 
     public static boolean deleteGeneratedKeyStoreOnExit() {

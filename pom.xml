@@ -452,7 +452,6 @@
                                 <include>**/*.log</include>
                                 <include>**/keystore.jks</include>
                                 <include>**/keystore.p12</include>
-                                <include>**/*.pem</include>
                             </includes>
                         </fileset>
                         <fileset>

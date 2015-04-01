@@ -1,6 +1,5 @@
 package org.mockserver.socket;
 
-import com.google.common.base.Charsets;
 import org.apache.commons.io.IOUtils;
 import org.bouncycastle.asn1.*;
 import org.bouncycastle.asn1.x500.X500Name;
@@ -19,12 +18,15 @@ import org.mockserver.configuration.ConfigurationProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.xml.bind.DatatypeConverter;
 import java.io.*;
 import java.math.BigInteger;
 import java.security.*;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -45,7 +47,9 @@ public class KeyStoreFactory {
 
     private static final String SIGNATURE_ALGORITHM = "SHA256WithRSAEncryption";
 
-    private static final String KEYGEN_ALGORITHM = "RSA";
+    private static final String KEY_GENERATION_ALGORITHM = "RSA";
+
+    private static final boolean REGENERATE_FRESH_CA_CERTIFICATE = false;
 
     /**
      * Generates an 2048 bit RSA key pair using SHA1PRNG for the Certificate Authority.
@@ -74,7 +78,7 @@ public class KeyStoreFactory {
      * Create a random 2048 bit RSA key pair with the given length
      */
     public static KeyPair generateKeyPair(int keySize) throws Exception {
-        KeyPairGenerator generator = KeyPairGenerator.getInstance(KEYGEN_ALGORITHM, PROVIDER_NAME);
+        KeyPairGenerator generator = KeyPairGenerator.getInstance(KEY_GENERATION_ALGORITHM, PROVIDER_NAME);
         generator.initialize(keySize, new SecureRandom());
         return generator.generateKeyPair();
     }
@@ -209,44 +213,51 @@ public class KeyStoreFactory {
         //
         // ca keys
         //
-        KeyPair caKeyPair = generateKeyPair(ROOT_KEYSIZE);
-        PrivateKey caPrivateKey = caKeyPair.getPrivate();
-        PublicKey caPublicKey = caKeyPair.getPublic();
+        PrivateKey caPrivateKey = loadPrivateKeyFromPEMFile("org/mockserver/socket/CertificateAuthorityPrivateKey.pem");
+        X509Certificate caCert = (X509Certificate) loadCertificateFromKeyStore("org/mockserver/socket/CertificateAuthorityKeyStore.jks", certificateAuthorityAlias, keyStorePassword);
 
         //
-        // generate certificates
+        // regenerate ca private key and ca certificate (for development / debugging only)
         //
-        X509Certificate caCert = createCACert(caPublicKey, caPrivateKey);
-        X509Certificate clientCert = createClientCert(publicKey, caCert, caPrivateKey, caPublicKey, domain, subjectAlternativeNameDomains, subjectAlternativeNameIps);
+        if (REGENERATE_FRESH_CA_CERTIFICATE) {
+            KeyPair caKeyPair = generateKeyPair(ROOT_KEYSIZE);
+            PublicKey caPublicKey = caKeyPair.getPublic();
+            caPrivateKey = caKeyPair.getPrivate();
+            caCert = createCACert(caPublicKey, caPrivateKey);
 
-        if (ConfigurationProperties.saveCertificatesAsPEMFiles()) {
-            // save certificates as PEM files
-            saveCertificateAsPEMFile(clientCert, "mockserverClientCertificate.pem");
-            saveCertificateAsPEMFile(caCert, "mockserverCertificateAuthorityCertificate.pem");
+            saveCertificateAsKeyStore("CertificateAuthorityKeyStore.jks", certificateAuthorityAlias, privateKey, keyStorePassword, new X509Certificate[]{caCert});
+            saveCertificateAsPEMFile(caCert, "CertificateAuthorityCertificate.pem");
+            saveCertificateAsPEMFile(caPublicKey, "CertificateAuthorityPublicKey.pem");
+            saveCertificateAsPEMFile(caPrivateKey, "CertificateAuthorityPrivateKey.pem");
         }
 
-        return saveCertificateAsKeyStore(certificationAlias, privateKey, keyStorePassword, new X509Certificate[]{clientCert, caCert});
+        //
+        // generate client certificate
+        //
+        X509Certificate clientCert = createClientCert(publicKey, caCert, caPrivateKey, caCert.getPublicKey(), domain, subjectAlternativeNameDomains, subjectAlternativeNameIps);
+
+        return saveCertificateAsKeyStore(ConfigurationProperties.javaKeyStoreFilePath(), certificationAlias, privateKey, keyStorePassword, new X509Certificate[]{clientCert, caCert});
     }
 
     /**
      * Saves X509Certificate as Base-64 encoded PEM file.
      */
-    public void saveCertificateAsPEMFile(X509Certificate x509Certificate, String filename) throws IOException {
-        StringWriter stringWriter = new StringWriter();
+    public void saveCertificateAsPEMFile(Object x509Certificate, String filename) throws IOException {
+        FileWriter fileWriter = new FileWriter(filename);
         JcaPEMWriter jcaPEMWriter = null;
         try {
-            jcaPEMWriter = new JcaPEMWriter(stringWriter);
+            jcaPEMWriter = new JcaPEMWriter(fileWriter);
             jcaPEMWriter.writeObject(x509Certificate);
         } finally {
             IOUtils.closeQuietly(jcaPEMWriter);
+            IOUtils.closeQuietly(fileWriter);
         }
-        IOUtils.write(stringWriter.toString(), new FileOutputStream(filename), Charsets.UTF_8);
     }
 
     /**
      * Save X509Certificate in KeyStore file.
      */
-    private KeyStore saveCertificateAsKeyStore(String certificationAlias, Key privateKey, char[] keyStorePassword, Certificate[] chain) {
+    private KeyStore saveCertificateAsKeyStore(String keyStoreFileName, String certificationAlias, Key privateKey, char[] keyStorePassword, Certificate[] chain) {
         try {
             // create new key store
             KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
@@ -256,23 +267,66 @@ public class KeyStoreFactory {
             keyStore.setKeyEntry(certificationAlias, privateKey, keyStorePassword, chain);
 
             // save as JKS file
-            File keyStoreFile = new File(ConfigurationProperties.javaKeyStoreFilePath());
+            File keyStoreFile = new File(keyStoreFileName);
             FileOutputStream fileOutputStream = null;
             try {
                 fileOutputStream = new FileOutputStream(keyStoreFile);
-                keyStore.store(fileOutputStream, ConfigurationProperties.javaKeyStorePassword().toCharArray());
-                logger.trace("Saving key store to file [" + ConfigurationProperties.javaKeyStoreFilePath() + "]");
+                keyStore.store(fileOutputStream, keyStorePassword);
+                logger.trace("Saving key store to file [" + keyStoreFileName + "]");
             } finally {
                 IOUtils.closeQuietly(fileOutputStream);
             }
             if (ConfigurationProperties.deleteGeneratedKeyStoreOnExit()) {
                 keyStoreFile.deleteOnExit();
             }
-
             return keyStore;
         } catch (Exception e) {
             throw new RuntimeException("Exception while saving KeyStore", e);
         }
+    }
+
+    /**
+     * Load PrivateKey from PEM file.
+     */
+    private RSAPrivateKey loadPrivateKeyFromPEMFile(String privateKeyFileName) {
+        try {
+            String publicKeyFile = IOUtils.toString(new InputStreamReader(KeyStoreFactory.class.getClassLoader().getResourceAsStream(privateKeyFileName)));
+            byte[] publicKeyBytes = DatatypeConverter.parseBase64Binary(publicKeyFile.replace("-----BEGIN RSA PRIVATE KEY-----", "").replace("-----END RSA PRIVATE KEY-----", ""));
+            return (RSAPrivateKey) KeyFactory.getInstance("RSA").generatePrivate(new PKCS8EncodedKeySpec(publicKeyBytes));
+        } catch (Exception e) {
+            throw new RuntimeException("Exception reading private key from PEM file", e);
+        }
+    }
+
+    /**
+     * Load X509Certificate from KeyStore file.
+     */
+    private Certificate loadCertificateFromKeyStore(String keyStoreFileName, String certificationAlias, char[] keyStorePassword) {
+        try {
+            InputStream inputStream = readFileFromClassPathOrPath(keyStoreFileName);
+            try {
+                logger.trace("Loading key store from file [" + keyStoreFileName + "]");
+                KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
+                keystore.load(inputStream, keyStorePassword);
+                return keystore.getCertificate(certificationAlias);
+            } finally {
+                IOUtils.closeQuietly(inputStream);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Exception while loading KeyStore from " + keyStoreFileName, e);
+        }
+    }
+
+    /**
+     * Load file from classpath and if not found then try file path
+     */
+    private InputStream readFileFromClassPathOrPath(String keyStoreFileName) throws FileNotFoundException {
+        InputStream inputStream = getClass().getClassLoader().getResourceAsStream(keyStoreFileName);
+        if (inputStream == null) {
+            // load from path if not found in classpath
+            inputStream = new FileInputStream(keyStoreFileName);
+        }
+        return inputStream;
     }
 
 }

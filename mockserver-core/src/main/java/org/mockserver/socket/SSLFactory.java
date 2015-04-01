@@ -1,6 +1,7 @@
 package org.mockserver.socket;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.apache.commons.io.IOUtils;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -104,7 +105,7 @@ public class SSLFactory {
         if (keystore == null) {
             File keyStoreFile = new File(ConfigurationProperties.javaKeyStoreFilePath());
             if (keyStoreFile.exists()) {
-                loadKeyStore(keyStoreFile);
+                keystore = loadKeyStore(keyStoreFile);
             } else {
                 dynamicallyCreateKeyStore();
             }
@@ -135,18 +136,17 @@ public class SSLFactory {
         }
     }
 
-    private void loadKeyStore(File keyStoreFile) {
+    private KeyStore loadKeyStore(File keyStoreFile) {
         try {
             FileInputStream fileInputStream = null;
             try {
                 fileInputStream = new FileInputStream(ConfigurationProperties.javaKeyStoreFilePath());
                 logger.trace("Loading key store from file [" + keyStoreFile + "]");
-                keystore = KeyStore.getInstance(KeyStore.getDefaultType());
+                KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
                 keystore.load(fileInputStream, ConfigurationProperties.javaKeyStorePassword().toCharArray());
+                return keystore;
             } finally {
-                if (fileInputStream != null) {
-                    fileInputStream.close();
-                }
+                IOUtils.closeQuietly(fileInputStream);
             }
         } catch (Exception e) {
             throw new RuntimeException("Exception while loading KeyStore from " + keyStoreFile.getAbsolutePath(), e);

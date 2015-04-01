@@ -31,7 +31,7 @@ test.csv
 #####################
 keystore.jks
 keystore.p12
-*.pem
+mockserver.properties
 
 # OS generated files #
 ######################
