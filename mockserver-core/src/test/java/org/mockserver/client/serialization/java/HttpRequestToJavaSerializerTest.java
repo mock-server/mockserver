@@ -205,6 +205,51 @@ public class HttpRequestToJavaSerializerTest {
         );
     }
 
+
+    @Test
+    public void shouldEscapeJsonSchemaBodies() throws IOException {
+        String jsonSchema = "{" + System.getProperty("line.separator") +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + System.getProperty("line.separator") +
+                "    \"title\": \"Product\"," + System.getProperty("line.separator") +
+                "    \"description\": \"A product from Acme's catalog\"," + System.getProperty("line.separator") +
+                "    \"type\": \"object\"," + System.getProperty("line.separator") +
+                "    \"properties\": {" + System.getProperty("line.separator") +
+                "        \"id\": {" + System.getProperty("line.separator") +
+                "            \"description\": \"The unique identifier for a product\"," + System.getProperty("line.separator") +
+                "            \"type\": \"integer\"" + System.getProperty("line.separator") +
+                "        }," + System.getProperty("line.separator") +
+                "        \"name\": {" + System.getProperty("line.separator") +
+                "            \"description\": \"Name of the product\"," + System.getProperty("line.separator") +
+                "            \"type\": \"string\"" + System.getProperty("line.separator") +
+                "        }," + System.getProperty("line.separator") +
+                "        \"price\": {" + System.getProperty("line.separator") +
+                "            \"type\": \"number\"," + System.getProperty("line.separator") +
+                "            \"minimum\": 0," + System.getProperty("line.separator") +
+                "            \"exclusiveMinimum\": true" + System.getProperty("line.separator") +
+                "        }," + System.getProperty("line.separator") +
+                "        \"tags\": {" + System.getProperty("line.separator") +
+                "            \"type\": \"array\"," + System.getProperty("line.separator") +
+                "            \"items\": {" + System.getProperty("line.separator") +
+                "                \"type\": \"string\"" + System.getProperty("line.separator") +
+                "            }," + System.getProperty("line.separator") +
+                "            \"minItems\": 1," + System.getProperty("line.separator") +
+                "            \"uniqueItems\": true" + System.getProperty("line.separator") +
+                "        }" + System.getProperty("line.separator") +
+                "    }," + System.getProperty("line.separator") +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + System.getProperty("line.separator") +
+                "}";
+        assertEquals("" + System.getProperty("line.separator") +
+                        "  request()" + System.getProperty("line.separator") +
+                        "          .withPath(\"somePath\")" + System.getProperty("line.separator") +
+                        "          .withBody(new JsonSchemaBody(\"" + StringEscapeUtils.escapeJava(jsonSchema) + "\"))",
+                new HttpRequestToJavaSerializer().serializeAsJava(2,
+                        new HttpRequest()
+                                .withPath("somePath")
+                                .withBody(new JsonSchemaBody(jsonSchema))
+                )
+        );
+    }
+
     @Test
     public void shouldSerializeMinimalObjectAsJava() throws IOException {
         assertEquals(System.getProperty("line.separator") +

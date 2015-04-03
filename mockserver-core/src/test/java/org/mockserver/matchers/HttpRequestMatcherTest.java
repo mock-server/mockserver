@@ -11,6 +11,7 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.ParameterBody.params;
 import static org.mockserver.model.StringBody.exact;
 import static org.mockserver.model.JsonBody.json;
+import static org.mockserver.model.JsonSchemaBody.jsonSchema;
 import static org.mockserver.model.RegexBody.regex;
 import static org.mockserver.model.XPathBody.xpath;
 
@@ -250,6 +251,88 @@ public class HttpRequestMatcherTest {
                 "   \"some_other_field\": \"some_other_value\" " +
                 "}";
         assertFalse(new HttpRequestMatcher(new HttpRequest().withBody(json("{ \"some_field\": \"some_value\" }"))).matches(new HttpRequest().withBody(matched)));
+    }
+
+    @Test
+    public void matchesMatchingJSONSchemaBody() {
+        String matched = "" +
+                "{" + System.getProperty("line.separator") +
+                "    \"id\": 1," + System.getProperty("line.separator") +
+                "    \"name\": \"A green door\"," + System.getProperty("line.separator") +
+                "    \"price\": 12.50," + System.getProperty("line.separator") +
+                "    \"tags\": [\"home\", \"green\"]" + System.getProperty("line.separator") +
+                "}";
+        assertTrue(new HttpRequestMatcher(new HttpRequest().withBody(jsonSchema("{" + System.getProperty("line.separator") +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + System.getProperty("line.separator") +
+                "    \"title\": \"Product\"," + System.getProperty("line.separator") +
+                "    \"description\": \"A product from Acme's catalog\"," + System.getProperty("line.separator") +
+                "    \"type\": \"object\"," + System.getProperty("line.separator") +
+                "    \"properties\": {" + System.getProperty("line.separator") +
+                "        \"id\": {" + System.getProperty("line.separator") +
+                "            \"description\": \"The unique identifier for a product\"," + System.getProperty("line.separator") +
+                "            \"type\": \"integer\"" + System.getProperty("line.separator") +
+                "        }," + System.getProperty("line.separator") +
+                "        \"name\": {" + System.getProperty("line.separator") +
+                "            \"description\": \"Name of the product\"," + System.getProperty("line.separator") +
+                "            \"type\": \"string\"" + System.getProperty("line.separator") +
+                "        }," + System.getProperty("line.separator") +
+                "        \"price\": {" + System.getProperty("line.separator") +
+                "            \"type\": \"number\"," + System.getProperty("line.separator") +
+                "            \"minimum\": 0," + System.getProperty("line.separator") +
+                "            \"exclusiveMinimum\": true" + System.getProperty("line.separator") +
+                "        }," + System.getProperty("line.separator") +
+                "        \"tags\": {" + System.getProperty("line.separator") +
+                "            \"type\": \"array\"," + System.getProperty("line.separator") +
+                "            \"items\": {" + System.getProperty("line.separator") +
+                "                \"type\": \"string\"" + System.getProperty("line.separator") +
+                "            }," + System.getProperty("line.separator") +
+                "            \"minItems\": 1," + System.getProperty("line.separator") +
+                "            \"uniqueItems\": true" + System.getProperty("line.separator") +
+                "        }" + System.getProperty("line.separator") +
+                "    }," + System.getProperty("line.separator") +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + System.getProperty("line.separator") +
+                "}"))).matches(new HttpRequest().withBody(matched)));
+    }
+
+    @Test
+    public void doesNotMatchIncorrectJSONSchemaBody() {
+        String matched = "" +
+                "{" + System.getProperty("line.separator") +
+                "    \"id\": 1," + System.getProperty("line.separator") +
+                "    \"name\": \"A green door\"," + System.getProperty("line.separator") +
+                "    \"price\": 12.50," + System.getProperty("line.separator") +
+                "    \"tags\": []" + System.getProperty("line.separator") +
+                "}";
+        assertFalse(new HttpRequestMatcher(new HttpRequest().withBody(jsonSchema("{" + System.getProperty("line.separator") +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + System.getProperty("line.separator") +
+                "    \"title\": \"Product\"," + System.getProperty("line.separator") +
+                "    \"description\": \"A product from Acme's catalog\"," + System.getProperty("line.separator") +
+                "    \"type\": \"object\"," + System.getProperty("line.separator") +
+                "    \"properties\": {" + System.getProperty("line.separator") +
+                "        \"id\": {" + System.getProperty("line.separator") +
+                "            \"description\": \"The unique identifier for a product\"," + System.getProperty("line.separator") +
+                "            \"type\": \"integer\"" + System.getProperty("line.separator") +
+                "        }," + System.getProperty("line.separator") +
+                "        \"name\": {" + System.getProperty("line.separator") +
+                "            \"description\": \"Name of the product\"," + System.getProperty("line.separator") +
+                "            \"type\": \"string\"" + System.getProperty("line.separator") +
+                "        }," + System.getProperty("line.separator") +
+                "        \"price\": {" + System.getProperty("line.separator") +
+                "            \"type\": \"number\"," + System.getProperty("line.separator") +
+                "            \"minimum\": 0," + System.getProperty("line.separator") +
+                "            \"exclusiveMinimum\": true" + System.getProperty("line.separator") +
+                "        }," + System.getProperty("line.separator") +
+                "        \"tags\": {" + System.getProperty("line.separator") +
+                "            \"type\": \"array\"," + System.getProperty("line.separator") +
+                "            \"items\": {" + System.getProperty("line.separator") +
+                "                \"type\": \"string\"" + System.getProperty("line.separator") +
+                "            }," + System.getProperty("line.separator") +
+                "            \"minItems\": 1," + System.getProperty("line.separator") +
+                "            \"uniqueItems\": true" + System.getProperty("line.separator") +
+                "        }" + System.getProperty("line.separator") +
+                "    }," + System.getProperty("line.separator") +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + System.getProperty("line.separator") +
+                "}"))).matches(new HttpRequest().withBody(matched)));
     }
 
 

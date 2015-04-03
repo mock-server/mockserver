@@ -70,6 +70,10 @@ public class HttpRequestMatcher extends ObjectWithReflectiveEqualsHashCodeToStri
                     JsonBody jsonBody = (JsonBody) body;
                     this.bodyMatcher = new JsonStringMatcher(jsonBody.getValue(), jsonBody.getMatchType());
                     break;
+                case JSON_SCHEMA:
+                    JsonSchemaBody jsonSchemaBody = (JsonSchemaBody) body;
+                    this.bodyMatcher = new JsonSchemaMatcher(jsonSchemaBody.getValue());
+                    break;
                 case BINARY:
                     BinaryBody binaryBody = (BinaryBody) body;
                     this.bodyMatcher = new BinaryMatcher(binaryBody.getValue());

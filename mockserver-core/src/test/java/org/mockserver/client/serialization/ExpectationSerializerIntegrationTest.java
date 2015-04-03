@@ -1,5 +1,6 @@
 package org.mockserver.client.serialization;
 
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.junit.Test;
 import org.mockserver.client.serialization.model.*;
 import org.mockserver.matchers.Times;
@@ -831,13 +832,31 @@ public class ExpectationSerializerIntegrationTest {
     }
 
     @Test
-    public void shouldSerializeStringJsonBody() throws IOException {
+    public void shouldSerializeStringJsonSchemaBody() throws IOException {
         // when
+        String jsonSchema = "{" + System.getProperty("line.separator") +
+                "  \"title\": \"Example Schema\"," + System.getProperty("line.separator") +
+                "  \"type\": \"object\"," + System.getProperty("line.separator") +
+                "  \"properties\": {" + System.getProperty("line.separator") +
+                "    \"firstName\": {" + System.getProperty("line.separator") +
+                "      \"type\": \"string\"" + System.getProperty("line.separator") +
+                "    }," + System.getProperty("line.separator") +
+                "    \"lastName\": {" + System.getProperty("line.separator") +
+                "      \"type\": \"string\"" + System.getProperty("line.separator") +
+                "    }," + System.getProperty("line.separator") +
+                "    \"age\": {" + System.getProperty("line.separator") +
+                "      \"description\": \"Age in years\"," + System.getProperty("line.separator") +
+                "      \"type\": \"integer\"," + System.getProperty("line.separator") +
+                "      \"minimum\": 0" + System.getProperty("line.separator") +
+                "    }" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"required\": [\"firstName\", \"lastName\"]" + System.getProperty("line.separator") +
+                "}";
         String jsonExpectation = new ExpectationSerializer().serialize(new ExpectationDTO()
                         .setHttpRequest(
                                 new HttpRequestDTO()
                                         .setPath("somePath")
-                                        .setBody(new JsonBodyDTO(new JsonBody("{fieldOne: \"valueOne\", \"fieldTwo\": \"valueTwo\"}")))
+                                        .setBody(new JsonSchemaBodyDTO(new JsonSchemaBody(jsonSchema)))
                         )
                         .setHttpResponse(
                                 new HttpResponseDTO()
@@ -852,14 +871,54 @@ public class ExpectationSerializerIntegrationTest {
                 "  \"httpRequest\" : {" + System.getProperty("line.separator") +
                 "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
                 "    \"body\" : {" + System.getProperty("line.separator") +
-                "      \"type\" : \"JSON\"," + System.getProperty("line.separator") +
-                "      \"value\" : \"{fieldOne: \\\"valueOne\\\", \\\"fieldTwo\\\": \\\"valueTwo\\\"}\"" + System.getProperty("line.separator") +
+                "      \"type\" : \"JSON_SCHEMA\"," + System.getProperty("line.separator") +
+                "      \"value\" : \"" + StringEscapeUtils.escapeJava(jsonSchema) + "\"" + System.getProperty("line.separator") +
                 "    }" + System.getProperty("line.separator") +
                 "  }," + System.getProperty("line.separator") +
                 "  \"httpResponse\" : {" + System.getProperty("line.separator") +
                 "    \"body\" : {" + System.getProperty("line.separator") +
                 "      \"type\" : \"JSON\"," + System.getProperty("line.separator") +
                 "      \"value\" : \"{fieldOne: \\\"valueOne\\\", \\\"fieldTwo\\\": \\\"valueTwo\\\"}\"" + System.getProperty("line.separator") +
+                "    }" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"times\" : {" + System.getProperty("line.separator") +
+                "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
+                "    \"unlimited\" : false" + System.getProperty("line.separator") +
+                "  }" + System.getProperty("line.separator") +
+                "}", jsonExpectation);
+    }
+
+    @Test
+    public void shouldSerializeStringJsonBody() throws IOException {
+        // when
+        String jsonBody = "{fieldOne: \"valueOne\", \"fieldTwo\": \"valueTwo\"}";
+        String jsonExpectation = new ExpectationSerializer().serialize(new ExpectationDTO()
+                        .setHttpRequest(
+                                new HttpRequestDTO()
+                                        .setPath("somePath")
+                                        .setBody(new JsonBodyDTO(new JsonBody(jsonBody)))
+                        )
+                        .setHttpResponse(
+                                new HttpResponseDTO()
+                                        .setBody(new JsonBodyDTO(new JsonBody(jsonBody)))
+                        )
+                        .setTimes(new TimesDTO(Times.exactly(5)))
+                        .buildObject()
+        );
+
+        // then
+        assertEquals("{" + System.getProperty("line.separator") +
+                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
+                "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
+                "    \"body\" : {" + System.getProperty("line.separator") +
+                "      \"type\" : \"JSON\"," + System.getProperty("line.separator") +
+                "      \"value\" : \"" + StringEscapeUtils.escapeJava(jsonBody) + "\"" + System.getProperty("line.separator") +
+                "    }" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"httpResponse\" : {" + System.getProperty("line.separator") +
+                "    \"body\" : {" + System.getProperty("line.separator") +
+                "      \"type\" : \"JSON\"," + System.getProperty("line.separator") +
+                "      \"value\" : \"" + StringEscapeUtils.escapeJava(jsonBody) + "\"" + System.getProperty("line.separator") +
                 "    }" + System.getProperty("line.separator") +
                 "  }," + System.getProperty("line.separator") +
                 "  \"times\" : {" + System.getProperty("line.separator") +

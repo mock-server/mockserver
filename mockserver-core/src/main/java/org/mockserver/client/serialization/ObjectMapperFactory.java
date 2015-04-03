@@ -9,10 +9,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.mockserver.client.serialization.deserializers.BodyDTODeserializer;
 import org.mockserver.client.serialization.model.*;
 import org.mockserver.client.serialization.serializers.*;
-import org.mockserver.model.JsonBody;
-import org.mockserver.model.RegexBody;
-import org.mockserver.model.StringBody;
-import org.mockserver.model.XPathBody;
+import org.mockserver.model.*;
 
 /**
  * @author jamesdbloom
@@ -62,6 +59,8 @@ public class ObjectMapperFactory {
             addSerializer(RegexBody.class, new RegexBodySerializer());
             addSerializer(JsonBodyDTO.class, new JsonBodyDTOSerializer());
             addSerializer(JsonBody.class, new JsonBodySerializer());
+            addSerializer(JsonSchemaBodyDTO.class, new JsonSchemaBodyDTOSerializer());
+            addSerializer(JsonSchemaBody.class, new JsonSchemaBodySerializer());
             addSerializer(XPathBodyDTO.class, new XPathBodyDTOSerializer());
             addSerializer(XPathBody.class, new XPathBodySerializer());
         }

@@ -28,10 +28,10 @@ public class JsonStringMatcher extends BodyMatcher<String> implements Matcher<St
             }
 
             if (!result) {
-                logger.trace("Failed to perform JSON match [{}] with [{}] because {}", matched, this.matcher, jsonCompareResult.getMessage());
+                logger.trace("Failed to perform JSON match \"{}\" with \"{}\" because {}", matched, this.matcher, jsonCompareResult.getMessage());
             }
         } catch (Exception e) {
-            logger.trace("Failed to perform JSON match [{}] with [{}] because {}", matched, this.matcher, e.getMessage());
+            logger.trace("Failed to perform JSON match \"{}\" with \"{}\" because {}", matched, this.matcher, e.getMessage());
         }
 
         return result;

@@ -11,6 +11,7 @@ import static org.junit.Assert.assertEquals;
 import static org.mockserver.model.ParameterBody.params;
 import static org.mockserver.model.StringBody.exact;
 import static org.mockserver.model.JsonBody.json;
+import static org.mockserver.model.JsonSchemaBody.jsonSchema;
 import static org.mockserver.model.RegexBody.regex;
 import static org.mockserver.model.XPathBody.xpath;
 
@@ -126,6 +127,25 @@ public class HttpRequestSerializerIntegrationTest {
         // then
         assertEquals(new HttpRequestDTO()
                 .setBody(BodyDTO.createDTO(json("{ \"key\": \"value\" }")))
+                .buildObject(), expectation);
+    }
+
+    @Test
+    public void shouldDeserializeJsonSchemaBody() throws IOException {
+        // given
+        String requestBytes = "{" + System.getProperty("line.separator") +
+                "  \"body\" : {" + System.getProperty("line.separator") +
+                "    \"type\" : \"JSON_SCHEMA\"," + System.getProperty("line.separator") +
+                "    \"value\" : \"{ \\\"key\\\": \\\"value\\\" }\"" + System.getProperty("line.separator") +
+                "  }" + System.getProperty("line.separator") +
+                "}";
+
+        // when
+        HttpRequest expectation = new HttpRequestSerializer().deserialize(requestBytes);
+
+        // then
+        assertEquals(new HttpRequestDTO()
+                .setBody(BodyDTO.createDTO(jsonSchema("{ \"key\": \"value\" }")))
                 .buildObject(), expectation);
     }
 

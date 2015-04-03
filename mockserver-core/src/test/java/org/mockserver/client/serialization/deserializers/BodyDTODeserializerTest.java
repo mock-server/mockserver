@@ -1,5 +1,6 @@
 package org.mockserver.client.serialization.deserializers;
 
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.junit.Test;
 import org.mockserver.client.serialization.ObjectMapperFactory;
 import org.mockserver.client.serialization.model.*;
@@ -8,7 +9,7 @@ import org.mockserver.model.*;
 import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class BodyDTODeserializerTest {
 
@@ -422,6 +423,113 @@ public class BodyDTODeserializerTest {
                 .setHttpRequest(
                         new HttpRequestDTO()
                                 .setBody(new JsonBodyDTO(new JsonBody("{'employees':[{'firstName':'John', 'lastName':'Doe'}]}")))
+                ), expectationDTO);
+    }
+
+    @Test
+    public void shouldParseJSONWithJsonSchemaBodyWithoutType() throws IOException {
+        // given
+        String jsonSchema = "{" + System.getProperty("line.separator") +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + System.getProperty("line.separator") +
+                "    \"title\": \"Product\"," + System.getProperty("line.separator") +
+                "    \"description\": \"A product from Acme's catalog\"," + System.getProperty("line.separator") +
+                "    \"type\": \"object\"," + System.getProperty("line.separator") +
+                "    \"properties\": {" + System.getProperty("line.separator") +
+                "        \"id\": {" + System.getProperty("line.separator") +
+                "            \"description\": \"The unique identifier for a product\"," + System.getProperty("line.separator") +
+                "            \"type\": \"integer\"" + System.getProperty("line.separator") +
+                "        }" + System.getProperty("line.separator") +
+                "    }," + System.getProperty("line.separator") +
+                "    \"required\": [\"id\"]" + System.getProperty("line.separator") +
+                "}";
+        String json = ("{" + System.getProperty("line.separator") +
+                "    \"httpRequest\": {" + System.getProperty("line.separator") +
+                "        \"body\" : {" + System.getProperty("line.separator") +
+                "            \"jsonSchema\" : \"" + StringEscapeUtils.escapeJava(jsonSchema) + "\"" + System.getProperty("line.separator") +
+                "        }" + System.getProperty("line.separator") +
+                "    }" + System.getProperty("line.separator") +
+                "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+                .setHttpRequest(
+                        new HttpRequestDTO()
+                                .setBody(new JsonSchemaBodyDTO(new JsonSchemaBody(jsonSchema)))
+                ), expectationDTO);
+    }
+
+    @Test
+    public void shouldParseJSONWithJsonSchemaBodyUsingJsonProperty() throws IOException {
+        // given
+        String jsonSchema = "{" + System.getProperty("line.separator") +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + System.getProperty("line.separator") +
+                "    \"title\": \"Product\"," + System.getProperty("line.separator") +
+                "    \"description\": \"A product from Acme's catalog\"," + System.getProperty("line.separator") +
+                "    \"type\": \"object\"," + System.getProperty("line.separator") +
+                "    \"properties\": {" + System.getProperty("line.separator") +
+                "        \"id\": {" + System.getProperty("line.separator") +
+                "            \"description\": \"The unique identifier for a product\"," + System.getProperty("line.separator") +
+                "            \"type\": \"integer\"" + System.getProperty("line.separator") +
+                "        }" + System.getProperty("line.separator") +
+                "    }," + System.getProperty("line.separator") +
+                "    \"required\": [\"id\"]" + System.getProperty("line.separator") +
+                "}";
+        String json = ("{" + System.getProperty("line.separator") +
+                "    \"httpRequest\": {" + System.getProperty("line.separator") +
+                "        \"body\" : {" + System.getProperty("line.separator") +
+                "            \"type\" : \"JSON_SCHEMA\"," + System.getProperty("line.separator") +
+                "            \"jsonSchema\" : \"" + StringEscapeUtils.escapeJava(jsonSchema) + "\"" + System.getProperty("line.separator") +
+                "        }" + System.getProperty("line.separator") +
+                "    }" + System.getProperty("line.separator") +
+                "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+                .setHttpRequest(
+                        new HttpRequestDTO()
+                                .setBody(new JsonSchemaBodyDTO(new JsonSchemaBody(jsonSchema)))
+                ), expectationDTO);
+    }
+
+    @Test
+    public void shouldParseJSONWithJsonSchemaBodyUsingValueProperty() throws IOException {
+        // given
+        String jsonSchema = "{" + System.getProperty("line.separator") +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + System.getProperty("line.separator") +
+                "    \"title\": \"Product\"," + System.getProperty("line.separator") +
+                "    \"description\": \"A product from Acme's catalog\"," + System.getProperty("line.separator") +
+                "    \"type\": \"object\"," + System.getProperty("line.separator") +
+                "    \"properties\": {" + System.getProperty("line.separator") +
+                "        \"id\": {" + System.getProperty("line.separator") +
+                "            \"description\": \"The unique identifier for a product\"," + System.getProperty("line.separator") +
+                "            \"type\": \"integer\"" + System.getProperty("line.separator") +
+                "        }" + System.getProperty("line.separator") +
+                "    }," + System.getProperty("line.separator") +
+                "    \"required\": [\"id\"]" + System.getProperty("line.separator") +
+                "}";
+        String json = ("{" + System.getProperty("line.separator") +
+                "    \"httpRequest\": {" + System.getProperty("line.separator") +
+                "        \"body\" : {" + System.getProperty("line.separator") +
+                "            \"type\" : \"JSON_SCHEMA\"," + System.getProperty("line.separator") +
+                "            \"value\" : \"" + StringEscapeUtils.escapeJava(jsonSchema) + "\"" + System.getProperty("line.separator") +
+                "        }" + System.getProperty("line.separator") +
+                "    }" + System.getProperty("line.separator") +
+                "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+                .setHttpRequest(
+                        new HttpRequestDTO()
+                                .setBody(new JsonSchemaBodyDTO(new JsonSchemaBody(jsonSchema)))
                 ), expectationDTO);
     }
 

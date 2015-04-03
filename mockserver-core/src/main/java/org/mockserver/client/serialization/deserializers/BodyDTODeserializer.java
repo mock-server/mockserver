@@ -28,12 +28,13 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
     private static Map<String, Body.Type> fieldNameToType = new HashMap<String, Body.Type>();
 
     static {
-        fieldNameToType.put("string", Body.Type.STRING);
-        fieldNameToType.put("regex", Body.Type.REGEX);
-        fieldNameToType.put("json", Body.Type.JSON);
-        fieldNameToType.put("xpath", Body.Type.XPATH);
-        fieldNameToType.put("bytes", Body.Type.BINARY);
-        fieldNameToType.put("parameters", Body.Type.PARAMETERS);
+        fieldNameToType.put("string".toLowerCase(), Body.Type.STRING);
+        fieldNameToType.put("regex".toLowerCase(), Body.Type.REGEX);
+        fieldNameToType.put("json".toLowerCase(), Body.Type.JSON);
+        fieldNameToType.put("jsonSchema".toLowerCase(), Body.Type.JSON_SCHEMA);
+        fieldNameToType.put("xpath".toLowerCase(), Body.Type.XPATH);
+        fieldNameToType.put("bytes".toLowerCase(), Body.Type.BINARY);
+        fieldNameToType.put("parameters".toLowerCase(), Body.Type.PARAMETERS);
     }
 
     public BodyDTODeserializer() {
@@ -58,7 +59,7 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         logger.warn("Ignoring invalid value for \"type\" field of \"" + jsonParser.getText() + "\"");
                     }
                 }
-                if (jsonParser.getCurrentToken() == JsonToken.FIELD_NAME && containsIgnoreCase(jsonParser.getText(), "string", "regex", "json", "xpath", "bytes", "parameters", "value")) {
+                if (jsonParser.getCurrentToken() == JsonToken.FIELD_NAME && containsIgnoreCase(jsonParser.getText(), "string", "regex", "json", "jsonSchema", "xpath", "bytes", "parameters", "value")) {
                     String fieldName = jsonParser.getText().toLowerCase();
                     if (fieldNameToType.containsKey(fieldName)) {
                         type = fieldNameToType.get(fieldName);
@@ -116,6 +117,8 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         return new RegexBodyDTO(new RegexBody(valueJsonValue));
                     case JSON:
                         return new JsonBodyDTO(new JsonBody(valueJsonValue, matchType));
+                    case JSON_SCHEMA:
+                        return new JsonSchemaBodyDTO(new JsonSchemaBody(valueJsonValue));
                     case XPATH:
                         return new XPathBodyDTO(new XPathBody(valueJsonValue));
                     case BINARY:

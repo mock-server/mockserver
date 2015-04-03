@@ -25,6 +25,7 @@ public abstract class Body<T> extends ObjectWithReflectiveEqualsHashCodeToString
         PARAMETERS,
         XPATH,
         JSON,
+        JSON_SCHEMA,
         REGEX,
         STRING,
         BINARY

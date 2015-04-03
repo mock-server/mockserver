@@ -36,6 +36,12 @@ public class HttpRequestToJavaSerializer implements ToJavaSerializer<HttpRequest
                     JsonBody jsonBody = (JsonBody) httpRequest.getBody();
                     output.append("new JsonBody(\"").append(StringEscapeUtils.escapeJava(jsonBody.getValue())).append("\", JsonBodyMatchType.").append(jsonBody.getMatchType()).append(")");
                     output.append(")");
+                } else if (httpRequest.getBody() instanceof JsonSchemaBody) {
+                    appendNewLineAndIndent(numberOfSpacesToIndent + 8, output);
+                    output.append(".withBody(");
+                    JsonSchemaBody jsonSchemaBody = (JsonSchemaBody) httpRequest.getBody();
+                    output.append("new JsonSchemaBody(\"").append(StringEscapeUtils.escapeJava(jsonSchemaBody.getValue())).append("\")");
+                    output.append(")");
                 } else if (httpRequest.getBody() instanceof XPathBody) {
                     appendNewLineAndIndent(numberOfSpacesToIndent + 8, output);
                     output.append(".withBody(");

@@ -23,6 +23,8 @@ public abstract class BodyDTO extends ObjectWithReflectiveEqualsHashCodeToString
             return new RegexBodyDTO((RegexBody) body);
         } else if (body instanceof JsonBody) {
             return new JsonBodyDTO((JsonBody) body);
+        } else if (body instanceof JsonSchemaBody) {
+            return new JsonSchemaBodyDTO((JsonSchemaBody) body);
         } else if (body instanceof XPathBody) {
             return new XPathBodyDTO((XPathBody) body);
         } else if (body instanceof ParameterBody) {

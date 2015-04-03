@@ -260,6 +260,11 @@
                 <artifactId>jsonassert</artifactId>
                 <version>1.2.3</version>
             </dependency>
+            <dependency>
+                <groupId>com.github.fge</groupId>
+                <artifactId>json-schema-validator</artifactId>
+                <version>2.2.6</version>
+            </dependency>
 
             <!-- commons & guava -->
             <dependency>

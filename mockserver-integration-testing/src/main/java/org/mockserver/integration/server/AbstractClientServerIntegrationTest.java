@@ -37,6 +37,7 @@ import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.ParameterBody.params;
 import static org.mockserver.model.StringBody.exact;
 import static org.mockserver.model.JsonBody.json;
+import static org.mockserver.model.JsonSchemaBody.jsonSchema;
 import static org.mockserver.model.XPathBody.xpath;
 
 /**
@@ -993,6 +994,78 @@ public abstract class AbstractClientServerIntegrationTest {
                                         "            }" + System.getProperty("line.separator") +
                                         "        }" + System.getProperty("line.separator") +
                                         "    }" + System.getProperty("line.separator") +
+                                        "}"),
+                        headersToIgnore)
+        );
+    }
+
+    @Test
+    public void clientCanCallServerMatchBodyWithJsonSchema() {
+        // when
+        mockServerClient.when(request().withBody(jsonSchema("{" + System.getProperty("line.separator") +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + System.getProperty("line.separator") +
+                "    \"title\": \"Product\"," + System.getProperty("line.separator") +
+                "    \"description\": \"A product from Acme's catalog\"," + System.getProperty("line.separator") +
+                "    \"type\": \"object\"," + System.getProperty("line.separator") +
+                "    \"properties\": {" + System.getProperty("line.separator") +
+                "        \"id\": {" + System.getProperty("line.separator") +
+                "            \"description\": \"The unique identifier for a product\"," + System.getProperty("line.separator") +
+                "            \"type\": \"integer\"" + System.getProperty("line.separator") +
+                "        }," + System.getProperty("line.separator") +
+                "        \"name\": {" + System.getProperty("line.separator") +
+                "            \"description\": \"Name of the product\"," + System.getProperty("line.separator") +
+                "            \"type\": \"string\"" + System.getProperty("line.separator") +
+                "        }," + System.getProperty("line.separator") +
+                "        \"price\": {" + System.getProperty("line.separator") +
+                "            \"type\": \"number\"," + System.getProperty("line.separator") +
+                "            \"minimum\": 0," + System.getProperty("line.separator") +
+                "            \"exclusiveMinimum\": true" + System.getProperty("line.separator") +
+                "        }," + System.getProperty("line.separator") +
+                "        \"tags\": {" + System.getProperty("line.separator") +
+                "            \"type\": \"array\"," + System.getProperty("line.separator") +
+                "            \"items\": {" + System.getProperty("line.separator") +
+                "                \"type\": \"string\"" + System.getProperty("line.separator") +
+                "            }," + System.getProperty("line.separator") +
+                "            \"minItems\": 1," + System.getProperty("line.separator") +
+                "            \"uniqueItems\": true" + System.getProperty("line.separator") +
+                "        }" + System.getProperty("line.separator") +
+                "    }," + System.getProperty("line.separator") +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + System.getProperty("line.separator") +
+                "}")), exactly(2)).respond(response().withBody("some_body"));
+
+        // then
+        // - in http
+        assertEquals(
+                response()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("some_path"))
+                                .withMethod("POST")
+                                .withBody("{" + System.getProperty("line.separator") +
+                                        "    \"id\": 1," + System.getProperty("line.separator") +
+                                        "    \"name\": \"A green door\"," + System.getProperty("line.separator") +
+                                        "    \"price\": 12.50," + System.getProperty("line.separator") +
+                                        "    \"tags\": [\"home\", \"green\"]" + System.getProperty("line.separator") +
+                                        "}"),
+                        headersToIgnore)
+        );
+        // - in https
+        assertEquals(
+                response()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        request()
+                                .setSecure(true)
+                                .withPath(calculatePath("some_path"))
+                                .withMethod("POST")
+                                .withBody("{" + System.getProperty("line.separator") +
+                                        "    \"id\": 1," + System.getProperty("line.separator") +
+                                        "    \"name\": \"A green door\"," + System.getProperty("line.separator") +
+                                        "    \"price\": 12.50," + System.getProperty("line.separator") +
+                                        "    \"tags\": [\"home\", \"green\"]" + System.getProperty("line.separator") +
                                         "}"),
                         headersToIgnore)
         );
@@ -2860,6 +2933,6 @@ public abstract class AbstractClientServerIntegrationTest {
                 }
             }
         }
-        throw new RuntimeException("Failed to send request:\n" + httpRequest);
+        throw new RuntimeException("Failed to send request:" + System.getProperty("line.separator") + httpRequest);
     }
 }

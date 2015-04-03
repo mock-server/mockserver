@@ -63,16 +63,16 @@ public class CompileGeneratedJavaCodeTest {
         );
 
         assertTrue(compileJavaCode("" +
-                        "import org.mockserver.client.server.MockServerClient;\n" +
-                        "import org.mockserver.matchers.Times;\n" +
-                        "import org.mockserver.mock.Expectation;\n" +
-                        "import org.mockserver.model.*;\n" +
-                        "import static org.mockserver.model.HttpRequest.request;\n" +
-                        "import static org.mockserver.model.HttpResponse.response;\n\n" +
-                        "class TestClass {\n" +
+                        "import org.mockserver.client.server.MockServerClient;" + System.getProperty("line.separator") +
+                        "import org.mockserver.matchers.Times;" + System.getProperty("line.separator") +
+                        "import org.mockserver.mock.Expectation;" + System.getProperty("line.separator") +
+                        "import org.mockserver.model.*;" + System.getProperty("line.separator") +
+                        "import static org.mockserver.model.HttpRequest.request;" + System.getProperty("line.separator") +
+                        "import static org.mockserver.model.HttpResponse.response;" + System.getProperty("line.separator") + System.getProperty("line.separator") +
+                        "class TestClass {" + System.getProperty("line.separator") +
                         "   static {" +
-                        "      " + expectationAsJavaCode + "\n" +
-                        "   }\n" +
+                        "      " + expectationAsJavaCode + "" + System.getProperty("line.separator") +
+                        "   }" + System.getProperty("line.separator") +
                         "}")
         );
     }

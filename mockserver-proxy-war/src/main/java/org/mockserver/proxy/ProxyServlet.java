@@ -189,7 +189,7 @@ public class ProxyServlet extends HttpServlet {
                     return httpResponse;
                 }
             } else {
-                logger.error("Host header must be provided for requests being forwarded, the following request does not include the \"Host\" header:\n" + httpRequest);
+                logger.error("Host header must be provided for requests being forwarded, the following request does not include the \"Host\" header:" + System.getProperty("line.separator") + httpRequest);
                 throw new IllegalArgumentException("Host header must be provided for requests being forwarded");
             }
         }
