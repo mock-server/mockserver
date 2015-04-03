@@ -34,7 +34,7 @@ public class HttpRequestSerializerTest {
                             new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
                             new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
                     )
-                    .withBody(new StringBody("somebody", Body.Type.STRING))
+                    .withBody(new StringBody("somebody"))
                     .withHeaders(new Header("headerName", "headerValue"))
                     .withCookies(new Cookie("cookieName", "cookieValue"));
     private final HttpRequestDTO fullHttpRequestDTO =
@@ -45,7 +45,7 @@ public class HttpRequestSerializerTest {
                             new ParameterDTO(new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two")),
                             new ParameterDTO(new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One"))
                     ))
-                    .setBody(BodyDTO.createDTO(new StringBody("somebody", Body.Type.STRING)))
+                    .setBody(BodyDTO.createDTO(new StringBody("somebody")))
                     .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("headerName", Arrays.asList("headerValue")))))
                     .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("cookieName", "cookieValue"))));
     @Mock

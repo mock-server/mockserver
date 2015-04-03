@@ -13,7 +13,9 @@ public class BinaryBodyDTO extends BodyDTO {
 
     public BinaryBodyDTO(BinaryBody binaryBody) {
         super(binaryBody.getType());
-        value = DatatypeConverter.printBase64Binary(binaryBody.getValue());
+        if (binaryBody.getValue() != null && binaryBody.getValue().length > 0) {
+            value = DatatypeConverter.printBase64Binary(binaryBody.getValue());
+        }
     }
 
     protected BinaryBodyDTO() {

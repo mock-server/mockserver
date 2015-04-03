@@ -44,7 +44,7 @@ public class ExpectationSerializerIntegrationTest {
                 )
                 .setHttpResponse(
                         new HttpResponseDTO()
-                                .setBody(new StringBodyDTO(new StringBody("someBody", Body.Type.STRING)))
+                                .setBody(new StringBodyDTO(new StringBody("someBody")))
                 )
                 .buildObject(), expectation);
     }
@@ -98,7 +98,7 @@ public class ExpectationSerializerIntegrationTest {
                 )
                 .setHttpResponse(
                         new HttpResponseDTO()
-                                .setBody(new StringBodyDTO(new StringBody("someBody", Body.Type.STRING)))
+                                .setBody(new StringBodyDTO(new StringBody("someBody")))
                 )
                 .setTimes(new TimesDTO(Times.exactly(0)))
                 .buildObject(), expectation);
@@ -131,7 +131,7 @@ public class ExpectationSerializerIntegrationTest {
                 )
                 .setHttpResponse(
                         new HttpResponseDTO()
-                                .setBody(new StringBodyDTO(new StringBody("someBody", Body.Type.STRING)))
+                                .setBody(new StringBodyDTO(new StringBody("someBody")))
                 )
                 .setTimes(new TimesDTO(Times.exactly(0)))
                 .buildObject(), expectation);
@@ -164,7 +164,7 @@ public class ExpectationSerializerIntegrationTest {
                 )
                 .setHttpResponse(
                         new HttpResponseDTO()
-                                .setBody(new StringBodyDTO(new StringBody("someBody", Body.Type.STRING)))
+                                .setBody(new StringBodyDTO(new StringBody("someBody")))
                                 .setDelay(new DelayDTO(new Delay(null, 0)))
                 )
                 .buildObject(), expectation);
@@ -196,7 +196,7 @@ public class ExpectationSerializerIntegrationTest {
                         )
                         .setHttpResponse(
                                 new HttpResponseDTO()
-                                        .setBody(new StringBodyDTO(new StringBody("someBody", Body.Type.STRING)))
+                                        .setBody(new StringBodyDTO(new StringBody("someBody")))
                         )
                         .buildObject()
         }, expectations);
@@ -244,7 +244,7 @@ public class ExpectationSerializerIntegrationTest {
                 )
                 .setHttpResponse(
                         new HttpResponseDTO()
-                                .setBody(new StringBodyDTO(new StringBody("someBody", Body.Type.STRING)))
+                                .setBody(new StringBodyDTO(new StringBody("someBody")))
                 )
                 .buildObject();
 
@@ -321,14 +321,14 @@ public class ExpectationSerializerIntegrationTest {
                                         new ParameterDTO(new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two")),
                                         new ParameterDTO(new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One"))
                                 ))
-                                .setBody(new StringBodyDTO(new StringBody("someBody", Body.Type.STRING)))
+                                .setBody(new StringBodyDTO(new StringBody("someBody")))
                                 .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
                                 .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
                 )
                 .setHttpResponse(
                         new HttpResponseDTO()
                                 .setStatusCode(304)
-                                .setBody(new StringBodyDTO(new StringBody("someBody", Body.Type.STRING)))
+                                .setBody(new StringBodyDTO(new StringBody("someBody")))
                                 .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
                                 .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
                                 .setDelay(
@@ -391,7 +391,7 @@ public class ExpectationSerializerIntegrationTest {
                                                 new ParameterDTO(new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two")),
                                                 new ParameterDTO(new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One"))
                                         ))
-                                        .setBody(new StringBodyDTO(new StringBody("someBody", Body.Type.STRING)))
+                                        .setBody(new StringBodyDTO(new StringBody("someBody")))
                                         .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
                                         .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
                         )
@@ -454,7 +454,7 @@ public class ExpectationSerializerIntegrationTest {
                                                 new ParameterDTO(new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two")),
                                                 new ParameterDTO(new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One"))
                                         ))
-                                        .setBody(new StringBodyDTO(new StringBody("someBody", Body.Type.STRING)))
+                                        .setBody(new StringBodyDTO(new StringBody("someBody")))
                                         .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
                                         .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
                         )
@@ -489,7 +489,7 @@ public class ExpectationSerializerIntegrationTest {
                 )
                 .setHttpResponse(
                         new HttpResponseDTO()
-                                .setBody(new StringBodyDTO(new StringBody("someBody", Body.Type.STRING)))
+                                .setBody(new StringBodyDTO(new StringBody("someBody")))
                 )
                 .buildObject(), expectation);
     }
@@ -518,11 +518,11 @@ public class ExpectationSerializerIntegrationTest {
                 .setHttpRequest(
                         new HttpRequestDTO()
                                 .setPath("somePath")
-                                .setBody(new StringBodyDTO(new StringBody("some[a-zA-Z]*", Body.Type.REGEX)))
+                                .setBody(new RegexBodyDTO(new RegexBody("some[a-zA-Z]*")))
                 )
                 .setHttpResponse(
                         new HttpResponseDTO()
-                                .setBody(new StringBodyDTO(new StringBody("someBody", Body.Type.STRING)))
+                                .setBody(new StringBodyDTO(new StringBody("someBody")))
                 )
                 .buildObject(), expectation);
     }
@@ -564,7 +564,7 @@ public class ExpectationSerializerIntegrationTest {
                 )
                 .setHttpResponse(
                         new HttpResponseDTO()
-                                .setBody(new StringBodyDTO(new StringBody("someBody", Body.Type.STRING)))
+                                .setBody(new StringBodyDTO(new StringBody("someBody")))
                 )
                 .buildObject(), expectation);
     }
@@ -581,14 +581,14 @@ public class ExpectationSerializerIntegrationTest {
                                                 new ParameterDTO(new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two")),
                                                 new ParameterDTO(new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One"))
                                         ))
-                                        .setBody(new StringBodyDTO(new StringBody("someBody", Body.Type.STRING)))
+                                        .setBody(new StringBodyDTO(new StringBody("someBody")))
                                         .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
                                         .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
                         )
                         .setHttpResponse(
                                 new HttpResponseDTO()
                                         .setStatusCode(304)
-                                        .setBody(new StringBodyDTO(new StringBody("someBody", Body.Type.STRING)))
+                                        .setBody(new StringBodyDTO(new StringBody("someBody")))
                                         .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
                                         .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
                                         .setDelay(
@@ -659,7 +659,7 @@ public class ExpectationSerializerIntegrationTest {
                                                 new ParameterDTO(new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two")),
                                                 new ParameterDTO(new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One"))
                                         ))
-                                        .setBody(new StringBodyDTO(new StringBody("someBody", Body.Type.STRING)))
+                                        .setBody(new StringBodyDTO(new StringBody("someBody")))
                                         .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
                                         .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
                         )
@@ -707,6 +707,7 @@ public class ExpectationSerializerIntegrationTest {
                 "}", jsonExpectation);
     }
 
+    @Test
     public void shouldSerializeCompleteObjectWithCallback() throws IOException {
         // when
         String jsonExpectation = new ExpectationSerializer().serialize(new ExpectationDTO()
@@ -718,7 +719,7 @@ public class ExpectationSerializerIntegrationTest {
                                                 new ParameterDTO(new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two")),
                                                 new ParameterDTO(new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One"))
                                         ))
-                                        .setBody(new StringBodyDTO(new StringBody("someBody", Body.Type.STRING)))
+                                        .setBody(new StringBodyDTO(new StringBody("someBody")))
                                         .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
                                         .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
                         )
@@ -745,7 +746,7 @@ public class ExpectationSerializerIntegrationTest {
                 "    \"body\" : \"someBody\"," + System.getProperty("line.separator") +
                 "    \"cookies\" : [ {" + System.getProperty("line.separator") +
                 "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"someCookieValue\" ]" + System.getProperty("line.separator") +
+                "      \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
                 "    } ]," + System.getProperty("line.separator") +
                 "    \"headers\" : [ {" + System.getProperty("line.separator") +
                 "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
@@ -772,7 +773,7 @@ public class ExpectationSerializerIntegrationTest {
                         )
                         .setHttpResponse(
                                 new HttpResponseDTO()
-                                        .setBody(new StringBodyDTO(new StringBody("someBody", Body.Type.STRING)))
+                                        .setBody(new StringBodyDTO(new StringBody("someBody")))
                         )
                         .setTimes(new TimesDTO(Times.exactly(5)))
                         .buildObject()
@@ -794,17 +795,92 @@ public class ExpectationSerializerIntegrationTest {
     }
 
     @Test
+    public void shouldSerializeStringXPathBody() throws IOException {
+        // when
+        String jsonExpectation = new ExpectationSerializer().serialize(new ExpectationDTO()
+                        .setHttpRequest(
+                                new HttpRequestDTO()
+                                        .setPath("somePath")
+                                        .setBody(new XPathBodyDTO(new XPathBody("/bookstore/book[price>35]/price")))
+                        )
+                        .setHttpResponse(
+                                new HttpResponseDTO()
+                                        .setBody(new StringBodyDTO(new StringBody("someBody")))
+                        )
+                        .setTimes(new TimesDTO(Times.exactly(5)))
+                        .buildObject()
+        );
+
+        // then
+        assertEquals("{" + System.getProperty("line.separator") +
+                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
+                "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
+                "    \"body\" : {" + System.getProperty("line.separator") +
+                "      \"type\" : \"XPATH\"," + System.getProperty("line.separator") +
+                "      \"value\" : \"/bookstore/book[price>35]/price\"" + System.getProperty("line.separator") +
+                "    }" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"httpResponse\" : {" + System.getProperty("line.separator") +
+                "    \"body\" : \"someBody\"" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"times\" : {" + System.getProperty("line.separator") +
+                "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
+                "    \"unlimited\" : false" + System.getProperty("line.separator") +
+                "  }" + System.getProperty("line.separator") +
+                "}", jsonExpectation);
+    }
+
+    @Test
+    public void shouldSerializeStringJsonBody() throws IOException {
+        // when
+        String jsonExpectation = new ExpectationSerializer().serialize(new ExpectationDTO()
+                        .setHttpRequest(
+                                new HttpRequestDTO()
+                                        .setPath("somePath")
+                                        .setBody(new JsonBodyDTO(new JsonBody("{fieldOne: \"valueOne\", \"fieldTwo\": \"valueTwo\"}")))
+                        )
+                        .setHttpResponse(
+                                new HttpResponseDTO()
+                                        .setBody(new JsonBodyDTO(new JsonBody("{fieldOne: \"valueOne\", \"fieldTwo\": \"valueTwo\"}")))
+                        )
+                        .setTimes(new TimesDTO(Times.exactly(5)))
+                        .buildObject()
+        );
+
+        // then
+        assertEquals("{" + System.getProperty("line.separator") +
+                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
+                "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
+                "    \"body\" : {" + System.getProperty("line.separator") +
+                "      \"type\" : \"JSON\"," + System.getProperty("line.separator") +
+                "      \"value\" : \"{fieldOne: \\\"valueOne\\\", \\\"fieldTwo\\\": \\\"valueTwo\\\"}\"" + System.getProperty("line.separator") +
+                "    }" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"httpResponse\" : {" + System.getProperty("line.separator") +
+                "    \"body\" : {" + System.getProperty("line.separator") +
+                "      \"type\" : \"JSON\"," + System.getProperty("line.separator") +
+                "      \"value\" : \"{fieldOne: \\\"valueOne\\\", \\\"fieldTwo\\\": \\\"valueTwo\\\"}\"" + System.getProperty("line.separator") +
+                "    }" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"times\" : {" + System.getProperty("line.separator") +
+                "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
+                "    \"unlimited\" : false" + System.getProperty("line.separator") +
+                "  }" + System.getProperty("line.separator") +
+                "}", jsonExpectation);
+    }
+
+    @Test
     public void shouldSerializeStringRegexBody() throws IOException {
         // when
         String jsonExpectation = new ExpectationSerializer().serialize(new ExpectationDTO()
                         .setHttpRequest(
                                 new HttpRequestDTO()
                                         .setPath("somePath")
-                                        .setBody(new StringBodyDTO(new StringBody("some[a-zA-Z]*", Body.Type.REGEX)))
+                                        .setBody(new RegexBodyDTO(new RegexBody("some[a-zA-Z]*")))
                         )
                         .setHttpResponse(
                                 new HttpResponseDTO()
-                                        .setBody(new StringBodyDTO(new StringBody("someBody", Body.Type.STRING)))
+                                        .setBody(new StringBodyDTO(new StringBody("someBody")))
                         )
                         .setTimes(new TimesDTO(Times.exactly(5)))
                         .buildObject()
@@ -843,7 +919,7 @@ public class ExpectationSerializerIntegrationTest {
                         )
                         .setHttpResponse(
                                 new HttpResponseDTO()
-                                        .setBody(new StringBodyDTO(new StringBody("someBody", Body.Type.STRING)))
+                                        .setBody(new StringBodyDTO(new StringBody("someBody")))
                         )
                         .setTimes(new TimesDTO(Times.exactly(5)))
                         .buildObject()
@@ -884,7 +960,7 @@ public class ExpectationSerializerIntegrationTest {
                         )
                         .setHttpResponse(
                                 new HttpResponseDTO()
-                                        .setBody(new StringBodyDTO(new StringBody("someBody", Body.Type.STRING)))
+                                        .setBody(new StringBodyDTO(new StringBody("someBody")))
                         )
                         .buildObject()
         );
@@ -914,7 +990,7 @@ public class ExpectationSerializerIntegrationTest {
                 )
                 .setHttpResponse(
                         new HttpResponseDTO()
-                                .setBody(new StringBodyDTO(new StringBody("someBody", Body.Type.STRING)))
+                                .setBody(new StringBodyDTO(new StringBody("someBody")))
                 )
                 .buildObject();
         String jsonExpectation = new ExpectationSerializer().serialize(new Expectation[]{

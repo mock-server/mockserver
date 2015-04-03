@@ -9,7 +9,10 @@ import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.model.ParameterBody.params;
-import static org.mockserver.model.StringBody.*;
+import static org.mockserver.model.StringBody.exact;
+import static org.mockserver.model.JsonBody.json;
+import static org.mockserver.model.RegexBody.regex;
+import static org.mockserver.model.XPathBody.xpath;
 
 /**
  * @author jamesdbloom
@@ -66,7 +69,7 @@ public class HttpRequestSerializerIntegrationTest {
                 .setMethod("someMethod")
                 .setPath("somePath")
                 .setQueryStringParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")))))
-                .setBody(BodyDTO.createDTO(new StringBody("somebody", Body.Type.STRING)))
+                .setBody(BodyDTO.createDTO(new StringBody("somebody")))
                 .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
                 .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
                 .buildObject(), expectation);
@@ -239,7 +242,7 @@ public class HttpRequestSerializerIntegrationTest {
                         .setMethod("someMethod")
                         .setPath("somePath")
                         .setQueryStringParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")))))
-                        .setBody(BodyDTO.createDTO(new StringBody("somebody", Body.Type.STRING)))
+                        .setBody(BodyDTO.createDTO(new StringBody("somebody")))
                         .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
                         .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
                         .buildObject()
@@ -273,13 +276,13 @@ public class HttpRequestSerializerIntegrationTest {
                         new HttpRequestDTO()
                                 .setMethod("some_method_one")
                                 .setPath("some_path_one")
-                                .setBody(BodyDTO.createDTO(new StringBody("some_body_one", Body.Type.STRING)))
+                                .setBody(BodyDTO.createDTO(new StringBody("some_body_one")))
                                 .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("some_header_name_one", Arrays.asList("some_header_value_one")))))
                                 .buildObject(),
                         new HttpRequestDTO()
                                 .setMethod("some_method_two")
                                 .setPath("some_path_two")
-                                .setBody(BodyDTO.createDTO(new StringBody("some_body_two", Body.Type.STRING)))
+                                .setBody(BodyDTO.createDTO(new StringBody("some_body_two")))
                                 .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("some_header_name_two", Arrays.asList("some_header_value_two")))))
                                 .buildObject()
                 }
@@ -313,13 +316,13 @@ public class HttpRequestSerializerIntegrationTest {
                         new HttpRequestDTO()
                                 .setMethod("some_method_one")
                                 .setPath("some_path_one")
-                                .setBody(BodyDTO.createDTO(new StringBody("some_body_one", Body.Type.STRING)))
+                                .setBody(BodyDTO.createDTO(new StringBody("some_body_one")))
                                 .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("some_header_name_one", Arrays.asList("some_header_value_one")))))
                                 .buildObject(),
                         new HttpRequestDTO()
                                 .setMethod("some_method_two")
                                 .setPath("some_path_two")
-                                .setBody(BodyDTO.createDTO(new StringBody("some_body_two", Body.Type.STRING)))
+                                .setBody(BodyDTO.createDTO(new StringBody("some_body_two")))
                                 .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("some_header_name_two", Arrays.asList("some_header_value_two")))))
                                 .buildObject()
                 )

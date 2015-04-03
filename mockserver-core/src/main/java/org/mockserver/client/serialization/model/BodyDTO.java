@@ -19,6 +19,12 @@ public abstract class BodyDTO extends ObjectWithReflectiveEqualsHashCodeToString
     public static BodyDTO createDTO(Body body) {
         if (body instanceof StringBody) {
             return new StringBodyDTO((StringBody) body);
+        } else if (body instanceof RegexBody) {
+            return new RegexBodyDTO((RegexBody) body);
+        } else if (body instanceof JsonBody) {
+            return new JsonBodyDTO((JsonBody) body);
+        } else if (body instanceof XPathBody) {
+            return new XPathBodyDTO((XPathBody) body);
         } else if (body instanceof ParameterBody) {
             return new ParameterBodyDTO((ParameterBody) body);
         } else if (body instanceof BinaryBody) {

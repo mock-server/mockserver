@@ -29,7 +29,7 @@ public class VerificationSerializerTest {
 
     private final HttpRequest request = request().withMethod("GET")
             .withPath("somepath")
-            .withBody(new StringBody("somebody", Body.Type.STRING))
+            .withBody(new StringBody("somebody"))
             .withHeaders(new Header("headerName", "headerValue"))
             .withCookies(new Cookie("cookieName", "cookieValue"));
     private final VerificationTimes times = VerificationTimes.atLeast(2);

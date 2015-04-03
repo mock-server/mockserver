@@ -7,21 +7,21 @@ import org.mockserver.model.StringBody;
  */
 public class StringBodyDTO extends BodyDTO {
 
-    private String value;
+    private String string;
 
     public StringBodyDTO(StringBody stringBody) {
         super(stringBody.getType());
-        value = stringBody.getValue();
+        string = stringBody.getValue();
     }
 
     protected StringBodyDTO() {
     }
 
-    public String getValue() {
-        return value;
+    public String getString() {
+        return string;
     }
 
     public StringBody buildObject() {
-        return new StringBody(value, getType());
+        return new StringBody(string);
     }
 }

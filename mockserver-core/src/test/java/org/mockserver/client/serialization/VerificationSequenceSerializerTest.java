@@ -31,13 +31,13 @@ public class VerificationSequenceSerializerTest {
             request()
                     .withMethod("GET")
                     .withPath("some_path_one")
-                    .withBody(new StringBody("some_body_one", Body.Type.STRING))
+                    .withBody(new StringBody("some_body_one"))
                     .withHeaders(new Header("header_name_two", "header_value_two"));
     private final HttpRequest requestTwo =
             request()
                     .withMethod("GET")
                     .withPath("some_path_two")
-                    .withBody(new StringBody("some_body_two", Body.Type.STRING))
+                    .withBody(new StringBody("some_body_two"))
                     .withHeaders(new Header("header_name_one", "header_value_one"));
     private final VerificationSequence fullVerificationSequence = new VerificationSequence().withRequests(requestOne);
     private final VerificationSequenceDTO fullVerificationSequenceDTO = new VerificationSequenceDTO(fullVerificationSequence);
