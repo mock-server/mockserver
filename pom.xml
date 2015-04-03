@@ -48,7 +48,7 @@
         <jetty.version>8.1.16.v20140903</jetty.version>
         <slf4j.version>1.7.10</slf4j.version>
         <tomcat.version>7.0.56</tomcat.version>
-        <jackson.version>2.4.3</jackson.version>
+        <jackson.version>2.5.2</jackson.version>
         <netty.version>4.0.26.Final</netty.version>
         <skipTests>false</skipTests>
         <nonReleaseBuild>true</nonReleaseBuild>
