@@ -89,55 +89,55 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void respondWhenBodyMatches() {
         // when
-        mockServerMatcher.when(httpRequest.withBody(new StringBody("someBody", Body.Type.STRING))).thenRespond(httpResponse.withBody("someBody"));
+        mockServerMatcher.when(httpRequest.withBody(new StringBody("someBody"))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withBody(new StringBody("someBody", Body.Type.STRING))));
+        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withBody(new StringBody("someBody"))));
     }
 
     @Test
     public void respondWhenRegexBodyMatches() {
         // when
-        mockServerMatcher.when(httpRequest.withBody(new StringBody("[a-zA-Z]*", Body.Type.REGEX))).thenRespond(httpResponse.withBody("someBody"));
+        mockServerMatcher.when(httpRequest.withBody(new RegexBody("[a-zA-Z]*"))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withBody(new StringBody("someBody", Body.Type.STRING))));
+        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withBody(new StringBody("someBody"))));
     }
 
     @Test
     public void doNotRespondWhenBodyDoesNotMatch() {
         // when
-        mockServerMatcher.when(httpRequest.withBody(new StringBody("someBody", Body.Type.STRING))).thenRespond(httpResponse.withBody("someBody"));
+        mockServerMatcher.when(httpRequest.withBody(new StringBody("someBody"))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertNull(mockServerMatcher.handle(new HttpRequest().withBody(new StringBody("someOtherBody", Body.Type.STRING))));
+        assertNull(mockServerMatcher.handle(new HttpRequest().withBody(new StringBody("someOtherBody"))));
     }
 
     @Test
     public void doNotRespondWhenRegexBodyDoesNotMatch() {
         // when
-        mockServerMatcher.when(httpRequest.withBody(new StringBody("[a-z]*", Body.Type.REGEX))).thenRespond(httpResponse.withBody("someBody"));
+        mockServerMatcher.when(httpRequest.withBody(new RegexBody("[a-z]*"))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertNull(mockServerMatcher.handle(new HttpRequest().withBody(new StringBody("someOtherBody123", Body.Type.STRING))));
+        assertNull(mockServerMatcher.handle(new HttpRequest().withBody(new StringBody("someOtherBody123"))));
     }
 
     @Test
     public void respondWhenBodyMatchesAndAdditionalHeaders() {
         // when
-        mockServerMatcher.when(httpRequest.withBody(new StringBody("someBody", Body.Type.STRING))).thenRespond(httpResponse.withBody("someBody"));
+        mockServerMatcher.when(httpRequest.withBody(new StringBody("someBody"))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withBody(new StringBody("someBody", Body.Type.STRING)).withHeaders(new Header("name", "value"))));
+        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withBody(new StringBody("someBody")).withHeaders(new Header("name", "value"))));
     }
 
     @Test
     public void respondWhenBodyMatchesAndAdditionalQueryStringParameters() {
         // when
-        mockServerMatcher.when(httpRequest.withBody(new StringBody("someBody", Body.Type.STRING))).thenRespond(httpResponse.withBody("someBody"));
+        mockServerMatcher.when(httpRequest.withBody(new StringBody("someBody"))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withBody(new StringBody("someBody", Body.Type.STRING)).withQueryStringParameter(new Parameter("name", "value"))));
+        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withBody(new StringBody("someBody")).withQueryStringParameter(new Parameter("name", "value"))));
     }
 
     @Test

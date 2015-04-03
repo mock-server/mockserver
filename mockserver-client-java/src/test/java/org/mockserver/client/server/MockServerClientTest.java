@@ -87,7 +87,7 @@ public class MockServerClientTest {
         HttpRequest httpRequest =
                 new HttpRequest()
                         .withPath("/some_path")
-                        .withBody(new StringBody("some_request_body", Body.Type.STRING));
+                        .withBody(new StringBody("some_request_body"));
         HttpResponse httpResponse =
                 new HttpResponse()
                         .withBody("some_response_body")
@@ -110,7 +110,7 @@ public class MockServerClientTest {
         HttpRequest httpRequest =
                 new HttpRequest()
                         .withPath("/some_path")
-                        .withBody(new StringBody("some_request_body", Body.Type.STRING));
+                        .withBody(new StringBody("some_request_body"));
         HttpForward httpForward =
                 new HttpForward()
                         .withHost("some_host")
@@ -134,7 +134,7 @@ public class MockServerClientTest {
         HttpRequest httpRequest =
                 new HttpRequest()
                         .withPath("/some_path")
-                        .withBody(new StringBody("some_request_body", Body.Type.STRING));
+                        .withBody(new StringBody("some_request_body"));
         HttpCallback httpCallback =
                 new HttpCallback()
                         .withCallbackClass("some_class");
@@ -157,7 +157,7 @@ public class MockServerClientTest {
                 .when(
                         new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.STRING)),
+                                .withBody(new StringBody("some_request_body")),
                         Times.exactly(3)
                 )
                 .respond(
@@ -171,7 +171,7 @@ public class MockServerClientTest {
                 new ExpectationDTO()
                         .setHttpRequest(new HttpRequestDTO(new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.STRING))))
+                                .withBody(new StringBody("some_request_body"))))
                         .setHttpResponse(new HttpResponseDTO(new HttpResponse()
                                 .withBody("some_response_body")
                                 .withHeaders(new Header("responseName", "responseValue"))))
@@ -187,7 +187,7 @@ public class MockServerClientTest {
                 .when(
                         new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.STRING)),
+                                .withBody(new StringBody("some_request_body")),
                         Times.exactly(3)
                 )
                 .forward(
@@ -202,7 +202,7 @@ public class MockServerClientTest {
                 new ExpectationDTO()
                         .setHttpRequest(new HttpRequestDTO(new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.STRING))))
+                                .withBody(new StringBody("some_request_body"))))
                         .setHttpForward(
                                 new HttpForwardDTO(
                                         new HttpForward()
@@ -224,7 +224,7 @@ public class MockServerClientTest {
                 .when(
                         new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.STRING)),
+                                .withBody(new StringBody("some_request_body")),
                         Times.exactly(3)
                 )
                 .callback(
@@ -237,7 +237,7 @@ public class MockServerClientTest {
                 new ExpectationDTO()
                         .setHttpRequest(new HttpRequestDTO(new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.STRING))))
+                                .withBody(new StringBody("some_request_body"))))
                         .setHttpCallback(
                                 new HttpCallbackDTO(
                                         new HttpCallback()
@@ -256,7 +256,7 @@ public class MockServerClientTest {
                 .when(
                         new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.STRING))
+                                .withBody(new StringBody("some_request_body"))
                 )
                 .respond(
                         new HttpResponse()
@@ -269,7 +269,7 @@ public class MockServerClientTest {
                 new ExpectationDTO()
                         .setHttpRequest(new HttpRequestDTO(new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.STRING))))
+                                .withBody(new StringBody("some_request_body"))))
                         .setHttpResponse(new HttpResponseDTO(new HttpResponse()
                                 .withBody("some_response_body")
                                 .withHeaders(new Header("responseName", "responseValue"))))
@@ -312,7 +312,7 @@ public class MockServerClientTest {
                 .clear(
                         new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.STRING))
+                                .withBody(new StringBody("some_request_body"))
                 );
 
         // then
@@ -345,7 +345,7 @@ public class MockServerClientTest {
                 .retrieveAsExpectations(
                         new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.STRING))
+                                .withBody(new StringBody("some_request_body"))
                 ));
 
         // then
@@ -383,7 +383,7 @@ public class MockServerClientTest {
                 .retrieveAsJSON(
                         new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.STRING))
+                                .withBody(new StringBody("some_request_body"))
                 ));
 
         // then
@@ -414,7 +414,7 @@ public class MockServerClientTest {
         when(mockVerificationSequenceSerializer.serialize(any(VerificationSequence.class))).thenReturn("verification_json");
         HttpRequest httpRequest = new HttpRequest()
                 .withPath("/some_path")
-                .withBody(new StringBody("some_request_body", Body.Type.STRING));
+                .withBody(new StringBody("some_request_body"));
 
         try {
             mockServerClient.verify(httpRequest);
@@ -435,7 +435,7 @@ public class MockServerClientTest {
         when(mockVerificationSequenceSerializer.serialize(any(VerificationSequence.class))).thenReturn("verification_json");
         HttpRequest httpRequest = new HttpRequest()
                 .withPath("/some_path")
-                .withBody(new StringBody("some_request_body", Body.Type.STRING));
+                .withBody(new StringBody("some_request_body"));
 
         try {
             mockServerClient.verify(httpRequest, httpRequest);
@@ -456,7 +456,7 @@ public class MockServerClientTest {
         when(mockVerificationSequenceSerializer.serialize(any(VerificationSequence.class))).thenReturn("verification_json");
         HttpRequest httpRequest = new HttpRequest()
                 .withPath("/some_path")
-                .withBody(new StringBody("some_request_body", Body.Type.STRING));
+                .withBody(new StringBody("some_request_body"));
 
         try {
             mockServerClient.verify(httpRequest);
@@ -478,7 +478,7 @@ public class MockServerClientTest {
         when(mockVerificationSerializer.serialize(any(Verification.class))).thenReturn("verification_json");
         HttpRequest httpRequest = new HttpRequest()
                 .withPath("/some_path")
-                .withBody(new StringBody("some_request_body", Body.Type.STRING));
+                .withBody(new StringBody("some_request_body"));
 
         try {
             mockServerClient.verify(httpRequest, once());
@@ -500,7 +500,7 @@ public class MockServerClientTest {
         when(mockVerificationSerializer.serialize(any(Verification.class))).thenReturn("verification_json");
         HttpRequest httpRequest = new HttpRequest()
                 .withPath("/some_path")
-                .withBody(new StringBody("some_request_body", Body.Type.STRING));
+                .withBody(new StringBody("some_request_body"));
 
         try {
             mockServerClient.verify(httpRequest, atLeast(1));

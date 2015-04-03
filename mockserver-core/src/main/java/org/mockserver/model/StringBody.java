@@ -14,8 +14,8 @@ public class StringBody extends Body<String> {
         this.rawBinaryData = rawBinaryData;
     }
 
-    public StringBody(String value, Type type) {
-        super(type);
+    public StringBody(String value) {
+        super(Type.STRING);
         this.value = value;
         if (value != null) {
             this.rawBinaryData = value.getBytes();
@@ -25,19 +25,7 @@ public class StringBody extends Body<String> {
     }
 
     public static StringBody exact(String body) {
-        return new StringBody(body, Type.STRING);
-    }
-
-    public static StringBody regex(String body) {
-        return new StringBody(body, Type.REGEX);
-    }
-
-    public static StringBody xpath(String body) {
-        return new StringBody(body, Type.XPATH);
-    }
-
-    public static StringBody json(String body) {
-        return new StringBody(body, Type.JSON);
+        return new StringBody(body);
     }
 
     public String getValue() {

@@ -17,7 +17,9 @@ public abstract class Body<T> extends ObjectWithReflectiveEqualsHashCodeToString
 
     public abstract T getValue();
 
-    public abstract byte[] getRawBytes();
+    public byte[] getRawBytes() {
+        return toString().getBytes();
+    }
 
     public enum Type {
         PARAMETERS,

@@ -1,8 +1,8 @@
 package org.mockserver.filters;
 
-import com.google.common.annotations.VisibleForTesting;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
+import org.mockserver.client.serialization.java.ExpectationToJavaSerializer;
 import org.mockserver.collections.CircularLinkedList;
 import org.mockserver.collections.CircularMultiMap;
 import org.mockserver.matchers.HttpRequestMatcher;
@@ -96,12 +96,13 @@ public class LogFilter implements ResponseFilter, RequestFilter {
 
     public synchronized void dumpToLog(HttpRequest httpRequest, boolean asJava) {
         ExpectationSerializer expectationSerializer = new ExpectationSerializer();
+        ExpectationToJavaSerializer expectationToJavaSerializer = new ExpectationToJavaSerializer();
         if (httpRequest != null) {
             HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
             for (Map.Entry<HttpRequest, HttpResponse> entry : requestResponseLog.entrySet()) {
                 if (httpRequestMatcher.matches(entry.getKey())) {
                     if (asJava) {
-                        requestLogger.warn(expectationSerializer.serializeAsJava(new Expectation(entry.getKey(), Times.once()).thenRespond(entry.getValue())));
+                        requestLogger.warn(expectationToJavaSerializer.serializeAsJava(0, new Expectation(entry.getKey(), Times.once()).thenRespond(entry.getValue())));
                     } else {
                         requestLogger.warn(expectationSerializer.serialize(new Expectation(entry.getKey(), Times.once()).thenRespond(entry.getValue())));
                     }
@@ -110,7 +111,7 @@ public class LogFilter implements ResponseFilter, RequestFilter {
         } else {
             for (Map.Entry<HttpRequest, HttpResponse> entry : requestResponseLog.entrySet()) {
                 if (asJava) {
-                    requestLogger.warn(expectationSerializer.serializeAsJava(new Expectation(entry.getKey(), Times.once()).thenRespond(entry.getValue())));
+                    requestLogger.warn(expectationToJavaSerializer.serializeAsJava(0, new Expectation(entry.getKey(), Times.once()).thenRespond(entry.getValue())));
                 } else {
                     requestLogger.warn(expectationSerializer.serialize(new Expectation(entry.getKey(), Times.once()).thenRespond(entry.getValue())));
                 }

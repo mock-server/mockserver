@@ -14,7 +14,7 @@ public class MatcherBuilderTest {
             .withMethod("GET")
             .withPath("some_path")
             .withQueryStringParameter(new Parameter("queryStringParameterName", "queryStringParameterValue"))
-            .withBody(new StringBody("some_body", Body.Type.STRING))
+            .withBody(new StringBody("some_body"))
             .withHeaders(new Header("name", "value"))
             .withCookies(new Cookie("name", "value"));
     ;
@@ -36,7 +36,7 @@ public class MatcherBuilderTest {
                         .withMethod("")
                         .withPath("some_path")
                         .withQueryStringParameter(new Parameter("queryStringParameterName", "queryStringParameterValue"))
-                        .withBody(new StringBody("some_body", Body.Type.STRING))
+                        .withBody(new StringBody("some_body"))
                         .withHeaders(new Header("name", "value"))
                         .withCookies(new Cookie("name", "value"))
         );
@@ -53,7 +53,7 @@ public class MatcherBuilderTest {
                         .withMethod("GET")
                         .withPath("")
                         .withQueryStringParameter(new Parameter("queryStringParameterName", "queryStringParameterValue"))
-                        .withBody(new StringBody("some_body", Body.Type.STRING))
+                        .withBody(new StringBody("some_body"))
                         .withHeaders(new Header("name", "value"))
                         .withCookies(new Cookie("name", "value"))
         );
@@ -70,7 +70,7 @@ public class MatcherBuilderTest {
                         .withMethod("GET")
                         .withPath("some_path")
                         .withQueryStringParameters()
-                        .withBody(new StringBody("some_body", Body.Type.STRING))
+                        .withBody(new StringBody("some_body"))
                         .withHeaders(new Header("name", "value"))
                         .withCookies(new Cookie("name", "value"))
         );
@@ -104,7 +104,7 @@ public class MatcherBuilderTest {
                         .withMethod("GET")
                         .withPath("some_path")
                         .withQueryStringParameter(new Parameter("queryStringParameterName", "queryStringParameterValue"))
-                        .withBody(new StringBody("", Body.Type.STRING))
+                        .withBody(new StringBody(""))
                         .withHeaders(new Header("name", "value"))
                         .withCookies(new Cookie("name", "value"))
         );
@@ -121,7 +121,7 @@ public class MatcherBuilderTest {
                         .withMethod("GET")
                         .withPath("some_path")
                         .withQueryStringParameter(new Parameter("queryStringParameterName", "queryStringParameterValue"))
-                        .withBody(new StringBody("some_body", Body.Type.STRING))
+                        .withBody(new StringBody("some_body"))
                         .withHeaders()
                         .withCookies(new Cookie("name", "value"))
         );
@@ -138,7 +138,7 @@ public class MatcherBuilderTest {
                         .withMethod("GET")
                         .withPath("some_path")
                         .withQueryStringParameter(new Parameter("queryStringParameterName", "queryStringParameterValue"))
-                        .withBody(new StringBody("some_body", Body.Type.STRING))
+                        .withBody(new StringBody("some_body"))
                         .withHeaders(new Header("name", "value"))
                         .withCookies()
         );

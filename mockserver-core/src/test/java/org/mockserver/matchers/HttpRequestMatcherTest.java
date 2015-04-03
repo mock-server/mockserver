@@ -9,7 +9,10 @@ import static org.junit.Assert.assertTrue;
 import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.ParameterBody.params;
-import static org.mockserver.model.StringBody.*;
+import static org.mockserver.model.StringBody.exact;
+import static org.mockserver.model.JsonBody.json;
+import static org.mockserver.model.RegexBody.regex;
+import static org.mockserver.model.XPathBody.xpath;
 
 /**
  * @author jamesdbloom
@@ -192,7 +195,7 @@ public class HttpRequestMatcherTest {
 
     @Test
     public void matchesMatchingBody() {
-        assertTrue(new HttpRequestMatcher(new HttpRequest().withBody(new StringBody("somebody", Type.STRING))).matches(new HttpRequest().withBody("somebody")));
+        assertTrue(new HttpRequestMatcher(new HttpRequest().withBody(new StringBody("somebody"))).matches(new HttpRequest().withBody("somebody")));
     }
 
     @Test

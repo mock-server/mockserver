@@ -35,7 +35,9 @@ import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.OutboundHttpRequest.outboundRequest;
 import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.ParameterBody.params;
-import static org.mockserver.model.StringBody.*;
+import static org.mockserver.model.StringBody.exact;
+import static org.mockserver.model.JsonBody.json;
+import static org.mockserver.model.XPathBody.xpath;
 
 /**
  * @author jamesdbloom
@@ -855,7 +857,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         "  <price>39.95</price>" + System.getProperty("line.separator") +
                                         "</book>" + System.getProperty("line.separator") +
                                         "" + System.getProperty("line.separator") +
-                                        "</bookstore>", Body.Type.STRING)),
+                                        "</bookstore>")),
                         headersToIgnore)
         );
         // - in https
@@ -893,7 +895,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         "  <price>39.95</price>" + System.getProperty("line.separator") +
                                         "</book>" + System.getProperty("line.separator") +
                                         "" + System.getProperty("line.separator") +
-                                        "</bookstore>", Body.Type.STRING)),
+                                        "</bookstore>")),
                         headersToIgnore)
         );
     }
@@ -1833,7 +1835,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withPath(calculatePath("some_pathRequest"))
                                 .withBody(new StringBody("bodyParameterOneName=Parameter+One+Value+One" +
                                         "&bodyParameterOneName=Parameter+One+Value+Two" +
-                                        "&bodyParameterTwoName=Parameter+Two", Body.Type.STRING))
+                                        "&bodyParameterTwoName=Parameter+Two"))
                                 .withHeaders(header("headerNameRequest", "headerValueRequest"))
                                 .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
                         headersToIgnore)
@@ -1894,7 +1896,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withPath(calculatePath("some_pathRequest"))
                                 .withBody(new StringBody("bodyParameterOneName=Parameter+One+Value+One" +
                                         "&bodyParameterOneName=Parameter+One+Value+Two" +
-                                        "&bodyParameterTwoName=Parameter+Two", Body.Type.STRING))
+                                        "&bodyParameterTwoName=Parameter+Two"))
                                 .withHeaders(header("headerNameRequest", "headerValueRequest"))
                                 .withCookies(cookie("cookieNameRequest", "cookieValueRequest"))
                 )
@@ -1924,7 +1926,7 @@ public abstract class AbstractClientServerIntegrationTest {
 
                                 .withBody(new StringBody("bodyParameterOneName=Parameter+One+Value+One" +
                                         "&bodyParameterOneName=Parameter+One+Value+Two" +
-                                        "&bodyParameterTwoName=Parameter+Two", Body.Type.STRING))
+                                        "&bodyParameterTwoName=Parameter+Two"))
                                 .withHeaders(
                                         header("headerNameRequest", "headerValueRequest"),
                                         header("Cookie", "cookieNameRequest=cookieValueRequest")
@@ -2020,7 +2022,7 @@ public abstract class AbstractClientServerIntegrationTest {
     @Test
     public void clientCanCallServerNegativeMatchXPathBodyOnly() {
         // when
-        mockServerClient.when(request().withBody(new StringBody("/bookstore/book[price>35]/price", Body.Type.XPATH)), exactly(2)).respond(response().withBody("some_body"));
+        mockServerClient.when(request().withBody(new XPathBody("/bookstore/book[price>35]/price")), exactly(2)).respond(response().withBody("some_body"));
 
         // then
         // - in http
@@ -2057,7 +2059,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         "  <price>31.95</price>" + System.getProperty("line.separator") +
                                         "</book>" + System.getProperty("line.separator") +
                                         "" + System.getProperty("line.separator") +
-                                        "</bookstore>", Body.Type.STRING)),
+                                        "</bookstore>")),
                         headersToIgnore)
         );
         // - in https
@@ -2094,7 +2096,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         "  <price>31.95</price>" + System.getProperty("line.separator") +
                                         "</book>" + System.getProperty("line.separator") +
                                         "" + System.getProperty("line.separator") +
-                                        "</bookstore>", Body.Type.STRING)),
+                                        "</bookstore>")),
                         headersToIgnore)
         );
     }
@@ -2348,7 +2350,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withPath(calculatePath("some_pathRequest"))
                                 .withBody(new StringBody("OTHERBodyParameterOneName=Parameter+One+Value+One" +
                                         "&bodyParameterOneName=Parameter+One+Value+Two" +
-                                        "&bodyParameterTwoName=Parameter+Two", Body.Type.STRING))
+                                        "&bodyParameterTwoName=Parameter+Two"))
                                 .withHeaders(header("headerNameRequest", "headerValueRequest"))
                                 .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
                         headersToIgnore)
@@ -2445,7 +2447,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withPath(calculatePath("some_pathRequest"))
                                 .withBody(new StringBody("bodyParameterOneName=Other Parameter+One+Value+One" +
                                         "&bodyParameterOneName=Parameter+One+Value+Two" +
-                                        "&bodyParameterTwoName=Parameter+Two", Body.Type.STRING))
+                                        "&bodyParameterTwoName=Parameter+Two"))
                                 .withHeaders(header("headerNameRequest", "headerValueRequest"))
                                 .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
                         headersToIgnore)

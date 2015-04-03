@@ -125,7 +125,7 @@ public class ProxyClientTest {
                 .clear(
                         new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.STRING))
+                                .withBody(new StringBody("some_request_body"))
                 );
 
         // then
@@ -158,7 +158,7 @@ public class ProxyClientTest {
                 .retrieveAsExpectations(
                         new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.STRING))
+                                .withBody(new StringBody("some_request_body"))
                 ));
 
         // then
@@ -196,7 +196,7 @@ public class ProxyClientTest {
                 .retrieveAsJSON(
                         new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body", Body.Type.STRING))
+                                .withBody(new StringBody("some_request_body"))
                 ));
 
         // then
@@ -227,7 +227,7 @@ public class ProxyClientTest {
         when(mockVerificationSequenceSerializer.serialize(any(VerificationSequence.class))).thenReturn("verification_json");
         HttpRequest httpRequest = new HttpRequest()
                 .withPath("/some_path")
-                .withBody(new StringBody("some_request_body", Body.Type.STRING));
+                .withBody(new StringBody("some_request_body"));
 
         try {
             proxyClient.verify(httpRequest);
@@ -248,7 +248,7 @@ public class ProxyClientTest {
         when(mockVerificationSequenceSerializer.serialize(any(VerificationSequence.class))).thenReturn("verification_json");
         HttpRequest httpRequest = new HttpRequest()
                 .withPath("/some_path")
-                .withBody(new StringBody("some_request_body", Body.Type.STRING));
+                .withBody(new StringBody("some_request_body"));
 
         try {
             proxyClient.verify(httpRequest, httpRequest);
@@ -269,7 +269,7 @@ public class ProxyClientTest {
         when(mockVerificationSequenceSerializer.serialize(any(VerificationSequence.class))).thenReturn("verification_json");
         HttpRequest httpRequest = new HttpRequest()
                 .withPath("/some_path")
-                .withBody(new StringBody("some_request_body", Body.Type.STRING));
+                .withBody(new StringBody("some_request_body"));
 
         try {
             proxyClient.verify(httpRequest);
@@ -291,7 +291,7 @@ public class ProxyClientTest {
         when(mockVerificationSerializer.serialize(any(Verification.class))).thenReturn("verification_json");
         HttpRequest httpRequest = new HttpRequest()
                 .withPath("/some_path")
-                .withBody(new StringBody("some_request_body", Body.Type.STRING));
+                .withBody(new StringBody("some_request_body"));
 
         try {
             proxyClient.verify(httpRequest, once());
@@ -313,7 +313,7 @@ public class ProxyClientTest {
         when(mockVerificationSerializer.serialize(any(Verification.class))).thenReturn("verification_json");
         HttpRequest httpRequest = new HttpRequest()
                 .withPath("/some_path")
-                .withBody(new StringBody("some_request_body", Body.Type.STRING));
+                .withBody(new StringBody("some_request_body"));
 
         try {
             proxyClient.verify(httpRequest, atLeast(1));

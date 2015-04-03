@@ -35,10 +35,6 @@ public class ParameterBody extends Body<List<Parameter>> {
         return parameters;
     }
 
-    public byte[] getRawBytes() {
-        return toString().getBytes();
-    }
-
     @Override
     public String toString() {
         StringBuilder body = new StringBuilder();

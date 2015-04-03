@@ -51,22 +51,28 @@ public class HttpRequestMatcher extends ObjectWithReflectiveEqualsHashCodeToStri
         if (body != null) {
             switch (body.getType()) {
                 case STRING:
-                    this.bodyMatcher = new ExactStringMatcher(((StringBody) body).getValue());
+                    StringBody stringBody = (StringBody) body;
+                    this.bodyMatcher = new ExactStringMatcher(stringBody.getValue());
                     break;
                 case REGEX:
-                    this.bodyMatcher = new RegexStringMatcher(((StringBody) body).getValue());
+                    RegexBody regexBody = (RegexBody) body;
+                    this.bodyMatcher = new RegexStringMatcher(regexBody.getValue());
                     break;
                 case PARAMETERS:
-                    this.bodyMatcher = new ParameterStringMatcher(((ParameterBody) body).getValue());
+                    ParameterBody parameterBody = (ParameterBody) body;
+                    this.bodyMatcher = new ParameterStringMatcher(parameterBody.getValue());
                     break;
                 case XPATH:
-                    this.bodyMatcher = new XPathStringMatcher(((StringBody) body).getValue());
+                    XPathBody xPathBody = (XPathBody) body;
+                    this.bodyMatcher = new XPathStringMatcher(xPathBody.getValue());
                     break;
                 case JSON:
-                    this.bodyMatcher = new JsonStringMatcher(((StringBody) body).getValue());
+                    JsonBody jsonBody = (JsonBody) body;
+                    this.bodyMatcher = new JsonStringMatcher(jsonBody.getValue(), jsonBody.getMatchType());
                     break;
                 case BINARY:
-                    this.bodyMatcher = new BinaryMatcher(((BinaryBody) body).getValue());
+                    BinaryBody binaryBody = (BinaryBody) body;
+                    this.bodyMatcher = new BinaryMatcher(binaryBody.getValue());
                     break;
             }
         }

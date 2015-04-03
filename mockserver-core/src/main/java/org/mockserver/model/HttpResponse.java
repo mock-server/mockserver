@@ -9,7 +9,7 @@ import java.util.*;
  */
 public class HttpResponse extends Action {
     private Integer statusCode = 200;
-    private Body body = new StringBody("", Body.Type.STRING);
+    private Body body = new StringBody("");
     private Map<String, Header> headers = new LinkedHashMap<String, Header>();
     private Map<String, Cookie> cookies = new LinkedHashMap<String, Cookie>();
     private Delay delay;
@@ -52,7 +52,7 @@ public class HttpResponse extends Action {
      */
     public HttpResponse withBody(String body) {
         if (body != null) {
-            this.body = new StringBody(body, Body.Type.STRING);
+            this.body = new StringBody(body);
         }
         return this;
     }

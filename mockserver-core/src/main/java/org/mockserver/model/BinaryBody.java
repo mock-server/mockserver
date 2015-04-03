@@ -7,11 +7,11 @@ import org.mockserver.client.serialization.Base64Converter;
  */
 public class BinaryBody extends Body<byte[]> {
 
-    private final byte[] value;
+    private final byte[] bytes;
 
-    public BinaryBody(byte[] value) {
+    public BinaryBody(byte[] bytes) {
         super(Type.BINARY);
-        this.value = value;
+        this.bytes = bytes;
     }
 
     public static BinaryBody binary(byte[] body) {
@@ -19,15 +19,15 @@ public class BinaryBody extends Body<byte[]> {
     }
 
     public byte[] getValue() {
-        return value;
+        return bytes;
     }
 
     public byte[] getRawBytes() {
-        return value;
+        return bytes;
     }
 
     @Override
     public String toString() {
-        return value != null ? Base64Converter.stringToBase64Bytes(value) : null;
+        return bytes != null ? Base64Converter.stringToBase64Bytes(bytes) : null;
     }
 }

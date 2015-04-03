@@ -177,7 +177,7 @@ public class HttpRequest extends ObjectWithJsonToString {
      *             or an XPath such as "/element[key = 'some_key' and value = 'some_value']"
      */
     public HttpRequest withBody(String body) {
-        this.body = new StringBody(body, Body.Type.STRING);
+        this.body = new StringBody(body);
         return this;
     }
 

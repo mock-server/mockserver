@@ -1,7 +1,6 @@
 package org.mockserver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.mockserver.client.serialization.ObjectMapperFactory;
 
 /**
  * @author jamesdbloom

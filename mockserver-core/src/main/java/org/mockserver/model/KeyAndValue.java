@@ -1,7 +1,6 @@
 package org.mockserver.model;
 
 import org.mockserver.collections.CaseInsensitiveRegexHashMap;
-import org.mockserver.collections.CaseInsensitiveRegexMultiMap;
 
 import java.util.Arrays;
 import java.util.List;

@@ -38,7 +38,7 @@ public class HttpRequestTest {
 
     @Test
     public void returnsBody() {
-        assertEquals(new StringBody("somebody", Body.Type.STRING), new HttpRequest().withBody(new StringBody("somebody", Body.Type.STRING)).getBody());
+        assertEquals(new StringBody("somebody"), new HttpRequest().withBody(new StringBody("somebody")).getBody());
     }
 
     @Test
