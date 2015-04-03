@@ -1,16 +1,18 @@
 package org.mockserver.socket;
 
-import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.io.IOUtils;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.*;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
 import java.net.Socket;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
+import java.security.Principal;
+import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 
 /**
@@ -18,11 +20,10 @@ import java.security.cert.X509Certificate;
  */
 public class SSLFactory {
 
-    private static final Logger logger = LoggerFactory.getLogger(SSLFactory.class);
-
     public static final String KEY_STORE_PASSWORD = "changeit";
     public static final String CERTIFICATE_DOMAIN = "localhost";
     public static final String KEY_STORE_CERT_ALIAS = "certAlias";
+    private static final Logger logger = LoggerFactory.getLogger(SSLFactory.class);
     private static final String KEY_STORE_CA_ALIAS = "caAlias";
     private static final SSLFactory SSL_FACTORY = new SSLFactory();
     private static final TrustManager DUMMY_TRUST_MANAGER = new X509TrustManager() {
@@ -43,6 +44,10 @@ public class SSLFactory {
     };
     private KeyStore keystore;
 
+    private SSLFactory() {
+
+    }
+
     public static String defaultKeyStoreFileName() {
         if ("jks".equalsIgnoreCase(ConfigurationProperties.javaKeyStoreType())) {
             return "keystore.jks";
@@ -51,12 +56,8 @@ public class SSLFactory {
         } else if ("jceks".equalsIgnoreCase(ConfigurationProperties.javaKeyStoreType())) {
             return "keystore.jceks";
         } else {
-             throw new IllegalArgumentException(ConfigurationProperties.javaKeyStoreType() + " is not a supported keystore type");
+            throw new IllegalArgumentException(ConfigurationProperties.javaKeyStoreType() + " is not a supported keystore type");
         }
-    }
-
-    private SSLFactory() {
-
     }
 
     public static SSLFactory getInstance() {
@@ -81,9 +82,52 @@ public class SSLFactory {
             KeyManagerFactory keyManagerFactory = getKeyManagerFactoryInstance(KeyManagerFactory.getDefaultAlgorithm());
             keyManagerFactory.init(buildKeyStore(), ConfigurationProperties.javaKeyStorePassword().toCharArray());
 
+            final X509ExtendedKeyManager sunKeyManager = (X509ExtendedKeyManager) keyManagerFactory.getKeyManagers()[0];
+
+            X509ExtendedKeyManager keyManager = new X509ExtendedKeyManager() {
+
+                @Override
+                public String[] getClientAliases(String s, Principal[] principals) {
+                    return sunKeyManager.getClientAliases(s, principals);
+                }
+
+                @Override
+                public String chooseClientAlias(String[] strings, Principal[] principals, Socket socket) {
+                    return sunKeyManager.chooseClientAlias(strings, principals, socket);
+                }
+
+                @Override
+                public String[] getServerAliases(String s, Principal[] principals) {
+                    return sunKeyManager.getServerAliases(s, principals);
+                }
+
+                @Override
+                public String chooseServerAlias(String s, Principal[] principals, Socket socket) {
+                    return sunKeyManager.chooseServerAlias(s, principals, socket);
+                }
+
+                @Override
+                public X509Certificate[] getCertificateChain(String s) {
+                    return sunKeyManager.getCertificateChain(s);
+                }
+
+                @Override
+                public PrivateKey getPrivateKey(String s) {
+                    return sunKeyManager.getPrivateKey(s);
+                }
+
+                public String chooseEngineClientAlias(String[] keyType, Principal[] issuers, SSLEngine engine) {
+                    return sunKeyManager.chooseEngineClientAlias(keyType, issuers, engine);
+                }
+
+                public String chooseEngineServerAlias(String keyType, Principal[] issuers, SSLEngine engine) {
+                    return sunKeyManager.chooseEngineServerAlias(keyType, issuers, engine);
+                }
+            };
+
             // ssl context
             SSLContext sslContext = getSSLContextInstance("TLS");
-            sslContext.init(keyManagerFactory.getKeyManagers(), new TrustManager[]{DUMMY_TRUST_MANAGER}, null);
+            sslContext.init(new KeyManager[]{keyManager}, new TrustManager[]{DUMMY_TRUST_MANAGER}, null);
             return sslContext;
         } catch (Exception e) {
             throw new RuntimeException("Failed to initialize the SSLContext", e);
