@@ -14,6 +14,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -54,19 +56,38 @@ public class MockServerMatcher extends ObjectWithReflectiveEqualsHashCodeToStrin
     }
 
     public synchronized Action handle(HttpRequest httpRequest) {
-        ArrayList<Expectation> expectations = new ArrayList<Expectation>(this.expectations);
+        Collection<Expectation> expectations = new ArrayList<Expectation>(this.expectations);
+        List<Expectation> matchingExpectations = new ArrayList<Expectation>();
         for (Expectation expectation : expectations) {
             if (expectation.matches(httpRequest)) {
-                expectation.decrementRemainingMatches();
-                if (!expectation.getTimes().greaterThenZero()) {
-                    if (this.expectations.contains(expectation)) {
-                        this.expectations.remove(expectation);
-                    }
-                }
-                return expectation.getAction(true);
+                matchingExpectations.add(expectation);
             }
         }
-        return null;
+        if (matchingExpectations.isEmpty()) {
+            return null;
+        }
+        Collections.sort(matchingExpectations, new Comparator<Expectation>() {
+            @Override
+            public int compare(Expectation expectationOne, Expectation expectationTwo) {
+                HttpRequest httpRequestOne = expectationOne.getHttpRequest();
+                HttpRequest httpRequestTwo = expectationTwo.getHttpRequest();
+                if (httpRequestOne == null || httpRequestTwo == null) {
+                    return 0;
+                }
+                return httpRequestOne.compareTo(httpRequestTwo);
+            }
+        });
+        return consumeExpectation(matchingExpectations.get(0));
+    }
+
+    private Action consumeExpectation(Expectation expectation) {
+        expectation.decrementRemainingMatches();
+        if (!expectation.getTimes().greaterThenZero()) {
+            if (this.expectations.contains(expectation)) {
+                this.expectations.remove(expectation);
+            }
+        }
+        return expectation.getAction(true);
     }
 
     public synchronized void clear(HttpRequest httpRequest) {

@@ -3,13 +3,14 @@ package org.mockserver.model;
 import junit.framework.TestCase;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
-import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertThat;
 import static org.mockserver.model.HttpRequest.request;
 
 /**
@@ -85,4 +86,33 @@ public class HttpRequestTest {
         );
     }
 
+    @Test
+    public void shouldBeAbleToCompareHttpRequest(){
+        List<HttpRequest> collection = new ArrayList<HttpRequest>();
+        collection.add(
+                request()
+                        .withPath("/requestWith3Criteria")
+                        .withHeaders(new Header("name", "value"))
+                        .withCookies(new Cookie("name", "[A-Z]{0,10}"))
+        );
+
+        collection.add(
+                request()
+                        .withPath("/requestWith2Criteria")
+                        .withCookies(new Cookie("name", "[A-Z]{0,10}"))
+        );
+
+        List<Parameter> strings = Arrays.asList(new Parameter("ParamOne", "Value"), new Parameter("ParamTwo", "Value"));
+        collection.add(
+                request()
+                        .withPath("/requestWith4Criteria")
+                        .withHeaders(new Header("name", "value"))
+                        .withCookies(new Cookie("name", "[A-Z]{0,10}"))
+                        .withQueryStringParameters(strings)
+        );
+        Collections.sort(collection);
+        assertEquals("/requestWith4Criteria",collection.get(0).path );
+        assertEquals("/requestWith3Criteria", collection.get(1).path );
+        assertEquals("/requestWith2Criteria", collection.get(2).path);
+    }
 }
