@@ -8,6 +8,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.ParameterBody.params;
 import static org.mockserver.model.StringBody.exact;
 import static org.mockserver.model.JsonBody.json;
@@ -177,6 +178,35 @@ public class HttpRequestMatcherTest {
                 new Parameter("nameTwo", "valueTwo"),
                 new Parameter("nameTwo", "valueThree")
         ))));
+    }
+
+    @Test
+    public void bodyMatchesMatchingUrlEncodedBodyParameters() {
+        // pass exact match
+        assertTrue(new HttpRequestMatcher(new HttpRequest().withBody(params(param("name one", "value one"), param("nameTwo", "valueTwo"))))
+                .matches(new HttpRequest().withBody("name+one=value+one&nameTwo=valueTwo")));
+
+        // ignore extra parameters
+        assertTrue(new HttpRequestMatcher(new HttpRequest().withBody(params(param("name one", "value one"))))
+                .matches(new HttpRequest().withBody("name+one=value+one&nameTwo=valueTwo")));
+
+        // matches multi-value parameters
+        assertTrue(new HttpRequestMatcher(new HttpRequest().withBody(params(param("name one", "value one one", "value one two"))))
+                .matches(new HttpRequest().withBody("name+one=value+one+one&name+one=value+one+two")));
+
+        // matches multi-value parameters (ignore extra values)
+        assertTrue(new HttpRequestMatcher(new HttpRequest().withBody(params(param("name one", "value one one"))))
+                .matches(new HttpRequest().withBody("name+one=value+one+one&name+one=value+one+two")));
+        assertTrue(new HttpRequestMatcher(new HttpRequest().withBody(params(param("name one", "value one two"))))
+                .matches(new HttpRequest().withBody("name+one=value+one+one&name+one=value+one+two")));
+
+        // matches using regex
+        assertTrue(new HttpRequestMatcher(new HttpRequest().withBody(params(param("name one", "value [a-z]{0,10}"), param("nameTwo", "valueT[a-z]{0,10}"))))
+                .matches(new HttpRequest().withBody("name+one=value+one&nameTwo=valueTwo")));
+
+        // fail no match
+        assertFalse(new HttpRequestMatcher(new HttpRequest().withBody(params(param("name one", "value one"))))
+                .matches(new HttpRequest().withBody("name+one=value+two")));
     }
 
     @Test
