@@ -6,10 +6,8 @@ import org.junit.Test;
 import java.util.Arrays;
 import java.util.Collection;
 
-import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertThat;
 import static org.mockserver.model.HttpRequest.request;
 
 /**

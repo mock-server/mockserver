@@ -8,11 +8,11 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockserver.model.ParameterBody.params;
-import static org.mockserver.model.StringBody.exact;
 import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.JsonSchemaBody.jsonSchema;
+import static org.mockserver.model.ParameterBody.params;
 import static org.mockserver.model.RegexBody.regex;
+import static org.mockserver.model.StringBody.exact;
 import static org.mockserver.model.XPathBody.xpath;
 
 /**

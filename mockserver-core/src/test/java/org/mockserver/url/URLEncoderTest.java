@@ -1,7 +1,6 @@
 package org.mockserver.url;
 
 import org.junit.Test;
-import org.mockserver.url.URLEncoder;
 
 import static org.junit.Assert.assertEquals;
 

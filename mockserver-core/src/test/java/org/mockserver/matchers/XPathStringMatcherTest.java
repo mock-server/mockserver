@@ -2,9 +2,7 @@ package org.mockserver.matchers;
 
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * @author jamesdbloom
@@ -64,7 +62,7 @@ public class XPathStringMatcherTest {
     }
 
     @Test
-    public void showHaveCorrectEqualsBehaviour(){
+    public void showHaveCorrectEqualsBehaviour() {
         assertEquals(new XPathStringMatcher("some_value"), new XPathStringMatcher("some_value"));
     }
 }

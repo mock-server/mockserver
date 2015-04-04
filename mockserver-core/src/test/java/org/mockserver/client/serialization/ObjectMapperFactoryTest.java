@@ -3,9 +3,11 @@ package org.mockserver.client.serialization;
 import org.junit.Test;
 import org.mockserver.client.serialization.model.*;
 import org.mockserver.matchers.Times;
-import org.mockserver.model.*;
+import org.mockserver.model.Cookie;
+import org.mockserver.model.Header;
+import org.mockserver.model.Parameter;
+import org.mockserver.model.StringBody;
 
-import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;

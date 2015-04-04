@@ -2,7 +2,6 @@ package org.mockserver.client.serialization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import org.apache.commons.lang3.StringEscapeUtils;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;

@@ -1,12 +1,7 @@
 package org.mockserver.matchers;
 
-import org.json.JSONException;
 import org.junit.Test;
-import org.skyscreamer.jsonassert.JSONCompare;
-import org.skyscreamer.jsonassert.JSONCompareMode;
-import org.skyscreamer.jsonassert.JSONCompareResult;
 
-import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
 
 /**

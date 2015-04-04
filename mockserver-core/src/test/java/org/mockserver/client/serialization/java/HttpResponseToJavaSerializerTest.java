@@ -2,7 +2,9 @@ package org.mockserver.client.serialization.java;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.junit.Test;
-import org.mockserver.model.*;
+import org.mockserver.model.Cookie;
+import org.mockserver.model.Header;
+import org.mockserver.model.HttpResponse;
 
 import java.io.IOException;
 

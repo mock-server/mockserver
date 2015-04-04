@@ -42,7 +42,7 @@ public class BinaryBodyDTOTest {
     }
 
     @Test
-    public void coverage(){
+    public void coverage() {
         new BinaryBodyDTO();
     }
 }

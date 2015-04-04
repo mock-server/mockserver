@@ -2,12 +2,6 @@ package org.mockserver.client.serialization.model;
 
 import org.junit.Test;
 import org.mockserver.matchers.Times;
-import org.mockserver.model.BinaryBody;
-import org.mockserver.model.Body;
-
-import javax.xml.bind.DatatypeConverter;
-
-import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;

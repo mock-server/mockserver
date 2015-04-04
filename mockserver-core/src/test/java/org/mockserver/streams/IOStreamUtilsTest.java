@@ -3,7 +3,10 @@ package org.mockserver.streams;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
-import javax.servlet.*;
+import javax.servlet.ServletInputStream;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
@@ -36,15 +39,15 @@ public class IOStreamUtilsTest {
         // given
         Socket socket = mock(Socket.class);
         when(socket.getInputStream()).thenReturn(IOUtils.toInputStream("" +
-                "Cache-Control:public, max-age=60\r\n" +
-                "Content-Length:10\r\n" +
-                "Content-Type:text/html; charset=utf-8\r\n" +
-                "Date:Sat, 04 Jan 2014 17:18:54 GMT\r\n" +
-                "Expires:Sat, 04 Jan 2014 17:19:54 GMT\r\n" +
-                "Last-Modified:Sat, 04 Jan 2014 17:18:54 GMT\r\n" +
-                "Vary:*\n" +
-                "\r\n" +
-                "1234567890"
+                        "Cache-Control:public, max-age=60\r\n" +
+                        "Content-Length:10\r\n" +
+                        "Content-Type:text/html; charset=utf-8\r\n" +
+                        "Date:Sat, 04 Jan 2014 17:18:54 GMT\r\n" +
+                        "Expires:Sat, 04 Jan 2014 17:19:54 GMT\r\n" +
+                        "Last-Modified:Sat, 04 Jan 2014 17:18:54 GMT\r\n" +
+                        "Vary:*\n" +
+                        "\r\n" +
+                        "1234567890"
         ));
 
         // when

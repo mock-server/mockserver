@@ -1,13 +1,10 @@
 package org.mockserver.verify;
 
 import org.junit.Test;
-import org.mockserver.verify.VerificationTimes;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockserver.verify.VerificationTimes.atLeast;
-import static org.mockserver.verify.VerificationTimes.exactly;
-import static org.mockserver.verify.VerificationTimes.once;
+import static org.mockserver.verify.VerificationTimes.*;
 
 /**
  * @author jamesdbloom

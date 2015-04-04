@@ -8,12 +8,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.HttpRequest.request;
-import static org.mockserver.model.Parameter.param;
-import static org.mockserver.model.ParameterBody.params;
-import static org.mockserver.model.StringBody.exact;
 import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.JsonSchemaBody.jsonSchema;
+import static org.mockserver.model.Parameter.param;
+import static org.mockserver.model.ParameterBody.params;
 import static org.mockserver.model.RegexBody.regex;
+import static org.mockserver.model.StringBody.exact;
 import static org.mockserver.model.XPathBody.xpath;
 
 /**

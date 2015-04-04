@@ -1,7 +1,7 @@
 package org.mockserver.client.serialization.java;
 
 import org.junit.Test;
-import org.mockserver.model.*;
+import org.mockserver.model.HttpForward;
 
 import java.io.IOException;
 

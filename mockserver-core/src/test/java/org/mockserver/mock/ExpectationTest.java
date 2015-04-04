@@ -10,7 +10,6 @@ import org.mockserver.model.HttpResponse;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
-import static org.junit.Assert.assertEquals;
 import static org.mockserver.model.HttpRequest.request;
 
 /**
