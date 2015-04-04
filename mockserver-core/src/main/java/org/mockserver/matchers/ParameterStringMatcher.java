@@ -12,7 +12,7 @@ import java.util.Map;
 /**
  * @author jamesdbloom
  */
-public class ParameterStringMatcher extends BodyMatcher<String> implements Matcher<String> {
+public class ParameterStringMatcher extends BodyMatcher<String> {
     private final MultiValueMapMatcher matcher;
 
     public ParameterStringMatcher(List<Parameter> parameters) {
@@ -30,7 +30,7 @@ public class ParameterStringMatcher extends BodyMatcher<String> implements Match
             logger.trace("Failed to match [{}] with [{}]", matched, this.matcher);
         }
 
-        return result;
+        return reverseResultIfNot(result);
     }
 
     private List<KeyToMultiValue> parseString(String matched) {

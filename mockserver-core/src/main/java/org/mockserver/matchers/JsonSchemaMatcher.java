@@ -10,7 +10,7 @@ import org.mockserver.client.serialization.ObjectMapperFactory;
  *
  * @author jamesdbloom
  */
-public class JsonSchemaMatcher extends BodyMatcher<String> implements Matcher<String> {
+public class JsonSchemaMatcher extends BodyMatcher<String> {
     private final String schema;
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
 
@@ -36,7 +36,7 @@ public class JsonSchemaMatcher extends BodyMatcher<String> implements Matcher<St
             logger.trace("Failed to perform JSON match \"{}\" with \"{}\" because {}", matched, this.schema, e.getMessage());
         }
 
-        return result;
+        return reverseResultIfNot(result);
     }
 
     public ProcessingReport validateJson(String json) throws Exception {

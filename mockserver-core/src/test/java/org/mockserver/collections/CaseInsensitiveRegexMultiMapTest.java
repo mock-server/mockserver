@@ -6,7 +6,9 @@ import org.junit.Test;
 import java.util.Arrays;
 import java.util.HashMap;
 
+import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.junit.Assert.*;
+import static org.mockserver.collections.NottableKey.nottableKey;
 
 /**
  * @author jamesdbloom
@@ -43,12 +45,12 @@ public class CaseInsensitiveRegexMultiMapTest {
 
         // when
         circularMultiMap.put("one", "one_one");
-        circularMultiMap.putAll(new HashMap<String, String>() {
+        circularMultiMap.putAll(new HashMap<NottableKey, String>() {
             private static final long serialVersionUID = -580164440676146851L;
 
             {
-                put("one", "one_two");
-                put("two", "two");
+                put(nottableKey("one"), "one_two");
+                put(nottableKey("two"), "two");
             }
         });
         circularMultiMap.put("one", "one_three");
@@ -168,7 +170,7 @@ public class CaseInsensitiveRegexMultiMapTest {
         CaseInsensitiveRegexMultiMap.ImmutableEntry immutableEntry = new CaseInsensitiveRegexMultiMap().new ImmutableEntry("key", "value");
 
         // then
-        assertEquals(immutableEntry.getKey(), "key");
+        assertEquals(immutableEntry.getKey(), nottableKey("key"));
         assertEquals(immutableEntry.getValue(), "value");
     }
 
@@ -195,7 +197,7 @@ public class CaseInsensitiveRegexMultiMapTest {
         // - should have correct keys
         assertFalse(circularMultiMap.containsKey("one"));
         assertTrue(circularMultiMap.containsKey("two"));
-        assertEquals(Sets.newHashSet("two"), circularMultiMap.keySet());
+        assertThat(circularMultiMap.keySet(), containsInAnyOrder((Object) "two"));
         // - should have correct values
         assertFalse(circularMultiMap.containsValue("one_one"));
         assertFalse(circularMultiMap.containsValue("one_two"));
@@ -227,7 +229,7 @@ public class CaseInsensitiveRegexMultiMapTest {
         // - should have correct keys
         assertTrue(circularMultiMap.containsKey("one"));
         assertTrue(circularMultiMap.containsKey("two"));
-        assertEquals(Sets.newHashSet("one", "two"), circularMultiMap.keySet());
+        assertThat(circularMultiMap.keySet(), containsInAnyOrder((Object) "one", "two"));
         // - should have correct values
         assertFalse(circularMultiMap.containsValue("one_one"));
         assertTrue(circularMultiMap.containsValue("one_two"));
@@ -259,7 +261,7 @@ public class CaseInsensitiveRegexMultiMapTest {
         // - should have correct keys
         assertTrue(circularMultiMap.containsKey("o.*"));
         assertTrue(circularMultiMap.containsKey("T[a-z]{2}"));
-        assertEquals(Sets.newHashSet("one", "two"), circularMultiMap.keySet());
+        assertThat(circularMultiMap.keySet(), containsInAnyOrder((Object) "one", "two"));
         // - should have correct values
         assertFalse(circularMultiMap.containsValue("one_one"));
         assertTrue(circularMultiMap.containsValue("one_two"));
@@ -291,7 +293,7 @@ public class CaseInsensitiveRegexMultiMapTest {
         // - should have correct keys
         assertFalse(circularMultiMap.containsKey("one"));
         assertTrue(circularMultiMap.containsKey("two"));
-        assertEquals(Sets.newHashSet("two"), circularMultiMap.keySet());
+        assertThat(circularMultiMap.keySet(), containsInAnyOrder((Object) "two"));
         // - should have correct values
         assertFalse(circularMultiMap.containsValue("one_one"));
         assertFalse(circularMultiMap.containsValue("one_two"));
@@ -323,7 +325,7 @@ public class CaseInsensitiveRegexMultiMapTest {
         // - should have correct keys
         assertTrue(circularMultiMap.containsKey("oNE"));
         assertTrue(circularMultiMap.containsKey("Two"));
-        assertEquals(Sets.newHashSet("one", "two"), circularMultiMap.keySet());
+        assertThat(circularMultiMap.keySet(), containsInAnyOrder((Object) "one", "two"));
         // - should have correct values
         assertFalse(circularMultiMap.containsValue("one_one"));
         assertTrue(circularMultiMap.containsValue("one_two"));
@@ -355,7 +357,7 @@ public class CaseInsensitiveRegexMultiMapTest {
         // - should have correct keys
         assertFalse(circularMultiMap.containsKey("one"));
         assertTrue(circularMultiMap.containsKey("two"));
-        assertEquals(Sets.newHashSet("two"), circularMultiMap.keySet());
+        assertThat(circularMultiMap.keySet(), containsInAnyOrder((Object) "two"));
         // - should have correct values
         assertFalse(circularMultiMap.containsValue("one_one"));
         assertFalse(circularMultiMap.containsValue("one_two"));

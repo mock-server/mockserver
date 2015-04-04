@@ -4,6 +4,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockserver.matchers.NotMatcher.not;
 
 /**
  * @author jamesdbloom
@@ -13,6 +14,10 @@ public class RegexStringMatcherTest {
     @Test
     public void shouldMatchMatchingString() {
         assertTrue(new RegexStringMatcher("some_value").matches("some_value"));
+    }
+    @Test
+    public void shouldNotMatchMatchingString() {
+        assertFalse(not(new RegexStringMatcher("some_value")).matches("some_value"));
     }
 
     @Test
@@ -38,6 +43,11 @@ public class RegexStringMatcherTest {
     @Test
     public void shouldNotMatchIncorrectString() {
         assertFalse(new RegexStringMatcher("some_value").matches("not_matching"));
+    }
+
+    @Test
+    public void shouldMatchIncorrectString() {
+        assertTrue(not(new RegexStringMatcher("some_value")).matches("not_matching"));
     }
 
     @Test

@@ -5,10 +5,12 @@ import org.mockserver.collections.CaseInsensitiveRegexHashMap;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.mockserver.collections.NottableKey.nottableKey;
+
 /**
  * @author jamesdbloom
  */
-public class KeyAndValue extends ObjectWithReflectiveEqualsHashCodeToString {
+public class KeyAndValue extends Not {
     private final String name;
     private final String value;
 
@@ -21,7 +23,7 @@ public class KeyAndValue extends ObjectWithReflectiveEqualsHashCodeToString {
         CaseInsensitiveRegexHashMap<String> caseInsensitiveRegexHashMap = new CaseInsensitiveRegexHashMap<String>();
         if (keyAndValue != null) {
             for (KeyAndValue keyToMultiValue : keyAndValue) {
-                caseInsensitiveRegexHashMap.put(keyToMultiValue.getName(), keyToMultiValue.getValue());
+                caseInsensitiveRegexHashMap.put(nottableKey(keyToMultiValue.getName(), keyToMultiValue.getNot()), keyToMultiValue.getValue());
             }
         }
         return caseInsensitiveRegexHashMap;

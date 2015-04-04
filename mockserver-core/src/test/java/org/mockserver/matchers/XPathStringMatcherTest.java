@@ -3,6 +3,7 @@ package org.mockserver.matchers;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
+import static org.mockserver.matchers.NotMatcher.not;
 
 /**
  * @author jamesdbloom
@@ -23,6 +24,19 @@ public class XPathStringMatcherTest {
     }
 
     @Test
+    public void shouldNotMatchMatchingXPathWithNot() {
+        String matched = "" +
+                "<element>" +
+                "   <key>some_key</key>" +
+                "   <value>some_value</value>" +
+                "</element>";
+        assertFalse(not(new XPathStringMatcher("/element[key = 'some_key' and value = 'some_value']")).matches(matched));
+        assertFalse(not(new XPathStringMatcher("/element[key = 'some_key']")).matches(matched));
+        assertFalse(not(new XPathStringMatcher("/element/key")).matches(matched));
+        assertFalse(not(new XPathStringMatcher("/element[key and value]")).matches(matched));
+    }
+
+    @Test
     public void shouldMatchMatchingString() {
         assertTrue(new XPathStringMatcher("some_value").matches("some_value"));
         assertFalse(new XPathStringMatcher("some_value").matches("some_other_value"));
@@ -39,7 +53,7 @@ public class XPathStringMatcherTest {
     }
 
     @Test
-    public void shouldNotMatchMatchingXPath() {
+    public void shouldNotMatchNotMatchingXPath() {
         String matched = "" +
                 "<element>" +
                 "   <key>some_key</key>" +
@@ -49,6 +63,18 @@ public class XPathStringMatcherTest {
         assertFalse(new XPathStringMatcher("/element[key = 'some_other_key']").matches(matched));
         assertFalse(new XPathStringMatcher("/element/not_key").matches(matched));
         assertFalse(new XPathStringMatcher("/element[key and not_value]").matches(matched));
+    }
+    @Test
+    public void shouldMatchNotMatchingXPathWithNot() {
+        String matched = "" +
+                "<element>" +
+                "   <key>some_key</key>" +
+                "   <value>some_value</value>" +
+                "</element>";
+        assertTrue(not(new XPathStringMatcher("/element[key = 'some_key' and value = 'some_other_value']")).matches(matched));
+        assertTrue(not(new XPathStringMatcher("/element[key = 'some_other_key']")).matches(matched));
+        assertTrue(not(new XPathStringMatcher("/element/not_key")).matches(matched));
+        assertTrue(not(new XPathStringMatcher("/element[key and not_value]")).matches(matched));
     }
 
     @Test

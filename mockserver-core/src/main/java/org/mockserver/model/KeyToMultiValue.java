@@ -7,10 +7,12 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import static org.mockserver.collections.NottableKey.nottableKey;
+
 /**
  * @author jamesdbloom
  */
-public class KeyToMultiValue extends ObjectWithReflectiveEqualsHashCodeToString {
+public class KeyToMultiValue extends Not {
     private final String name;
     private final List<String> values;
 
@@ -31,8 +33,8 @@ public class KeyToMultiValue extends ObjectWithReflectiveEqualsHashCodeToString 
         CaseInsensitiveRegexMultiMap caseInsensitiveRegexMultiMap = new CaseInsensitiveRegexMultiMap();
         if (keyToMultiValues != null) {
             for (KeyToMultiValue keyToMultiValue : keyToMultiValues) {
-                for (String value : keyToMultiValue.getValues()) {
-                    caseInsensitiveRegexMultiMap.put(keyToMultiValue.getName(), value);
+                for (String item : keyToMultiValue.getValues()) {
+                    caseInsensitiveRegexMultiMap.put(nottableKey(keyToMultiValue.getName(), keyToMultiValue.getNot()), item);
                 }
             }
         }

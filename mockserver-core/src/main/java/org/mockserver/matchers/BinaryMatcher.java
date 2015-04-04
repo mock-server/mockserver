@@ -8,7 +8,7 @@ import java.util.Arrays;
 /**
  * @author jamesdbloom
  */
-public class BinaryMatcher extends BodyMatcher<byte[]> implements Matcher<byte[]> {
+public class BinaryMatcher extends BodyMatcher<byte[]> {
     private static Logger logger = LoggerFactory.getLogger(BinaryMatcher.class);
     private final byte[] matcher;
 
@@ -27,7 +27,7 @@ public class BinaryMatcher extends BodyMatcher<byte[]> implements Matcher<byte[]
             logger.trace("Failed to perform binary match [{}] with [{}] because {}", matched);
         }
 
-        return result;
+        return reverseResultIfNot(result);
     }
 
     @Override

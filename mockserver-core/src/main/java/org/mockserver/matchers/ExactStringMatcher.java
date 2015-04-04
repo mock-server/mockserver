@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 /**
  * @author jamesdbloom
  */
-public class ExactStringMatcher extends BodyMatcher<String> implements Matcher<String> {
+public class ExactStringMatcher extends BodyMatcher<String> {
     private static Logger logger = LoggerFactory.getLogger(ExactStringMatcher.class);
     private final String matcher;
 
@@ -46,7 +46,7 @@ public class ExactStringMatcher extends BodyMatcher<String> implements Matcher<S
             logger.trace("Failed to match [{}] with [{}]", matched, this.matcher);
         }
 
-        return result;
+        return reverseResultIfNot(result);
     }
 
     @Override

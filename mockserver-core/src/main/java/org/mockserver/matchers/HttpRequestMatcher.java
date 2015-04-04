@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * @author jamesdbloom
  */
-public class HttpRequestMatcher extends ObjectWithReflectiveEqualsHashCodeToString implements Matcher<HttpRequest> {
+public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
 
     private HttpRequest httpRequest;
     private RegexStringMatcher methodMatcher = null;
@@ -122,7 +122,7 @@ public class HttpRequestMatcher extends ObjectWithReflectiveEqualsHashCodeToStri
             if (!result && logger.isDebugEnabled()) {
                 logger.debug("\n\nMatcher:" + System.getProperty("line.separator") + System.getProperty("line.separator") +
                         "[" + this + "]" + System.getProperty("line.separator") + System.getProperty("line.separator") +
-                        "did not match request:" + System.getProperty("line.separator") + System.getProperty("line.separator") +
+                        "did" + (not ? " not" : "") + " match request:" + System.getProperty("line.separator") + System.getProperty("line.separator") +
                         "[" + httpRequest + "]" + System.getProperty("line.separator") + System.getProperty("line.separator") +
                         "because:" + System.getProperty("line.separator") + System.getProperty("line.separator") +
                         "methodMatches = " + methodMatches + "" + System.getProperty("line.separator") +
@@ -132,7 +132,7 @@ public class HttpRequestMatcher extends ObjectWithReflectiveEqualsHashCodeToStri
                         "headersMatch = " + headersMatch + "" + System.getProperty("line.separator") +
                         "cookiesMatch = " + cookiesMatch);
             }
-            return result;
+            return reverseResultIfNot(result);
         } else {
             return false;
         }

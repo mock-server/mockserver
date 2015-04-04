@@ -31,5 +31,4 @@ public class CookieTest {
         assertThat(firstCookie.getValue(), is("value"));
     }
 
-
 }

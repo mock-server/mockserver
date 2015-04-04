@@ -1,31 +1,31 @@
 package org.mockserver.matchers;
 
 import org.mockserver.collections.CaseInsensitiveRegexHashMap;
-import org.mockserver.collections.CaseInsensitiveRegexMultiMap;
 import org.mockserver.model.KeyAndValue;
-import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 
 import java.util.List;
 
 /**
  * @author jamesdbloom
  */
-public class HashMapMatcher extends ObjectWithReflectiveEqualsHashCodeToString implements Matcher<List<KeyAndValue>> {
-    private final CaseInsensitiveRegexHashMap multiMap;
+public class HashMapMatcher extends NotMatcher<List<KeyAndValue>> {
+    private final CaseInsensitiveRegexHashMap hashMap;
 
-    public HashMapMatcher(CaseInsensitiveRegexHashMap multiMap) {
-        this.multiMap = multiMap;
+    public HashMapMatcher(CaseInsensitiveRegexHashMap hashMap) {
+        this.hashMap = hashMap;
     }
 
     public boolean matches(List<KeyAndValue> values) {
         boolean result = false;
 
-        if (KeyAndValue.toHashMap(values).containsAll(multiMap)) {
+        if (hashMap == null) {
+            result = true;
+        } else if (KeyAndValue.toHashMap(values).containsAll(hashMap)) {
             result = true;
         } else {
-            logger.trace("Map [{}] is not a subset of [{}]", this.multiMap, KeyAndValue.toHashMap(values));
+            logger.trace("Map [{}] is not a subset of [{}]", this.hashMap, KeyAndValue.toHashMap(values));
         }
 
-        return result;
+        return reverseResultIfNot(result);
     }
 }

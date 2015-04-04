@@ -6,6 +6,7 @@ import org.mockserver.model.*;
 import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockserver.matchers.NotMatcher.not;
 import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.JsonBody.json;
@@ -20,6 +21,16 @@ import static org.mockserver.model.XPathBody.xpath;
  * @author jamesdbloom
  */
 public class HttpRequestMatcherTest {
+
+    @Test
+    public void shouldNotMatchMatchingRequestWithNot() {
+        assertFalse(not(new HttpRequestMatcher(new HttpRequest().withMethod("HEAD"))).matches(new HttpRequest().withMethod("HEAD")));
+    }
+
+    @Test
+    public void shouldMatchNotMatchingRequestWithNot() {
+        assertTrue(not(new HttpRequestMatcher(new HttpRequest().withMethod("HEAD"))).matches(new HttpRequest().withMethod("OPTIONS")));
+    }
 
     @Test
     public void matchesMatchingMethod() {

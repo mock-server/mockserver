@@ -7,7 +7,7 @@ import static org.skyscreamer.jsonassert.JSONCompare.compareJSON;
 /**
  * @author jamesdbloom
  */
-public class JsonStringMatcher extends BodyMatcher<String> implements Matcher<String> {
+public class JsonStringMatcher extends BodyMatcher<String> {
     private final String matcher;
     private final JsonBodyMatchType jsonBodyMatchType;
 
@@ -34,6 +34,6 @@ public class JsonStringMatcher extends BodyMatcher<String> implements Matcher<St
             logger.trace("Failed to perform JSON match \"{}\" with \"{}\" because {}", matched, this.matcher, e.getMessage());
         }
 
-        return result;
+        return reverseResultIfNot(result);
     }
 }

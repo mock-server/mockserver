@@ -9,7 +9,7 @@ import java.util.regex.PatternSyntaxException;
 /**
  * @author jamesdbloom
  */
-public class RegexStringMatcher extends BodyMatcher<String> implements Matcher<String> {
+public class RegexStringMatcher extends BodyMatcher<String> {
     private static Logger logger = LoggerFactory.getLogger(RegexStringMatcher.class);
     private final String matcher;
 
@@ -81,6 +81,7 @@ public class RegexStringMatcher extends BodyMatcher<String> implements Matcher<S
         if (!result) {
             logger.trace("Failed to match [{}] with [{}]", matched, this.matcher);
         }
-        return result;
+
+        return reverseResultIfNot(result);
     }
 }
