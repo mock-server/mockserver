@@ -23,7 +23,7 @@ public class KeyAndValue extends Not {
         CaseInsensitiveRegexHashMap<String> caseInsensitiveRegexHashMap = new CaseInsensitiveRegexHashMap<String>();
         if (keyAndValue != null) {
             for (KeyAndValue keyToMultiValue : keyAndValue) {
-                caseInsensitiveRegexHashMap.put(nottableKey(keyToMultiValue.getName(), keyToMultiValue.getNot()), keyToMultiValue.getValue());
+                caseInsensitiveRegexHashMap.put(nottableKey(keyToMultiValue.getName(), keyToMultiValue.isNot()), keyToMultiValue.getValue());
             }
         }
         return caseInsensitiveRegexHashMap;

@@ -7,6 +7,7 @@ import org.mockserver.model.XPathBody;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
+import static org.mockserver.model.Not.not;
 
 public class XPathBodySerializerTest {
 
@@ -14,6 +15,12 @@ public class XPathBodySerializerTest {
     public void shouldSerializeXPathBodyDTO() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new XPathBody("\\some\\xpath")),
                 is("{\"type\":\"XPATH\",\"value\":\"\\\\some\\\\xpath\"}"));
+    }
+
+    @Test
+    public void shouldSerializeXPathBodyDTOWithNot() throws JsonProcessingException {
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(not(new XPathBody("\\some\\xpath"))),
+                is("{\"not\":true,\"type\":\"XPATH\",\"value\":\"\\\\some\\\\xpath\"}"));
     }
 
 }

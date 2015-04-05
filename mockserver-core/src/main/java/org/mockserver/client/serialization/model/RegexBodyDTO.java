@@ -10,8 +10,8 @@ public class RegexBodyDTO extends BodyDTO {
 
     private String regex;
 
-    public RegexBodyDTO(RegexBody regexBody) {
-        super(Body.Type.REGEX);
+    public RegexBodyDTO(RegexBody regexBody, boolean not) {
+        super(Body.Type.REGEX, not);
         this.regex = regexBody.getValue();
     }
 

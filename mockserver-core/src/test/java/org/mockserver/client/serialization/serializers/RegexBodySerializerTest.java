@@ -7,6 +7,7 @@ import org.mockserver.model.RegexBody;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
+import static org.mockserver.model.Not.not;
 
 public class RegexBodySerializerTest {
 
@@ -14,6 +15,12 @@ public class RegexBodySerializerTest {
     public void shouldSerializeRegexBody() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new RegexBody("some[a-zA-Z]*")),
                 is("{\"type\":\"REGEX\",\"value\":\"some[a-zA-Z]*\"}"));
+    }
+
+    @Test
+    public void shouldSerializeRegexBodyWithNot() throws JsonProcessingException {
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(not(new RegexBody("some[a-zA-Z]*"))),
+                is("{\"not\":true,\"type\":\"REGEX\",\"value\":\"some[a-zA-Z]*\"}"));
     }
 
 }

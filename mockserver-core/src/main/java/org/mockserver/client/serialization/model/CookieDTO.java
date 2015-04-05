@@ -7,8 +7,8 @@ import org.mockserver.model.Cookie;
  */
 public class CookieDTO extends KeyAndValueDTO {
 
-    public CookieDTO(Cookie cookie) {
-        super(cookie);
+    public CookieDTO(Cookie cookie, boolean not) {
+        super(cookie, not);
     }
 
     protected CookieDTO() {

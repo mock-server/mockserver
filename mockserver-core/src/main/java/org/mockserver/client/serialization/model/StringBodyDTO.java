@@ -9,8 +9,8 @@ public class StringBodyDTO extends BodyDTO {
 
     private String string;
 
-    public StringBodyDTO(StringBody stringBody) {
-        super(stringBody.getType());
+    public StringBodyDTO(StringBody stringBody, boolean not) {
+        super(stringBody.getType(), not);
         string = stringBody.getValue();
     }
 

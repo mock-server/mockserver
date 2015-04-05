@@ -19,7 +19,7 @@ public class JsonBodyDTOTest {
     @Test
     public void shouldReturnValueSetInConstructor() {
         // when
-        JsonBodyDTO jsonBody = new JsonBodyDTO(new JsonBody("some_body"));
+        JsonBodyDTO jsonBody = new JsonBodyDTO(new JsonBody("some_body"), false);
 
         // then
         assertThat(jsonBody.getJson(), is("some_body"));
@@ -30,7 +30,7 @@ public class JsonBodyDTOTest {
     @Test
     public void shouldReturnValueSetInConstructorWithMatchType() {
         // when
-        JsonBodyDTO jsonBody = new JsonBodyDTO(new JsonBody("some_body", STRICT));
+        JsonBodyDTO jsonBody = new JsonBodyDTO(new JsonBody("some_body", STRICT), false);
 
         // then
         assertThat(jsonBody.getJson(), is("some_body"));
@@ -41,7 +41,7 @@ public class JsonBodyDTOTest {
     @Test
     public void shouldBuildCorrectObject() {
         // when
-        JsonBody jsonBody = new JsonBodyDTO(new JsonBody("some_body")).buildObject();
+        JsonBody jsonBody = new JsonBodyDTO(new JsonBody("some_body"), false).buildObject();
 
         // then
         assertThat(jsonBody.getValue(), is("some_body"));
@@ -52,7 +52,7 @@ public class JsonBodyDTOTest {
     @Test
     public void shouldBuildCorrectObjectWithMatchType() {
         // when
-        JsonBody jsonBody = new JsonBodyDTO(new JsonBody("some_body", STRICT)).buildObject();
+        JsonBody jsonBody = new JsonBodyDTO(new JsonBody("some_body", STRICT), false).buildObject();
 
         // then
         assertThat(jsonBody.getValue(), is("some_body"));

@@ -69,10 +69,10 @@ public class HttpRequestSerializerIntegrationTest {
         assertEquals(new HttpRequestDTO()
                 .setMethod("someMethod")
                 .setPath("somePath")
-                .setQueryStringParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")))))
+                .setQueryStringParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")), false)))
                 .setBody(BodyDTO.createDTO(new StringBody("somebody")))
-                .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
-                .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
+                .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")), false)))
+                .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"), false)))
                 .buildObject(), expectation);
     }
 
@@ -250,7 +250,7 @@ public class HttpRequestSerializerIntegrationTest {
         // then
         assertEquals(new HttpRequestDTO()
                 .setPath("somePath")
-                .setQueryStringParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")))))
+                .setQueryStringParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")), false)))
                 .buildObject(), expectation);
     }
 
@@ -261,10 +261,10 @@ public class HttpRequestSerializerIntegrationTest {
                 new HttpRequestDTO()
                         .setMethod("someMethod")
                         .setPath("somePath")
-                        .setQueryStringParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")))))
+                        .setQueryStringParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")), false)))
                         .setBody(BodyDTO.createDTO(new StringBody("somebody")))
-                        .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
-                        .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
+                        .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")), false)))
+                        .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"), false)))
                         .buildObject()
         );
 
@@ -297,13 +297,13 @@ public class HttpRequestSerializerIntegrationTest {
                                 .setMethod("some_method_one")
                                 .setPath("some_path_one")
                                 .setBody(BodyDTO.createDTO(new StringBody("some_body_one")))
-                                .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("some_header_name_one", Arrays.asList("some_header_value_one")))))
+                                .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("some_header_name_one", Arrays.asList("some_header_value_one")), false)))
                                 .buildObject(),
                         new HttpRequestDTO()
                                 .setMethod("some_method_two")
                                 .setPath("some_path_two")
                                 .setBody(BodyDTO.createDTO(new StringBody("some_body_two")))
-                                .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("some_header_name_two", Arrays.asList("some_header_value_two")))))
+                                .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("some_header_name_two", Arrays.asList("some_header_value_two")), false)))
                                 .buildObject()
                 }
         );
@@ -337,13 +337,13 @@ public class HttpRequestSerializerIntegrationTest {
                                 .setMethod("some_method_one")
                                 .setPath("some_path_one")
                                 .setBody(BodyDTO.createDTO(new StringBody("some_body_one")))
-                                .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("some_header_name_one", Arrays.asList("some_header_value_one")))))
+                                .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("some_header_name_one", Arrays.asList("some_header_value_one")), false)))
                                 .buildObject(),
                         new HttpRequestDTO()
                                 .setMethod("some_method_two")
                                 .setPath("some_path_two")
                                 .setBody(BodyDTO.createDTO(new StringBody("some_body_two")))
-                                .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("some_header_name_two", Arrays.asList("some_header_value_two")))))
+                                .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("some_header_name_two", Arrays.asList("some_header_value_two")), false)))
                                 .buildObject()
                 )
         );

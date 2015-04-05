@@ -15,7 +15,7 @@ public class VerificationDTO extends ObjectWithReflectiveEqualsHashCodeToString 
 
     public VerificationDTO(Verification verification) {
         if (verification != null) {
-            httpRequest = new HttpRequestDTO(verification.getHttpRequest());
+            httpRequest = new HttpRequestDTO(verification.getHttpRequest(), false);
             times = new VerificationTimesDTO(verification.getTimes());
         }
     }

@@ -13,8 +13,14 @@ public class XPathBodyDTOSerializerTest {
 
     @Test
     public void shouldSerializeXPathBodyDTO() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new XPathBodyDTO(new XPathBody("\\some\\xpath"))),
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new XPathBodyDTO(new XPathBody("\\some\\xpath"), false)),
                 is("{\"type\":\"XPATH\",\"value\":\"\\\\some\\\\xpath\"}"));
+    }
+
+    @Test
+    public void shouldSerializeXPathBodyDTOWithNot() throws JsonProcessingException {
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new XPathBodyDTO(new XPathBody("\\some\\xpath"), true)),
+                is("{\"not\":true,\"type\":\"XPATH\",\"value\":\"\\\\some\\\\xpath\"}"));
     }
 
 }

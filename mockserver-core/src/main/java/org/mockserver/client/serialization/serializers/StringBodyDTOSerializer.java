@@ -18,6 +18,14 @@ public class StringBodyDTOSerializer extends StdSerializer<StringBodyDTO> {
 
     @Override
     public void serialize(StringBodyDTO stringBodyDTO, JsonGenerator json, SerializerProvider provider) throws IOException {
-        json.writeString(stringBodyDTO.getString());
+        if (stringBodyDTO.getNot() != null && stringBodyDTO.getNot()) {
+            json.writeStartObject();
+            json.writeBooleanField("not", true);
+            json.writeStringField("type", stringBodyDTO.getType().name());
+            json.writeStringField("value", stringBodyDTO.getString());
+            json.writeEndObject();
+        } else {
+            json.writeString(stringBodyDTO.getString());
+        }
     }
 }

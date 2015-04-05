@@ -32,7 +32,7 @@ public class VerificationSerializerIntegrationTest {
 
         // then
         assertEquals(new VerificationDTO()
-                .setHttpRequest(new HttpRequestDTO(request().withPath("somepath")))
+                .setHttpRequest(new HttpRequestDTO(request().withPath("somepath"), false))
                 .buildObject(), verification);
     }
 
@@ -55,7 +55,7 @@ public class VerificationSerializerIntegrationTest {
 
         // then
         assertEquals(new VerificationDTO()
-                .setHttpRequest(new HttpRequestDTO(request().withMethod("GET").withPath("somepath")))
+                .setHttpRequest(new HttpRequestDTO(request().withMethod("GET").withPath("somepath"), false))
                 .setTimes(new VerificationTimesDTO(VerificationTimes.exactly(2)))
                 .buildObject(), verification);
     }
@@ -72,7 +72,7 @@ public class VerificationSerializerIntegrationTest {
 
         // then
         assertEquals(new VerificationDTO()
-                .setHttpRequest(new HttpRequestDTO(request()))
+                .setHttpRequest(new HttpRequestDTO(request(), false))
                 .buildObject(), verification);
     }
 
@@ -81,7 +81,7 @@ public class VerificationSerializerIntegrationTest {
         // when
         String jsonExpectation = new VerificationSerializer().serialize(
                 new VerificationDTO()
-                        .setHttpRequest(new HttpRequestDTO(request().withMethod("GET").withPath("somepath")))
+                        .setHttpRequest(new HttpRequestDTO(request().withMethod("GET").withPath("somepath"), false))
                         .setTimes(new VerificationTimesDTO(VerificationTimes.exactly(2)))
                         .buildObject()
         );
@@ -104,7 +104,7 @@ public class VerificationSerializerIntegrationTest {
         // when
         String jsonExpectation = new VerificationSerializer().serialize(
                 new VerificationDTO()
-                        .setHttpRequest(new HttpRequestDTO(request()))
+                        .setHttpRequest(new HttpRequestDTO(request(), false))
                         .buildObject()
         );
 

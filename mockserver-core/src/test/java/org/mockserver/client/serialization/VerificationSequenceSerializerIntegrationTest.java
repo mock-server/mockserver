@@ -33,7 +33,7 @@ public class VerificationSequenceSerializerIntegrationTest {
         // then
         assertEquals(new VerificationSequenceDTO()
                 .setHttpRequests(Arrays.asList(
-                        new HttpRequestDTO(request("some_path_one"))
+                        new HttpRequestDTO(request("some_path_one"), false)
                 ))
                 .buildObject(), verificationSequence);
     }
@@ -63,10 +63,10 @@ public class VerificationSequenceSerializerIntegrationTest {
         // then
         assertEquals(new VerificationSequenceDTO()
                 .setHttpRequests(Arrays.asList(
-                        new HttpRequestDTO(request("some_path_one").withBody("some_body_one")),
-                        new HttpRequestDTO(request("some_body_multiple").withBody("some_body_multiple")),
-                        new HttpRequestDTO(request("some_path_three").withBody("some_body_three")),
-                        new HttpRequestDTO(request("some_body_multiple").withBody("some_body_multiple"))
+                        new HttpRequestDTO(request("some_path_one").withBody("some_body_one"), false),
+                        new HttpRequestDTO(request("some_body_multiple").withBody("some_body_multiple"), false),
+                        new HttpRequestDTO(request("some_path_three").withBody("some_body_three"), false),
+                        new HttpRequestDTO(request("some_body_multiple").withBody("some_body_multiple"), false)
                 ))
                 .buildObject(), verificationSequence);
     }
@@ -102,7 +102,7 @@ public class VerificationSequenceSerializerIntegrationTest {
         // then
         assertEquals(new VerificationSequenceDTO()
                 .setHttpRequests(Arrays.asList(
-                        new HttpRequestDTO(request("some_path_one"))
+                        new HttpRequestDTO(request("some_path_one"), false)
                 ))
                 .buildObject(), verificationSequence);
     }
@@ -113,10 +113,10 @@ public class VerificationSequenceSerializerIntegrationTest {
         String jsonExpectation = new VerificationSequenceSerializer().serialize(
                 new VerificationSequenceDTO()
                         .setHttpRequests(Arrays.asList(
-                                new HttpRequestDTO(request("some_path_one").withBody("some_body_one")),
-                                new HttpRequestDTO(request("some_body_multiple").withBody("some_body_multiple")),
-                                new HttpRequestDTO(request("some_path_three").withBody("some_body_three")),
-                                new HttpRequestDTO(request("some_body_multiple").withBody("some_body_multiple"))
+                                new HttpRequestDTO(request("some_path_one").withBody("some_body_one"), false),
+                                new HttpRequestDTO(request("some_body_multiple").withBody("some_body_multiple"), false),
+                                new HttpRequestDTO(request("some_path_three").withBody("some_body_three"), false),
+                                new HttpRequestDTO(request("some_body_multiple").withBody("some_body_multiple"), false)
                         ))
                         .buildObject()
         );
@@ -145,7 +145,7 @@ public class VerificationSequenceSerializerIntegrationTest {
         String jsonExpectation = new VerificationSequenceSerializer().serialize(
                 new VerificationSequenceDTO()
                         .setHttpRequests(Arrays.asList(
-                                new HttpRequestDTO(request("some_path_one").withBody("some_body_one"))
+                                new HttpRequestDTO(request("some_path_one").withBody("some_body_one"), false)
                         ))
                         .buildObject()
         );

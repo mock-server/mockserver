@@ -13,8 +13,14 @@ public class StringBodyDTOSerializerTest {
 
     @Test
     public void shouldSerializeStringBodyDTO() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new StringBodyDTO(new StringBody("string_body"))),
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new StringBodyDTO(new StringBody("string_body"), false)),
                 is("\"string_body\""));
+    }
+
+    @Test
+    public void shouldSerializeStringBodyDTOWithNot() throws JsonProcessingException {
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new StringBodyDTO(new StringBody("string_body"), true)),
+                is("{\"not\":true,\"type\":\"STRING\",\"value\":\"string_body\"}"));
     }
 
 }

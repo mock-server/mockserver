@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * @author jamesdbloom
  */
-public class HttpRequestDTO extends ObjectWithReflectiveEqualsHashCodeToString {
+public class HttpRequestDTO extends NotDTO {
     private String method = "";
     private String path = "";
     private List<ParameterDTO> queryStringParameters = new ArrayList<ParameterDTO>();
@@ -18,23 +18,24 @@ public class HttpRequestDTO extends ObjectWithReflectiveEqualsHashCodeToString {
     private List<CookieDTO> cookies = new ArrayList<CookieDTO>();
     private List<HeaderDTO> headers = new ArrayList<HeaderDTO>();
 
-    public HttpRequestDTO(HttpRequest httpRequest) {
+    public HttpRequestDTO(HttpRequest httpRequest, boolean not) {
+        super(not);
         if (httpRequest != null) {
             method = httpRequest.getMethod();
             path = httpRequest.getPath();
             headers = Lists.transform(httpRequest.getHeaders(), new Function<Header, HeaderDTO>() {
                 public HeaderDTO apply(Header header) {
-                    return new HeaderDTO(header);
+                    return new HeaderDTO(header, false);
                 }
             });
             cookies = Lists.transform(httpRequest.getCookies(), new Function<Cookie, CookieDTO>() {
                 public CookieDTO apply(Cookie cookie) {
-                    return new CookieDTO(cookie);
+                    return new CookieDTO(cookie, false);
                 }
             });
             queryStringParameters = Lists.transform(httpRequest.getQueryStringParameters(), new Function<Parameter, ParameterDTO>() {
                 public ParameterDTO apply(Parameter parameter) {
-                    return new ParameterDTO(parameter);
+                    return new ParameterDTO(parameter, false);
                 }
             });
             body = BodyDTO.createDTO(httpRequest.getBody());

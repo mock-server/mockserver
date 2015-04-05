@@ -16,7 +16,7 @@ public class RegexBodyDTOTest {
     @Test
     public void shouldReturnValueSetInConstructor() {
         // when
-        RegexBodyDTO regexBody = new RegexBodyDTO(new RegexBody("some_body"));
+        RegexBodyDTO regexBody = new RegexBodyDTO(new RegexBody("some_body"), false);
 
         // then
         assertThat(regexBody.getRegex(), is("some_body"));
@@ -26,7 +26,7 @@ public class RegexBodyDTOTest {
     @Test
     public void shouldBuildCorrectObject() {
         // when
-        RegexBody regexBody = new RegexBodyDTO(new RegexBody("some_body")).buildObject();
+        RegexBody regexBody = new RegexBodyDTO(new RegexBody("some_body"), false).buildObject();
 
         // then
         assertThat(regexBody.getValue(), is("some_body"));

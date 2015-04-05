@@ -46,6 +46,7 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
         JsonToken currentToken = jsonParser.getCurrentToken();
         String valueJsonValue = "";
         Body.Type type = null;
+        boolean not = false;
         JsonBodyMatchType matchType = JsonBody.DEFAULT_MATCH_TYPE;
         List<Parameter> parameters = new ArrayList<Parameter>();
         if (currentToken == JsonToken.START_OBJECT) {
@@ -68,6 +69,10 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                     if (jsonParser.getCurrentToken() == JsonToken.VALUE_STRING) {
                         valueJsonValue = jsonParser.getText();
                     }
+                }
+                if (jsonParser.getCurrentToken() == JsonToken.FIELD_NAME && jsonParser.getText().equalsIgnoreCase("not")) {
+                    jsonParser.nextToken();
+                    not = Boolean.parseBoolean(jsonParser.getText());
                 }
                 if (jsonParser.getCurrentToken() == JsonToken.FIELD_NAME && jsonParser.getText().equalsIgnoreCase("matchType")) {
                     jsonParser.nextToken();
@@ -112,23 +117,23 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
             if (type != null) {
                 switch (type) {
                     case STRING:
-                        return new StringBodyDTO(new StringBody(valueJsonValue));
+                        return new StringBodyDTO(new StringBody(valueJsonValue), not);
                     case REGEX:
-                        return new RegexBodyDTO(new RegexBody(valueJsonValue));
+                        return new RegexBodyDTO(new RegexBody(valueJsonValue), not);
                     case JSON:
-                        return new JsonBodyDTO(new JsonBody(valueJsonValue, matchType));
+                        return new JsonBodyDTO(new JsonBody(valueJsonValue, matchType), not);
                     case JSON_SCHEMA:
-                        return new JsonSchemaBodyDTO(new JsonSchemaBody(valueJsonValue));
+                        return new JsonSchemaBodyDTO(new JsonSchemaBody(valueJsonValue), not);
                     case XPATH:
-                        return new XPathBodyDTO(new XPathBody(valueJsonValue));
+                        return new XPathBodyDTO(new XPathBody(valueJsonValue), not);
                     case BINARY:
-                        return new BinaryBodyDTO(new BinaryBody(Base64Converter.base64StringToBytes(valueJsonValue)));
+                        return new BinaryBodyDTO(new BinaryBody(Base64Converter.base64StringToBytes(valueJsonValue)), not);
                     case PARAMETERS:
-                        return new ParameterBodyDTO(new ParameterBody(parameters));
+                        return new ParameterBodyDTO(new ParameterBody(parameters), not);
                 }
             }
         } else if (currentToken == JsonToken.VALUE_STRING) {
-            return new StringBodyDTO(new StringBody(jsonParser.getText()));
+            return new StringBodyDTO(new StringBody(jsonParser.getText()), false);
         }
         return null;
     }

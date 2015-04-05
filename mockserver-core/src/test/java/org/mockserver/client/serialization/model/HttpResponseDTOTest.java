@@ -25,8 +25,8 @@ public class HttpResponseDTOTest {
     public void shouldReturnValueSetInConstructor() {
         // given
         BodyDTO body = BodyDTO.createDTO(exact("body"));
-        List<CookieDTO> cookies = Arrays.asList(new CookieDTO(new Cookie("name", "value")));
-        List<HeaderDTO> headers = Arrays.asList(new HeaderDTO(new Header("name", "value")));
+        List<CookieDTO> cookies = Arrays.asList(new CookieDTO(new Cookie("name", "value"), false));
+        List<HeaderDTO> headers = Arrays.asList(new HeaderDTO(new Header("name", "value"), false));
         Integer statusCode = 200;
         HttpResponse httpRequest = new HttpResponse()
                 .withBody("body")

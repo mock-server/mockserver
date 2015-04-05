@@ -10,8 +10,8 @@ public class JsonSchemaBodyDTO extends BodyDTO {
 
     private String jsonSchema;
 
-    public JsonSchemaBodyDTO(JsonSchemaBody jsonSchemaBody) {
-        super(Body.Type.JSON_SCHEMA);
+    public JsonSchemaBodyDTO(JsonSchemaBody jsonSchemaBody, boolean not) {
+        super(Body.Type.JSON_SCHEMA, not);
         this.jsonSchema = jsonSchemaBody.getValue();
     }
 

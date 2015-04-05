@@ -19,6 +19,9 @@ public class XPathBodySerializer extends StdSerializer<XPathBody> {
     @Override
     public void serialize(XPathBody xPathBody, JsonGenerator json, SerializerProvider provider) throws IOException {
         json.writeStartObject();
+        if (xPathBody.isNot() != null && xPathBody.isNot()) {
+            json.writeBooleanField("not", xPathBody.isNot());
+        }
         json.writeStringField("type", xPathBody.getType().name());
         json.writeStringField("value", xPathBody.getValue());
         json.writeEndObject();

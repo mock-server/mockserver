@@ -19,6 +19,9 @@ public class XPathBodyDTOSerializer extends StdSerializer<XPathBodyDTO> {
     @Override
     public void serialize(XPathBodyDTO xPathBodyDTO, JsonGenerator json, SerializerProvider provider) throws IOException {
         json.writeStartObject();
+        if (xPathBodyDTO.getNot() != null && xPathBodyDTO.getNot()) {
+            json.writeBooleanField("not", xPathBodyDTO.getNot());
+        }
         json.writeStringField("type", xPathBodyDTO.getType().name());
         json.writeStringField("value", xPathBodyDTO.getXPath());
         json.writeEndObject();

@@ -19,6 +19,9 @@ public class JsonBodyDTOSerializer extends StdSerializer<JsonBodyDTO> {
     @Override
     public void serialize(JsonBodyDTO jsonBodyDTO, JsonGenerator json, SerializerProvider provider) throws IOException {
         json.writeStartObject();
+        if (jsonBodyDTO.getNot() != null && jsonBodyDTO.getNot()) {
+            json.writeBooleanField("not", jsonBodyDTO.getNot());
+        }
         json.writeStringField("type", jsonBodyDTO.getType().name());
         json.writeStringField("value", jsonBodyDTO.getJson());
         json.writeEndObject();

@@ -12,7 +12,7 @@ public class Not extends ObjectWithReflectiveEqualsHashCodeToString {
         return t;
     }
 
-    public Boolean getNot() {
+    public Boolean isNot() {
         return not;
     }
 }

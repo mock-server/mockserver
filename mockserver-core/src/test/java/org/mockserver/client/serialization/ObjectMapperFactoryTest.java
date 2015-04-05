@@ -79,19 +79,19 @@ public class ObjectMapperFactoryTest {
                                 .setMethod("someMethod")
                                 .setPath("somePath")
                                 .setQueryStringParameters(Arrays.asList(
-                                        new ParameterDTO(new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two")),
-                                        new ParameterDTO(new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One"))
+                                        new ParameterDTO(new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"), false),
+                                        new ParameterDTO(new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One"), false)
                                 ))
-                                .setBody(new StringBodyDTO(new StringBody("someBody")))
-                                .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
-                                .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
+                                .setBody(new StringBodyDTO(new StringBody("someBody"), false))
+                                .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")), false)))
+                                .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"), false)))
                 )
                 .setHttpResponse(
                         new HttpResponseDTO()
                                 .setStatusCode(304)
-                                .setBody(new StringBodyDTO(new StringBody("someBody")))
-                                .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
-                                .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
+                                .setBody(new StringBodyDTO(new StringBody("someBody"), false))
+                                .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")), false)))
+                                .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"), false)))
                                 .setDelay(
                                         new DelayDTO()
                                                 .setTimeUnit(TimeUnit.MICROSECONDS)

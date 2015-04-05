@@ -34,7 +34,7 @@ public class KeyToMultiValue extends Not {
         if (keyToMultiValues != null) {
             for (KeyToMultiValue keyToMultiValue : keyToMultiValues) {
                 for (String item : keyToMultiValue.getValues()) {
-                    caseInsensitiveRegexMultiMap.put(nottableKey(keyToMultiValue.getName(), keyToMultiValue.getNot()), item);
+                    caseInsensitiveRegexMultiMap.put(nottableKey(keyToMultiValue.getName(), keyToMultiValue.isNot()), item);
                 }
             }
         }

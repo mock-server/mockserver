@@ -1,5 +1,7 @@
 package org.mockserver.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 /**
  * @author jamesdbloom
  */
@@ -17,6 +19,7 @@ public abstract class Body<T> extends Not {
 
     public abstract T getValue();
 
+    @JsonIgnore
     public byte[] getRawBytes() {
         return toString().getBytes();
     }

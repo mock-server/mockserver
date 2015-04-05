@@ -8,6 +8,7 @@ import org.mockserver.model.JsonBody;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
+import static org.mockserver.model.Not.not;
 
 public class JsonBodySerializerTest {
 
@@ -21,5 +22,11 @@ public class JsonBodySerializerTest {
     public void shouldSerializeJsonBodyWithMatchType() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new JsonBody("{fieldOne: \"valueOne\", \"fieldTwo\": \"valueTwo\"}", JsonBodyMatchType.STRICT)),
                 is("{\"type\":\"JSON\",\"value\":\"{fieldOne: \\\"valueOne\\\", \\\"fieldTwo\\\": \\\"valueTwo\\\"}\"}"));
+    }
+
+    @Test
+    public void shouldSerializeJsonBodyWithMatchTypeWithNot() throws JsonProcessingException {
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(not(new JsonBody("{fieldOne: \"valueOne\", \"fieldTwo\": \"valueTwo\"}", JsonBodyMatchType.STRICT))),
+                is("{\"not\":true,\"type\":\"JSON\",\"value\":\"{fieldOne: \\\"valueOne\\\", \\\"fieldTwo\\\": \\\"valueTwo\\\"}\"}"));
     }
 }

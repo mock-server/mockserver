@@ -13,8 +13,13 @@ public class JsonSchemaBodyDTOSerializerTest {
 
     @Test
     public void shouldSerializeJsonBody() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new JsonSchemaBodyDTO(new JsonSchemaBody("{\"type\": \"object\", \"properties\": {\"id\": {\"type\": \"integer\"}}, \"required\": [\"id\"]}"))),
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new JsonSchemaBodyDTO(new JsonSchemaBody("{\"type\": \"object\", \"properties\": {\"id\": {\"type\": \"integer\"}}, \"required\": [\"id\"]}"), false)),
                 is("{\"type\":\"JSON_SCHEMA\",\"value\":\"{\\\"type\\\": \\\"object\\\", \\\"properties\\\": {\\\"id\\\": {\\\"type\\\": \\\"integer\\\"}}, \\\"required\\\": [\\\"id\\\"]}\"}"));
+    }
+    @Test
+    public void shouldSerializeJsonBodyWithNot() throws JsonProcessingException {
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new JsonSchemaBodyDTO(new JsonSchemaBody("{\"type\": \"object\", \"properties\": {\"id\": {\"type\": \"integer\"}}, \"required\": [\"id\"]}"), true)),
+                is("{\"not\":true,\"type\":\"JSON_SCHEMA\",\"value\":\"{\\\"type\\\": \\\"object\\\", \\\"properties\\\": {\\\"id\\\": {\\\"type\\\": \\\"integer\\\"}}, \\\"required\\\": [\\\"id\\\"]}\"}"));
     }
 
 }

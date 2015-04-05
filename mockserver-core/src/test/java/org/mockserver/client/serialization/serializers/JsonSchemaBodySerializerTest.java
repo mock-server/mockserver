@@ -7,6 +7,7 @@ import org.mockserver.model.JsonSchemaBody;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
+import static org.mockserver.model.Not.not;
 
 public class JsonSchemaBodySerializerTest {
 
@@ -14,6 +15,11 @@ public class JsonSchemaBodySerializerTest {
     public void shouldSerializeJsonBody() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new JsonSchemaBody("{\"type\": \"object\", \"properties\": {\"id\": {\"type\": \"integer\"}}, \"required\": [\"id\"]}")),
                 is("{\"type\":\"JSON_SCHEMA\",\"value\":\"{\\\"type\\\": \\\"object\\\", \\\"properties\\\": {\\\"id\\\": {\\\"type\\\": \\\"integer\\\"}}, \\\"required\\\": [\\\"id\\\"]}\"}"));
+    }
+    @Test
+    public void shouldSerializeJsonBodyWithNot() throws JsonProcessingException {
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(not(new JsonSchemaBody("{\"type\": \"object\", \"properties\": {\"id\": {\"type\": \"integer\"}}, \"required\": [\"id\"]}"))),
+                is("{\"not\":true,\"type\":\"JSON_SCHEMA\",\"value\":\"{\\\"type\\\": \\\"object\\\", \\\"properties\\\": {\\\"id\\\": {\\\"type\\\": \\\"integer\\\"}}, \\\"required\\\": [\\\"id\\\"]}\"}"));
     }
 
 }

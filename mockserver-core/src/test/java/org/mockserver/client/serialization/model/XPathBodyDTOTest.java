@@ -16,7 +16,7 @@ public class XPathBodyDTOTest {
     @Test
     public void shouldReturnValueSetInConstructor() {
         // when
-        XPathBodyDTO xpathBody = new XPathBodyDTO(new XPathBody("some_body"));
+        XPathBodyDTO xpathBody = new XPathBodyDTO(new XPathBody("some_body"), false);
 
         // then
         assertThat(xpathBody.getXPath(), is("some_body"));
@@ -26,7 +26,7 @@ public class XPathBodyDTOTest {
     @Test
     public void shouldBuildCorrectObject() {
         // when
-        XPathBody xPathBody = new XPathBodyDTO(new XPathBody("some_body")).buildObject();
+        XPathBody xPathBody = new XPathBodyDTO(new XPathBody("some_body"), false).buildObject();
 
         // then
         assertThat(xPathBody.getValue(), is("some_body"));

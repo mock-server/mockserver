@@ -42,12 +42,12 @@ public class HttpRequestSerializerTest {
                     .setMethod("GET")
                     .setPath("somepath")
                     .setQueryStringParameters(Arrays.asList(
-                            new ParameterDTO(new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two")),
-                            new ParameterDTO(new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One"))
+                            new ParameterDTO(new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"), false),
+                            new ParameterDTO(new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One"), false)
                     ))
                     .setBody(BodyDTO.createDTO(new StringBody("somebody")))
-                    .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("headerName", Arrays.asList("headerValue")))))
-                    .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("cookieName", "cookieValue"))));
+                    .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("headerName", Arrays.asList("headerValue")), false)))
+                    .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("cookieName", "cookieValue"), false)));
     @Mock
     private ObjectMapper objectMapper;
     @Mock

@@ -9,11 +9,12 @@ import java.util.List;
 /**
  * @author jamesdbloom
  */
-public class KeyAndValueDTO extends ObjectWithReflectiveEqualsHashCodeToString {
+public class KeyAndValueDTO extends NotDTO {
     private String name;
     private String value;
 
-    protected KeyAndValueDTO(KeyAndValue keyAndValue) {
+    protected KeyAndValueDTO(KeyAndValue keyAndValue, boolean not) {
+        super(not);
         name = keyAndValue.getName();
         value = keyAndValue.getValue();
     }

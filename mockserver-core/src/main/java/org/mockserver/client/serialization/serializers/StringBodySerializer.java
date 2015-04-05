@@ -18,6 +18,14 @@ public class StringBodySerializer extends StdSerializer<StringBody> {
 
     @Override
     public void serialize(StringBody stringBody, JsonGenerator json, SerializerProvider provider) throws IOException {
-        json.writeString(stringBody.getValue());
+        if (stringBody.isNot() != null && stringBody.isNot()) {
+            json.writeStartObject();
+            json.writeBooleanField("not", true);
+            json.writeStringField("type", stringBody.getType().name());
+            json.writeStringField("value", stringBody.getValue());
+            json.writeEndObject();
+        } else {
+            json.writeString(stringBody.getValue());
+        }
     }
 }

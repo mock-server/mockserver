@@ -26,9 +26,9 @@ public class VerificationSequenceDTOTest {
 
         // then
         assertThat(verificationSequenceDTO.getHttpRequests(), is(Arrays.asList(
-                new HttpRequestDTO(request("one")),
-                new HttpRequestDTO(request("two")),
-                new HttpRequestDTO(request("three"))
+                new HttpRequestDTO(request("one"), false),
+                new HttpRequestDTO(request("two"), false),
+                new HttpRequestDTO(request("three"), false)
         )));
     }
 
@@ -61,16 +61,16 @@ public class VerificationSequenceDTOTest {
         // when
         VerificationSequenceDTO verificationSequenceDTO = new VerificationSequenceDTO(verification);
         verificationSequenceDTO.setHttpRequests(Arrays.asList(
-                new HttpRequestDTO(request("one")),
-                new HttpRequestDTO(request("two")),
-                new HttpRequestDTO(request("three"))
+                new HttpRequestDTO(request("one"), false),
+                new HttpRequestDTO(request("two"), false),
+                new HttpRequestDTO(request("three"), false)
         ));
 
         // then
         assertThat(verificationSequenceDTO.getHttpRequests(), is(Arrays.asList(
-                new HttpRequestDTO(request("one")),
-                new HttpRequestDTO(request("two")),
-                new HttpRequestDTO(request("three"))
+                new HttpRequestDTO(request("one"), false),
+                new HttpRequestDTO(request("two"), false),
+                new HttpRequestDTO(request("three"), false)
         )));
     }
 

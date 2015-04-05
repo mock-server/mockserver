@@ -19,6 +19,9 @@ public class JsonBodySerializer extends StdSerializer<JsonBody> {
     @Override
     public void serialize(JsonBody jsonBody, JsonGenerator json, SerializerProvider provider) throws IOException {
         json.writeStartObject();
+        if (jsonBody.isNot() != null && jsonBody.isNot()) {
+            json.writeBooleanField("not", jsonBody.isNot());
+        }
         json.writeStringField("type", jsonBody.getType().name());
         json.writeStringField("value", jsonBody.getValue());
         json.writeEndObject();

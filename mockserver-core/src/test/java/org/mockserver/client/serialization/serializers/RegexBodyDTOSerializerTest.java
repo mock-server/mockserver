@@ -13,8 +13,14 @@ public class RegexBodyDTOSerializerTest {
 
     @Test
     public void shouldSerializeRegexBodyDTO() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new RegexBodyDTO(new RegexBody("some[a-zA-Z]*"))),
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new RegexBodyDTO(new RegexBody("some[a-zA-Z]*"), false)),
                 is("{\"type\":\"REGEX\",\"value\":\"some[a-zA-Z]*\"}"));
+    }
+
+    @Test
+    public void shouldSerializeRegexBodyDTOWithNot() throws JsonProcessingException {
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new RegexBodyDTO(new RegexBody("some[a-zA-Z]*"), true)),
+                is("{\"not\":true,\"type\":\"REGEX\",\"value\":\"some[a-zA-Z]*\"}"));
     }
 
 }

@@ -7,7 +7,6 @@ import org.mockserver.model.HttpRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -22,7 +21,7 @@ public class HttpRequestSerializer {
         try {
             return objectMapper
                     .writerWithDefaultPrettyPrinter()
-                    .writeValueAsString(new HttpRequestDTO(httpRequest));
+                    .writeValueAsString(new HttpRequestDTO(httpRequest, false));
         } catch (Exception e) {
             logger.error(String.format("Exception while serializing httpRequest to JSON with value %s", httpRequest), e);
             throw new RuntimeException(String.format("Exception while serializing httpRequest to JSON with value %s", httpRequest), e);
@@ -61,7 +60,7 @@ public class HttpRequestSerializer {
             if (httpRequest != null && httpRequest.length > 0) {
                 HttpRequestDTO[] httpRequestDTOs = new HttpRequestDTO[httpRequest.length];
                 for (int i = 0; i < httpRequest.length; i++) {
-                    httpRequestDTOs[i] = new HttpRequestDTO(httpRequest[i]);
+                    httpRequestDTOs[i] = new HttpRequestDTO(httpRequest[i], false);
                 }
                 return objectMapper
                         .writerWithDefaultPrettyPrinter()

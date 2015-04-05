@@ -19,6 +19,9 @@ public class RegexBodyDTOSerializer extends StdSerializer<RegexBodyDTO> {
     @Override
     public void serialize(RegexBodyDTO regexBodyDTO, JsonGenerator json, SerializerProvider provider) throws IOException {
         json.writeStartObject();
+        if (regexBodyDTO.getNot() != null && regexBodyDTO.getNot()) {
+            json.writeBooleanField("not", regexBodyDTO.getNot());
+        }
         json.writeStringField("type", regexBodyDTO.getType().name());
         json.writeStringField("value", regexBodyDTO.getRegex());
         json.writeEndObject();

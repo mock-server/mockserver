@@ -26,11 +26,11 @@ public class HttpRequestDTOTest {
     public void shouldReturnValueSetInConstructor() {
         // given
         BodyDTO body = BodyDTO.createDTO(exact("body"));
-        List<CookieDTO> cookies = Arrays.asList(new CookieDTO(new Cookie("name", "value")));
-        List<HeaderDTO> headers = Arrays.asList(new HeaderDTO(new Header("name", "value")));
+        List<CookieDTO> cookies = Arrays.asList(new CookieDTO(new Cookie("name", "value"), false));
+        List<HeaderDTO> headers = Arrays.asList(new HeaderDTO(new Header("name", "value"), false));
         String method = "METHOD";
         String path = "path";
-        List<ParameterDTO> queryStringParameters = Arrays.asList(new ParameterDTO(new Parameter("name", "value")));
+        List<ParameterDTO> queryStringParameters = Arrays.asList(new ParameterDTO(new Parameter("name", "value"), false));
         HttpRequest httpRequest = new HttpRequest()
                 .withBody("body")
                 .withCookies(new Cookie("name", "value"))
@@ -40,7 +40,7 @@ public class HttpRequestDTOTest {
                 .withQueryStringParameter(new Parameter("name", "value"));
 
         // when
-        HttpRequestDTO httpRequestDTO = new HttpRequestDTO(httpRequest);
+        HttpRequestDTO httpRequestDTO = new HttpRequestDTO(httpRequest, false);
 
         // then
         assertThat(httpRequestDTO.getBody(), is(body));
@@ -69,7 +69,7 @@ public class HttpRequestDTOTest {
                 .withQueryStringParameter(parameter);
 
         // when
-        HttpRequest builtHttpRequest = new HttpRequestDTO(httpRequest).buildObject();
+        HttpRequest builtHttpRequest = new HttpRequestDTO(httpRequest, false).buildObject();
 
         // then
         assertThat(builtHttpRequest.getBody(), Is.<org.mockserver.model.Body>is(exact(body)));
@@ -92,7 +92,7 @@ public class HttpRequestDTOTest {
         HttpRequest httpRequest = new HttpRequest();
 
         // when
-        HttpRequestDTO httpRequestDTO = new HttpRequestDTO(httpRequest);
+        HttpRequestDTO httpRequestDTO = new HttpRequestDTO(httpRequest, false);
         httpRequestDTO.setBody(body);
         httpRequestDTO.setCookies(cookies);
         httpRequestDTO.setHeaders(headers);
@@ -113,7 +113,7 @@ public class HttpRequestDTOTest {
     @Test
     public void shouldHandleNullObjectInput() {
         // when
-        HttpRequestDTO httpRequestDTO = new HttpRequestDTO(null);
+        HttpRequestDTO httpRequestDTO = new HttpRequestDTO(null, false);
 
         // then
         assertThat(httpRequestDTO.getBody(), is(nullValue()));
@@ -127,7 +127,7 @@ public class HttpRequestDTOTest {
     @Test
     public void shouldHandleNullFieldInput() {
         // when
-        HttpRequestDTO httpRequestDTO = new HttpRequestDTO(new HttpRequest());
+        HttpRequestDTO httpRequestDTO = new HttpRequestDTO(new HttpRequest(), false);
 
         // then
         assertThat(httpRequestDTO.getBody(), is(nullValue()));
