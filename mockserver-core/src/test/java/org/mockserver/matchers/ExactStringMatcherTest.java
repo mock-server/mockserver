@@ -5,6 +5,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockserver.matchers.NotMatcher.not;
+import static org.mockserver.model.NottableString.string;
 
 /**
  * @author jamesdbloom
@@ -23,12 +24,12 @@ public class ExactStringMatcherTest {
 
     @Test
     public void shouldMatchNullExpectation() {
-        assertTrue(new ExactStringMatcher(null).matches("some_value"));
+        assertTrue(new ExactStringMatcher(string(null)).matches("some_value"));
     }
 
     @Test
     public void shouldNotMatchNullExpectation() {
-        assertFalse(not(new ExactStringMatcher(null)).matches("some_value"));
+        assertFalse(not(new ExactStringMatcher(string(null))).matches("some_value"));
     }
 
     @Test
@@ -53,12 +54,12 @@ public class ExactStringMatcherTest {
 
     @Test
     public void shouldNotMatchNullTest() {
-        assertFalse(new ExactStringMatcher("some_value").matches(null));
+        assertFalse(new ExactStringMatcher("some_value").matches(string(null)));
     }
 
     @Test
     public void shouldMatchNullTest() {
-        assertTrue(not(new ExactStringMatcher("some_value")).matches(null));
+        assertTrue(not(new ExactStringMatcher("some_value")).matches(string(null)));
     }
 
     @Test

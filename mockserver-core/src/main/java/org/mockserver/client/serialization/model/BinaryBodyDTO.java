@@ -11,6 +11,10 @@ public class BinaryBodyDTO extends BodyDTO {
 
     private String value;
 
+    public BinaryBodyDTO(BinaryBody binaryBody) {
+        this(binaryBody, false);
+    }
+
     public BinaryBodyDTO(BinaryBody binaryBody, boolean not) {
         super(binaryBody.getType(), not);
         if (binaryBody.getValue() != null && binaryBody.getValue().length > 0) {

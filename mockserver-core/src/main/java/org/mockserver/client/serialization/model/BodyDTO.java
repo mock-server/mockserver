@@ -19,19 +19,19 @@ public abstract class BodyDTO extends NotDTO {
 
     public static BodyDTO createDTO(Body body) {
         if (body instanceof StringBody) {
-            return new StringBodyDTO((StringBody) body, false);
+            return new StringBodyDTO((StringBody) body);
         } else if (body instanceof RegexBody) {
-            return new RegexBodyDTO((RegexBody) body, false);
+            return new RegexBodyDTO((RegexBody) body);
         } else if (body instanceof JsonBody) {
-            return new JsonBodyDTO((JsonBody) body, false);
+            return new JsonBodyDTO((JsonBody) body);
         } else if (body instanceof JsonSchemaBody) {
-            return new JsonSchemaBodyDTO((JsonSchemaBody) body, false);
+            return new JsonSchemaBodyDTO((JsonSchemaBody) body);
         } else if (body instanceof XPathBody) {
-            return new XPathBodyDTO((XPathBody) body, false);
+            return new XPathBodyDTO((XPathBody) body);
         } else if (body instanceof ParameterBody) {
-            return new ParameterBodyDTO((ParameterBody) body, false);
+            return new ParameterBodyDTO((ParameterBody) body);
         } else if (body instanceof BinaryBody) {
-            return new BinaryBodyDTO((BinaryBody) body, false);
+            return new BinaryBodyDTO((BinaryBody) body);
         } else {
             return null;
         }

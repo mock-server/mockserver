@@ -14,7 +14,7 @@ public class ParameterDTOTest {
     @Test
     public void shouldReturnValueSetInConstructor() {
         // when
-        ParameterDTO parameter = new ParameterDTO(new Parameter("first", "first_one", "first_two"), false);
+        ParameterDTO parameter = new ParameterDTO(new Parameter("first", "first_one", "first_two"));
 
         // then
         assertThat(parameter.getValues(), containsInAnyOrder("first_one", "first_two"));

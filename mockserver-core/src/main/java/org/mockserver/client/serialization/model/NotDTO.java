@@ -18,6 +18,10 @@ public class NotDTO extends ObjectWithReflectiveEqualsHashCodeToString {
     public NotDTO() {
     }
 
+    public boolean isNot() {
+        return not != null && not;
+    }
+
     public Boolean getNot() {
         return not;
     }

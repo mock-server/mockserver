@@ -2,13 +2,15 @@ package org.mockserver.collections;
 
 import com.google.common.collect.Sets;
 import org.junit.Test;
+import org.mockserver.model.NottableString;
 
 import java.util.Arrays;
 
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.junit.Assert.*;
-import static org.mockserver.collections.NottableKey.nottableKey;
+import static org.mockserver.model.NottableString.not;
+import static org.mockserver.model.NottableString.string;
 import static org.mockserver.test.Assert.assertSameEntries;
 
 /**
@@ -26,15 +28,15 @@ public class CaseInsensitiveRegexHashMapNotTest {
         caseInsensitiveRegexHashMap.put(".*key.*", "valueFour");
 
         // then
-        assertTrue(caseInsensitiveRegexHashMap.containsKey(nottableKey("key", false)));
-        assertTrue(caseInsensitiveRegexHashMap.containsKey(nottableKey("key End", false)));
-        assertTrue(caseInsensitiveRegexHashMap.containsKey(nottableKey("Beginning key", false)));
-        assertTrue(caseInsensitiveRegexHashMap.containsKey(nottableKey("Beginning key End", false)));
-        assertTrue(caseInsensitiveRegexHashMap.containsKey(nottableKey("KEY", false)));
-        assertTrue(caseInsensitiveRegexHashMap.containsKey(nottableKey("KEY End", false)));
-        assertTrue(caseInsensitiveRegexHashMap.containsKey(nottableKey("Beginning KEY", false)));
-        assertTrue(caseInsensitiveRegexHashMap.containsKey(nottableKey("Beginning KEY End", false)));
-        assertFalse(caseInsensitiveRegexHashMap.containsKey(nottableKey("AnotherValue", false)));
+        assertTrue(caseInsensitiveRegexHashMap.containsKey(string("key")));
+        assertTrue(caseInsensitiveRegexHashMap.containsKey(string("key End")));
+        assertTrue(caseInsensitiveRegexHashMap.containsKey(string("Beginning key")));
+        assertTrue(caseInsensitiveRegexHashMap.containsKey(string("Beginning key End")));
+        assertTrue(caseInsensitiveRegexHashMap.containsKey(string("KEY")));
+        assertTrue(caseInsensitiveRegexHashMap.containsKey(string("KEY End")));
+        assertTrue(caseInsensitiveRegexHashMap.containsKey(string("Beginning KEY")));
+        assertTrue(caseInsensitiveRegexHashMap.containsKey(string("Beginning KEY End")));
+        assertFalse(caseInsensitiveRegexHashMap.containsKey(string("AnotherValue")));
     }
 
     @Test
@@ -47,15 +49,15 @@ public class CaseInsensitiveRegexHashMapNotTest {
         caseInsensitiveRegexHashMap.put(".*key.*", "valueFour");
 
         // then
-        assertFalse(caseInsensitiveRegexHashMap.containsKey(nottableKey("key", true)));
-        assertFalse(caseInsensitiveRegexHashMap.containsKey(nottableKey("key End", true)));
-        assertFalse(caseInsensitiveRegexHashMap.containsKey(nottableKey("Beginning key", true)));
-        assertFalse(caseInsensitiveRegexHashMap.containsKey(nottableKey("Beginning key End", true)));
-        assertFalse(caseInsensitiveRegexHashMap.containsKey(nottableKey("KEY", true)));
-        assertFalse(caseInsensitiveRegexHashMap.containsKey(nottableKey("KEY End", true)));
-        assertFalse(caseInsensitiveRegexHashMap.containsKey(nottableKey("Beginning KEY", true)));
-        assertFalse(caseInsensitiveRegexHashMap.containsKey(nottableKey("Beginning KEY End", true)));
-        assertTrue(caseInsensitiveRegexHashMap.containsKey(nottableKey("AnotherValue", true)));
+        assertFalse(caseInsensitiveRegexHashMap.containsKey(not("key")));
+        assertFalse(caseInsensitiveRegexHashMap.containsKey(not("key End")));
+        assertFalse(caseInsensitiveRegexHashMap.containsKey(not("Beginning key")));
+        assertFalse(caseInsensitiveRegexHashMap.containsKey(not("Beginning key End")));
+        assertFalse(caseInsensitiveRegexHashMap.containsKey(not("KEY")));
+        assertFalse(caseInsensitiveRegexHashMap.containsKey(not("KEY End")));
+        assertFalse(caseInsensitiveRegexHashMap.containsKey(not("Beginning KEY")));
+        assertFalse(caseInsensitiveRegexHashMap.containsKey(not("Beginning KEY End")));
+        assertTrue(caseInsensitiveRegexHashMap.containsKey(not("AnotherValue")));
     }
 
     @Test
@@ -68,15 +70,15 @@ public class CaseInsensitiveRegexHashMapNotTest {
         caseInsensitiveRegexHashMap.put("OtherKey", "valueFour");
 
         // then
-        assertTrue(caseInsensitiveRegexHashMap.containsKey(nottableKey("key", false)));
-        assertTrue(caseInsensitiveRegexHashMap.containsKey(nottableKey("KEY", false)));
-        assertTrue(caseInsensitiveRegexHashMap.containsKey(nottableKey("Key", false)));
-        assertTrue(caseInsensitiveRegexHashMap.containsKey(nottableKey("kEy", false)));
-        assertTrue(caseInsensitiveRegexHashMap.containsKey(nottableKey("keY", false)));
-        assertTrue(caseInsensitiveRegexHashMap.containsKey(nottableKey("kEY", false)));
-        assertTrue(caseInsensitiveRegexHashMap.containsKey(nottableKey("OTHERKEY", false)));
-        assertTrue(caseInsensitiveRegexHashMap.containsKey(nottableKey("otherkey", false)));
-        assertFalse(caseInsensitiveRegexHashMap.containsKey(nottableKey("notAKey", false)));
+        assertTrue(caseInsensitiveRegexHashMap.containsKey(string("key")));
+        assertTrue(caseInsensitiveRegexHashMap.containsKey(string("KEY")));
+        assertTrue(caseInsensitiveRegexHashMap.containsKey(string("Key")));
+        assertTrue(caseInsensitiveRegexHashMap.containsKey(string("kEy")));
+        assertTrue(caseInsensitiveRegexHashMap.containsKey(string("keY")));
+        assertTrue(caseInsensitiveRegexHashMap.containsKey(string("kEY")));
+        assertTrue(caseInsensitiveRegexHashMap.containsKey(string("OTHERKEY")));
+        assertTrue(caseInsensitiveRegexHashMap.containsKey(string("otherkey")));
+        assertFalse(caseInsensitiveRegexHashMap.containsKey(string("notAKey")));
     }
 
     @Test
@@ -89,15 +91,15 @@ public class CaseInsensitiveRegexHashMapNotTest {
         caseInsensitiveRegexHashMap.put("OtherKey", "valueFour");
 
         // then
-        assertFalse(caseInsensitiveRegexHashMap.containsKey(nottableKey("key", true)));
-        assertFalse(caseInsensitiveRegexHashMap.containsKey(nottableKey("KEY", true)));
-        assertFalse(caseInsensitiveRegexHashMap.containsKey(nottableKey("Key", true)));
-        assertFalse(caseInsensitiveRegexHashMap.containsKey(nottableKey("kEy", true)));
-        assertFalse(caseInsensitiveRegexHashMap.containsKey(nottableKey("keY", true)));
-        assertFalse(caseInsensitiveRegexHashMap.containsKey(nottableKey("kEY", true)));
-        assertFalse(caseInsensitiveRegexHashMap.containsKey(nottableKey("OTHERKEY", true)));
-        assertFalse(caseInsensitiveRegexHashMap.containsKey(nottableKey("otherkey", true)));
-        assertTrue(caseInsensitiveRegexHashMap.containsKey(nottableKey("notAKey", true)));
+        assertFalse(caseInsensitiveRegexHashMap.containsKey(not("key")));
+        assertFalse(caseInsensitiveRegexHashMap.containsKey(not("KEY")));
+        assertFalse(caseInsensitiveRegexHashMap.containsKey(not("Key")));
+        assertFalse(caseInsensitiveRegexHashMap.containsKey(not("kEy")));
+        assertFalse(caseInsensitiveRegexHashMap.containsKey(not("keY")));
+        assertFalse(caseInsensitiveRegexHashMap.containsKey(not("kEY")));
+        assertFalse(caseInsensitiveRegexHashMap.containsKey(not("OTHERKEY")));
+        assertFalse(caseInsensitiveRegexHashMap.containsKey(not("otherkey")));
+        assertTrue(caseInsensitiveRegexHashMap.containsKey(not("notAKey")));
     }
 
     @Test
@@ -110,10 +112,10 @@ public class CaseInsensitiveRegexHashMapNotTest {
         caseInsensitiveRegexHashMap.put(".*key.*", "valueFour");
 
         // then
-        assertEquals("valueOne", caseInsensitiveRegexHashMap.get(nottableKey("key", false)));
-        assertEquals("valueTwo", caseInsensitiveRegexHashMap.get(nottableKey("key End", false)));
-        assertEquals("valueThree", caseInsensitiveRegexHashMap.get(nottableKey("Beginning key", false)));
-        assertEquals("valueFour", caseInsensitiveRegexHashMap.get(nottableKey("Beginning key End", false)));
+        assertEquals("valueOne", caseInsensitiveRegexHashMap.get(string("key")));
+        assertEquals("valueTwo", caseInsensitiveRegexHashMap.get(string("key End")));
+        assertEquals("valueThree", caseInsensitiveRegexHashMap.get(string("Beginning key")));
+        assertEquals("valueFour", caseInsensitiveRegexHashMap.get(string("Beginning key End")));
     }
 
     @Test
@@ -126,7 +128,7 @@ public class CaseInsensitiveRegexHashMapNotTest {
         caseInsensitiveRegexHashMap.put(".*key.*", "valueFour");
 
         // then
-        assertEquals("valueOne", caseInsensitiveRegexHashMap.get(nottableKey("does_not_exist", true)));
+        assertEquals("valueOne", caseInsensitiveRegexHashMap.get(not("does_not_exist")));
     }
 
     @Test
@@ -139,10 +141,10 @@ public class CaseInsensitiveRegexHashMapNotTest {
         caseInsensitiveRegexHashMap.put("OtherKey", "valueFour");
 
         // then
-        assertEquals("valueOne", caseInsensitiveRegexHashMap.get(nottableKey("key", false)));
-        assertEquals("valueTwo", caseInsensitiveRegexHashMap.get(nottableKey("KEY", false)));
-        assertEquals("valueThree", caseInsensitiveRegexHashMap.get(nottableKey("Key", false)));
-        assertEquals("valueFour", caseInsensitiveRegexHashMap.get(nottableKey("OtherKey", false)));
+        assertEquals("valueOne", caseInsensitiveRegexHashMap.get(string("key")));
+        assertEquals("valueTwo", caseInsensitiveRegexHashMap.get(string("KEY")));
+        assertEquals("valueThree", caseInsensitiveRegexHashMap.get(string("Key")));
+        assertEquals("valueFour", caseInsensitiveRegexHashMap.get(string("OtherKey")));
     }
 
     @Test
@@ -155,7 +157,7 @@ public class CaseInsensitiveRegexHashMapNotTest {
         caseInsensitiveRegexHashMap.put("OtherKey", "valueFour");
 
         // then
-        assertEquals("valueOne", caseInsensitiveRegexHashMap.get(nottableKey("does_not_exist", true)));
+        assertEquals("valueOne", caseInsensitiveRegexHashMap.get(not("does_not_exist")));
     }
 
     @Test
@@ -168,10 +170,10 @@ public class CaseInsensitiveRegexHashMapNotTest {
         caseInsensitiveRegexHashMap.put(".*key.*", "valueFour");
 
         // then
-        assertSameEntries(Arrays.asList("valueOne", "valueTwo", "valueThree", "valueFour"), caseInsensitiveRegexHashMap.getAll(nottableKey("key", false)));
-        assertSameEntries(Arrays.asList("valueTwo", "valueFour"), caseInsensitiveRegexHashMap.getAll(nottableKey("key End", false)));
-        assertSameEntries(Arrays.asList("valueThree", "valueFour"), caseInsensitiveRegexHashMap.getAll(nottableKey("Beginning key", false)));
-        assertEquals(Arrays.asList("valueFour"), caseInsensitiveRegexHashMap.getAll(nottableKey("Beginning key End", false)));
+        assertSameEntries(Arrays.asList("valueOne", "valueTwo", "valueThree", "valueFour"), caseInsensitiveRegexHashMap.getAll(string("key")));
+        assertSameEntries(Arrays.asList("valueTwo", "valueFour"), caseInsensitiveRegexHashMap.getAll(string("key End")));
+        assertSameEntries(Arrays.asList("valueThree", "valueFour"), caseInsensitiveRegexHashMap.getAll(string("Beginning key")));
+        assertEquals(Arrays.asList("valueFour"), caseInsensitiveRegexHashMap.getAll(string("Beginning key End")));
     }
 
     @Test
@@ -184,10 +186,10 @@ public class CaseInsensitiveRegexHashMapNotTest {
         caseInsensitiveRegexHashMap.put(".*key.*", "valueFour");
 
         // then
-        assertThat(caseInsensitiveRegexHashMap.getAll(nottableKey("key", true)), empty());
-        assertThat(caseInsensitiveRegexHashMap.getAll(nottableKey("key End", true)), contains("valueOne", "valueThree"));
-        assertThat(caseInsensitiveRegexHashMap.getAll(nottableKey("Beginning key", true)), contains("valueOne", "valueTwo"));
-        assertThat(caseInsensitiveRegexHashMap.getAll(nottableKey("Beginning key End", true)), contains("valueOne", "valueTwo", "valueThree"));
+        assertThat(caseInsensitiveRegexHashMap.getAll(not("key")), empty());
+        assertThat(caseInsensitiveRegexHashMap.getAll(not("key End")), contains("valueOne", "valueThree"));
+        assertThat(caseInsensitiveRegexHashMap.getAll(not("Beginning key")), contains("valueOne", "valueTwo"));
+        assertThat(caseInsensitiveRegexHashMap.getAll(not("Beginning key End")), contains("valueOne", "valueTwo", "valueThree"));
     }
 
     @Test
@@ -200,10 +202,10 @@ public class CaseInsensitiveRegexHashMapNotTest {
         caseInsensitiveRegexHashMap.put("OtherKey", "valueFour");
 
         // then
-        assertSameEntries(Arrays.asList("valueOne", "valueTwo", "valueThree"), caseInsensitiveRegexHashMap.getAll(nottableKey("key", false)));
-        assertSameEntries(Arrays.asList("valueOne", "valueTwo", "valueThree"), caseInsensitiveRegexHashMap.getAll(nottableKey("KEY", false)));
-        assertSameEntries(Arrays.asList("valueOne", "valueTwo", "valueThree"), caseInsensitiveRegexHashMap.getAll(nottableKey("Key", false)));
-        assertEquals(Arrays.asList("valueFour"), caseInsensitiveRegexHashMap.getAll(nottableKey("OtherKey", false)));
+        assertSameEntries(Arrays.asList("valueOne", "valueTwo", "valueThree"), caseInsensitiveRegexHashMap.getAll(string("key")));
+        assertSameEntries(Arrays.asList("valueOne", "valueTwo", "valueThree"), caseInsensitiveRegexHashMap.getAll(string("KEY")));
+        assertSameEntries(Arrays.asList("valueOne", "valueTwo", "valueThree"), caseInsensitiveRegexHashMap.getAll(string("Key")));
+        assertEquals(Arrays.asList("valueFour"), caseInsensitiveRegexHashMap.getAll(string("OtherKey")));
     }
 
     @Test
@@ -216,10 +218,10 @@ public class CaseInsensitiveRegexHashMapNotTest {
         caseInsensitiveRegexHashMap.put("OtherKey", "valueFour");
 
         // then
-        assertSameEntries(Arrays.asList("valueFour"), caseInsensitiveRegexHashMap.getAll(nottableKey("key", true)));
-        assertSameEntries(Arrays.asList("valueFour"), caseInsensitiveRegexHashMap.getAll(nottableKey("KEY", true)));
-        assertSameEntries(Arrays.asList("valueFour"), caseInsensitiveRegexHashMap.getAll(nottableKey("Key", true)));
-        assertEquals(Arrays.asList("valueOne", "valueTwo", "valueThree"), caseInsensitiveRegexHashMap.getAll(nottableKey("OtherKey", true)));
+        assertSameEntries(Arrays.asList("valueFour"), caseInsensitiveRegexHashMap.getAll(not("key")));
+        assertSameEntries(Arrays.asList("valueFour"), caseInsensitiveRegexHashMap.getAll(not("KEY")));
+        assertSameEntries(Arrays.asList("valueFour"), caseInsensitiveRegexHashMap.getAll(not("Key")));
+        assertEquals(Arrays.asList("valueOne", "valueTwo", "valueThree"), caseInsensitiveRegexHashMap.getAll(not("OtherKey")));
     }
 
     @Test
@@ -230,14 +232,14 @@ public class CaseInsensitiveRegexHashMapNotTest {
         circularMultiMap.put("two", "two");
 
         // when
-        assertEquals("one_one", circularMultiMap.remove(nottableKey("one", false)));
-        assertNull(circularMultiMap.remove(nottableKey("one", false)));
+        assertEquals("one_one", circularMultiMap.remove(string("one")));
+        assertNull(circularMultiMap.remove(string("one")));
 
         // then
         // - should have correct keys
         assertFalse(circularMultiMap.containsKey("one"));
         assertTrue(circularMultiMap.containsKey("two"));
-        assertEquals(Sets.newHashSet(nottableKey("two")), circularMultiMap.keySet());
+        assertEquals(Sets.newHashSet(string("two")), circularMultiMap.keySet());
         // - should have correct values
         assertFalse(circularMultiMap.containsValue("one_one"));
         assertTrue(circularMultiMap.containsValue("two"));
@@ -251,8 +253,8 @@ public class CaseInsensitiveRegexHashMapNotTest {
         circularMultiMap.put("two", "two");
 
         // when
-        assertEquals("two", circularMultiMap.remove(nottableKey("one", true)));
-        assertNull(circularMultiMap.remove(nottableKey("one", true)));
+        assertEquals("two", circularMultiMap.remove(not("one")));
+        assertNull(circularMultiMap.remove(not("one")));
 
         // then
         // - should have correct keys
@@ -271,14 +273,14 @@ public class CaseInsensitiveRegexHashMapNotTest {
         circularMultiMap.put("two", "two");
 
         // when
-        assertEquals("one_one", circularMultiMap.remove(nottableKey("o[a-z]{2}", false)));
-        assertNull(circularMultiMap.remove(nottableKey("one", false)));
+        assertEquals("one_one", circularMultiMap.remove(string("o[a-z]{2}")));
+        assertNull(circularMultiMap.remove(string("one")));
 
         // then
         // - should have correct keys
         assertFalse(circularMultiMap.containsKey("one"));
         assertTrue(circularMultiMap.containsKey("two"));
-        assertEquals(Sets.newHashSet(nottableKey("two")), circularMultiMap.keySet());
+        assertEquals(Sets.newHashSet(string("two")), circularMultiMap.keySet());
         // - should have correct values
         assertFalse(circularMultiMap.containsValue("one_one"));
         assertTrue(circularMultiMap.containsValue("two"));
@@ -292,8 +294,8 @@ public class CaseInsensitiveRegexHashMapNotTest {
         circularMultiMap.put("two", "two");
 
         // when
-        assertEquals("two", circularMultiMap.remove(nottableKey("o[a-z]{2}", true)));
-        assertNull(circularMultiMap.remove(nottableKey("one", true)));
+        assertEquals("two", circularMultiMap.remove(not("o[a-z]{2}")));
+        assertNull(circularMultiMap.remove(not("one")));
 
         // then
         // - should have correct keys
@@ -312,8 +314,8 @@ public class CaseInsensitiveRegexHashMapNotTest {
         circularMultiMap.put("two", "two");
 
         // when
-        assertEquals("one_one", circularMultiMap.remove(nottableKey("ONE", false)));
-        assertEquals("two", circularMultiMap.remove(nottableKey("Two", false)));
+        assertEquals("one_one", circularMultiMap.remove(string("ONE")));
+        assertEquals("two", circularMultiMap.remove(string("Two")));
 
         // then
         // - should have correct keys
@@ -329,8 +331,8 @@ public class CaseInsensitiveRegexHashMapNotTest {
         circularMultiMap.put("two", "two");
 
         // when
-        assertEquals("two", circularMultiMap.remove(nottableKey("ONE", true)));
-        assertEquals("one_one", circularMultiMap.remove(nottableKey("Two", true)));
+        assertEquals("two", circularMultiMap.remove(not("ONE")));
+        assertEquals("one_one", circularMultiMap.remove(not("Two")));
 
         // then
         // - should have correct keys

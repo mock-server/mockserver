@@ -23,13 +23,33 @@ import static org.mockserver.model.XPathBody.xpath;
 public class HttpRequestMatcherTest {
 
     @Test
-    public void shouldNotMatchMatchingRequestWithNot() {
+    public void shouldNotMatchMatchingRequestWithNotMatcher() {
         assertFalse(not(new HttpRequestMatcher(new HttpRequest().withMethod("HEAD"))).matches(new HttpRequest().withMethod("HEAD")));
     }
 
     @Test
-    public void shouldMatchNotMatchingRequestWithNot() {
+    public void shouldNotMatchMatchingRequestWithNotRequestInMatcher() {
+        assertFalse(new HttpRequestMatcher(org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD"))).matches(new HttpRequest().withMethod("HEAD")));
+    }
+
+    @Test
+    public void shouldNotMatchMatchingRequestWithNotRequestPassedToMatches() {
+        assertFalse(new HttpRequestMatcher(new HttpRequest().withMethod("HEAD")).matches(org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD"))));
+    }
+
+    @Test
+    public void shouldMatchNotMatchingRequestWithNotMatcher() {
         assertTrue(not(new HttpRequestMatcher(new HttpRequest().withMethod("HEAD"))).matches(new HttpRequest().withMethod("OPTIONS")));
+    }
+
+    @Test
+    public void shouldMatchNotMatchingRequestWithNotRequestInMatcher() {
+        assertTrue(new HttpRequestMatcher(org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD"))).matches(new HttpRequest().withMethod("OPTIONS")));
+    }
+
+    @Test
+    public void shouldMatchNotMatchingRequestWithNotRequestPassedToMatches() {
+        assertTrue(new HttpRequestMatcher(new HttpRequest().withMethod("HEAD")).matches(org.mockserver.model.Not.not(new HttpRequest().withMethod("OPTIONS"))));
     }
 
     @Test
@@ -442,6 +462,12 @@ public class HttpRequestMatcherTest {
     @Test
     public void shouldReturnFormattedRequestWithStringBodyInToString() {
         assertEquals("{" + System.getProperty("line.separator") +
+                        "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
+                        "  \"path\" : \"/some/path\"," + System.getProperty("line.separator") +
+                        "  \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
+                        "    \"name\" : \"parameterOneName\"," + System.getProperty("line.separator") +
+                        "    \"values\" : [ \"parameterOneValue\" ]" + System.getProperty("line.separator") +
+                        "  } ]," + System.getProperty("line.separator") +
                         "  \"body\" : \"some_body\"," + System.getProperty("line.separator") +
                         "  \"headers\" : [ {" + System.getProperty("line.separator") +
                         "    \"name\" : \"name\"," + System.getProperty("line.separator") +
@@ -454,32 +480,10 @@ public class HttpRequestMatcherTest {
                         "}",
                 new HttpRequestMatcher(
                         request()
+                                .withMethod("GET")
+                                .withPath("/some/path")
+                                .withQueryStringParameters(param("parameterOneName", "parameterOneValue"))
                                 .withBody("some_body")
-                                .withHeaders(new Header("name", "value"))
-                                .withCookies(new Cookie("name", "[A-Z]{0,10}"))
-                ).toString()
-        );
-    }
-
-    @Test
-    public void shouldReturnFormattedRequestWithJsonBodyInToString() {
-        assertEquals("{" + System.getProperty("line.separator") +
-                        "  \"body\" : {" + System.getProperty("line.separator") +
-                        "    \"type\" : \"JSON\"," + System.getProperty("line.separator") +
-                        "    \"value\" : \"{ \\\"key\\\": \\\"some_value\\\" }\"" + System.getProperty("line.separator") +
-                        "  }," + System.getProperty("line.separator") +
-                        "  \"headers\" : [ {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"name\"," + System.getProperty("line.separator") +
-                        "    \"values\" : [ \"value\" ]" + System.getProperty("line.separator") +
-                        "  } ]," + System.getProperty("line.separator") +
-                        "  \"cookies\" : [ {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"name\"," + System.getProperty("line.separator") +
-                        "    \"value\" : \"[A-Z]{0,10}\"" + System.getProperty("line.separator") +
-                        "  } ]" + System.getProperty("line.separator") +
-                        "}",
-                new HttpRequestMatcher(
-                        request()
-                                .withBody(json("{ \"key\": \"some_value\" }"))
                                 .withHeaders(new Header("name", "value"))
                                 .withCookies(new Cookie("name", "[A-Z]{0,10}"))
                 ).toString()

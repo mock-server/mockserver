@@ -23,6 +23,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockserver.model.NottableString.string;
 
 /**
  * @author jamesdbloom
@@ -47,19 +48,19 @@ public class ExpectationSerializerTest {
     private final ExpectationDTO fullExpectationDTO = new ExpectationDTO()
             .setHttpRequest(
                     new HttpRequestDTO()
-                            .setMethod("GET")
-                            .setPath("somePath")
-                            .setQueryStringParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")), false)))
+                            .setMethod(string("GET"))
+                            .setPath(string("somePath"))
+                            .setQueryStringParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")))))
                             .setBody(BodyDTO.createDTO(new StringBody("somebody")))
-                            .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("headerName", Arrays.asList("headerValue")), false)))
-                            .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("cookieName", "cookieValue"), false)))
+                            .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("headerName", Arrays.asList("headerValue")))))
+                            .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("cookieName", "cookieValue"))))
             )
             .setHttpResponse(
                     new HttpResponseDTO()
                             .setStatusCode(304)
-                            .setBody(new StringBodyDTO(new StringBody("responseBody"), false))
-                            .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("headerName", Arrays.asList("headerValue")), false)))
-                            .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("cookieName", "cookieValue"), false)))
+                            .setBody(new StringBodyDTO(new StringBody("responseBody")))
+                            .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("headerName", Arrays.asList("headerValue")))))
+                            .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("cookieName", "cookieValue"))))
                             .setDelay(
                                     new DelayDTO()
                                             .setTimeUnit(TimeUnit.MICROSECONDS)

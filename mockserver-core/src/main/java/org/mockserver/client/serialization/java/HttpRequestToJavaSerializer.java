@@ -18,13 +18,13 @@ public class HttpRequestToJavaSerializer implements ToJavaSerializer<HttpRequest
         if (httpRequest != null) {
             appendNewLineAndIndent(numberOfSpacesToIndent, output);
             output.append("request()");
-            if (StringUtils.isNotEmpty(httpRequest.getMethod())) {
+            if (httpRequest.getMethod() != null && StringUtils.isNotEmpty(httpRequest.getMethod().getValue())) {
                 appendNewLineAndIndent(numberOfSpacesToIndent + 8, output);
-                output.append(".withMethod(\"").append(httpRequest.getMethod()).append("\")");
+                output.append(".withMethod(\"").append(httpRequest.getMethod().getValue()).append("\")");
             }
-            if (StringUtils.isNotEmpty(httpRequest.getPath())) {
+            if (httpRequest.getPath() != null && StringUtils.isNotEmpty(httpRequest.getPath().getValue())) {
                 appendNewLineAndIndent(numberOfSpacesToIndent + 8, output);
-                output.append(".withPath(\"").append(httpRequest.getPath()).append("\")");
+                output.append(".withPath(\"").append(httpRequest.getPath().getValue()).append("\")");
             }
             outputHeaders(numberOfSpacesToIndent + 8, output, httpRequest.getHeaders());
             outputCookies(numberOfSpacesToIndent + 8, output, httpRequest.getCookies());

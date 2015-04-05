@@ -10,6 +10,7 @@ import java.util.Arrays;
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.JsonSchemaBody.jsonSchema;
+import static org.mockserver.model.NottableString.string;
 import static org.mockserver.model.ParameterBody.params;
 import static org.mockserver.model.RegexBody.regex;
 import static org.mockserver.model.StringBody.exact;
@@ -34,7 +35,7 @@ public class HttpRequestSerializerIntegrationTest {
 
         // then
         assertEquals(new HttpRequestDTO()
-                .setPath("somePath")
+                .setPath(string("somePath"))
                 .buildObject(), expectation);
     }
 
@@ -67,12 +68,12 @@ public class HttpRequestSerializerIntegrationTest {
 
         // then
         assertEquals(new HttpRequestDTO()
-                .setMethod("someMethod")
-                .setPath("somePath")
-                .setQueryStringParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")), false)))
+                .setMethod(string("someMethod"))
+                .setPath(string("somePath"))
+                .setQueryStringParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")))))
                 .setBody(BodyDTO.createDTO(new StringBody("somebody")))
-                .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")), false)))
-                .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"), false)))
+                .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
+                .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
                 .buildObject(), expectation);
     }
 
@@ -227,7 +228,7 @@ public class HttpRequestSerializerIntegrationTest {
 
         // then
         assertEquals(new HttpRequestDTO()
-                .setPath("somePath")
+                .setPath(string("somePath"))
                 .buildObject(), expectation);
     }
 
@@ -249,8 +250,8 @@ public class HttpRequestSerializerIntegrationTest {
 
         // then
         assertEquals(new HttpRequestDTO()
-                .setPath("somePath")
-                .setQueryStringParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")), false)))
+                .setPath(string("somePath"))
+                .setQueryStringParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")))))
                 .buildObject(), expectation);
     }
 
@@ -259,12 +260,12 @@ public class HttpRequestSerializerIntegrationTest {
         // when
         String jsonExpectation = new HttpRequestSerializer().serialize(
                 new HttpRequestDTO()
-                        .setMethod("someMethod")
-                        .setPath("somePath")
-                        .setQueryStringParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")), false)))
+                        .setMethod(string("someMethod"))
+                        .setPath(string("somePath"))
+                        .setQueryStringParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")))))
                         .setBody(BodyDTO.createDTO(new StringBody("somebody")))
-                        .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")), false)))
-                        .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"), false)))
+                        .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
+                        .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
                         .buildObject()
         );
 
@@ -277,13 +278,13 @@ public class HttpRequestSerializerIntegrationTest {
                 "    \"values\" : [ \"queryParameterValue\" ]" + System.getProperty("line.separator") +
                 "  } ]," + System.getProperty("line.separator") +
                 "  \"body\" : \"somebody\"," + System.getProperty("line.separator") +
-                "  \"cookies\" : [ {" + System.getProperty("line.separator") +
-                "    \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
-                "    \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
-                "  } ]," + System.getProperty("line.separator") +
                 "  \"headers\" : [ {" + System.getProperty("line.separator") +
                 "    \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
                 "    \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
+                "  } ]," + System.getProperty("line.separator") +
+                "  \"cookies\" : [ {" + System.getProperty("line.separator") +
+                "    \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
+                "    \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
                 "  } ]" + System.getProperty("line.separator") +
                 "}", jsonExpectation);
     }
@@ -294,16 +295,16 @@ public class HttpRequestSerializerIntegrationTest {
         String jsonExpectation = new HttpRequestSerializer().serialize(
                 new HttpRequest[]{
                         new HttpRequestDTO()
-                                .setMethod("some_method_one")
-                                .setPath("some_path_one")
+                                .setMethod(string("some_method_one"))
+                                .setPath(string("some_path_one"))
                                 .setBody(BodyDTO.createDTO(new StringBody("some_body_one")))
-                                .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("some_header_name_one", Arrays.asList("some_header_value_one")), false)))
+                                .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("some_header_name_one", Arrays.asList("some_header_value_one")))))
                                 .buildObject(),
                         new HttpRequestDTO()
-                                .setMethod("some_method_two")
-                                .setPath("some_path_two")
+                                .setMethod(string("some_method_two"))
+                                .setPath(string("some_path_two"))
                                 .setBody(BodyDTO.createDTO(new StringBody("some_body_two")))
-                                .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("some_header_name_two", Arrays.asList("some_header_value_two")), false)))
+                                .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("some_header_name_two", Arrays.asList("some_header_value_two")))))
                                 .buildObject()
                 }
         );
@@ -334,16 +335,16 @@ public class HttpRequestSerializerIntegrationTest {
         String jsonExpectation = new HttpRequestSerializer().serialize(
                 Arrays.asList(
                         new HttpRequestDTO()
-                                .setMethod("some_method_one")
-                                .setPath("some_path_one")
+                                .setMethod(string("some_method_one"))
+                                .setPath(string("some_path_one"))
                                 .setBody(BodyDTO.createDTO(new StringBody("some_body_one")))
-                                .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("some_header_name_one", Arrays.asList("some_header_value_one")), false)))
+                                .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("some_header_name_one", Arrays.asList("some_header_value_one")))))
                                 .buildObject(),
                         new HttpRequestDTO()
-                                .setMethod("some_method_two")
-                                .setPath("some_path_two")
+                                .setMethod(string("some_method_two"))
+                                .setPath(string("some_path_two"))
                                 .setBody(BodyDTO.createDTO(new StringBody("some_body_two")))
-                                .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("some_header_name_two", Arrays.asList("some_header_value_two")), false)))
+                                .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("some_header_name_two", Arrays.asList("some_header_value_two")))))
                                 .buildObject()
                 )
         );
@@ -396,7 +397,7 @@ public class HttpRequestSerializerIntegrationTest {
         assertEquals("{" + System.getProperty("line.separator") +
                 "  \"body\" : {" + System.getProperty("line.separator") +
                 "    \"type\" : \"JSON\"," + System.getProperty("line.separator") +
-                "    \"value\" : \"{ \\\"key\\\": \\\"value\\\" }\"" + System.getProperty("line.separator") +
+                "    \"json\" : \"{ \\\"key\\\": \\\"value\\\" }\"" + System.getProperty("line.separator") +
                 "  }" + System.getProperty("line.separator") +
                 "}", jsonExpectation);
     }
@@ -414,7 +415,7 @@ public class HttpRequestSerializerIntegrationTest {
         assertEquals("{" + System.getProperty("line.separator") +
                 "  \"body\" : {" + System.getProperty("line.separator") +
                 "    \"type\" : \"REGEX\"," + System.getProperty("line.separator") +
-                "    \"value\" : \"some[a-z]{3}\"" + System.getProperty("line.separator") +
+                "    \"regex\" : \"some[a-z]{3}\"" + System.getProperty("line.separator") +
                 "  }" + System.getProperty("line.separator") +
                 "}", jsonExpectation);
     }
@@ -432,7 +433,7 @@ public class HttpRequestSerializerIntegrationTest {
         assertEquals("{" + System.getProperty("line.separator") +
                 "  \"body\" : {" + System.getProperty("line.separator") +
                 "    \"type\" : \"XPATH\"," + System.getProperty("line.separator") +
-                "    \"value\" : \"/element[key = 'some_key' and value = 'some_value']\"" + System.getProperty("line.separator") +
+                "    \"xpath\" : \"/element[key = 'some_key' and value = 'some_value']\"" + System.getProperty("line.separator") +
                 "  }" + System.getProperty("line.separator") +
                 "}", jsonExpectation);
     }
@@ -468,7 +469,7 @@ public class HttpRequestSerializerIntegrationTest {
     public void shouldSerializePartialRequestAndResponse() throws IOException {
         // when
         String jsonExpectation = new HttpRequestSerializer().serialize(new HttpRequestDTO()
-                        .setPath("somePath")
+                        .setPath(string("somePath"))
                         .buildObject()
         );
 
@@ -482,7 +483,7 @@ public class HttpRequestSerializerIntegrationTest {
     public void shouldSerializePartialExpectation() throws IOException {
         // when
         String jsonExpectation = new HttpRequestSerializer().serialize(new HttpRequestDTO()
-                        .setPath("somePath")
+                        .setPath(string("somePath"))
                         .buildObject()
         );
 

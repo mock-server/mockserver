@@ -22,10 +22,10 @@ public class ParameterBodyDTOTest {
         // when
         ParameterBodyDTO parameterBody = new ParameterBodyDTO(new ParameterBody(
                 new Parameter("some", "value")
-        ), false);
+        ));
 
         // then
-        assertThat(parameterBody.getParameters(), containsInAnyOrder(new ParameterDTO(new Parameter("some", "value"), false)));
+        assertThat(parameterBody.getParameters(), containsInAnyOrder(new ParameterDTO(new Parameter("some", "value"))));
         assertThat(parameterBody.getType(), is(Body.Type.PARAMETERS));
     }
 
@@ -34,7 +34,7 @@ public class ParameterBodyDTOTest {
         // when
         ParameterBody parameterBody = new ParameterBodyDTO(new ParameterBody(
                 new Parameter("some", "value")
-        ), false).buildObject();
+        )).buildObject();
 
         // then
         assertThat(parameterBody.getValue(), containsInAnyOrder(new Parameter("some", "value")));

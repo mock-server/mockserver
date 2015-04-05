@@ -14,7 +14,7 @@ public class HeaderDTOTest {
     @Test
     public void shouldReturnValueSetInConstructor() {
         // when
-        HeaderDTO header = new HeaderDTO(new Header("first", "first_one", "first_two"), false);
+        HeaderDTO header = new HeaderDTO(new Header("first", "first_one", "first_two"));
 
         // then
         assertThat(header.getValues(), containsInAnyOrder("first_one", "first_two"));

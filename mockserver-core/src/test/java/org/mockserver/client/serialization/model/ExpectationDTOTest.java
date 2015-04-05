@@ -30,7 +30,7 @@ public class ExpectationDTOTest {
         ExpectationDTO expectationWithResponse = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3)).thenRespond(httpResponse));
 
         // then
-        assertThat(expectationWithResponse.getHttpRequest(), is(new HttpRequestDTO(httpRequest, false)));
+        assertThat(expectationWithResponse.getHttpRequest(), is(new HttpRequestDTO(httpRequest)));
         assertThat(expectationWithResponse.getTimes(), is(new TimesDTO(Times.exactly(3))));
         assertThat(expectationWithResponse.getHttpResponse(), is(new HttpResponseDTO(httpResponse)));
         assertNull(expectationWithResponse.getHttpForward());
@@ -40,7 +40,7 @@ public class ExpectationDTOTest {
         ExpectationDTO expectationWithForward = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3)).thenForward(httpForward));
 
         // then
-        assertThat(expectationWithForward.getHttpRequest(), is(new HttpRequestDTO(httpRequest, false)));
+        assertThat(expectationWithForward.getHttpRequest(), is(new HttpRequestDTO(httpRequest)));
         assertThat(expectationWithForward.getTimes(), is(new TimesDTO(Times.exactly(3))));
         assertNull(expectationWithForward.getHttpResponse());
         assertThat(expectationWithForward.getHttpForward(), is(new HttpForwardDTO(httpForward)));
@@ -50,7 +50,7 @@ public class ExpectationDTOTest {
         ExpectationDTO expectationWithCallback = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3)).thenCallback(httpCallback));
 
         // then
-        assertThat(expectationWithCallback.getHttpRequest(), is(new HttpRequestDTO(httpRequest, false)));
+        assertThat(expectationWithCallback.getHttpRequest(), is(new HttpRequestDTO(httpRequest)));
         assertThat(expectationWithCallback.getTimes(), is(new TimesDTO(Times.exactly(3))));
         assertNull(expectationWithCallback.getHttpResponse());
         assertNull(expectationWithCallback.getHttpForward());
@@ -112,7 +112,7 @@ public class ExpectationDTOTest {
     @Test
     public void shouldReturnValueSetInSetter() {
         // given
-        HttpRequestDTO httpRequest = new HttpRequestDTO(new HttpRequest().withBody("some_body"), false);
+        HttpRequestDTO httpRequest = new HttpRequestDTO(new HttpRequest().withBody("some_body"));
         TimesDTO times = new TimesDTO(Times.exactly(3));
         HttpResponseDTO httpResponse = new HttpResponseDTO(new HttpResponse().withBody("some_response_body"));
         HttpForwardDTO httpForward = new HttpForwardDTO(new HttpForward().withHost("some_host"));

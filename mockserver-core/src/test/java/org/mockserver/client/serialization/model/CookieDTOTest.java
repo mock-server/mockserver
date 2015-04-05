@@ -14,7 +14,7 @@ public class CookieDTOTest {
     @Test
     public void shouldReturnValueSetInConstructor() {
         // when
-        CookieDTO cookie = new CookieDTO(new Cookie("name", "value"), false);
+        CookieDTO cookie = new CookieDTO(new Cookie("name", "value"));
 
         // then
         assertThat(cookie.getValue(), is("value"));

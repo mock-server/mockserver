@@ -14,11 +14,15 @@ public class ParameterBodyDTO extends BodyDTO {
 
     private List<ParameterDTO> parameters;
 
+    public ParameterBodyDTO(ParameterBody parameterBody) {
+        this(parameterBody, false);
+    }
+
     public ParameterBodyDTO(ParameterBody parameterBody, boolean not) {
         super(parameterBody.getType(), not);
         parameters = Lists.transform(parameterBody.getValue(), new Function<Parameter, ParameterDTO>() {
             public ParameterDTO apply(Parameter parameter) {
-                return new ParameterDTO(parameter, parameter.isNot() != null && parameter.isNot());
+                return new ParameterDTO(parameter, parameter.isNot());
             }
         });
     }

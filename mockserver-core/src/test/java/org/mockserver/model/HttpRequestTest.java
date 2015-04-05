@@ -9,6 +9,7 @@ import java.util.Collection;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.NottableString.string;
 
 /**
  * @author jamesdbloom
@@ -23,7 +24,12 @@ public class HttpRequestTest {
 
     @Test
     public void returnsPath() {
-        assertEquals("somepath", new HttpRequest().withPath("somepath").getPath());
+        assertEquals(string("somepath"), new HttpRequest().withPath("somepath").getPath());
+    }
+
+    @Test
+    public void returnsMethod() {
+        assertEquals(string("POST"), new HttpRequest().withMethod("POST").getMethod());
     }
 
     @Test

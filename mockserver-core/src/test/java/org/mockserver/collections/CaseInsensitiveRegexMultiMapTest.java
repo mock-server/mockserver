@@ -2,13 +2,14 @@ package org.mockserver.collections;
 
 import com.google.common.collect.Sets;
 import org.junit.Test;
+import org.mockserver.model.NottableString;
 
 import java.util.Arrays;
 import java.util.HashMap;
 
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.junit.Assert.*;
-import static org.mockserver.collections.NottableKey.nottableKey;
+import static org.mockserver.model.NottableString.string;
 
 /**
  * @author jamesdbloom
@@ -45,12 +46,12 @@ public class CaseInsensitiveRegexMultiMapTest {
 
         // when
         circularMultiMap.put("one", "one_one");
-        circularMultiMap.putAll(new HashMap<NottableKey, String>() {
+        circularMultiMap.putAll(new HashMap<NottableString, String>() {
             private static final long serialVersionUID = -580164440676146851L;
 
             {
-                put(nottableKey("one"), "one_two");
-                put(nottableKey("two"), "two");
+                put(string("one"), "one_two");
+                put(string("two"), "two");
             }
         });
         circularMultiMap.put("one", "one_three");
@@ -170,7 +171,7 @@ public class CaseInsensitiveRegexMultiMapTest {
         CaseInsensitiveRegexMultiMap.ImmutableEntry immutableEntry = new CaseInsensitiveRegexMultiMap().new ImmutableEntry("key", "value");
 
         // then
-        assertEquals(immutableEntry.getKey(), nottableKey("key"));
+        assertEquals(immutableEntry.getKey(), string("key"));
         assertEquals(immutableEntry.getValue(), "value");
     }
 

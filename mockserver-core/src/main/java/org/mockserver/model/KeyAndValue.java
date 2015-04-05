@@ -5,8 +5,6 @@ import org.mockserver.collections.CaseInsensitiveRegexHashMap;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.mockserver.collections.NottableKey.nottableKey;
-
 /**
  * @author jamesdbloom
  */
@@ -23,7 +21,7 @@ public class KeyAndValue extends Not {
         CaseInsensitiveRegexHashMap<String> caseInsensitiveRegexHashMap = new CaseInsensitiveRegexHashMap<String>();
         if (keyAndValue != null) {
             for (KeyAndValue keyToMultiValue : keyAndValue) {
-                caseInsensitiveRegexHashMap.put(nottableKey(keyToMultiValue.getName(), keyToMultiValue.isNot()), keyToMultiValue.getValue());
+                caseInsensitiveRegexHashMap.put(NottableString.string(keyToMultiValue.getName(), keyToMultiValue.isNot()), keyToMultiValue.getValue());
             }
         }
         return caseInsensitiveRegexHashMap;

@@ -16,7 +16,7 @@ public class StringBodyDTOTest {
     @Test
     public void shouldReturnValueSetInConstructor() {
         // when
-        StringBodyDTO stringBody = new StringBodyDTO(new StringBody("some_body"), false);
+        StringBodyDTO stringBody = new StringBodyDTO(new StringBody("some_body"));
 
         // then
         assertThat(stringBody.getString(), is("some_body"));
@@ -26,7 +26,7 @@ public class StringBodyDTOTest {
     @Test
     public void shouldBuildCorrectObject() {
         // when
-        StringBody stringBody = new StringBodyDTO(new StringBody("some_body"), false).buildObject();
+        StringBody stringBody = new StringBodyDTO(new StringBody("some_body")).buildObject();
 
         // then
         assertThat(stringBody.getValue(), is("some_body"));

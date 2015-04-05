@@ -20,7 +20,7 @@ public class BinaryBodyDTOTest {
         byte[] body = DatatypeConverter.parseBase64Binary("some_body");
 
         // when
-        BinaryBodyDTO binaryBody = new BinaryBodyDTO(new BinaryBody(body), false);
+        BinaryBodyDTO binaryBody = new BinaryBodyDTO(new BinaryBody(body));
 
         // then
         assertThat(binaryBody.getValue(), is(DatatypeConverter.printBase64Binary(body)));
@@ -34,7 +34,7 @@ public class BinaryBodyDTOTest {
         byte[] body = DatatypeConverter.parseBase64Binary("some_body");
 
         // when
-        BinaryBody binaryBody = new BinaryBodyDTO(new BinaryBody(body), false).buildObject();
+        BinaryBody binaryBody = new BinaryBodyDTO(new BinaryBody(body)).buildObject();
 
         // then
         assertThat(binaryBody.getValue(), is(body));

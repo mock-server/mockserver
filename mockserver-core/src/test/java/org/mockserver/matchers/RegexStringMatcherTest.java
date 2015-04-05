@@ -5,6 +5,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockserver.matchers.NotMatcher.not;
+import static org.mockserver.model.NottableString.string;
 
 /**
  * @author jamesdbloom
@@ -32,7 +33,7 @@ public class RegexStringMatcherTest {
 
     @Test
     public void shouldMatchNullExpectation() {
-        assertTrue(new RegexStringMatcher(null).matches("some_value"));
+        assertTrue(new RegexStringMatcher(string(null)).matches("some_value"));
     }
 
     @Test
@@ -62,7 +63,7 @@ public class RegexStringMatcherTest {
 
     @Test
     public void shouldNotMatchNullTest() {
-        assertFalse(new RegexStringMatcher("some_value").matches(null));
+        assertFalse(new RegexStringMatcher("some_value").matches(string(null)));
     }
 
     @Test

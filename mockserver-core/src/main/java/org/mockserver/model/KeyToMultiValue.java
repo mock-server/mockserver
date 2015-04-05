@@ -7,8 +7,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import static org.mockserver.collections.NottableKey.nottableKey;
-
 /**
  * @author jamesdbloom
  */
@@ -34,7 +32,7 @@ public class KeyToMultiValue extends Not {
         if (keyToMultiValues != null) {
             for (KeyToMultiValue keyToMultiValue : keyToMultiValues) {
                 for (String item : keyToMultiValue.getValues()) {
-                    caseInsensitiveRegexMultiMap.put(nottableKey(keyToMultiValue.getName(), keyToMultiValue.isNot()), item);
+                    caseInsensitiveRegexMultiMap.put(NottableString.string(keyToMultiValue.getName(), keyToMultiValue.isNot()), item);
                 }
             }
         }

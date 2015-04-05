@@ -18,7 +18,7 @@ public class ExpectationDTO extends ObjectWithReflectiveEqualsHashCodeToString {
     public ExpectationDTO(Expectation expectation) {
         if (expectation != null) {
             if (expectation.getHttpRequest() != null) {
-                httpRequest = new HttpRequestDTO(expectation.getHttpRequest(), false);
+                httpRequest = new HttpRequestDTO(expectation.getHttpRequest());
             }
             if (expectation.getHttpResponse(false) != null) {
                 httpResponse = new HttpResponseDTO(expectation.getHttpResponse(false));

@@ -1,17 +1,24 @@
 package org.mockserver.matchers;
 
 import com.google.common.base.Strings;
+import org.mockserver.model.NottableString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.mockserver.model.NottableString.string;
 
 /**
  * @author jamesdbloom
  */
-public class ExactStringMatcher extends BodyMatcher<String> {
+public class ExactStringMatcher extends BodyMatcher<NottableString> {
     private static Logger logger = LoggerFactory.getLogger(ExactStringMatcher.class);
-    private final String matcher;
+    private final NottableString matcher;
 
     public ExactStringMatcher(String matcher) {
+        this.matcher = string(matcher);
+    }
+
+    public ExactStringMatcher(NottableString matcher) {
         this.matcher = matcher;
     }
 
@@ -36,9 +43,13 @@ public class ExactStringMatcher extends BodyMatcher<String> {
     }
 
     public boolean matches(String matched) {
+        return matches(string(matched));
+    }
+
+    public boolean matches(NottableString matched) {
         boolean result = false;
 
-        if (matches(matcher, matched, false)) {
+        if (matches(matcher.getValue(), matched.getValue(), false)) {
             result = true;
         }
 
@@ -46,7 +57,7 @@ public class ExactStringMatcher extends BodyMatcher<String> {
             logger.trace("Failed to match [{}] with [{}]", matched, this.matcher);
         }
 
-        return reverseResultIfNot(result);
+        return matcher.isNot() != reverseResultIfNot(result);
     }
 
     @Override

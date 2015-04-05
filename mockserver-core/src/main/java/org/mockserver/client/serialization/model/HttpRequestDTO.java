@@ -7,16 +7,22 @@ import org.mockserver.model.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.mockserver.model.NottableString.string;
+
 /**
  * @author jamesdbloom
  */
 public class HttpRequestDTO extends NotDTO {
-    private String method = "";
-    private String path = "";
+    private NottableString method = string("");
+    private NottableString path = string("");
     private List<ParameterDTO> queryStringParameters = new ArrayList<ParameterDTO>();
     private BodyDTO body;
     private List<CookieDTO> cookies = new ArrayList<CookieDTO>();
     private List<HeaderDTO> headers = new ArrayList<HeaderDTO>();
+
+    public HttpRequestDTO(HttpRequest httpRequest) {
+        this(httpRequest, false);
+    }
 
     public HttpRequestDTO(HttpRequest httpRequest, boolean not) {
         super(not);
@@ -25,17 +31,17 @@ public class HttpRequestDTO extends NotDTO {
             path = httpRequest.getPath();
             headers = Lists.transform(httpRequest.getHeaders(), new Function<Header, HeaderDTO>() {
                 public HeaderDTO apply(Header header) {
-                    return new HeaderDTO(header, false);
+                    return new HeaderDTO(header);
                 }
             });
             cookies = Lists.transform(httpRequest.getCookies(), new Function<Cookie, CookieDTO>() {
                 public CookieDTO apply(Cookie cookie) {
-                    return new CookieDTO(cookie, false);
+                    return new CookieDTO(cookie);
                 }
             });
             queryStringParameters = Lists.transform(httpRequest.getQueryStringParameters(), new Function<Parameter, ParameterDTO>() {
                 public ParameterDTO apply(Parameter parameter) {
-                    return new ParameterDTO(parameter, false);
+                    return new ParameterDTO(parameter);
                 }
             });
             body = BodyDTO.createDTO(httpRequest.getBody());
@@ -68,20 +74,20 @@ public class HttpRequestDTO extends NotDTO {
 
     }
 
-    public String getMethod() {
+    public NottableString getMethod() {
         return method;
     }
 
-    public HttpRequestDTO setMethod(String method) {
+    public HttpRequestDTO setMethod(NottableString method) {
         this.method = method;
         return this;
     }
 
-    public String getPath() {
+    public NottableString getPath() {
         return path;
     }
 
-    public HttpRequestDTO setPath(String path) {
+    public HttpRequestDTO setPath(NottableString path) {
         this.path = path;
         return this;
     }

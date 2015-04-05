@@ -10,6 +10,10 @@ public class RegexBodyDTO extends BodyDTO {
 
     private String regex;
 
+    public RegexBodyDTO(RegexBody regexBody) {
+        this(regexBody, false);
+    }
+
     public RegexBodyDTO(RegexBody regexBody, boolean not) {
         super(Body.Type.REGEX, not);
         this.regex = regexBody.getValue();

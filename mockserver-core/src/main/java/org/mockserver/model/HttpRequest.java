@@ -6,12 +6,14 @@ import com.google.common.base.Strings;
 
 import java.util.*;
 
+import static org.mockserver.model.NottableString.string;
+
 /**
  * @author jamesdbloom
  */
-public class HttpRequest extends ObjectWithJsonToString {
-    String method = "";
-    String path = "";
+public class HttpRequest extends Not {
+    NottableString method = string("");
+    NottableString path = string("");
     Map<String, Parameter> queryStringParameters = new LinkedHashMap<String, Parameter>();
     Body body = null;
     Map<String, Header> headers = new LinkedHashMap<String, Header>();
@@ -53,25 +55,32 @@ public class HttpRequest extends ObjectWithJsonToString {
      * @param method the HTTP method such as "GET" or "POST"
      */
     public HttpRequest withMethod(String method) {
+        return withMethod(string(method));
+    }
+
+    /**
+     * The HTTP method all method except a specific value using the "not" operator,
+     * for example this allows operations such as not("GET")
+     *
+     * @param method the HTTP method to not match on not("GET") or not("POST")
+     */
+    public HttpRequest withMethod(NottableString method) {
         this.method = method;
         return this;
     }
 
-    public String getMethod() {
+    public NottableString getMethod() {
         return method;
     }
 
     public String getMethod(String defaultValue) {
-        if (Strings.isNullOrEmpty(method)) {
+        if (Strings.isNullOrEmpty(method.getValue())) {
             return defaultValue;
         } else {
-            return getMethod();
+            return method.getValue();
         }
     }
 
-    public String getPath() {
-        return path;
-    }
 
     /**
      * The path to match on such as "/some_mocked_path" any servlet context path is ignored for matching and should not be specified here
@@ -81,12 +90,29 @@ public class HttpRequest extends ObjectWithJsonToString {
      * @param path the path such as "/some_mocked_path" or a regex
      */
     public HttpRequest withPath(String path) {
+        withPath(string(path));
+        return this;
+    }
+
+    /**
+     * The path to not match on for example not("/some_mocked_path") with match any path not equal to "/some_mocked_path",
+     * the servlet context path is ignored for matching and should not be specified here
+     * regex values are also supported such as not(".*_path"), see
+     * http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html for full details of the supported regex syntax
+     *
+     * @param path the path to not match on such as not("/some_mocked_path") or not(".*_path")
+     */
+    public HttpRequest withPath(NottableString path) {
         this.path = path;
         return this;
     }
 
+    public NottableString getPath() {
+        return path;
+    }
+
     public boolean matches(String method, String path) {
-        return this.method.equals(method) && this.path.equals(path);
+        return this.method.getValue().equals(method) && this.path.getValue().equals(path);
     }
 
     /**

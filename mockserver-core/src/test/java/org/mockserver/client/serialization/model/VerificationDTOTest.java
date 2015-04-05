@@ -25,7 +25,7 @@ public class VerificationDTOTest {
         VerificationDTO verificationDTO = new VerificationDTO(verification);
 
         // then
-        assertThat(verificationDTO.getHttpRequest(), is(new HttpRequestDTO(request, false)));
+        assertThat(verificationDTO.getHttpRequest(), is(new HttpRequestDTO(request)));
         assertThat(verificationDTO.getTimes(), is(new VerificationTimesDTO(times)));
     }
 
@@ -49,7 +49,7 @@ public class VerificationDTOTest {
     @Test
     public void shouldReturnValueSetInSetter() {
         // given
-        HttpRequestDTO request = new HttpRequestDTO(request(), false);
+        HttpRequestDTO request = new HttpRequestDTO(request());
         VerificationTimesDTO times = new VerificationTimesDTO(VerificationTimes.atLeast(1));
         Verification verification = new Verification();
 
@@ -79,7 +79,7 @@ public class VerificationDTOTest {
         VerificationDTO verificationDTO = new VerificationDTO(new Verification());
 
         // then
-        assertThat(verificationDTO.getHttpRequest(), is(new HttpRequestDTO(request(), false)));
+        assertThat(verificationDTO.getHttpRequest(), is(new HttpRequestDTO(request())));
         assertThat(verificationDTO.getTimes(), is(new VerificationTimesDTO(VerificationTimes.atLeast(1))));
     }
 

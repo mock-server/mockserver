@@ -57,7 +57,7 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
         try {
 
-            if (request.getMethod().equals("CONNECT")) {
+            if (request.getMethod().getValue().equals("CONNECT")) {
 
                 // assume CONNECT always for SSL
                 ctx.channel().attr(PortUnificationHandler.SSL_ENABLED).set(Boolean.TRUE);

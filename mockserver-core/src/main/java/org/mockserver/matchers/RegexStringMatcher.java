@@ -1,19 +1,26 @@
 package org.mockserver.matchers;
 
 import com.google.common.base.Strings;
+import org.mockserver.model.NottableString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.regex.PatternSyntaxException;
 
+import static org.mockserver.model.NottableString.string;
+
 /**
  * @author jamesdbloom
  */
-public class RegexStringMatcher extends BodyMatcher<String> {
+public class RegexStringMatcher extends BodyMatcher<NottableString> {
     private static Logger logger = LoggerFactory.getLogger(RegexStringMatcher.class);
-    private final String matcher;
+    private final NottableString matcher;
 
     public RegexStringMatcher(String matcher) {
+        this.matcher = string(matcher);
+    }
+
+    public RegexStringMatcher(NottableString matcher) {
         this.matcher = matcher;
     }
 
@@ -72,9 +79,13 @@ public class RegexStringMatcher extends BodyMatcher<String> {
     }
 
     public boolean matches(String matched) {
+        return matches(string(matched));
+    }
+
+    public boolean matches(NottableString matched) {
         boolean result = false;
 
-        if (matches(matcher, matched, false)) {
+        if (matches(matcher.getValue(), matched.getValue(), false)) {
             result = true;
         }
 
@@ -82,6 +93,6 @@ public class RegexStringMatcher extends BodyMatcher<String> {
             logger.trace("Failed to match [{}] with [{}]", matched, this.matcher);
         }
 
-        return reverseResultIfNot(result);
+        return matcher.isNot() != reverseResultIfNot(result);
     }
 }

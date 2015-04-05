@@ -7,6 +7,8 @@ import org.mockserver.model.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.mockserver.model.NottableString.string;
+
 /**
  * @author jamesdbloom
  */
@@ -32,12 +34,12 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
         }
     }
 
-    private HttpRequestMatcher withMethod(String method) {
+    private HttpRequestMatcher withMethod(NottableString method) {
         this.methodMatcher = new RegexStringMatcher(method);
         return this;
     }
 
-    private HttpRequestMatcher withPath(String path) {
+    private HttpRequestMatcher withPath(NottableString path) {
         this.pathMatcher = new RegexStringMatcher(path);
         return this;
     }
@@ -52,11 +54,11 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
             switch (body.getType()) {
                 case STRING:
                     StringBody stringBody = (StringBody) body;
-                    this.bodyMatcher = new ExactStringMatcher(stringBody.getValue());
+                    this.bodyMatcher = new ExactStringMatcher(string(stringBody.getValue(), stringBody.isNot()));
                     break;
                 case REGEX:
                     RegexBody regexBody = (RegexBody) body;
-                    this.bodyMatcher = new RegexStringMatcher(regexBody.getValue());
+                    this.bodyMatcher = new RegexStringMatcher(string(regexBody.getValue(), regexBody.isNot()));
                     break;
                 case PARAMETERS:
                     ParameterBody parameterBody = (ParameterBody) body;
@@ -106,6 +108,8 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
     public boolean matches(HttpRequest httpRequest) {
         if (httpRequest == this.httpRequest) {
             return true;
+        } else if (this.httpRequest == null) {
+            return true;
         } else if (httpRequest != null) {
             boolean methodMatches = matches(methodMatcher, httpRequest.getMethod());
             boolean pathMatches = matches(pathMatcher, httpRequest.getPath());
@@ -113,6 +117,10 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
             boolean bodyMatches;
             if (bodyMatcher instanceof BinaryMatcher) {
                 bodyMatches = matches(bodyMatcher, httpRequest.getBodyAsRawBytes());
+            } else if (bodyMatcher instanceof ExactStringMatcher) {
+                bodyMatches = matches(bodyMatcher, string(httpRequest.getBody() != null ? new String(httpRequest.getBody().getRawBytes(), Charsets.UTF_8) : ""));
+            } else if (bodyMatcher instanceof RegexStringMatcher) {
+                bodyMatches = matches(bodyMatcher, string(httpRequest.getBody() != null ? new String(httpRequest.getBody().getRawBytes(), Charsets.UTF_8) : ""));
             } else {
                 bodyMatches = matches(bodyMatcher, (httpRequest.getBody() != null ? new String(httpRequest.getBody().getRawBytes(), Charsets.UTF_8) : ""));
             }
@@ -132,7 +140,7 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
                         "headersMatch = " + headersMatch + "" + System.getProperty("line.separator") +
                         "cookiesMatch = " + cookiesMatch);
             }
-            return reverseResultIfNot(result);
+            return httpRequest.isNot() == (this.httpRequest.isNot() == (not != result));
         } else {
             return false;
         }

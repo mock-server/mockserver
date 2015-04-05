@@ -17,7 +17,7 @@ public class JsonSchemaBodyDTOTest {
     @Test
     public void shouldReturnValueSetInConstructor() {
         // when
-        JsonSchemaBodyDTO jsonSchemaBodyDTO = new JsonSchemaBodyDTO(new JsonSchemaBody("some_body"), false);
+        JsonSchemaBodyDTO jsonSchemaBodyDTO = new JsonSchemaBodyDTO(new JsonSchemaBody("some_body"));
 
         // then
         assertThat(jsonSchemaBodyDTO.getJson(), is("some_body"));
@@ -27,7 +27,7 @@ public class JsonSchemaBodyDTOTest {
     @Test
     public void shouldBuildCorrectObject() {
         // when
-        JsonSchemaBody jsonSchemaBody = new JsonSchemaBodyDTO(new JsonSchemaBody("some_body"), false).buildObject();
+        JsonSchemaBody jsonSchemaBody = new JsonSchemaBodyDTO(new JsonSchemaBody("some_body")).buildObject();
 
         // then
         assertThat(jsonSchemaBody.getValue(), is("some_body"));

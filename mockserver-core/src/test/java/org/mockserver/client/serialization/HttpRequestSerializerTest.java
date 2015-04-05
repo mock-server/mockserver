@@ -20,6 +20,7 @@ import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.NottableString.string;
 
 /**
  * @author jamesdbloom
@@ -39,15 +40,15 @@ public class HttpRequestSerializerTest {
                     .withCookies(new Cookie("cookieName", "cookieValue"));
     private final HttpRequestDTO fullHttpRequestDTO =
             new HttpRequestDTO()
-                    .setMethod("GET")
-                    .setPath("somepath")
+                    .setMethod(string("GET"))
+                    .setPath(string("somepath"))
                     .setQueryStringParameters(Arrays.asList(
-                            new ParameterDTO(new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"), false),
-                            new ParameterDTO(new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One"), false)
+                            new ParameterDTO(new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two")),
+                            new ParameterDTO(new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One"))
                     ))
                     .setBody(BodyDTO.createDTO(new StringBody("somebody")))
-                    .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("headerName", Arrays.asList("headerValue")), false)))
-                    .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("cookieName", "cookieValue"), false)));
+                    .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("headerName", Arrays.asList("headerValue")))))
+                    .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("cookieName", "cookieValue"))));
     @Mock
     private ObjectMapper objectMapper;
     @Mock

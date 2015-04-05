@@ -171,7 +171,7 @@ public class MockServerClientTest {
                 new ExpectationDTO()
                         .setHttpRequest(new HttpRequestDTO(new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body")), false))
+                                .withBody(new StringBody("some_request_body"))))
                         .setHttpResponse(new HttpResponseDTO(new HttpResponse()
                                 .withBody("some_response_body")
                                 .withHeaders(new Header("responseName", "responseValue"))))
@@ -202,7 +202,7 @@ public class MockServerClientTest {
                 new ExpectationDTO()
                         .setHttpRequest(new HttpRequestDTO(new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body")), false))
+                                .withBody(new StringBody("some_request_body"))))
                         .setHttpForward(
                                 new HttpForwardDTO(
                                         new HttpForward()
@@ -237,7 +237,7 @@ public class MockServerClientTest {
                 new ExpectationDTO()
                         .setHttpRequest(new HttpRequestDTO(new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body")), false))
+                                .withBody(new StringBody("some_request_body"))))
                         .setHttpCallback(
                                 new HttpCallbackDTO(
                                         new HttpCallback()
@@ -269,7 +269,7 @@ public class MockServerClientTest {
                 new ExpectationDTO()
                         .setHttpRequest(new HttpRequestDTO(new HttpRequest()
                                 .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body")), false))
+                                .withBody(new StringBody("some_request_body"))))
                         .setHttpResponse(new HttpResponseDTO(new HttpResponse()
                                 .withBody("some_response_body")
                                 .withHeaders(new Header("responseName", "responseValue"))))

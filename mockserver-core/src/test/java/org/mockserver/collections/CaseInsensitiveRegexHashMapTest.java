@@ -6,7 +6,7 @@ import org.junit.Test;
 import java.util.Arrays;
 
 import static org.junit.Assert.*;
-import static org.mockserver.collections.NottableKey.nottableKey;
+import static org.mockserver.model.NottableString.string;
 import static org.mockserver.test.Assert.assertSameEntries;
 
 /**
@@ -135,7 +135,7 @@ public class CaseInsensitiveRegexHashMapTest {
         // - should have correct keys
         assertFalse(circularMultiMap.containsKey("one"));
         assertTrue(circularMultiMap.containsKey("two"));
-        assertEquals(Sets.newHashSet(nottableKey("two")), circularMultiMap.keySet());
+        assertEquals(Sets.newHashSet(string("two")), circularMultiMap.keySet());
         // - should have correct values
         assertFalse(circularMultiMap.containsValue("one_one"));
         assertTrue(circularMultiMap.containsValue("two"));
@@ -156,7 +156,7 @@ public class CaseInsensitiveRegexHashMapTest {
         // - should have correct keys
         assertFalse(circularMultiMap.containsKey("one"));
         assertTrue(circularMultiMap.containsKey("two"));
-        assertEquals(Sets.newHashSet(nottableKey("two")), circularMultiMap.keySet());
+        assertEquals(Sets.newHashSet(string("two")), circularMultiMap.keySet());
         // - should have correct values
         assertFalse(circularMultiMap.containsValue("one_one"));
         assertTrue(circularMultiMap.containsValue("two"));

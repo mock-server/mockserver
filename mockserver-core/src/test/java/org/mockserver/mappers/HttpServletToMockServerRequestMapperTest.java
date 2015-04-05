@@ -13,6 +13,7 @@ import java.util.Enumeration;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockserver.model.NottableString.string;
 
 /**
  * @author jamesdbloom
@@ -36,7 +37,7 @@ public class HttpServletToMockServerRequestMapperTest {
         HttpRequest httpRequest = new HttpServletToMockServerRequestMapper().mapHttpServletRequestToMockServerRequest(httpServletRequest);
 
         // then
-        assertEquals("/requestURI", httpRequest.getPath());
+        assertEquals(string("/requestURI"), httpRequest.getPath());
         assertEquals(new ParameterBody(
                 new Parameter("bodyParameterNameOne", "bodyParameterValueOne_One"),
                 new Parameter("bodyParameterNameOne", "bodyParameterValueOne_Two"),
@@ -62,7 +63,7 @@ public class HttpServletToMockServerRequestMapperTest {
         HttpRequest httpRequest = new HttpServletToMockServerRequestMapper().mapHttpServletRequestToMockServerRequest(httpServletRequest);
 
         // then
-        assertEquals("/pathInfo", httpRequest.getPath());
+        assertEquals(string("/pathInfo"), httpRequest.getPath());
     }
 
     @Test(expected = RuntimeException.class)

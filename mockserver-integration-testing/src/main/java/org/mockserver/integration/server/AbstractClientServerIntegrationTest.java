@@ -32,12 +32,12 @@ import static org.mockserver.model.HttpForward.forward;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.JsonBody.json;
+import static org.mockserver.model.JsonSchemaBody.jsonSchema;
 import static org.mockserver.model.OutboundHttpRequest.outboundRequest;
 import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.ParameterBody.params;
 import static org.mockserver.model.StringBody.exact;
-import static org.mockserver.model.JsonBody.json;
-import static org.mockserver.model.JsonSchemaBody.jsonSchema;
 import static org.mockserver.model.XPathBody.xpath;
 
 /**
@@ -45,9 +45,9 @@ import static org.mockserver.model.XPathBody.xpath;
  */
 public abstract class AbstractClientServerIntegrationTest {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     protected static MockServerClient mockServerClient;
     protected static String servletContext = "";
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     protected List<String> headersToIgnore = Arrays.asList(
             "server",
             "expires",
@@ -79,36 +79,7 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanCallServerForSimpleResponse() {
-        // when
-        mockServerClient.when(request()).respond(response().withBody("some_body"));
-
-        // then
-        // - in http
-        assertEquals(
-                response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withBody("some_body"),
-                makeRequest(
-                        request()
-                                .withPath(calculatePath("")),
-                        headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-                response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withBody("some_body"),
-                makeRequest(
-                        request()
-                                .setSecure(true)
-                                .withPath(calculatePath("")),
-                        headersToIgnore)
-        );
-    }
-
-    @Test
-    public void clientCanCallServerForForwardInHTTP() {
+    public void shouldForwardRequestInHTTP() {
         // when
         mockServerClient
                 .when(
@@ -162,7 +133,7 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanCallServerForForwardInHTTPS() {
+    public void shouldForwardRequestInHTTPS() {
         // when
         mockServerClient
                 .when(
@@ -217,7 +188,7 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanCallServerForResponseThenForward() {
+    public void shouldAllowSimultaneousForwardAndResponseExpectations() {
         // when
         mockServerClient
                 .when(
@@ -282,7 +253,7 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanCallServerForCallbackInHTTP() {
+    public void shouldCallbackToSpecifiedClass() {
         // when
         mockServerClient
                 .when(
@@ -338,7 +309,36 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanCallServerForResponseWithNoBody() {
+    public void shouldReturnResponseWithOnlyBody() {
+        // when
+        mockServerClient.when(request()).respond(response().withBody("some_body"));
+
+        // then
+        // - in http
+        assertEquals(
+                response()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("")),
+                        headersToIgnore)
+        );
+        // - in https
+        assertEquals(
+                response()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        request()
+                                .setSecure(true)
+                                .withPath(calculatePath("")),
+                        headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseWithOnlyStatusCode() {
         // when
         mockServerClient
                 .when(
@@ -376,7 +376,329 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanCallServerMatchPath() {
+    public void shouldVerifyReceivedRequests() {
+        // when
+        mockServerClient
+                .when(
+                        request()
+                                .withPath(calculatePath("some_path")), exactly(2)
+                )
+                .respond(
+                        response()
+                                .withBody("some_body")
+                );
+
+        // then
+        // - in http
+        assertEquals(
+                response()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("some_path")),
+                        headersToIgnore)
+        );
+        mockServerClient.verify(request()
+                .withPath(calculatePath("some_path")));
+        mockServerClient.verify(request()
+                .withPath(calculatePath("some_path")), VerificationTimes.exactly(1));
+
+        // - in https
+        assertEquals(
+                response()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        request()
+                                .setSecure(true)
+                                .withPath(calculatePath("some_path")),
+                        headersToIgnore)
+        );
+        mockServerClient.verify(request().withPath(calculatePath("some_path")), VerificationTimes.atLeast(1));
+        mockServerClient.verify(request().withPath(calculatePath("some_path")), VerificationTimes.exactly(2));
+    }
+
+    @Test
+    public void shouldVerifyReceivedRequestsWithNoBody() {
+        // when
+        mockServerClient.when(request().withPath(calculatePath("some_path")), exactly(2)).respond(response());
+
+        // then
+        // - in http
+        assertEquals(
+                response()
+                        .withStatusCode(HttpStatusCode.OK_200.code()),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("some_path")),
+                        headersToIgnore)
+        );
+        mockServerClient.verify(request()
+                .withPath(calculatePath("some_path")));
+        mockServerClient.verify(request()
+                .withPath(calculatePath("some_path")), VerificationTimes.exactly(1));
+    }
+
+    @Test
+    public void shouldVerifyNotEnoughRequestsReceived() {
+        // when
+        mockServerClient.when(request().withPath(calculatePath("some_path")), exactly(2)).respond(response().withBody("some_body"));
+
+        // then
+        assertEquals(
+                response()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("some_path")),
+                        headersToIgnore)
+        );
+        try {
+            mockServerClient.verify(request()
+                    .withPath(calculatePath("some_path")), VerificationTimes.atLeast(2));
+            fail();
+        } catch (AssertionError ae) {
+            assertThat(ae.getMessage(), startsWith("Request not found at least 2 times, expected:<{" + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path") + "\"" + System.getProperty("line.separator") +
+                    "}> but was:<{" + System.getProperty("line.separator") +
+                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path") + "\"," + System.getProperty("line.separator")));
+        }
+    }
+
+    @Test
+    public void shouldVerifyTooManyRequestsReceived() {
+        // when
+        mockServerClient.when(request().withPath(calculatePath("some_path")), exactly(2)).respond(response().withBody("some_body"));
+
+        // then
+        assertEquals(
+                response()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("some_path")),
+                        headersToIgnore)
+        );
+        try {
+            mockServerClient.verify(request()
+                    .withPath(calculatePath("some_path")), VerificationTimes.exactly(0));
+            fail();
+        } catch (AssertionError ae) {
+            assertThat(ae.getMessage(), startsWith("Request not found exactly 0 times, expected:<{" + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path") + "\"" + System.getProperty("line.separator") +
+                    "}> but was:<{" + System.getProperty("line.separator") +
+                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path") + "\"," + System.getProperty("line.separator")));
+        }
+    }
+
+    @Test
+    public void shouldVerifyNoMatchingRequestsReceived() {
+        // when
+        mockServerClient.when(request().withPath(calculatePath("some_path")), exactly(2)).respond(response().withBody("some_body"));
+
+        // then
+        assertEquals(
+                response()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("some_path")),
+                        headersToIgnore)
+        );
+        try {
+            mockServerClient.verify(request()
+                    .withPath(calculatePath("some_other_path")), VerificationTimes.exactly(2));
+            fail();
+        } catch (AssertionError ae) {
+            assertThat(ae.getMessage(), startsWith("Request not found exactly 2 times, expected:<{" + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_other_path") + "\"" + System.getProperty("line.separator") +
+                    "}> but was:<{" + System.getProperty("line.separator") +
+                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path") + "\"," + System.getProperty("line.separator")));
+        }
+    }
+
+    @Test
+    public void shouldVerifySequenceOfRequestsReceived() {
+        // when
+        mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(6)).respond(response().withBody("some_body"));
+
+        // then
+        // - in http
+        assertEquals(
+                response("some_body"),
+                makeRequest(
+                        request().withPath(calculatePath("some_path_one")),
+                        headersToIgnore)
+        );
+        assertEquals(
+                response("some_body"),
+                makeRequest(
+                        request().withPath(calculatePath("some_path_two")),
+                        headersToIgnore)
+        );
+        assertEquals(
+                response("some_body"),
+                makeRequest(
+                        request().withPath(calculatePath("some_path_three")),
+                        headersToIgnore)
+        );
+        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_three")));
+        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_two")));
+        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_two")), request(calculatePath("some_path_three")));
+
+        // - in https
+        assertEquals(
+                response("some_body"),
+                makeRequest(
+                        request().setSecure(true)
+                                .withPath(calculatePath("some_path_one")),
+                        headersToIgnore)
+        );
+        assertEquals(
+                response("some_body"),
+                makeRequest(
+                        request().setSecure(true)
+                                .withPath(calculatePath("some_path_two")),
+                        headersToIgnore)
+        );
+        assertEquals(
+                response("some_body"),
+                makeRequest(
+                        request().setSecure(true)
+                                .withPath(calculatePath("some_path_three")),
+                        headersToIgnore)
+        );
+        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_three")));
+        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_two")));
+        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_two")), request(calculatePath("some_path_three")));
+    }
+
+    @Test
+    public void shouldVerifySequenceOfRequestsReceivedIncludingThoseNotMatchingAnException() {
+        // when
+        mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(4)).respond(response().withBody("some_body"));
+
+        // then
+        // - in http
+        assertEquals(
+                response("some_body"),
+                makeRequest(
+                        request().withPath(calculatePath("some_path_one")),
+                        headersToIgnore)
+        );
+        assertEquals(
+                notFoundResponse(),
+                makeRequest(
+                        request().withPath(calculatePath("not_found")),
+                        headersToIgnore)
+        );
+        assertEquals(
+                response("some_body"),
+                makeRequest(
+                        request().withPath(calculatePath("some_path_three")),
+                        headersToIgnore)
+        );
+        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_three")));
+        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("not_found")));
+        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("not_found")), request(calculatePath("some_path_three")));
+
+        // - in https
+        assertEquals(
+                response("some_body"),
+                makeRequest(
+                        request().setSecure(true)
+                                .withPath(calculatePath("some_path_one")),
+                        headersToIgnore)
+        );
+        assertEquals(
+                notFoundResponse(),
+                makeRequest(
+                        request().setSecure(true)
+                                .withPath(calculatePath("not_found")),
+                        headersToIgnore)
+        );
+        assertEquals(
+                response("some_body"),
+                makeRequest(
+                        request().setSecure(true)
+                                .withPath(calculatePath("some_path_three")),
+                        headersToIgnore)
+        );
+        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_three")));
+        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("not_found")));
+        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("not_found")), request(calculatePath("some_path_three")));
+    }
+
+    @Test
+    public void shouldVerifySequenceOfRequestsNotReceived() {
+        // when
+        mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(6)).respond(response().withBody("some_body"));
+
+        // then
+        // - in http
+        assertEquals(
+                response("some_body"),
+                makeRequest(
+                        request().withPath(calculatePath("some_path_one")),
+                        headersToIgnore)
+        );
+        assertEquals(
+                response("some_body"),
+                makeRequest(
+                        request().withPath(calculatePath("some_path_two")),
+                        headersToIgnore)
+        );
+        assertEquals(
+                response("some_body"),
+                makeRequest(
+                        request().withPath(calculatePath("some_path_three")),
+                        headersToIgnore)
+        );
+        try {
+            mockServerClient.verify(request(calculatePath("some_path_two")), request(calculatePath("some_path_one")));
+            fail();
+        } catch (AssertionError ae) {
+            assertThat(ae.getMessage(), startsWith("Request sequence not found, expected:<[ {" + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path_two") + "\"" + System.getProperty("line.separator") +
+                    "}, {" + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path_one") + "\"" + System.getProperty("line.separator") +
+                    "} ]> but was:<[ {" + System.getProperty("line.separator") +
+                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path_one") + "\"," + System.getProperty("line.separator")));
+        }
+        try {
+            mockServerClient.verify(request(calculatePath("some_path_three")), request(calculatePath("some_path_two")));
+            fail();
+        } catch (AssertionError ae) {
+            assertThat(ae.getMessage(), startsWith("Request sequence not found, expected:<[ {" + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path_three") + "\"" + System.getProperty("line.separator") +
+                    "}, {" + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path_two") + "\"" + System.getProperty("line.separator") +
+                    "} ]> but was:<[ {" + System.getProperty("line.separator") +
+                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path_one") + "\"," + System.getProperty("line.separator")));
+        }
+        try {
+            mockServerClient.verify(request(calculatePath("some_path_four")));
+            fail();
+        } catch (AssertionError ae) {
+            assertThat(ae.getMessage(), startsWith("Request sequence not found, expected:<[ {" + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path_four") + "\"" + System.getProperty("line.separator") +
+                    "} ]> but was:<[ {" + System.getProperty("line.separator") +
+                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path_one") + "\"," + System.getProperty("line.separator")));
+        }
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingPath() {
         // when
         mockServerClient
                 .when(
@@ -441,7 +763,7 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanCallServerMatchPathXTimes() {
+    public void shouldReturnResponseByMatchingPathExactTimes() {
         // when
         mockServerClient
                 .when(
@@ -497,15 +819,97 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanVerifyRequestsReceived() {
+    public void shouldReturnResponseByMatchingBodyWithXPath() {
+        // when
+        mockServerClient.when(request().withBody(xpath("/bookstore/book[price>30]/price")), exactly(2)).respond(response().withBody("some_body"));
+
+        // then
+        // - in http
+        assertEquals(
+                response()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("some_path"))
+                                .withMethod("POST")
+                                .withBody(new StringBody("" +
+                                        "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + System.getProperty("line.separator") +
+                                        "<bookstore>" + System.getProperty("line.separator") +
+                                        "  <book category=\"COOKING\">" + System.getProperty("line.separator") +
+                                        "    <title lang=\"en\">Everyday Italian</title>" + System.getProperty("line.separator") +
+                                        "    <author>Giada De Laurentiis</author>" + System.getProperty("line.separator") +
+                                        "    <year>2005</year>" + System.getProperty("line.separator") +
+                                        "    <price>30.00</price>" + System.getProperty("line.separator") +
+                                        "  </book>" + System.getProperty("line.separator") +
+                                        "  <book category=\"CHILDREN\">" + System.getProperty("line.separator") +
+                                        "    <title lang=\"en\">Harry Potter</title>" + System.getProperty("line.separator") +
+                                        "    <author>J K. Rowling</author>" + System.getProperty("line.separator") +
+                                        "    <year>2005</year>" + System.getProperty("line.separator") +
+                                        "    <price>29.99</price>" + System.getProperty("line.separator") +
+                                        "  </book>" + System.getProperty("line.separator") +
+                                        "  <book category=\"WEB\">" + System.getProperty("line.separator") +
+                                        "    <title lang=\"en\">Learning XML</title>" + System.getProperty("line.separator") +
+                                        "    <author>Erik T. Ray</author>" + System.getProperty("line.separator") +
+                                        "    <year>2003</year>" + System.getProperty("line.separator") +
+                                        "    <price>31.95</price>" + System.getProperty("line.separator") +
+                                        "  </book>" + System.getProperty("line.separator") +
+                                        "</bookstore>")),
+                        headersToIgnore)
+        );
+        // - in https
+        assertEquals(
+                response()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        request()
+                                .setSecure(true)
+                                .withPath(calculatePath("some_path"))
+                                .withMethod("POST")
+                                .withBody(new StringBody("" +
+                                        "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + System.getProperty("line.separator") +
+                                        "<bookstore>" + System.getProperty("line.separator") +
+                                        "  <book category=\"COOKING\">" + System.getProperty("line.separator") +
+                                        "    <title lang=\"en\">Everyday Italian</title>" + System.getProperty("line.separator") +
+                                        "    <author>Giada De Laurentiis</author>" + System.getProperty("line.separator") +
+                                        "    <year>2005</year>" + System.getProperty("line.separator") +
+                                        "    <price>30.00</price>" + System.getProperty("line.separator") +
+                                        "  </book>" + System.getProperty("line.separator") +
+                                        "  <book category=\"CHILDREN\">" + System.getProperty("line.separator") +
+                                        "    <title lang=\"en\">Harry Potter</title>" + System.getProperty("line.separator") +
+                                        "    <author>J K. Rowling</author>" + System.getProperty("line.separator") +
+                                        "    <year>2005</year>" + System.getProperty("line.separator") +
+                                        "    <price>29.99</price>" + System.getProperty("line.separator") +
+                                        "  </book>" + System.getProperty("line.separator") +
+                                        "  <book category=\"WEB\">" + System.getProperty("line.separator") +
+                                        "    <title lang=\"en\">Learning XML</title>" + System.getProperty("line.separator") +
+                                        "    <author>Erik T. Ray</author>" + System.getProperty("line.separator") +
+                                        "    <year>2003</year>" + System.getProperty("line.separator") +
+                                        "    <price>31.95</price>" + System.getProperty("line.separator") +
+                                        "  </book>" + System.getProperty("line.separator") +
+                                        "</bookstore>")),
+                        headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingBodyWithJson() {
         // when
         mockServerClient
                 .when(
                         request()
-                                .withPath(calculatePath("some_path")), exactly(2)
+                                .withBody(json("{" + System.getProperty("line.separator") +
+                                        "    \"id\": 1," + System.getProperty("line.separator") +
+                                        "    \"name\": \"A green door\"," + System.getProperty("line.separator") +
+                                        "    \"price\": 12.50," + System.getProperty("line.separator") +
+                                        "    \"tags\": [\"home\", \"green\"]" + System.getProperty("line.separator") +
+                                        "}")),
+                        exactly(2)
                 )
                 .respond(
                         response()
+                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
                                 .withBody("some_body")
                 );
 
@@ -513,459 +917,25 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withBody("some_body"),
-                makeRequest(
-                        request()
-                                .withPath(calculatePath("some_path")),
-                        headersToIgnore)
-        );
-        mockServerClient.verify(request()
-                .withPath(calculatePath("some_path")));
-        mockServerClient.verify(request()
-                .withPath(calculatePath("some_path")), VerificationTimes.exactly(1));
-
-        // - in https
-        assertEquals(
-                response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withBody("some_body"),
-                makeRequest(
-                        request()
-                                .setSecure(true)
-                                .withPath(calculatePath("some_path")),
-                        headersToIgnore)
-        );
-        mockServerClient.verify(request().withPath(calculatePath("some_path")), VerificationTimes.atLeast(1));
-        mockServerClient.verify(request().withPath(calculatePath("some_path")), VerificationTimes.exactly(2));
-    }
-
-    @Test
-    public void clientCanVerifyRequestsReceivedWithNoBody() {
-        // when
-        mockServerClient.when(request().withPath(calculatePath("some_path")), exactly(2)).respond(response());
-
-        // then
-        // - in http
-        assertEquals(
-                response()
-                        .withStatusCode(HttpStatusCode.OK_200.code()),
-                makeRequest(
-                        request()
-                                .withPath(calculatePath("some_path")),
-                        headersToIgnore)
-        );
-        mockServerClient.verify(request()
-                .withPath(calculatePath("some_path")));
-        mockServerClient.verify(request()
-                .withPath(calculatePath("some_path")), VerificationTimes.exactly(1));
-    }
-
-    @Test
-    public void clientCanVerifyNotEnoughRequestsReceived() {
-        // when
-        mockServerClient.when(request().withPath(calculatePath("some_path")), exactly(2)).respond(response().withBody("some_body"));
-
-        // then
-        assertEquals(
-                response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withBody("some_body"),
-                makeRequest(
-                        request()
-                                .withPath(calculatePath("some_path")),
-                        headersToIgnore)
-        );
-        try {
-            mockServerClient.verify(request()
-                    .withPath(calculatePath("some_path")), VerificationTimes.atLeast(2));
-            fail();
-        } catch (AssertionError ae) {
-            assertThat(ae.getMessage(), startsWith("Request not found at least 2 times, expected:<{" + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path") + "\"" + System.getProperty("line.separator") +
-                    "}> but was:<{" + System.getProperty("line.separator") +
-                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path") + "\"," + System.getProperty("line.separator")));
-        }
-    }
-
-    @Test
-    public void clientCanVerifyTooManyRequestsReceived() {
-        // when
-        mockServerClient.when(request().withPath(calculatePath("some_path")), exactly(2)).respond(response().withBody("some_body"));
-
-        // then
-        assertEquals(
-                response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withBody("some_body"),
-                makeRequest(
-                        request()
-                                .withPath(calculatePath("some_path")),
-                        headersToIgnore)
-        );
-        try {
-            mockServerClient.verify(request()
-                    .withPath(calculatePath("some_path")), VerificationTimes.exactly(0));
-            fail();
-        } catch (AssertionError ae) {
-            assertThat(ae.getMessage(), startsWith("Request not found exactly 0 times, expected:<{" + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path") + "\"" + System.getProperty("line.separator") +
-                    "}> but was:<{" + System.getProperty("line.separator") +
-                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path") + "\"," + System.getProperty("line.separator")));
-        }
-    }
-
-    @Test
-    public void clientCanVerifyNotMatchingRequestsReceived() {
-        // when
-        mockServerClient.when(request().withPath(calculatePath("some_path")), exactly(2)).respond(response().withBody("some_body"));
-
-        // then
-        assertEquals(
-                response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withBody("some_body"),
-                makeRequest(
-                        request()
-                                .withPath(calculatePath("some_path")),
-                        headersToIgnore)
-        );
-        try {
-            mockServerClient.verify(request()
-                    .withPath(calculatePath("some_other_path")), VerificationTimes.exactly(2));
-            fail();
-        } catch (AssertionError ae) {
-            assertThat(ae.getMessage(), startsWith("Request not found exactly 2 times, expected:<{" + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_other_path") + "\"" + System.getProperty("line.separator") +
-                    "}> but was:<{" + System.getProperty("line.separator") +
-                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path") + "\"," + System.getProperty("line.separator")));
-        }
-    }
-
-    @Test
-    public void clientCanVerifySequenceOfRequestsReceived() {
-        // when
-        mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(6)).respond(response().withBody("some_body"));
-
-        // then
-        // - in http
-        assertEquals(
-                response("some_body"),
-                makeRequest(
-                        request().withPath(calculatePath("some_path_one")),
-                        headersToIgnore)
-        );
-        assertEquals(
-                response("some_body"),
-                makeRequest(
-                        request().withPath(calculatePath("some_path_two")),
-                        headersToIgnore)
-        );
-        assertEquals(
-                response("some_body"),
-                makeRequest(
-                        request().withPath(calculatePath("some_path_three")),
-                        headersToIgnore)
-        );
-        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_three")));
-        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_two")));
-        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_two")), request(calculatePath("some_path_three")));
-
-        // - in https
-        assertEquals(
-                response("some_body"),
-                makeRequest(
-                        request().setSecure(true)
-                                .withPath(calculatePath("some_path_one")),
-                        headersToIgnore)
-        );
-        assertEquals(
-                response("some_body"),
-                makeRequest(
-                        request().setSecure(true)
-                                .withPath(calculatePath("some_path_two")),
-                        headersToIgnore)
-        );
-        assertEquals(
-                response("some_body"),
-                makeRequest(
-                        request().setSecure(true)
-                                .withPath(calculatePath("some_path_three")),
-                        headersToIgnore)
-        );
-        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_three")));
-        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_two")));
-        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_two")), request(calculatePath("some_path_three")));
-    }
-
-    @Test
-    public void clientCanVerifySequenceOfRequestsReceivedEvenThoseNotMatchingAnException() {
-        // when
-        mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(4)).respond(response().withBody("some_body"));
-
-        // then
-        // - in http
-        assertEquals(
-                response("some_body"),
-                makeRequest(
-                        request().withPath(calculatePath("some_path_one")),
-                        headersToIgnore)
-        );
-        assertEquals(
-                notFoundResponse(),
-                makeRequest(
-                        request().withPath(calculatePath("not_found")),
-                        headersToIgnore)
-        );
-        assertEquals(
-                response("some_body"),
-                makeRequest(
-                        request().withPath(calculatePath("some_path_three")),
-                        headersToIgnore)
-        );
-        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_three")));
-        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("not_found")));
-        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("not_found")), request(calculatePath("some_path_three")));
-
-        // - in https
-        assertEquals(
-                response("some_body"),
-                makeRequest(
-                        request().setSecure(true)
-                                .withPath(calculatePath("some_path_one")),
-                        headersToIgnore)
-        );
-        assertEquals(
-                notFoundResponse(),
-                makeRequest(
-                        request().setSecure(true)
-                                .withPath(calculatePath("not_found")),
-                        headersToIgnore)
-        );
-        assertEquals(
-                response("some_body"),
-                makeRequest(
-                        request().setSecure(true)
-                                .withPath(calculatePath("some_path_three")),
-                        headersToIgnore)
-        );
-        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_three")));
-        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("not_found")));
-        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("not_found")), request(calculatePath("some_path_three")));
-    }
-
-    @Test
-    public void clientCanVerifySequenceOfRequestsNotReceived() {
-        // when
-        mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(6)).respond(response().withBody("some_body"));
-
-        // then
-        // - in http
-        assertEquals(
-                response("some_body"),
-                makeRequest(
-                        request().withPath(calculatePath("some_path_one")),
-                        headersToIgnore)
-        );
-        assertEquals(
-                response("some_body"),
-                makeRequest(
-                        request().withPath(calculatePath("some_path_two")),
-                        headersToIgnore)
-        );
-        assertEquals(
-                response("some_body"),
-                makeRequest(
-                        request().withPath(calculatePath("some_path_three")),
-                        headersToIgnore)
-        );
-        try {
-            mockServerClient.verify(request(calculatePath("some_path_two")), request(calculatePath("some_path_one")));
-            fail();
-        } catch (AssertionError ae) {
-            assertThat(ae.getMessage(), startsWith("Request sequence not found, expected:<[ {" + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path_two") + "\"" + System.getProperty("line.separator") +
-                    "}, {" + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path_one") + "\"" + System.getProperty("line.separator") +
-                    "} ]> but was:<[ {" + System.getProperty("line.separator") +
-                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path_one") + "\"," + System.getProperty("line.separator")));
-        }
-        try {
-            mockServerClient.verify(request(calculatePath("some_path_three")), request(calculatePath("some_path_two")));
-            fail();
-        } catch (AssertionError ae) {
-            assertThat(ae.getMessage(), startsWith("Request sequence not found, expected:<[ {" + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path_three") + "\"" + System.getProperty("line.separator") +
-                    "}, {" + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path_two") + "\"" + System.getProperty("line.separator") +
-                    "} ]> but was:<[ {" + System.getProperty("line.separator") +
-                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path_one") + "\"," + System.getProperty("line.separator")));
-        }
-        try {
-            mockServerClient.verify(request(calculatePath("some_path_four")));
-            fail();
-        } catch (AssertionError ae) {
-            assertThat(ae.getMessage(), startsWith("Request sequence not found, expected:<[ {" + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path_four") + "\"" + System.getProperty("line.separator") +
-                    "} ]> but was:<[ {" + System.getProperty("line.separator") +
-                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path_one") + "\"," + System.getProperty("line.separator")));
-        }
-    }
-
-    @Test
-    public void clientCanCallServerMatchBodyWithXPath() {
-        // when
-        mockServerClient.when(request().withBody(xpath("/bookstore/book[price>35]/price")), exactly(2)).respond(response().withBody("some_body"));
-
-        // then
-        // - in http
-        assertEquals(
-                response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withBody("some_body"),
-                makeRequest(
-                        request()
-                                .withPath(calculatePath("some_path"))
-                                .withMethod("POST")
-                                .withBody(new StringBody("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + System.getProperty("line.separator") +
-                                        "" + System.getProperty("line.separator") +
-                                        "<bookstore>" + System.getProperty("line.separator") +
-                                        "" + System.getProperty("line.separator") +
-                                        "<book category=\"COOKING\">" + System.getProperty("line.separator") +
-                                        "  <title lang=\"en\">Everyday Italian</title>" + System.getProperty("line.separator") +
-                                        "  <author>Giada De Laurentiis</author>" + System.getProperty("line.separator") +
-                                        "  <year>2005</year>" + System.getProperty("line.separator") +
-                                        "  <price>30.00</price>" + System.getProperty("line.separator") +
-                                        "</book>" + System.getProperty("line.separator") +
-                                        "" + System.getProperty("line.separator") +
-                                        "<book category=\"CHILDREN\">" + System.getProperty("line.separator") +
-                                        "  <title lang=\"en\">Harry Potter</title>" + System.getProperty("line.separator") +
-                                        "  <author>J K. Rowling</author>" + System.getProperty("line.separator") +
-                                        "  <year>2005</year>" + System.getProperty("line.separator") +
-                                        "  <price>29.99</price>" + System.getProperty("line.separator") +
-                                        "</book>" + System.getProperty("line.separator") +
-                                        "" + System.getProperty("line.separator") +
-                                        "<book category=\"WEB\">" + System.getProperty("line.separator") +
-                                        "  <title lang=\"en\">Learning XML</title>" + System.getProperty("line.separator") +
-                                        "  <author>Erik T. Ray</author>" + System.getProperty("line.separator") +
-                                        "  <year>2003</year>" + System.getProperty("line.separator") +
-                                        "  <price>39.95</price>" + System.getProperty("line.separator") +
-                                        "</book>" + System.getProperty("line.separator") +
-                                        "" + System.getProperty("line.separator") +
-                                        "</bookstore>")),
-                        headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-                response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withBody("some_body"),
-                makeRequest(
-                        request()
-                                .setSecure(true)
-                                .withPath(calculatePath("some_path"))
-                                .withMethod("POST")
-                                .withBody(new StringBody("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + System.getProperty("line.separator") +
-                                        "" + System.getProperty("line.separator") +
-                                        "<bookstore>" + System.getProperty("line.separator") +
-                                        "" + System.getProperty("line.separator") +
-                                        "<book category=\"COOKING\">" + System.getProperty("line.separator") +
-                                        "  <title lang=\"en\">Everyday Italian</title>" + System.getProperty("line.separator") +
-                                        "  <author>Giada De Laurentiis</author>" + System.getProperty("line.separator") +
-                                        "  <year>2005</year>" + System.getProperty("line.separator") +
-                                        "  <price>30.00</price>" + System.getProperty("line.separator") +
-                                        "</book>" + System.getProperty("line.separator") +
-                                        "" + System.getProperty("line.separator") +
-                                        "<book category=\"CHILDREN\">" + System.getProperty("line.separator") +
-                                        "  <title lang=\"en\">Harry Potter</title>" + System.getProperty("line.separator") +
-                                        "  <author>J K. Rowling</author>" + System.getProperty("line.separator") +
-                                        "  <year>2005</year>" + System.getProperty("line.separator") +
-                                        "  <price>29.99</price>" + System.getProperty("line.separator") +
-                                        "</book>" + System.getProperty("line.separator") +
-                                        "" + System.getProperty("line.separator") +
-                                        "<book category=\"WEB\">" + System.getProperty("line.separator") +
-                                        "  <title lang=\"en\">Learning XML</title>" + System.getProperty("line.separator") +
-                                        "  <author>Erik T. Ray</author>" + System.getProperty("line.separator") +
-                                        "  <year>2003</year>" + System.getProperty("line.separator") +
-                                        "  <price>39.95</price>" + System.getProperty("line.separator") +
-                                        "</book>" + System.getProperty("line.separator") +
-                                        "" + System.getProperty("line.separator") +
-                                        "</bookstore>")),
-                        headersToIgnore)
-        );
-    }
-
-    @Test
-    public void clientCanCallServerMatchBodyWithJson() {
-        // when
-        mockServerClient.when(request().withBody(json("{" + System.getProperty("line.separator") +
-                "    \"GlossDiv\": {" + System.getProperty("line.separator") +
-                "        \"title\": \"S\", " + System.getProperty("line.separator") +
-                "        \"GlossList\": {" + System.getProperty("line.separator") +
-                "            \"GlossEntry\": {" + System.getProperty("line.separator") +
-                "                \"ID\": \"SGML\", " + System.getProperty("line.separator") +
-                "                \"SortAs\": \"SGML\", " + System.getProperty("line.separator") +
-                "                \"GlossTerm\": \"Standard Generalized Markup Language\", " + System.getProperty("line.separator") +
-                "                \"Acronym\": \"SGML\", " + System.getProperty("line.separator") +
-                "                \"Abbrev\": \"ISO 8879:1986\", " + System.getProperty("line.separator") +
-                "                \"GlossDef\": {" + System.getProperty("line.separator") +
-                "                    \"para\": \"A meta-markup language, used to create markup languages such as DocBook.\", " + System.getProperty("line.separator") +
-                "                    \"GlossSeeAlso\": [" + System.getProperty("line.separator") +
-                "                        \"GML\", " + System.getProperty("line.separator") +
-                "                        \"XML\"" + System.getProperty("line.separator") +
-                "                    ]" + System.getProperty("line.separator") +
-                "                }, " + System.getProperty("line.separator") +
-                "                \"GlossSee\": \"markup\"" + System.getProperty("line.separator") +
-                "            }" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
-                "}")), exactly(2)).respond(response().withBody("some_body"));
-
-        // then
-        // - in http
-        assertEquals(
-                response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
                         .withBody("some_body"),
                 makeRequest(
                         request()
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
                                 .withBody("{" + System.getProperty("line.separator") +
-                                        "    \"title\": \"example glossary\", " + System.getProperty("line.separator") +
-                                        "    \"GlossDiv\": {" + System.getProperty("line.separator") +
-                                        "        \"title\": \"S\", " + System.getProperty("line.separator") +
-                                        "        \"GlossList\": {" + System.getProperty("line.separator") +
-                                        "            \"GlossEntry\": {" + System.getProperty("line.separator") +
-                                        "                \"ID\": \"SGML\", " + System.getProperty("line.separator") +
-                                        "                \"SortAs\": \"SGML\", " + System.getProperty("line.separator") +
-                                        "                \"GlossTerm\": \"Standard Generalized Markup Language\", " + System.getProperty("line.separator") +
-                                        "                \"Acronym\": \"SGML\", " + System.getProperty("line.separator") +
-                                        "                \"Abbrev\": \"ISO 8879:1986\", " + System.getProperty("line.separator") +
-                                        "                \"GlossDef\": {" + System.getProperty("line.separator") +
-                                        "                    \"para\": \"A meta-markup language, used to create markup languages such as DocBook.\", " + System.getProperty("line.separator") +
-                                        "                    \"GlossSeeAlso\": [" + System.getProperty("line.separator") +
-                                        "                        \"GML\", " + System.getProperty("line.separator") +
-                                        "                        \"XML\"" + System.getProperty("line.separator") +
-                                        "                    ]" + System.getProperty("line.separator") +
-                                        "                }, " + System.getProperty("line.separator") +
-                                        "                \"GlossSee\": \"markup\"" + System.getProperty("line.separator") +
-                                        "            }" + System.getProperty("line.separator") +
-                                        "        }" + System.getProperty("line.separator") +
-                                        "    }" + System.getProperty("line.separator") +
+                                        "    \"id\": 1," + System.getProperty("line.separator") +
+                                        "    \"extra_ignored_field\": \"some value\"," + System.getProperty("line.separator") +
+                                        "    \"name\": \"A green door\"," + System.getProperty("line.separator") +
+                                        "    \"price\": 12.50," + System.getProperty("line.separator") +
+                                        "    \"tags\": [\"home\", \"green\"]" + System.getProperty("line.separator") +
                                         "}"),
                         headersToIgnore)
         );
         // - in https
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
                         .withBody("some_body"),
                 makeRequest(
                         request()
@@ -973,34 +943,18 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
                                 .withBody("{" + System.getProperty("line.separator") +
-                                        "    \"title\": \"example glossary\", " + System.getProperty("line.separator") +
-                                        "    \"GlossDiv\": {" + System.getProperty("line.separator") +
-                                        "        \"title\": \"S\", " + System.getProperty("line.separator") +
-                                        "        \"GlossList\": {" + System.getProperty("line.separator") +
-                                        "            \"GlossEntry\": {" + System.getProperty("line.separator") +
-                                        "                \"ID\": \"SGML\", " + System.getProperty("line.separator") +
-                                        "                \"SortAs\": \"SGML\", " + System.getProperty("line.separator") +
-                                        "                \"GlossTerm\": \"Standard Generalized Markup Language\", " + System.getProperty("line.separator") +
-                                        "                \"Acronym\": \"SGML\", " + System.getProperty("line.separator") +
-                                        "                \"Abbrev\": \"ISO 8879:1986\", " + System.getProperty("line.separator") +
-                                        "                \"GlossDef\": {" + System.getProperty("line.separator") +
-                                        "                    \"para\": \"A meta-markup language, used to create markup languages such as DocBook.\", " + System.getProperty("line.separator") +
-                                        "                    \"GlossSeeAlso\": [" + System.getProperty("line.separator") +
-                                        "                        \"GML\", " + System.getProperty("line.separator") +
-                                        "                        \"XML\"" + System.getProperty("line.separator") +
-                                        "                    ]" + System.getProperty("line.separator") +
-                                        "                }, " + System.getProperty("line.separator") +
-                                        "                \"GlossSee\": \"markup\"" + System.getProperty("line.separator") +
-                                        "            }" + System.getProperty("line.separator") +
-                                        "        }" + System.getProperty("line.separator") +
-                                        "    }" + System.getProperty("line.separator") +
+                                        "    \"id\": 1," + System.getProperty("line.separator") +
+                                        "    \"extra_ignored_array\": [\"one\", \"two\"]," + System.getProperty("line.separator") +
+                                        "    \"name\": \"A green door\"," + System.getProperty("line.separator") +
+                                        "    \"price\": 12.50," + System.getProperty("line.separator") +
+                                        "    \"tags\": [\"home\", \"green\"]" + System.getProperty("line.separator") +
                                         "}"),
                         headersToIgnore)
         );
     }
 
     @Test
-    public void clientCanCallServerMatchBodyWithJsonSchema() {
+    public void shouldReturnResponseByMatchingBodyWithJsonSchema() {
         // when
         mockServerClient.when(request().withBody(jsonSchema("{" + System.getProperty("line.separator") +
                 "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + System.getProperty("line.separator") +
@@ -1072,7 +1026,7 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanSetupExpectationForPDF() throws IOException {
+    public void shouldReturnPDFResponseByMatchingPath() throws IOException {
         // when
         byte[] pdfBytes = new byte[1024];
         IOUtils.readFully(getClass().getClassLoader().getResourceAsStream("test.pdf"), pdfBytes);
@@ -1127,7 +1081,7 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanSetupExpectationForPNG() throws IOException {
+    public void shouldReturnPNGResponseByMatchingPath() throws IOException {
         // when
         byte[] pngBytes = new byte[1024];
         IOUtils.readFully(getClass().getClassLoader().getResourceAsStream("test.png"), pngBytes);
@@ -1180,7 +1134,7 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanSetupExpectationForPDFAsBinaryBody() throws IOException {
+    public void shouldReturnPDFResponseByMatchingBinaryPDFBody() throws IOException {
         // when
         byte[] pdfBytes = new byte[1024];
         IOUtils.readFully(getClass().getClassLoader().getResourceAsStream("test.pdf"), pdfBytes);
@@ -1236,7 +1190,7 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanSetupExpectationForPNGAsBinaryBody() throws IOException {
+    public void shouldReturnPNGResponseByMatchingBinaryPNGBody() throws IOException {
         // when
         byte[] pngBytes = new byte[1024];
         IOUtils.readFully(getClass().getClassLoader().getResourceAsStream("test.png"), pngBytes);
@@ -1289,7 +1243,7 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanCallServerMatchPathWithDelay() {
+    public void shouldReturnResponseForExpectationWithDelay() {
         // when
         mockServerClient.when(
                 request()
@@ -1352,7 +1306,7 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanCallServerPositiveMatchForGETAndMatchingPath() {
+    public void shouldReturnResponseByMatchingPathAndMethod() {
         // when
         mockServerClient
                 .when(
@@ -1405,7 +1359,7 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanCallServerPositiveMatchForGETAndMatchingPathAndBody() {
+    public void shouldReturnResponseByMatchingPathAndMethodAndBody() {
         // when
         mockServerClient
                 .when(
@@ -1468,7 +1422,7 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanCallServerPositiveMatchForGETAndMatchingPathAndParameters() {
+    public void shouldReturnResponseByMatchingPathAndMethodAndQueryStringParameters() {
         // when
         mockServerClient
                 .when(
@@ -1534,7 +1488,7 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanCallServerPositiveMatchForGETAndMatchingPathAndHeaders() {
+    public void shouldReturnResponseByMatchingPathAndMethodAndHeaders() {
         // when
         mockServerClient
                 .when(
@@ -1598,7 +1552,7 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanCallServerPositiveMatchForGETAndMatchingPathAndCookies() {
+    public void shouldReturnResponseByMatchingPathAndMethodAndCookies() {
         // when
         mockServerClient
                 .when(
@@ -1721,7 +1675,7 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanCallServerPositiveMatchForPOSTAndMatchingPathAndParameters() {
+    public void shouldReturnResponseByMatchingPathAndMethodAndQueryStringParametersAndBodyParameters() {
         // when
         mockServerClient
                 .when(
@@ -1777,7 +1731,7 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanCallServerPositiveMatchForPOSTAndMatchingPathBodyAndQueryParameters() {
+    public void shouldReturnResponseByMatchingPathAndMethodAndQueryStringParametersAndBody() {
         // when
         mockServerClient
                 .when(
@@ -1871,7 +1825,7 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanCallServerPositiveMatchForPOSTAndMatchingPathBodyParametersAndQueryParameters() {
+    public void shouldReturnResponseByMatchingPathAndMethodAndBodyParameters() {
         // when
         mockServerClient
                 .when(
@@ -1960,7 +1914,7 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanCallServerPositiveMatchForPUTAndMatchingPathBodyParametersAndHeadersAndCookies() {
+    public void shouldReturnResponseByMatchingPathAndMethodAndParametersAndHeadersAndCookies() {
         // when
         mockServerClient
                 .when(
@@ -1996,7 +1950,6 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withMethod("PUT")
                                 .withPath(calculatePath("some_pathRequest"))
-
                                 .withBody(new StringBody("bodyParameterOneName=Parameter+One+Value+One" +
                                         "&bodyParameterOneName=Parameter+One+Value+Two" +
                                         "&bodyParameterTwoName=Parameter+Two"))
@@ -2031,7 +1984,7 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanCallServerNegativeMatchBodyOnly() {
+    public void shouldNotReturnResponseForNonMatchingBody() {
         // when
         mockServerClient
                 .when(
@@ -2093,7 +2046,7 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanCallServerNegativeMatchXPathBodyOnly() {
+    public void shouldNotReturnResponseForNonMatchingXPathBody() {
         // when
         mockServerClient.when(request().withBody(new XPathBody("/bookstore/book[price>35]/price")), exactly(2)).respond(response().withBody("some_body"));
 
@@ -2107,31 +2060,27 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .setSecure(true)
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
-                                .withBody(new StringBody("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + System.getProperty("line.separator") +
-                                        "" + System.getProperty("line.separator") +
+                                .withBody(new StringBody("" +
+                                        "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + System.getProperty("line.separator") +
                                         "<bookstore>" + System.getProperty("line.separator") +
-                                        "" + System.getProperty("line.separator") +
-                                        "<book category=\"COOKING\">" + System.getProperty("line.separator") +
-                                        "  <title lang=\"en\">Everyday Italian</title>" + System.getProperty("line.separator") +
-                                        "  <author>Giada De Laurentiis</author>" + System.getProperty("line.separator") +
-                                        "  <year>2005</year>" + System.getProperty("line.separator") +
-                                        "  <price>30.00</price>" + System.getProperty("line.separator") +
-                                        "</book>" + System.getProperty("line.separator") +
-                                        "" + System.getProperty("line.separator") +
-                                        "<book category=\"CHILDREN\">" + System.getProperty("line.separator") +
-                                        "  <title lang=\"en\">Harry Potter</title>" + System.getProperty("line.separator") +
-                                        "  <author>J K. Rowling</author>" + System.getProperty("line.separator") +
-                                        "  <year>2005</year>" + System.getProperty("line.separator") +
-                                        "  <price>29.99</price>" + System.getProperty("line.separator") +
-                                        "</book>" + System.getProperty("line.separator") +
-                                        "" + System.getProperty("line.separator") +
-                                        "<book category=\"WEB\">" + System.getProperty("line.separator") +
-                                        "  <title lang=\"en\">Learning XML</title>" + System.getProperty("line.separator") +
-                                        "  <author>Erik T. Ray</author>" + System.getProperty("line.separator") +
-                                        "  <year>2003</year>" + System.getProperty("line.separator") +
-                                        "  <price>31.95</price>" + System.getProperty("line.separator") +
-                                        "</book>" + System.getProperty("line.separator") +
-                                        "" + System.getProperty("line.separator") +
+                                        "  <book category=\"COOKING\">" + System.getProperty("line.separator") +
+                                        "    <title lang=\"en\">Everyday Italian</title>" + System.getProperty("line.separator") +
+                                        "    <author>Giada De Laurentiis</author>" + System.getProperty("line.separator") +
+                                        "    <year>2005</year>" + System.getProperty("line.separator") +
+                                        "    <price>30.00</price>" + System.getProperty("line.separator") +
+                                        "  </book>" + System.getProperty("line.separator") +
+                                        "  <book category=\"CHILDREN\">" + System.getProperty("line.separator") +
+                                        "    <title lang=\"en\">Harry Potter</title>" + System.getProperty("line.separator") +
+                                        "    <author>J K. Rowling</author>" + System.getProperty("line.separator") +
+                                        "    <year>2005</year>" + System.getProperty("line.separator") +
+                                        "    <price>29.99</price>" + System.getProperty("line.separator") +
+                                        "  </book>" + System.getProperty("line.separator") +
+                                        "  <book category=\"WEB\">" + System.getProperty("line.separator") +
+                                        "    <title lang=\"en\">Learning XML</title>" + System.getProperty("line.separator") +
+                                        "    <author>Erik T. Ray</author>" + System.getProperty("line.separator") +
+                                        "    <year>2003</year>" + System.getProperty("line.separator") +
+                                        "    <price>31.95</price>" + System.getProperty("line.separator") +
+                                        "  </book>" + System.getProperty("line.separator") +
                                         "</bookstore>")),
                         headersToIgnore)
         );
@@ -2144,61 +2093,40 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .setSecure(true)
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
-                                .withBody(new StringBody("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + System.getProperty("line.separator") +
-                                        "" + System.getProperty("line.separator") +
+                                .withBody(new StringBody("" +
+                                        "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + System.getProperty("line.separator") +
                                         "<bookstore>" + System.getProperty("line.separator") +
-                                        "" + System.getProperty("line.separator") +
-                                        "<book category=\"COOKING\">" + System.getProperty("line.separator") +
-                                        "  <title lang=\"en\">Everyday Italian</title>" + System.getProperty("line.separator") +
-                                        "  <author>Giada De Laurentiis</author>" + System.getProperty("line.separator") +
-                                        "  <year>2005</year>" + System.getProperty("line.separator") +
-                                        "  <price>30.00</price>" + System.getProperty("line.separator") +
-                                        "</book>" + System.getProperty("line.separator") +
-                                        "" + System.getProperty("line.separator") +
-                                        "<book category=\"CHILDREN\">" + System.getProperty("line.separator") +
-                                        "  <title lang=\"en\">Harry Potter</title>" + System.getProperty("line.separator") +
-                                        "  <author>J K. Rowling</author>" + System.getProperty("line.separator") +
-                                        "  <year>2005</year>" + System.getProperty("line.separator") +
-                                        "  <price>29.99</price>" + System.getProperty("line.separator") +
-                                        "</book>" + System.getProperty("line.separator") +
-                                        "" + System.getProperty("line.separator") +
-                                        "<book category=\"WEB\">" + System.getProperty("line.separator") +
-                                        "  <title lang=\"en\">Learning XML</title>" + System.getProperty("line.separator") +
-                                        "  <author>Erik T. Ray</author>" + System.getProperty("line.separator") +
-                                        "  <year>2003</year>" + System.getProperty("line.separator") +
-                                        "  <price>31.95</price>" + System.getProperty("line.separator") +
-                                        "</book>" + System.getProperty("line.separator") +
-                                        "" + System.getProperty("line.separator") +
+                                        "  <book category=\"COOKING\">" + System.getProperty("line.separator") +
+                                        "    <title lang=\"en\">Everyday Italian</title>" + System.getProperty("line.separator") +
+                                        "    <author>Giada De Laurentiis</author>" + System.getProperty("line.separator") +
+                                        "    <year>2005</year>" + System.getProperty("line.separator") +
+                                        "    <price>30.00</price>" + System.getProperty("line.separator") +
+                                        "  </book>" + System.getProperty("line.separator") +
+                                        "  <book category=\"CHILDREN\">" + System.getProperty("line.separator") +
+                                        "    <title lang=\"en\">Harry Potter</title>" + System.getProperty("line.separator") +
+                                        "    <author>J K. Rowling</author>" + System.getProperty("line.separator") +
+                                        "    <year>2005</year>" + System.getProperty("line.separator") +
+                                        "    <price>29.99</price>" + System.getProperty("line.separator") +
+                                        "  </book>" + System.getProperty("line.separator") +
+                                        "  <book category=\"WEB\">" + System.getProperty("line.separator") +
+                                        "    <title lang=\"en\">Learning XML</title>" + System.getProperty("line.separator") +
+                                        "    <author>Erik T. Ray</author>" + System.getProperty("line.separator") +
+                                        "    <year>2003</year>" + System.getProperty("line.separator") +
+                                        "    <price>31.95</price>" + System.getProperty("line.separator") +
+                                        "  </book>" + System.getProperty("line.separator") +
                                         "</bookstore>")),
                         headersToIgnore)
         );
     }
 
     @Test
-    public void clientCanCallServerNegativeMatchJsonBodyOnly() {
+    public void shouldNotReturnResponseForNonMatchingJsonBody() {
         // when
         mockServerClient.when(request().withBody(json("{" + System.getProperty("line.separator") +
-                "    \"title\": \"example glossary\", " + System.getProperty("line.separator") +
-                "    \"GlossDiv\": {" + System.getProperty("line.separator") +
-                "        \"title\": \"wrong_value\", " + System.getProperty("line.separator") +
-                "        \"GlossList\": {" + System.getProperty("line.separator") +
-                "            \"GlossEntry\": {" + System.getProperty("line.separator") +
-                "                \"ID\": \"SGML\", " + System.getProperty("line.separator") +
-                "                \"SortAs\": \"SGML\", " + System.getProperty("line.separator") +
-                "                \"GlossTerm\": \"Standard Generalized Markup Language\", " + System.getProperty("line.separator") +
-                "                \"Acronym\": \"SGML\", " + System.getProperty("line.separator") +
-                "                \"Abbrev\": \"ISO 8879:1986\", " + System.getProperty("line.separator") +
-                "                \"GlossDef\": {" + System.getProperty("line.separator") +
-                "                    \"para\": \"A meta-markup language, used to create markup languages such as DocBook.\", " + System.getProperty("line.separator") +
-                "                    \"GlossSeeAlso\": [" + System.getProperty("line.separator") +
-                "                        \"GML\", " + System.getProperty("line.separator") +
-                "                        \"XML\"" + System.getProperty("line.separator") +
-                "                    ]" + System.getProperty("line.separator") +
-                "                }, " + System.getProperty("line.separator") +
-                "                \"GlossSee\": \"markup\"" + System.getProperty("line.separator") +
-                "            }" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+                "    \"id\": 1," + System.getProperty("line.separator") +
+                "    \"name\": \"A green door\"," + System.getProperty("line.separator") +
+                "    \"price\": 12.50," + System.getProperty("line.separator") +
+                "    \"tags\": [\"home\", \"green\"]" + System.getProperty("line.separator") +
                 "}")), exactly(2)).respond(response().withBody("some_body"));
 
         // then
@@ -2211,27 +2139,10 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
                                 .withBody("{" + System.getProperty("line.separator") +
-                                        "    \"title\": \"example glossary\", " + System.getProperty("line.separator") +
-                                        "    \"GlossDiv\": {" + System.getProperty("line.separator") +
-                                        "        \"title\": \"S\", " + System.getProperty("line.separator") +
-                                        "        \"GlossList\": {" + System.getProperty("line.separator") +
-                                        "            \"GlossEntry\": {" + System.getProperty("line.separator") +
-                                        "                \"ID\": \"SGML\", " + System.getProperty("line.separator") +
-                                        "                \"SortAs\": \"SGML\", " + System.getProperty("line.separator") +
-                                        "                \"GlossTerm\": \"Standard Generalized Markup Language\", " + System.getProperty("line.separator") +
-                                        "                \"Acronym\": \"SGML\", " + System.getProperty("line.separator") +
-                                        "                \"Abbrev\": \"ISO 8879:1986\", " + System.getProperty("line.separator") +
-                                        "                \"GlossDef\": {" + System.getProperty("line.separator") +
-                                        "                    \"para\": \"A meta-markup language, used to create markup languages such as DocBook.\", " + System.getProperty("line.separator") +
-                                        "                    \"GlossSeeAlso\": [" + System.getProperty("line.separator") +
-                                        "                        \"GML\", " + System.getProperty("line.separator") +
-                                        "                        \"XML\"" + System.getProperty("line.separator") +
-                                        "                    ]" + System.getProperty("line.separator") +
-                                        "                }, " + System.getProperty("line.separator") +
-                                        "                \"GlossSee\": \"markup\"" + System.getProperty("line.separator") +
-                                        "            }" + System.getProperty("line.separator") +
-                                        "        }" + System.getProperty("line.separator") +
-                                        "    }" + System.getProperty("line.separator") +
+                                        "    \"id\": 1," + System.getProperty("line.separator") +
+                                        "    \"name\": \"---- XXXX WRONG VALUE XXXX ----\"," + System.getProperty("line.separator") +
+                                        "    \"price\": 12.50," + System.getProperty("line.separator") +
+                                        "    \"tags\": [\"home\", \"green\"]" + System.getProperty("line.separator") +
                                         "}"),
                         headersToIgnore)
         );
@@ -2245,34 +2156,87 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
                                 .withBody("{" + System.getProperty("line.separator") +
-                                        "    \"title\": \"example glossary\", " + System.getProperty("line.separator") +
-                                        "    \"GlossDiv\": {" + System.getProperty("line.separator") +
-                                        "        \"title\": \"S\", " + System.getProperty("line.separator") +
-                                        "        \"GlossList\": {" + System.getProperty("line.separator") +
-                                        "            \"GlossEntry\": {" + System.getProperty("line.separator") +
-                                        "                \"ID\": \"SGML\", " + System.getProperty("line.separator") +
-                                        "                \"SortAs\": \"SGML\", " + System.getProperty("line.separator") +
-                                        "                \"GlossTerm\": \"Standard Generalized Markup Language\", " + System.getProperty("line.separator") +
-                                        "                \"Acronym\": \"SGML\", " + System.getProperty("line.separator") +
-                                        "                \"Abbrev\": \"ISO 8879:1986\", " + System.getProperty("line.separator") +
-                                        "                \"GlossDef\": {" + System.getProperty("line.separator") +
-                                        "                    \"para\": \"A meta-markup language, used to create markup languages such as DocBook.\", " + System.getProperty("line.separator") +
-                                        "                    \"GlossSeeAlso\": [" + System.getProperty("line.separator") +
-                                        "                        \"GML\", " + System.getProperty("line.separator") +
-                                        "                        \"XML\"" + System.getProperty("line.separator") +
-                                        "                    ]" + System.getProperty("line.separator") +
-                                        "                }, " + System.getProperty("line.separator") +
-                                        "                \"GlossSee\": \"markup\"" + System.getProperty("line.separator") +
-                                        "            }" + System.getProperty("line.separator") +
-                                        "        }" + System.getProperty("line.separator") +
-                                        "    }" + System.getProperty("line.separator") +
+                                        "    \"id\": 1," + System.getProperty("line.separator") +
+                                        "    \"name\": \"---- XXXX WRONG VALUE XXXX ----\"," + System.getProperty("line.separator") +
+                                        "    \"price\": 12.50," + System.getProperty("line.separator") +
+                                        "    \"tags\": [\"home\", \"green\"]" + System.getProperty("line.separator") +
                                         "}"),
                         headersToIgnore)
         );
     }
 
     @Test
-    public void clientCanCallServerNegativeMatchPathOnly() {
+    public void shouldNotReturnResponseForNonMatchingJsonSchema() {
+        // when
+        mockServerClient.when(request().withBody(jsonSchema("{" + System.getProperty("line.separator") +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + System.getProperty("line.separator") +
+                "    \"title\": \"Product\"," + System.getProperty("line.separator") +
+                "    \"description\": \"A product from Acme's catalog\"," + System.getProperty("line.separator") +
+                "    \"type\": \"object\"," + System.getProperty("line.separator") +
+                "    \"properties\": {" + System.getProperty("line.separator") +
+                "        \"id\": {" + System.getProperty("line.separator") +
+                "            \"description\": \"The unique identifier for a product\"," + System.getProperty("line.separator") +
+                "            \"type\": \"integer\"" + System.getProperty("line.separator") +
+                "        }," + System.getProperty("line.separator") +
+                "        \"name\": {" + System.getProperty("line.separator") +
+                "            \"description\": \"Name of the product\"," + System.getProperty("line.separator") +
+                "            \"type\": \"string\"" + System.getProperty("line.separator") +
+                "        }," + System.getProperty("line.separator") +
+                "        \"price\": {" + System.getProperty("line.separator") +
+                "            \"type\": \"number\"," + System.getProperty("line.separator") +
+                "            \"minimum\": 0," + System.getProperty("line.separator") +
+                "            \"exclusiveMinimum\": true" + System.getProperty("line.separator") +
+                "        }," + System.getProperty("line.separator") +
+                "        \"tags\": {" + System.getProperty("line.separator") +
+                "            \"type\": \"array\"," + System.getProperty("line.separator") +
+                "            \"items\": {" + System.getProperty("line.separator") +
+                "                \"type\": \"string\"" + System.getProperty("line.separator") +
+                "            }," + System.getProperty("line.separator") +
+                "            \"minItems\": 1," + System.getProperty("line.separator") +
+                "            \"uniqueItems\": true" + System.getProperty("line.separator") +
+                "        }" + System.getProperty("line.separator") +
+                "    }," + System.getProperty("line.separator") +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + System.getProperty("line.separator") +
+                "}")), exactly(2)).respond(response().withBody("some_body"));
+
+        // then
+        // - in http
+        assertEquals(
+                response()
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("some_path"))
+                                .withMethod("POST")
+                                .withBody("{" + System.getProperty("line.separator") +
+                                        "    \"id\": 1," + System.getProperty("line.separator") +
+                                        "    \"wrong field name\": \"A green door\"," + System.getProperty("line.separator") +
+                                        "    \"price\": 12.50," + System.getProperty("line.separator") +
+                                        "    \"tags\": [\"home\", \"green\"]" + System.getProperty("line.separator") +
+                                        "}"),
+                        headersToIgnore)
+        );
+        // - in https
+        assertEquals(
+                response()
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
+                makeRequest(
+                        request()
+                                .setSecure(true)
+                                .withPath(calculatePath("some_path"))
+                                .withMethod("POST")
+                                .withBody("{" + System.getProperty("line.separator") +
+                                        "    \"id\": 1," + System.getProperty("line.separator") +
+                                        "    \"name\": \"A green door\"," + System.getProperty("line.separator") +
+                                        "    \"wrong field name\": 12.50," + System.getProperty("line.separator") +
+                                        "    \"tags\": [\"home\", \"green\"]" + System.getProperty("line.separator") +
+                                        "}"),
+                        headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldNotReturnResponseForNonMatchingPath() {
         // when
         mockServerClient
                 .when(
@@ -2334,7 +2298,7 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanCallServerNegativeMatchQueryStringParameterNameOnly() {
+    public void shouldNotReturnResponseForNonMatchingQueryStringParameterName() {
         // when
         mockServerClient
                 .when(
@@ -2376,7 +2340,7 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanCallServerNegativeMatchBodyParameterNameOnly() {
+    public void shouldNotReturnResponseForNonMatchingBodyParameterName() {
         // when
         mockServerClient
                 .when(
@@ -2431,7 +2395,7 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanCallServerNegativeMatchQueryStringParameterValueOnly() {
+    public void shouldNotReturnResponseForNonMatchingQueryStringParameterValue() {
         // when
         mockServerClient
                 .when(
@@ -2473,7 +2437,7 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanCallServerNegativeMatchBodyParameterValueOnly() {
+    public void shouldNotReturnResponseForNonMatchingBodyParameterValue() {
         // when
         mockServerClient
                 .when(
@@ -2528,7 +2492,7 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanCallServerNegativeMatchCookieNameOnly() {
+    public void shouldNotReturnResponseForNonMatchingCookieName() {
         // when
         mockServerClient
                 .when(
@@ -2590,7 +2554,7 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanCallServerNegativeMatchCookieValueOnly() {
+    public void shouldNotReturnResponseForNonMatchingCookieValue() {
         // when
         mockServerClient
                 .when(
@@ -2652,7 +2616,7 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanCallServerNegativeMatchHeaderNameOnly() {
+    public void shouldNotReturnResponseForNonMatchingHeaderName() {
         // when
         mockServerClient
                 .when(
@@ -2714,7 +2678,7 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanCallServerNegativeMatchHeaderValueOnly() {
+    public void shouldNotReturnResponseForNonMatchingHeaderValue() {
         // when
         mockServerClient
                 .when(
@@ -2776,7 +2740,7 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanClearServerExpectations() {
+    public void shouldClearExpectations() {
         // given
         mockServerClient
                 .when(
@@ -2846,7 +2810,7 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void clientCanResetServerExpectations() {
+    public void shouldReset() {
         // given
         mockServerClient
                 .when(

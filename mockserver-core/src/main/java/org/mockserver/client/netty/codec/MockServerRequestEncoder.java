@@ -50,7 +50,7 @@ public class MockServerRequestEncoder extends MessageToMessageEncoder<OutboundHt
                 contextPath = "/" + contextPath;
             }
         }
-        QueryStringEncoder queryStringEncoder = new QueryStringEncoder(contextPath + httpRequest.getPath());
+        QueryStringEncoder queryStringEncoder = new QueryStringEncoder(contextPath + httpRequest.getPath().getValue());
         for (Parameter parameter : httpRequest.getQueryStringParameters()) {
             for (String value : parameter.getValues()) {
                 queryStringEncoder.addParam(parameter.getName(), value);

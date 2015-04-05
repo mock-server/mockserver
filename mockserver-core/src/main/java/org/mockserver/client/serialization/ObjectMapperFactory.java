@@ -6,9 +6,11 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import org.mockserver.client.serialization.deserializers.BodyDTODeserializer;
+import org.mockserver.client.serialization.deserializers.body.BodyDTODeserializer;
+import org.mockserver.client.serialization.deserializers.string.NottableStringDeserializer;
 import org.mockserver.client.serialization.model.*;
-import org.mockserver.client.serialization.serializers.*;
+import org.mockserver.client.serialization.serializers.body.*;
+import org.mockserver.client.serialization.serializers.string.NottableStringSerializer;
 import org.mockserver.model.*;
 
 /**
@@ -52,6 +54,10 @@ public class ObjectMapperFactory {
     private static class Module extends SimpleModule {
 
         public Module() {
+            // request
+            addSerializer(HttpRequest.class, new org.mockserver.client.serialization.serializers.request.HttpRequestSerializer());
+            addSerializer(HttpRequestDTO.class, new org.mockserver.client.serialization.serializers.request.HttpRequestDTOSerializer());
+            // request body
             addDeserializer(BodyDTO.class, new BodyDTODeserializer());
             addSerializer(StringBodyDTO.class, new StringBodyDTOSerializer());
             addSerializer(StringBody.class, new StringBodySerializer());
@@ -63,6 +69,9 @@ public class ObjectMapperFactory {
             addSerializer(JsonSchemaBody.class, new JsonSchemaBodySerializer());
             addSerializer(XPathBodyDTO.class, new XPathBodyDTOSerializer());
             addSerializer(XPathBody.class, new XPathBodySerializer());
+            // nottable string
+            addSerializer(NottableString.class, new NottableStringSerializer());
+            addDeserializer(NottableString.class, new NottableStringDeserializer());
         }
 
     }

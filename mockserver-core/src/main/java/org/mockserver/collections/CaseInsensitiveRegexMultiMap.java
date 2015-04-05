@@ -1,18 +1,19 @@
 package org.mockserver.collections;
 
 import org.mockserver.matchers.RegexStringMatcher;
+import org.mockserver.model.NottableString;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 
 import java.util.*;
 
-import static org.mockserver.collections.NottableKey.nottableKey;
+import static org.mockserver.model.NottableString.string;
 
 /**
  * MultiMap that uses case insensitive regex expression matching for keys and values
  *
  * @author jamesdbloom
  */
-public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHashCodeToString implements Map<NottableKey, String> {
+public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHashCodeToString implements Map<NottableString, String> {
     private final CaseInsensitiveRegexHashMap<List<String>> backingMap = new CaseInsensitiveRegexHashMap<List<String>>();
 
     @Override
@@ -31,7 +32,7 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
     }
 
     public boolean containsAll(CaseInsensitiveRegexMultiMap subSet) {
-        for (NottableKey subSetKey : subSet.keySet()) {
+        for (NottableString subSetKey : subSet.keySet()) {
             if (!containsKey(subSetKey)) { // check if sub-set key exists in super-set
                 return false;
             } else { // check if sub-set value matches at least one super-set value using regex
@@ -45,11 +46,11 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
         return true;
     }
 
-    public synchronized boolean containsKeyValue(NottableKey key, String value) {
+    public synchronized boolean containsKeyValue(NottableString key, String value) {
         boolean result = false;
 
         outermost:
-        for (NottableKey matcherKey : backingMap.keySet()) {
+        for (NottableString matcherKey : backingMap.keySet()) {
             for (List<String> allMatcherKeyValues : backingMap.getAll(matcherKey)) {
                 for (String matcherKeyValue : allMatcherKeyValues) {
                     if (RegexStringMatcher.matches(matcherKey.getValue(), key.getValue(), true) && RegexStringMatcher.matches(value, matcherKeyValue, false)) {
@@ -66,7 +67,7 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
     @Override
     public synchronized boolean containsValue(Object value) {
         if (value instanceof String) {
-            for (NottableKey key : backingMap.keySet()) {
+            for (NottableString key : backingMap.keySet()) {
                 for (List<String> allKeyValues : backingMap.getAll(key)) {
                     for (String keyValue : allKeyValues) {
                         if (RegexStringMatcher.matches(keyValue, (String) value, false)) {
@@ -90,7 +91,7 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
     }
 
     public synchronized List<String> getAll(String key) {
-        return getAll(nottableKey(key));
+        return getAll(string(key));
     }
 
     public synchronized List<String> getAll(Object key) {
@@ -102,11 +103,11 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
     }
 
     public synchronized String put(String key, String value) {
-        return put(nottableKey(key), value);
+        return put(string(key), value);
     }
 
     @Override
-    public synchronized String put(NottableKey key, String value) {
+    public synchronized String put(NottableString key, String value) {
         List<String> list = Collections.synchronizedList(new ArrayList<String>());
         if (containsKey(key) && backingMap.get(key) != null) {
             list.addAll(backingMap.get(key));
@@ -117,10 +118,10 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
     }
 
     public synchronized List<String> put(String key, List<String> values) {
-        return put(nottableKey(key), values);
+        return put(string(key), values);
     }
 
-    public synchronized List<String> put(NottableKey key, List<String> values) {
+    public synchronized List<String> put(NottableString key, List<String> values) {
         if (containsKey(key)) {
             for (String value : values) {
                 put(key, value);
@@ -132,7 +133,7 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
     }
 
     public void putValuesForNewKeys(CaseInsensitiveRegexMultiMap multiMap) {
-        for (NottableKey key : multiMap.keySet()) {
+        for (NottableString key : multiMap.keySet()) {
             if (!containsKey(key)) {
                 backingMap.put(key, multiMap.getAll(key));
             }
@@ -149,7 +150,7 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
         }
     }
 
-    public synchronized List<String> removeAll(NottableKey key) {
+    public synchronized List<String> removeAll(NottableString key) {
         return backingMap.remove(key);
     }
 
@@ -158,8 +159,8 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
     }
 
     @Override
-    public synchronized void putAll(Map<? extends NottableKey, ? extends String> map) {
-        for (Entry<? extends NottableKey, ? extends String> entry : map.entrySet()) {
+    public synchronized void putAll(Map<? extends NottableString, ? extends String> map) {
+        for (Entry<? extends NottableString, ? extends String> entry : map.entrySet()) {
             put(entry.getKey(), entry.getValue());
         }
     }
@@ -170,7 +171,7 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
     }
 
     @Override
-    public synchronized Set<NottableKey> keySet() {
+    public synchronized Set<NottableString> keySet() {
         return backingMap.keySet();
     }
 
@@ -184,9 +185,9 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
     }
 
     @Override
-    public synchronized Set<Entry<NottableKey, String>> entrySet() {
-        Set<Entry<NottableKey, String>> entrySet = new LinkedHashSet<Entry<NottableKey, String>>();
-        for (Entry<NottableKey, List<String>> entry : backingMap.entrySet()) {
+    public synchronized Set<Entry<NottableString, String>> entrySet() {
+        Set<Entry<NottableString, String>> entrySet = new LinkedHashSet<Entry<NottableString, String>>();
+        for (Entry<NottableString, List<String>> entry : backingMap.entrySet()) {
             for (String value : entry.getValue()) {
                 entrySet.add(new ImmutableEntry(entry.getKey(), value));
             }
@@ -194,22 +195,22 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
         return entrySet;
     }
 
-    class ImmutableEntry extends ObjectWithReflectiveEqualsHashCodeToString implements Entry<NottableKey, String> {
-        private final NottableKey key;
+    class ImmutableEntry extends ObjectWithReflectiveEqualsHashCodeToString implements Entry<NottableString, String> {
+        private final NottableString key;
         private final String value;
 
         ImmutableEntry(String key, String value) {
-            this.key = nottableKey(key);
+            this.key = string(key);
             this.value = value;
         }
 
-        ImmutableEntry(NottableKey key, String value) {
+        ImmutableEntry(NottableString key, String value) {
             this.key = key;
             this.value = value;
         }
 
         @Override
-        public NottableKey getKey() {
+        public NottableString getKey() {
             return key;
         }
 

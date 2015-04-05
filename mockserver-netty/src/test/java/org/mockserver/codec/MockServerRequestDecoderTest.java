@@ -19,6 +19,7 @@ import static org.hamcrest.core.Is.is;
 import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.Cookie.cookie;
 import static org.mockserver.model.Header.header;
+import static org.mockserver.model.NottableString.string;
 import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.StringBody.exact;
 
@@ -46,8 +47,8 @@ public class MockServerRequestDecoderTest {
         mockServerRequestDecoder.decode(null, fullHttpRequest, output);
 
         // then
-        String method = ((HttpRequest) output.get(0)).getMethod();
-        assertThat(method, is("OPTIONS"));
+        NottableString method = ((HttpRequest) output.get(0)).getMethod();
+        assertThat(method, is(string("OPTIONS")));
     }
 
     @Test
@@ -80,7 +81,7 @@ public class MockServerRequestDecoderTest {
 
         // then
         HttpRequest httpRequest = ((HttpRequest) output.get(0));
-        assertThat(httpRequest.getPath(), is("/uri"));
+        assertThat(httpRequest.getPath(), is(string("/uri")));
     }
 
     @Test

@@ -7,6 +7,10 @@ import org.mockserver.model.Parameter;
  */
 public class ParameterDTO extends KeyToMultiValueDTO {
 
+    public ParameterDTO(Parameter parameter) {
+        this(parameter, false);
+    }
+
     public ParameterDTO(Parameter parameter, boolean not) {
         super(parameter, not);
     }

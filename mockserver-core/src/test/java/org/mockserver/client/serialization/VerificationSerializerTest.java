@@ -42,7 +42,7 @@ public class VerificationSerializerTest {
                     .withTimes(times);
     private final VerificationDTO fullVerificationDTO =
             new VerificationDTO()
-                    .setHttpRequest(new HttpRequestDTO(request, false))
+                    .setHttpRequest(new HttpRequestDTO(request))
                     .setTimes(new VerificationTimesDTO(times));
     @Mock
     private ObjectMapper objectMapper;

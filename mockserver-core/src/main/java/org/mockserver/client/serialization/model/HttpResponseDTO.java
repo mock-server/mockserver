@@ -26,12 +26,12 @@ public class HttpResponseDTO extends ObjectWithReflectiveEqualsHashCodeToString 
             body = BodyDTO.createDTO(httpResponse.getBody());
             headers = Lists.transform(httpResponse.getHeaders(), new Function<Header, HeaderDTO>() {
                 public HeaderDTO apply(Header header) {
-                    return new HeaderDTO(header, false);
+                    return new HeaderDTO(header);
                 }
             });
             cookies = Lists.transform(httpResponse.getCookies(), new Function<Cookie, CookieDTO>() {
                 public CookieDTO apply(Cookie cookie) {
-                    return new CookieDTO(cookie, false);
+                    return new CookieDTO(cookie);
                 }
             });
             delay = (httpResponse.getDelay() != null ? new DelayDTO(httpResponse.getDelay()) : null);
