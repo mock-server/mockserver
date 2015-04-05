@@ -253,7 +253,7 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void shouldCallbackToSpecifiedClass() {
+    public void shouldCallbackToSpecifiedClassWithPrecannedResponse() {
         // when
         mockServerClient
                 .when(

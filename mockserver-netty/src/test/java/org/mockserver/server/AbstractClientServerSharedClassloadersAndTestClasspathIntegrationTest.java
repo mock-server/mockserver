@@ -15,9 +15,8 @@ import static org.mockserver.model.HttpResponse.response;
  */
 public abstract class AbstractClientServerSharedClassloadersAndTestClasspathIntegrationTest extends AbstractClientServerSharedClassloadersIntegrationTest {
 
-
     @Test
-    public void clientCanCallServerForCallbackInTestClasspathInHTTP() {
+    public void shouldCallbackToSpecifiedClassInTestClasspath() {
         // given
         TestClasspathTestExpectationCallback.httpRequests.clear();
         TestClasspathTestExpectationCallback.httpResponse = response()
@@ -82,4 +81,5 @@ public abstract class AbstractClientServerSharedClassloadersAndTestClasspathInte
         assertEquals(TestClasspathTestExpectationCallback.httpRequests.get(1).getBody().getValue(), "an_example_body_https");
         assertEquals(TestClasspathTestExpectationCallback.httpRequests.get(1).getPath(), "/callback");
     }
+
 }
