@@ -43,7 +43,7 @@ public class JsonStringMatcherTest {
                 "            ]" + System.getProperty("line.separator") +
                 "        }" + System.getProperty("line.separator") +
                 "    }" + System.getProperty("line.separator") +
-                "}", JsonBodyMatchType.ONLY_MATCHING_FIELDS).matches(matched));
+                "}", MatchType.ONLY_MATCHING_FIELDS).matches(matched));
     }
     @Test
     public void shouldNotMatchExactMatchingJson() {
@@ -78,7 +78,7 @@ public class JsonStringMatcherTest {
                 "            ]" + System.getProperty("line.separator") +
                 "        }" + System.getProperty("line.separator") +
                 "    }" + System.getProperty("line.separator") +
-                "}", JsonBodyMatchType.ONLY_MATCHING_FIELDS)).matches(matched));
+                "}", MatchType.ONLY_MATCHING_FIELDS)).matches(matched));
     }
 
     @Test
@@ -114,7 +114,7 @@ public class JsonStringMatcherTest {
                 "        \"id\": \"file\"," + System.getProperty("line.separator") +
                 "        \"value\": \"File\"" + System.getProperty("line.separator") +
                 "    }" + System.getProperty("line.separator") +
-                "}", JsonBodyMatchType.ONLY_MATCHING_FIELDS).matches(matched));
+                "}", MatchType.ONLY_MATCHING_FIELDS).matches(matched));
         assertTrue(new JsonStringMatcher("{" + System.getProperty("line.separator") +
                 "    \"menu\": {" + System.getProperty("line.separator") +
                 "        \"popup\": {" + System.getProperty("line.separator") +
@@ -134,7 +134,7 @@ public class JsonStringMatcherTest {
                 "            ]" + System.getProperty("line.separator") +
                 "        }" + System.getProperty("line.separator") +
                 "    }" + System.getProperty("line.separator") +
-                "}", JsonBodyMatchType.ONLY_MATCHING_FIELDS).matches(matched));
+                "}", MatchType.ONLY_MATCHING_FIELDS).matches(matched));
     }
 
     @Test
@@ -184,7 +184,7 @@ public class JsonStringMatcherTest {
                 "            }" + System.getProperty("line.separator") +
                 "        }" + System.getProperty("line.separator") +
                 "    }" + System.getProperty("line.separator") +
-                "}", JsonBodyMatchType.ONLY_MATCHING_FIELDS).matches(matched));
+                "}", MatchType.ONLY_MATCHING_FIELDS).matches(matched));
     }
 
     @Test
@@ -234,7 +234,7 @@ public class JsonStringMatcherTest {
                 "            }" + System.getProperty("line.separator") +
                 "        }" + System.getProperty("line.separator") +
                 "    }" + System.getProperty("line.separator") +
-                "}", JsonBodyMatchType.STRICT).matches(matched));
+                "}", MatchType.STRICT).matches(matched));
     }
 
     @Test
@@ -284,7 +284,7 @@ public class JsonStringMatcherTest {
                 "            }" + System.getProperty("line.separator") +
                 "        }" + System.getProperty("line.separator") +
                 "    }" + System.getProperty("line.separator") +
-                "}", JsonBodyMatchType.STRICT)).matches(matched));
+                "}", MatchType.STRICT)).matches(matched));
     }
 
     @Test
@@ -320,7 +320,7 @@ public class JsonStringMatcherTest {
                 "        \"id\": \"file\"," + System.getProperty("line.separator") +
                 "        \"value\": \"File\"" + System.getProperty("line.separator") +
                 "    }" + System.getProperty("line.separator") +
-                "}", JsonBodyMatchType.ONLY_MATCHING_FIELDS).matches(matched));
+                "}", MatchType.ONLY_MATCHING_FIELDS).matches(matched));
         assertTrue(new JsonStringMatcher("{" + System.getProperty("line.separator") +
                 "    \"menu\": {" + System.getProperty("line.separator") +
                 "        \"popup\": {" + System.getProperty("line.separator") +
@@ -340,7 +340,7 @@ public class JsonStringMatcherTest {
                 "            ]" + System.getProperty("line.separator") +
                 "        }" + System.getProperty("line.separator") +
                 "    }" + System.getProperty("line.separator") +
-                "}", JsonBodyMatchType.ONLY_MATCHING_FIELDS).matches(matched));
+                "}", MatchType.ONLY_MATCHING_FIELDS).matches(matched));
     }
 
     @Test
@@ -376,7 +376,7 @@ public class JsonStringMatcherTest {
                 "        \"id\": \"file\"," + System.getProperty("line.separator") +
                 "        \"value\": \"File\"" + System.getProperty("line.separator") +
                 "    }" + System.getProperty("line.separator") +
-                "}", JsonBodyMatchType.STRICT).matches(matched));
+                "}", MatchType.STRICT).matches(matched));
         assertFalse(new JsonStringMatcher("{" + System.getProperty("line.separator") +
                 "    \"menu\": {" + System.getProperty("line.separator") +
                 "        \"popup\": {" + System.getProperty("line.separator") +
@@ -396,23 +396,23 @@ public class JsonStringMatcherTest {
                 "            ]" + System.getProperty("line.separator") +
                 "        }" + System.getProperty("line.separator") +
                 "    }" + System.getProperty("line.separator") +
-                "}", JsonBodyMatchType.STRICT).matches(matched));
+                "}", MatchType.STRICT).matches(matched));
     }
 
     @Test
     public void shouldNotMatchIllegalJson() {
-        assertFalse(new JsonStringMatcher("illegal_json", JsonBodyMatchType.ONLY_MATCHING_FIELDS).matches("illegal_json"));
-        assertFalse(new JsonStringMatcher("illegal_json", JsonBodyMatchType.ONLY_MATCHING_FIELDS).matches("some_other_illegal_json"));
+        assertFalse(new JsonStringMatcher("illegal_json", MatchType.ONLY_MATCHING_FIELDS).matches("illegal_json"));
+        assertFalse(new JsonStringMatcher("illegal_json", MatchType.ONLY_MATCHING_FIELDS).matches("some_other_illegal_json"));
     }
 
     @Test
     public void shouldNotMatchNullExpectation() {
-        assertFalse(new JsonStringMatcher(null, JsonBodyMatchType.ONLY_MATCHING_FIELDS).matches("some_value"));
+        assertFalse(new JsonStringMatcher(null, MatchType.ONLY_MATCHING_FIELDS).matches("some_value"));
     }
 
     @Test
     public void shouldNotMatchEmptyExpectation() {
-        assertFalse(new JsonStringMatcher("", JsonBodyMatchType.ONLY_MATCHING_FIELDS).matches("some_value"));
+        assertFalse(new JsonStringMatcher("", MatchType.ONLY_MATCHING_FIELDS).matches("some_value"));
     }
 
     @Test
@@ -464,7 +464,7 @@ public class JsonStringMatcherTest {
                 "            ]" + System.getProperty("line.separator") +
                 "        }" + System.getProperty("line.separator") +
                 "    }" + System.getProperty("line.separator") +
-                "}", JsonBodyMatchType.ONLY_MATCHING_FIELDS).matches(matched));
+                "}", MatchType.ONLY_MATCHING_FIELDS).matches(matched));
     }
 
     @Test
@@ -473,7 +473,7 @@ public class JsonStringMatcherTest {
         String matched = "{id:1,pets:[\"dog\",\"cat\",\"fish\"]}";
 
         // then
-        assertTrue(new JsonStringMatcher("{id:1,pets:[\"cat\",\"dog\",\"fish\"]}", JsonBodyMatchType.ONLY_MATCHING_FIELDS).matches(matched));
+        assertTrue(new JsonStringMatcher("{id:1,pets:[\"cat\",\"dog\",\"fish\"]}", MatchType.ONLY_MATCHING_FIELDS).matches(matched));
     }
 
     @Test
@@ -482,7 +482,7 @@ public class JsonStringMatcherTest {
         String matched = "{id:1,pets:[\"dog\",\"cat\",\"fish\"]}";
 
         // then
-        assertFalse(new JsonStringMatcher("{id:1,pets:[\"cat\",\"dog\",\"fish\"]}", JsonBodyMatchType.STRICT).matches(matched));
+        assertFalse(new JsonStringMatcher("{id:1,pets:[\"cat\",\"dog\",\"fish\"]}", MatchType.STRICT).matches(matched));
     }
 
     @Test
@@ -491,7 +491,7 @@ public class JsonStringMatcherTest {
         String matched = "{id:1,pets:[\"dog\",\"cat\",\"fish\"],extraField:\"extraValue\"}";
 
         // then
-        assertTrue(new JsonStringMatcher("{id:1,pets:[\"dog\",\"cat\",\"fish\"]}", JsonBodyMatchType.ONLY_MATCHING_FIELDS).matches(matched));
+        assertTrue(new JsonStringMatcher("{id:1,pets:[\"dog\",\"cat\",\"fish\"]}", MatchType.ONLY_MATCHING_FIELDS).matches(matched));
     }
 
     @Test
@@ -500,7 +500,7 @@ public class JsonStringMatcherTest {
         String matched = "{id:1,pets:[\"dog\",\"cat\",\"fish\"],extraField:\"extraValue\"}";
 
         // then
-        assertFalse(new JsonStringMatcher("{id:1,pets:[\"dog\",\"cat\",\"fish\"]}", JsonBodyMatchType.STRICT).matches(matched));
+        assertFalse(new JsonStringMatcher("{id:1,pets:[\"dog\",\"cat\",\"fish\"]}", MatchType.STRICT).matches(matched));
     }
 
     @Test
@@ -536,7 +536,7 @@ public class JsonStringMatcherTest {
                 "        \"id\": \"file\"," + System.getProperty("line.separator") +
                 "        \"value\": \"other_value\"" + System.getProperty("line.separator") +
                 "    }" + System.getProperty("line.separator") +
-                "}", JsonBodyMatchType.ONLY_MATCHING_FIELDS).matches(matched));
+                "}", MatchType.ONLY_MATCHING_FIELDS).matches(matched));
         assertFalse(new JsonStringMatcher("{" + System.getProperty("line.separator") +
                 "    \"menu\": {" + System.getProperty("line.separator") +
                 "        \"popup\": {" + System.getProperty("line.separator") +
@@ -560,21 +560,21 @@ public class JsonStringMatcherTest {
                 "            ]" + System.getProperty("line.separator") +
                 "        }" + System.getProperty("line.separator") +
                 "    }" + System.getProperty("line.separator") +
-                "}", JsonBodyMatchType.ONLY_MATCHING_FIELDS).matches(matched));
+                "}", MatchType.ONLY_MATCHING_FIELDS).matches(matched));
     }
 
     @Test
     public void shouldNotMatchNullTest() {
-        assertFalse(new JsonStringMatcher("some_value", JsonBodyMatchType.ONLY_MATCHING_FIELDS).matches(null));
+        assertFalse(new JsonStringMatcher("some_value", MatchType.ONLY_MATCHING_FIELDS).matches(null));
     }
 
     @Test
     public void shouldNotMatchEmptyTest() {
-        assertFalse(new JsonStringMatcher("some_value", JsonBodyMatchType.ONLY_MATCHING_FIELDS).matches(""));
+        assertFalse(new JsonStringMatcher("some_value", MatchType.ONLY_MATCHING_FIELDS).matches(""));
     }
 
     @Test
     public void showHaveCorrectEqualsBehaviour() {
-        assertEquals(new JsonStringMatcher("some_value", JsonBodyMatchType.ONLY_MATCHING_FIELDS), new JsonStringMatcher("some_value", JsonBodyMatchType.ONLY_MATCHING_FIELDS));
+        assertEquals(new JsonStringMatcher("some_value", MatchType.ONLY_MATCHING_FIELDS), new JsonStringMatcher("some_value", MatchType.ONLY_MATCHING_FIELDS));
     }
 }

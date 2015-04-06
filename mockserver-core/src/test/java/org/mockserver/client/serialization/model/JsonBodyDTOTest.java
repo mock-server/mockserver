@@ -6,8 +6,8 @@ import org.mockserver.model.JsonBody;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.mockserver.matchers.JsonBodyMatchType.ONLY_MATCHING_FIELDS;
-import static org.mockserver.matchers.JsonBodyMatchType.STRICT;
+import static org.mockserver.matchers.MatchType.ONLY_MATCHING_FIELDS;
+import static org.mockserver.matchers.MatchType.STRICT;
 import static org.mockserver.model.JsonBody.json;
 
 

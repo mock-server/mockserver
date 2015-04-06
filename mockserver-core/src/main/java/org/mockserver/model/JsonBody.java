@@ -1,21 +1,21 @@
 package org.mockserver.model;
 
-import org.mockserver.matchers.JsonBodyMatchType;
+import org.mockserver.matchers.MatchType;
 
 /**
  * @author jamesdbloom
  */
 public class JsonBody extends Body {
 
-    public static final JsonBodyMatchType DEFAULT_MATCH_TYPE = JsonBodyMatchType.ONLY_MATCHING_FIELDS;
+    public static final MatchType DEFAULT_MATCH_TYPE = MatchType.ONLY_MATCHING_FIELDS;
     private final String json;
-    private final JsonBodyMatchType matchType;
+    private final MatchType matchType;
 
     public JsonBody(String json) {
         this(json, DEFAULT_MATCH_TYPE);
     }
 
-    public JsonBody(String json, JsonBodyMatchType matchType) {
+    public JsonBody(String json, MatchType matchType) {
         super(Type.JSON);
         this.json = json;
         this.matchType = matchType;
@@ -25,15 +25,15 @@ public class JsonBody extends Body {
         return new JsonBody(json);
     }
 
-    public static JsonBody json(String json, JsonBodyMatchType jsonBodyMatchType) {
-        return new JsonBody(json, jsonBodyMatchType);
+    public static JsonBody json(String json, MatchType matchType) {
+        return new JsonBody(json, matchType);
     }
 
     public String getValue() {
         return json;
     }
 
-    public JsonBodyMatchType getMatchType() {
+    public MatchType getMatchType() {
         return matchType;
     }
 

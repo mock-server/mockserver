@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import org.mockserver.client.serialization.Base64Converter;
 import org.mockserver.client.serialization.ObjectMapperFactory;
 import org.mockserver.client.serialization.model.*;
-import org.mockserver.matchers.JsonBodyMatchType;
+import org.mockserver.matchers.MatchType;
 import org.mockserver.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +47,7 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
         String valueJsonValue = "";
         Body.Type type = null;
         boolean not = false;
-        JsonBodyMatchType matchType = JsonBody.DEFAULT_MATCH_TYPE;
+        MatchType matchType = JsonBody.DEFAULT_MATCH_TYPE;
         List<Parameter> parameters = new ArrayList<Parameter>();
         if (currentToken == JsonToken.START_OBJECT) {
             while (jsonParser.getCurrentToken() != JsonToken.END_OBJECT) {
@@ -77,7 +77,7 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                 if (jsonParser.getCurrentToken() == JsonToken.FIELD_NAME && jsonParser.getText().equalsIgnoreCase("matchType")) {
                     jsonParser.nextToken();
                     try {
-                        matchType = JsonBodyMatchType.valueOf(jsonParser.getText());
+                        matchType = MatchType.valueOf(jsonParser.getText());
                     } catch (IllegalArgumentException iae) {
                         logger.warn("Ignoring incorrect JsonBodyMatchType with value \"" + jsonParser.getText() + "\"");
                     }

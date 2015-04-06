@@ -8,7 +8,7 @@ import org.junit.Test;
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.netty.SocketConnectionException;
 import org.mockserver.client.server.MockServerClient;
-import org.mockserver.matchers.JsonBodyMatchType;
+import org.mockserver.matchers.MatchType;
 import org.mockserver.model.*;
 import org.mockserver.verify.VerificationTimes;
 import org.slf4j.Logger;
@@ -966,7 +966,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         "    \"name\": \"A green door\"," + System.getProperty("line.separator") +
                                         "    \"price\": 12.50," + System.getProperty("line.separator") +
                                         "    \"tags\": [\"home\", \"green\"]" + System.getProperty("line.separator") +
-                                        "}", JsonBodyMatchType.ONLY_MATCHING_FIELDS)),
+                                        "}", MatchType.ONLY_MATCHING_FIELDS)),
                         exactly(2)
                 )
                 .respond(
@@ -2578,7 +2578,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                         "    \"name\": \"A green door\"," + System.getProperty("line.separator") +
                                         "    \"price\": 12.50," + System.getProperty("line.separator") +
                                         "    \"tags\": [\"home\", \"green\"]" + System.getProperty("line.separator") +
-                                        "}", JsonBodyMatchType.STRICT)),
+                                        "}", MatchType.STRICT)),
                         exactly(2))
                 .respond(
                         response()

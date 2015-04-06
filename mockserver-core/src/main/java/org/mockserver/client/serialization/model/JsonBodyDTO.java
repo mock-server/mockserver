@@ -1,6 +1,6 @@
 package org.mockserver.client.serialization.model;
 
-import org.mockserver.matchers.JsonBodyMatchType;
+import org.mockserver.matchers.MatchType;
 import org.mockserver.model.Body;
 import org.mockserver.model.JsonBody;
 
@@ -10,7 +10,7 @@ import org.mockserver.model.JsonBody;
 public class JsonBodyDTO extends BodyDTO {
 
     private String json;
-    private JsonBodyMatchType matchType;
+    private MatchType matchType;
 
     public JsonBodyDTO(JsonBody jsonBody) {
         this(jsonBody, false);
@@ -29,7 +29,7 @@ public class JsonBodyDTO extends BodyDTO {
         return json;
     }
 
-    public JsonBodyMatchType getMatchType() {
+    public MatchType getMatchType() {
         return matchType;
     }
 

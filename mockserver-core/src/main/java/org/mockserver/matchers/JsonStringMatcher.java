@@ -1,5 +1,7 @@
 package org.mockserver.matchers;
 
+import org.mockserver.model.JsonBody;
+import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.skyscreamer.jsonassert.JSONCompareResult;
 
 import static org.skyscreamer.jsonassert.JSONCompare.compareJSON;
@@ -9,11 +11,11 @@ import static org.skyscreamer.jsonassert.JSONCompare.compareJSON;
  */
 public class JsonStringMatcher extends BodyMatcher<String> {
     private final String matcher;
-    private final JsonBodyMatchType jsonBodyMatchType;
+    private final MatchType matchType;
 
-    public JsonStringMatcher(String matcher, JsonBodyMatchType jsonBodyMatchType) {
+    public JsonStringMatcher(String matcher, MatchType matchType) {
         this.matcher = matcher;
-        this.jsonBodyMatchType = jsonBodyMatchType;
+        this.matchType = matchType;
     }
 
     public boolean matches(String matched) {
@@ -21,7 +23,11 @@ public class JsonStringMatcher extends BodyMatcher<String> {
 
         JSONCompareResult jsonCompareResult;
         try {
-            jsonCompareResult = compareJSON(matcher, matched, jsonBodyMatchType.getNonExtensible());
+            JSONCompareMode jsonCompareMode = JSONCompareMode.LENIENT;
+            if (matchType == MatchType.STRICT) {
+                jsonCompareMode = JSONCompareMode.STRICT;
+            }
+            jsonCompareResult = compareJSON(matcher, matched, jsonCompareMode);
 
             if (jsonCompareResult.passed()) {
                 result = true;
