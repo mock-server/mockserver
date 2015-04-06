@@ -14,6 +14,10 @@ public class JsonSchemaMatcher extends BodyMatcher<String> {
     private final String schema;
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
 
+    protected String[] fieldsExcludedFromEqualsAndHashCode() {
+        return new String[]{"logger", "objectMapper"};
+    }
+
     public JsonSchemaMatcher(String schema) {
         this.schema = schema;
     }
