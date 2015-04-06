@@ -9,4 +9,4 @@ echo "-------------------------"
 echo "------- JAVA 1.6  -------"
 echo "-------------------------"
 echo
-mvn clean deploy $1
+/usr/local/Cellar/maven/3.2.3/bin/mvn clean deploy $1
