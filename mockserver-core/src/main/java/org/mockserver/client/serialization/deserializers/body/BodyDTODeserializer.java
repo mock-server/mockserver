@@ -60,7 +60,7 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         logger.warn("Ignoring invalid value for \"type\" field of \"" + jsonParser.getText() + "\"");
                     }
                 }
-                if (jsonParser.getCurrentToken() == JsonToken.FIELD_NAME && containsIgnoreCase(jsonParser.getText(), "string", "regex", "json", "jsonSchema", "xpath", "bytes", "parameters", "value")) {
+                if (jsonParser.getCurrentToken() == JsonToken.FIELD_NAME && containsIgnoreCase(jsonParser.getText(), "string", "regex", "json", "jsonSchema", "xpath", "bytes", "value") && type != Body.Type.PARAMETERS) {
                     String fieldName = jsonParser.getText().toLowerCase();
                     if (fieldNameToType.containsKey(fieldName)) {
                         type = fieldNameToType.get(fieldName);
@@ -82,34 +82,59 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         logger.warn("Ignoring incorrect JsonBodyMatchType with value \"" + jsonParser.getText() + "\"");
                     }
                 }
-                if (jsonParser.isExpectedStartArrayToken()) {
-                    boolean inObject = false;
-                    while (inObject || jsonParser.getCurrentToken() != JsonToken.END_ARRAY) {
-                        JsonToken token = jsonParser.nextToken();
-                        switch (token) {
-                            case START_OBJECT:
-                                inObject = true;
-                                break;
-                            case END_OBJECT:
-                                inObject = false;
-                                break;
-                            case FIELD_NAME:
-                                if (jsonParser.getText().equals("name")) {
-                                    if (jsonParser.nextToken() == JsonToken.VALUE_STRING) {
-                                        String name = jsonParser.getText();
-                                        jsonParser.nextToken();
-                                        if (jsonParser.nextToken() == JsonToken.START_ARRAY) {
-                                            List<String> values = new ArrayList<String>();
-                                            while (jsonParser.nextToken() != null && jsonParser.getCurrentToken() != JsonToken.END_ARRAY) {
-                                                if (jsonParser.getCurrentToken() == JsonToken.VALUE_STRING) {
-                                                    values.add(jsonParser.getText());
-                                                }
-                                            }
-                                            parameters.add(new Parameter(name, values));
+                if (jsonParser.getCurrentToken() == JsonToken.FIELD_NAME && containsIgnoreCase(jsonParser.getText(), "parameters", "value")) {
+                    jsonParser.nextToken();
+                    if (jsonParser.isExpectedStartArrayToken()) {
+                        int objectDepth = 1;
+                        String parameterName = "";
+                        List<String> parameterValues = new ArrayList<String>();
+                        boolean parameterNot = false;
+                        while (objectDepth > 0) {
+                            JsonToken token = jsonParser.getCurrentToken();
+                            switch (token) {
+                                case START_ARRAY:
+                                    break;
+                                case START_OBJECT:
+                                    objectDepth++;
+                                    parameterName = "";
+                                    parameterValues = new ArrayList<String>();
+                                    parameterNot = false;
+                                    break;
+                                case END_OBJECT:
+                                    objectDepth--;
+                                    if (objectDepth >= 1) {
+                                        if (parameterNot) {
+                                            parameters.add(Not.not(new Parameter(parameterName, parameterValues)));
+                                        } else {
+                                            parameters.add(new Parameter(parameterName, parameterValues));
                                         }
                                     }
-                                }
-                                break;
+                                    break;
+                                case FIELD_NAME:
+                                    if (jsonParser.getText().equalsIgnoreCase("name")) {
+                                        jsonParser.nextToken();
+                                        parameterName = jsonParser.getText();
+                                    } else if (jsonParser.getText().equalsIgnoreCase("not")) {
+                                        jsonParser.nextToken();
+                                        parameterNot = Boolean.parseBoolean(jsonParser.getText());
+                                    } else if (jsonParser.getText().equalsIgnoreCase("values")) {
+                                        if (jsonParser.nextToken() == JsonToken.START_ARRAY) {
+                                            while (jsonParser.nextToken() != null && jsonParser.getCurrentToken() != JsonToken.END_ARRAY) {
+                                                if (jsonParser.getCurrentToken() == JsonToken.VALUE_STRING) {
+                                                    parameterValues.add(jsonParser.getText());
+                                                }
+                                            }
+                                        }
+                                    }
+                                    break;
+                                case VALUE_TRUE:
+                                    break;
+                                case VALUE_STRING:
+                                    break;
+                            }
+                            if (objectDepth > 0) {
+                                jsonParser.nextToken();
+                            }
                         }
                     }
                 }

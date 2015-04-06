@@ -42,7 +42,7 @@ public class NottableString extends Not {
             return not != (value.equals(other));
         } else if (other instanceof NottableString) {
             NottableString otherNottableString = (NottableString) other;
-            return otherNottableString.isNot() != (isNot() != (value.equals(otherNottableString.getValue())));
+            return otherNottableString.isNot() == (isNot() == (value.equals(otherNottableString.getValue())));
         }
         return false;
     }

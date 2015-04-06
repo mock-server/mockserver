@@ -283,7 +283,7 @@ public class BodyDTODeserializerTest {
                 .setHttpRequest(
                         new HttpRequestDTO()
                                 .setBody(new ParameterBodyDTO(new ParameterBody(
-                                        new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
+                                        Not.not(new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo")),
                                         new Parameter("parameterTwoName", "parameterTwoValue")
                                 )))
                 ), expectationDTO);

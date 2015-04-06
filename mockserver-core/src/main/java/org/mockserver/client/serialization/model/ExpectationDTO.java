@@ -17,20 +17,25 @@ public class ExpectationDTO extends ObjectWithReflectiveEqualsHashCodeToString {
 
     public ExpectationDTO(Expectation expectation) {
         if (expectation != null) {
-            if (expectation.getHttpRequest() != null) {
-                httpRequest = new HttpRequestDTO(expectation.getHttpRequest());
+            HttpRequest httpRequest = expectation.getHttpRequest();
+            if (httpRequest != null) {
+                this.httpRequest = new HttpRequestDTO(httpRequest, httpRequest.isNot());
             }
-            if (expectation.getHttpResponse(false) != null) {
-                httpResponse = new HttpResponseDTO(expectation.getHttpResponse(false));
+            HttpResponse httpResponse = expectation.getHttpResponse(false);
+            if (httpResponse != null) {
+                this.httpResponse = new HttpResponseDTO(httpResponse);
             }
-            if (expectation.getHttpForward() != null) {
-                httpForward = new HttpForwardDTO(expectation.getHttpForward());
+            HttpForward httpForward = expectation.getHttpForward();
+            if (httpForward != null) {
+                this.httpForward = new HttpForwardDTO(httpForward);
             }
-            if (expectation.getHttpCallback() != null) {
-                httpCallback = new HttpCallbackDTO(expectation.getHttpCallback());
+            HttpCallback httpCallback = expectation.getHttpCallback();
+            if (httpCallback != null) {
+                this.httpCallback = new HttpCallbackDTO(httpCallback);
             }
-            if (expectation.getTimes() != null) {
-                times = new TimesDTO(expectation.getTimes());
+            Times times = expectation.getTimes();
+            if (times != null) {
+                this.times = new TimesDTO(times);
             }
         }
     }

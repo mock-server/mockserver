@@ -12,9 +12,20 @@ public class Not extends ObjectWithJsonToString {
         return t;
     }
 
+    public static <T extends Not> T not(T t, Boolean not) {
+        if (not) {
+            t.not = true;
+        }
+        return t;
+    }
+
     public boolean isNot() {
         return not != null && not;
     }
 
     public Boolean getNot() { return not; }
+
+    public void setNot(Boolean not) {
+        this.not = not;
+    }
 }

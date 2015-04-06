@@ -57,21 +57,20 @@ public class HttpRequestDTO extends NotDTO {
                 .withPath(path)
                 .withHeaders(Lists.transform(headers, new Function<HeaderDTO, Header>() {
                     public Header apply(HeaderDTO header) {
-                        return header.buildObject();
+                        return Not.not(header.buildObject(), header.isNot());
                     }
                 }))
                 .withCookies(Lists.transform(cookies, new Function<CookieDTO, Cookie>() {
                     public Cookie apply(CookieDTO cookie) {
-                        return cookie.buildObject();
+                        return Not.not(cookie.buildObject(), cookie.isNot());
                     }
                 }))
                 .withQueryStringParameters(Lists.transform(queryStringParameters, new Function<ParameterDTO, Parameter>() {
                     public Parameter apply(ParameterDTO parameter) {
-                        return parameter.buildObject();
+                        return Not.not(parameter.buildObject(), parameter.isNot());
                     }
                 }))
-                .withBody((body != null ? body.buildObject() : null));
-
+                .withBody((body != null ? Not.not(body.buildObject(), body.isNot()) : null));
     }
 
     public NottableString getMethod() {

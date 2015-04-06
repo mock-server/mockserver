@@ -81,6 +81,9 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
                     this.bodyMatcher = new BinaryMatcher(binaryBody.getValue());
                     break;
             }
+            if (body.isNot()) {
+                this.bodyMatcher = not(this.bodyMatcher);
+            }
         }
         return this;
     }

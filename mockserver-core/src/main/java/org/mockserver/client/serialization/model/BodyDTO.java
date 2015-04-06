@@ -18,23 +18,32 @@ public abstract class BodyDTO extends NotDTO {
     }
 
     public static BodyDTO createDTO(Body body) {
+        BodyDTO result = null;
+
         if (body instanceof StringBody) {
-            return new StringBodyDTO((StringBody) body);
+            StringBody stringBody = (StringBody) body;
+            result = new StringBodyDTO(stringBody, stringBody.isNot());
         } else if (body instanceof RegexBody) {
-            return new RegexBodyDTO((RegexBody) body);
+            RegexBody regexBody = (RegexBody) body;
+            result = new RegexBodyDTO(regexBody, regexBody.isNot());
         } else if (body instanceof JsonBody) {
-            return new JsonBodyDTO((JsonBody) body);
+            JsonBody jsonBody = (JsonBody) body;
+            result = new JsonBodyDTO(jsonBody, jsonBody.isNot());
         } else if (body instanceof JsonSchemaBody) {
-            return new JsonSchemaBodyDTO((JsonSchemaBody) body);
+            JsonSchemaBody jsonSchemaBody = (JsonSchemaBody) body;
+            result = new JsonSchemaBodyDTO(jsonSchemaBody, jsonSchemaBody.isNot());
         } else if (body instanceof XPathBody) {
-            return new XPathBodyDTO((XPathBody) body);
+            XPathBody xPathBody = (XPathBody) body;
+            result = new XPathBodyDTO(xPathBody, xPathBody.isNot());
         } else if (body instanceof ParameterBody) {
-            return new ParameterBodyDTO((ParameterBody) body);
+            ParameterBody parameterBody = (ParameterBody) body;
+            result = new ParameterBodyDTO(parameterBody, parameterBody.isNot());
         } else if (body instanceof BinaryBody) {
-            return new BinaryBodyDTO((BinaryBody) body);
-        } else {
-            return null;
+            BinaryBody binaryBody = (BinaryBody) body;
+            result = new BinaryBodyDTO(binaryBody, binaryBody.isNot());
         }
+
+        return result;
     }
 
     public Body.Type getType() {

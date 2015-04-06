@@ -1,5 +1,6 @@
 package org.mockserver.client.serialization.model;
 
+import org.mockserver.model.Not;
 import org.mockserver.model.Parameter;
 
 /**
@@ -19,6 +20,6 @@ public class ParameterDTO extends KeyToMultiValueDTO {
     }
 
     public Parameter buildObject() {
-        return new Parameter(getName(), getValues());
+        return Not.not(new Parameter(getName(), getValues()), isNot());
     }
 }
