@@ -31,17 +31,17 @@ public class HttpRequestDTO extends NotDTO {
             path = httpRequest.getPath();
             headers = Lists.transform(httpRequest.getHeaders(), new Function<Header, HeaderDTO>() {
                 public HeaderDTO apply(Header header) {
-                    return new HeaderDTO(header);
+                    return new HeaderDTO(header, header.isNot());
                 }
             });
             cookies = Lists.transform(httpRequest.getCookies(), new Function<Cookie, CookieDTO>() {
                 public CookieDTO apply(Cookie cookie) {
-                    return new CookieDTO(cookie);
+                    return new CookieDTO(cookie, cookie.isNot());
                 }
             });
             queryStringParameters = Lists.transform(httpRequest.getQueryStringParameters(), new Function<Parameter, ParameterDTO>() {
                 public ParameterDTO apply(Parameter parameter) {
-                    return new ParameterDTO(parameter);
+                    return new ParameterDTO(parameter, parameter.isNot());
                 }
             });
             body = BodyDTO.createDTO(httpRequest.getBody());

@@ -1,5 +1,6 @@
 package org.mockserver.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
@@ -11,6 +12,8 @@ import org.slf4j.LoggerFactory;
  * @author jamesdbloom
  */
 public abstract class ObjectWithReflectiveEqualsHashCodeToString {
+
+    @JsonIgnore
     protected Logger logger = LoggerFactory.getLogger(this.getClass());
 
     static {
