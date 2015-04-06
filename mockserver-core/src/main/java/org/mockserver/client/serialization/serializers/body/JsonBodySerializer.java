@@ -3,6 +3,7 @@ package org.mockserver.client.serialization.serializers.body;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import org.mockserver.matchers.JsonBodyMatchType;
 import org.mockserver.model.JsonBody;
 
 import java.io.IOException;
@@ -24,6 +25,9 @@ public class JsonBodySerializer extends StdSerializer<JsonBody> {
         }
         jgen.writeStringField("type", jsonBody.getType().name());
         jgen.writeStringField("json", jsonBody.getValue());
+        if (jsonBody.getMatchType() != JsonBody.DEFAULT_MATCH_TYPE) {
+            jgen.writeStringField("matchType", jsonBody.getMatchType().name());
+        }
         jgen.writeEndObject();
     }
 }
