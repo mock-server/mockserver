@@ -13,7 +13,7 @@ Gem::Specification.new do |spec|
   spec.description = 'A Ruby Client for MockServer that enables easy mocking of any system you integrate with via HTTP or HTTPS (i.e. services, web sites, etc)'
 
   spec.required_ruby_version     = '>= 1.9'
-  spec.required_rubygems_version = '~> 1'
+  spec.required_rubygems_version = '~> 2'
 
   spec.files         = `git ls-files -z`.split("\x0")
   spec.executables   = spec.files.grep(/^bin\//) { |f| File.basename(f) }
