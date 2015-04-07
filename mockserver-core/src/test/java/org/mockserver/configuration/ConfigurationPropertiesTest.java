@@ -3,12 +3,15 @@ package org.mockserver.configuration;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockserver.socket.SSLFactory;
 
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.security.KeyStore;
 import java.util.concurrent.TimeUnit;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -23,6 +26,7 @@ public class ConfigurationPropertiesTest {
         StringWriter stringWriter = new StringWriter();
         System.getProperties().store(stringWriter, "");
         propertiesBeforeTest = stringWriter.toString();
+        System.clearProperty("mockserver.rebuildKeyStore");
     }
 
     @After
@@ -33,7 +37,7 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
-    public void shouldSetAndReadMaxTimeout() {
+    public void shouldSetAndReadMaxSocketTimeout() {
         // given
         System.clearProperty("mockserver.maxTimeout");
 
@@ -46,7 +50,7 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
-    public void shouldThrowRuntimeExceptionForInvalidMaxTimeout() {
+    public void shouldThrowRuntimeExceptionForInvalidMaxSocketTimeout() {
         // given
         System.setProperty("mockserver.maxTimeout", "invalid");
 
@@ -55,9 +59,128 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
-    public void shouldSetAndReadServerStopPort() {
+    public void shouldSetAndReadJavaKeyStoreFilePath() {
         // given
-        System.clearProperty("mockserver.mockServerHttpPort");
+        System.clearProperty("mockserver.javaKeyStoreFilePath");
+
+        // when
+        assertEquals(SSLFactory.defaultKeyStoreFileName(), new ConfigurationProperties().javaKeyStoreFilePath());
+        ConfigurationProperties.javaKeyStoreFilePath("newKeyStoreFile.jks");
+
+        // then
+        assertEquals("newKeyStoreFile.jks", ConfigurationProperties.javaKeyStoreFilePath());
+        assertEquals(true, ConfigurationProperties.rebuildKeyStore());
+    }
+
+    @Test
+    public void shouldSetAndReadJavaKeyStorePassword() {
+        // given
+        System.clearProperty("mockserver.javaKeyStorePassword");
+
+        // when
+        assertEquals(SSLFactory.KEY_STORE_PASSWORD, new ConfigurationProperties().javaKeyStorePassword());
+        ConfigurationProperties.javaKeyStorePassword("newPassword");
+
+        // then
+        assertEquals("newPassword", ConfigurationProperties.javaKeyStorePassword());
+        assertEquals(true, ConfigurationProperties.rebuildKeyStore());
+    }
+
+    @Test
+    public void shouldSetAndReadJavaKeyStoreType() {
+        // given
+        System.clearProperty("mockserver.javaKeyStoreType");
+
+        // when
+        assertEquals(KeyStore.getDefaultType(), new ConfigurationProperties().javaKeyStoreType());
+        ConfigurationProperties.javaKeyStoreType("PKCS11");
+
+        // then
+        assertEquals("PKCS11", ConfigurationProperties.javaKeyStoreType());
+        assertEquals(true, ConfigurationProperties.rebuildKeyStore());
+    }
+
+    @Test
+    public void shouldSetAndReadDeleteGeneratedKeyStoreOnExit() {
+        // given
+        System.clearProperty("mockserver.deleteGeneratedKeyStoreOnExit");
+
+        // when
+        assertEquals(true, new ConfigurationProperties().deleteGeneratedKeyStoreOnExit());
+        ConfigurationProperties.deleteGeneratedKeyStoreOnExit(false);
+
+        // then
+        assertEquals(false, ConfigurationProperties.deleteGeneratedKeyStoreOnExit());
+    }
+
+    @Test
+    public void shouldSetAndReadSslCertificateDomainName() {
+        // given
+        System.clearProperty("mockserver.sslCertificateDomainName");
+
+        // when
+        assertEquals(SSLFactory.CERTIFICATE_DOMAIN, new ConfigurationProperties().sslCertificateDomainName());
+        ConfigurationProperties.sslCertificateDomainName("newDomain");
+
+        // then
+        assertEquals("newDomain", ConfigurationProperties.sslCertificateDomainName());
+        assertEquals(true, ConfigurationProperties.rebuildKeyStore());
+    }
+
+    @Test
+    public void shouldSetAndReadSslSubjectAlternativeNameDomains() {
+        // given
+        System.clearProperty("mockserver.sslSubjectAlternativeNameDomains");
+
+        // when
+        assertArrayEquals(new String[0], new ConfigurationProperties().sslSubjectAlternativeNameDomains());
+        ConfigurationProperties.sslSubjectAlternativeNameDomains("a", "b", "c", "d");
+
+        // then
+        assertArrayEquals(new String[]{"a", "b", "c", "d"}, ConfigurationProperties.sslSubjectAlternativeNameDomains());
+        assertEquals("a,b,c,d", System.getProperty("mockserver.sslSubjectAlternativeNameDomains"));
+
+        // when
+        ConfigurationProperties.addSslSubjectAlternativeNameDomains("e", "f", "g");
+
+        // then
+        assertArrayEquals(new String[]{"a", "b", "c", "d", "e", "f", "g"}, ConfigurationProperties.sslSubjectAlternativeNameDomains());
+        assertEquals("a,b,c,d,e,f,g", System.getProperty("mockserver.sslSubjectAlternativeNameDomains"));
+        assertEquals(true, ConfigurationProperties.rebuildKeyStore());
+    }
+
+    @Test
+    public void shouldSetAndReadSslSubjectAlternativeNameIps() {
+        // given
+        System.clearProperty("mockserver.sslSubjectAlternativeNameIps");
+
+        // when
+        assertArrayEquals(new String[0], new ConfigurationProperties().sslSubjectAlternativeNameIps());
+        ConfigurationProperties.sslSubjectAlternativeNameIps("1", "2", "3", "4");
+
+        // then
+        assertArrayEquals(new String[]{"1", "2", "3", "4"}, ConfigurationProperties.sslSubjectAlternativeNameIps());
+        assertEquals("1,2,3,4", System.getProperty("mockserver.sslSubjectAlternativeNameIps"));
+        assertEquals(true, ConfigurationProperties.rebuildKeyStore());
+    }
+
+    @Test
+    public void shouldSetAndReadRebuildKeyStore() {
+        // given
+        System.clearProperty("mockserver.rebuildKeyStore");
+
+        // when
+        assertEquals(false, new ConfigurationProperties().rebuildKeyStore());
+        ConfigurationProperties.rebuildKeyStore(true);
+
+        // then
+        assertEquals(true, ConfigurationProperties.rebuildKeyStore());
+    }
+
+    @Test
+    public void shouldSetAndReadServerPort() {
+        // given
+        System.clearProperty("mockserver.mockServerPort");
 
         // when
         assertEquals(-1, ConfigurationProperties.mockServerPort());
@@ -68,18 +191,18 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
-    public void shouldThrowRuntimeExceptionForInvalidServerStopPort() {
+    public void shouldThrowRuntimeExceptionForInvalidServerPort() {
         // given
-        System.setProperty("mockserver.mockServerHttpPort", "invalid");
+        System.setProperty("mockserver.mockServerPort", "invalid");
 
         // then
         assertEquals(-1, ConfigurationProperties.mockServerPort());
     }
 
     @Test
-    public void shouldSetAndReadProxyStopPort() {
+    public void shouldSetAndReadProxyPort() {
         // given
-        System.clearProperty("mockserver.proxyHttpPort");
+        System.clearProperty("mockserver.proxyPort");
 
         // when
         assertEquals(-1, ConfigurationProperties.proxyPort());
@@ -90,9 +213,9 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
-    public void shouldThrowRuntimeExceptionForInvalidProxyStopPort() {
+    public void shouldThrowRuntimeExceptionForInvalidProxyPort() {
         // given
-        System.setProperty("mockserver.proxyHttpPort", "invalid");
+        System.setProperty("mockserver.proxyPort", "invalid");
 
         // then
         assertEquals(-1, ConfigurationProperties.proxyPort());

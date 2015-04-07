@@ -227,6 +227,13 @@
                 <version>${netty.version}</version>
             </dependency>
 
+            <!-- gzip HTTP deflater & inflater -->
+            <dependency>
+                <groupId>com.jcraft</groupId>
+                <artifactId>jzlib</artifactId>
+                <version>1.1.2</version>
+            </dependency>
+
             <!-- SSL X509 -->
             <dependency>
                 <groupId>org.bouncycastle</groupId>

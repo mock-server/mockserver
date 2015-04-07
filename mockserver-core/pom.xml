@@ -47,6 +47,12 @@
             <artifactId>netty-transport</artifactId>
         </dependency>
 
+        <!-- gzip HTTP deflater & inflater -->
+        <dependency>
+            <groupId>com.jcraft</groupId>
+            <artifactId>jzlib</artifactId>
+        </dependency>
+
         <!-- SSL X509 -->
         <dependency>
             <groupId>org.bouncycastle</groupId>

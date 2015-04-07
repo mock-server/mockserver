@@ -11,8 +11,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.KeyStore;
-import java.util.Enumeration;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -20,13 +19,14 @@ import java.util.concurrent.TimeUnit;
  */
 public class ConfigurationProperties {
 
-    private static final Logger logger = LoggerFactory.getLogger(ConfigurationProperties.class);
     static final long DEFAULT_MAX_TIMEOUT = 120;
+    static final Logger logger = LoggerFactory.getLogger(ConfigurationProperties.class);
     static final Properties PROPERTIES = readPropertyFile();
 
     // property file config
     public static String propertyFile() {
-        return System.getProperty("mockserver.propertyFile", "mockserver.properties");
+        String property = System.getProperty("mockserver.propertyFile", "mockserver.properties");
+        return property;
     }
 
     // socket config
@@ -45,6 +45,7 @@ public class ConfigurationProperties {
 
     public static void javaKeyStoreFilePath(String keyStoreFilePath) {
         System.setProperty("mockserver.javaKeyStoreFilePath", keyStoreFilePath);
+        rebuildKeyStore(true);
     }
 
     public static String javaKeyStorePassword() {
@@ -53,6 +54,7 @@ public class ConfigurationProperties {
 
     public static void javaKeyStorePassword(String keyStorePassword) {
         System.setProperty("mockserver.javaKeyStorePassword", keyStorePassword);
+        rebuildKeyStore(true);
     }
 
     public static String javaKeyStoreType() {
@@ -61,6 +63,7 @@ public class ConfigurationProperties {
 
     public static void javaKeyStoreType(String keyStoreType) {
         System.setProperty("mockserver.javaKeyStoreType", keyStoreType);
+        rebuildKeyStore(true);
     }
 
     public static boolean deleteGeneratedKeyStoreOnExit() {
@@ -69,6 +72,7 @@ public class ConfigurationProperties {
 
     public static void deleteGeneratedKeyStoreOnExit(boolean deleteGeneratedKeyStoreOnExit) {
         System.setProperty("mockserver.deleteGeneratedKeyStoreOnExit", "" + deleteGeneratedKeyStoreOnExit);
+        rebuildKeyStore(true);
     }
 
     public static String sslCertificateDomainName() {
@@ -77,6 +81,7 @@ public class ConfigurationProperties {
 
     public static void sslCertificateDomainName(String domainName) {
         System.setProperty("mockserver.sslCertificateDomainName", domainName);
+        rebuildKeyStore(true);
     }
 
     public static String[] sslSubjectAlternativeNameDomains() {
@@ -88,8 +93,16 @@ public class ConfigurationProperties {
         }
     }
 
-    public static void sslCertificateDomainName(String[] subjectAlternativeNameDomains) {
-        System.setProperty("mockserver.sslSubjectAlternativeNameDomains", Joiner.on(",").join(subjectAlternativeNameDomains));
+    public static void sslSubjectAlternativeNameDomains(String... subjectAlternativeNameDomains) {
+        addSslSubjectAlternativeNameDomains(subjectAlternativeNameDomains);
+    }
+
+    public static void addSslSubjectAlternativeNameDomains(String... subjectAlternativeNameDomains) {
+        List<String> allSubjectAlternativeNameDomains = new ArrayList<String>();
+        allSubjectAlternativeNameDomains.addAll(Arrays.asList(sslSubjectAlternativeNameDomains()));
+        allSubjectAlternativeNameDomains.addAll(Arrays.asList(subjectAlternativeNameDomains));
+        System.setProperty("mockserver.sslSubjectAlternativeNameDomains", Joiner.on(",").join(allSubjectAlternativeNameDomains));
+        rebuildKeyStore(true);
     }
 
     public static String[] sslSubjectAlternativeNameIps() {
@@ -101,26 +114,35 @@ public class ConfigurationProperties {
         }
     }
 
-    public static void sslSubjectAlternativeNameIps(String[] subjectAlternativeNameIps) {
+    public static void sslSubjectAlternativeNameIps(String... subjectAlternativeNameIps) {
         System.setProperty("mockserver.sslSubjectAlternativeNameIps", Joiner.on(",").join(subjectAlternativeNameIps));
+        rebuildKeyStore(true);
+    }
+
+    public static boolean rebuildKeyStore() {
+        return Boolean.parseBoolean(System.getProperty("mockserver.rebuildKeyStore", "false"));
+    }
+
+    public static void rebuildKeyStore(boolean rebuildKeyStore) {
+        System.setProperty("mockserver.rebuildKeyStore", Boolean.toString(rebuildKeyStore));
     }
 
     // mockserver config
     public static int mockServerPort() {
-        return readIntegerProperty("mockserver.mockServerHttpPort", -1);
+        return readIntegerProperty("mockserver.mockServerPort", -1);
     }
 
     public static void mockServerPort(int port) {
-        System.setProperty("mockserver.mockServerHttpPort", "" + port);
+        System.setProperty("mockserver.mockServerPort", "" + port);
     }
 
     // proxy config
     public static int proxyPort() {
-        return readIntegerProperty("mockserver.proxyHttpPort", -1);
+        return readIntegerProperty("mockserver.proxyPort", -1);
     }
 
     public static void proxyPort(int port) {
-        System.setProperty("mockserver.proxyHttpPort", "" + port);
+        System.setProperty("mockserver.proxyPort", "" + port);
     }
 
     private static Integer readIntegerProperty(String key, int defaultValue) {
