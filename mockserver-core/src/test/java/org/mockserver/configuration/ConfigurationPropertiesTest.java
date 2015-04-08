@@ -9,10 +9,13 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.security.KeyStore;
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.assertArrayEquals;
+import static org.hamcrest.collection.IsEmptyCollection.empty;
+import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 /**
  * @author jamesdbloom
@@ -133,18 +136,41 @@ public class ConfigurationPropertiesTest {
         System.clearProperty("mockserver.sslSubjectAlternativeNameDomains");
 
         // when
-        assertArrayEquals(new String[0], new ConfigurationProperties().sslSubjectAlternativeNameDomains());
+        assertThat(Arrays.asList(new ConfigurationProperties().sslSubjectAlternativeNameDomains()), empty());
         ConfigurationProperties.sslSubjectAlternativeNameDomains("a", "b", "c", "d");
 
         // then
-        assertArrayEquals(new String[]{"a", "b", "c", "d"}, ConfigurationProperties.sslSubjectAlternativeNameDomains());
+        assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()), containsInAnyOrder("a", "b", "c", "d"));
+        assertEquals("a,b,c,d", System.getProperty("mockserver.sslSubjectAlternativeNameDomains"));
+        assertEquals(true, ConfigurationProperties.rebuildKeyStore());
+    }
+
+    @Test
+    public void shouldAddSslSubjectAlternativeNameDomains() {
+        // given
+        System.clearProperty("mockserver.sslSubjectAlternativeNameDomains");
+
+        // when
+        assertThat(Arrays.asList(new ConfigurationProperties().sslSubjectAlternativeNameDomains()), empty());
+        ConfigurationProperties.sslSubjectAlternativeNameDomains("a", "b", "c", "d");
+
+        // then
+        assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()), containsInAnyOrder("a", "b", "c", "d"));
         assertEquals("a,b,c,d", System.getProperty("mockserver.sslSubjectAlternativeNameDomains"));
 
         // when
         ConfigurationProperties.addSslSubjectAlternativeNameDomains("e", "f", "g");
 
-        // then
-        assertArrayEquals(new String[]{"a", "b", "c", "d", "e", "f", "g"}, ConfigurationProperties.sslSubjectAlternativeNameDomains());
+        // then - add subject alternative domain names
+        assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()), containsInAnyOrder("a", "b", "c", "d", "e", "f", "g"));
+        assertEquals("a,b,c,d,e,f,g", System.getProperty("mockserver.sslSubjectAlternativeNameDomains"));
+        assertEquals(true, ConfigurationProperties.rebuildKeyStore());
+
+        // when
+        ConfigurationProperties.addSslSubjectAlternativeNameDomains("e", "f", "g");
+
+        // then - do not add duplicate subject alternative domain names
+        assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()), containsInAnyOrder("a", "b", "c", "d", "e", "f", "g"));
         assertEquals("a,b,c,d,e,f,g", System.getProperty("mockserver.sslSubjectAlternativeNameDomains"));
         assertEquals(true, ConfigurationProperties.rebuildKeyStore());
     }
@@ -155,11 +181,11 @@ public class ConfigurationPropertiesTest {
         System.clearProperty("mockserver.sslSubjectAlternativeNameIps");
 
         // when
-        assertArrayEquals(new String[0], new ConfigurationProperties().sslSubjectAlternativeNameIps());
+        assertThat(Arrays.asList(new ConfigurationProperties().sslSubjectAlternativeNameIps()), empty());
         ConfigurationProperties.sslSubjectAlternativeNameIps("1", "2", "3", "4");
 
         // then
-        assertArrayEquals(new String[]{"1", "2", "3", "4"}, ConfigurationProperties.sslSubjectAlternativeNameIps());
+        assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameIps()), containsInAnyOrder("1", "2", "3", "4"));
         assertEquals("1,2,3,4", System.getProperty("mockserver.sslSubjectAlternativeNameIps"));
         assertEquals(true, ConfigurationProperties.rebuildKeyStore());
     }

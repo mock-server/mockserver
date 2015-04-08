@@ -97,12 +97,19 @@ public class ConfigurationProperties {
         addSslSubjectAlternativeNameDomains(subjectAlternativeNameDomains);
     }
 
-    public static void addSslSubjectAlternativeNameDomains(String... subjectAlternativeNameDomains) {
-        List<String> allSubjectAlternativeNameDomains = new ArrayList<String>();
-        allSubjectAlternativeNameDomains.addAll(Arrays.asList(sslSubjectAlternativeNameDomains()));
-        allSubjectAlternativeNameDomains.addAll(Arrays.asList(subjectAlternativeNameDomains));
-        System.setProperty("mockserver.sslSubjectAlternativeNameDomains", Joiner.on(",").join(allSubjectAlternativeNameDomains));
-        rebuildKeyStore(true);
+    public static void addSslSubjectAlternativeNameDomains(String... newSubjectAlternativeNameDomains) {
+        boolean subjectAlternativeDomainsModified = false;
+        Set<String> allSubjectAlternativeDomains = new TreeSet<String>();
+        Collections.addAll(allSubjectAlternativeDomains, sslSubjectAlternativeNameDomains());
+        for (String subjectAlternativeDomain : newSubjectAlternativeNameDomains) {
+            if (allSubjectAlternativeDomains.add(subjectAlternativeDomain)) {
+                subjectAlternativeDomainsModified = true;
+            }
+        }
+        if (subjectAlternativeDomainsModified) {
+            System.setProperty("mockserver.sslSubjectAlternativeNameDomains", Joiner.on(",").join(allSubjectAlternativeDomains));
+            rebuildKeyStore(true);
+        }
     }
 
     public static String[] sslSubjectAlternativeNameIps() {
