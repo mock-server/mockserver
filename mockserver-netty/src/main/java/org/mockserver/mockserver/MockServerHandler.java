@@ -130,7 +130,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                 .withStatusCode(responseStatus.code())
                 .withBody(body);
         if (!body.isEmpty()) {
-            response.withHeader(header(HttpHeaders.Names.CONTENT_TYPE, contentType + "; charset=utf-8"));
+            response.updateHeader(header(HttpHeaders.Names.CONTENT_TYPE, contentType + "; charset=utf-8"));
         }
         writeResponse(ctx, request, response);
     }
@@ -139,14 +139,12 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
         if (response == null) {
             response = notFoundResponse();
         }
-        if (response.getHeader(CONTENT_LENGTH).isEmpty()) {
-            response.withHeader(header(CONTENT_LENGTH, response.getBody().getRawBytes().length));
-        }
+        response.updateHeader(header(CONTENT_LENGTH, response.getBody().getRawBytes().length));
         if (request.isKeepAlive()) {
-            response.withHeader(header(CONNECTION, HttpHeaders.Values.KEEP_ALIVE));
+            response.updateHeader(header(CONNECTION, HttpHeaders.Values.KEEP_ALIVE));
             ctx.write(response);
         } else {
-            response.withHeader(header(CONNECTION, HttpHeaders.Values.CLOSE));
+            response.updateHeader(header(CONNECTION, HttpHeaders.Values.CLOSE));
             ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
         }
     }

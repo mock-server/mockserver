@@ -165,17 +165,17 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
                 response()
                         .withStatusCode(responseStatus.code())
                         .withBody(body)
-                        .withHeader(header(HttpHeaders.Names.CONTENT_TYPE, contentType + "; charset=utf-8"))
+                        .updateHeader(header(HttpHeaders.Names.CONTENT_TYPE, contentType + "; charset=utf-8"))
         );
     }
 
     private void writeResponse(ChannelHandlerContext ctx, HttpRequest request, HttpResponse response) {
-        response.withHeader(header(CONTENT_LENGTH, response.getBodyAsString().getBytes().length));
+        response.updateHeader(header(CONTENT_LENGTH, response.getBody().getRawBytes().length));
         if (request.isKeepAlive()) {
-            response.withHeader(header(CONNECTION, HttpHeaders.Values.KEEP_ALIVE));
+            response.updateHeader(header(CONNECTION, HttpHeaders.Values.KEEP_ALIVE));
             ctx.write(response);
         } else {
-            response.withHeader(header(CONNECTION, HttpHeaders.Values.CLOSE));
+            response.updateHeader(header(CONNECTION, HttpHeaders.Values.CLOSE));
             ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
         }
     }
