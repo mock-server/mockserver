@@ -308,6 +308,11 @@
                 <scope>runtime</scope>
                 <optional>true</optional> <!-- do not impose on project importing mock-server -->
             </dependency>
+            <dependency>
+                <groupId>janino</groupId>
+                <artifactId>janino</artifactId>
+                <version>2.5.10</version>
+            </dependency>
 
             <!-- test -->
             <dependency>

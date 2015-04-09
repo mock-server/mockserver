@@ -123,6 +123,9 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
             } else {
 
                 HttpResponse response = sendRequest(filters.applyOnRequestFilters(request));
+                if (logger.isInfoEnabled()) {
+                    logger.info("\n returning response:\n{}\n for request:\n{}", request.toString().replaceAll("(?m)^", "\t"), request.toString().replaceAll("(?m)^", "\t"));
+                }
                 writeResponse(ctx, request, response);
 
             }
