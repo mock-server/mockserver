@@ -28,6 +28,7 @@ import static org.mockserver.model.HttpResponse.notFoundResponse;
  */
 public class LogFilter implements ResponseFilter, RequestFilter {
 
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final CircularMultiMap<HttpRequest, HttpResponse> requestResponseLog = new CircularMultiMap<HttpRequest, HttpResponse>(100, 100);
     private final CircularLinkedList<HttpRequest> requestLog = new CircularLinkedList<HttpRequest>(100);
     private final MatcherBuilder matcherBuilder = new MatcherBuilder();
@@ -155,16 +156,20 @@ public class LogFilter implements ResponseFilter, RequestFilter {
             }
 
             HttpRequest[] allRequestsArray = requestLog.toArray(new HttpRequest[requestLog.size()]);
+            String message = "Request not found " + verification.getTimes() + ", expected:<" + httpRequestSerializer.serialize(verification.getHttpRequest()) + "> but was:<" + (allRequestsArray.length == 1 ? httpRequestSerializer.serialize(allRequestsArray[0]) : httpRequestSerializer.serialize(allRequestsArray)) + ">";
             if (verification.getTimes().getCount() != 0 && matchingRequests.isEmpty()) {
-                return "Request not found " + verification.getTimes() + ", expected:<" + httpRequestSerializer.serialize(verification.getHttpRequest()) + "> but was:<" + (allRequestsArray.length == 1 ? httpRequestSerializer.serialize(allRequestsArray[0]) : httpRequestSerializer.serialize(allRequestsArray)) + ">";
+                logger.info(message);
+                return message;
             }
             if (verification.getTimes().isExact()) {
                 if (matchingRequests.size() != verification.getTimes().getCount()) {
-                    return "Request not found " + verification.getTimes() + ", expected:<" + httpRequestSerializer.serialize(verification.getHttpRequest()) + "> but was:<" + (allRequestsArray.length == 1 ? httpRequestSerializer.serialize(allRequestsArray[0]) : httpRequestSerializer.serialize(allRequestsArray)) + ">";
+                    logger.info(message);
+                    return message;
                 }
             } else {
                 if (matchingRequests.size() < verification.getTimes().getCount()) {
-                    return "Request not found " + verification.getTimes() + ", expected:<" + httpRequestSerializer.serialize(verification.getHttpRequest()) + "> but was:<" + (allRequestsArray.length == 1 ? httpRequestSerializer.serialize(allRequestsArray[0]) : httpRequestSerializer.serialize(allRequestsArray)) + ">";
+                    logger.info(message);
+                    return message;
                 }
             }
         }
@@ -187,7 +192,9 @@ public class LogFilter implements ResponseFilter, RequestFilter {
                         }
                     }
                     if (!foundRequest) {
-                        return "Request sequence not found, expected:<" + httpRequestSerializer.serialize(verificationSequence.getHttpRequests()) + "> but was:<" + httpRequestSerializer.serialize(requestLog) + ">";
+                        String message = "Request sequence not found, expected:<" + httpRequestSerializer.serialize(verificationSequence.getHttpRequests()) + "> but was:<" + httpRequestSerializer.serialize(requestLog) + ">";
+                        logger.info(message);
+                        return message;
                     }
                 }
             }
