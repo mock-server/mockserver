@@ -90,7 +90,7 @@ public class HttpProxy implements Proxy {
         try {
             hasStarted.get();
         } catch (Exception e) {
-            logger.debug("Exception while waiting for proxy to complete starting up", e);
+            logger.warn("Exception while waiting for proxy to complete starting up", e);
         }
     }
 

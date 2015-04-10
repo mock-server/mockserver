@@ -116,7 +116,7 @@ public class ExpectationSerializerTest {
     public void shouldHandleExceptionWhileSerializingObject() throws IOException {
         // given
         thrown.expect(RuntimeException.class);
-        thrown.expectMessage("Exception while serializing expectation to JSON with value Expectation[httpRequest=<null>,times=<null>,httpRequestMatcher=null,httpResponse=<null>,httpForward=<null>,httpCallback=<null>]");
+        thrown.expectMessage("Exception while serializing expectation to JSON with value { }");
         // and
         when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
         when(objectWriter.writeValueAsString(any(ExpectationDTO.class))).thenThrow(new RuntimeException("TEST EXCEPTION"));
@@ -129,7 +129,7 @@ public class ExpectationSerializerTest {
     public void shouldHandleExceptionWhileSerializingArray() throws IOException {
         // given
         thrown.expect(RuntimeException.class);
-        thrown.expectMessage("Exception while serializing expectation to JSON with value [Expectation[httpRequest=<null>,times=<null>,httpRequestMatcher=null,httpResponse=<null>,httpForward=<null>,httpCallback=<null>]]");
+        thrown.expectMessage("Exception while serializing expectation to JSON with value [{ }]");
         // and
         when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
         when(objectWriter.writeValueAsString(any(ExpectationDTO[].class))).thenThrow(new RuntimeException("TEST EXCEPTION"));

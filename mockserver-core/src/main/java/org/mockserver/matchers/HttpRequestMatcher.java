@@ -130,18 +130,18 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
             boolean headersMatch = matches(headerMatcher, (httpRequest.getHeaders() != null ? new ArrayList<KeyToMultiValue>(httpRequest.getHeaders()) : null));
             boolean cookiesMatch = matches(cookieMatcher, (httpRequest.getCookies() != null ? new ArrayList<KeyAndValue>(httpRequest.getCookies()) : null));
             boolean result = methodMatches && pathMatches && queryStringParametersMatches && bodyMatches && headersMatch && cookiesMatch;
-            if (!result && logger.isDebugEnabled()) {
-                logger.debug("\n\nMatcher:" + System.getProperty("line.separator") + System.getProperty("line.separator") +
-                        "[" + this + "]" + System.getProperty("line.separator") + System.getProperty("line.separator") +
-                        "did" + (not ? " not" : "") + " match request:" + System.getProperty("line.separator") + System.getProperty("line.separator") +
-                        "[" + httpRequest + "]" + System.getProperty("line.separator") + System.getProperty("line.separator") +
+            if (!result && logger.isInfoEnabled()) {
+                logger.info("request:" + System.getProperty("line.separator") + System.getProperty("line.separator") +
+                        String.valueOf(httpRequest).replaceAll("(?m)^", "\t") + System.getProperty("line.separator") + System.getProperty("line.separator") +
+                        "DID" + (not ? " NOT" : "") + " match expectation:" + System.getProperty("line.separator") + System.getProperty("line.separator") +
+                        String.valueOf(this).replaceAll("(?m)^", "\t") + System.getProperty("line.separator") + System.getProperty("line.separator") +
                         "because:" + System.getProperty("line.separator") + System.getProperty("line.separator") +
-                        "methodMatches = " + methodMatches + "" + System.getProperty("line.separator") +
-                        "pathMatches = " + pathMatches + "" + System.getProperty("line.separator") +
-                        "queryStringParametersMatch = " + queryStringParametersMatches + "" + System.getProperty("line.separator") +
-                        "bodyMatches = " + bodyMatches + "" + System.getProperty("line.separator") +
-                        "headersMatch = " + headersMatch + "" + System.getProperty("line.separator") +
-                        "cookiesMatch = " + cookiesMatch);
+                        "methodMatches = " + methodMatches + System.getProperty("line.separator") +
+                        "pathMatches = " + pathMatches + System.getProperty("line.separator") +
+                        "queryStringParametersMatch = " + queryStringParametersMatches + System.getProperty("line.separator") +
+                        "bodyMatches = " + bodyMatches + System.getProperty("line.separator") +
+                        "headersMatch = " + headersMatch + System.getProperty("line.separator") +
+                        "cookiesMatch = " + cookiesMatch + System.getProperty("line.separator"));
             }
             return httpRequest.isNot() == (this.httpRequest.isNot() == (not != result));
         } else {

@@ -16,6 +16,8 @@ import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.verify.Verification;
+import org.mockserver.verify.VerificationSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,6 +61,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
                 Expectation expectation = expectationSerializer.deserialize(request.getBodyAsString());
                 mockServerMatcher.when(expectation.getHttpRequest(), expectation.getTimes()).thenRespond(expectation.getHttpResponse(false)).thenForward(expectation.getHttpForward()).thenCallback(expectation.getHttpCallback());
+                infoLog("creating expectation:{}", expectation);
                 writeResponse(ctx, request, HttpResponseStatus.CREATED);
 
             } else if (request.matches("PUT", "/clear")) {
@@ -66,12 +69,14 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                 org.mockserver.model.HttpRequest httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
                 logFilter.clear(httpRequest);
                 mockServerMatcher.clear(httpRequest);
+                infoLog("clearing expectations and request logs that match:{}", httpRequest);
                 writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
 
             } else if (request.matches("PUT", "/reset")) {
 
                 logFilter.reset();
                 mockServerMatcher.reset();
+                infoLog("resetting all expectations and request logs");
                 writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
 
             } else if (request.matches("PUT", "/dumpToLog")) {
@@ -86,7 +91,9 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
             } else if (request.matches("PUT", "/verify")) {
 
-                String result = logFilter.verify(verificationSerializer.deserialize(request.getBodyAsString()));
+                Verification verification = verificationSerializer.deserialize(request.getBodyAsString());
+                infoLog("verifying:{}", verification);
+                String result = logFilter.verify(verification);
                 if (result.isEmpty()) {
                     writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
                 } else {
@@ -95,7 +102,9 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
             } else if (request.matches("PUT", "/verifySequence")) {
 
-                String result = logFilter.verify(verificationSequenceSerializer.deserialize(request.getBodyAsString()));
+                VerificationSequence verificationSequence = verificationSequenceSerializer.deserialize(request.getBodyAsString());
+                String result = logFilter.verify(verificationSequence);
+                infoLog("verifying sequence:{}", verificationSequence);
                 if (result.isEmpty()) {
                     writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
                 } else {
@@ -111,7 +120,9 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
             } else {
 
-                writeResponse(ctx, request, actionHandler.processAction(mockServerMatcher.handle(request), request));
+                HttpResponse response = actionHandler.processAction(mockServerMatcher.handle(request), request);
+                infoLog("returning response:{}" + System.getProperty("line.separator") + " for request:{}", response, request);
+                writeResponse(ctx, request, response);
 
             }
         } catch (Exception e) {
@@ -119,6 +130,16 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
             writeResponse(ctx, request, HttpResponseStatus.BAD_REQUEST);
         }
 
+    }
+
+    private void infoLog(String message, Object... objects) {
+        if (logger.isInfoEnabled()) {
+            String[] indentedObjects = new String[objects.length];
+            for (int i = 0; i < objects.length; i++) {
+                indentedObjects[i] = System.getProperty("line.separator") + System.getProperty("line.separator") + String.valueOf(objects[i]).replaceAll("(?m)^", "\t") + System.getProperty("line.separator");
+            }
+            logger.info(message + System.getProperty("line.separator"), indentedObjects);
+        }
     }
 
     private void writeResponse(ChannelHandlerContext ctx, HttpRequest request, HttpResponseStatus responseStatus) {

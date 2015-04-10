@@ -95,7 +95,7 @@ public class ProxyClient extends AbstractClient {
         try {
             sendRequest(request().withMethod("PUT").withPath(calculatePath("stop")));
         } catch (Exception e) {
-            logger.debug("Failed to send stop request to proxy " + e.getMessage());
+            logger.warn("Failed to send stop request to proxy " + e.getMessage());
         }
         return this;
     }

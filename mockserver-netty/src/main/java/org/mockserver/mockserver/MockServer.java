@@ -85,7 +85,7 @@ public class MockServer {
             // wait for proxy to start all channels
             hasStarted.get();
         } catch (Exception e) {
-            logger.debug("Exception while waiting for MockServer to complete starting up", e);
+            logger.warn("Exception while waiting for MockServer to complete starting up", e);
         }
     }
 
