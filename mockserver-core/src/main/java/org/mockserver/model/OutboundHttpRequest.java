@@ -1,17 +1,17 @@
 package org.mockserver.model;
 
+import java.net.InetSocketAddress;
+
 /**
  * @author jamesdbloom
  */
 public class OutboundHttpRequest extends HttpRequest {
 
-    private final String host;
-    private final Integer port;
+    private final InetSocketAddress destination;
     private final String contextPath;
 
-    public OutboundHttpRequest(String host, Integer port, String contextPath, HttpRequest httpRequest) {
-        this.host = host;
-        this.port = port;
+    public OutboundHttpRequest(InetSocketAddress destination, String contextPath, HttpRequest httpRequest) {
+        this.destination = destination;
         this.contextPath = contextPath;
         this.secure = httpRequest.secure;
         this.method = httpRequest.method;
@@ -23,17 +23,16 @@ public class OutboundHttpRequest extends HttpRequest {
         this.isKeepAlive = httpRequest.isKeepAlive;
     }
 
-    public static OutboundHttpRequest outboundRequest(String host, Integer port, String contextPath, HttpRequest httpRequest) {
-        return new OutboundHttpRequest(host, port, contextPath, httpRequest);
+    public static OutboundHttpRequest outboundRequest(String host, int port, String contextPath, HttpRequest httpRequest) {
+        return new OutboundHttpRequest(new InetSocketAddress(host, port), contextPath, httpRequest);
     }
 
-
-    public String getHost() {
-        return host;
+    public static OutboundHttpRequest outboundRequest(InetSocketAddress destination, String contextPath, HttpRequest httpRequest) {
+        return new OutboundHttpRequest(destination, contextPath, httpRequest);
     }
 
-    public Integer getPort() {
-        return port;
+    public InetSocketAddress getDestination() {
+        return destination;
     }
 
     public String getContextPath() {

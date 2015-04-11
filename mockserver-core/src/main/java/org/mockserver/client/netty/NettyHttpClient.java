@@ -35,7 +35,7 @@ public class NettyHttpClient {
                     .group(group)
                     .channel(NioSocketChannel.class)
                     .handler(channelInitializer)
-                    .connect(httpRequest.getHost(), httpRequest.getPort())
+                    .connect(httpRequest.getDestination())
                     .addListener(new ChannelFutureListener() {
                         @Override
                         public void operationComplete(ChannelFuture future) throws Exception {
@@ -59,11 +59,11 @@ public class NettyHttpClient {
 
         } catch (ExecutionException e) {
             if (e.getCause() instanceof ConnectException) {
-                throw new SocketConnectionException("Unable to connect to socket " + httpRequest.getHost() + ":" + httpRequest.getPort(), e.getCause());
+                throw new SocketConnectionException("Unable to connect to socket " + httpRequest.getDestination(), e.getCause());
             } else if (e.getCause() instanceof UnknownHostException) {
-                throw new SocketConnectionException("Unable to resolve host " + httpRequest.getHost(), e.getCause());
+                throw new SocketConnectionException("Unable to resolve host " + httpRequest.getDestination(), e.getCause());
             } else if (e.getCause() instanceof IOException) {
-                throw new SocketCommunicationException("Error while communicating to " + httpRequest.getHost() + ":" + httpRequest.getPort(), e.getCause());
+                throw new SocketCommunicationException("Error while communicating to " + httpRequest.getDestination(), e.getCause());
             } else {
                 throw new RuntimeException("Exception while sending request", e);
             }

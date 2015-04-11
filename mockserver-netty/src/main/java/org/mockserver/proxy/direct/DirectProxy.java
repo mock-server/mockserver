@@ -33,11 +33,11 @@ public class DirectProxy implements Proxy {
     private final EventLoopGroup bossGroup = new NioEventLoopGroup();
     private final EventLoopGroup workerGroup = new NioEventLoopGroup();
     private Channel channel;
-    // ports
-    private final String remoteHost;
-    private final Integer remotePort;
+    // remote socket
+    private InetSocketAddress remoteSocket;
 
     /**
+     *
      * Start the instance using the ports provided
      *
      * @param localPort the local port to expose
@@ -55,14 +55,13 @@ public class DirectProxy implements Proxy {
             throw new IllegalArgumentException("You must specify a remote hostname");
         }
 
-        this.remoteHost = remoteHost;
-        this.remotePort = remotePort;
         hasStarted = SettableFuture.create();
 
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
+                    remoteSocket = new InetSocketAddress(remoteHost, remotePort);
                     channel = new ServerBootstrap()
                             .group(bossGroup, workerGroup)
                             .option(ChannelOption.SO_BACKLOG, 1024)
@@ -71,7 +70,7 @@ public class DirectProxy implements Proxy {
                             .childHandler(new DirectProxyUnificationHandler())
                             .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                             .childAttr(HTTP_PROXY, DirectProxy.this)
-                            .childAttr(REMOTE_SOCKET, new InetSocketAddress(remoteHost, remotePort))
+                            .childAttr(REMOTE_SOCKET, remoteSocket)
                             .childAttr(LOG_FILTER, logFilter)
                             .bind(localPort)
                             .sync()
@@ -127,11 +126,8 @@ public class DirectProxy implements Proxy {
         return ((InetSocketAddress) channel.localAddress()).getPort();
     }
 
-    public String getRemoteHost() {
-        return remoteHost;
+    public InetSocketAddress getRemoteAddress() {
+        return remoteSocket;
     }
 
-    public Integer getRemotePort() {
-        return remotePort;
-    }
 }

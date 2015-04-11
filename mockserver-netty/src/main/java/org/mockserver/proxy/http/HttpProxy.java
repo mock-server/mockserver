@@ -65,7 +65,7 @@ public class HttpProxy implements Proxy {
                             .childHandler(new HttpProxyUnificationHandler())
                             .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                             .childAttr(HTTP_PROXY, HttpProxy.this)
-                            .childAttr(REMOTE_SOCKET, new InetSocketAddress(port))
+                            .childAttr(HTTP_CONNECT_SOCKET, new InetSocketAddress(port))
                             .childAttr(LOG_FILTER, logFilter)
                             .bind(port)
                             .sync()

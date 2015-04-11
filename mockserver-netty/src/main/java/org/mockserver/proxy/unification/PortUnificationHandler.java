@@ -11,10 +11,6 @@ import io.netty.handler.codec.socks.SocksMessageEncoder;
 import io.netty.handler.codec.socks.SocksProtocolVersion;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.util.AttributeKey;
-import org.mockserver.logging.LoggingHandler;
-import org.mockserver.proxy.Proxy;
-import org.mockserver.proxy.connect.HttpConnectHandler;
-import org.mockserver.proxy.http.HttpProxyHandler;
 import org.mockserver.proxy.socks.SocksProxyHandler;
 import org.mockserver.socket.SSLFactory;
 
@@ -29,6 +25,31 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
 
     public PortUnificationHandler() {
         super(false);
+    }
+
+    public static void enabledSslUpstreamAndDownstream(Channel channel) {
+        channel.attr(PortUnificationHandler.SSL_ENABLED_UPSTREAM).set(Boolean.TRUE);
+        channel.attr(PortUnificationHandler.SSL_ENABLED_DOWNSTREAM).set(Boolean.TRUE);
+    }
+
+    public static boolean isSslEnabledUpstream(Channel channel) {
+        if (channel.attr(SSL_ENABLED_UPSTREAM).get() != null) {
+            return channel.attr(SSL_ENABLED_UPSTREAM).get();
+        } else {
+            return false;
+        }
+    }
+
+    public static void enabledSslDownstream(Channel channel) {
+        channel.attr(PortUnificationHandler.SSL_ENABLED_DOWNSTREAM).set(Boolean.TRUE);
+    }
+
+    public static boolean isSslEnabledDownstream(Channel channel) {
+        if (channel.attr(SSL_ENABLED_DOWNSTREAM).get() != null) {
+            return channel.attr(SSL_ENABLED_DOWNSTREAM).get();
+        } else {
+            return false;
+        }
     }
 
     @Override
@@ -134,29 +155,4 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
     }
 
     protected abstract void configurePipeline(ChannelHandlerContext ctx, ChannelPipeline pipeline);
-
-    public static void enabledSslUpstreamAndDownstream(Channel channel) {
-        channel.attr(PortUnificationHandler.SSL_ENABLED_UPSTREAM).set(Boolean.TRUE);
-        channel.attr(PortUnificationHandler.SSL_ENABLED_DOWNSTREAM).set(Boolean.TRUE);
-    }
-
-    public static boolean isSslEnabledUpstream(Channel channel) {
-        if (channel.attr(SSL_ENABLED_UPSTREAM).get() != null) {
-            return channel.attr(SSL_ENABLED_UPSTREAM).get();
-        } else {
-            return false;
-        }
-    }
-
-    public static void enabledSslDownstream(Channel channel) {
-        channel.attr(PortUnificationHandler.SSL_ENABLED_DOWNSTREAM).set(Boolean.TRUE);
-    }
-
-    public static boolean isSslEnabledDownstream(Channel channel) {
-        if (channel.attr(SSL_ENABLED_DOWNSTREAM).get() != null) {
-            return channel.attr(SSL_ENABLED_DOWNSTREAM).get();
-        } else {
-            return false;
-        }
-    }
 }

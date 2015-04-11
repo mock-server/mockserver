@@ -18,15 +18,15 @@ import org.mockserver.logging.LogFormatter;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
-import org.mockserver.verify.Verification;
-import org.mockserver.verify.VerificationSequence;
 import org.mockserver.proxy.Proxy;
 import org.mockserver.proxy.connect.HttpConnectHandler;
 import org.mockserver.proxy.unification.PortUnificationHandler;
+import org.mockserver.verify.Verification;
+import org.mockserver.verify.VerificationSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.sound.sampled.Port;
+import java.net.InetSocketAddress;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONNECTION;
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH;
@@ -39,11 +39,11 @@ import static org.mockserver.model.OutboundHttpRequest.outboundRequest;
 public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private LogFormatter logFormatter = new LogFormatter(logger);
     // mockserver
     private final Proxy server;
     private final LogFilter logFilter;
     private final Filters filters = new Filters();
+    private LogFormatter logFormatter = new LogFormatter(logger);
     // http client
     private NettyHttpClient httpClient = new NettyHttpClient();
     // serializers
@@ -135,7 +135,7 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
             } else {
 
-                HttpResponse response = sendRequest(filters.applyOnRequestFilters(request));
+                HttpResponse response = sendRequest(ctx.channel(), filters.applyOnRequestFilters(request));
                 logFormatter.infoLog("returning response:{}" + System.getProperty("line.separator") + " for request:{}", response, request);
                 writeResponse(ctx, request, response);
 
@@ -147,24 +147,36 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
     }
 
-    private HttpResponse sendRequest(HttpRequest httpRequest) {
+    private HttpResponse sendRequest(Channel channel, HttpRequest httpRequest) {
         // if HttpRequest was set to null by a filter don't send request
         if (httpRequest != null) {
-            String hostHeader = httpRequest.getFirstHeader("Host");
-            if (!Strings.isNullOrEmpty(hostHeader)) {
-                String[] hostHeaderParts = hostHeader.split(":");
+
+
+            InetSocketAddress inetSocketAddress = channel.attr(HttpProxy.REMOTE_SOCKET).get();
+
+            // read remote socket from channel attribute to direct proxy (port forwarding)
+            if (inetSocketAddress != null) {
+                if (inetSocketAddress.getPort() == 443 || inetSocketAddress.getPort() == 8443) {
+                    httpRequest.setSecure(true);
+                }
+            } else if (!Strings.isNullOrEmpty(httpRequest.getFirstHeader("Host"))) {
+                // read remote socket from host header for HTTP proxy
+                String[] hostHeaderParts = httpRequest.getFirstHeader("Host").split(":");
 
                 Integer port = (httpRequest.isSecure() ? 443 : 80); // default
                 if (hostHeaderParts.length > 1) {
                     port = Integer.parseInt(hostHeaderParts[1]);  // non-default
                 }
-                HttpResponse httpResponse = filters.applyOnResponseFilters(httpRequest, httpClient.sendRequest(outboundRequest(hostHeaderParts[0], port, "", httpRequest)));
-                if (httpResponse != null) {
-                    return httpResponse;
-                }
+
+                inetSocketAddress = new InetSocketAddress(hostHeaderParts[0], port);
             } else {
                 logger.error("Host header must be provided for requests being forwarded, the following request does not include the \"Host\" header:" + System.getProperty("line.separator") + httpRequest);
                 throw new IllegalArgumentException("Host header must be provided for requests being forwarded");
+            }
+
+            HttpResponse httpResponse = filters.applyOnResponseFilters(httpRequest, httpClient.sendRequest(outboundRequest(inetSocketAddress, "", httpRequest)));
+            if (httpResponse != null) {
+                return httpResponse;
             }
         }
         return notFoundResponse();

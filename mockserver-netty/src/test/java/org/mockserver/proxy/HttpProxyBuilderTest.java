@@ -3,8 +3,6 @@ package org.mockserver.proxy;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.mockserver.proxy.Proxy;
-import org.mockserver.proxy.ProxyBuilder;
 import org.mockserver.proxy.direct.DirectProxy;
 import org.mockserver.proxy.http.HttpProxy;
 import org.mockserver.socket.PortFactory;
@@ -62,8 +60,8 @@ public class HttpProxyBuilderTest {
             assertThat(httpProxy, is(instanceOf(DirectProxy.class)));
             DirectProxy directProxy = (DirectProxy)httpProxy;
             assertThat(directProxy.getLocalPort(), is(port));
-            assertThat(directProxy.getRemoteHost(), is(directRemoteHost));
-            assertThat(directProxy.getRemotePort(), is(directRemotePort));
+            assertThat(directProxy.getRemoteAddress().getHostName(), is(directRemoteHost));
+            assertThat(directProxy.getRemoteAddress().getPort(), is(directRemotePort));
         } finally {
             httpProxy.stop();
         }

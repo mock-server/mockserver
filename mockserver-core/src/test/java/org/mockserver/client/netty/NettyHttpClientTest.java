@@ -96,7 +96,7 @@ public class NettyHttpClientTest {
 
         // then
         exception.expect(SocketConnectionException.class);
-        exception.expectMessage(containsString("Unable to connect to socket 127.0.0.1:" + freePort));
+        exception.expectMessage(containsString("Unable to connect to socket /127.0.0.1:" + freePort));
 
         // when
         nettyHttpClient.sendRequest(outboundRequest("127.0.0.1", freePort, "", request()));

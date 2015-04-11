@@ -99,11 +99,11 @@ public class MockServerRequestEncoder extends MessageToMessageEncoder<OutboundHt
         }
 
         String port = "";
-        if ((!httpRequest.isSecure() && httpRequest.getPort() != 80) ||
-                (httpRequest.isSecure() && httpRequest.getPort() != 443)) {
-            port = ":" + httpRequest.getPort();
+        if ((!httpRequest.isSecure() && httpRequest.getDestination().getPort() != 80) ||
+                (httpRequest.isSecure() && httpRequest.getDestination().getPort() != 443)) {
+            port = ":" + httpRequest.getDestination().getPort();
         }
-        request.headers().add(HOST, httpRequest.getHost() + port);
+        request.headers().add(HOST, httpRequest.getDestination().getHostName() + port);
         request.headers().set(ACCEPT_ENCODING, GZIP + "," + DEFLATE);
         request.headers().set(CONTENT_LENGTH, request.content().readableBytes());
         if (isKeepAlive(request)) {

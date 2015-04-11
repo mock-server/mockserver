@@ -79,15 +79,25 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
                     }
                 });
 
-        final InetSocketAddress remoteSocket = serverCtx.channel().attr(HttpProxy.REMOTE_SOCKET).get();
+        final InetSocketAddress remoteSocket = getDownstreamSocket(serverCtx.channel());
         bootstrap.connect(remoteSocket).addListener(new ChannelFutureListener() {
             @Override
             public void operationComplete(ChannelFuture future) throws Exception {
                 if (!future.isSuccess()) {
-                    failure("Connection failed to 127.0.0.1:" + remoteSocket, future.cause(), serverCtx, failureResponse(request));
+                    failure("Connection failed to " + remoteSocket, future.cause(), serverCtx, failureResponse(request));
                 }
             }
         });
+    }
+
+    private InetSocketAddress getDownstreamSocket(Channel channel) {
+        if (channel.attr(HttpProxy.REMOTE_SOCKET).get() != null) {
+            return channel.attr(HttpProxy.REMOTE_SOCKET).get();
+        } else if (channel.attr(HttpProxy.HTTP_CONNECT_SOCKET).get() != null) {
+            return channel.attr(HttpProxy.HTTP_CONNECT_SOCKET).get();
+        } else {
+            throw new IllegalStateException("Trying to connect to remote socket but no remote socket has been set");
+        }
     }
 
     @Override
