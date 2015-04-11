@@ -2,9 +2,11 @@ package org.mockserver.matchers;
 
 import com.google.common.base.Charsets;
 import org.mockserver.client.serialization.ObjectMapperFactory;
+import org.mockserver.logging.LogFormatter;
 import org.mockserver.model.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.mockserver.model.NottableString.string;
@@ -14,6 +16,7 @@ import static org.mockserver.model.NottableString.string;
  */
 public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
 
+    private LogFormatter logFormatter = new LogFormatter(logger);
     private HttpRequest httpRequest;
     private RegexStringMatcher methodMatcher = null;
     private RegexStringMatcher pathMatcher = null;
@@ -32,6 +35,7 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
             withHeaders(httpRequest.getHeaders());
             withCookies(httpRequest.getCookies());
         }
+        addFieldsExcludedFromEqualsAndHashCode("logFormatter");
     }
 
     private HttpRequestMatcher withMethod(NottableString method) {
@@ -130,20 +134,25 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
             boolean headersMatch = matches(headerMatcher, (httpRequest.getHeaders() != null ? new ArrayList<KeyToMultiValue>(httpRequest.getHeaders()) : null));
             boolean cookiesMatch = matches(cookieMatcher, (httpRequest.getCookies() != null ? new ArrayList<KeyAndValue>(httpRequest.getCookies()) : null));
             boolean result = methodMatches && pathMatches && queryStringParametersMatches && bodyMatches && headersMatch && cookiesMatch;
-            if (!result && logger.isInfoEnabled()) {
-                logger.info("request:" + System.getProperty("line.separator") + System.getProperty("line.separator") +
-                        String.valueOf(httpRequest).replaceAll("(?m)^", "\t") + System.getProperty("line.separator") + System.getProperty("line.separator") +
-                        "DID" + (not ? " NOT" : "") + " match expectation:" + System.getProperty("line.separator") + System.getProperty("line.separator") +
-                        String.valueOf(this).replaceAll("(?m)^", "\t") + System.getProperty("line.separator") + System.getProperty("line.separator") +
-                        "because:" + System.getProperty("line.separator") + System.getProperty("line.separator") +
-                        "methodMatches = " + methodMatches + System.getProperty("line.separator") +
-                        "pathMatches = " + pathMatches + System.getProperty("line.separator") +
-                        "queryStringParametersMatch = " + queryStringParametersMatches + System.getProperty("line.separator") +
-                        "bodyMatches = " + bodyMatches + System.getProperty("line.separator") +
-                        "headersMatch = " + headersMatch + System.getProperty("line.separator") +
-                        "cookiesMatch = " + cookiesMatch + System.getProperty("line.separator"));
+            boolean resultAfterNotOperatorsApplied = httpRequest.isNot() == (this.httpRequest.isNot() == (not != result));
+            if (logger.isInfoEnabled()) {
+                if (!resultAfterNotOperatorsApplied) {
+                    String because = "" +
+                            "methodMatches = " + methodMatches + System.getProperty("line.separator") +
+                            "pathMatches = " + pathMatches + System.getProperty("line.separator") +
+                            "queryStringParametersMatch = " + queryStringParametersMatches + System.getProperty("line.separator") +
+                            "bodyMatches = " + bodyMatches + System.getProperty("line.separator") +
+                            "headersMatch = " + headersMatch + System.getProperty("line.separator") +
+                            "cookiesMatch = " + cookiesMatch +
+                            (httpRequest.isNot() ? System.getProperty("line.separator") + "request not operator is enabled" : "") +
+                            (this.httpRequest.isNot() ? System.getProperty("line.separator") + "expectation's request not operator is enabled" : "") +
+                            (not ? System.getProperty("line.separator") + "expectation's request matcher not operator is enabled" : "");
+                    logFormatter.infoLog("request:{}" + System.getProperty("line.separator") + " did" + (result ? "" : " not") + " match expectation:{}" + System.getProperty("line.separator") + " because:{}", httpRequest, this, because);
+                } else {
+                    logFormatter.infoLog("request:{}" + System.getProperty("line.separator") + " matched expectation:{}", httpRequest, this);
+                }
             }
-            return httpRequest.isNot() == (this.httpRequest.isNot() == (not != result));
+            return resultAfterNotOperatorsApplied;
         } else {
             return false;
         }

@@ -5,6 +5,7 @@ import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.client.serialization.java.ExpectationToJavaSerializer;
 import org.mockserver.collections.CircularLinkedList;
 import org.mockserver.collections.CircularMultiMap;
+import org.mockserver.logging.LogFormatter;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.matchers.Times;
@@ -28,11 +29,16 @@ import static org.mockserver.model.HttpResponse.notFoundResponse;
  */
 public class LogFilter implements ResponseFilter, RequestFilter {
 
+    // loggers
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    // request / response persistence
     private final CircularMultiMap<HttpRequest, HttpResponse> requestResponseLog = new CircularMultiMap<HttpRequest, HttpResponse>(100, 100);
     private final CircularLinkedList<HttpRequest> requestLog = new CircularLinkedList<HttpRequest>(100);
+    // matcher
     private final MatcherBuilder matcherBuilder = new MatcherBuilder();
+    private LogFormatter logFormatter = new LogFormatter(logger);
     private Logger requestLogger = LoggerFactory.getLogger("REQUEST");
+    private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
 
     @Override
     public synchronized HttpResponse onResponse(HttpRequest httpRequest, HttpResponse httpResponse) {
@@ -141,9 +147,9 @@ public class LogFilter implements ResponseFilter, RequestFilter {
         return expectations.toArray(new Expectation[expectations.size()]);
     }
 
-    private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
-
     public synchronized String verify(Verification verification) {
+        String failureMessage = "";
+
         if (verification != null) {
             List<HttpRequest> matchingRequests = new ArrayList<HttpRequest>();
             if (verification.getHttpRequest() != null) {
@@ -155,30 +161,33 @@ public class LogFilter implements ResponseFilter, RequestFilter {
                 }
             }
 
-            HttpRequest[] allRequestsArray = requestLog.toArray(new HttpRequest[requestLog.size()]);
-            String message = "Request not found " + verification.getTimes() + ", expected:<" + httpRequestSerializer.serialize(verification.getHttpRequest()) + "> but was:<" + (allRequestsArray.length == 1 ? httpRequestSerializer.serialize(allRequestsArray[0]) : httpRequestSerializer.serialize(allRequestsArray)) + ">";
+            boolean verified = true;
+
             if (verification.getTimes().getCount() != 0 && matchingRequests.isEmpty()) {
-                logger.info(message);
-                return message;
+                verified = false;
+            } else if (verification.getTimes().isExact() && matchingRequests.size() != verification.getTimes().getCount()) {
+                verified = false;
+            } else if (matchingRequests.size() < verification.getTimes().getCount()) {
+                verified = false;
             }
-            if (verification.getTimes().isExact()) {
-                if (matchingRequests.size() != verification.getTimes().getCount()) {
-                    logger.info(message);
-                    return message;
-                }
-            } else {
-                if (matchingRequests.size() < verification.getTimes().getCount()) {
-                    logger.info(message);
-                    return message;
-                }
+
+            if (!verified) {
+                HttpRequest[] allRequestsArray = requestLog.toArray(new HttpRequest[requestLog.size()]);
+                String serializedRequestToBeVerified = httpRequestSerializer.serialize(verification.getHttpRequest());
+                String serializedAllRequestInLog = allRequestsArray.length == 1 ? httpRequestSerializer.serialize(allRequestsArray[0]) : httpRequestSerializer.serialize(allRequestsArray);
+                logFormatter.infoLog("request not found " + verification.getTimes() + ", expected:{}" + System.getProperty("line.separator") + " but was:{}", serializedRequestToBeVerified, serializedAllRequestInLog);
+                failureMessage = "Request not found " + verification.getTimes() + ", expected:<" + serializedRequestToBeVerified + "> but was:<" + serializedAllRequestInLog + ">";
             }
         }
 
-        return "";
+        return failureMessage;
     }
 
     public String verify(VerificationSequence verificationSequence) {
+        String failureMessage = "";
+
         if (verificationSequence != null) {
+
             int requestLogCounter = 0;
 
             for (HttpRequest verificationHttpRequest : verificationSequence.getHttpRequests()) {
@@ -192,14 +201,16 @@ public class LogFilter implements ResponseFilter, RequestFilter {
                         }
                     }
                     if (!foundRequest) {
-                        String message = "Request sequence not found, expected:<" + httpRequestSerializer.serialize(verificationSequence.getHttpRequests()) + "> but was:<" + httpRequestSerializer.serialize(requestLog) + ">";
-                        logger.info(message);
-                        return message;
+                        String serializedRequestToBeVerified = httpRequestSerializer.serialize(verificationSequence.getHttpRequests());
+                        String serializedAllRequestInLog = httpRequestSerializer.serialize(requestLog);
+                        failureMessage = "Request sequence not found, expected:<" + serializedRequestToBeVerified + "> but was:<" + serializedAllRequestInLog + ">";
+                        logFormatter.infoLog("request sequence not found, expected:{}" + System.getProperty("line.separator") + " but was:{}", serializedRequestToBeVerified, serializedAllRequestInLog);
+                        break;
                     }
                 }
             }
         }
 
-        return "";
+        return failureMessage;
     }
 }

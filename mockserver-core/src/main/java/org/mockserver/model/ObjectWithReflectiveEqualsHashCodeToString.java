@@ -1,6 +1,7 @@
 package org.mockserver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
@@ -14,6 +15,9 @@ import org.slf4j.LoggerFactory;
 public abstract class ObjectWithReflectiveEqualsHashCodeToString {
 
     @JsonIgnore
+    private String[] fieldsExcludedFromEqualsAndHashCode = new String[]{"logger", "fieldsExcludedFromEqualsAndHashCode"};
+
+    @JsonIgnore
     protected Logger logger = LoggerFactory.getLogger(this.getClass());
 
     static {
@@ -21,7 +25,11 @@ public abstract class ObjectWithReflectiveEqualsHashCodeToString {
     }
 
     protected String[] fieldsExcludedFromEqualsAndHashCode() {
-        return new String[]{"logger"};
+        return fieldsExcludedFromEqualsAndHashCode;
+    }
+
+    protected void addFieldsExcludedFromEqualsAndHashCode(String... toExclude) {
+        fieldsExcludedFromEqualsAndHashCode = ArrayUtils.addAll(fieldsExcludedFromEqualsAndHashCode, toExclude);
     }
 
     @Override
