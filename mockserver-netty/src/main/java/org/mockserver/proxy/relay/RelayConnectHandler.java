@@ -40,7 +40,7 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
 
                                         // downstream
                                         ChannelPipeline downstreamPipeline = clientCtx.channel().pipeline();
-                                        if (PortUnificationHandler.isSslEnabled(serverCtx)) {
+                                        if (PortUnificationHandler.isSslEnabledDownstream(serverCtx.channel())) {
                                             downstreamPipeline.addLast(new SslHandler(SSLFactory.createClientSSLEngine()));
                                         }
 
@@ -59,7 +59,7 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
 
                                         // upstream
                                         ChannelPipeline upstreamPipeline = serverCtx.channel().pipeline();
-                                        if (PortUnificationHandler.isSslEnabled(serverCtx)) {
+                                        if (PortUnificationHandler.isSslEnabledUpstream(serverCtx.channel())) {
                                             upstreamPipeline.addLast(new SslHandler(SSLFactory.createServerSSLEngine()));
                                         }
 
@@ -109,4 +109,10 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
     protected abstract Object successResponse(Object request);
 
     protected abstract Object failureResponse(Object request);
+
+    protected void removeHandler(ChannelPipeline pipeline, Class<? extends ChannelHandler> handlerType) {
+        if (pipeline.get(handlerType) != null) {
+            pipeline.remove(handlerType);
+        }
+    }
 }

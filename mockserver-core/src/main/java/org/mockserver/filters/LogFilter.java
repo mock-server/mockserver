@@ -92,7 +92,7 @@ public class LogFilter implements ResponseFilter, RequestFilter {
                 }
             }
             for (HttpRequest value : new LinkedList<HttpRequest>(requestLog)) {
-                if (httpRequestMatcher.matches(value)) {
+                if (httpRequestMatcher.matches(value, true)) {
                     requestLog.remove(value);
                 }
             }
@@ -107,7 +107,7 @@ public class LogFilter implements ResponseFilter, RequestFilter {
         if (httpRequest != null) {
             HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
             for (Map.Entry<HttpRequest, HttpResponse> entry : requestResponseLog.entrySet()) {
-                if (httpRequestMatcher.matches(entry.getKey())) {
+                if (httpRequestMatcher.matches(entry.getKey(), true)) {
                     if (asJava) {
                         requestLogger.warn(expectationToJavaSerializer.serializeAsJava(0, new Expectation(entry.getKey(), Times.once()).thenRespond(entry.getValue())));
                     } else {
@@ -132,7 +132,7 @@ public class LogFilter implements ResponseFilter, RequestFilter {
             HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
             for (HttpRequest key : requestResponseLog.keySet()) {
                 for (HttpResponse value : requestResponseLog.getAll(key)) {
-                    if (httpRequestMatcher.matches(key)) {
+                    if (httpRequestMatcher.matches(key, true)) {
                         expectations.add(new Expectation(key, Times.once()).thenRespond(value));
                     }
                 }
@@ -155,7 +155,7 @@ public class LogFilter implements ResponseFilter, RequestFilter {
             if (verification.getHttpRequest() != null) {
                 HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(verification.getHttpRequest());
                 for (HttpRequest httpRequest : requestLog) {
-                    if (httpRequestMatcher.matches(httpRequest)) {
+                    if (httpRequestMatcher.matches(httpRequest, true)) {
                         matchingRequests.add(httpRequest);
                     }
                 }
@@ -195,7 +195,7 @@ public class LogFilter implements ResponseFilter, RequestFilter {
                     HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(verificationHttpRequest);
                     boolean foundRequest = false;
                     for (; !foundRequest && requestLogCounter < requestLog.size(); requestLogCounter++) {
-                        if (httpRequestMatcher.matches(requestLog.get(requestLogCounter))) {
+                        if (httpRequestMatcher.matches(requestLog.get(requestLogCounter), true)) {
                             // move on to next request
                             foundRequest = true;
                         }

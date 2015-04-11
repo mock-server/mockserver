@@ -26,6 +26,8 @@ import org.mockserver.proxy.unification.PortUnificationHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.sound.sampled.Port;
+
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONNECTION;
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH;
 import static org.mockserver.model.Header.header;
@@ -66,7 +68,7 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
             if (request.getMethod().getValue().equals("CONNECT")) {
 
                 // assume CONNECT always for SSL
-                ctx.channel().attr(PortUnificationHandler.SSL_ENABLED).set(Boolean.TRUE);
+                PortUnificationHandler.enabledSslUpstreamAndDownstream(ctx.channel());
                 // add Subject Alternative Name for SSL certificate
                 ConfigurationProperties.addSslSubjectAlternativeNameDomains(
                         StringUtils.substringBefore(request.getPath().getValue(), ":")

@@ -40,6 +40,7 @@
         <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
             <evaluator>
                 <expression>level &gt;= INFO &amp;&amp; level &lt; WARN</expression>
+                <!--<expression>level &lt; WARN</expression>-->
             </evaluator>
             <OnMismatch>DENY</OnMismatch>
             <OnMatch>NEUTRAL</OnMatch>

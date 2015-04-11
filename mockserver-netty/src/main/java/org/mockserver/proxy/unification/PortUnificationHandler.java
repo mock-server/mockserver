@@ -1,10 +1,7 @@
 package org.mockserver.proxy.unification;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelPipeline;
-import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.*;
 import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
@@ -27,7 +24,8 @@ import org.mockserver.socket.SSLFactory;
 @ChannelHandler.Sharable
 public abstract class PortUnificationHandler extends SimpleChannelInboundHandler<ByteBuf> {
 
-    public static final AttributeKey<Boolean> SSL_ENABLED = AttributeKey.valueOf("PROXY_SSL_ENABLED");
+    public static final AttributeKey<Boolean> SSL_ENABLED_UPSTREAM = AttributeKey.valueOf("PROXY_SSL_ENABLED_UPSTREAM");
+    public static final AttributeKey<Boolean> SSL_ENABLED_DOWNSTREAM = AttributeKey.valueOf("SSL_ENABLED_DOWNSTREAM");
 
     public PortUnificationHandler() {
         super(false);
@@ -36,7 +34,7 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) throws Exception {
         // Will use the first five bytes to detect a protocol.
-        if (msg.readableBytes() < 4) {
+        if (msg.readableBytes() < 3) {
             return;
         }
 
@@ -101,7 +99,7 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
         pipeline.addFirst(new SslHandler(SSLFactory.createServerSSLEngine()));
 
         // re-unify (with SSL enabled)
-        ctx.channel().attr(SSL_ENABLED).set(Boolean.TRUE);
+        PortUnificationHandler.enabledSslUpstreamAndDownstream(ctx.channel());
         ctx.pipeline().fireChannelRead(msg);
     }
 
@@ -117,9 +115,11 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
 
     private void switchToHttp(ChannelHandlerContext ctx, ByteBuf msg) {
         ChannelPipeline pipeline = ctx.pipeline();
-        pipeline.addLast(new HttpServerCodec());
-        pipeline.addLast(new HttpContentDecompressor());
-        pipeline.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
+
+        addLastIfNotPresent(pipeline, new HttpServerCodec());
+        addLastIfNotPresent(pipeline, new HttpContentDecompressor());
+        addLastIfNotPresent(pipeline, new HttpObjectAggregator(Integer.MAX_VALUE));
+
         configurePipeline(ctx, pipeline);
         pipeline.remove(this);
 
@@ -127,11 +127,34 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
         ctx.fireChannelRead(msg);
     }
 
+    protected void addLastIfNotPresent(ChannelPipeline pipeline, ChannelHandler channelHandler) {
+        if (pipeline.get(channelHandler.getClass()) == null) {
+            pipeline.addLast(channelHandler);
+        }
+    }
+
     protected abstract void configurePipeline(ChannelHandlerContext ctx, ChannelPipeline pipeline);
 
-    public static boolean isSslEnabled(ChannelHandlerContext ctx) {
-        if (ctx.channel().attr(SSL_ENABLED).get() != null) {
-            return ctx.channel().attr(SSL_ENABLED).get();
+    public static void enabledSslUpstreamAndDownstream(Channel channel) {
+        channel.attr(PortUnificationHandler.SSL_ENABLED_UPSTREAM).set(Boolean.TRUE);
+        channel.attr(PortUnificationHandler.SSL_ENABLED_DOWNSTREAM).set(Boolean.TRUE);
+    }
+
+    public static boolean isSslEnabledUpstream(Channel channel) {
+        if (channel.attr(SSL_ENABLED_UPSTREAM).get() != null) {
+            return channel.attr(SSL_ENABLED_UPSTREAM).get();
+        } else {
+            return false;
+        }
+    }
+
+    public static void enabledSslDownstream(Channel channel) {
+        channel.attr(PortUnificationHandler.SSL_ENABLED_DOWNSTREAM).set(Boolean.TRUE);
+    }
+
+    public static boolean isSslEnabledDownstream(Channel channel) {
+        if (channel.attr(SSL_ENABLED_DOWNSTREAM).get() != null) {
+            return channel.attr(SSL_ENABLED_DOWNSTREAM).get();
         } else {
             return false;
         }

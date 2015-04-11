@@ -37,7 +37,7 @@ public class DirectProxyUpstreamHandler extends SimpleChannelInboundHandler<Full
                     public void initChannel(final SocketChannel socketChannel) throws Exception {
                         // downstream
                         ChannelPipeline downstreamPipeline = socketChannel.pipeline();
-                        if (PortUnificationHandler.isSslEnabled(ctx)) {
+                        if (PortUnificationHandler.isSslEnabledDownstream(ctx.channel())) {
                             downstreamPipeline.addLast(new SslHandler(SSLFactory.createClientSSLEngine()));
                         }
 

@@ -113,6 +113,10 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
     }
 
     public boolean matches(HttpRequest httpRequest) {
+        return matches(httpRequest, false);
+    }
+
+    public boolean matches(HttpRequest httpRequest, boolean logMatchResults) {
         if (httpRequest == this.httpRequest) {
             return true;
         } else if (this.httpRequest == null) {
@@ -135,7 +139,7 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
             boolean cookiesMatch = matches(cookieMatcher, (httpRequest.getCookies() != null ? new ArrayList<KeyAndValue>(httpRequest.getCookies()) : null));
             boolean result = methodMatches && pathMatches && queryStringParametersMatches && bodyMatches && headersMatch && cookiesMatch;
             boolean resultAfterNotOperatorsApplied = httpRequest.isNot() == (this.httpRequest.isNot() == (not != result));
-            if (logger.isInfoEnabled()) {
+            if (logMatchResults && logger.isInfoEnabled()) {
                 if (!resultAfterNotOperatorsApplied) {
                     String because = "" +
                             "methodMatches = " + methodMatches + System.getProperty("line.separator") +

@@ -73,7 +73,7 @@ public class MockServerMatcher extends ObjectWithReflectiveEqualsHashCodeToStrin
         if (httpRequest != null) {
             HttpRequestMatcher httpRequestMatcher = new MatcherBuilder().transformsToMatcher(httpRequest);
             for (Expectation expectation : new ArrayList<Expectation>(expectations)) {
-                if (httpRequestMatcher.matches(expectation.getHttpRequest())) {
+                if (httpRequestMatcher.matches(expectation.getHttpRequest(), true)) {
                     if (this.expectations.contains(expectation)) {
                         this.expectations.remove(expectation);
                     }

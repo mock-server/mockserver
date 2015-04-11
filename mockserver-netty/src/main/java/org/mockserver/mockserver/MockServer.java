@@ -50,16 +50,11 @@ public class MockServer {
             @Override
             public void run() {
                 try {
-                    if (port == 0) {
-                        logger.info("MockServer starting up on a free port");
-                    } else {
-                        logger.info("MockServer starting up on port: {}", port);
-                    }
-
                     channel = new ServerBootstrap()
                             .group(bossGroup, workerGroup)
-                            .channel(NioServerSocketChannel.class)
                             .option(ChannelOption.SO_BACKLOG, 1024)
+                            .channel(NioServerSocketChannel.class)
+                            .childOption(ChannelOption.AUTO_READ, true)
                             .childHandler(new MockServerInitializer(mockServerMatcher, MockServer.this, false))
                             .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                             .childAttr(LOG_FILTER, logFilter)
@@ -67,7 +62,7 @@ public class MockServer {
                             .sync()
                             .channel();
 
-                    logger.info("MockServer successfully started on port: {}", ((InetSocketAddress) channel.localAddress()).getPort());
+                    logger.info("MockServer started on port: {}", ((InetSocketAddress) channel.localAddress()).getPort());
 
                     hasStarted.set("STARTED");
 
@@ -82,7 +77,6 @@ public class MockServer {
         }).start();
 
         try {
-            // wait for proxy to start all channels
             hasStarted.get();
         } catch (Exception e) {
             logger.warn("Exception while waiting for MockServer to complete starting up", e);

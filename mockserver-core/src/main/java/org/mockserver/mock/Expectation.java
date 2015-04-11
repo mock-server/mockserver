@@ -39,6 +39,10 @@ public class Expectation extends ObjectWithJsonToString {
         }
     }
 
+    public HttpResponse getHttpResponse() {
+        return httpResponse;
+    }
+
     public HttpForward getHttpForward() {
         return httpForward;
     }
@@ -102,8 +106,7 @@ public class Expectation extends ObjectWithJsonToString {
     }
 
     public boolean matches(HttpRequest httpRequest) {
-        logger.trace("\nMatching expectation: \n{} \nwith incoming http: \n{}" + System.getProperty("line.separator"), this.httpRequest, httpRequest);
-        return hasRemainingMatches() && httpRequestMatcher.matches(httpRequest);
+        return hasRemainingMatches() && httpRequestMatcher.matches(httpRequest, true);
     }
 
     private boolean hasRemainingMatches() {

@@ -64,11 +64,11 @@ public class Main {
         Logging.overrideLogLevel(System.getProperty("mockserver.logLevel"));
 
         if (parseIntegerArguments.size() > 0) {
-            if (parseIntegerArguments.containsKey(PROXY_PORT_KEY)) {
-                httpProxyBuilder.withLocalPort(parseIntegerArguments.get(PROXY_PORT_KEY)).build();
-            }
             if (parseIntegerArguments.containsKey(SERVER_PORT_KEY)) {
                 mockServerBuilder.withHTTPPort(parseIntegerArguments.get(SERVER_PORT_KEY)).build();
+            }
+            if (parseIntegerArguments.containsKey(PROXY_PORT_KEY)) {
+                httpProxyBuilder.withLocalPort(parseIntegerArguments.get(PROXY_PORT_KEY)).build();
             }
         } else {
             showUsage();
