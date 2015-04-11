@@ -77,7 +77,6 @@ public class NettySocksProxyIntegrationTest extends AbstractClientProxyIntegrati
         // setup proxy
         previousProxySelector = ProxySelector.getDefault();
         ProxySelector.setDefault(createProxySelector("127.0.0.1", PROXY_HTTP_PORT));
-        System.setProperty("socksProxySet", "true");
     }
 
     @AfterClass
@@ -90,7 +89,6 @@ public class NettySocksProxyIntegrationTest extends AbstractClientProxyIntegrati
 
         // rollback proxy
         ProxySelector.setDefault(previousProxySelector);
-        System.clearProperty("socksProxySet");
     }
 
     @Before
