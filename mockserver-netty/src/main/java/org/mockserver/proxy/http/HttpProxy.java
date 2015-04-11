@@ -48,7 +48,7 @@ public class HttpProxy implements Proxy {
      */
     public HttpProxy(final Integer port) {
         if (port == null) {
-            throw new IllegalStateException("You must specify a port");
+            throw new IllegalArgumentException("You must specify a port");
         }
 
         hasStarted = SettableFuture.create();
@@ -78,7 +78,7 @@ public class HttpProxy implements Proxy {
 
                     channel.closeFuture().sync();
                 } catch (InterruptedException ie) {
-                    logger.error("MockServer receive InterruptedException", ie);
+                    logger.error("MockServer proxy receive InterruptedException", ie);
                 } finally {
                     bossGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
                     workerGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);

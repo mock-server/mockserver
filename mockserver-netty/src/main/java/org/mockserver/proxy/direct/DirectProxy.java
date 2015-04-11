@@ -2,17 +2,14 @@ package org.mockserver.proxy.direct;
 
 import com.google.common.util.concurrent.SettableFuture;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.*;
+import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.codec.http.HttpContentDecompressor;
-import io.netty.handler.codec.http.HttpObjectAggregator;
-import io.netty.handler.codec.http.HttpServerCodec;
-import io.netty.handler.ssl.SslHandler;
-import org.mockserver.logging.LoggingHandler;
+import org.mockserver.filters.LogFilter;
 import org.mockserver.proxy.Proxy;
-import org.mockserver.socket.SSLFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,59 +27,63 @@ public class DirectProxy implements Proxy {
 
     private static final Logger logger = LoggerFactory.getLogger(DirectProxy.class);
     // proxy
-    private final SettableFuture<String> hasStarted = SettableFuture.create();
+    private final LogFilter logFilter = new LogFilter();
+    private final SettableFuture<String> hasStarted;
     // netty
     private final EventLoopGroup bossGroup = new NioEventLoopGroup();
     private final EventLoopGroup workerGroup = new NioEventLoopGroup();
+    private Channel channel;
     // ports
-    private final Integer localPort;
     private final String remoteHost;
     private final Integer remotePort;
 
+    /**
+     * Start the instance using the ports provided
+     *
+     * @param localPort the local port to expose
+     * @param remoteHost the hostname of the remote server to connect to
+     * @param remotePort the port of the remote server to connect to
+     */
     public DirectProxy(final Integer localPort, final String remoteHost, final Integer remotePort) {
-
         if (localPort == null) {
-            throw new IllegalArgumentException("Port must not be null");
+            throw new IllegalArgumentException("You must specify a local port");
         }
         if (remoteHost == null) {
-            throw new IllegalArgumentException("Port must not be null");
+            throw new IllegalArgumentException("You must specify a remote port");
         }
         if (remotePort == null) {
-            throw new IllegalArgumentException("Port must not be null");
+            throw new IllegalArgumentException("You must specify a remote hostname");
         }
 
-        this.localPort = localPort;
         this.remoteHost = remoteHost;
         this.remotePort = remotePort;
+        hasStarted = SettableFuture.create();
 
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    new ServerBootstrap()
+                    channel = new ServerBootstrap()
                             .group(bossGroup, workerGroup)
                             .option(ChannelOption.SO_BACKLOG, 1024)
                             .channel(NioServerSocketChannel.class)
                             .childOption(ChannelOption.AUTO_READ, true)
                             .childHandler(new DirectProxyUnificationHandler())
+                            .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                             .childAttr(HTTP_PROXY, DirectProxy.this)
                             .childAttr(REMOTE_SOCKET, new InetSocketAddress(remoteHost, remotePort))
+                            .childAttr(LOG_FILTER, logFilter)
                             .bind(localPort)
-                            .addListener(new ChannelFutureListener() {
-                                @Override
-                                public void operationComplete(ChannelFuture future) throws Exception {
-                                    if (future.isSuccess()) {
-                                        hasStarted.set("STARTED");
-                                    } else {
-                                        hasStarted.setException(future.cause());
-                                    }
-                                }
-                            })
-                            .channel()
-                            .closeFuture()
-                            .sync();
-                } catch (Exception ie) {
-                    logger.error("Exception while running proxy channels", ie);
+                            .sync()
+                            .channel();
+
+                    logger.info("MockServer proxy started on port: {} connected to remote server: {}", ((InetSocketAddress) channel.localAddress()).getPort(), remoteHost + ":" + remotePort);
+
+                    hasStarted.set("STARTED");
+
+                    channel.closeFuture().sync();
+                } catch (InterruptedException ie) {
+                    logger.error("MockServer proxy receive InterruptedException", ie);
                 } finally {
                     bossGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
                     workerGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
@@ -93,7 +94,7 @@ public class DirectProxy implements Proxy {
         try {
             hasStarted.get();
         } catch (Exception e) {
-            logger.warn("Exception while waiting for proxy to complete starting up", e);
+            logger.warn("Exception while waiting for MockServer proxy to complete starting up", e);
         }
     }
 
@@ -101,10 +102,11 @@ public class DirectProxy implements Proxy {
         try {
             bossGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
             workerGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
+            channel.close();
             // wait for socket to be released
             TimeUnit.MILLISECONDS.sleep(500);
         } catch (Exception ie) {
-            logger.trace("Exception while waiting for the proxy to stop", ie);
+            logger.trace("Exception while stopping MockServer proxy", ie);
         }
     }
 
@@ -122,7 +124,7 @@ public class DirectProxy implements Proxy {
     }
 
     public Integer getLocalPort() {
-        return localPort;
+        return ((InetSocketAddress) channel.localAddress()).getPort();
     }
 
     public String getRemoteHost() {

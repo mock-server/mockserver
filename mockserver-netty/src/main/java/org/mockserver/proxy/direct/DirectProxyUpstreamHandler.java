@@ -53,7 +53,6 @@ public class DirectProxyUpstreamHandler extends SimpleChannelInboundHandler<Full
 
                         downstreamPipeline.addLast(new DownstreamProxyRelayHandler(ctx.channel(), logger));
 
-
                         // upstream
                         ChannelPipeline upstreamPipeline = ctx.channel().pipeline();
 

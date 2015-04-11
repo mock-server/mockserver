@@ -41,7 +41,7 @@ public class MockServer {
      */
     public MockServer(final Integer port) {
         if (port == null) {
-            throw new IllegalStateException("You must specify a port");
+            throw new IllegalArgumentException("You must specify a port");
         }
 
         hasStarted = SettableFuture.create();
