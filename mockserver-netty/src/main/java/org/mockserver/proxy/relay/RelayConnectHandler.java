@@ -45,7 +45,7 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
                                         }
 
                                         if (logger.isDebugEnabled()) {
-                                            downstreamPipeline.addLast(new LoggingHandler("                -->"));
+                                            downstreamPipeline.addLast(new LoggingHandler(this.getClass().getSimpleName() + "                -->"));
                                         }
 
                                         downstreamPipeline.addLast(new HttpClientCodec());
@@ -64,7 +64,7 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
                                         }
 
                                         if (logger.isDebugEnabled()) {
-                                            upstreamPipeline.addLast(new LoggingHandler("<-- "));
+                                            upstreamPipeline.addLast(new LoggingHandler(this.getClass().getSimpleName() + "<-- "));
                                         }
 
                                         upstreamPipeline.addLast(new HttpServerCodec());

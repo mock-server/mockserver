@@ -37,7 +37,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
                 .custom()
                 .setSslcontext(SSLFactory.getInstance().sslContext())
                 .setHostnameVerifier(new AllowAllHostnameVerifier());
-        if (Boolean.parseBoolean(System.getProperty("defaultProxySet"))) {
+        if (Boolean.parseBoolean(System.getProperty("defaultProxySelectorSet"))) {
             httpClientBuilder.setRoutePlanner(new SystemDefaultRoutePlanner(ProxySelector.getDefault())).build();
         } else if (Boolean.parseBoolean(System.getProperty("proxySet"))) {
             HttpHost httpHost = new HttpHost(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort")));
