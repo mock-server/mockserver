@@ -7,13 +7,42 @@
         </encoder>
     </appender>
 
+    <!-- application console log (errors and warnings) -->
+    <appender name="STDERR" class="ch.qos.logback.core.ConsoleAppender">
+        <target>System.err</target>
+        <encoder>
+            <pattern>%date %level %logger{20} %msg%n</pattern>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>WARN</level>
+        </filter>
+    </appender>
+
+    <!-- application console log (errors and warnings) -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <target>System.out</target>
+        <encoder>
+            <pattern>%date %level %logger{20} %msg%n</pattern>
+        </encoder>
+        <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
+            <evaluator>
+                <expression>level &gt;= INFO &amp;&amp; level &lt; WARN</expression>
+                <!--<expression>level &lt; WARN</expression>-->
+            </evaluator>
+            <OnMismatch>DENY</OnMismatch>
+            <OnMatch>NEUTRAL</OnMatch>
+        </filter>
+    </appender>
+
     <logger name="org.mockserver" level="TRACE"/>
-    <!--<logger name="org.mockserver.proxy.http.HttpProxy" level="INFO"/>-->
-    <!--<logger name="org.mockserver.mockserver.MockServer" level="INFO"/>-->
+    <!--<logger name="org.mockserver.proxy" level="INFO"/>-->
+    <!--<logger name="org.mockserver.mockserver" level="INFO"/>-->
     <logger name="io.netty.channel.nio.NioEventLoop" level="WARN"/>
     <logger name="io.netty.util.internal" level="WARN"/>
 
     <root level="TRACE">
         <appender-ref ref="FILE"/>
+        <appender-ref ref="STDERR"/>
+        <appender-ref ref="STDOUT"/>
     </root>
 </configuration>

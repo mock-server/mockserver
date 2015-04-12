@@ -60,15 +60,9 @@ public class BookServiceApacheHttpClient implements BookService {
     }
 
     private HttpClient createHttpClient() {
-        if (Boolean.parseBoolean(System.getProperty("proxySet"))) {
-            HttpHost httpHost = new HttpHost(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort")));
-            DefaultProxyRoutePlanner defaultProxyRoutePlanner = new DefaultProxyRoutePlanner(httpHost);
-            return HttpClients.custom().setRoutePlanner(defaultProxyRoutePlanner).build();
-//            todo - need to support SOCKS protocol for this solution to work - jamesdbloom 12/01/2014
-//            return HttpClients.custom().setRoutePlanner(new SystemDefaultRoutePlanner(ProxySelector.getDefault())).build();
-        } else {
-            return HttpClients.custom().build();
-        }
+        HttpHost httpHost = new HttpHost(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort")));
+        DefaultProxyRoutePlanner defaultProxyRoutePlanner = new DefaultProxyRoutePlanner(httpHost);
+        return HttpClients.custom().setRoutePlanner(defaultProxyRoutePlanner).build();
     }
 
     public Book[] getAllBooks() {

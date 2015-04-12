@@ -76,14 +76,10 @@ public class BookServiceSpringRestTemplateClient implements BookService {
         restTemplate.setMessageConverters(httpMessageConverters);
 
         // configure proxy
-        if (Boolean.parseBoolean(System.getProperty("proxySet"))) {
-            HttpHost httpHost = new HttpHost(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort")));
-            DefaultProxyRoutePlanner defaultProxyRoutePlanner = new DefaultProxyRoutePlanner(httpHost);
-            HttpClient httpClient = HttpClients.custom().setRoutePlanner(defaultProxyRoutePlanner).build();
-//            todo - need to support SOCKS protocol for this solution to work - jamesdbloom 12/01/2014
-//            HttpClient httpClient = HttpClients.custom().setRoutePlanner(new SystemDefaultRoutePlanner(PROXY_SELECTOR.getDefault())).build();
-            restTemplate.setRequestFactory(new HttpComponentsClientHttpRequestFactory(httpClient));
-        }
+        HttpHost httpHost = new HttpHost(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort")));
+        DefaultProxyRoutePlanner defaultProxyRoutePlanner = new DefaultProxyRoutePlanner(httpHost);
+        HttpClient httpClient = HttpClients.custom().setRoutePlanner(defaultProxyRoutePlanner).build();
+        restTemplate.setRequestFactory(new HttpComponentsClientHttpRequestFactory(httpClient));
 
         return restTemplate;
     }

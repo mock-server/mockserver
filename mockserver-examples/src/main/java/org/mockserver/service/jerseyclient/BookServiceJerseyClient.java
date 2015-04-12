@@ -37,13 +37,10 @@ public class BookServiceJerseyClient implements BookService {
     }
 
     private Client createHttpClient() {
-        ClientConfig clientConfig = new ClientConfig()
+        return ClientBuilder.newClient(new ClientConfig()
                 .register(new JacksonFeature())
-                .connectorProvider(new ApacheConnectorProvider());
-        if (Boolean.parseBoolean(System.getProperty("proxySet"))) {
-            clientConfig.property(ClientProperties.PROXY_URI, "http://" + System.getProperty("http.proxyHost") + ":" + System.getProperty("http.proxyPort"));
-        }
-        return ClientBuilder.newClient(clientConfig);
+                .connectorProvider(new ApacheConnectorProvider())
+                .property(ClientProperties.PROXY_URI, "http://" + System.getProperty("http.proxyHost") + ":" + System.getProperty("http.proxyPort")));
     }
 
     public Book[] getAllBooks() {

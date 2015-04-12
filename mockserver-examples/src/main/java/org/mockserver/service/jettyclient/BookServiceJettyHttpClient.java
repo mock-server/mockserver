@@ -60,9 +60,7 @@ public class BookServiceJettyHttpClient implements BookService {
     private HttpClient createHttpClient() {
         HttpClient httpClient = new HttpClient();
         try {
-            if (Boolean.parseBoolean(System.getProperty("proxySet"))) {
-                httpClient.setProxy(new Address(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort"))));
-            }
+            httpClient.setProxy(new Address(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort"))));
             httpClient.start();
         } catch (Exception e) {
             throw new RuntimeException("Exception creating HttpClient", e);

@@ -3,7 +3,7 @@ MockServer
 
 **Build Status:** 
 
-[![Travis Build Status](https://travis-ci.org/jamesdbloom/mockserver.svg?branch=master)](https://travis-ci.org/jamesdbloom/mockserver)
+[![Drone.io Build Status](https://drone.io/github.com/jamesdbloom/mockserver/status.png)](https://drone.io/github.com/jamesdbloom/mockserver)
 
 **Backlog:**
 

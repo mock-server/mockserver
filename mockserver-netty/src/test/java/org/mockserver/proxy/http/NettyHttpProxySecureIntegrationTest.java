@@ -62,6 +62,11 @@ public class NettyHttpProxySecureIntegrationTest extends AbstractClientSecurePro
     }
 
     @Override
+    public ProxyClient getProxyClient() {
+        return proxyClient;
+    }
+
+    @Override
     public int getServerSecurePort() {
         return SERVER_HTTPS_PORT;
     }

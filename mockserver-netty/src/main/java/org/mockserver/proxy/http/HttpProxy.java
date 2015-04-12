@@ -143,23 +143,19 @@ public class HttpProxy implements Proxy {
 
     protected void proxyStarted(Integer port) {
         ConfigurationProperties.proxyPort(port);
-        System.setProperty("proxySet", "true");
         System.setProperty("http.proxyHost", "127.0.0.1");
         System.setProperty("http.proxyPort", port.toString());
         System.setProperty("https.proxyHost", "127.0.0.1");
         System.setProperty("https.proxyPort", port.toString());
         previousProxySelector = ProxySelector.getDefault();
 //        ProxySelector.setDefault(createProxySelector("127.0.0.1", port));
-//        System.setProperty("defaultProxySelectorSet", "true");
     }
 
     protected void proxyStopping() {
-        System.clearProperty("proxySet");
         System.clearProperty("http.proxyHost");
         System.clearProperty("http.proxyPort");
         System.clearProperty("https.proxyHost");
         System.clearProperty("https.proxyPort");
         ProxySelector.setDefault(previousProxySelector);
-        System.clearProperty("defaultProxySelectorSet");
     }
 }
