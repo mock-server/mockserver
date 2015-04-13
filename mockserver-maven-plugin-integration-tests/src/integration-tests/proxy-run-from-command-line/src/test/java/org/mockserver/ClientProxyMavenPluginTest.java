@@ -4,7 +4,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.mockserver.client.proxy.ProxyClient;
-import org.mockserver.echo.EchoServer;
+import org.mockserver.echo.unification.PortUnificationEchoServer;
 import org.mockserver.integration.proxy.AbstractClientProxyIntegrationTest;
 import org.mockserver.socket.PortFactory;
 
@@ -15,12 +15,12 @@ public class ClientProxyMavenPluginTest extends AbstractClientProxyIntegrationTe
 
     private final static int ECHO_SERVER_HTTP_PORT = PortFactory.findFreePort();
     private final static int PROXY_HTTP_PORT = 9090;
-    private static EchoServer echoServer;
+    private static PortUnificationEchoServer echoServer;
     private static ProxyClient proxyClient;
 
     @BeforeClass
     public static void startServer() throws Exception {
-        echoServer = new EchoServer(ECHO_SERVER_HTTP_PORT);
+        echoServer = new PortUnificationEchoServer(ECHO_SERVER_HTTP_PORT);
         proxyClient = new ProxyClient("127.0.0.1", PROXY_HTTP_PORT);
     }
 
