@@ -4,7 +4,7 @@ import com.google.common.base.Charsets;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockserver.echo.EchoServer;
+import org.mockserver.echo.http.EchoServer;
 import org.mockserver.proxy.Proxy;
 import org.mockserver.proxy.ProxyBuilder;
 import org.mockserver.socket.PortFactory;
@@ -35,7 +35,7 @@ public class NettyDirectProxyIntegrationTest {
         logger.debug("PROXY_DIRECT_PORT = " + PROXY_DIRECT_PORT);
 
         // start echo server
-        echoServer = new EchoServer(SERVER_HTTP_PORT);
+        echoServer = new EchoServer(SERVER_HTTP_PORT, false);
 
         // start proxy
         httpProxy = new ProxyBuilder()

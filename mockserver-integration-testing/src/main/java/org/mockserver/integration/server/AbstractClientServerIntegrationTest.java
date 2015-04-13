@@ -8,8 +8,10 @@ import org.junit.Test;
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.netty.SocketConnectionException;
 import org.mockserver.client.server.MockServerClient;
+import org.mockserver.echo.http.EchoServer;
 import org.mockserver.matchers.MatchType;
 import org.mockserver.model.*;
+import org.mockserver.socket.PortFactory;
 import org.mockserver.verify.VerificationTimes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,7 +64,6 @@ public abstract class AbstractClientServerIntegrationTest {
             "accept-encoding",
             "transfer-encoding"
     );
-    // http client
     private NettyHttpClient httpClient = new NettyHttpClient();
 
     public abstract int getMockServerPort();
@@ -136,57 +137,63 @@ public abstract class AbstractClientServerIntegrationTest {
 
     @Test
     public void shouldForwardRequestInHTTPS() {
-        // when
-        mockServerClient
-                .when(
-                        request()
-                                .withPath(calculatePath("echo"))
-                )
-                .forward(
-                        forward()
-                                .withHost("127.0.0.1")
-                                .withPort(getTestServerPort())
-                                .withScheme(HttpForward.Scheme.HTTPS)
-                );
+        int testServerHttpsPort = PortFactory.findFreePort();
+        EchoServer secureEchoServer = new EchoServer(testServerHttpsPort, true);
+        try {
+            // when
+            mockServerClient
+                    .when(
+                            request()
+                                    .withPath(calculatePath("echo"))
+                    )
+                    .forward(
+                            forward()
+                                    .withHost("127.0.0.1")
+                                    .withPort(testServerHttpsPort)
+                                    .withScheme(HttpForward.Scheme.HTTPS)
+                    );
 
-        // then
-        // - in http
-        assertEquals(
-                response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withHeaders(
-                                header("x-test", "test_headers_and_body")
-                        )
-                        .withBody("an_example_body_http"),
-                makeRequest(
-                        request()
-                                .withPath(calculatePath("echo"))
-                                .withMethod("POST")
-                                .withHeaders(
-                                        header("x-test", "test_headers_and_body")
-                                )
-                                .withBody("an_example_body_http"),
-                        headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-                response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withHeaders(
-                                header("x-test", "test_headers_and_body")
-                        )
-                        .withBody("an_example_body_https"),
-                makeRequest(
-                        request()
-                                .setSecure(true)
-                                .withPath(calculatePath("echo"))
-                                .withMethod("POST")
-                                .withHeaders(
-                                        header("x-test", "test_headers_and_body")
-                                )
-                                .withBody("an_example_body_https"),
-                        headersToIgnore)
-        );
+            // then
+            // - in http
+            assertEquals(
+                    response()
+                            .withStatusCode(HttpStatusCode.OK_200.code())
+                            .withHeaders(
+                                    header("x-test", "test_headers_and_body")
+                            )
+                            .withBody("an_example_body_http"),
+                    makeRequest(
+                            request()
+                                    .withPath(calculatePath("echo"))
+                                    .withMethod("POST")
+                                    .withHeaders(
+                                            header("x-test", "test_headers_and_body")
+                                    )
+                                    .withBody("an_example_body_http"),
+                            headersToIgnore)
+            );
+            // - in https
+            assertEquals(
+                    response()
+                            .withStatusCode(HttpStatusCode.OK_200.code())
+                            .withHeaders(
+                                    header("x-test", "test_headers_and_body")
+                            )
+                            .withBody("an_example_body_https"),
+                    makeRequest(
+                            request()
+                                    .setSecure(true)
+                                    .withPath(calculatePath("echo"))
+                                    .withMethod("POST")
+                                    .withHeaders(
+                                            header("x-test", "test_headers_and_body")
+                                    )
+                                    .withBody("an_example_body_https"),
+                            headersToIgnore)
+            );
+        } finally {
+            secureEchoServer.stop();
+        }
     }
 
     @Test

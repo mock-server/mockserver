@@ -4,7 +4,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.mockserver.client.proxy.ProxyClient;
-import org.mockserver.echo.EchoServer;
+import org.mockserver.echo.http.EchoServer;
 import org.mockserver.integration.proxy.AbstractClientSecureProxyIntegrationTest;
 import org.mockserver.proxy.Proxy;
 import org.mockserver.proxy.ProxyBuilder;
@@ -31,7 +31,7 @@ public class NettyHttpProxySecureIntegrationTest extends AbstractClientSecurePro
         logger.debug("PROXY_HTTPS_PORT = " + PROXY_HTTPS_PORT);
 
         // start server
-        echoServer = new EchoServer(SERVER_HTTPS_PORT);
+        echoServer = new EchoServer(SERVER_HTTPS_PORT, true);
 
         // start proxy
         httpProxy = new ProxyBuilder()

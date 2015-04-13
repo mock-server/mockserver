@@ -3,7 +3,7 @@ package org.mockserver.server;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.mockserver.client.server.MockServerClient;
-import org.mockserver.echo.EchoServer;
+import org.mockserver.echo.http.EchoServer;
 import org.mockserver.mockserver.MockServer;
 import org.mockserver.socket.PortFactory;
 
@@ -23,7 +23,7 @@ public class ClientServerNettyIntegrationTest extends AbstractClientServerShared
         mockServer = new MockServer(SERVER_HTTP_PORT);
 
         // start test server
-        echoServer = new EchoServer(TEST_SERVER_HTTP_PORT);
+        echoServer = new EchoServer(TEST_SERVER_HTTP_PORT, false);
 
         // start client
         mockServerClient = new MockServerClient("localhost", SERVER_HTTP_PORT, servletContext);

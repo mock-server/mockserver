@@ -1,6 +1,7 @@
 package org.mockserver.proxy.relay;
 
 import io.netty.bootstrap.Bootstrap;
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.socket.nio.NioSocketChannel;
@@ -62,6 +63,20 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
                                         if (PortUnificationHandler.isSslEnabledUpstream(serverCtx.channel())) {
                                             upstreamPipeline.addLast(new SslHandler(SSLFactory.createServerSSLEngine()));
                                         }
+
+//                                        upstreamPipeline.addLast(new SimpleChannelInboundHandler<ByteBuf>() {
+//
+//                                            @Override
+//                                            protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) throws Exception {
+//                                                if(SslHandler.isEncrypted(msg)) {
+//                                                    ChannelPipeline pipeline = ctx.pipeline();
+//                                                    pipeline.addFirst(new SslHandler(SSLFactory.createServerSSLEngine()));
+//
+//                                                    // re-unify (with SSL enabled)
+//                                                    ctx.pipeline().fireChannelRead(msg);
+//                                                }
+//                                            }
+//                                        });
 
                                         if (logger.isDebugEnabled()) {
                                             upstreamPipeline.addLast(new LoggingHandler(this.getClass().getSimpleName() + "<-- "));

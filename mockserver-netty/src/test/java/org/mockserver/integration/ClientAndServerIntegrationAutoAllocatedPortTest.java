@@ -2,7 +2,7 @@ package org.mockserver.integration;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.mockserver.echo.EchoServer;
+import org.mockserver.echo.http.EchoServer;
 import org.mockserver.server.AbstractClientServerSharedClassloadersAndTestClasspathIntegrationTest;
 import org.mockserver.socket.PortFactory;
 
@@ -17,7 +17,7 @@ public class ClientAndServerIntegrationAutoAllocatedPortTest extends AbstractCli
 
     private static int severHttpPort;
     private final static int TEST_SERVER_HTTP_PORT = PortFactory.findFreePort();
-    private static EchoServer httpEchoServer;
+    private static EchoServer echoServer;
 
     @BeforeClass
     public static void startServer() throws InterruptedException, ExecutionException {
@@ -26,7 +26,7 @@ public class ClientAndServerIntegrationAutoAllocatedPortTest extends AbstractCli
         severHttpPort = ((ClientAndServer)mockServerClient).getPort();
 
         // start echo servers
-        httpEchoServer = new EchoServer(TEST_SERVER_HTTP_PORT);
+        echoServer = new EchoServer(TEST_SERVER_HTTP_PORT, false);
     }
 
     @AfterClass
@@ -37,7 +37,7 @@ public class ClientAndServerIntegrationAutoAllocatedPortTest extends AbstractCli
         }
 
         // stop echo server
-        httpEchoServer.stop();
+        echoServer.stop();
     }
 
     @Override

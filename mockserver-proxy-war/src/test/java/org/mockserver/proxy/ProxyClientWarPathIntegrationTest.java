@@ -6,7 +6,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.mockserver.client.proxy.ProxyClient;
-import org.mockserver.echo.EchoServer;
+import org.mockserver.echo.http.EchoServer;
 import org.mockserver.integration.proxy.AbstractClientProxyIntegrationTest;
 import org.mockserver.socket.PortFactory;
 
@@ -29,7 +29,7 @@ public class ProxyClientWarPathIntegrationTest extends AbstractClientProxyIntegr
         servletContext = "";
 
         // start server
-        echoServer = new EchoServer(SERVER_HTTP_PORT);
+        echoServer = new EchoServer(SERVER_HTTP_PORT, false);
 
         // wait for server to start up
         TimeUnit.MILLISECONDS.sleep(500);

@@ -1,4 +1,4 @@
-package org.mockserver.echo;
+package org.mockserver.echo.unification;
 
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandler;

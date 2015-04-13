@@ -4,7 +4,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.mockserver.client.proxy.ProxyClient;
-import org.mockserver.echo.EchoServer;
+import org.mockserver.echo.http.EchoServer;
 import org.mockserver.integration.proxy.AbstractClientProxyIntegrationTest;
 import org.mockserver.proxy.Proxy;
 import org.mockserver.proxy.ProxyBuilder;
@@ -33,7 +33,7 @@ public class NettyHttpProxyIntegrationTest extends AbstractClientProxyIntegratio
         servletContext = "";
 
         // start server
-        echoServer = new EchoServer(SERVER_HTTP_PORT);
+        echoServer = new EchoServer(SERVER_HTTP_PORT, false);
 
         // start proxy
         httpProxy = new ProxyBuilder()

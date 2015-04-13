@@ -4,7 +4,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.mockserver.client.server.MockServerClient;
-import org.mockserver.echo.EchoServer;
+import org.mockserver.echo.unification.PortUnificationEchoServer;
 import org.mockserver.integration.server.AbstractClientServerIntegrationTest;
 import org.mockserver.socket.PortFactory;
 
@@ -15,11 +15,11 @@ public class ClientServerMavenPluginTest extends AbstractClientServerIntegration
 
     private final static int ECHO_SERVER_HTTP_PORT = PortFactory.findFreePort();
     private final static int SERVER_HTTP_PORT = 8088;
-    private static EchoServer echoServer;
+    private static PortUnificationEchoServer echoServer;
 
     @BeforeClass
     public static void createClient() throws Exception {
-        echoServer = new EchoServer(ECHO_SERVER_HTTP_PORT);
+        echoServer = new PortUnificationEchoServer(ECHO_SERVER_HTTP_PORT);
         mockServerClient = new MockServerClient("localhost", SERVER_HTTP_PORT, servletContext);
     }
 

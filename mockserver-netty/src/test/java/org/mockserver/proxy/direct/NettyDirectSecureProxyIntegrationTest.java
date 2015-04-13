@@ -1,12 +1,11 @@
 package org.mockserver.proxy.direct;
 
 import com.google.common.base.Charsets;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.proxy.ProxyClient;
-import org.mockserver.echo.EchoServer;
+import org.mockserver.echo.http.EchoServer;
 import org.mockserver.proxy.Proxy;
 import org.mockserver.proxy.ProxyBuilder;
 import org.mockserver.socket.PortFactory;
@@ -17,7 +16,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.OutputStream;
 import java.net.Socket;
-import java.security.Security;
 
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.test.Assert.assertContains;
@@ -42,7 +40,7 @@ public class NettyDirectSecureProxyIntegrationTest {
         logger.debug("PROXY_DIRECT_SECURE_PORT = " + PROXY_DIRECT_SECURE_PORT);
 
         // start server
-        echoServer = new EchoServer(SERVER_HTTPS_PORT);
+        echoServer = new EchoServer(SERVER_HTTPS_PORT, true);
 
         // start proxy
         httpProxy = new ProxyBuilder()

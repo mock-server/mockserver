@@ -57,7 +57,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
 
             // when
             output.write(("" +
-                    "CONNECT localhost:666 HTTP/1.1\r\n" +
+                    "CONNECT localhost:443 HTTP/1.1\r\n" +
                     "Host: localhost:" + getServerSecurePort() + "\r\n" +
                     "\r\n"
             ).getBytes(Charsets.UTF_8));
@@ -83,7 +83,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
             // when
             // - send CONNECT request
             output.write(("" +
-                    "CONNECT localhost:666 HTTP/1.1\r\n" +
+                    "CONNECT localhost:443 HTTP/1.1\r\n" +
                     "Host: localhost:" + getServerSecurePort() + "\r\n" +
                     "\r\n"
             ).getBytes(Charsets.UTF_8));
@@ -201,7 +201,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
             // when
             // - send CONNECT request
             output.write(("" +
-                    "CONNECT localhost:666 HTTP/1.1\r\n" +
+                    "CONNECT localhost:443 HTTP/1.1\r\n" +
                     "Host: localhost:" + getServerSecurePort() + "\r\n" +
                     "\r\n"
             ).getBytes(Charsets.UTF_8));

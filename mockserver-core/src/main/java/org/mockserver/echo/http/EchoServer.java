@@ -1,4 +1,4 @@
-package org.mockserver.echo;
+package org.mockserver.echo.http;
 
 import com.google.common.util.concurrent.SettableFuture;
 import io.netty.bootstrap.ServerBootstrap;
@@ -19,7 +19,7 @@ public class EchoServer {
 
     private NioEventLoopGroup eventLoopGroup;
 
-    public EchoServer(final int port) {
+    public EchoServer(final int port, final boolean secure) {
         final Logger logger = LoggerFactory.getLogger(EchoServer.class);
         final SettableFuture<String> hasStarted = SettableFuture.create();
 
@@ -33,7 +33,7 @@ public class EchoServer {
                         .channel(NioServerSocketChannel.class)
                         .option(ChannelOption.SO_BACKLOG, 100)
                         .handler(new LoggingHandler("EchoServer Handler"))
-                        .childHandler(new EchoServerUnificationHandler())
+                        .childHandler(new EchoServerInitializer(secure))
                         .bind(port)
                         .addListener(new ChannelFutureListener() {
                             @Override

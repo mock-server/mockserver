@@ -6,7 +6,7 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.mockserver.echo.EchoServer;
+import org.mockserver.echo.http.EchoServer;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.socket.PortFactory;
 
@@ -31,7 +31,7 @@ public class NettyHttpClientTest {
     @BeforeClass
     public static void startEchoServer() {
         freePort = PortFactory.findFreePort();
-        echoServer = new EchoServer(freePort);
+        echoServer = new EchoServer(freePort, false);
     }
 
     @AfterClass

@@ -15,26 +15,27 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 import org.mockserver.client.proxy.ProxyClient;
-import org.mockserver.echo.EchoServer;
+import org.mockserver.echo.http.EchoServer;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.proxy.Proxy;
 import org.mockserver.proxy.ProxyBuilder;
 import org.mockserver.socket.PortFactory;
+import org.mockserver.socket.SSLFactory;
+import org.mockserver.streams.IOStreamUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.net.SocketTimeoutException;
+import java.io.OutputStream;
+import java.net.*;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.test.Assert.assertContains;
 import static org.mockserver.verify.VerificationTimes.exactly;
 
 /**
@@ -44,33 +45,37 @@ public class NettyHttpProxySOCKSIntegrationTest {
 
     private final static Logger logger = LoggerFactory.getLogger(NettyHttpProxySOCKSIntegrationTest.class);
 
+    private final static Integer SERVER_HTTP_PORT = PortFactory.findFreePort();
     private final static Integer SERVER_HTTPS_PORT = PortFactory.findFreePort();
-    private final static Integer PROXY_HTTPS_PORT = PortFactory.findFreePort();
-    private static EchoServer echoServer;
+    private final static Integer PROXY_HTTP_PORT = PortFactory.findFreePort();
+    private static EchoServer insecureEchoServer;
+    private static EchoServer secureEchoServer;
     private static Proxy httpProxy;
     private static ProxyClient proxyClient;
 
     @BeforeClass
     public static void setupFixture() throws Exception {
         logger.debug("SERVER_HTTPS_PORT = " + SERVER_HTTPS_PORT);
-        logger.debug("PROXY_HTTPS_PORT = " + PROXY_HTTPS_PORT);
+        logger.debug("PROXY_HTTP_PORT = " + PROXY_HTTP_PORT);
 
         // start server
-        echoServer = new EchoServer(SERVER_HTTPS_PORT);
+        insecureEchoServer = new EchoServer(SERVER_HTTP_PORT, false);
+        secureEchoServer = new EchoServer(SERVER_HTTPS_PORT, true);
 
         // start proxy
         httpProxy = new ProxyBuilder()
-                .withLocalPort(PROXY_HTTPS_PORT)
+                .withLocalPort(PROXY_HTTP_PORT)
                 .build();
 
         // start client
-        proxyClient = new ProxyClient("localhost", PROXY_HTTPS_PORT);
+        proxyClient = new ProxyClient("localhost", PROXY_HTTP_PORT);
     }
 
     @AfterClass
     public static void shutdownFixture() {
         // stop server
-        echoServer.stop();
+        insecureEchoServer.stop();
+        secureEchoServer.stop();
 
         // stop proxy
         httpProxy.stop();
@@ -128,7 +133,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
                 new URIBuilder()
                         .setScheme("http")
                         .setHost("localhost")
-                        .setPort(SERVER_HTTPS_PORT)
+                        .setPort(SERVER_HTTP_PORT)
                         .setPath("/test_headers_and_body")
                         .build()
         );
@@ -149,6 +154,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
     }
 
     @Test
+    @Ignore
     public void shouldForwardRequestsToSecurePortUsingHttpClientViaSOCKS() throws Exception {
         // given
         Registry<ConnectionSocketFactory> reg = RegistryBuilder.<ConnectionSocketFactory>create()
@@ -200,6 +206,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
                         .build()
         );
         request.setEntity(new StringEntity("an_example_body"));
+        request.addHeader("Secure", "true");
         HttpResponse response = httpClient.execute(request);
 
         // then
@@ -213,5 +220,115 @@ public class NettyHttpProxySOCKSIntegrationTest {
                         .withBody("an_example_body"),
                 exactly(1)
         );
+    }
+
+    @Test
+    public void shouldForwardRequestsUsingSocketViaSOCKS() throws Exception {
+        Socket socket = null;
+        try {
+            ProxySelector.setDefault(new ProxySelector() {
+                @Override
+                public List<java.net.Proxy> select(URI uri) {
+                    return Arrays.asList(
+                            new java.net.Proxy(java.net.Proxy.Type.SOCKS, new InetSocketAddress("127.0.0.1", PROXY_HTTP_PORT))
+                    );
+                }
+
+                @Override
+                public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {
+                    logger.error("Connection could not be established to proxy at socket [" + sa + "]", ioe);
+                }
+            });
+
+            socket = SSLFactory.getInstance().wrapSocket(new Socket("localhost", SERVER_HTTP_PORT));
+
+            // given
+            OutputStream output = socket.getOutputStream();
+
+            // - send GET request for headers and body
+            output.write(("" +
+                    "GET /test_headers_and_body HTTP/1.1\r\n" +
+                    "Host: localhost:" + SERVER_HTTP_PORT + "\r\n" +
+                    "X-Test: test_headers_and_body\r\n" +
+                    "Content-Length:" + "an_example_body".getBytes(Charsets.UTF_8).length + "\r\n" +
+                    "\r\n" +
+                    "an_example_body" + "\r\n"
+            ).getBytes(Charsets.UTF_8));
+            output.flush();
+
+            // then
+            String response = IOStreamUtils.readInputStreamToString(socket);
+            assertContains(response, "X-Test: test_headers_and_body");
+            assertContains(response, "an_example_body");
+
+            // and
+            proxyClient.verify(
+                    request()
+                            .withMethod("GET")
+                            .withPath("/test_headers_and_body")
+                            .withBody("an_example_body"),
+                    exactly(1)
+            );
+        } finally {
+            if (socket != null) {
+                socket.close();
+            }
+        }
+    }
+
+    @Test
+    @Ignore
+    public void shouldForwardRequestsToSecurePortUsingSocketViaSOCKS() throws Exception {
+        Socket socket = null;
+        try {
+            ProxySelector.setDefault(new ProxySelector() {
+                @Override
+                public List<java.net.Proxy> select(URI uri) {
+                    return Arrays.asList(
+                            new java.net.Proxy(java.net.Proxy.Type.SOCKS, new InetSocketAddress("127.0.0.1", PROXY_HTTP_PORT))
+                    );
+                }
+
+                @Override
+                public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {
+                    logger.error("Connection could not be established to proxy at socket [" + sa + "]", ioe);
+                }
+            });
+
+            socket = SSLFactory.getInstance().wrapSocket(new Socket("localhost", SERVER_HTTPS_PORT));
+
+            // given
+            OutputStream output = socket.getOutputStream();
+
+            // - send GET request for headers and body
+            output.write(("" +
+                    "GET /test_headers_and_body HTTP/1.1\r\n" +
+                    "Host: localhost:" + SERVER_HTTPS_PORT + "\r\n" +
+                    "Secure: true\r\n" +
+                    "X-Test: test_headers_and_body\r\n" +
+                    "Content-Length:" + "an_example_body".getBytes(Charsets.UTF_8).length + "\r\n" +
+                    "\r\n" +
+                    "an_example_body" + "\r\n"
+            ).getBytes(Charsets.UTF_8));
+            output.flush();
+
+            // then
+            String response = IOStreamUtils.readInputStreamToString(socket);
+            assertContains(response, "X-Test: test_headers_and_body");
+            assertContains(response, "an_example_body");
+
+            // and
+            proxyClient.verify(
+                    request()
+                            .withMethod("GET")
+                            .withPath("/test_headers_and_body")
+                            .withBody("an_example_body"),
+                    exactly(1)
+            );
+        } finally {
+            if (socket != null) {
+                socket.close();
+            }
+        }
     }
 }
