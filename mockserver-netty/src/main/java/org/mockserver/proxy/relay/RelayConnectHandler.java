@@ -64,19 +64,7 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
                                             upstreamPipeline.addLast(new SslHandler(SSLFactory.createServerSSLEngine()));
                                         }
 
-//                                        upstreamPipeline.addLast(new SimpleChannelInboundHandler<ByteBuf>() {
-//
-//                                            @Override
-//                                            protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) throws Exception {
-//                                                if(SslHandler.isEncrypted(msg)) {
-//                                                    ChannelPipeline pipeline = ctx.pipeline();
-//                                                    pipeline.addFirst(new SslHandler(SSLFactory.createServerSSLEngine()));
-//
-//                                                    // re-unify (with SSL enabled)
-//                                                    ctx.pipeline().fireChannelRead(msg);
-//                                                }
-//                                            }
-//                                        });
+//                                        upstreamPipeline.addLast(new SslPortUnification());
 
                                         if (logger.isDebugEnabled()) {
                                             upstreamPipeline.addLast(new LoggingHandler(this.getClass().getSimpleName() + "<-- "));
@@ -138,6 +126,27 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
     protected void removeHandler(ChannelPipeline pipeline, Class<? extends ChannelHandler> handlerType) {
         if (pipeline.get(handlerType) != null) {
             pipeline.remove(handlerType);
+        }
+    }
+
+    private class SslPortUnification extends SimpleChannelInboundHandler<ByteBuf> {
+
+        public SslPortUnification() {
+            super(false);
+        }
+
+        @Override
+        protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) throws Exception {
+            if (msg.readableBytes() >= 5 && SslHandler.isEncrypted(msg)) {
+                ChannelPipeline pipeline = ctx.pipeline();
+
+                pipeline.addFirst(new SslHandler(SSLFactory.createServerSSLEngine()));
+
+                pipeline.remove(this);
+
+                // re-unify (with SSL enabled)
+                ctx.fireChannelRead(msg);
+            }
         }
     }
 }

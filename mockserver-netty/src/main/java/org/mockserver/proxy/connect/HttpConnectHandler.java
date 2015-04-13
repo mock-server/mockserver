@@ -4,6 +4,7 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.http.*;
+import io.netty.handler.ssl.SslHandler;
 import org.mockserver.codec.MockServerServerCodec;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.proxy.relay.RelayConnectHandler;
@@ -15,6 +16,7 @@ public final class HttpConnectHandler extends RelayConnectHandler<HttpRequest> {
 
     protected void removeCodecSupport(ChannelHandlerContext ctx) {
         ChannelPipeline pipeline = ctx.pipeline();
+        removeHandler(pipeline, SslHandler.class);
         removeHandler(pipeline, HttpServerCodec.class);
         removeHandler(pipeline, HttpContentDecompressor.class);
         removeHandler(pipeline, HttpObjectAggregator.class);

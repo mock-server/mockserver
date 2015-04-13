@@ -7,6 +7,7 @@ import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.socks.*;
+import io.netty.handler.ssl.SslHandler;
 import org.mockserver.proxy.relay.RelayConnectHandler;
 
 @ChannelHandler.Sharable
@@ -14,6 +15,7 @@ public final class SocksConnectHandler extends RelayConnectHandler<SocksCmdReque
 
     protected void removeCodecSupport(ChannelHandlerContext ctx) {
         ChannelPipeline pipeline = ctx.pipeline();
+        removeHandler(pipeline, SslHandler.class);
         removeHandler(pipeline, HttpServerCodec.class);
         removeHandler(pipeline, HttpContentDecompressor.class);
         removeHandler(pipeline, HttpObjectAggregator.class);

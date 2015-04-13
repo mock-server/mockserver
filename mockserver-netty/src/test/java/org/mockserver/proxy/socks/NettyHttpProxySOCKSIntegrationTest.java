@@ -225,6 +225,64 @@ public class NettyHttpProxySOCKSIntegrationTest {
     @Test
     public void shouldForwardRequestsUsingSocketViaSOCKS() throws Exception {
         Socket socket = null;
+        ProxySelector proxySelector = ProxySelector.getDefault();
+        try {
+            ProxySelector.setDefault(new ProxySelector() {
+                @Override
+                public List<java.net.Proxy> select(URI uri) {
+                    return Arrays.asList(
+                            new java.net.Proxy(java.net.Proxy.Type.SOCKS, new InetSocketAddress("127.0.0.1", PROXY_HTTP_PORT))
+                    );
+                }
+
+                @Override
+                public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {
+                    logger.error("Connection could not be established to proxy at socket [" + sa + "]", ioe);
+                }
+            });
+
+            socket = new Socket("localhost", SERVER_HTTP_PORT);
+
+            // given
+            OutputStream output = socket.getOutputStream();
+
+            // - send GET request for headers and body
+            output.write(("" +
+                    "GET /test_headers_and_body HTTP/1.1\r\n" +
+                    "Host: localhost:" + SERVER_HTTP_PORT + "\r\n" +
+                    "X-Test: test_headers_and_body\r\n" +
+                    "Content-Length:" + "an_example_body".getBytes(Charsets.UTF_8).length + "\r\n" +
+                    "\r\n" +
+                    "an_example_body" + "\r\n"
+            ).getBytes(Charsets.UTF_8));
+            output.flush();
+
+            // then
+            // assertThat(socket.getInputStream().available(), greaterThan(0));
+            String response = IOStreamUtils.readInputStreamToString(socket);
+            assertContains(response, "X-Test: test_headers_and_body");
+            assertContains(response, "an_example_body");
+
+            // and
+            proxyClient.verify(
+                    request()
+                            .withMethod("GET")
+                            .withPath("/test_headers_and_body")
+                            .withBody("an_example_body"),
+                    exactly(1)
+            );
+        } finally {
+            ProxySelector.setDefault(proxySelector);
+            if (socket != null) {
+                socket.close();
+            }
+        }
+    }
+
+    @Test
+    public void shouldForwardRequestsUsingSecureSocketViaSOCKS() throws Exception {
+        Socket socket = null;
+        ProxySelector proxySelector = ProxySelector.getDefault();
         try {
             ProxySelector.setDefault(new ProxySelector() {
                 @Override
@@ -249,6 +307,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
             output.write(("" +
                     "GET /test_headers_and_body HTTP/1.1\r\n" +
                     "Host: localhost:" + SERVER_HTTP_PORT + "\r\n" +
+                    "Secure: true\r\n" +
                     "X-Test: test_headers_and_body\r\n" +
                     "Content-Length:" + "an_example_body".getBytes(Charsets.UTF_8).length + "\r\n" +
                     "\r\n" +
@@ -257,6 +316,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
             output.flush();
 
             // then
+            // assertThat(socket.getInputStream().available(), greaterThan(0));
             String response = IOStreamUtils.readInputStreamToString(socket);
             assertContains(response, "X-Test: test_headers_and_body");
             assertContains(response, "an_example_body");
@@ -270,6 +330,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
                     exactly(1)
             );
         } finally {
+            ProxySelector.setDefault(proxySelector);
             if (socket != null) {
                 socket.close();
             }
@@ -280,6 +341,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
     @Ignore
     public void shouldForwardRequestsToSecurePortUsingSocketViaSOCKS() throws Exception {
         Socket socket = null;
+        ProxySelector proxySelector = ProxySelector.getDefault();
         try {
             ProxySelector.setDefault(new ProxySelector() {
                 @Override
@@ -313,6 +375,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
             output.flush();
 
             // then
+            // assertThat(socket.getInputStream().available(), greaterThan(0));
             String response = IOStreamUtils.readInputStreamToString(socket);
             assertContains(response, "X-Test: test_headers_and_body");
             assertContains(response, "an_example_body");
@@ -326,6 +389,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
                     exactly(1)
             );
         } finally {
+            ProxySelector.setDefault(proxySelector);
             if (socket != null) {
                 socket.close();
             }

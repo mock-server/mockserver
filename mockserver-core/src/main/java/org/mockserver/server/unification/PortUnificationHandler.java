@@ -29,7 +29,7 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) throws Exception {
         // Will use the first five bytes to detect a protocol.
-        if (msg.readableBytes() < 5) {
+        if (msg.readableBytes() < 3) {
             return;
         }
 
@@ -46,7 +46,7 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
     }
 
     private boolean isSsl(ByteBuf buf) {
-        return SslHandler.isEncrypted(buf);
+        return buf.readableBytes() >= 5 && SslHandler.isEncrypted(buf);
     }
 
     private boolean isHttp(ByteBuf msg) {
@@ -74,17 +74,24 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
 
     private void switchToHttp(ChannelHandlerContext ctx, ByteBuf msg) {
         ChannelPipeline pipeline = ctx.pipeline();
-        pipeline.addLast(new HttpServerCodec());
-        pipeline.addLast(new HttpContentDecompressor());
-        pipeline.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
+
+        addLastIfNotPresent(pipeline, new HttpServerCodec());
+        addLastIfNotPresent(pipeline, new HttpContentDecompressor());
+        addLastIfNotPresent(pipeline, new HttpObjectAggregator(Integer.MAX_VALUE));
         if (logger.isDebugEnabled()) {
-            pipeline.addLast(new LoggingHandler());
+            addLastIfNotPresent(pipeline, new LoggingHandler());
         }
         configurePipeline(ctx, pipeline);
         pipeline.remove(this);
 
         // fire message back through pipeline
         ctx.fireChannelRead(msg);
+    }
+
+    protected void addLastIfNotPresent(ChannelPipeline pipeline, ChannelHandler channelHandler) {
+        if (pipeline.get(channelHandler.getClass()) == null) {
+            pipeline.addLast(channelHandler);
+        }
     }
 
     protected abstract void configurePipeline(ChannelHandlerContext ctx, ChannelPipeline pipeline);
