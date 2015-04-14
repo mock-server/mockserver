@@ -42,7 +42,7 @@ subsection: true
 <pre><code class="code xml">&lt;<span class="element">plugin</span>&gt;
     &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;
     &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-maven-plugin</span>&lt;/<span class="element">artifactId</span>&gt;
-    &lt;<span class="element">version</span>&gt;<span class="element_value">3.9.7</span>&lt;/<span class="element">version</span>&gt;
+    &lt;<span class="element">version</span>&gt;<span class="element_value">3.9.8</span>&lt;/<span class="element">version</span>&gt;
     &lt;<span class="element">configuration</span>&gt;
         &lt;<span class="element">serverPort</span>&gt;<span class="element_value">1080</span>&lt;/<span class="element">serverPort</span>&gt;
         &lt;<span class="element">proxyPort</span>&gt;<span class="element_value">1090</span>&lt;/<span class="element">proxyPort</span>&gt;
@@ -77,7 +77,7 @@ subsection: true
 <pre><code class="code xml"> &lt;<span class="element">plugin</span>&gt;
      &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;
      &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-maven-plugin</span>&lt;/<span class="element">artifactId</span>&gt;
-     &lt;<span class="element">version</span>&gt;<span class="element_value">3.9.7</span>&lt;/<span class="element">version</span>&gt;
+     &lt;<span class="element">version</span>&gt;<span class="element_value">3.9.8</span>&lt;/<span class="element">version</span>&gt;
      &lt;<span class="element">configuration</span>&gt;
         &lt;<span class="element">serverPort</span>&gt;<span class="element_value">1080</span>&lt;/<span class="element">serverPort</span>&gt;
         &lt;<span class="element">proxyPort</span>&gt;<span class="element_value">1090</span>&lt;/<span class="element">proxyPort</span>&gt;
@@ -180,7 +180,7 @@ subsection: true
 &lt;<span class="element">dependency</span>&gt;
      &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;<span class="element">/groupId</span>&gt;
      &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-netty</span>&lt;<span class="element">/artifactId</span>&gt;
-     &lt;<span class="element">version</span>&gt;<span class="element_value">3.9.7</span>&lt;<span class="element">/version</span>&gt;
+     &lt;<span class="element">version</span>&gt;<span class="element_value">3.9.8</span>&lt;<span class="element">/version</span>&gt;
 &lt;<span class="element">/dependency</span>&gt;</code></pre>
 
 <p>To start the server and create a client the simplest way is to the start factory methods ClientAndServer.startClientAndServer or ClientAndProxy.startClientAndProxy as follows:</p>
@@ -355,9 +355,9 @@ subsection: true
 <p>MockServer can be run directly from the command line and using Netty as follow:</p>
 
 <ol>
-	<li><p>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/3.9.7/mockserver-netty-3.9.7-jar-with-dependencies.jar">mockserver-netty-3.9.7-jar-with-dependencies.jar</a> from Maven Central</p></li>
+	<li><p>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/3.9.8/mockserver-netty-3.9.8-jar-with-dependencies.jar">mockserver-netty-3.9.8-jar-with-dependencies.jar</a> from Maven Central</p></li>
 	<li>
-		<code class="code inline">java -jar &lt;path to mockserver-netty-3.9.7-jar-with-dependencies.jar&gt; -serverPort &lt;port&gt;</code>
+		<code class="code inline">java -jar &lt;path to mockserver-netty-3.9.8-jar-with-dependencies.jar&gt; -serverPort &lt;port&gt;</code>
 	</li>
 </ol>
 
@@ -377,7 +377,7 @@ subsection: true
 
 <p>For example:</p>
 
-<pre><code class="code">java -Dmockserver.logLevel=DEBUG -jar ~/Downloads/mockserver-netty-3.9.7-jar-with-dependencies.jar -serverPort <span class="numeric_literal">8080</span> -proxyPort <span class="numeric_literal">9090</span></code></pre>
+<pre><code class="code">java -Dmockserver.logLevel=DEBUG -jar ~/Downloads/mockserver-netty-3.9.8-jar-with-dependencies.jar -serverPort <span class="numeric_literal">8080</span> -proxyPort <span class="numeric_literal">9090</span></code></pre>
 
 <a name="docker-container" class="anchor" href="#docker-container">&nbsp;</a>
 
@@ -439,8 +439,8 @@ vertx runmod org.mock-server~mockserver-vertx~2.9</code></pre>
 <p>To run as a WAR deployed on any JEE web server:</p>
 
 <ol>
-	<li>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-war/3.9.7/mockserver-war-3.9.7.war">mockserver-war-3.9.7.war</a> from Maven Central</li>
-	<li>deploy <strong>mockserver-war-3.9.7.war</strong> to any JEE web server</li>
+	<li>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-war/3.9.8/mockserver-war-3.9.8.war">mockserver-war-3.9.8.war</a> from Maven Central</li>
+	<li>deploy <strong>mockserver-war-3.9.8.war</strong> to any JEE web server</li>
 </ol>
 
 <p><strong>WAR Context Path</strong></p>
@@ -468,6 +468,6 @@ cd mockserver</code></pre>
 
 <p>This will produce a jar file under the target directory called, as follows:</p>
 
-<pre><code class="code">mockserver-netty/target/mockserver-netty-3.9.7-jar-with-dependencies.jar</code></pre>
+<pre><code class="code">mockserver-netty/target/mockserver-netty-3.9.8-jar-with-dependencies.jar</code></pre>
 
 <p>Run MockServer then using the executable jar as per the instruction above in <a href="#running-from-command-line">Running From The Command Line</a></p>
