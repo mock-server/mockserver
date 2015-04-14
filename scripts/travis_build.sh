@@ -5,8 +5,6 @@ export JAVA_OPTS='-XX:MaxPermSize=1024m -Xmx2048m'
 JAVA_VER=$(java -version 2>&1 | sed 's/java version "\(.*\)\.\(.*\)\..*"/\1\2/; 1q')
 current_directory=${PWD}
 
-./install_ca_certificate.sh
-
 if [ $JAVA_VER -eq 16 ]; then
     echo
     echo "------------------------"
