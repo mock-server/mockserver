@@ -1,6 +1,7 @@
 language: java
 
 before_install:
+  - "./scripts/install_ca_certificate.sh"
   - "travis_retry mvn test-compile -T2C"
 
 script:
