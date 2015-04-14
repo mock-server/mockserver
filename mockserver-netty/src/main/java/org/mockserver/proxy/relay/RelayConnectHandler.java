@@ -9,6 +9,7 @@ import io.netty.handler.codec.http.HttpClientCodec;
 import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
+import io.netty.handler.ssl.NotSslRecordException;
 import io.netty.handler.ssl.SslHandler;
 import org.mockserver.logging.LoggingHandler;
 import org.mockserver.proxy.http.HttpProxy;
@@ -25,9 +26,8 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
 
     @Override
     public void channelRead0(final ChannelHandlerContext serverCtx, final T request) throws Exception {
-        final Channel inboundChannel = serverCtx.channel();
         Bootstrap bootstrap = new Bootstrap()
-                .group(inboundChannel.eventLoop())
+                .group(serverCtx.channel().eventLoop())
                 .channel(NioSocketChannel.class)
                 .handler(new ChannelInboundHandlerAdapter() {
                     @Override
@@ -41,6 +41,7 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
 
                                         // downstream
                                         ChannelPipeline downstreamPipeline = clientCtx.channel().pipeline();
+
                                         if (PortUnificationHandler.isSslEnabledDownstream(serverCtx.channel())) {
                                             downstreamPipeline.addLast(new SslHandler(SSLFactory.createClientSSLEngine()));
                                         }
@@ -60,11 +61,10 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
 
                                         // upstream
                                         ChannelPipeline upstreamPipeline = serverCtx.channel().pipeline();
+
                                         if (PortUnificationHandler.isSslEnabledUpstream(serverCtx.channel())) {
                                             upstreamPipeline.addLast(new SslHandler(SSLFactory.createServerSSLEngine()));
                                         }
-
-//                                        upstreamPipeline.addLast(new SslPortUnification());
 
                                         if (logger.isDebugEnabled()) {
                                             upstreamPipeline.addLast(new LoggingHandler(this.getClass().getSimpleName() + "<-- "));
@@ -129,24 +129,4 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
         }
     }
 
-    private class SslPortUnification extends SimpleChannelInboundHandler<ByteBuf> {
-
-        public SslPortUnification() {
-            super(false);
-        }
-
-        @Override
-        protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) throws Exception {
-            if (msg.readableBytes() >= 5 && SslHandler.isEncrypted(msg)) {
-                ChannelPipeline pipeline = ctx.pipeline();
-
-                pipeline.addFirst(new SslHandler(SSLFactory.createServerSSLEngine()));
-
-                pipeline.remove(this);
-
-                // re-unify (with SSL enabled)
-                ctx.fireChannelRead(msg);
-            }
-        }
-    }
 }

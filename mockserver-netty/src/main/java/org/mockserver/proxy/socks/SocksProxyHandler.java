@@ -3,7 +3,6 @@ package org.mockserver.proxy.socks;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.socks.*;
-import org.apache.commons.lang3.StringUtils;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.proxy.unification.PortUnificationHandler;
 import org.slf4j.Logger;
@@ -38,9 +37,9 @@ public class SocksProxyHandler extends SimpleChannelInboundHandler<SocksRequest>
                 SocksCmdRequest req = (SocksCmdRequest) socksRequest;
                 if (req.cmdType() == SocksCmdType.CONNECT) {
 
-                    if (req.port() == 443 || req.port() == 8443) {
-                        PortUnificationHandler.enabledSslDownstream(ctx.channel());
-                    }
+                    // assume SSL enabled, if this is incorrect client retries without SSL
+                    PortUnificationHandler.enabledSslDownstream(ctx.channel());
+
                     // add Subject Alternative Name for SSL certificate
                     ConfigurationProperties.addSslSubjectAlternativeNameDomains(req.host());
 

@@ -2,11 +2,7 @@ package org.mockserver.client.netty;
 
 import com.google.common.util.concurrent.SettableFuture;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelPromise;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.handler.codec.http.FullHttpResponse;
-import io.netty.handler.codec.http.HttpHeaders;
-import io.netty.util.CharsetUtil;
 import org.mockserver.model.HttpResponse;
 
 public class HttpClientHandler extends SimpleChannelInboundHandler<HttpResponse> {

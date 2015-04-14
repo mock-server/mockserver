@@ -25,8 +25,7 @@ public class ConfigurationProperties {
 
     // property file config
     public static String propertyFile() {
-        String property = System.getProperty("mockserver.propertyFile", "mockserver.properties");
-        return property;
+        return System.getProperty("mockserver.propertyFile", "mockserver.properties");
     }
 
     // socket config

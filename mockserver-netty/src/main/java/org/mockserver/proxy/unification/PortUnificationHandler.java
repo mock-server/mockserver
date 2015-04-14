@@ -144,7 +144,7 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
         configurePipeline(ctx, pipeline);
         pipeline.remove(this);
 
-        // fire message back through pipeline
+        // pass message to next stage in pipeline
         ctx.fireChannelRead(msg);
     }
 

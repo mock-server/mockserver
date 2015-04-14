@@ -2,17 +2,17 @@ package org.mockserver.proxy.relay;
 
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
-import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.HttpMessage;
 import org.slf4j.Logger;
 
-public class UpstreamProxyRelayHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
+public class ProxyRelayHandler<T extends HttpMessage> extends SimpleChannelInboundHandler<T> {
 
     private final Logger logger;
-    private volatile Channel downstreamChannel;
+    private volatile Channel channel;
 
-    public UpstreamProxyRelayHandler(Channel downstreamChannel, Logger logger) {
+    public ProxyRelayHandler(Channel channel, Logger logger) {
         super(false);
-        this.downstreamChannel = downstreamChannel;
+        this.channel = channel;
         this.logger = logger;
     }
 
@@ -23,14 +23,14 @@ public class UpstreamProxyRelayHandler extends SimpleChannelInboundHandler<FullH
     }
 
     @Override
-    public void channelRead0(final ChannelHandlerContext ctx, final FullHttpRequest request) {
-        downstreamChannel.writeAndFlush(request).addListener(new ChannelFutureListener() {
+    public void channelRead0(final ChannelHandlerContext ctx, final T msg) {
+        channel.writeAndFlush(msg).addListener(new ChannelFutureListener() {
             @Override
             public void operationComplete(ChannelFuture future) {
                 if (future.isSuccess()) {
                     ctx.channel().read();
                 } else {
-                    logger.error("Exception while returning writing " + request, future.cause());
+                    logger.error("Exception while returning writing", future.cause());
                     future.channel().close();
                 }
             }
@@ -39,12 +39,12 @@ public class UpstreamProxyRelayHandler extends SimpleChannelInboundHandler<FullH
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
-        closeOnFlush(downstreamChannel);
+        closeOnFlush(channel);
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        logger.error("Exception while reading from channel " + ctx.channel(), cause);
+        logger.error("Exception while reading from channel", cause);
         closeOnFlush(ctx.channel());
     }
 

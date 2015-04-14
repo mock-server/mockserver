@@ -6,6 +6,7 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.OutboundHttpRequest;
 import org.slf4j.Logger;
@@ -16,12 +17,17 @@ import java.net.ConnectException;
 import java.net.UnknownHostException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class NettyHttpClient {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public HttpResponse sendRequest(final OutboundHttpRequest httpRequest) throws SocketConnectionException {
+        return sendRequest(httpRequest, true);
+    }
+
+    private HttpResponse sendRequest(final OutboundHttpRequest httpRequest, final boolean retry) throws SocketConnectionException {
         logger.debug("Sending request: {}", httpRequest);
 
         // configure the client
@@ -49,7 +55,7 @@ public class NettyHttpClient {
                     });
 
             // wait for response
-            HttpResponse httpResponse = channelInitializer.getResponseFuture().get();
+            HttpResponse httpResponse = channelInitializer.getResponseFuture().get(ConfigurationProperties.maxSocketTimeout(), TimeUnit.MILLISECONDS);
             logger.debug("Received response: {}", httpResponse);
 
             // shutdown client
@@ -57,13 +63,19 @@ public class NettyHttpClient {
 
             return httpResponse;
 
+        } catch (TimeoutException e) {
+            throw new SocketCommunicationException("Response was not received after " + ConfigurationProperties.maxSocketTimeout() + " milliseconds, to make the proxy wait longer please use \"mockserver.maxSocketTimeout\" system property or ConfigurationProperties.maxSocketTimeout(long milliseconds)", e.getCause());
         } catch (ExecutionException e) {
             if (e.getCause() instanceof ConnectException) {
                 throw new SocketConnectionException("Unable to connect to socket " + httpRequest.getDestination(), e.getCause());
             } else if (e.getCause() instanceof UnknownHostException) {
                 throw new SocketConnectionException("Unable to resolve host " + httpRequest.getDestination(), e.getCause());
             } else if (e.getCause() instanceof IOException) {
-                throw new SocketCommunicationException("Error while communicating to " + httpRequest.getDestination(), e.getCause());
+                if (retry) {
+                    return sendRequest((OutboundHttpRequest) httpRequest.setSecure(!httpRequest.isSecure()), false);
+                } else {
+                    throw new SocketCommunicationException("Error while communicating to " + httpRequest.getDestination(), e.getCause());
+                }
             } else {
                 throw new RuntimeException("Exception while sending request", e);
             }

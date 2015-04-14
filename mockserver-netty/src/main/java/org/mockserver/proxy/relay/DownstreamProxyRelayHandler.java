@@ -16,15 +16,6 @@ public class DownstreamProxyRelayHandler extends SimpleChannelInboundHandler<Ful
         this.logger = logger;
     }
 
-    /**
-     * Closes the specified channel after all queued write requests are flushed.
-     */
-    public static void closeOnFlush(Channel ch) {
-        if (ch != null && ch.isActive()) {
-            ch.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
-        }
-    }
-
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
         ctx.read();
@@ -39,7 +30,7 @@ public class DownstreamProxyRelayHandler extends SimpleChannelInboundHandler<Ful
                 if (future.isSuccess()) {
                     ctx.channel().read();
                 } else {
-                    logger.error("Exception while returning response message", future.cause());
+                    logger.error("Exception while returning writing " + response, future.cause());
                     future.channel().close();
                 }
             }
@@ -53,8 +44,17 @@ public class DownstreamProxyRelayHandler extends SimpleChannelInboundHandler<Ful
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        logger.error("Exception while reading from channel", cause);
+        logger.error("Exception while reading from channel " + ctx.channel(), cause);
         closeOnFlush(ctx.channel());
+    }
+
+    /**
+     * Closes the specified channel after all queued write requests are flushed.
+     */
+    public static void closeOnFlush(Channel ch) {
+        if (ch != null && ch.isActive()) {
+            ch.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+        }
     }
 
 }
