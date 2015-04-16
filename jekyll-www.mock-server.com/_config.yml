@@ -9,6 +9,9 @@ keywords: >
   mock api server, json mock service, api mocking
 baseurl: "" # the subpath of your site, e.g. /blog/
 url: "http://www.mock-server.com"
+sitemap:
+    exclude:
+        - "/css/main.scss"
 author:
   name:
     full: James D Bloom
