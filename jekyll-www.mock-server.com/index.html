@@ -20,7 +20,7 @@ layout: default
 
 <h2>What is MockServer</h2>
 
-<p>MockServer is for mocking of any system you integrate with via HTTP or HTTPS (i.e. services, web sites, etc).</p>
+<p>MockServer can be used for mocking any system you integrate with via HTTP or HTTPS (i.e. services, web sites, etc).</p>
 
 <p>MockServer can:</p>
 <ul>
@@ -28,7 +28,50 @@ layout: default
 	<li><strong>forward a request</strong> when the request matches an expectation (i.e. ack as a selective proxy) (<a href="/pages/mock_server/creating_expectations">see more</a>)</li>
 	<li><strong>execute a callback</strong> (in Java) when a request matches an expectation, allowing the response to be created dynamically (<a href="/pages/mock_server/creating_expectations">see more</a>)</li>
 	<li><strong>verify requests</strong> have been sent (i.e. in a test assertion) (<a href="/pages/mock_server/verification">see more</a>)</li>
+</ul>
+
+<h2>What is MockServer Proxy</h2>
+
+<p>MockServer Proxy can be used for transparently recording all requests sent by a system (i.e. an application or a set of applications and servers).</p>
+
+<p>MockServer Proxy can:</p>
+<ul>
+	<li><strong>proxy all requests</strong> using port forwarding, HTTP proxying, HTTPS proxying (HTTP CONNECT), and SOCKS proxying</li>
+	<li><strong>verify requests</strong> have been sent (i.e. in a test assertion) (<a href="/pages/mock_server/verification">see more</a>)</li>
 	<li><strong>record requests and responses</strong> to analyse how a system behaves (<a href="#proxying">see more</a>)</li>
+</ul>
+
+<p>The different proxying methods are:</p>
+
+<ul>
+	<li><strong>port forwarding</strong>
+		<ul>
+			<li>all requests for a specific local port are forwarded to a different (local or remote) port and hostname</li>
+			<li><em>no client or operating system configuration required</em></li>
+		</ul>
+	</li>
+	<li><strong>HTTP proxy</strong>
+		<ul>
+			<li>all requests are forwarded using the Host header of the HTTP request</li>
+			<li><em>the client must be configured to use the proxy</em></li>
+		</ul>
+	</li>
+	<li><strong>HTTPS proxy</strong>
+		<ul>
+			<li>all requests are forwarded using a CONNECT request</li>
+			<li><em>the client must be configured to use the proxy</em></li>
+		</ul>
+	</li>
+	<li><strong>SOCKS proxy</strong>
+		<ul>
+			<li>all requests are forwarded to port and hostname when socket connection is created</li>
+			<li><em>the operating system (or JVM) must be configured to use the proxy</em></li>
+		</ul>
+	<li><strong>SSL & Certificates</strong>
+		<ul>
+			<li>all SSL traffic is handled transparently by auto-generating an appropriate SSL certificate using a single <a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-core/src/main/resources/org/mockserver/socket/CertificateAuthorityCertificate.pem">MockServer root CA certificate</a></li>
+		</ul>
+	</li>
 </ul>
 
 <a name="why-use-mockserver" class="anchor" href="#why-use-mockserver">&nbsp;</a>
@@ -41,18 +84,17 @@ layout: default
 
 <ul>
 	<li>testing
-
 		<ul>
 			<li>easily recreate all types of responses for HTTP dependencies such as REST or RPC services to test applications easily and affectively</li>
 			<li>isolate the system under test to ensure tests run reliably and only fail when there is a genuine bug. It is important only the system under test is tested and not its dependencies to avoid tests failing due to irrelevant external changes such as network failure or a server being rebooted / redeployed.</li>
-			<li>easily setup mock responses independently for each test to ensure test data is encapsulated with each test. Avoid sharing data between tests that is difficult to manage and maintain and risks tests infecting each other.</li>
+			<li>easily setup mock responses independently for each test to ensure test data is encapsulated with each test. Avoid sharing data between tests that is difficult to manage and maintain and risks tests infecting each other</li>
+			<li>create test assertions that verify the requests the system-under-test has been sent</li>
 		</ul>
 	</li>
 	<li>de-coupling development
-
 		<ul>
-			<li>start working against a service API before the service is available. If an API or service is not yet fully developed MockServer can mock the API allowing any team who is using the service to start work without being delayed.</li>
-			<li>isolate development teams particularly critical during the initial development phases when the APIs / services may be extremely unstable and volatile. Using MockServer allows development work to continue even when an external service fails.</li>
+			<li>start working against a service API before the service is available. If an API or service is not yet fully developed MockServer can mock the API allowing any team who is using the service to start work without being delayed</li>
+			<li>isolate development teams particularly critical during the initial development phases when the APIs / services may be extremely unstable and volatile. Using MockServer allows development work to continue even when an external service fails</li>
 		</ul>
 	</li>
 </ul>
@@ -64,3 +106,27 @@ layout: default
 <p>Could be tested with MockServer, mocking the service dependencies, as follows:</p>
 
 <p><a href="images/SystemUnderTest.png" target="_blank"><img src="images/SystemUnderTest.png" alt="Mocking service dependencies with MockServer" style="max-width:100%;"></a></p>
+
+<h2>Why use MockServer Proxy</h2>
+
+<p>MockServer proxy allows you to record request from the system-under-test or two analysis an existing system by recording outbound requests.</p>
+
+<p>This is useful in the following scenarios:</p>
+
+<ul>
+	<li>testing
+		<ul>
+			<li>create test assertions that verify the requests the system-under-test has been sent, without needing to mock any requests</li>
+		</ul>
+	</li>
+	<li>analyse existing system
+		<ul>
+			<li>record all outbound requests so it is possible to analise and under stand what outbound requests an existing system is making</li>
+		</ul>
+	</li>
+	<li>record & replay
+		<ul>
+			<li>all recorded requests can be converted into Java code or JSON expectations to simplify the creation of mocks for complex test scenarios</li>
+		</ul>
+	</li>
+</ul>
