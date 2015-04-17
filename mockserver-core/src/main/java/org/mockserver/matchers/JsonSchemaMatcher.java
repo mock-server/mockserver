@@ -34,7 +34,7 @@ public class JsonSchemaMatcher extends BodyMatcher<String> {
             }
 
             if (!result) {
-                logger.trace("Failed to perform JSON match \"{}\" with schema \"{}\" because {}", matched, this.schema, objectMapper.writeValueAsString(processingReport));
+                logger.trace("Failed to perform JSON match \"{}\" with schema \"{}\" because {}", matched, this.schema, processingReport.toString());
             }
         } catch (Exception e) {
             logger.trace("Failed to perform JSON match \"{}\" with \"{}\" because {}", matched, this.schema, e.getMessage());

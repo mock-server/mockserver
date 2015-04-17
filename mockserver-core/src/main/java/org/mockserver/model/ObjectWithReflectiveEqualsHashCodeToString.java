@@ -1,6 +1,7 @@
 package org.mockserver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -18,7 +19,8 @@ public abstract class ObjectWithReflectiveEqualsHashCodeToString {
     private String[] fieldsExcludedFromEqualsAndHashCode = new String[]{"logger", "fieldsExcludedFromEqualsAndHashCode"};
 
     @JsonIgnore
-    protected Logger logger = LoggerFactory.getLogger(this.getClass());
+    @VisibleForTesting
+    public Logger logger = LoggerFactory.getLogger(this.getClass());
 
     static {
         ReflectionToStringBuilder.setDefaultStyle(ToStringStyle.SHORT_PREFIX_STYLE);
