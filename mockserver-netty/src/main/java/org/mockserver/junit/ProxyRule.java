@@ -14,7 +14,7 @@ public class ProxyRule implements TestRule {
 
     private static ClientAndProxy perTestSuiteClientAndProxy;
     private final Object target;
-    private final Integer httpPort;
+    private final Integer port;
     private final boolean perTestSuite;
     private ClientAndProxyFactory clientAndProxyFactory;
 
@@ -23,7 +23,7 @@ public class ProxyRule implements TestRule {
      * This constructor dynamically allocates a free port for the proxy to use.
      * Note: The getHttpPort getter can be used to retrieve the dynamically allocated port.
      *
-     * @param target an instance of the test being executed
+     * @param target        an instance of the test being executed
      */
     public ProxyRule(Object target) {
         this(PortFactory.findFreePort(), target);
@@ -33,10 +33,10 @@ public class ProxyRule implements TestRule {
      * Start the proxy prior to test execution and stop the proxy after the tests have completed.
      * This constructor dynamically allocates a free port for the proxy to use.
      *
-     * @param target an instance of the test being executed
-     * @param perTestSuite indicates how many instances of the proxy are created
-     *                     if true a single proxy is created per JVM
-     *                     if false one instance per test class is created
+     * @param target        an instance of the test being executed
+     * @param perTestSuite  indicates how many instances of the proxy are created
+     *                      if true a single proxy is created per JVM
+     *                      if false one instance per test class is created
      */
     public ProxyRule(Object target, boolean perTestSuite) {
         this(PortFactory.findFreePort(), target, perTestSuite);
@@ -44,34 +44,34 @@ public class ProxyRule implements TestRule {
 
     /**
      * Start the proxy prior to test execution and stop the proxy after the tests have completed.
-     * This constructor dynamically create a proxy that accepts HTTP requests on the specified port
+     * This constructor dynamically create a proxy that accepts HTTP(S) requests on the specified port
      *
-     * @param httpPort the HTTP port for the proxy
-     * @param target an instance of the test being executed
+     * @param port          the HTTP(S) port for the proxy
+     * @param target        an instance of the test being executed
      */
-    public ProxyRule(Integer httpPort, Object target) {
-        this(httpPort, target, false);
+    public ProxyRule(Integer port, Object target) {
+        this(port, target, false);
     }
 
     /**
      * Start the proxy prior to test execution and stop the proxy after the tests have completed.
-     * This constructor dynamically create a proxy that accepts HTTP and HTTPS requests on the specified ports
+     * This constructor dynamically create a proxy that accepts HTTP(S) requests on the specified port
      *
-     * @param httpPort the HTTP(S) port for the proxy
-     * @param target an instance of the test being executed
-     * @param perTestSuite indicates how many instances of the proxy are created
-     *                     if true a single proxy is created per JVM
-     *                     if false one instance per test class is created
+     * @param port          the HTTP(S) port for the proxy
+     * @param target        an instance of the test being executed
+     * @param perTestSuite  indicates how many instances of the proxy are created
+     *                      if true a single proxy is created per JVM
+     *                      if false one instance per test class is created
      */
-    public ProxyRule(Integer httpPort, Object target, boolean perTestSuite) {
-        this.httpPort = httpPort;
+    public ProxyRule(Integer port, Object target, boolean perTestSuite) {
+        this.port = port;
         this.target = target;
         this.perTestSuite = perTestSuite;
-        this.clientAndProxyFactory = new ClientAndProxyFactory(httpPort);
+        this.clientAndProxyFactory = new ClientAndProxyFactory(port);
     }
 
     public Integer getHttpPort() {
-        return httpPort;
+        return port;
     }
 
     public Statement apply(Statement base, Description description) {
@@ -124,14 +124,14 @@ public class ProxyRule implements TestRule {
 
     @VisibleForTesting
     class ClientAndProxyFactory {
-        private final Integer httpPort;
+        private final Integer port;
 
-        public ClientAndProxyFactory(Integer httpPort) {
-            this.httpPort = httpPort;
+        public ClientAndProxyFactory(Integer port) {
+            this.port = port;
         }
 
         public ClientAndProxy newClientAndProxy() {
-            return ClientAndProxy.startClientAndProxy(httpPort);
+            return ClientAndProxy.startClientAndProxy(port);
         }
     }
 }
