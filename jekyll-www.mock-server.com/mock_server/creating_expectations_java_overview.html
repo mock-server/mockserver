@@ -6,6 +6,8 @@ section: 'Mock Server'
 subsection: false
 ---
 
+<!--<p><strong>Mock Response Expectation (connect to existing MockServer)</strong></p>-->
+
 <p>To setup an expectation that responds to a request:</p>
 
 <pre><code class="code"><span class="keyword">new</span> MockServerClient(<span class="string_literal">"127.0.0.1"</span>, <span class="numeric_literal">8080</span>)
@@ -33,6 +35,8 @@ subsection: false
                         .withDelay(<span class="keyword">new</span> Delay(<span class="constant">SECONDS</span>, <span class="numeric_literal">1</span>))
         );</code></pre>
 
+<!--<p><strong>Forward Request Expectation (connect to existing MockServer)</strong></p>-->
+
 <p>To setup an expectation that forwards to a request:</p>
 
 <pre><code class="code"><span class="keyword">new</span> MockServerClient(<span class="string_literal">"127.0.0.1"</span>, <span class="numeric_literal">8080</span>)
@@ -49,12 +53,69 @@ subsection: false
                         .withScheme(<span class="constant">HTTP</span>)
         );</code></pre>
 
-<p><strong>Note:</strong> this requires the use of these static imports as follows:</p>
-<code class="code"><span class="keyword">import static</span> org.mockserver.model.HttpRequest.request;
+<!--<p><strong>Execute Callback Expectation (start new MockServer instance)</strong></p>-->
+
+<p>To start a local instance of MockServer and setup an expectation that executes a callback:</p>
+
+<pre><code class="code">MockServerClient mockServer = startClientAndServer(<span class="numeric_literal">8080</span>);
+
+mockServer
+        .when(
+                request()
+                        .withMethod(<span class="string_literal">"POST"</span>)
+                        .withPath(<span class="string_literal">"/login"</span>)
+                        .withQueryStringParameters(
+                                <span class="keyword">new</span> Parameter(<span class="string_literal">"returnUrl"</span>, <span class="string_literal">"/account"</span>)
+                        )
+                        .withCookies(
+                                <span class="keyword">new</span> Cookie(<span class="string_literal">"sessionId"</span>, <span class="string_literal">"2By8LOhBmaW5nZXJwcmludCIlMDAzMW"</span>)
+                        )
+                        .withBody(exact(<span class="string_literal">"{username: 'foo', password: 'bar'}"</span>)),
+                exactly(<span class="numeric_literal">1</span>)
+        )
+        .when(
+                request()
+                        .withPath(<span class="string_literal">"/callback"</span>)
+        )
+        .callback(
+                callback()
+                        .withCallbackClass(<span class="string_literal">"org.mockserver.server.PrecannedTestExpectationCallback"</span>)
+        );</code></pre>
+
+<p>and the callback class could be as follows:</p>
+
+<pre><code class="code"><span class="keyword">public class</span> PrecannedTestExpectationCallback <span class="keyword">implements</span> ExpectationCallback {
+
+    <span class="keyword">public static</span> HttpResponse httpResponse = response()
+            .withStatusCode(<span class="constant">ACCEPTED_202</span>.code())
+            .withHeaders(
+                    header(<span class="string_literal">"x-callback"</span>, <span class="string_literal">"test_callback_header"</span>),
+                    header(<span class="string_literal">"Content-Length"</span>, <span class="string_literal">"a_callback_response"</span>.getBytes().length),
+                    header(<span class="string_literal">"Connection"</span>, <span class="string_literal">"keep-alive"</span>)
+            )
+            .withBody(<span class="string_literal">"a_callback_response"</span>);
+
+    <span class="annotation">@Override</span>
+    <span class="keyword">public</span> HttpResponse handle(HttpRequest httpRequest) {
+        if (httpRequest.getPath().getValue().endsWith(<span class="string_literal">"/callback"</span>)) {
+            <span class="keyword">return</span> httpResponse;
+        } else {
+            <span class="keyword">return</span> notFoundResponse();
+        }
+    }
+}</code></pre>
+
+<p><strong>Note:</strong> these examples require the use of these static imports as follows:</p>
+<code class="code"><span class="keyword">import static</span> org.mockserver.integration.ClientAndServer.startClientAndServer;
+<span class="keyword">import static</span> org.mockserver.model.HttpRequest.request;
 <span class="keyword">import static</span> org.mockserver.model.HttpResponse.response;
 <span class="keyword">import static</span> org.mockserver.model.HttpForward.forward;
+<span class="keyword">import static</span> org.mockserver.model.Header.header;
+<span class="keyword">import static</span> org.mockserver.model.HttpResponse.notFoundResponse;
+<span class="keyword">import static</span> org.mockserver.model.HttpResponse.response;
 <span class="keyword">import static</span> org.mockserver.matchers.Times.exactly;
 <span class="keyword">import static</span> java.util.concurrent.TimeUnit.SECONDS;
-<span class="keyword">import static</span> org.mockserver.model.HttpForward.Scheme.HTTP;</code>
+<span class="keyword">import static</span> org.mockserver.model.HttpForward.Scheme.HTTP;
+<span class="keyword">import static</span> import static org.mockserver.model.HttpStatusCode.ACCEPTED_202;</code>
 
-<p>The <a href="https://github.com/jamesdbloom/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example test called <a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-examples/src/test/java/org/mockserver/web/controller/BooksPageIntegrationTest.java">BookPageIntegrationTest</a> that demonstrates a fully working example.</p>
+<p>The <a href="https://github.com/jamesdbloom/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains multiple examples such as <a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-examples/src/test/java/org/mockserver/web/controller/BooksPageIntegrationTest.java">BookPageIntegrationTest</a> that demonstrates a fully working examples.</p>
