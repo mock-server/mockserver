@@ -1,5 +1,5 @@
 ---
-title: Overview
+title: Getting Started
 layout: page
 pageOrder: 1
 section: 'Proxy'
@@ -31,7 +31,7 @@ subsection: true
 
 <p>For example to use the proxy to verify a request has been sent:</p>
 
-<pre><code class="code"><span class="keyword">new</span> ProxyClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">9999</span>)
+<pre><code class="code"><span class="keyword">new</span> ProxyClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1080</span>)
         .verify(
                 request()
                         .withMethod(<span class="string_literal">"POST"</span>)
@@ -42,7 +42,7 @@ subsection: true
 
 <p>For example to use the proxy to print recorded requests and response to the log as JSON:</p>
 
-<pre><code class="code"><span class="keyword">new</span> ProxyClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">9999</span>)
+<pre><code class="code"><span class="keyword">new</span> ProxyClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1080</span>)
         .dumpToLogAsJSON(
                 request()
                         .withPath(<span class="string_literal">"/login"</span>)

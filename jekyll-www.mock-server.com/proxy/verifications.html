@@ -19,7 +19,7 @@ subsection: true
 
 <p>To verify that the system under test has sent an inidividual request to MockServer use the verify method of the MockServerClient as follows:</p>
 
-<pre><code class="code"><span class="keyword">new</span> MockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">9090</span>).verify(
+<pre><code class="code"><span class="keyword">new</span> MockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1090</span>).verify(
         request()
                 .withMethod(<span class="string_literal">"POST"</span>)
                 .withPath(<span class="string_literal">"/login"</span>)
@@ -42,7 +42,7 @@ VerificationTimes.atLeast(<span class="keyword">int</span> count);</code></pre>
 
 <p>To verify that the system under test has sent a sequence of requests to MockServer use the verify method of the MockServerClient as follows:</p>
 
-<pre><code class="code"><span class="keyword">new</span> MockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">9090</span>).verify(
+<pre><code class="code"><span class="keyword">new</span> MockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1090</span>).verify(
         request()
                 .withMethod(<span class="string_literal">"POST"</span>)
                 .withPath(<span class="string_literal">"/login"</span>)

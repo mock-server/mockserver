@@ -1,5 +1,6 @@
 ---
 title: Running Mock Server
+shortTitle: Running Mock Server
 layout: page
 pageOrder: 2
 section: 'Mock Server'
@@ -8,30 +9,7 @@ subsection: true
 
 <p>Before any mock expectation can be sent to MockServer it must be started.</p>
 
-<p>The mock server can be run:</p>
-
-<ul>
-	<li>via a <a href="#maven-plugin"><strong>Maven Plugin</strong></a> as part of a Maven build cycle</li>
-	<li><a href="#client-api"><strong>programmatically via an API</strong></a> in an <span class="annotation">@Before</span> or <span class="annotation">@After</span> method</li>
-	<li><a href="#junit-rule"><strong>using a JUnit @Rule</strong></a> via a <span class="annotation">@Rule</span> annotated field in a JUnit test</li>
-	<li><a href="#running-from-command-line"><strong>from the command line</strong></a> as a stand-alone process in a test environment</li>
-	<li>as a <a href="#docker-container"><strong>Docker container</strong></a> in any Docker enabled environment</li>
-	<li>as a <a href="#vertx-module"><strong>Vert.X module</strong></a> as part of an existing Vert.X environment</li>
-	<li>as a <a href="#deployable-war"><strong>deployable WAR</strong></a> to an existing application server</li>
-	<li>as a <a href="https://www.npmjs.org/package/mockserver-grunt"><strong>Grunt plugin</strong></a> as part of a Grunt build cycle</li>
-	<li>as a <a href="https://www.npmjs.org/package/mockserver-grunt"><strong>Node.js (npm) module</strong></a> from any Node.js code</li>
-</ul>
-
-<p>MockServer is available as:</p>
-
-<ul>
-	<li>a stand alone Netty web server that is fully self contained</li>
-	<li>a deployable WAR that runs on any JEE web server</li>
-	<li>a fully encapsulated Docker container</li>
-	<li>a Vert.X module that runs on a Vert.X</li>
-</ul>
-
-<p>It is also possible to build and run MockServer directly from source code <a href="#build-and-run-from-source">as described below</a></p>
+{% include_subpage _includes/running_mock_server_summary.html %}
 
 <a name="maven-plugin" class="anchor" href="#maven-plugin">&nbsp;</a>
 
@@ -102,12 +80,31 @@ subsection: true
      &lt;/<span class="element">executions</span>&gt;
  &lt;/<span class="element">plugin</span>&gt;</code></pre>
 
-<p>
-	<strong>Note:</strong> If you use the <span class="annotation">runForked</span> goal as above and the <strong>test</strong> phase fails (because a test has failed) MockServer will not be stopped as Maven does not run any more phases after a phase has failed. In the case above the
-	<strong>verify</strong> phase is not run if a test fails so the forked MockServer will not be stopped. If you want to ensure MockServer is stopped even when there are test failures make sure you use <span class="annotation">start</span> and
-	<span class="annotation">stop</span> goals as these run MockServer on a separate thread that is stopped however maven exits (even if a test fails). </p>
+<p><strong>Stop MockServer Even When Tests Fail</strong></p>
 
-<p>These goals can be used from the command line as well to start and stop MockServer, as follows:</p>
+<p>If you use the <span class="annotation">runForked</span> goal as above and the <strong>test</strong> phase fails (because a test has failed) MockServer will not be stopped as Maven does not run any more phases after a phase has failed. In the case above the
+<strong>verify</strong> phase is not run if a test fails so the forked MockServer will not be stopped.</p>
+
+<p>If you want to ensure MockServer is stopped even when there are test failures make sure you use <span class="annotation">start</span> and
+<span class="annotation">stop</span> goals as these run MockServer on a separate thread that is stopped however maven exits (even if a test fails).</p>
+
+<p>Alternatively a TestListener can be used with <span class="annotation">maven-surefire-plugin</span> to ensure that MockServer is stopped even when a test fails, as follows:</p>
+
+<pre><code class="code xml"> &lt;<span class="element">plugin</span>&gt;
+    &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.apache.maven.plugins</span>&lt;/<span class="element">groupId</span>&gt;
+    &lt;<span class="element">artifactId</span>&gt;<span class="element_value">maven-surefire-plugin</span>&lt;/<span class="element">artifactId</span>&gt;
+    &lt;<span class="element">version</span>&gt;<span class="element_value">2.17</span>&lt;/<span class="element">version</span>&gt;
+    &lt;<span class="element">configuration</span>&gt;
+        &lt;<span class="element">properties</span>&gt;
+            &lt;<span class="element">property</span>&gt;
+                &lt;<span class="element">name</span>&gt;<span class="element_value">listener</span>&lt;<span class="element">/name</span>&gt;
+                &lt;<span class="element">value</span>&gt;<span class="element_value">org.mockserver.maven.StopMockServerTestListener</span>&lt;<span class="element">/value</span>&gt;
+            &lt;<span class="element">/property</span>&gt;
+        &lt;<span class="element">/properties</span>&gt;
+    &lt;/<span class="element">configuration</span>&gt;
+&lt;/<span class="element">plugin</span>&gt;</code></pre>
+
+<p>The Maven plugin can also be used from the command line to start and stop MockServer, as follows:</p>
 
 <p>To run MockServer synchronously and block:</p>
 
@@ -142,17 +139,17 @@ subsection: true
 		<strong>stopForked</strong> - stop a forked MockServer, previously started by a runForked goal
 	</li>
 </ul>
-<p>The Maven plugin can be configured as follows:</p>
+<p>The Maven plugin can be configured with the following properties:</p>
 
 <ul>
 	<li>
-		<strong>serverPort</strong> - java -jar &lt;path to and HTTPS requests, port unification is used to support HTTP and HTTPS on the same port (required: false - but at least one of the two ports must be specified)
+		<strong>serverPort</strong> - The port the MockServer listens for incoming request.  Port unification is used to support both HTTP and HTTPS on the same port (required: false - but at least one of the two ports (serverPort or proxyPort) must be specified)
 	</li>
 	<li>
-		<strong>proxyPort</strong> - The port the proxy listens to incoming HTTP, HTTP -> HTTPS CONNECT, HTTPS and SOCKS requests, port unification supports for all protocols on the same port (required: false - but at least one of the two ports must be specified)
+		<strong>proxyPort</strong> - The port the proxy listens to incoming requests. Port unification is used to support all protocols on the same port (required: false - but at least one of the two ports (serverPort or proxyPort) must be specified)
 	</li>
 	<li>
-		<strong>timeout</strong> - How long to block waiting for MockServer, used by <strong>run</strong> goal, 0 means wait indefinitely (required: false, default: 0)
+		<strong>timeout</strong> - How long to block waiting for MockServer, after the timeout the plugin will shutdown MockServer, used by <strong>run</strong> goal, 0 means wait indefinitely (required: false, default: 0)
 	</li>
 	<li>
 		<strong>logLevel</strong> - The logging level (required: false, default: WARN)
@@ -161,10 +158,7 @@ subsection: true
 		<strong>skip</strong> - Prevent the plugin from running (required: false, default: false)
 	</li>
 	<li>
-		<strong>initializationClass</strong> - To enable the creation of default expectations that are generic across all tests or mocking scenarios a class can be specified to initialize expectations in MockServer, this class must implement
-		<span class="annotation">org.mockserver.initialize.ExpectationInitializer</span> interface, the <span class="annotation">initializeExpectations(MockServerClient mockServerClient)</span> method will be called once MockServer has been started (but ONLY if
-		<strong>serverPort</strong> has been set), however it should be noted that it is generally better practice to create all expectations locally in each test (or test class) for clarity, simplicity and to avoid brittle tests. Note: that the plugin must be started during the
-		<strong>process-test-classes</strong> to ensure that the initialization class has been compiled from either <strong>src/main/java</strong> or <strong>src/test/java</strong> locations. (required: false, default: false)
+		<strong>initializationClass</strong> - To enable the creation of default expectations a class can be specified to initialize expectations in MockServer, this class must implement <span class="inline_code">org.mockserver.initialize.ExpectationInitializer</span> interface.  The <span class="inline_code">initializeExpectations(MockServerClient mockServerClient)</span> method will be called once MockServer has been started (but ONLY if <strong>serverPort</strong> has been set). Note: that the plugin must be started during the <strong>process-test-classes</strong> to ensure that the initialization class has been compiled from either <strong>src/main/java</strong> or <strong>src/test/java</strong> locations. (required: false, default: false)
 	</li>
 </ul>
 
@@ -183,7 +177,7 @@ subsection: true
      &lt;<span class="element">version</span>&gt;<span class="element_value">3.9.8</span>&lt;<span class="element">/version</span>&gt;
 &lt;<span class="element">/dependency</span>&gt;</code></pre>
 
-<p>To start the server and create a client the simplest way is to the start factory methods ClientAndServer.startClientAndServer or ClientAndProxy.startClientAndProxy as follows:</p>
+<p>To start the server and create a client the simplest way is to the start factory methods <span class="inline_code">ClientAndServer.startClientAndServer</span> or <span class="inline_code">ClientAndProxy.startClientAndProxy</span> as follows:</p>
 
 
 <p>Add includes:</p>
@@ -200,8 +194,8 @@ subsection: true
 
 <pre><code class="code"><span class="annotation">@Before</span>
 <span class="keyword">public void</span> startProxy() {
-    <span class="this_value">mockServer</span> = startClientAndServer(<span class="numeric_literal">8080</span>);
-    <span class="this_value">proxy</span> = startClientAndProxy(<span class="numeric_literal">9090</span>);
+    <span class="this_value">mockServer</span> = startClientAndServer(<span class="numeric_literal">1080</span>);
+    <span class="this_value">proxy</span> = startClientAndProxy(<span class="numeric_literal">1090</span>);
 }</code></pre>
 
 <p>Stop server and client when appropriate, for example in <span class="annotation">@After</span> method:</p>
@@ -227,7 +221,7 @@ subsection: true
 
 <span class="keyword">private</span> MockServerClient mockServerClient;</code></pre>
 
-<p>Any test method can now use the <strong>mockServerClient</strong> field to <a href="#create-expectations">create expectation</a> or <a href="#verify-behaviour">verify</a> requests.</p>
+<p>Any test method can now use the <strong>mockServerClient</strong> field to <a href="/mock_server/create_expectations.html">create expectation</a> or <a href="/mock_server/verification.html">verify</a> requests.</p>
 
 <p>The MockServerRule has the following constructors:</p>
 
@@ -251,46 +245,34 @@ subsection: true
 <span class="keyword">public</span> MockServerRule(Object target, <span class="keyword">boolean</span> per TestSuite);
 <span class="comment">/**
  * Start the proxy prior to test execution and stop the proxy after the tests have completed.
- * This constructor dynamically create a proxy that accepts HTTP requests on the specified port
+ * This constructor dynamically create a proxy that accepts HTTP(S) requests on the specified port
  *
- * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpPort</span> the HTTP port for the proxy
+ * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">port</span> the HTTP(S) port for the proxy
  * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">target</span> an instance of the test being executed
  */</span>
-<span class="keyword">public</span> MockServerRule(Integer httpPort, Object target);
+<span class="keyword">public</span> MockServerRule(Integer port, Object target);
 
 <span class="comment">/**
  * Start the proxy prior to test execution and stop the proxy after the tests have completed.
- * This constructor dynamically create a proxy that accepts HTTP requests on the specified port
+ * This constructor dynamically create a proxy that accepts HTTP(S) requests on the specified port
  *
- * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpPort</span> the HTTP port for the proxy
- * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">target</span> an instance of the test being executed
- * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">perTestSuite</span> indicates how many instances of MockServer are created
- *                     if true a single MockServer is created per JVM
- *                     if false one instance per test class is created
- */</span>
-<span class="keyword">public</span> MockServerRule(Integer httpPort, Object target, <span class="keyword">boolean</span> per TestSuite);
-
-<span class="comment">/**
- * Start the proxy prior to test execution and stop the proxy after the tests have completed.
- * This constructor dynamically create a proxy that accepts HTTP and HTTPS requests on the specified ports
- *
- * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpPort</span> the HTTP port for the proxy
+ * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">port</span> the HTTP(S) port for the proxy
  * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpsPort</span> the HTTPS port for the proxy
  * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">target</span> an instance of the test being executed
  * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">perTestSuite</span> indicates how many instances of MockServer are created
  *                     if true a single MockServer is created per JVM
  *                     if false one instance per test class is created
  */</span>
-<span class="keyword">public</span> MockServerRule(Integer httpPort, Integer httpsPort, Object target, <span class="keyword">boolean</span> per TestSuite);</code></pre>
+<span class="keyword">public</span> MockServerRule(Integer port, Object target, <span class="keyword">boolean</span> per TestSuite);</code></pre>
 
 <p>The proxy can be run using the ProxyRule. The ProxyRule starts the proxy before the any test runs and stops the proxy after all tests have completed. A ProxyClient is then assigned to any field in the unit test of type org.mockserver.client.proxy.ProxyClient</p>
 
 <pre><code class="code"><span class="annotation">@Rule</span>
-<span class="keyword">public</span> ProxyRule proxyRule = <span class="keyword">new</span> ProxyRule(<span class="numeric_literal">8080</span>, <span class="keyword">this</span>);
+<span class="keyword">public</span> ProxyRule proxyRule = <span class="keyword">new</span> ProxyRule(<span class="numeric_literal">1080</span>, <span class="keyword">this</span>);
 
 <span class="keyword">private</span> ProxyClient proxyClient;</code></pre>
 
-<p>Any test method can now use the <strong>proxyClient</strong> field to <a href="#verify-behaviour">verify</a> requests or <a href="#analysing-behaviour">anaylse a system's behaviour</a>.</p>
+<p>Any test method can now use the <strong>proxyClient</strong> field to <a href="/mock_server/verification.html">verify</a> requests or <a href="/proxy/analysing_behavior.html">anaylse a system's behaviour</a>.</p>
 
 <p>The ProxyRule has the following constructors:</p>
 
@@ -316,37 +298,25 @@ subsection: true
 
 <span class="comment">/**
  * Start the proxy prior to test execution and stop the proxy after the tests have completed.
- * This constructor dynamically create a proxy that accepts HTTP requests on the specified port
+ * This constructor dynamically create a proxy that accepts HTTP(S) requests on the specified port
  *
- * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpPort</span> the HTTP port for the proxy
+ * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">port</span> the HTTP(S) port for the proxy
  * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">target</span> an instance of the test being executed
  */</span>
-<span class="keyword">public</span> ProxyRule(Integer httpPort, Object target);
+<span class="keyword">public</span> ProxyRule(Integer port, Object target);
 
 <span class="comment">/**
  * Start the proxy prior to test execution and stop the proxy after the tests have completed.
- * This constructor dynamically create a proxy that accepts HTTP requests on the specified port
+ * This constructor dynamically create a proxy that accepts HTTP(S) requests on the specified port
  *
- * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpPort</span> the HTTP port for the proxy
- * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">target</span> an instance of the test being executed
- * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">perTestSuite</span> indicates how many instances of the proxy are created
- *                     if true a single proxy is created per JVM
- *                     if false one instance per test class is created
- */</span>
-<span class="keyword">public</span> ProxyRule(Integer httpPort, Object target, <span class="keyword">boolean</span> per TestSuite);
-
-<span class="comment">/**
- * Start the proxy prior to test execution and stop the proxy after the tests have completed.
- * This constructor dynamically create a proxy that accepts HTTP and HTTPS requests on the specified ports
- *
- * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpPort</span> the HTTP port for the proxy
+ * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">port</span> the HTTP(S) port for the proxy
  * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpsPort</span> the HTTPS port for the proxy
  * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">target</span> an instance of the test being executed
  * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">perTestSuite</span> indicates how many instances of the proxy are created
  *                     if true a single proxy is created per JVM
  *                     if false one instance per test class is created
  */</span>
-<span class="keyword">public</span> ProxyRule(Integer httpPort, Integer httpsPort, Object target, <span class="keyword">boolean</span> per TestSuite);</code></pre>
+<span class="keyword">public</span> ProxyRule(Integer port, Object target, <span class="keyword">boolean</span> per TestSuite);</code></pre>
 
 <a name="running-from-command-line" class="anchor" href="#running-from-command-line">&nbsp;</a>
 
@@ -357,31 +327,48 @@ subsection: true
 <ol>
 	<li><p>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/3.9.8/mockserver-netty-3.9.8-jar-with-dependencies.jar">mockserver-netty-3.9.8-jar-with-dependencies.jar</a> from Maven Central</p></li>
 	<li>
-		<code class="code inline">java -jar &lt;path to mockserver-netty-3.9.8-jar-with-dependencies.jar&gt; -serverPort &lt;port&gt;</code>
+		<code class="code inline">java -jar <span class="command_line_argument_placeholder">&lt;path to mockserver-netty-3.9.8-jar-with-dependencies.jar&gt;</span> -serverPort <span class="command_line_argument_placeholder">&lt;port&gt;</span></code>
 	</li>
 </ol>
 
 <p>The command line supports the following options:</p>
 
-<pre><code class="code">java -jar &lt;path to jar&gt; [-serverPort &lt;port&gt;]        \
-                        [-proxyPort &lt;port&gt;]
+<pre><code class="code">java -jar <span class="command_line_argument_placeholder">&lt;path to mockserver-jetty-jar-with-dependencies.jar&gt;</span> [-serverPort <span class="command_line_argument_placeholder">&lt;port&gt;</span>] \
+                                                               [-proxyPort <span class="command_line_argument_placeholder">&lt;port&gt;</span>] \
+                                                               [-proxyRemotePort <span class="command_line_argument_placeholder">&lt;port&gt;</span>] \
+                                                               [-proxyRemoteHost <span class="command_line_argument_placeholder">&lt;hostname&gt;</span>]
 
-  valid options are:
-     -serverPort &lt;port&gt;         specifies the HTTP and HTTPS port for the
-                                MockServer port unification is used to
-                                support HTTP and HTTPS on the same port
+ valid options are:
+    -serverPort <span class="command_line_argument_placeholder">&lt;port&gt;</span>           specifies the HTTP, HTTPS, SOCKS and HTTP
+                                 CONNECT port for proxy, port unification
+                                 supports for all protocols on the same port
 
-     -proxyPort &lt;path&gt;          specifies the HTTP, HTTPS, SOCKS and HTTP
-                                CONNECT port for proxy, port unification
-                                supports for all protocols on the same port</code></pre>
+    -proxyPort <span class="command_line_argument_placeholder">&lt;port&gt;</span>            specifies the HTTP and HTTPS port for the
+                                 MockServer port unification is used to
+                                 support HTTP and HTTPS on the same port
+
+    -proxyRemotePort <span class="command_line_argument_placeholder">&lt;port&gt;</span>      specifies the port to forward all proxy
+                                 requests to (i.e. all requests received on
+                                 portPort), this setting is used to enable
+                                 the port forwarding mode therefore this
+                                 option disables the HTTP, HTTPS, SOCKS and
+                                 HTTP CONNECT support
+
+    -proxyRemoteHost <span class="command_line_argument_placeholder">&lt;hostname&gt;</span>  specified the host to forward all proxy
+                                 requests to (i.e. all requests received on
+                                 portPort), this setting is ignored unless
+                                 proxyRemotePort has been specified, if no
+                                 value is provided for proxyRemoteHost when
+                                 proxyRemotePort has been specified,
+                                 proxyRemoteHost will default to "localhost"</code></pre>
 
 <p>For example:</p>
 
-<pre><code class="code">java -Dmockserver.logLevel=DEBUG -jar ~/Downloads/mockserver-netty-3.9.8-jar-with-dependencies.jar -serverPort <span class="numeric_literal">8080</span> -proxyPort <span class="numeric_literal">9090</span></code></pre>
+<pre><code class="code">java -Dmockserver.logLevel=DEBUG -jar ~/Downloads/mockserver-netty-3.9.8-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span> -proxyPort <span class="numeric_literal">1090</span></code></pre>
 
 <a name="docker-container" class="anchor" href="#docker-container">&nbsp;</a>
 
-<h4><a href="https://registry.hub.docker.com/u/jamesdbloom/mockserver/">Docker Container</a></h4>
+<h4>Docker Container</h4>
 
 <p>MockServer can be run as a <a href="https://registry.hub.docker.com/u/jamesdbloom/mockserver/">Docker container</a>.</p>
 
@@ -396,12 +383,12 @@ subsection: true
 
 <p>To run MockServer specifying as a Docker container run the following command (replacing each <strong><span class="annotation">&lt; ... &gt;</span></strong> section with the appropriate port value):</p>
 
-<pre><code class="code">docker run -d -p <span class="annotation">&lt;serverPort&gt;</span>:<span class="numeric_literal">8080</span> -p <span class="annotation">&lt;proxyPort&gt;</span>:<span class="numeric_literal">9090</span> jamesdbloom/mockserver</code></pre>
+<pre><code class="code">docker run -d -p <span class="annotation">&lt;serverPort&gt;</span>:<span class="numeric_literal">1080</span> -p <span class="annotation">&lt;proxyPort&gt;</span>:<span class="numeric_literal">1090</span> jamesdbloom/mockserver</code></pre>
 
-<p><strong>Note</strong>: you only need to specify mapping for ports you need to use, for example, if you are only using MockServer to mock HTTP endpoints then only specify <strong>-p <span class="annotation">&lt;serverPort&gt;</span>:<span class="numeric_literal">8080</span></strong> as follows (replacing each
+<p><strong>Note</strong>: you only need to specify mapping for ports you need to use, for example, if you are only using MockServer to mock HTTP endpoints then only specify <strong>-p <span class="annotation">&lt;serverPort&gt;</span>:<span class="numeric_literal">1080</span></strong> as follows (replacing each
 	<strong><span class="annotation">&lt; ... &gt;</span></strong> section with the appropriate port value):</p>
 
-<pre><code class="code">docker run -d -p <span class="annotation">&lt;serverPort&gt;</span>:<span class="numeric_literal">8080</span> jamesdbloom/mockserver</code></pre>
+<pre><code class="code">docker run -d -p <span class="annotation">&lt;serverPort&gt;</span>:<span class="numeric_literal">1080</span> jamesdbloom/mockserver</code></pre>
 
 <p>This MockServer docker container exposes the following ports:</p>
 
@@ -450,6 +437,12 @@ vertx runmod org.mock-server~mockserver-vertx~2.9</code></pre>
 <p>The MockServerClient constructor includes an argument for the context path that the WAR has been deployed to, as follows:</p>
 
 <pre><code class="code"><span class="keyword">public</span> MockServerClient(String host, <span class="keyword">int</span> port, String contextPath)</code></pre>
+
+<a name="mockserver-grunt" class="anchor" href="#mockserver-grunt">&nbsp;</a>
+
+<h4>MockServer Grunt Plugin & NPM Module</h4>
+
+<p>TODO</p>
 
 <a name="build-and-run-from-source" class="anchor" href="#build-and-run-from-source">&nbsp;</a>
 

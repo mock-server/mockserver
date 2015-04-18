@@ -1,7 +1,7 @@
 ---
-title: Expectations Overview - Java
+title: Example Code - Java
 layout: page
-pageOrder: 3.1
+pageOrder: 4.1
 section: 'Mock Server'
 subsection: false
 ---
@@ -10,7 +10,7 @@ subsection: false
 
 <p>To setup an expectation that responds to a request:</p>
 
-<pre><code class="code"><span class="keyword">new</span> MockServerClient(<span class="string_literal">"127.0.0.1"</span>, <span class="numeric_literal">8080</span>)
+<pre><code class="code"><span class="keyword">new</span> MockServerClient(<span class="string_literal">"127.0.0.1"</span>, <span class="numeric_literal">1080</span>)
         .when(
                 request()
                         .withMethod(<span class="string_literal">"POST"</span>)
@@ -39,7 +39,7 @@ subsection: false
 
 <p>To setup an expectation that forwards to a request:</p>
 
-<pre><code class="code"><span class="keyword">new</span> MockServerClient(<span class="string_literal">"127.0.0.1"</span>, <span class="numeric_literal">8080</span>)
+<pre><code class="code"><span class="keyword">new</span> MockServerClient(<span class="string_literal">"127.0.0.1"</span>, <span class="numeric_literal">1080</span>)
         .when(
                 request()
                         .withMethod(<span class="string_literal">"GET"</span>)
@@ -57,7 +57,7 @@ subsection: false
 
 <p>To start a local instance of MockServer and setup an expectation that executes a callback:</p>
 
-<pre><code class="code">MockServerClient mockServer = startClientAndServer(<span class="numeric_literal">8080</span>);
+<pre><code class="code">MockServerClient mockServer = startClientAndServer(<span class="numeric_literal">1080</span>);
 
 mockServer
         .when(

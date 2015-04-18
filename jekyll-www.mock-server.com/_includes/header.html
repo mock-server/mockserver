@@ -3,7 +3,7 @@
 	<!-- Menu toggle -->
 	<a href="#menu" id="menuLink" class="menu-link"><!-- Hamburger icon --><span></span></a>
 
-	{% assign url = page.url|remove:'index.html' %}
+	{% assign url = page.url | remove:'index.html' %}
 	{% assign sorted_pages = site.pages | sort:"pageOrder" %}
 	<nav id="menu">
 		<div class="pure-menu pure-menu-open">
@@ -18,8 +18,13 @@
 			<ul>
 				{% for page in sorted_pages %}
 					{% if page.section == 'Mock Server' and page.subsection %}
+						{% if page.shortTitle %}
+							{% assign title = page.shortTitle %}
+						{% else %}
+							{% assign title = page.title %}
+						{% endif %}
 				<li typeof="sioc:Page" about="{{ page.url | prepend: site.baseurl }}" class="{% if url == page.url %}active{% endif %}">
-					<a href="{{ page.url | prepend: site.baseurl }}" property="dc:title">{{ page.title }}</a>
+					<a href="{{ page.url | prepend: site.baseurl }}" property="dc:title">{{ title }}</a>
 				</li>
 					{% endif %}
 				{% endfor %}
@@ -29,9 +34,14 @@
 			<span class="pure-menu-heading">Proxy - How?</span>
 			<ul>
 				{% for page in sorted_pages %}
-					{% if page.section == 'Proxy' %}
+					{% if page.section == 'Proxy' and page.subsection %}
+						{% if page.shortTitle %}
+							{% assign title = page.shortTitle %}
+						{% else %}
+							{% assign title = page.title %}
+						{% endif %}
 				<li typeof="sioc:Page" about="{{ page.url | prepend: site.baseurl }}" class="{% if url == page.url %}active{% endif %}">
-					<a href="{{ page.url | prepend: site.baseurl }}" property="dc:title">{{ page.title }}</a>
+					<a href="{{ page.url | prepend: site.baseurl }}" property="dc:title">{{ title }}</a>
 				</li>
 					{% endif %}
 				{% endfor %}
@@ -41,9 +51,14 @@
 			<span class="pure-menu-heading">Where?</span>
 			<ul>
 				{% for page in sorted_pages %}
-					{% if page.section == 'Where' %}
+					{% if page.section == 'Where' and page.subsection %}
+						{% if page.shortTitle %}
+							{% assign title = page.shortTitle %}
+						{% else %}
+							{% assign title = page.title %}
+						{% endif %}
 				<li typeof="sioc:Page" about="{{ page.url | prepend: site.baseurl }}" class="{% if url == page.url %}active{% endif %}">
-					<a href="{{ page.url | prepend: site.baseurl }}" property="dc:title">{{ page.title }}</a>
+					<a href="{{ page.url | prepend: site.baseurl }}" property="dc:title">{{ title }}</a>
 				</li>
 					{% endif %}
 				{% endfor %}

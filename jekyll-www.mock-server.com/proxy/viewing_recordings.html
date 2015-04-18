@@ -1,14 +1,14 @@
 ---
 title: Viewing Recordings
 layout: page
-pageOrder: 4
+pageOrder: 4.2
 section: 'Proxy'
-subsection: true
+subsection: false
 ---
 
 <p>Write the recorded request to the log as Java code, as follows:</p>
 
-<pre><code class="code"><span class="keyword">new</span> ProxyClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">9090</span>).dumpToLogAsJava(
+<pre><code class="code"><span class="keyword">new</span> ProxyClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1090</span>).dumpToLogAsJava(
         request()
                 .withMethod(<span class="string_literal">"POST"</span>)
                 .withPath(<span class="string_literal">"/login"</span>)
@@ -41,7 +41,7 @@ subsection: true
 
 <p>Write the recorded request to the log as JSON, as follows:</p>
 
-<pre><code class="code"><span class="keyword">new</span> ProxyClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">9090</span>).dumpToLogAsJSON(
+<pre><code class="code"><span class="keyword">new</span> ProxyClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1090</span>).dumpToLogAsJSON(
         request()
                 .withMethod(<span class="string_literal">"POST"</span>)
                 .withPath(<span class="string_literal">"/login"</span>)

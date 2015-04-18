@@ -1,12 +1,11 @@
 ---
-title: Clients
+title: Mock Server Clients
+shortTitle: Clients
 layout: page
-pageOrder: 2
+pageOrder: 3
 section: 'Mock Server'
 subsection: true
 ---
-
-<h2>Clients</h2>
 
 <p>MockServer has the following clients:</p>
 
@@ -37,7 +36,7 @@ subsection: true
 
 <h3>Java Client Examples</h3>
 
-{% include_subpage creating_expectations_java_overview.html %}
+{% include_subpage creating_expectations_java_example_code.html %}
 
 <h3>Java Client API</h3>
 
@@ -55,7 +54,7 @@ subsection: true
      * Start the client communicating to a MockServer at the specified host and port
      * for example:
      *
-     *   MockServerClient mockServerClient = <span class="keyword">new</span> MockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">8080</span>);
+     *   MockServerClient mockServerClient = <span class="keyword">new</span> MockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1080</span>);
      *
      * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">host</span> the host for MockServer to communicate with
      * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">port</span> the port for MockServer to communicate with
@@ -66,7 +65,7 @@ subsection: true
      * Start the client communicating to a MockServer at the specified host and port
      * and contextPath for example:
      *
-     *   MockServerClient mockServerClient = <span class="keyword">new</span> MockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">8080</span>);
+     *   MockServerClient mockServerClient = <span class="keyword">new</span> MockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1080</span>);
      *
      * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">host</span> the host for MockServer to communicate with
      * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">port</span> the port for MockServer to communicate with
@@ -228,7 +227,7 @@ subsection: true
 <pre><code class="code"><span class="keyword">var</span> mockServer = require(<span class="string_literal">'mockserver-client'</span>),
     mockServerClient = mockServer.mockServerClient;</code></pre>
 
-{% include_subpage creating_expectations_javascript_overview.html %}
+{% include_subpage creating_expectations_javascript_example_code.html %}
 
 <h3>JavaScript MockServer Client</h3>
 

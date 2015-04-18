@@ -1,23 +1,21 @@
 ---
-title: Overview
+title: Getting Started
 layout: page
 pageOrder: 1
 section: 'Mock Server'
 subsection: true
 ---
 
-<h2>Getting Started</h2>
-
 <p>To use MockServer:</p>
 
 <ol>
-	<li><a href="#starting-mockserver">Start MockServer</a></li>
-	<li><a href="#create-expectations">Create Expectations</a></li>
-	<li><a href="#verify-behaviour">Verify Behaviour</a></li>
-	<li>Run Tests</li>
+	<li><a href="/mock_server/running_mock_server.html">Start MockServer</a></li>
+	<li><a href="/mock_server/creating_expectations.html">Create Expectations</a></li>
+	<li>Run Test Scenario</li>
+	<li><a href="/mock_server/verification.html">Verify Behaviour</a></li>
 </ol>
 
-<p>To mock an HTTP / HTTPS interaction an expectation is setup specifying how a request should be matched and what action MockServer should take with when the request has been matched.</p>
+<p>To mock an HTTP / HTTPS interaction an expectation is setup specifying how a request should be matched and what action MockServer should take when the request has been matched.</p>
 
 <p>When a request is matched there are three actions that can be defined as follows:</p>
 
@@ -27,9 +25,9 @@ subsection: true
 	<li><strong>callback</strong> - execute a callback</li>
 </ul>
 
-<p>For example to create an expectation using <strong>Java</strong> then has a respond action:</p>
+<p>The following <strong>Java</strong> example shows the creation of an expectation with a respond action:</p>
 
-<pre><code class="code"><span class="keyword">new</span> MockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">9999</span>)
+<pre><code class="code"><span class="keyword">new</span> MockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1080</span>)
         .when(
                 request()
                         .withMethod(<span class="string_literal">"POST"</span>)
@@ -54,9 +52,9 @@ subsection: true
                         .withDelay(<span class="keyword">new</span> Delay(TimeUnit.<span class="constant">SECONDS</span>, <span class="numeric_literal">1</span>))
         );</code></pre>
 
-<p style="margin-top: 2em;">Or to create an expectation using <strong>JavaScript</strong>:</p>
+<p style="margin-top: 2em;">The following <strong>JavaScript</strong> example shows the creation of an expectation with a respond action:</p>
 
-<pre><code class="code">mockServerClient(<span class="string_literal">"http://localhost:9999"</span>).mockAnyResponse({
+<pre><code class="code">mockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1080</span>).mockAnyResponse({
     <span class="string_literal">"httpRequest"</span>: {
         <span class="string_literal">"method"</span>: <span class="string_literal">"POST"</span>,
         <span class="string_literal">"path"</span>: <span class="string_literal">"/login"</span>,
@@ -105,22 +103,26 @@ subsection: true
 <h3>Requests can be matched on:</h3>
 
 <ul>
-	<li><strong>path</strong> - regex or plain text</li>
-	<li><strong>query string</strong> - regex or plain text</li>
-	<li><strong>headers</strong> - regex or plain text</li>
-	<li><strong>cookies</strong> - regex or plain text</li>
-	<li><strong>body</strong> - XPath, json, regex, plain text (exact match), or body parameters</li>
+	<li><strong>path</strong> - plain text or regular expression</li>
+	<li><strong>query string</strong> - plain text or regular expression</li>
+	<li><strong>headers</strong> - plain text or regular expression</li>
+	<li><strong>cookies</strong> - plain text or regular expression</li>
+	<li><strong>body</strong> - XPath, JSON, JSON Schema, regular expression, plain text (exact match), or body parameters</li>
 </ul>
 
-<p>The body can be matched using plain text, a json expression, an XPath expression or a regular expression, see <a href="http://saxon.sourceforge.net/saxon6.5.3/expressions.html">XPath Expression Syntax</a> for supported XPath syntax.</p>
+<p>The body can be matched using plain text, a JSON object, a JSON schema, an XPath expression or a regular expression</p>
+
+<p>For detail of the support JSON Schema syntax see <a href="http://json-schema.org/">json-schema.org</a>.</p>
+
+<p>For detail of the support XPath syntax see <a href="http://saxon.sourceforge.net/saxon6.5.3/expressions.html">XPath Expression Syntax</a>.</p>
 
 <p>All other matching can be done using plain text or a regular expression, see <a href="http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html">Pattern (Java Platform SE 6)</a> for supported regular expression syntax.</p>
 
-<p>For more details see the section below on <a href="#create-expectations">creating expectations</a>.</p>
+<p>For more details see the section below on <a href="/mock_server/creating_expectations.html#request-matcher">creating expectations</a>.</p>
 
-<h3>Actions can be defined:</h3>
+<h3>Actions</h3>
 
-<p>When a request is matched there are three actions that can be defined as follows:</p>
+<p>When a request is matched there are three actions that can occur as follows:</p>
 
 <ul>
 	<li><strong>respond</strong> - return a "mock" response</li>
@@ -130,7 +132,7 @@ subsection: true
 
 <h4><em>Respond Actions</em></h4>
 
-<p>A response action defines a mock response.  Each response can contain:</p>
+<p>A response action defines a mock response containing:</p>
 
 <ul>
 	<li><strong>status code</strong></li>
@@ -142,15 +144,15 @@ subsection: true
 <p>Responses can be further controlled using:</p>
 
 <ul>
-	<li>a delay before the response is sent</li>
-	<li>the number of times the response is sent (including unlimited)</li>
+	<li>a <strong>delay</strong> before the response is sent</li>
+	<li>the <strong>number of times</strong> the response is sent (including unlimited)</li>
 </ul>
 
-<p>For more details see the section below on <a href="#create-expectations">creating expectations</a>.</p>
+<p>For more details see the section below on <a href="/mock_server/creating_expectations.html#mock-response">creating expectations</a>.</p>
 
 <h4><em>Forward Actions</em></h4>
 
-<p>A forward action defines how a request should be forwarded.  Each forward can contain:</p>
+<p>A forward action defines how a request should be forwarded and contains:</p>
 
 <ul>
 	<li><strong>host</strong></li>
@@ -158,13 +160,13 @@ subsection: true
 	<li><strong>scheme</strong></li>
 </ul>
 
-<p>Only the host is mandatory as the port is default to 80 and the scheme is defaulted to HTTP.</p>
+<p>Only the host is mandatory as the port is defaulted to 80 and the scheme is defaulted to HTTP.</p>
 
-<p>For more details see the section below on <a href="#create-expectations">creating expectations</a>.</p>
+<p>For more details see the section below on <a href="/mock_server/creating_expectations.html#mock-forward">creating expectations</a>.</p>
 
 <h4><em>Callback Actions</em></h4>
 
-<p>A callback action defines a class that will be used to dynamically generate the response.  Each callback contains:</p>
+<p>A callback action defines a class that will be used to dynamically generate the response and contains:</p>
 
 <ul>
 	<li><strong>callbackClass</strong></li>
@@ -172,35 +174,16 @@ subsection: true
 
 <p>The class must define a default constructor and implement <strong>org.mockserver.mock.action.ExpectationCallback</strong>.</p>
 
-<p>For more details see the section below on <a href="#create-expectations">creating expectations</a>.</p>
-
-<h2>Requirements</h2>
-
-<ul>
-	<li><strong>Java 6+</strong>&nbsp;&nbsp;&nbsp;to use the Netty version, the Maven Plugin and MockServer WAR and proxy WAR</li>
-	<li><strong>Java 7+</strong>&nbsp;&nbsp;&nbsp;to use the Vert.X module or the Embedded Jetty version as both Jetty 9 and Vert.X in turn require Java 7 (<strong>Note:</strong> all features provided in the Embedded Jetty version are also available using the Netty version)</li>
-</ul>
+<p>For more details see the section below on <a href="/mock_server/creating_expectations.html#callback">creating expectations</a>.</p>
 
 <h2>Versions</h2>
 
 <p>MockServer is flexible and support numerous usage patterns.</p>
 
-<p>The mock server can be run:</p>
+{% include_subpage _includes/running_mock_server_summary.html %}
+
+<h2>Requirements</h2>
 
 <ul>
-	<li>via the mockserver-maven-plugin, for example, as part of a build cycle</li>
-	<li>programmatically via an API, for example, in an <span class="annotation">@Before</span> / <span class="annotation">@After</span> method</li>
-	<li>from the command line as a stand-alone process, for example, as part of a deployment process to a test environment</li>
-	<li>from a Grunt build using a Grunt plugin</li>
-	<li>from an Node.js code using an npm plugin</li>
-</ul>
-
-<p>MockServer is available as:</p>
-
-<ul>
-	<li>a stand alone Netty web server that is fully self contained</li>
-	<li>a deployable WAR that runs on any JEE web server</li>
-	<li>a Vert.X module that runs on a Vert.X</li>
-	<li>a Grunt plugin (that has the embedded Netty server bundle with it)</li>
-	<li>an npm plugin (that has the embedded Netty server bundle with it)</li>
+    <li><strong>Java 6+</strong>&nbsp;&nbsp;&nbsp;to use the Netty version, the Maven Plugin and MockServer WAR and proxy WAR</li>
 </ul>

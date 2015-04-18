@@ -1,7 +1,7 @@
 ---
 title: Creating Expectations
 layout: page
-pageOrder: 3
+pageOrder: 4
 section: 'Mock Server'
 subsection: true
 ---
@@ -10,8 +10,8 @@ subsection: true
 <ul>
 	<li>the <a href="#request-matchers">request matcher</a> and</li>
 	<li>what <a href="#mock-response">response</a> should be returned or</li>
-	<li>what <a href="#callback">callback</a> should be executed or</li>
-	<li>where the request should be <a href="#mock-forward">forwarded</a>.</li>
+	<li>where the request should be <a href="#mock-forward">forwarded</a> or</li>
+	<li>what <a href="#callback">callback</a> should be executed.</li>
 </ul>
 
 <p>MockServer will play expectations in the exact order they are setup. For example, if an expectation <span class="annotation">A</span> is setup to response (or forward) <strong>3</strong> times then expectation <span class="annotation">B</span> is setup to response (or forward)
@@ -19,15 +19,21 @@ subsection: true
 
 <p><strong>Java</strong></p>
 
-{% include_subpage creating_expectations_java_overview.html %}
+{% include_subpage creating_expectations_java_example_code.html %}
 
 <p><strong>JavaScript</strong></p>
 
-{% include_subpage creating_expectations_javascript_overview.html %}
+{% include_subpage creating_expectations_javascript_example_code.html %}
+
+<p><strong>Ruby</strong></p>
+
+{% include_subpage creating_expectations_ruby_example_code.html %}
+
+<a name="request-matcher" class="anchor" href="#request-matcher">&nbsp;</a>
 
 <h3>Request Matcher</h3>
 
-{% include_subpage creating_expectations_request_matchers_overview.html %}
+{% include_subpage creating_expectations_request_matchers.html %}
 
 <p><strong>Java</strong></p>
 
@@ -36,6 +42,10 @@ subsection: true
 <p><strong>JavaScript</strong></p>
 
 {% include_subpage creating_expectations_javascript_request_matchers.html %}
+
+<p><strong>Ruby</strong></p>
+
+{% include_subpage creating_expectations_ruby_request_matchers.html %}
 
 <a name="mock-response" class="anchor" href="#mock-response">&nbsp;</a>
 
@@ -53,8 +63,8 @@ subsection: true
 <p>Responses can be further controlled using:</p>
 
 <ul>
-	<li>a delay before the response is sent</li>
-	<li>the number of times the response is sent (including unlimited)</li>
+    <li>a <strong>delay</strong> before the response is sent</li>
+    <li>the <strong>number of times</strong> the response is sent (including unlimited)</li>
 </ul>
 
 <p><strong>Java</strong></p>

@@ -1,9 +1,9 @@
 ---
 title: Configuring Clients
 layout: page
-pageOrder: 2
+pageOrder: 4.1
 section: 'Proxy'
-subsection: true
+subsection: false
 ---
 
 <p>The following examples show how to do this with different HTTP clients:</p>
@@ -12,7 +12,7 @@ subsection: true
 
 <pre><code class="code">HttpClient httpClient = <span class="keyword">new</span> HttpClient();
 <span class="keyword">try</span> {
-    httpClient.getProxyConfiguration().getProxies().add(<span class="keyword">new</span> HttpProxy(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">9090</span>));
+    httpClient.getProxyConfiguration().getProxies().add(<span class="keyword">new</span> HttpProxy(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1090</span>));
     httpClient.start();
 } <span class="keyword">catch</span> (Exception e) {
     <span class="keyword">throw new</span> RuntimeException(<span class="string_literal">"Exception creating HttpClient"</span>, e);
@@ -22,7 +22,7 @@ subsection: true
 
 <pre><code class="code">HttpClient httpClient = <span class="keyword">new</span> HttpClient();
 <span class="keyword">try</span> {
-    httpClient.setProxy(<span class="keyword">new</span> Address(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">9090</span>));
+    httpClient.setProxy(<span class="keyword">new</span> Address(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1090</span>));
     httpClient.start();
 } <span class="keyword">catch</span> (Exception e) {
     <span class="keyword">throw new</span> RuntimeException(<span class="string_literal">"Exception creating HttpClient"</span>, e);
@@ -33,7 +33,7 @@ subsection: true
 
 <h4>Apache HttpClient</h4>
 
-<pre><code class="code">HttpHost httpHost = <span class="keyword">new</span> HttpHost(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">9090</span>);
+<pre><code class="code">HttpHost httpHost = <span class="keyword">new</span> HttpHost(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1090</span>);
 DefaultProxyRoutePlanner defaultProxyRoutePlanner = <span class="keyword">new</span> DefaultProxyRoutePlanner(httpHost);
 HttpClient httpClient = HttpClients.custom().setRoutePlanner(defaultProxyRoutePlanner).build();</code></pre>
 
@@ -53,7 +53,7 @@ Client client = ClientBuilder.newClient(clientConfig);</code></pre>
 <h4>Spring Rest Template</h4>
 
 <pre><code class="code">RestTemplate restTemplate = <span class="keyword">new</span> RestTemplate();
-HttpHost httpHost = <span class="keyword">new</span> HttpHost(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">9090</span>);
+HttpHost httpHost = <span class="keyword">new</span> HttpHost(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1090</span>);
 DefaultProxyRoutePlanner defaultProxyRoutePlanner = <span class="keyword">new</span> DefaultProxyRoutePlanner(httpHost);
 HttpClient httpClient = HttpClients.custom().setRoutePlanner(defaultProxyRoutePlanner).build();
 restTemplate.setRequestFactory(<span class="keyword">new</span> HttpComponentsClientHttpRequestFactory(httpClient));</code></pre>
@@ -72,7 +72,7 @@ AsyncHttpClient asyncHttpClient = <span class="keyword">new</span> AsyncHttpClie
 
 <p>To verify that a request has been sent use the verify method of the ProxyClient as follows:</p>
 
-<pre><code class="code"><span class="keyword">new</span> ProxyClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">9090</span>).verify(
+<pre><code class="code"><span class="keyword">new</span> ProxyClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1090</span>).verify(
         request()
                 .withMethod(<span class="string_literal">"POST"</span>)
                 .withPath(<span class="string_literal">"/login"</span>)

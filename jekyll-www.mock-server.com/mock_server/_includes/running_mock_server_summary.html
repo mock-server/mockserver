@@ -1,0 +1,26 @@
+<p>The mock server can be run:</p>
+
+<ul>
+	<li>via a <a href="/mock_server/running_mock_server.html#maven-plugin"><strong>Maven Plugin</strong></a> as part of a Maven build cycle</li>
+	<li><a href="/mock_server/running_mock_server.html#client-api"><strong>programmatically via an API</strong></a> in an <span class="annotation">@Before</span> or <span class="annotation">@After</span> method</li>
+	<li><a href="/mock_server/running_mock_server.html#junit-rule"><strong>using a JUnit @Rule</strong></a> via a <span class="annotation">@Rule</span> annotated field in a JUnit test</li>
+	<li><a href="/mock_server/running_mock_server.html#running-from-command-line"><strong>from the command line</strong></a> as a stand-alone process in a test environment</li>
+	<li>as a <a href="/mock_server/running_mock_server.html#deployable-war"><strong>deployable WAR</strong></a> to an existing application server</li>
+	<li>as a <a href="/mock_server/running_mock_server.html#mockserver-grunt"><strong>Grunt plugin</strong></a> as part of a Grunt build cycle</li>
+	<li>as a <a href="/mock_server/running_mock_server.html#mockserver-grunt"><strong>Node.js (npm) module</strong></a> from any Node.js code</li>
+	<li>as a <a href="/mock_server/running_mock_server.html#docker-container"><strong>Docker container</strong></a> in any Docker enabled environment</li>
+</ul>
+
+<p>MockServer is available as:</p>
+
+<ul>
+	<li>a stand alone <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/3.9.8/mockserver-netty-3.9.8-jar-with-dependencies.jar">Netty web server</a> that is fully self contained</li>
+	<li>a <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-war/3.9.8/mockserver-war-3.9.8.war">deployable WAR</a> that runs on any JEE web server</li>
+	<li>a <a href="https://www.npmjs.org/package/mockserver-grunt">Grunt plugin</a> (that has the embedded Netty server bundled with it)</li>
+	<li>an <a href="https://www.npmjs.org/package/mockserver-grunt">npm plugin</a> (that has the embedded Netty server bundled with it)</li>
+	<li>a fully encapsulated <a href="https://registry.hub.docker.com/u/jamesdbloom/mockserver/">Docker container</a></li>
+</ul>
+
+<p>It is also possible to <a href="/mock_server/running_mock_server.html#build-and-run-from-source">build and run MockServer directly from source code</a></p>
+
+<p>To simplify configuration all MockServer versions (except the deployable WAR) only use a single port to support both HTTP and HTTPS.  This is achieved by dynamically detecting if the client is using HTTP or HTTPS.</p>

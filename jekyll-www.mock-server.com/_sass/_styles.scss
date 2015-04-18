@@ -51,7 +51,7 @@ The content `<div>` is where all your content goes.
 
 .page_header h1 {
   margin: 0.2em 0;
-  font: 4em 'Gloria Hallelujah', 'Indie Flower', Helvetica, Arial, sans-serif;
+  font: 4em 'Averia Sans Libre', 'Gloria Hallelujah', 'Indie Flower', Helvetica, Arial, sans-serif;
 }
 
 .footer {
@@ -239,7 +239,7 @@ This styles the menu heading.
 
 h2 {
   margin: .83em 0;
-  font: 2em 'Gloria Hallelujah', 'Indie Flower', Helvetica, Arial, sans-serif;
+  font: 2em 'Averia Sans Libre', 'Gloria Hallelujah', 'Indie Flower', Helvetica, Arial, sans-serif;
 }
 
 a.anchor,
@@ -282,6 +282,10 @@ pre {
 ul, ol {
   margin-left: 1%;
   padding-left: 1%;
+}
+
+ul.sublist {
+  margin: 0 1%;
 }
 
 ul pre,
@@ -330,6 +334,11 @@ span.annotation {
   color: #bdb76b;
 }
 
+span.inline_code {
+  color: #6c6c6c;
+  font-size: 1.1em;
+}
+
 span.numeric_literal {
   color: #008dff;
 }
@@ -346,7 +355,7 @@ span.command_line_argument_switch {
 }
 
 span.this_value {
-  color: #CF0808;
+  color: #a30707;
 }
 
 span.element {
@@ -355,8 +364,7 @@ span.element {
 }
 
 span.attribute_name,
-span.comment,
-span.command_line_argument_placeholder {
+span.comment {
   color: #9c9c9c;
   font-style: italic;
   font-size: 0.9em;
@@ -387,6 +395,10 @@ span.element_value {
 
 span.attribute_value {
   color: blue;
+}
+
+span.command_line_argument_placeholder {
+  color: #9c9c9c;
 }
 
 .sub_title {

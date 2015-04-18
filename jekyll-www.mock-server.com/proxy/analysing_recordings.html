@@ -1,9 +1,9 @@
 ---
-title: Analysing Behaviour
+title: Analysing Recordings
 layout: page
-pageOrder: 5
+pageOrder: 4.3
 section: 'Proxy'
-subsection: true
+subsection: false
 ---
 
 <p>To analyse the requests that system makes the proxy can be used to record all requests and write them into the <span class="annotation">mockserver_request.log</span>. This can be particularly helpful when refactoring an existing or legacy system.</p>
@@ -15,7 +15,7 @@ subsection: true
 <p>If the proxy is being started programmatically from within the same JVM using <span class="annotation">org.mockserver.proxy.ProxyRunner</span> or <span class="annotation">org.mockserver.integration.ClientAndProxy</span> then the environment variables for <strong>"proxySet"</strong>,
 	<strong>"http.proxyHost"</strong> and <strong>"http.proxyPort"</strong> will be set automatically.</p>
 
-<p>If the proxy is being started as separate JVM, for example using <a href="#running-from-command-line">the command line</a>, then the system being analysed needs the following command line options to set the correct environment variables.</p>
+<p>If the proxy is being started as separate JVM, for example using <a href="/mock_server/running_mock_server_proxy.html#running-from-command-line">the command line</a>, then the system being analysed needs the following command line options to set the correct environment variables.</p>
 
 <pre><code class="code">-DproxySet=true -Dhttp.proxyHost=&lt;proxy hostname&gt; -Dhttp.proxyPort=&lt;proxy port&gt;</code></pre>
 
