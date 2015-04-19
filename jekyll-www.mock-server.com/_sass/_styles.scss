@@ -349,6 +349,10 @@ span.constant {
   font-style: italic;
 }
 
+span.ruby_constant {
+  color: #e28964;
+}
+
 span.string_literal,
 span.command_line_argument_switch {
   color: #5BA382;

@@ -100,6 +100,28 @@ subsection: true
 });
 </code></pre>
 
+<p style="margin-top: 2em;">The following <strong>Ruby</strong> example shows the creation of an expectation with a respond action:</p>
+
+<pre><code class="code">client = MockServerClient.new(<span class="string_literal">'localhost'</span>, <span class="numeric_literal">1080</span>)
+expectation = expectation <span class="keyword">do</span> |expectation|
+     expectation.request <span class="keyword">do</span> |request|
+        request.method = <span class="string_literal">'POST'</span>
+        request.path = <span class="string_literal">'/login'</span>
+        request.query_parameters << parameter(<span class="string_literal">'returnUrl'</span>, <span class="string_literal">'/account'</span>)
+        request.cookies = [cookie(<span class="string_literal">'sessionId'</span>, <span class="string_literal">'2By8LOhBmaW5nZXJwcmludCIlMDAzMW'</span>)]
+        request.body = exact({ username: <span class="string_literal">'foo'</span>, password: <span class="string_literal">'bar'</span> }.to_json)
+     end
+
+    expectation.response <span class="keyword">do</span> |response|
+        response.status_code = <span class="numeric_literal">401</span>
+        response.headers << header(<span class="string_literal">'Content-Type'</span>, <span class="string_literal">'application/json; charset=utf-8'</span>)
+        response.headers << header(<span class="string_literal">'Cache-Control'</span>, <span class="string_literal">'public, max-age=86400'</span>)
+        response.body  = body({ message: <span class="string_literal">'incorrect username and password combination'</span> }.to_json)
+        response.delay = delay_by(<span class="ruby_constant">:SECONDS</span>, <span class="numeric_literal">1</span>)
+    end
+end
+client.register(expectation)</code></pre>
+
 <h3>Requests can be matched on:</h3>
 
 <ul>
@@ -185,5 +207,5 @@ subsection: true
 <h2>Requirements</h2>
 
 <ul>
-    <li><strong>Java 6+</strong>&nbsp;&nbsp;&nbsp;to use the Netty version, the Maven Plugin and MockServer WAR and proxy WAR</li>
+    <li><strong>Java 6+</strong>&nbsp;&nbsp;&nbsp;to use the Netty version, the Maven Plugin and MockServer WAR and MockServer Proxy WAR</li>
 </ul>

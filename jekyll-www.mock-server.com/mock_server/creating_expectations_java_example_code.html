@@ -6,8 +6,6 @@ section: 'Mock Server'
 subsection: false
 ---
 
-<!--<p><strong>Mock Response Expectation (connect to existing MockServer)</strong></p>-->
-
 <p>To setup an expectation that responds to a request:</p>
 
 <pre><code class="code"><span class="keyword">new</span> MockServerClient(<span class="string_literal">"127.0.0.1"</span>, <span class="numeric_literal">1080</span>)
@@ -35,8 +33,6 @@ subsection: false
                         .withDelay(<span class="keyword">new</span> Delay(<span class="constant">SECONDS</span>, <span class="numeric_literal">1</span>))
         );</code></pre>
 
-<!--<p><strong>Forward Request Expectation (connect to existing MockServer)</strong></p>-->
-
 <p>To setup an expectation that forwards to a request:</p>
 
 <pre><code class="code"><span class="keyword">new</span> MockServerClient(<span class="string_literal">"127.0.0.1"</span>, <span class="numeric_literal">1080</span>)
@@ -52,8 +48,6 @@ subsection: false
                         .withPort(<span class="numeric_literal">80</span>)
                         .withScheme(<span class="constant">HTTP</span>)
         );</code></pre>
-
-<!--<p><strong>Execute Callback Expectation (start new MockServer instance)</strong></p>-->
 
 <p>To start a local instance of MockServer and setup an expectation that executes a callback:</p>
 

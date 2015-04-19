@@ -10,7 +10,7 @@ subsection: false
 
 <pre><code class="code">mockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1080</span>).mockSimpleResponse(<span class="string_literal">'/somePath'</span>, { name: <span class="string_literal">'value'</span> }, <span class="numeric_literal">203</span>);</code></pre>
 
-<p>To setup a simple expectation that returns a JSON body for all requests on a given path:</p>
+<p>To setup a more complex expectation:</p>
 
 <pre><code class="code">mockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1080</span>).mockAnyResponse(
     {

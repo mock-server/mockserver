@@ -14,52 +14,22 @@ subsection: true
 <p><strong>Note:</strong> It is not necessary to use the provided clients because the protocol is very simple JSON/HTTP web api.</p>
 
 <ul>
-    <li>Java
-        <ul>
-            <li><a href="#java-mockserver-client"><strong>org.mockserver.client.server.MockServerClient</strong></a> - supports:
-                <ul>
-                    <li>creating expectations</li>
-                    <li>clearing expectations (selectively)</li>
-                    <li>resetting (clearing all expectations)</li>
-                    <li>dumping all expectations to the log (for debugging)</li>
-                    <li>verifying which requests have been received</li>
-                </ul>
-            </li>
-            <li><a href="#java-proxy-client"><strong>org.mockserver.client.proxy.ProxyClient</strong></a> - supports:
-                <ul>
-                    <li>verifying which requests have been recorded</li>
-                    <li>retrieving all recorded requests / responses as JSON or Expectation objects</li>
-                    <li>outputting to the log all recorded requests / responses as Expectations in JSON format</li>
-                    <li>outputting to the log all recorded requests / responses as Expectations in Java code format that can be pasted into test setup methods</li>
-                    <li>clearing recorded requests / responses (selectively)</li>
-                    <li>resetting (clearing all recorded requests / responses)</li>
-                </ul>
-            </li>
-        </ul>
-    </li>
-    <li>JavaScript (both browser API & Node.js module)
-        <ul>
-            <li><a href="#javascript-mockserver-client"><strong>mockServerClient</strong></a> - supports:
-                <ul>
-                    <li>creating expectations</li>
-                    <li>clearing expectations (selectively)</li>
-                    <li>resetting (clearing all expectations)</li>
-                    <li>dumping all expectations to the log (for debugging)</li>
-                    <li>verifying which requests have been received</li>
-                </ul>
-            </li>
-            <li><a href="#javascript-proxy-client"><strong>proxyClient</strong></a> - supports:
-                <ul>
-                    <li>verifying which requests have been recorded</li>
-                    <li>retrieving all recorded requests / responses as JSON or Expectation objects</li>
-                    <li>outputting to the log all recorded requests / responses as Expectations in JSON format</li>
-                    <li>clearing recorded requests / responses (selectively)</li>
-                    <li>resetting (clearing all recorded requests / responses)</li>
-                </ul>
-            </li>
-        </ul>
-    </li>
+    <li><a href="#java-proxy-client">Java</a></li>
+    <li><a href="#javascript-proxy-client">JavaScript</a> (both browser API & Node.js module)</li>
+    <li><a href="#ruby-proxy-client">Ruby</a></li>
 </ul>
+
+<p>All clients support:</p>
+<ul>
+    <li>verifying which requests have been recorded</li>
+    <li>retrieving all recorded requests / responses as JSON or Expectation objects</li>
+    <li>outputting to the log all recorded requests / responses as Expectations in JSON format</li>
+    <li>outputting to the log all recorded requests / responses as Expectations in Java code format that can be pasted into test setup methods</li>
+    <li>clearing recorded requests / responses (selectively)</li>
+    <li>resetting (clearing all recorded requests / responses)</li>
+</ul>
+
+<a name="java-proxy-client" class="anchor" href="#java-proxy-client">&nbsp;</a>
 
 <p><strong>Java Proxy Client</strong></p>
 
@@ -278,3 +248,66 @@ subsection: true
         dumpToLogs: dumpToLogs
     };
 };</code></pre>
+
+<a name="ruby-proxy-client" class="anchor" href="#ruby-proxy-client">&nbsp;</a>
+
+<p><strong>Ruby MockServer Proxy Client</strong>&nbsp;&nbsp;<a href="http://badge.fury.io/rb/mockserver-client"><img src="https://badge.fury.io/rb/mockserver-client.png" alt="Gem Version" width="104" height="18"></a></p>
+
+<p>To interact with MockServer Proxy from Ruby use <strong>mockserver-client</strong> gem as follows:</p>
+
+<p>Add the gem to the application Gemfile:</p>
+
+<pre><code class="code"><span class="keyword">gem</span> <span class="string_literal">'mockserver-client'</span></code></pre>
+
+<p>Or install the gem directly:</p>
+
+<pre><code class="code">gem install mockserver-client</code></pre>
+
+<p>To write recorded requests to the logs as Java:</p>
+
+<pre><code class="code"><span class="keyword">require</span> <span class="string_literal">"mockserver-client"</span>
+
+<span class="keyword">class</span> SomeClass
+
+  <span class="keyword">include</span> MockServer
+  <span class="keyword">include</span> MockServer::Model::DSL
+
+  <span class="keyword">def</span> writeToLogAsJava
+    ProxyClient.new(<span class="string_literal">'localhost'</span>, <span class="numeric_literal">1090</span>).dump_log(request(<span class="ruby_constant">:POST</span>, <span class="string_literal">'/login'</span>), <span class="keyword">true</span>)
+  <span class="keyword">end</span>
+
+<span class="keyword">end</span></code></pre>
+
+<p>To write recorded requests to the logs as JSON:</p>
+
+<pre><code class="code"><span class="keyword">require</span> <span class="string_literal">"mockserver-client"</span>
+
+<span class="keyword">class</span> SomeClass
+
+  <span class="keyword">include</span> MockServer
+  <span class="keyword">include</span> MockServer::Model::DSL
+
+  <span class="keyword">def</span> writeToLogAsJSON
+    ProxyClient.new(<span class="string_literal">'localhost'</span>, <span class="numeric_literal">1090</span>).dump_log(request(<span class="ruby_constant">:POST</span>, <span class="string_literal">'/login'</span>))
+  <span class="keyword">end</span>
+
+<span class="keyword">end</span></code></pre>
+
+<p>To verify a request has been sent:</p>
+
+<pre><code class="code"><span class="keyword">require</span> <span class="string_literal">"mockserver-client"</span>
+
+<span class="keyword">class</span> SomeClass
+
+  <span class="keyword">include</span> MockServer
+  <span class="keyword">include</span> MockServer::Model::DSL
+
+  <span class="keyword">def</span> verifyRequest
+    client = ProxyClient.new(<span class="string_literal">'localhost'</span>, <span class="numeric_literal">1090</span>)
+    client.verify(request(<span class="ruby_constant">:POST</span>, <span class="string_literal">'/login'</span>) <span class="keyword">do</span> |request|
+        request.body = exact({ username: <span class="string_literal">'foo'</span>, password: <span class="string_literal">'bar'</span> }.to_json)
+        request.cookies = [cookie(<span class="string_literal">"sessionId"</span>, <span class="string_literal">".*"</span>)]
+    <span class="keyword">end</span>)
+  <span class="keyword">end</span>
+
+<span class="keyword">end</span></code></pre>

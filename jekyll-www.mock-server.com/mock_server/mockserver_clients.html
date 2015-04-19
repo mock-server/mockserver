@@ -376,46 +376,47 @@ subsection: true
 
 <a name="ruby-mockserver-client" class="anchor" href="#ruby-mockserver-client">&nbsp;</a>
 
-<p><strong>Ruby MockServer Client</strong></p>
+<p><strong>Ruby MockServer Client</strong>&nbsp;&nbsp;<a href="http://badge.fury.io/rb/mockserver-client"><img src="https://badge.fury.io/rb/mockserver-client.png" alt="Gem Version" width="104" height="18"></a></p>
 
-<p>To interact with MockServer from Ruby use <strong>mockserver-client</strong> gem <a href="http://badge.fury.io/rb/mockserver-client"><img src="https://badge.fury.io/rb/mockserver-client.png" alt="Gem Version" width="104" height="18"></a>:</p>
+<p>To interact with MockServer from Ruby use <strong>mockserver-client</strong> gem as follows:</p>
 
-Add this line to your application's Gemfile:
+<p>Add the gem to the application Gemfile:</p>
 
 <pre><code class="code"><span class="keyword">gem</span> <span class="string_literal">'mockserver-client'</span></code></pre>
 
-And then execute:
+<p>Or install the gem directly:</p>
 
-bundle
-Or install it yourself as:
+<pre><code class="code">gem install mockserver-client</code></pre>
 
-gem install mockserver-client
+<p>Then to setup an expectation that responds to a request:</p>
 
-Add
+<pre><code class="code"><span class="keyword">require</span> <span class="string_literal">"mockserver-client"</span>
 
-require "mockserver-client"
+<span class="keyword">class</span> SomeClass
 
-include MockServer
-include MockServer::Model::DSL
+  <span class="keyword">include</span> MockServer
+  <span class="keyword">include</span> MockServer::Model::DSL
 
-then
+  <span class="keyword">def</span> createExpectation
+    client = MockServerClient.new(<span class="string_literal">'localhost'</span>, <span class="numeric_literal">1080</span>)
+    expectation = expectation <span class="keyword">do</span> |expectation|
+         expectation.request <span class="keyword">do</span> |request|
+            request.method = <span class="string_literal">'POST'</span>
+            request.path = <span class="string_literal">'/login'</span>
+            request.query_parameters << parameter(<span class="string_literal">'returnUrl'</span>, <span class="string_literal">'/account'</span>)
+            request.cookies = [cookie(<span class="string_literal">'sessionId'</span>, <span class="string_literal">'2By8LOhBmaW5nZXJwcmludCIlMDAzMW'</span>)]
+            request.body = exact({ username: <span class="string_literal">'foo'</span>, password: <span class="string_literal">'bar'</span> }.to_json)
+         <span class="keyword">end</span>
 
-client = MockServerClient.new('localhost', 9999)
-expectation = expectation do |expectation|
-expectation.request do |request|
-request.method = 'POST'
-request.path = '/login'
-request.query_parameters << parameter('returnUrl', '/account')
-request.cookies = [cookie('sessionId', '2By8LOhBmaW5nZXJwcmludCIlMDAzMW')]
-request.body = exact("{username: 'foo', password: 'bar'}")
-end
+        expectation.response <span class="keyword">do</span> |response|
+            response.status_code = <span class="numeric_literal">401</span>
+            response.headers << header(<span class="string_literal">'Content-Type'</span>, <span class="string_literal">'application/json; charset=utf-8'</span>)
+            response.headers << header(<span class="string_literal">'Cache-Control'</span>, <span class="string_literal">'public, max-age=86400'</span>)
+            response.body  = body({ message: <span class="string_literal">'incorrect username and password combination'</span> }.to_json)
+            response.delay = delay_by(<span class="ruby_constant">:SECONDS</span>, <span class="numeric_literal">1</span>)
+        <span class="keyword">end</span>
+    <span class="keyword">end</span>
+    client.register(expectation)
+  <span class="keyword">end</span>
 
-expectation.response do |response|
-response.status_code = 401
-response.headers << header('Content-Type', 'application/json; charset=utf-8')
-response.headers << header('Cache-Control', 'public, max-age=86400')
-response.body = body("{ message: 'incorrect username and password combination' }")
-response.delay = delay_by(:SECONDS, 1)
-end
-end
-client.register(expectation)
+<span class="keyword">end</span></code></pre>

@@ -1,7 +1,7 @@
 ---
 title: Verifications
 layout: page
-pageOrder: 3
+pageOrder: 5
 section: 'Proxy'
 subsection: true
 ---
@@ -17,9 +17,9 @@ subsection: true
 
 <h4>Verifying Repeating Requests</h4>
 
-<p>To verify that the system under test has sent an inidividual request to MockServer use the verify method of the MockServerClient as follows:</p>
+<p>To verify that a request has been sent use the verify method of the ProxyClient as follows:</p>
 
-<pre><code class="code"><span class="keyword">new</span> MockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1090</span>).verify(
+<pre><code class="code"><span class="keyword">new</span> ProxyClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1090</span>).verify(
         request()
                 .withMethod(<span class="string_literal">"POST"</span>)
                 .withPath(<span class="string_literal">"/login"</span>)
@@ -42,7 +42,7 @@ VerificationTimes.atLeast(<span class="keyword">int</span> count);</code></pre>
 
 <p>To verify that the system under test has sent a sequence of requests to MockServer use the verify method of the MockServerClient as follows:</p>
 
-<pre><code class="code"><span class="keyword">new</span> MockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1090</span>).verify(
+<pre><code class="code"><span class="keyword">new</span> ProxyClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1090</span>).verify(
         request()
                 .withMethod(<span class="string_literal">"POST"</span>)
                 .withPath(<span class="string_literal">"/login"</span>)
@@ -66,3 +66,6 @@ VerificationTimes.atLeast(<span class="keyword">int</span> count);</code></pre>
 );</code></pre>
 
 <p>The each request in the sequence will be verified to have been received at least once, in the exact order specified.</p>
+
+<p>The <a href="https://github.com/jamesdbloom/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example test called
+        <a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-examples/src/test/java/org/mockserver/web/controller/BooksPageIntegrationTest.java">BookPageIntegrationTest</a> that demonstrates a fully working example.</p>
