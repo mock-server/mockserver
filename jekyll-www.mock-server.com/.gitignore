@@ -1,2 +1,25 @@
+# Ruby #
+########
+*.gem
+*.a
+*.log
+.config
+.yardoc
+.rakeTasks
+Gemfile.lock
+InstalledFiles
+coverage
+*doc
+*tmp
+lib/bundler/man
+pkg
+spec/reports
+vendor/bundle
+
+# Jekyll #
+##########
 _site
+
+# SASS #
+########
 .sass-cache

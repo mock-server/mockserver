@@ -257,11 +257,13 @@ a.anchor:focus {
 a img,
 a:hover img,
 a:active img,
-a:focus img {
+a:focus img,
+a.no_link {
   text-decoration: none;
   border: 0 none;
   outline: 0;
   cursor: default;
+  color: black;
 }
 
 .build_tag {

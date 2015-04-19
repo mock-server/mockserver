@@ -1,3 +1,5 @@
+exclude: ["vendor", "*.rb", "Gemfile*", "*.gemspec", "*.md"]
+
 # Site settings
 title: Mock Server
 email: jamesdbloom@gmail.com
@@ -12,6 +14,8 @@ url: "http://www.mock-server.com"
 sitemap:
     exclude:
         - "/css/main.scss"
+
+# Author
 author:
   name:
     full: James D Bloom
@@ -24,3 +28,5 @@ author:
 
 # Build settings
 markdown: kramdown
+sass:
+    style: :compressed

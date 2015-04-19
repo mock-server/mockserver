@@ -30,7 +30,7 @@ subsection: true
 
 <a name="java-mockserver-client" class="anchor" href="#java-mockserver-client">&nbsp;</a>
 
-<h2>Java MockServer Client</h2>
+<h2>MockServer Java Client</h2>
 
 <p>This section includes an overview with a few basic examples then a detailed description of the Java client API.</p>
 
@@ -207,9 +207,9 @@ subsection: true
 
 <a name="javascript-mockserver-client" class="anchor" href="#javascript-mockserver-client">&nbsp;</a>
 
-<h2>JavaScript MockServer Client</h2>
+<h2>MockServer JavaScript Client</h2>
 
-<p>This section includes an overview with a few basic examples then a detailed description of the Java client API.</p>
+<p>This section includes an overview with a few basic examples then a detailed description of the JavaScript client API.</p>
 
 <p>To interact with MockServer from JavaScript it is possible to use either:</p>
 
@@ -227,9 +227,11 @@ subsection: true
 <pre><code class="code"><span class="keyword">var</span> mockServer = require(<span class="string_literal">'mockserver-client'</span>),
     mockServerClient = mockServer.mockServerClient;</code></pre>
 
+<h3>JavaScript Client Examples</h3>
+
 {% include_subpage creating_expectations_javascript_example_code.html %}
 
-<h3>JavaScript MockServer Client</h3>
+<h3>JavaScript Client API</h3>
 
 <p>Both versions of <strong>mockServerClient</strong> provide the same API as follows:</p>
 
@@ -376,7 +378,9 @@ subsection: true
 
 <a name="ruby-mockserver-client" class="anchor" href="#ruby-mockserver-client">&nbsp;</a>
 
-<p><strong>Ruby MockServer Client</strong>&nbsp;&nbsp;<a href="http://badge.fury.io/rb/mockserver-client"><img src="https://badge.fury.io/rb/mockserver-client.png" alt="Gem Version" width="104" height="18"></a></p>
+<h2>MockServer Ruby Client&nbsp;&nbsp;<a href="http://badge.fury.io/rb/mockserver-client"><img src="https://badge.fury.io/rb/mockserver-client.png" alt="Gem Version" width="104" height="18"></a></h2>
+
+<p>This section includes an overview with a few basic examples then a detailed description of the Java client API.</p>
 
 <p>To interact with MockServer from Ruby use <strong>mockserver-client</strong> gem as follows:</p>
 
@@ -388,35 +392,6 @@ subsection: true
 
 <pre><code class="code">gem install mockserver-client</code></pre>
 
-<p>Then to setup an expectation that responds to a request:</p>
+<h3>Ruby Client Examples</h3>
 
-<pre><code class="code"><span class="keyword">require</span> <span class="string_literal">"mockserver-client"</span>
-
-<span class="keyword">class</span> SomeClass
-
-  <span class="keyword">include</span> MockServer
-  <span class="keyword">include</span> MockServer::Model::DSL
-
-  <span class="keyword">def</span> createExpectation
-    client = MockServerClient.new(<span class="string_literal">'localhost'</span>, <span class="numeric_literal">1080</span>)
-    expectation = expectation <span class="keyword">do</span> |expectation|
-         expectation.request <span class="keyword">do</span> |request|
-            request.method = <span class="string_literal">'POST'</span>
-            request.path = <span class="string_literal">'/login'</span>
-            request.query_parameters << parameter(<span class="string_literal">'returnUrl'</span>, <span class="string_literal">'/account'</span>)
-            request.cookies = [cookie(<span class="string_literal">'sessionId'</span>, <span class="string_literal">'2By8LOhBmaW5nZXJwcmludCIlMDAzMW'</span>)]
-            request.body = exact({ username: <span class="string_literal">'foo'</span>, password: <span class="string_literal">'bar'</span> }.to_json)
-         <span class="keyword">end</span>
-
-        expectation.response <span class="keyword">do</span> |response|
-            response.status_code = <span class="numeric_literal">401</span>
-            response.headers << header(<span class="string_literal">'Content-Type'</span>, <span class="string_literal">'application/json; charset=utf-8'</span>)
-            response.headers << header(<span class="string_literal">'Cache-Control'</span>, <span class="string_literal">'public, max-age=86400'</span>)
-            response.body  = body({ message: <span class="string_literal">'incorrect username and password combination'</span> }.to_json)
-            response.delay = delay_by(<span class="ruby_constant">:SECONDS</span>, <span class="numeric_literal">1</span>)
-        <span class="keyword">end</span>
-    <span class="keyword">end</span>
-    client.register(expectation)
-  <span class="keyword">end</span>
-
-<span class="keyword">end</span></code></pre>
+{% include_subpage creating_expectations_ruby_example_code.html %}

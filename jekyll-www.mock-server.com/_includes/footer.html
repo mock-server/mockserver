@@ -2,7 +2,7 @@
 
 	<div class="footer">
 		<span class="right">&copy; MockServer {{ 'now' | date: "%Y" }}</span>
-		<span class="left"><a href="{{ site.author.google_plus }}">{{ site.author.name.full }}</a> - <a href="{{ site.author.blog }}">Blog</a></span>
+		<span class="left"><a href="{{ site.author.google_plus }}" class="no_link">{{ site.author.name.full }}</a>
                 <span itemprop="author" itemscope itemtype="http://schema.org/Person">
                     <meta itemprop="name" content="{{ site.author.name.full }}">
                     <meta itemprop="image" content="http://blog.jamesdbloom.com/jamesdbloom.jpg">
@@ -15,5 +15,6 @@
 	</div>
 	<script defer="defer"  src="/scripts/toggle_menu.js"></script>
 	<script defer="defer"  src="/scripts/google_analytics.js"></script>
+	<!--<script defer="defer"  src="{% minified_js_file %}"></script>-->
 
 </footer>
