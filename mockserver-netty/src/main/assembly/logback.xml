@@ -1,4 +1,6 @@
 <configuration>
+    <!-- To completely disable all logging completely -Droot.logLevel=OFF -->
+
     <!-- application log -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>mockserver.log</file>
@@ -46,7 +48,7 @@
     <logger name="org.mockserver.proxy" level="INFO"/>
     <logger name="org.mockserver.mockserver" level="INFO"/>
 
-    <root level="WARN">
+    <root level="${root.logLevel:-WARN}">
         <appender-ref ref="FILE"/>
         <appender-ref ref="STDOUT"/>
     </root>
