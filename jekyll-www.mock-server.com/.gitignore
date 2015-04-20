@@ -3,6 +3,7 @@
 *.gem
 *.a
 *.log
+.bundle
 .config
 .yardoc
 .rakeTasks
