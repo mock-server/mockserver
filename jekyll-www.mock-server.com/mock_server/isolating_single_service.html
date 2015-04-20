@@ -1,0 +1,109 @@
+---
+title: Isolate Single Service
+shortTitle: Isolate Single Service
+layout: page
+pageOrder: 9
+section: 'Mock Server'
+subsection: true
+---
+
+<p>During deployment and debugging it is helpful to run a single application or service or handle a sub-set of requests on on a local machine in debug mode. Using MockServer it is easy to selectively forward requests to a local process running in debug mode, all other request can be forwarded to the real services for example running in a QA or UAT environment.</p>
+
+<p>Once of the simplest ways to do this is using Node.js.  In the example below all requests matching path <span class="inline_code string_literal">"/rest.*"</span> (i.e. starting with <strong>/rest</strong>) will go to the local machine on port <strong>8080</strong> whereas all other requests will go to a remote machine (i.e. a load balancer or remote server) on ip <strong>192.168.50.10</strong> and port <strong>443</strong>.</p>
+
+<p>First create a <strong>package.json</strong> file as follows:</p>
+
+<pre><code class="code">{
+  <span class="string_literal">"name"</span>: <span class="string_literal">"simple-load-balancer"</span>,
+  <span class="string_literal">"version"</span>: <span class="string_literal">"1.0.0"</span>,
+  <span class="string_literal">"main"</span>: <span class="string_literal">"index.js"</span>,
+  <span class="string_literal">"dependencies"</span>: {
+     <span class="string_literal">"mockserver-grunt"</span>: <span class="string_literal">"~1"</span>,
+     <span class="string_literal">"mockserver-client"</span>: <span class="string_literal">"~1"</span>
+  }
+}</code></pre>
+
+<p>Then create the <strong>index.js</strong> file that starts MockServer and sets up the forwarding rules as different expectations, as follows:</p>
+
+<pre><code class="code"><span class="keyword">var</span> mockserver = require(<span class="string_literal">'mockserver-grunt'</span>);
+<span class="keyword">var</span> mockServerClient = require(<span class="string_literal">'mockserver-client'</span>).mockServerClient;
+<span class="keyword">var</span> HTTP_PORT = <span class="numeric_literal">1080</span>;
+
+mockserver.start_mockserver({
+                serverPort: HTTP_PORT
+            }).then(function(){
+            	<span class="comment">// forward backend REST API request to local machine</span>
+            	mockServerClient(<span class="string_literal">"localhost"</span>, HTTP_PORT).mockAnyResponse({
+				    <span class="string_literal">"httpRequest"</span>: {
+				        <span class="string_literal">"path"</span>: <span class="string_literal">"/rest.*"</span>,
+				        <span class="string_literal">"headers"</span>: [
+				            {
+				                <span class="string_literal">"name"</span>: <span class="string_literal">"Host"</span>,
+				                <span class="string_literal">"values"</span>: <span class="string_literal">"qa\\.environment\\.com.*"</span>
+				            }
+				        ]
+				    },
+				    <span class="string_literal">"httpForward"</span>: { <span class="comment">// local machine Tomcat instance</span>
+				        <span class="string_literal">"host"</span>: <span class="string_literal">"127.0.0.1"</span>,
+				        <span class="string_literal">"port"</span>: <span class="numeric_literal">8080</span>,
+				        <span class="string_literal">"scheme"</span>: <span class="string_literal">"HTTP"</span>
+				    },
+				    <span class="string_literal">"times"</span>: {
+				        <span class="string_literal">"unlimited"</span>: <span class="keyword">true</span>
+				    }
+				})
+            	<span class="comment">// forward all other request to QA environment</span>
+            	mockServerClient(<span class="string_literal">"localhost"</span>, HTTP_PORT).mockAnyResponse({
+				    <span class="string_literal">"httpRequest"</span>: {
+				        <span class="string_literal">"path"</span>: <span class="string_literal">"/.*"</span>,
+				        <span class="string_literal">"headers"</span>: [
+				            {
+				                <span class="string_literal">"name"</span>: <span class="string_literal">"Host"</span>,
+				                <span class="string_literal">"values"</span>: <span class="string_literal">"qa\\.environment\\.com.*"</span>
+				            }
+				        ]
+				    },
+				    <span class="string_literal">"httpForward"</span>: { <span class="comment">// QA load balancer</span>
+				        <span class="string_literal">"host"</span>: <span class="string_literal">"192.168.50.10"</span>,
+				        <span class="string_literal">"port"</span>: <span class="numeric_literal">443</span>,
+				        <span class="string_literal">"scheme"</span>: <span class="string_literal">"HTTPS"</span>
+				    },
+				    <span class="string_literal">"times"</span>: {
+				        <span class="string_literal">"unlimited"</span>: <span class="keyword">true</span>
+				    }
+				})
+            });
+
+console.log(<span class="string_literal">"started on port: "</span> + HTTP_PORT);
+
+<span class="comment">// stop MockServer if Node exist abnormally</span>
+process.on(<span class="string_literal">'uncaughtException'</span>, function (err) {
+    console.log(<span class="string_literal">'uncaught exception - stopping node server: '</span> + JSON.stringify(err));
+    mockserver.stop_mockserver();
+    <span class="keyword">throw</span> err;
+});
+
+<span class="comment">// stop MockServer if Node exits normally</span>
+process.on(<span class="string_literal">'exit'</span>, function () {
+    console.log(<span class="string_literal">'exit - stopping node server'</span>);
+    mockserver.stop_mockserver();
+});
+
+<span class="comment">// stop MockServer when Ctrl-C is used</span>
+process.on(<span class="string_literal">'SIGINT'</span>, function () {
+    console.log(<span class="string_literal">'SIGINT - stopping node server'</span>);
+    mockserver.stop_mockserver();
+    process.exit(<span class="keyword">0</span>);
+});
+
+<span class="comment">// stop MockServer when a kill shell command is used</span>
+process.on(<span class="string_literal">'SIGTERM'</span>, function () {
+    console.log(<span class="string_literal">'SIGTERM - stopping node server'</span>);
+    mockserver.stop_mockserver();
+    process.exit(<span class="keyword">0</span>);
+});</code></pre>
+
+<p>To start the process install the npm module and launch Node.js, as follows:</p>
+
+<pre><code class="code">npm install
+node index.js</code></pre>
