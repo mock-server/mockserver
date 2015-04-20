@@ -1,6 +1,6 @@
 <a name="maven-plugin" class="anchor" href="#maven-plugin">&nbsp;</a>
 
-<h4>Maven Plugin</h4>
+<h2>Maven Plugin</h2>
 
 <p>To run MockServer as part of your build add the following plugin to your pom.xml:</p>
 
@@ -151,7 +151,7 @@
 
 <a name="client-api" class="anchor" href="#client-api">&nbsp;</a>
 
-<h4>Client API&nbsp;&nbsp;-&nbsp;&nbsp;starting and stopping</h4>
+<h2>Client API&nbsp;&nbsp;-&nbsp;&nbsp;starting and stopping</h2>
 
 <p>Use the client API to run MockServer programmatically.</p>
 
@@ -199,7 +199,7 @@
 
 <a name="junit-rule" class="anchor" href="#junit-rule">&nbsp;</a>
 
-<h4>Running MockServer via a JUnit @Rule</h4>
+<h2>Running MockServer via a JUnit @Rule</h2>
 
 <p>MockServer can be run using the MockServerRule. The MockServerRule starts MockServer on a free port before the any test runs and stops MockServer after all tests have completed. A MockServerClient is then assigned to any field in the unit test of type org.mockserver.client.server.MockServerClient</p>
 
@@ -307,7 +307,7 @@
 
 <a name="running-from-command-line" class="anchor" href="#running-from-command-line">&nbsp;</a>
 
-<h4>Running From Command Line</h4>
+<h2>Running From Command Line</h2>
 
 <p>MockServer can be run directly from the command line and using Netty as follow:</p>
 
@@ -359,7 +359,7 @@
 
 <a name="docker-container" class="anchor" href="#docker-container">&nbsp;</a>
 
-<h4>Docker Container</h4>
+<h2>Docker Container</h2>
 
 <p>MockServer can be run as a <a href="https://registry.hub.docker.com/u/jamesdbloom/mockserver/">Docker container</a>.</p>
 
@@ -388,31 +388,9 @@
 	<li><strong>proxyPort</strong> 9090</li>
 </ul>
 
-<a name="vertx-module" class="anchor" href="#vertx-module">&nbsp;</a>
-
-<h4>Vert.X Module</h4>
-
-<p>MockServer can be run as a Vert.X module. However, support for the Vert.X module was stopped at version 2.9. This is because Vert.X requires Java 7 and MockServer Vert.X module was the only MockServer module that relied on Java 7 making the build and development process more complex.</p>
-
-<p>First, you'll need to <a href="http://vertx.io/install.html">install Vert.x</a>.</p>
-
-<p>Then to run MockServer as Vert.X module run the following command:</p>
-
-<pre><code class="code">vertx install org.mock-server~mockserver-vertx~2.9
-export VERTX_OPTS=<span class="string_literal">"-Dmockserver.serverPort=8080 -Dmockserver.serverSecurePort=1443 -Dmockserver.logLevel=TRACE"</span>
-vertx runmod org.mock-server~mockserver-vertx~2.9</code></pre>
-
-<p>The specify the HTTP port and / or HTTPS port the <strong>VERTX_OPTS</strong> environment variable must be set specifying the system property <strong>mockserver.serverPort</strong> for the HTTP port and <strong>mockserver.serverSecurePort</strong> for the HTTPS port.</p>
-
-<p><strong>Note:</strong> At least one of either the HTTP or the HTTPS port must be specified for MockServer to run.</p>
-
-<pre><code class="code">export VERTX_OPTS=<span class="string_literal">"-Dmockserver.serverPort=8080 -Dmockserver.serverSecurePort=1443 -Dmockserver.logLevel=TRACE"</span></code></pre>
-
-<p>It is also possible to update the default logging level by setting the system properties <strong>mockserver.logLevel</strong> as above.</p>
-
 <a name="deployable-war" class="anchor" href="#deployable-war">&nbsp;</a>
 
-<h4>Web Archive (WAR)</h4>
+<h2>Web Archive (WAR)</h2>
 
 <p>To run as a WAR deployed on any JEE web server:</p>
 
@@ -431,7 +409,7 @@ vertx runmod org.mock-server~mockserver-vertx~2.9</code></pre>
 
 <a name="mockserver-grunt" class="anchor" href="#mockserver-grunt">&nbsp;</a>
 
-<h4>MockServer Grunt Plugin & NPM Module</h4>
+<h2>MockServer Grunt Plugin & NPM Module</h2>
 
 <p>The node module can be used to start and stop MockServer and the MockServer proxy as a node module or as a Grunt plugin.</p>
 
@@ -531,9 +509,31 @@ grunt.loadNpmTasks(<span class="string_literal">'mockserver-grunt'</span>);</cod
 
 <p><strong>Note:</strong> <span class="inline_code">suspend=y</span> is used so the MockServer will pause until the debugger is attached. The grunt task will wait 50 seconds for the debugger to be attached before it exits with a failure status.</p>
 
+<a name="vertx-module" class="anchor" href="#vertx-module">&nbsp;</a>
+
+<h2>Vert.X Module</h2>
+
+<p>MockServer can be run as a Vert.X module. However, support for the Vert.X module was stopped at version 2.9. This is because Vert.X requires Java 7 and MockServer Vert.X module was the only MockServer module that relied on Java 7 making the build and development process more complex.</p>
+
+<p>First, you'll need to <a href="http://vertx.io/install.html">install Vert.x</a>.</p>
+
+<p>Then to run MockServer as Vert.X module run the following command:</p>
+
+<pre><code class="code">vertx install org.mock-server~mockserver-vertx~2.9
+export VERTX_OPTS=<span class="string_literal">"-Dmockserver.serverPort=8080 -Dmockserver.serverSecurePort=1443 -Dmockserver.logLevel=TRACE"</span>
+vertx runmod org.mock-server~mockserver-vertx~2.9</code></pre>
+
+<p>The specify the HTTP port and / or HTTPS port the <strong>VERTX_OPTS</strong> environment variable must be set specifying the system property <strong>mockserver.serverPort</strong> for the HTTP port and <strong>mockserver.serverSecurePort</strong> for the HTTPS port.</p>
+
+<p><strong>Note:</strong> At least one of either the HTTP or the HTTPS port must be specified for MockServer to run.</p>
+
+<pre><code class="code">export VERTX_OPTS=<span class="string_literal">"-Dmockserver.serverPort=8080 -Dmockserver.serverSecurePort=1443 -Dmockserver.logLevel=TRACE"</span></code></pre>
+
+<p>It is also possible to update the default logging level by setting the system properties <strong>mockserver.logLevel</strong> as above.</p>
+
 <a name="build-and-run-from-source" class="anchor" href="#build-and-run-from-source">&nbsp;</a>
 
-<h4>Build & Run From Source</h4>
+<h2>Build & Run From Source</h2>
 
 <p>MockServer is now only built using maven as the use of gradle caused problems with the Travis CI environment so the gradle build was removed.</p>
 
@@ -551,3 +551,9 @@ cd mockserver</code></pre>
 <pre><code class="code">mockserver-netty/target/mockserver-netty-3.9.8-jar-with-dependencies.jar</code></pre>
 
 <p>Run MockServer then using the executable jar as per the instruction above in <a href="#running-from-command-line">Running From The Command Line</a></p>
+
+<h2>Requirements</h2>
+
+<ul>
+    <li><strong>Java 6+</strong>&nbsp;&nbsp;&nbsp;to use the Netty version, the Maven Plugin and MockServer WAR and MockServer Proxy WAR</li>
+</ul>

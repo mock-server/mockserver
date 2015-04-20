@@ -20,7 +20,16 @@
             <image:loc>http://www.mock-server.com/images/system_under_test_with_mockserver.png</image:loc>
         </image:image>
         <image:image>
+            <image:loc>http://www.mock-server.com/images/single_page_application.png</image:loc>
+        </image:image>
+        <image:image>
+            <image:loc>http://www.mock-server.com/images/isolate_single_service_with_mockserver.png</image:loc>
+        </image:image>
+        <image:image>
             <image:loc>http://www.mock-server.com/images/system_under_test_with_mockserver_proxy.png</image:loc>
+        </image:image>
+        <image:image>
+            <image:loc>http://www.mock-server.com/images/recording_requests_with_mockserver_proxy.png</image:loc>
         </image:image>
     </url>
     <url>

@@ -6,31 +6,36 @@ section: 'Proxy'
 subsection: true
 ---
 
+<p style="width: 35%; float: right; margin-right: 5%"><a href="../images/more_detail_available_message.png" target="_blank"><img src="../images/more_detail_available_message.png" alt="Note: this page is a high level overview of each topic, more detail is available for each topic on a linked page." style="float: right; max-width: 100%;"></a></p>
+
 <p>To use MockServer Proxy to analysis an existing system:</p>
 
-<ol>
+<ol start="0">
     <li><a href="/proxy/running_mock_server_proxy.html">Start MockServer Proxy</a></li>
     <li><a href="/proxy/configuring_clients.html">Configure Clients</a></li>
     <li>Run Scenarios</li>
     <li><a href="#analysing-behaviour">Analyse Behaviour</a></li>
 </ol>
 
-<p>To use MockServer Proxy to verify request:</p>
+<p style="width: 59%; margin-top: 0; padding-top: 0;"><a href="../images/recording_requests_with_mockserver_proxy.png" target="_blank"><img src="../images/recording_requests_with_mockserver_proxy.png" alt="Mocking service dependencies with MockServer" style="max-width:100%;"></a></p>
 
-<ol>
+<p>To use MockServer Proxy to verify requests:</p>
+
+<ol start="0">
     <li><a href="/proxy/running_mock_server_proxy.html">Start MockServer Proxy</a></li>
     <li><a href="/proxy/configuring_clients.html">Configure Clients</a></li>
     <li>Run Test Scenarios</li>
     <li><a href="/proxy/verification.html">Verify Requests</a></li>
 </ol>
 
-<a name="analysing-behaviour" class="anchor" href="#analysing-behaviour">&nbsp;</a>
+<p style="width: 59%; margin-top: 0; padding-top: 0;"><a href="../images/system_under_test_with_mockserver_proxy_different_numbering.png" target="_blank"><img src="../images/system_under_test_with_mockserver_proxy_different_numbering.png" alt="Mocking service dependencies with MockServer" style="max-width:100%;"></a></p>
 
-<p><strong>Analysing Existing System Behaviour</strong></p>
+<h2>0. Start MockServer</h2>
 
-<p>To analyse the requests that a system makes the proxy can be used to record all requests and write them into the <span class="annotation">mockserver_request.log</span>. This can be particularly helpful when refactoring an existing or legacy system.</p>
+<p>MockServer is flexible and support numerous usage patterns.</p>
 
-<p>The requests can be written to the log in JSON or as Java code. The Java code can then be used to setup expectations in MockServer and exactly replay all interactions.</p>
+{% include_subpage ../mock_server/_includes/running_mock_server_summary.html %}
+
 
 <p><strong>Start MockServer Proxy</strong></p>
 
@@ -49,6 +54,14 @@ subsection: true
 <p>The system that is being analysed must be <a href="/proxy/configuring_clients.html">configured to use the proxy</a>.</p>
 
 <p><strong>Viewing Recorded Request & Responses</strong></p>
+
+<a name="analysing-behaviour" class="anchor" href="#analysing-behaviour">&nbsp;</a>
+
+<h2>3. Analysing Behaviour</h2>
+
+<p>To analyse the requests that a system makes the proxy can be used to record all requests and write them into the <span class="annotation">mockserver_request.log</span>. This can be particularly helpful when refactoring an existing or legacy system.</p>
+
+<p>The requests can be written to the log in JSON or as Java code. The Java code can then be used to setup expectations in MockServer and exactly replay all interactions.</p>
 
 <p>The request and responses recorded by the MockServer Proxy can be written to the request log as Java code, as follows:</p>
 
@@ -163,8 +176,6 @@ subsection: true
     }
 }</code></pre>
 
-<h2>Requirements</h2>
+<h2>3. Verify Requests</h2>
 
-<ul>
-    <li><strong>Java 6+</strong>&nbsp;&nbsp;&nbsp;to use the Netty version, the Maven Plugin and MockServer WAR and MockServer Proxy WAR</li>
-</ul>
+{% include_subpage _includes/verification_summary.html %}

@@ -22,6 +22,8 @@ subsection: false
 
 <p><strong>Note:</strong> Only values which are matched on need to be specified, if a value is missing then it will not be matched on. For example, below both the parameters and headers fields are not specified.</p>
 
+<p><strong>Cookies, Headers, Parameters</strong></p>
+
 <p>Each cookie, header or parameter array entry has the following syntax:</p>
 
 <pre><code class="code">{
@@ -52,16 +54,21 @@ subsection: false
     }
 }</code></pre>
 
+<p><strong>Bodies</strong></p>
+
 <p>The <span class="string_literal">"type"</span> value in <span class="string_literal">"body"</span> can be:</p>
 
 <pre><code class="code"><span class="string_literal">"STRING"</span>
 <span class="string_literal">"REGEX"</span>
 <span class="string_literal">"JSON"</span>
+<span class="string_literal">"JSON_SCHEMA"</span>
 <span class="string_literal">"XPATH"</span>
 <span class="string_literal">"PARAMETERS"</span></code></pre>
 
 <p>When the <span class="string_literal">"type"</span> field has a value of <span class="string_literal">"STRING"</span>, <span class="string_literal">"REGEX"</span>, <span class="string_literal">"JSON"</span> or <span class="string_literal">"XPATH"</span> the other field of
 	<span class="string_literal">"body"</span>" should be <span class="string_literal">"value"</span> and it should provide a string to perform the match against, as shown in the example above.</p>
+
+<p><strong>Parameter Bodies</strong></p>
 
 <p>When the <span class="string_literal">"type"</span> field has a value of <span class="string_literal">"PARAMETERS"</span> the other field of <span class="string_literal">"body"</span> should be
 	<span class="string_literal">"parameters"</span> and it should provide a list of body parameters using the following syntax:</p>
@@ -103,6 +110,8 @@ subsection: false
     }
 }</code></pre>
 
+<p><strong>String Bodies</strong></p>
+
 <p>When the <span class="string_literal">"type"</span> field has a value of <span class="string_literal">"STRING"</span> a short hand can be used where the <span class="string_literal">"body"</span> is only specified as a string literal for example:</p>
 
 <pre><code class="code"><span class="string_literal">"httpRequest"</span>: {
@@ -123,12 +132,18 @@ subsection: false
     <span class="string_literal">"body"</span>: <span class="string_literal">"a string body showing the short-hand way to specify a simple string body"</span>
 }</code></pre>
 
-<p><strong>Times</strong></p>
+<p><strong>JSON Bodies</strong></p>
 
-<p>The org.mockserver.matchers.Times class is used to specify how many times you want MockServer to match a request:</p>
+<p>When the <span class="string_literal">"type"</span> field has a value of <span class="string_literal">"JSON"</span> an additional field can be provided to specify the match type called <span class="string_literal">"matchType"</span>.</p>
 
-<p>To create an instance of Times use one of the static factory methods:</p>
+<p>The JSON expression supports two match types <span class="string_literal">"STRICT"</span> and <span class="string_literal">"ONLY_MATCHING_FIELDS"</span>.  <span class="string_literal">"STRICT"</span> match type matches all fields and the order of arrays.  In <span class="string_literal">"STRICT"</span> match type extra fields will cause the matcher to fail. <span class="string_literal">"ONLY_MATCHING_FIELDS"</span> match type only matches fields provided in the body for the request matcher.  <span class="string_literal">"ONLY_MATCHING_FIELDS"</span> match type will match correctly against a request that contains additional fields or a request that contains any array fields those elements are in a different order.</p>
 
-<pre><code class="code">Times.unlimited();
-Times.once();
-Times.exactly(<span class="keyword">int</span> count);</code></pre>
+<pre><code class="code"><span class="string_literal">"httpRequest"</span>: {
+    <span class="string_literal">"method"</span>: <span class="string_literal">"POST"</span>,
+    <span class="string_literal">"path"</span>: <span class="string_literal">"/login"</span>,
+    <span class="string_literal">"body"</span>: {
+        <span class="string_literal">"type"</span>: <span class="string_literal">"JSON"</span>,
+        <span class="string_literal">"value"</span>: <span class="string_literal">"{username: 'foo', password: 'bar'}"</span>,
+        <span class="string_literal">"matchType"</span>: <span class="string_literal">"STRICT"</span>
+    }
+}</code></pre>

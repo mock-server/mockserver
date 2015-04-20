@@ -6,14 +6,26 @@ section: 'Mock Server'
 subsection: true
 ---
 
-<p>To use MockServer:</p>
+<p style="width: 35%; float: right; margin-right: 5%"><a href="../images/more_detail_available_message.png" target="_blank"><img src="../images/more_detail_available_message.png" alt="Note: this page is a high level overview of each topic, more detail is available for each topic on a linked page." style="float: right; max-width: 100%;"></a></p>
 
-<ol>
+<p>The typical sequence for using MockServer is as follows:</p>
+
+<ol start="0">
 	<li><a href="/mock_server/running_mock_server.html">Start MockServer</a></li>
-	<li><a href="/mock_server/creating_expectations.html">Create Expectations</a></li>
+	<li><a href="/mock_server/creating_expectations.html">Setup Expectations</a></li>
 	<li>Run Test Scenario</li>
-	<li><a href="/mock_server/verification.html">Verify Behaviour</a></li>
+	<li><a href="/mock_server/verification.html">Verify Requests</a></li>
 </ol>
+
+<p style="width: 59%; margin-top: 0; padding-top: 0;"><a href="../images/system_under_test_with_mockserver.png" target="_blank"><img src="../images/system_under_test_with_mockserver_cropped.png" alt="Mocking service dependencies with MockServer" style="max-width:100%;"></a></p>
+
+<h2>0. Start MockServer</h2>
+
+<p>MockServer is flexible and support numerous usage patterns.</p>
+
+{% include_subpage _includes/running_mock_server_summary.html %}
+
+<h2>1. Setup Expectations</h2>
 
 <p>To mock an HTTP / HTTPS interaction an expectation is setup specifying how a request should be matched and what action MockServer should take when the request has been matched.</p>
 
@@ -124,21 +136,7 @@ client.register(expectation)</code></pre>
 
 <h3>Requests can be matched on:</h3>
 
-<ul>
-	<li><strong>path</strong> - plain text or regular expression</li>
-	<li><strong>query string</strong> - plain text or regular expression</li>
-	<li><strong>headers</strong> - plain text or regular expression</li>
-	<li><strong>cookies</strong> - plain text or regular expression</li>
-	<li><strong>body</strong> - XPath, JSON, JSON Schema, regular expression, plain text (exact match), or body parameters</li>
-</ul>
-
-<p>The body can be matched using plain text, a JSON object, a JSON schema, an XPath expression or a regular expression</p>
-
-<p>For detail of the support JSON Schema syntax see <a href="http://json-schema.org/">json-schema.org</a>.</p>
-
-<p>For detail of the support XPath syntax see <a href="http://saxon.sourceforge.net/saxon6.5.3/expressions.html">XPath Expression Syntax</a>.</p>
-
-<p>All other matching can be done using plain text or a regular expression, see <a href="http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html">Pattern (Java Platform SE 6)</a> for supported regular expression syntax.</p>
+{% include_subpage _includes/request_matchers_summary.html %}
 
 <p>For more details see the section below on <a href="/mock_server/creating_expectations.html#request-matcher">creating expectations</a>.</p>
 
@@ -198,14 +196,6 @@ client.register(expectation)</code></pre>
 
 <p>For more details see the section below on <a href="/mock_server/creating_expectations.html#callback">creating expectations</a>.</p>
 
-<h2>Versions</h2>
+<h2>3. Verify Requests</h2>
 
-<p>MockServer is flexible and support numerous usage patterns.</p>
-
-{% include_subpage _includes/running_mock_server_summary.html %}
-
-<h2>Requirements</h2>
-
-<ul>
-    <li><strong>Java 6+</strong>&nbsp;&nbsp;&nbsp;to use the Netty version, the Maven Plugin and MockServer WAR and MockServer Proxy WAR</li>
-</ul>
+{% include_subpage _includes/verification_summary.html %}

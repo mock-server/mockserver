@@ -24,3 +24,7 @@ _site
 # SASS #
 ########
 .sass-cache
+
+# Temporary Image Artefacts #
+#############################
+images/MockServerScenarios

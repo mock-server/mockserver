@@ -53,36 +53,40 @@ layout: default
 <ul>
 	<li><strong>Port forwarding</strong>
 		<ul>
-			<li>all requests for a specific local port are forwarded to a different (local or remote) port and hostname</li>
-			<li><a href="/proxy/configuring_clients.html">the client</a> must use the hostname and port of the MockServer Proxy instead of the system being proxied</li>
+			<li>all requests for a specific local port are forwarded to a different (local or remote) port and hostname for the system being proxied</li>
+			<li>to proxy requests the <strong>HTTP client</strong> should <a href="/proxy/configuring_clients.html">use the hostname and port of the MockServer Proxy</a> instead of the system being proxied</li>
 		</ul>
 	</li>
 	<li><strong>Web proxying</strong> (i.e. HTTP proxy)
 		<ul>
-			<li>all requests are forwarded using the Host header of the HTTP request</li>
-			<li><a href="/proxy/configuring_clients.html">the client</a> must be configured to use an HTTP Proxy</li>
+			<li>each request is forwarded dynamically using its Host header</li>
+			<li>to proxy requests the <strong>HTTP client</strong> should <a href="/proxy/configuring_clients.html">be configured to use an HTTP Proxy</a></li>
 		</ul>
 	</li>
 	<li><strong>HTTPS tunneling proxying</strong> (using HTTP CONNECT)
 		<ul>
-			<li>all requests are forwarded using a CONNECT request</li>
-			<li><a href="/proxy/configuring_clients.html">the client</a> must be configured to use an HTTP Proxy</li>
+			<li>requests are forwarded using a CONNECT request that setups an HTTP tunnel</li>
+			<li>an SSL certificate is auto-generated allowing encrypted HTTPS traffic to be recorded transparently</li>
+			<li>to proxy requests the <strong>HTTP client</strong> should <a href="/proxy/configuring_clients.html">be configured to use an HTTP Proxy</a></li>
 		</ul>
 	</li>
 	<li><strong>SOCKS proxying</strong> (i.e. dynamic port forwarding)
 		<ul>
-			<li>all requests are forwarded to port and hostname when socket connection is created</li>
-			<li><a href="/proxy/configuring_clients.html">the operating system (or JVM)</a> must be configured to use an HTTP Proxy</li>
+			<li>requests are forwarded using a SOCK CONNECT CMD request that established a socket tunnel</li>
+			<li>if the traffic is encrypted an SSL certificate is auto-generated allowing SSL traffic to be recorded transparently</li>
+			<li>to proxy requests the <strong>operating system (or JVM)</strong> should <a href="/proxy/configuring_clients.html">be configured to use an HTTP Proxy</a></li>
 		</ul>
 	<li><strong>SSL & Certificates</strong>
 		<ul>
 			<li>all SSL traffic is handled transparently by auto-generating an appropriate SSL certificate</li>
-			<li>generated certificates using single <a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-core/src/main/resources/org/mockserver/socket/CertificateAuthorityCertificate.pem">MockServer root CA certificate</a> enabling the root certificate to be <a href="/proxy/configuring_clients.html">easily imported</a></li>
+			<li>generated certificates use a single <a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-core/src/main/resources/org/mockserver/socket/CertificateAuthorityCertificate.pem">MockServer root CA certificate</a> enabling the root certificate to be
+				<a href="/proxy/configuring_clients.html">easily imported</a></li>
 		</ul>
 	</li>
 	<li><strong>Port Unification</strong>
 		<ul>
-			<li>to simplify configuration for both the MockServer and Proxy all protocols (i.e. HTTP, HTTPS / SSL, SOCKS, etc) are supported on the same port, as the protocol being used is dynamically detected</li>
+			<li>to simplify configuration all protocols (i.e. HTTP, HTTPS / SSL, SOCKS, etc) are supported on the same port</li>
+			<li>the protocol is dynamically detected by both MockServer and MockServer Proxy</li>
 		</ul>
 	</li>
 </ul>
@@ -99,7 +103,7 @@ layout: default
 	<li>testing
 		<ul>
 			<li>easily recreate all types of responses for HTTP dependencies such as REST or RPC services to test applications easily and affectively</li>
-			<li>isolate the system under test to ensure tests run reliably and only fail when there is a genuine bug. It is important only the system under test is tested and not its dependencies to avoid tests failing due to irrelevant external changes such as network failure or a server being rebooted / redeployed.</li>
+			<li>isolate the system-under-test to ensure tests run reliably and only fail when there is a genuine bug. It is important only the system-under-test is tested and not its dependencies to avoid tests failing due to irrelevant external changes such as network failure or a server being rebooted / redeployed.</li>
 			<li>easily setup mock responses independently for each test to ensure test data is encapsulated with each test. Avoid sharing data between tests that is difficult to manage and maintain and risks tests infecting each other</li>
 			<li>create test assertions that verify the requests the system-under-test has sent</li>
 		</ul>
@@ -107,23 +111,37 @@ layout: default
 	<li>de-coupling development
 		<ul>
 			<li>start working against a service API before the service is available. If an API or service is not yet fully developed MockServer can mock the API allowing any team who is using the service to start work without being delayed</li>
-			<li>isolate development teams particularly critical during the initial development phases when the APIs / services may be extremely unstable and volatile. Using MockServer allows development work to continue even when an external service fails</li>
+			<li>isolate development teams during the initial development phases when the APIs / services may be extremely unstable and volatile. Using MockServer allows development work to continue even when an external service fails</li>
 		</ul>
 	</li>
 	<li>isolate single service
 		<ul>
-			<li>during deployment and debugging it is helpful to run a single application or service or handle a sub-set of requests on on a local machine in debug mode.  Using MockServer it is easy to selectively forward requests to a local process running in debug mode, all other request can be forwarded to the real services for example running in a QA or UAT environment</li>
+			<li>during deployment and debugging it is helpful to run a single application or service or handle a sub-set of requests on on a local machine in debug mode. Using MockServer it is easy to <a href="/mock_server/isolating_single_service.html">selectively forward requests to a local process</a> running in debug mode, all other request can be forwarded to the real services for example running in a QA or UAT environment</li>
 		</ul>
 	</li>
 </ul>
 
-<p>A system with service dependencies as follows:</p>
+<p><strong>Mocking Dependencies & Verifying Request</strong></p>
+
+<p>A system with service dependencies, as follows:</p>
 
 <p><a href="images/system_in_production.png" target="_blank"><img src="images/system_in_production.png" alt="System In Production" style="max-width:100%;"></a></p>
 
 <p>MockServer could be used to mock the service dependencies, as follows:</p>
 
 <p><a href="images/system_under_test_with_mockserver.png" target="_blank"><img src="images/system_under_test_with_mockserver.png" alt="Mocking service dependencies with MockServer" style="max-width:100%;"></a></p>
+
+<p><strong>Isolating Single Service / Application</strong></p>
+
+<p>A single page application may load static resources such as HTML, CSS and JavaScript from a web server and also make AJAX calls to one or more separate services, as follows:</p>
+
+<p><a href="images/single_page_application.png" target="_blank"><img src="images/single_page_application.png" alt="Single Page Application" style="max-width:100%;"></a></p>
+
+<p>To isolate a single AJAX service, for development or debugging, the MockServer can selectively forward specific requests to local instance of the service:</p>
+
+<p><a href="images/isolate_single_service_with_mockserver.png" target="_blank"><img src="images/isolate_single_service_with_mockserver.png" alt="Isolating Single Service" style="max-width:100%;"></a></p>
+
+<p>Using MockServer as a content routing load balancer is described in more detail in the section called <a href="/mock_server/isolating_single_service.html">Isolate Single Service</a>.</p>
 
 <h2>Why use MockServer Proxy</h2>
 
@@ -154,6 +172,14 @@ layout: default
 	</li>
 </ul>
 
-<p>MockServer Proxy could be used to verify service requests, as follows:</p>
+<p><strong>Recording Requests & Analysing Behaviour</strong></p>
 
-<p><a href="images/system_under_test_with_mockserver_proxy.png" target="_blank"><img src="images/system_under_test_with_mockserver_proxy.png" alt="Verifying service request with MockServer Proxy" style="max-width:100%;"></a></p>
+<p>MockServer Proxy can record all outbound requests, as follows:</p>
+
+<p><a href="images/recording_requests_with_mockserver_proxy.png" target="_blank"><img src="images/recording_requests_with_mockserver_proxy.png" alt="Recording service requests with MockServer Proxy" style="max-width:100%;"></a></p>
+
+<p><strong>Verifying Request</strong></p>
+
+<p>MockServer Proxy can verify service requests, as follows:</p>
+
+<p><a href="images/system_under_test_with_mockserver_proxy.png" target="_blank"><img src="images/system_under_test_with_mockserver_proxy.png" alt="Verifying service requests with MockServer Proxy" style="max-width:100%;"></a></p>

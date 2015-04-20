@@ -6,60 +6,18 @@ section: 'Mock Server'
 subsection: true
 ---
 
-<p>The MockServer allows the verification of requests by specifying:</p>
-<ul>
-	<li>an amount of a single type of request</li>
-	<li>a sequence of requests that is verified in order</li>
-</ul>
+{% include_subpage _includes/verification_summary.html %}
 
-<h4>Verifying Repeating Requests</h4>
+<h3>Request Matchers</h3>
 
-<p>To verify that the system under test has sent an inidividual request to MockServer use the verify method of the MockServerClient as follows:</p>
+<p>For each verification a request matcher is used to specify how and what should be verified.</p>
 
-<pre><code class="code"><span class="keyword">new</span> MockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1090</span>).verify(
-        request()
-                .withMethod(<span class="string_literal">"POST"</span>)
-                .withPath(<span class="string_literal">"/login"</span>)
-                .withBody(exact(<span class="string_literal">"{username: 'foo', password: 'bar'}"</span>))
-                .withCookies(
-                        <span class="keyword">new</span> Cookie(<span class="string_literal">"sessionId"</span>, <span class="string_literal">".*"</span>)
-                ),
-        VerificationTimes.exactly(<span class="numeric_literal">1</span>)
-);</code></pre>
+{% include_subpage creating_expectations_request_matchers.html %}
 
-<p>The <strong>org.mockserver.verify.VerificationTimes</strong> class is used to specify how many times you want MockServer to match a request:</p>
+<h4>Java Request Matcher API</h4>
 
-<p>To create an instance of VerificationTimes use one of the static factory methods:</p>
+{% include_subpage creating_expectations_java_request_matchers.html %}
 
-<pre><code class="code">VerificationTimes.once();
-VerificationTimes.exactly(<span class="keyword">int</span> count);
-VerificationTimes.atLeast(<span class="keyword">int</span> count);</code></pre>
+<h4>JavaScript Request Matcher API</h4>
 
-<h4>Verifying Request Sequences</h4>
-
-<p>To verify that the system under test has sent a sequence of requests to MockServer use the verify method of the MockServerClient as follows:</p>
-
-<pre><code class="code"><span class="keyword">new</span> MockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1090</span>).verify(
-        request()
-                .withMethod(<span class="string_literal">"POST"</span>)
-                .withPath(<span class="string_literal">"/login"</span>)
-                .withBody(exact(<span class="string_literal">"{username: 'foo', password: 'bar'}"</span>))
-                .withCookies(
-                        <span class="keyword">new</span> Cookie(<span class="string_literal">"sessionId"</span>, <span class="string_literal">".*"</span>)
-                ),
-        request()
-                .withMethod(<span class="string_literal">"POST"</span>)
-                .withPath(<span class="string_literal">"/deposit"</span>)
-                .withBody(exact(<span class="string_literal">"{acccount: '123456789', card: '1234 5678 9012 3456', amount: '10.00'}"</span>))
-                .withCookies(
-                        <span class="keyword">new</span> Cookie(<span class="string_literal">"sessionId"</span>, <span class="string_literal">".*"</span>)
-                ),
-        request()
-                .withMethod(<span class="string_literal">"POST"</span>)
-                .withPath(<span class="string_literal">"/logout"</span>)
-                .withCookies(
-                        <span class="keyword">new</span> Cookie(<span class="string_literal">"sessionId"</span>, <span class="string_literal">".*"</span>)
-                )
-);</code></pre>
-
-<p>The each request in the sequence will be verified to have been received at least once, in the exact order specified.</p>
+{% include_subpage creating_expectations_javascript_request_matchers.html %}

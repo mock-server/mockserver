@@ -1,4 +1,4 @@
-exclude: ["vendor", "*.rb", "Gemfile*", "*.gemspec", "*.md"]
+exclude: ["vendor", "*.rb", "Gemfile*", "*.gemspec", "*.md", "*.pptx", "*.psd", "images/MockServerScenarios"]
 
 # Site settings
 title: Mock Server

@@ -29,23 +29,27 @@ subsection: true
 
 {% include_subpage creating_expectations_ruby_example_code.html %}
 
-<a name="request-matcher" class="anchor" href="#request-matcher">&nbsp;</a>
+<a name="request-matchers" class="anchor" href="#request-matchers">&nbsp;</a>
 
-<h3>Request Matcher</h3>
+<h3>Request Matchers</h3>
+
+<p>To specify when a response should be mocked a request matcher must be provided in each expectation.</p>
+
+<p>When an incoming request matches the request matcher in an expectation MockServer will return the response for that expectation.</p>
 
 {% include_subpage creating_expectations_request_matchers.html %}
 
-<p><strong>Java</strong></p>
+<h4>Java Request Matcher API</h4>
 
 {% include_subpage creating_expectations_java_request_matchers.html %}
 
-<p><strong>JavaScript</strong></p>
+<h4>JavaScript Request Matcher API</h4>
 
 {% include_subpage creating_expectations_javascript_request_matchers.html %}
 
 <a name="mock-response" class="anchor" href="#mock-response">&nbsp;</a>
 
-<h3>Mock Responses</h3>
+<h3>Response Actions (Mock Responses)</h3>
 
 <p>Response actions contain:</p>
 
@@ -224,7 +228,7 @@ subsection: true
 
 <a name="mock-forward" class="anchor" href="#mock-forward">&nbsp;</a>
 
-<h3>Mock Forward</h3>
+<h3>Forward Actions</h3>
 
 <p>Forward actions contain:</p>
 
@@ -305,7 +309,7 @@ subsection: true
 
 <a name="callback" class="anchor" href="#callback">&nbsp;</a>
 
-<h3>Callback</h3>
+<h3>Callback Actions</h3>
 
 <p>A callback specifies a class that will be called for each matching request and can be used to dynamically generate the response.<p>
 <p>Callback actions contain:</p>
@@ -402,6 +406,16 @@ subsection: true
     <span class="keyword">public</span> HttpResponse handle(HttpRequest httpRequest);
 
 }</code></pre>
+
+<p><strong>Times</strong></p>
+
+<p>The org.mockserver.matchers.Times class is used to specify how many times you want MockServer to match a request:</p>
+
+<p>To create an instance of Times use one of the static factory methods:</p>
+
+<pre><code class="code">Times.unlimited();
+Times.once();
+Times.exactly(<span class="keyword">int</span> count);</code></pre>
 
 <p><strong>JavaScript</strong></p>
 
