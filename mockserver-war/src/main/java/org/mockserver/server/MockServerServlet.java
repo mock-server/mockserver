@@ -41,14 +41,37 @@ public class MockServerServlet extends HttpServlet {
     private VerificationSerializer verificationSerializer = new VerificationSerializer();
     private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer();
 
+    @Override
     public void doGet(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
         mockResponse(httpServletRequest, httpServletResponse);
     }
 
+    @Override
     public void doPost(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
         mockResponse(httpServletRequest, httpServletResponse);
     }
 
+    @Override
+    protected void doHead(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
+        mockResponse(httpServletRequest, httpServletResponse);
+    }
+
+    @Override
+    protected void doDelete(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
+        mockResponse(httpServletRequest, httpServletResponse);
+    }
+
+    @Override
+    protected void doOptions(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
+        mockResponse(httpServletRequest, httpServletResponse);
+    }
+
+    @Override
+    protected void doTrace(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
+        mockResponse(httpServletRequest, httpServletResponse);
+    }
+
+    @Override
     public void doPut(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
 
         try {
