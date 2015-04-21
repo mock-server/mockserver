@@ -51,31 +51,32 @@ layout: default
 <p>The MockServer Proxy provides the following features:</p>
 
 <ul>
-	<li><strong>Port forwarding</strong>
+	<li><strong>Port Forwarding</strong>
 		<ul>
 			<li>all requests for a specific local port are forwarded to a different (local or remote) port and hostname for the system being proxied</li>
 			<li>to proxy requests the <strong>HTTP client</strong> should <a href="/proxy/configuring_clients.html">use the hostname and port of the MockServer Proxy</a> instead of the system being proxied</li>
 		</ul>
 	</li>
-	<li><strong>Web proxying</strong> (i.e. HTTP proxy)
+	<li><strong>Web Proxying</strong> (i.e. HTTP proxy)
 		<ul>
 			<li>each request is forwarded dynamically using its Host header</li>
 			<li>to proxy requests the <strong>HTTP client</strong> should <a href="/proxy/configuring_clients.html">be configured to use an HTTP Proxy</a></li>
 		</ul>
 	</li>
-	<li><strong>HTTPS tunneling proxying</strong> (using HTTP CONNECT)
+	<li><strong>Secure Web Proxying</strong> (i.e. HTTPS tunneling proxying)
 		<ul>
 			<li>requests are forwarded using a CONNECT request that setups an HTTP tunnel</li>
 			<li>an SSL certificate is auto-generated allowing encrypted HTTPS traffic to be recorded transparently</li>
 			<li>to proxy requests the <strong>HTTP client</strong> should <a href="/proxy/configuring_clients.html">be configured to use an HTTP Proxy</a></li>
 		</ul>
 	</li>
-	<li><strong>SOCKS proxying</strong> (i.e. dynamic port forwarding)
+	<li><strong>SOCKS Proxying</strong> (i.e. dynamic port forwarding)
 		<ul>
 			<li>requests are forwarded using a SOCK CONNECT CMD request that established a socket tunnel</li>
 			<li>if the traffic is encrypted an SSL certificate is auto-generated allowing SSL traffic to be recorded transparently</li>
 			<li>to proxy requests the <strong>operating system (or JVM)</strong> should <a href="/proxy/configuring_clients.html">be configured to use an HTTP Proxy</a></li>
 		</ul>
+	</li>
 	<li><strong>SSL & Certificates</strong>
 		<ul>
 			<li>all SSL traffic is handled transparently by auto-generating an appropriate SSL certificate</li>

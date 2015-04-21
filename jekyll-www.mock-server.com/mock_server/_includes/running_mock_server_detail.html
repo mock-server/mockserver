@@ -166,7 +166,6 @@
 
 <p>To start the server and create a client the simplest way is to the start factory methods <span class="inline_code">ClientAndServer.startClientAndServer</span> or <span class="inline_code">ClientAndProxy.startClientAndProxy</span> as follows:</p>
 
-
 <p>Add includes:</p>
 
 <pre><code class="code"><span class="keyword">import static</span> org.mockserver.integration.ClientAndProxy.startClientAndProxy;
@@ -186,7 +185,6 @@
 }</code></pre>
 
 <p>Stop server and client when appropriate, for example in <span class="annotation">@After</span> method:</p>
-
 
 <pre><code class="code"><span class="annotation">@After</span>
 <span class="keyword">public void</span> stopProxy() {
