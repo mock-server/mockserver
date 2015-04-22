@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -23,14 +24,14 @@ import java.util.regex.Pattern;
  */
 public class MockServerMatcher extends ObjectWithReflectiveEqualsHashCodeToString {
 
-    protected final List<Expectation> expectations = new ArrayList<Expectation>();
+    protected final List<Expectation> expectations = Collections.synchronizedList(new ArrayList<Expectation>());
     private Logger requestLogger = LoggerFactory.getLogger("REQUEST");
 
-    public synchronized Expectation when(HttpRequest httpRequest) {
+    public Expectation when(HttpRequest httpRequest) {
         return when(httpRequest, Times.unlimited());
     }
 
-    public synchronized Expectation when(final HttpRequest httpRequest, Times times) {
+    public Expectation when(final HttpRequest httpRequest, Times times) {
         Expectation expectation;
         if (times.isUnlimited()) {
             Collection<Expectation> existingExpectationsWithMatchingRequest = Collections2.filter(expectations, new Predicate<Expectation>() {
@@ -53,7 +54,7 @@ public class MockServerMatcher extends ObjectWithReflectiveEqualsHashCodeToStrin
         return expectation;
     }
 
-    public synchronized Action handle(HttpRequest httpRequest) {
+    public Action handle(HttpRequest httpRequest) {
         ArrayList<Expectation> expectations = new ArrayList<Expectation>(this.expectations);
         for (Expectation expectation : expectations) {
             if (expectation.matches(httpRequest)) {
@@ -69,7 +70,7 @@ public class MockServerMatcher extends ObjectWithReflectiveEqualsHashCodeToStrin
         return null;
     }
 
-    public synchronized void clear(HttpRequest httpRequest) {
+    public void clear(HttpRequest httpRequest) {
         if (httpRequest != null) {
             HttpRequestMatcher httpRequestMatcher = new MatcherBuilder().transformsToMatcher(httpRequest);
             for (Expectation expectation : new ArrayList<Expectation>(expectations)) {
@@ -84,11 +85,11 @@ public class MockServerMatcher extends ObjectWithReflectiveEqualsHashCodeToStrin
         }
     }
 
-    public synchronized void reset() {
+    public void reset() {
         this.expectations.clear();
     }
 
-    public synchronized void dumpToLog(HttpRequest httpRequest) {
+    public void dumpToLog(HttpRequest httpRequest) {
         if (httpRequest != null) {
             ExpectationSerializer expectationSerializer = new ExpectationSerializer();
             for (Expectation expectation : new ArrayList<Expectation>(expectations)) {

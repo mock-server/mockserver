@@ -2,6 +2,7 @@ package org.mockserver.integration.server;
 
 import com.google.common.net.HttpHeaders;
 import com.google.common.net.MediaType;
+import com.google.common.util.concurrent.Uninterruptibles;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -17,13 +18,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.concurrent.*;
 
+import static org.hamcrest.Matchers.lessThan;
+import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.StringStartsWith.startsWith;
+import static org.hamcrest.number.OrderingComparison.greaterThan;
 import static org.junit.Assert.*;
 import static org.mockserver.matchers.Times.exactly;
 import static org.mockserver.matchers.Times.once;
@@ -3609,6 +3610,59 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withPath(calculatePath("some_path2")),
                         headersToIgnore)
         );
+    }
+
+    @Test
+    public void shouldEnsureThatRequestDelaysDoNotAffectOtherRequests() throws Exception {
+        mockServerClient
+                .when(
+                        request("/slow")
+                )
+                .respond(
+                        response("super slow")
+                                .withDelay(new Delay(TimeUnit.SECONDS, 8))
+                );
+        mockServerClient
+                .when(
+                        request("/fast")
+                )
+                .respond(
+                        response("quite fast")
+                );
+
+        ExecutorService executorService = Executors.newFixedThreadPool(2);
+
+        Future<Long> slowFuture = executorService.submit(new Callable<Long>() {
+            @Override
+            public Long call() throws Exception {
+                long start = System.currentTimeMillis();
+                makeRequest(request("/slow"));
+                return System.currentTimeMillis() - start;
+            }
+        });
+
+        // Let fast request come to the server slightly after slow request
+        Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
+
+        Future<Long> fastFuture = executorService.submit(new Callable<Long>() {
+            @Override
+            public Long call() throws Exception {
+                long start = System.currentTimeMillis();
+                makeRequest(request("/fast"));
+                return System.currentTimeMillis() - start;
+
+            }
+        });
+
+        Long slowRequestElapsedMillis = slowFuture.get();
+        Long fastRequestElapsedMillis = fastFuture.get();
+
+        assertThat("Slow request takes less than expected", slowRequestElapsedMillis, is(greaterThan(7 * 1000L)));
+        assertThat("Fast request takes longer than expected", fastRequestElapsedMillis, is(lessThan(3 * 1000L)));
+    }
+
+    protected HttpResponse makeRequest(HttpRequest httpRequest) {
+        return makeRequest(httpRequest, Collections.<String>emptySet());
     }
 
     protected HttpResponse makeRequest(HttpRequest httpRequest, Collection<String> headersToIgnore) {

@@ -9,11 +9,11 @@ import java.util.*;
  */
 public class CircularMultiMap<K, V> implements Map<K, V> {
     private final int maxValuesPerKeySize;
-    private final CircularHashMap<K, List<V>> backingMap;
+    private final Map<K, List<V>> backingMap;
 
     public CircularMultiMap(int maxNumberOfKeys, int maxNumberOfValuesPerKey) {
         this.maxValuesPerKeySize = maxNumberOfValuesPerKey;
-        backingMap = new CircularHashMap<K, List<V>>(maxNumberOfKeys);
+        backingMap = Collections.synchronizedMap(new CircularHashMap<K, List<V>>(maxNumberOfKeys));
     }
 
     @Override

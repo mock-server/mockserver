@@ -22,7 +22,7 @@ public class ActionHandler {
         filters.withFilter(new org.mockserver.model.HttpRequest(), logFilter);
     }
 
-    public synchronized HttpResponse processAction(Action action, HttpRequest httpRequest) {
+    public HttpResponse processAction(Action action, HttpRequest httpRequest) {
         HttpResponse httpResponse = notFoundResponse();
         httpRequest = filters.applyOnRequestFilters(httpRequest);
         if (action != null) {
