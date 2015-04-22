@@ -3,7 +3,7 @@
 
 ### Dependencies
 
-* [dockerfile/java](http://dockerfile.github.io/#/java)
+* [java](https://registry.hub.docker.com/u/library/java/)
 
 ### Installation
 
@@ -13,7 +13,7 @@
 
 ### Usage
 
-    docker run -d jamesdbloom/mockserver
+    docker run -d -p <serverPort>:1080 -p <proxyPort>:1090 jamesdbloom/mockserver
 
 ### What is MockServer
 
@@ -21,9 +21,9 @@ MockServer is for mocking of any system you integrate with via HTTP or HTTPS (i.
 
 MockServer supports:
 
-* mocking of any HTTP / HTTPS response when any request is matched ([learn more](http://www.mock-server.com/#mocking))
-* recording requests and responses to analyse how a system behaves ([learn more](http://www.mock-server.com/#proxying))
-* verifying which requests and responses have been sent as part of a test ([learn more](http://www.mock-server.com/#proxying))
+* mocking of any HTTP / HTTPS response when any request is matched ([learn more](http://www.mock-server.com/#what-is-mockserver))
+* recording requests and responses to analyse how a system behaves ([learn more](http://www.mock-server.com/#what-is-mockserver))
+* verifying which requests and responses have been sent as part of a test ([learn more](http://www.mock-server.com/#what-is-mockserver))
 
 This docker container will run an instance of the MockServer on the following ports:
 
@@ -42,4 +42,3 @@ Pull requests are, of course, very welcome! Please read our [contributing to the
 
 ### Maintainers
 * [James D Bloom](http://blog.jamesdbloom.com)
-* [Samira Bloom](https://github.com/samirabloom)
