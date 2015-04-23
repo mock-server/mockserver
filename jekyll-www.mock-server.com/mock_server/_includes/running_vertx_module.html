@@ -1,0 +1,17 @@
+<p>MockServer can be run as a Vert.X module. However, support for the Vert.X module was stopped at version 2.9. This is because Vert.X requires Java 7 and MockServer Vert.X module was the only MockServer module that relied on Java 7 making the build and development process more complex.</p>
+
+<p>First, you'll need to <a href="http://vertx.io/install.html">install Vert.x</a>.</p>
+
+<p>Then to run MockServer as Vert.X module run the following command:</p>
+
+<pre><code class="code">vertx install org.mock-server~mockserver-vertx~2.9
+export VERTX_OPTS=<span class="string_literal">"-Dmockserver.serverPort=8080 -Dmockserver.serverSecurePort=1443 -Dmockserver.logLevel=TRACE"</span>
+vertx runmod org.mock-server~mockserver-vertx~2.9</code></pre>
+
+<p>The specify the HTTP port and / or HTTPS port the <strong>VERTX_OPTS</strong> environment variable must be set specifying the system property <strong>mockserver.serverPort</strong> for the HTTP port and <strong>mockserver.serverSecurePort</strong> for the HTTPS port.</p>
+
+<p><strong>Note:</strong> At least one of either the HTTP or the HTTPS port must be specified for MockServer to run.</p>
+
+<pre><code class="code">export VERTX_OPTS=<span class="string_literal">"-Dmockserver.serverPort=8080 -Dmockserver.serverSecurePort=1443 -Dmockserver.logLevel=TRACE"</span></code></pre>
+
+<p>It is also possible to update the default logging level by setting the system properties <strong>mockserver.logLevel</strong> as above.</p>

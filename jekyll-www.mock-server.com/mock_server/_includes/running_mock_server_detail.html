@@ -361,30 +361,7 @@
 
 <p>MockServer can be run as a <a href="https://registry.hub.docker.com/u/jamesdbloom/mockserver/">Docker container</a>.</p>
 
-<p>First, you'll need to <a href="https://docs.docker.com/">install Docker</a>.</p>
-
-<p>Then to run MockServer as a Docker container run the following command:</p>
-
-<pre><code class="code">docker run -d -P jamesdbloom/mockserver</code></pre>
-
-<p>This command will map the ports exposed by MockServer and Proxy to dynamic ports using the <strong>-P</strong> option. To specify which ports are used you can specify one or more port mappings using the <strong>-p
-	<span class="annotation">&lt;host port&gt;</span>:<span class="annotation">&lt;container port&gt;</span></strong> option. You only need to specify mapping for ports you need to use, for example, if you are not using the proxy there is no need to provide port mapping options for the proxy ports.</p>
-
-<p>To run MockServer specifying as a Docker container run the following command (replacing each <strong><span class="annotation">&lt; ... &gt;</span></strong> section with the appropriate port value):</p>
-
-<pre><code class="code">docker run -d -p <span class="annotation">&lt;serverPort&gt;</span>:<span class="numeric_literal">1080</span> -p <span class="annotation">&lt;proxyPort&gt;</span>:<span class="numeric_literal">1090</span> jamesdbloom/mockserver</code></pre>
-
-<p><strong>Note</strong>: you only need to specify mapping for ports you need to use, for example, if you are only using MockServer to mock HTTP endpoints then only specify <strong>-p <span class="annotation">&lt;serverPort&gt;</span>:<span class="numeric_literal">1080</span></strong> as follows (replacing each
-	<strong><span class="annotation">&lt; ... &gt;</span></strong> section with the appropriate port value):</p>
-
-<pre><code class="code">docker run -d -p <span class="annotation">&lt;serverPort&gt;</span>:<span class="numeric_literal">1080</span> jamesdbloom/mockserver</code></pre>
-
-<p>This MockServer docker container exposes the following ports:</p>
-
-<ul>
-	<li><strong>serverPort</strong> 8080</li>
-	<li><strong>proxyPort</strong> 9090</li>
-</ul>
+{% include_subpage ../mock_server/_includes/running_docker_container.html %}
 
 <a name="deployable-war" class="anchor" href="#deployable-war">&nbsp;</a>
 
@@ -409,125 +386,13 @@
 
 <h2>MockServer Grunt Plugin & NPM Module</h2>
 
-<p>The node module can be used to start and stop MockServer and the MockServer proxy as a node module or as a Grunt plugin.</p>
-
-<p>You may install this plugin / node module with the following command:</p>
-
-<pre><code class="code">npm install mockserver-grunt --save-dev</code></pre>
-
-<p><strong>Node Module</strong></p>
-
-<p>To start or stop the MockServer from any Node.js code you need to import this module using <span class="inline_code">require(<span class="string_literal">'mockserver-grunt'</span>)</span> as follows:</p>
-
-<pre><code class="code">var mockserver = require(<span class="string_literal">'mockserver-grunt'</span>);</code></pre>
-
-<p>Then you can use either the <span class="inline_code">start_mockserver</span> or <span class="inline_code">stop_mockserver</span> functions as follows:</p>
-
-<pre><code class="code">mockserver.start_mockserver({
-                serverPort: <span class="numeric_literal">1080</span>,
-                proxyPort: <span class="numeric_literal">1090</span>,
-                verbose: <span class="keyword">true</span>
-            });
-
-<span class="comment">// do something</span>
-
-mockserver.stop_mockserver();</code></pre>
-
-<p>If you are only using the MockServer then only specify the MockServer port as follows:</p>
-
-<pre><code class="code">mockserver.start_mockserver({serverPort: <span class="numeric_literal">1080</span>});
-
-<span class="comment">// do something</span>
-
-mockserver.stop_mockserver();</code></pre>
-
-<p>The MockServer and the MockServer proxy use port unification to support HTTP and HTTPS on the same port. A client can then connect to the single port with both HTTP and HTTPS as the socket will automatically detected SSL traffic and decrypt it when required.</p>
-
-<p><strong>Grunt Plugin</strong></p>
-
-<p>If you haven't used Grunt before, be sure to check out the Getting Started guide, as it explains how to create a Gruntfile as well as install and use Grunt plugins.</p>
-
-<p>In your project's Gruntfile, add a section named <span class="inline_code">start_mockserver</span> and <span class="inline_code">stop_mockserver</span> to the data object passed into <span class="inline_code">grunt.initConfig()</span>.</p>
-
-<p>The following example will result in a both a MockServer and a MockServer proxy being started on ports <strong>1080</strong> and <strong>1090</strong>.</p>
-
-<pre><code class="code">grunt.initConfig({
-    start_mockserver: {
-        start: {
-            options: {
-                serverPort: <span class="numeric_literal">1080</span>,
-                proxyPort: <span class="numeric_literal">1090</span>
-            }
-        }
-    },
-    stop_mockserver: {
-        stop: {
-
-        }
-    }
-});
-
-grunt.loadNpmTasks(<span class="string_literal">'mockserver-grunt'</span>);</code></pre>
-
-<p><strong>Grunt Plugin & NPM Module Options</strong></p>
-
-<p><span class="inline_code"><strong>options.serverPort</strong></span></p>
-
-<p><strong>Type:</strong> Integer <strong>Default:</strong> undefined</p>
-
-<p>This value specifies the HTTP and HTTPS port for the MockServer port unification is used to support HTTP and HTTPS on the same port. The MockServer will only be started if a port is provided, if this value is left undefined the MockServer will not be started.</p>
-
-<p><span class="inline_code"><strong>options.proxyPort</strong></span></p>
-
-<p><strong>Type:</strong> Integer <strong>Default:</strong> undefined</p>
-
-<p>This value specifies the HTTP, HTTPS, SOCKS and HTTP CONNECT port for proxy, port unification is used to support all protocols on the same port. The proxy will only be started if a port is provided, if this value is left undefined the proxy will not be started.</p>
-
-<p><span class="inline_code"><strong>options.verbose</strong></span></p>
-
-<p><strong>Type:</strong> Boolean <strong>Default:</strong> false</p>
-
-<p>This value indicates whether the MockServer logs should be written to the console. In addition to logging additional output from the grunt task this options also sets the logging level of the MockServer to INFO. At INFO level all interactions with the MockServer including setting up expectations, matching expectations, clearing expectations and verifying requests are written to the log. The MockServer logs are written to mockserver.log in the current directory.</p>
-
-<p><strong>Note:</strong> It is also possible to use the <span class="inline_code">--verbose</span> command line switch to enabled verbose level logging from the command line.</p>
-
-<p><span class="inline_code"><strong>options.trace</strong></span></p>
-
-<p><strong>Type:</strong> Boolean <strong>Default:</strong> false</p>
-
-<p>This value sets the logging level of the MockServer to TRACE. At TRACE level (in addition to INFO level information) all matcher results, including when specific matchers fail (such as HeaderMatcher) are written to the log. The MockServer logs are written to mockserver.log in the current directory.</p>
-
-<p><span class="inline_code"><strong>options.javaDebugPort</strong></span></p>
-
-<p><strong>Type:</strong> Integer <strong>Default:</strong> undefined</p>
-
-<p>This value indicates whether Java debugging should be enabled and if so which port the debugger should listen on. When this options is provided the following additional option is passed to the JVM:</p>
-
-<pre><code class="code"><span class="string_literal">"-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address="</span> + javaDebugPort</code></pre>
-
-<p><strong>Note:</strong> <span class="inline_code">suspend=y</span> is used so the MockServer will pause until the debugger is attached. The grunt task will wait 50 seconds for the debugger to be attached before it exits with a failure status.</p>
+{% include_subpage ../mock_server/_includes/running_npm_module.html %}
 
 <a name="vertx-module" class="anchor" href="#vertx-module">&nbsp;</a>
 
 <h2>Vert.X Module</h2>
 
-<p>MockServer can be run as a Vert.X module. However, support for the Vert.X module was stopped at version 2.9. This is because Vert.X requires Java 7 and MockServer Vert.X module was the only MockServer module that relied on Java 7 making the build and development process more complex.</p>
-
-<p>First, you'll need to <a href="http://vertx.io/install.html">install Vert.x</a>.</p>
-
-<p>Then to run MockServer as Vert.X module run the following command:</p>
-
-<pre><code class="code">vertx install org.mock-server~mockserver-vertx~2.9
-export VERTX_OPTS=<span class="string_literal">"-Dmockserver.serverPort=8080 -Dmockserver.serverSecurePort=1443 -Dmockserver.logLevel=TRACE"</span>
-vertx runmod org.mock-server~mockserver-vertx~2.9</code></pre>
-
-<p>The specify the HTTP port and / or HTTPS port the <strong>VERTX_OPTS</strong> environment variable must be set specifying the system property <strong>mockserver.serverPort</strong> for the HTTP port and <strong>mockserver.serverSecurePort</strong> for the HTTPS port.</p>
-
-<p><strong>Note:</strong> At least one of either the HTTP or the HTTPS port must be specified for MockServer to run.</p>
-
-<pre><code class="code">export VERTX_OPTS=<span class="string_literal">"-Dmockserver.serverPort=8080 -Dmockserver.serverSecurePort=1443 -Dmockserver.logLevel=TRACE"</span></code></pre>
-
-<p>It is also possible to update the default logging level by setting the system properties <strong>mockserver.logLevel</strong> as above.</p>
+{% include_subpage ../mock_server/_includes/running_vertx_module.html %}
 
 <a name="build-and-run-from-source" class="anchor" href="#build-and-run-from-source">&nbsp;</a>
 
