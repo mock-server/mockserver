@@ -16,6 +16,11 @@ public class ClientAndProxy extends ProxyClient {
         httpProxy = new ProxyBuilder().withLocalPort(port).build();
     }
 
+    public ClientAndProxy(Integer port, String remoteHost, Integer remotePort) {
+        super("localhost", port);
+        httpProxy = new ProxyBuilder().withLocalPort(port).withDirect(remoteHost, remotePort).build();
+    }
+
     public static ClientAndProxy startClientAndProxy(Integer port) {
         return new ClientAndProxy(port);
     }

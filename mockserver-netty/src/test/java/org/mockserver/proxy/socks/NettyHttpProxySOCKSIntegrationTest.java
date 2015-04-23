@@ -89,11 +89,16 @@ public class NettyHttpProxySOCKSIntegrationTest {
     @Test
     public void shouldProxyRequestsUsingHttpClientViaSOCKS() throws Exception {
         // given
-        Registry<ConnectionSocketFactory> reg = RegistryBuilder.<ConnectionSocketFactory>create()
+        Registry<ConnectionSocketFactory> socketFactoryRegistry = RegistryBuilder.<ConnectionSocketFactory>create()
                 .register("http", new ConnectionSocketFactory() {
 
                     public Socket createSocket(final HttpContext context) throws IOException {
-                        return new Socket(new java.net.Proxy(java.net.Proxy.Type.SOCKS, new InetSocketAddress(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort")))));
+                        return new Socket(new java.net.Proxy(
+                                java.net.Proxy.Type.SOCKS,
+                                new InetSocketAddress(
+                                        System.getProperty("http.proxyHost"),
+                                        Integer.parseInt(System.getProperty("http.proxyPort"))
+                                )));
                     }
 
                     public Socket connectSocket(
@@ -123,9 +128,9 @@ public class NettyHttpProxySOCKSIntegrationTest {
                 })
                 .build();
 
-        PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager(reg);
+        PoolingHttpClientConnectionManager clientConnectionManager = new PoolingHttpClientConnectionManager(socketFactoryRegistry);
         HttpClient httpClient = HttpClients.custom()
-                .setConnectionManager(cm)
+                .setConnectionManager(clientConnectionManager)
                 .build();
 
         // when

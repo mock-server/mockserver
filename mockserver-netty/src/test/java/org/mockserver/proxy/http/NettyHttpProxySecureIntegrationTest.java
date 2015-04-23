@@ -20,7 +20,7 @@ public class NettyHttpProxySecureIntegrationTest extends AbstractClientSecurePro
     private final static Logger logger = LoggerFactory.getLogger(NettyHttpProxySecureIntegrationTest.class);
 
     private final static Integer SERVER_HTTPS_PORT = PortFactory.findFreePort();
-    private final static Integer PROXY_HTTPS_PORT = PortFactory.findFreePort();
+    private final static Integer PROXY_PORT = PortFactory.findFreePort();
     private static EchoServer echoServer;
     private static Proxy httpProxy;
     private static ProxyClient proxyClient;
@@ -28,18 +28,18 @@ public class NettyHttpProxySecureIntegrationTest extends AbstractClientSecurePro
     @BeforeClass
     public static void setupFixture() throws Exception {
         logger.debug("SERVER_HTTPS_PORT = " + SERVER_HTTPS_PORT);
-        logger.debug("PROXY_HTTPS_PORT = " + PROXY_HTTPS_PORT);
+        logger.debug("PROXY_PORT = " + PROXY_PORT);
 
         // start server
         echoServer = new EchoServer(SERVER_HTTPS_PORT, true);
 
         // start proxy
         httpProxy = new ProxyBuilder()
-                .withLocalPort(PROXY_HTTPS_PORT)
+                .withLocalPort(PROXY_PORT)
                 .build();
 
         // start client
-        proxyClient = new ProxyClient("localhost", PROXY_HTTPS_PORT);
+        proxyClient = new ProxyClient("localhost", PROXY_PORT);
     }
 
     @AfterClass
@@ -58,7 +58,7 @@ public class NettyHttpProxySecureIntegrationTest extends AbstractClientSecurePro
 
     @Override
     public int getProxyPort() {
-        return PROXY_HTTPS_PORT;
+        return PROXY_PORT;
     }
 
     @Override
