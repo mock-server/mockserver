@@ -51,6 +51,7 @@
         <tomcat.version>7.0.56</tomcat.version>
         <jackson.version>2.5.2</jackson.version>
         <netty.version>4.0.26.Final</netty.version>
+        <boucycastle.verion>1.51</boucycastle.verion>
         <skipTests>false</skipTests>
         <nonReleaseBuild>true</nonReleaseBuild>
         <release.arguments />
@@ -239,12 +240,17 @@
             <dependency>
                 <groupId>org.bouncycastle</groupId>
                 <artifactId>bcprov-jdk15on</artifactId>
-                <version>1.51</version>
+                <version>${boucycastle.verion}</version>
             </dependency>
             <dependency>
                 <groupId>org.bouncycastle</groupId>
                 <artifactId>bcmail-jdk15on</artifactId>
-                <version>1.51</version>
+                <version>${boucycastle.verion}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcpkix-jdk15on</artifactId>
+                <version>${boucycastle.verion}</version>
             </dependency>
 
             <!-- json (object serialisation) -->
