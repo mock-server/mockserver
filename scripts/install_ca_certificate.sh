@@ -13,7 +13,16 @@ if [ ! -z "$CERT_ALREADY_INSTALLED" -a "$CERT_ALREADY_INSTALLED" != "1" ]; then
 fi
 
 # install the certificate
-keytool -v -import -alias mockserver-ca -file CertificateAuthorityCertificate.pem -storepass changeit -trustcacerts -noprompt
+STORE_RESPONSE=$(keytool -v -import -alias mockserver-ca -file CertificateAuthorityCertificate.pem -storepass changeit -trustcacerts -noprompt 2>&1)
+echo "$STORE_RESPONSE"
+
+KEY_STORE_FILE=$(echo $STORE_RESPONSE | tr ']' ' ' | awk '{print $7}')
 
 # delete the downloaded file
 rm -rf CertificateAuthorityCertificate.pem
+
+echo
+printf -v str "%-$((${#KEY_STORE_FILE} + 85))s" ' '; echo "${str// /=}"
+echo "Ensure your JVM is using the correct keystore as follows: -Djavax.net.ssl.trustStore=$KEY_STORE_FILE"
+printf -v str "%-$((${#KEY_STORE_FILE} + 85))s" ' '; echo "${str// /=}"
+echo
