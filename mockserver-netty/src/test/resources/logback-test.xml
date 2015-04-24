@@ -26,8 +26,8 @@
         </encoder>
         <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
             <evaluator>
-                <!--<expression>level &gt;= INFO &amp;&amp; level &lt; WARN</expression>-->
-                <expression>level &lt; WARN</expression>
+                <expression>level &gt;= INFO &amp;&amp; level &lt; WARN</expression>
+                <!--<expression>level &lt; WARN</expression>-->
             </evaluator>
             <OnMismatch>DENY</OnMismatch>
             <OnMatch>NEUTRAL</OnMatch>
@@ -40,7 +40,7 @@
 
     <root level="TRACE">
         <appender-ref ref="FILE"/>
-        <appender-ref ref="STDERR"/>
-        <appender-ref ref="STDOUT"/>
+        <!-- <appender-ref ref="STDERR"/> -->
+        <!-- <appender-ref ref="STDOUT"/> -->
     </root>
 </configuration>
