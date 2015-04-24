@@ -26,8 +26,8 @@
         </encoder>
         <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
             <evaluator>
-                <expression>level &gt;= INFO &amp;&amp; level &lt; WARN</expression>
-                <!--<expression>level &lt; WARN</expression>-->
+                <!--<expression>level &gt;= INFO &amp;&amp; level &lt; WARN</expression>-->
+                <expression>level &lt; WARN</expression>
             </evaluator>
             <OnMismatch>DENY</OnMismatch>
             <OnMatch>NEUTRAL</OnMatch>
@@ -35,8 +35,6 @@
     </appender>
 
     <logger name="org.mockserver" level="TRACE"/>
-    <!--<logger name="org.mockserver.proxy" level="INFO"/>-->
-    <!--<logger name="org.mockserver.mockserver" level="INFO"/>-->
     <logger name="io.netty.channel.nio.NioEventLoop" level="WARN"/>
     <logger name="io.netty.util.internal" level="WARN"/>
 
