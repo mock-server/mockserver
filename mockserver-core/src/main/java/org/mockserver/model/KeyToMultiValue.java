@@ -66,4 +66,8 @@ public class KeyToMultiValue extends Not {
             }
         }
     }
+
+    public void addValues(String... values) {
+        addValues(Arrays.asList(values));
+    }
 }

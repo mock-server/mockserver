@@ -6,7 +6,10 @@ import com.google.common.base.Strings;
 
 import java.util.*;
 
+import static org.mockserver.model.Cookie.cookie;
+import static org.mockserver.model.Header.header;
 import static org.mockserver.model.NottableString.string;
+import static org.mockserver.model.Parameter.param;
 
 /**
  * @author jamesdbloom
@@ -170,6 +173,22 @@ public class HttpRequest extends Not {
         return this;
     }
 
+    /**
+     * Adds one query string parameter to match on as a Parameter object where the parameter values list can be a list of strings or regular expressions
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     *
+     * @param name the parameter name
+     * @param values the parameter values which can be a varags of strings or regular expressions
+     */
+    public HttpRequest withQueryStringParameter(String name, String... values) {
+        if (this.queryStringParameters.containsKey(name)) {
+            this.queryStringParameters.get(name).addValues(values);
+        } else {
+            this.queryStringParameters.put(name, param(name, values));
+        }
+        return this;
+    }
+
     public List<Parameter> getQueryStringParameters() {
         return new ArrayList<Parameter>(queryStringParameters.values());
     }
@@ -323,6 +342,22 @@ public class HttpRequest extends Not {
      * Adds one header to match on as a Header object where the header values list can be a list of strings or regular expressions
      * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
      *
+     * @param name the header name
+     * @param values the header values which can be a varags of strings or regular expressions
+     */
+    public HttpRequest withHeader(String name, String... values) {
+        if (this.headers.containsKey(name)) {
+            this.headers.get(name).addValues(values);
+        } else {
+            this.headers.put(name, header(name, values));
+        }
+        return this;
+    }
+
+    /**
+     * Adds one header to match on as a Header object where the header values list can be a list of strings or regular expressions
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     *
      * @param header the Header object which can have a values list of strings or regular expressions
      */
     public HttpRequest withHeader(Header header) {
@@ -413,6 +448,18 @@ public class HttpRequest extends Not {
      */
     public HttpRequest withCookie(Cookie cookie) {
         this.cookies.put(cookie.getName(), cookie);
+        return this;
+    }
+
+    /**
+     * Adds one cookie to match on as a Cookie object where the cookie values list can be a list of strings or regular expressions
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     *
+     * @param name the cookies name
+     * @param value the cookies value which can be a string or regular expression
+     */
+    public HttpRequest withCookie(String name, String value) {
+        this.cookies.put(name, cookie(name, value));
         return this;
     }
 
