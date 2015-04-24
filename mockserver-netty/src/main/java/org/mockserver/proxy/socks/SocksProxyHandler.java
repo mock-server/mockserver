@@ -8,6 +8,9 @@ import org.mockserver.proxy.unification.PortUnificationHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 public class SocksProxyHandler extends SimpleChannelInboundHandler<SocksRequest> {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -39,6 +42,15 @@ public class SocksProxyHandler extends SimpleChannelInboundHandler<SocksRequest>
 
                     // assume SSL enabled, if this is incorrect client retries without SSL
                     PortUnificationHandler.enabledSslDownstream(ctx.channel());
+
+                    try {
+                        // resolve host name for subject alternative name when ip address used in SOCKS request
+                        InetAddress addr = InetAddress.getByName(req.host());
+                        ConfigurationProperties.addSslSubjectAlternativeNameDomains(addr.getHostName());
+                        ConfigurationProperties.addSslSubjectAlternativeNameDomains(addr.getCanonicalHostName());
+                    } catch (UnknownHostException uhe) {
+                        // do nothing
+                    }
 
                     // add Subject Alternative Name for SSL certificate
                     ConfigurationProperties.addSslSubjectAlternativeNameDomains(req.host());

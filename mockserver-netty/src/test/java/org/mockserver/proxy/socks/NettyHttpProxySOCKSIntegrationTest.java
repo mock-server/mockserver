@@ -4,6 +4,7 @@ import com.google.common.base.Charsets;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.config.Registry;
@@ -11,6 +12,7 @@ import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.protocol.HttpContext;
@@ -33,6 +35,8 @@ import java.net.*;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.test.Assert.assertContains;
@@ -84,6 +88,46 @@ public class NettyHttpProxySOCKSIntegrationTest {
     @Before
     public void resetProxy() {
         proxyClient.reset();
+    }
+
+    @Test
+    public void shouldProxyRequestsUsingHttpClientViaSOCKSConfiguredForJVM() throws Exception {
+        ProxySelector defaultProxySelector = ProxySelector.getDefault();
+        try {
+            // given - SOCKS proxy JVM settings
+            ProxySelector.setDefault(new ProxySelector() {
+                @Override
+                public List<java.net.Proxy> select(URI uri) {
+                    return Arrays.asList(
+                            new java.net.Proxy(
+                                    java.net.Proxy.Type.SOCKS,
+                                    new InetSocketAddress(
+                                            System.getProperty("http.proxyHost"),
+                                            Integer.parseInt(System.getProperty("http.proxyPort"))
+                                    )
+                            )
+                    );
+                }
+
+                @Override
+                public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {
+                    System.out.println("Connection could not be established to proxy at socket [" + sa + "]");
+                    ioe.printStackTrace();
+                }
+            });
+
+            // and - an HTTP client
+            HttpClient httpClient = HttpClientBuilder.create().build();
+
+            // when
+            HttpResponse response = httpClient.execute(new HttpHost("google.com", 443, "https"), new HttpGet("/"));
+
+            // then
+            assertThat(response.getStatusLine().getStatusCode(), is(200));
+            proxyClient.verify(request().withHeader("Host", "google.com:443"));
+        } finally {
+            ProxySelector.setDefault(defaultProxySelector);
+        }
     }
 
     @Test
