@@ -225,7 +225,7 @@ public class KeyStoreFactory {
             caPrivateKey = caKeyPair.getPrivate();
             caCert = createCACert(caPublicKey, caPrivateKey);
 
-            saveCertificateAsKeyStore("CertificateAuthorityKeyStore.jks", certificateAuthorityAlias, privateKey, keyStorePassword, new X509Certificate[]{caCert});
+            saveCertificateAsKeyStore("CertificateAuthorityKeyStore.jks", certificateAuthorityAlias, privateKey, keyStorePassword, new X509Certificate[]{caCert}, caCert);
             saveCertificateAsPEMFile(caCert, "CertificateAuthorityCertificate.pem");
             saveCertificateAsPEMFile(caPublicKey, "CertificateAuthorityPublicKey.pem");
             saveCertificateAsPEMFile(caPrivateKey, "CertificateAuthorityPrivateKey.pem");
@@ -236,7 +236,7 @@ public class KeyStoreFactory {
         //
         X509Certificate clientCert = createClientCert(publicKey, caCert, caPrivateKey, caCert.getPublicKey(), domain, subjectAlternativeNameDomains, subjectAlternativeNameIps);
 
-        return saveCertificateAsKeyStore(ConfigurationProperties.javaKeyStoreFilePath(), certificationAlias, privateKey, keyStorePassword, new X509Certificate[]{clientCert, caCert});
+        return saveCertificateAsKeyStore(ConfigurationProperties.javaKeyStoreFilePath(), certificationAlias, privateKey, keyStorePassword, new X509Certificate[]{clientCert, caCert}, caCert);
     }
 
     /**
@@ -257,14 +257,17 @@ public class KeyStoreFactory {
     /**
      * Save X509Certificate in KeyStore file.
      */
-    private KeyStore saveCertificateAsKeyStore(String keyStoreFileName, String certificationAlias, Key privateKey, char[] keyStorePassword, Certificate[] chain) {
+    private KeyStore saveCertificateAsKeyStore(String keyStoreFileName, String certificationAlias, Key privateKey, char[] keyStorePassword, Certificate[] chain, X509Certificate caCert) {
         try {
             // create new key store
             KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
             keyStore.load(null, keyStorePassword);
 
-            // add certification
+            // add certificate
             keyStore.setKeyEntry(certificationAlias, privateKey, keyStorePassword, chain);
+
+            // add CA certificate
+            keyStore.setCertificateEntry("mockserver-ca", caCert);
 
             // save as JKS file
             File keyStoreFile = new File(keyStoreFileName);

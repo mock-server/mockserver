@@ -149,6 +149,7 @@ public class SSLFactory {
         boolean rebuildKeyStore = ConfigurationProperties.rebuildKeyStore();
         if (keystore == null || rebuildKeyStore) {
             File keyStoreFile = new File(ConfigurationProperties.javaKeyStoreFilePath());
+            System.setProperty("javax.net.ssl.trustStore", keyStoreFile.getAbsolutePath());
             if (keyStoreFile.exists() && !rebuildKeyStore) {
                 keystore = loadKeyStore(keyStoreFile);
             } else {
