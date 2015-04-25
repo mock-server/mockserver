@@ -15,7 +15,7 @@
     <properties>
         <mavenPluginPluginVersion>3.2</mavenPluginPluginVersion>
         <maven-version>3.1.1</maven-version>
-        <maven-invoker-parallel-threads>2</maven-invoker-parallel-threads>
+        <maven-invoker-parallel-threads>3</maven-invoker-parallel-threads>
     </properties>
 
     <dependencies>
@@ -99,7 +99,7 @@
                     <skipInvocation>${skipTests}</skipInvocation>
                     <debug>false</debug>
                     <parallelThreads>${maven-invoker-parallel-threads}</parallelThreads>
-                    <streamLogs>false</streamLogs>
+                    <streamLogs>true</streamLogs>
                     <showErrors>true</showErrors>
                     <projectsDirectory>${basedir}/src/integration-tests/</projectsDirectory>
                     <cloneProjectsTo>${project.build.directory}/integration-tests/</cloneProjectsTo>
