@@ -1,8 +1,12 @@
 package org.mockserver.configuration;
 
+import org.hamcrest.Matcher;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.mockito.Matchers;
 import org.mockserver.socket.SSLFactory;
 
 import java.io.IOException;
@@ -12,16 +16,21 @@ import java.security.KeyStore;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.isNull;
 
 /**
  * @author jamesdbloom
  */
 public class ConfigurationPropertiesTest {
 
+    @Rule
+    public ExpectedException exception = ExpectedException.none();
     String propertiesBeforeTest;
 
     @Before
@@ -53,7 +62,7 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
-    public void shouldThrowRuntimeExceptionForInvalidMaxSocketTimeout() {
+    public void shouldHandleInvalidMaxSocketTimeout() {
         // given
         System.setProperty("mockserver.maxTimeout", "invalid");
 
@@ -217,7 +226,7 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
-    public void shouldThrowRuntimeExceptionForInvalidServerPort() {
+    public void shouldHandleInvalidServerPort() {
         // given
         System.setProperty("mockserver.mockServerPort", "invalid");
 
@@ -239,11 +248,33 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
-    public void shouldThrowRuntimeExceptionForInvalidProxyPort() {
+    public void shouldHandleInvalidProxyPort() {
         // given
         System.setProperty("mockserver.proxyPort", "invalid");
 
         // then
         assertEquals(-1, ConfigurationProperties.proxyPort());
+    }
+
+    @Test
+    public void shouldThrowIllegalArgumentExceptionForInvalidLogLevel() {
+        exception.expect(IllegalArgumentException.class);
+        exception.expectMessage(containsString("log level \"WRONG\" is not legel it must be one of \"ALL\", \"DEBUG\", \"INFO\", \"WARN\", \"ERROR\", \"OFF\""));
+
+        ConfigurationProperties.overrideLogLevel("WRONG");
+    }
+
+    @Test
+    public void shouldIgnoreNull() {
+        // given
+        System.clearProperty("mockserver.logLevel");
+        System.clearProperty("root.logLevel");
+
+        // when
+        ConfigurationProperties.overrideLogLevel(null);
+
+        // then
+        assertNull(System.getProperty("mockserver.logLevel"));
+        assertNull(System.getProperty("root.logLevel"));
     }
 }

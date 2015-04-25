@@ -2,7 +2,7 @@ package org.mockserver.maven;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
-import org.mockserver.logging.Logging;
+import org.mockserver.configuration.ConfigurationProperties;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -19,7 +19,7 @@ public class MockServerRunAndWaitMojo extends MockServerAbstractMojo {
     private SettableFuture settableFuture = SettableFuture.create();
 
     public void execute() throws MojoExecutionException {
-        Logging.overrideLogLevel(logLevel);
+        ConfigurationProperties.overrideLogLevel(logLevel);
         if (skip) {
             getLog().info("Skipping plugin execution");
         } else {

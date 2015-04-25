@@ -212,4 +212,14 @@ public class ConfigurationProperties {
     public static String readPropertyHierarchically(String key, String defaultValue) {
         return System.getProperty(key, PROPERTIES.getProperty(key, defaultValue));
     }
+
+    public static void overrideLogLevel(String level) {
+        if (level != null) {
+            if (!Arrays.asList("ALL", "DEBUG", "INFO", "WARN", "ERROR", "OFF").contains(level)) {
+                throw new IllegalArgumentException("log level \"" + level + "\" is not legel it must be one of \"ALL\", \"DEBUG\", \"INFO\", \"WARN\", \"ERROR\", \"OFF\"");
+            }
+            System.setProperty("mockserver.logLevel", level);
+            System.setProperty("root.logLevel", level);
+        }
+    }
 }

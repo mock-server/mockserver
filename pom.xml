@@ -59,6 +59,7 @@
     </properties>
 
     <modules>
+        <module>mockserver-logging</module>
         <module>mockserver-client-java</module>
         <module>mockserver-client-ruby</module>
         <module>mockserver-core</module>
@@ -311,7 +312,7 @@
             <dependency>
                 <groupId>ch.qos.logback</groupId>
                 <artifactId>logback-classic</artifactId>
-                <version>1.1.2</version>
+                <version>1.1.3</version>
                 <scope>runtime</scope>
                 <optional>true</optional> <!-- do not impose on project importing mock-server -->
             </dependency>
@@ -319,6 +320,15 @@
                 <groupId>janino</groupId>
                 <artifactId>janino</artifactId>
                 <version>2.5.10</version>
+                <scope>runtime</scope>
+                <optional>true</optional> <!-- do not impose on project importing mock-server -->
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>mockserver-logging</artifactId>
+                <version>${project.version}</version>
+                <scope>runtime</scope>
+                <optional>true</optional> <!-- do not impose on project importing mock-server -->
             </dependency>
 
             <!-- test -->

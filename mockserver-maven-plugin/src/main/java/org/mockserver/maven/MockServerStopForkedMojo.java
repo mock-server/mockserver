@@ -2,7 +2,7 @@ package org.mockserver.maven;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
-import org.mockserver.logging.Logging;
+import org.mockserver.configuration.ConfigurationProperties;
 
 
 /**
@@ -14,7 +14,7 @@ import org.mockserver.logging.Logging;
 public class MockServerStopForkedMojo extends MockServerAbstractMojo {
 
     public void execute() throws MojoExecutionException {
-        Logging.overrideLogLevel(logLevel);
+        ConfigurationProperties.overrideLogLevel(logLevel);
         if (skip) {
             getLog().info("Skipping plugin execution");
         } else {

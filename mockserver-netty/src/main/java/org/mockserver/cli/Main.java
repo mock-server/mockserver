@@ -3,7 +3,6 @@ package org.mockserver.cli;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
-import org.mockserver.logging.Logging;
 import org.mockserver.mockserver.MockServerBuilder;
 import org.mockserver.proxy.ProxyBuilder;
 import org.slf4j.Logger;
@@ -79,7 +78,6 @@ public class Main {
             logger.debug(System.getProperty("line.separator") + System.getProperty("line.separator") + "Using command line options: " +
                     Joiner.on(", ").withKeyValueSeparator("=").join(parsedArguments) + System.getProperty("line.separator"));
         }
-        Logging.overrideLogLevel(System.getProperty("mockserver.logLevel"));
 
         if (parsedArguments.size() > 0) {
             if (parsedArguments.containsKey(SERVER_PORT_KEY)) {

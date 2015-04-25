@@ -4,7 +4,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.mockserver.logging.Logging;
+import org.mockserver.configuration.ConfigurationProperties;
 
 /**
  * Start the MockServer in the initialize phase of the build and continue build so that tests can run that rely on the MockServer
@@ -20,7 +20,7 @@ public class MockServerStartMojo extends MockServerAbstractMojo {
     private InstanceHolder embeddedJettyHolder;
 
     public void execute() throws MojoExecutionException {
-        Logging.overrideLogLevel(logLevel);
+        ConfigurationProperties.overrideLogLevel(logLevel);
         if (skip) {
             getLog().info("Skipping plugin execution");
         } else {

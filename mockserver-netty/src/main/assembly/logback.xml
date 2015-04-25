@@ -2,7 +2,7 @@
     <!-- To completely disable all logging completely -Droot.logLevel=OFF -->
 
     <!-- application log -->
-    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <appender name="FILE" class="org.mockserver.logging.DelayedFileCreationRollingFileAppender">
         <file>mockserver.log</file>
         <encoder>
             <pattern>%date %level [%thread] %logger{35} [%file:%line] %msg%n</pattern>
@@ -32,21 +32,29 @@
     </appender>
 
     <!-- request log configuration -->
-    <appender name="REQUEST_LOG" class="ch.qos.logback.core.FileAppender">
+    <appender name="REQUEST_LOG" class="org.mockserver.logging.DelayedFileCreationRollingFileAppender">
         <file>mockserver_request.log</file>
 
         <encoder>
             <pattern>%date %msg%n</pattern>
         </encoder>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>mockserver_request.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>100MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+            <maxHistory>3</maxHistory>
+        </rollingPolicy>
     </appender>
 
     <logger name="REQUEST" level="INFO" additivity="false">
         <appender-ref ref="REQUEST_LOG"/>
     </logger>
 
-    <logger name="org.mockserver" level="WARN"/>
-    <logger name="org.mockserver.proxy" level="INFO"/>
-    <logger name="org.mockserver.mockserver" level="INFO"/>
+    <logger name="org.mockserver" level="${mockserver.logLevel:-WARN}"/>
+    <logger name="org.mockserver.proxy" level="${mockserver.logLevel:-INFO}"/>
+    <logger name="org.mockserver.mockserver" level="${mockserver.logLevel:-INFO}"/>
 
     <root level="${root.logLevel:-WARN}">
         <appender-ref ref="FILE"/>
