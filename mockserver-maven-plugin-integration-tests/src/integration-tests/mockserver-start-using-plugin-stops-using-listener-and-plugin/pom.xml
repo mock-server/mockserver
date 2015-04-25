@@ -37,7 +37,7 @@
                 <artifactId>mockserver-maven-plugin</artifactId>
                 <version>${mockserver.version}</version>
                 <configuration>
-                    <logLevel>INFO</logLevel>
+                    <logLevel>OFF</logLevel>
                     <serverPort>8090</serverPort>
                     <pipeLogToConsole>true</pipeLogToConsole>
                 </configuration>

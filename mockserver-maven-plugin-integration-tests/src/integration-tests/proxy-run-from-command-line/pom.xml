@@ -33,7 +33,7 @@
                 <artifactId>mockserver-maven-plugin</artifactId>
                 <version>${mockserver.version}</version>
                 <configuration>
-                    <logLevel>INFO</logLevel>
+                    <logLevel>OFF</logLevel>
                     <proxyPort>9090</proxyPort>
                     <timeout>${mockserver.timeout}</timeout>
                     <pipeLogToConsole>true</pipeLogToConsole>

@@ -32,7 +32,7 @@
                 <artifactId>mockserver-maven-plugin</artifactId>
                 <version>${mockserver.version}</version>
                 <configuration>
-                    <logLevel>INFO</logLevel>
+                    <logLevel>OFF</logLevel>
                     <serverPort>8084</serverPort>
                     <timeout>${mockserver.timeout}</timeout>
                     <pipeLogToConsole>true</pipeLogToConsole>

@@ -19,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
@@ -259,7 +260,7 @@ public class ConfigurationPropertiesTest {
     @Test
     public void shouldThrowIllegalArgumentExceptionForInvalidLogLevel() {
         exception.expect(IllegalArgumentException.class);
-        exception.expectMessage(containsString("log level \"WRONG\" is not legel it must be one of \"ALL\", \"DEBUG\", \"INFO\", \"WARN\", \"ERROR\", \"OFF\""));
+        exception.expectMessage(containsString("log level \"WRONG\" is not legel it must be one of \"TRACE\", \"DEBUG\", \"INFO\", \"WARN\", \"ERROR\", \"OFF\""));
 
         ConfigurationProperties.overrideLogLevel("WRONG");
     }
@@ -268,13 +269,23 @@ public class ConfigurationPropertiesTest {
     public void shouldIgnoreNull() {
         // given
         System.clearProperty("mockserver.logLevel");
-        System.clearProperty("root.logLevel");
 
         // when
         ConfigurationProperties.overrideLogLevel(null);
 
         // then
         assertNull(System.getProperty("mockserver.logLevel"));
-        assertNull(System.getProperty("root.logLevel"));
+    }
+
+    @Test
+    public void shouldSetLogLevel() {
+        // given
+        System.clearProperty("mockserver.logLevel");
+
+        // when
+        ConfigurationProperties.overrideLogLevel("TRACE");
+
+        // then
+        assertThat(System.getProperty("mockserver.logLevel"), is("TRACE"));
     }
 }

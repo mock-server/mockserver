@@ -215,11 +215,10 @@ public class ConfigurationProperties {
 
     public static void overrideLogLevel(String level) {
         if (level != null) {
-            if (!Arrays.asList("ALL", "DEBUG", "INFO", "WARN", "ERROR", "OFF").contains(level)) {
-                throw new IllegalArgumentException("log level \"" + level + "\" is not legel it must be one of \"ALL\", \"DEBUG\", \"INFO\", \"WARN\", \"ERROR\", \"OFF\"");
+            if (!Arrays.asList("TRACE", "DEBUG", "INFO", "WARN", "ERROR", "OFF").contains(level)) {
+                throw new IllegalArgumentException("log level \"" + level + "\" is not legel it must be one of \"TRACE\", \"DEBUG\", \"INFO\", \"WARN\", \"ERROR\", \"OFF\"");
             }
             System.setProperty("mockserver.logLevel", level);
-            System.setProperty("root.logLevel", level);
         }
     }
 }
