@@ -1,5 +1,5 @@
-<configuration>
-    <!-- To completely disable all logging completely -Droot.logLevel=OFF -->
+<configuration debug="false">
+    <!-- To completely disable all logging completely -Droot.logLevel=OFF -Dmockserver.logLevel=OFF -->
 
     <!-- application log -->
     <appender name="FILE" class="org.mockserver.logging.DelayedFileCreationRollingFileAppender">
@@ -21,7 +21,7 @@
     </appender>
 
     <!-- application console log (errors and warnings) -->
-    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <appender name="STDERR" class="ch.qos.logback.core.ConsoleAppender">
         <target>System.err</target>
         <encoder>
             <pattern>%date %level %logger{20} %msg%n</pattern>
@@ -30,6 +30,22 @@
             <level>WARN</level>
         </filter>
     </appender>
+
+    <!-- application console log (errors and warnings) -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <target>System.out</target>
+        <encoder>
+            <pattern>%date %level %logger{20} %msg%n</pattern>
+        </encoder>
+        <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
+            <evaluator>
+                <expression>level &gt;= INFO &amp;&amp; level &lt; WARN</expression>
+            </evaluator>
+            <OnMismatch>DENY</OnMismatch>
+            <OnMatch>NEUTRAL</OnMatch>
+        </filter>
+    </appender>
+
 
     <!-- request log configuration -->
     <appender name="REQUEST_LOG" class="org.mockserver.logging.DelayedFileCreationRollingFileAppender">
@@ -58,6 +74,7 @@
 
     <root level="${root.logLevel:-WARN}">
         <appender-ref ref="FILE"/>
+        <appender-ref ref="STDERR"/>
         <appender-ref ref="STDOUT"/>
     </root>
 </configuration>
