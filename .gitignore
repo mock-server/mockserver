@@ -73,3 +73,13 @@ node_modules
 npm-debug.log
 tmp
 custom_tmp
+
+# vagrant #
+###########
+
+.vagrant
+
+# drone.io build testing #
+##########################
+
+drone.io
