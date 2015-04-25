@@ -123,7 +123,6 @@
                 <groupId>${project.groupId}</groupId>
                 <artifactId>mockserver-integration-testing</artifactId>
                 <version>${project.version}</version>
-                <!-- TODO why is mockserver-client not transitively included for tests in intelliJ but works from mvn directly -->
                 <scope>test</scope>
             </dependency>
 

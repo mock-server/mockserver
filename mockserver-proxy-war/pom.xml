@@ -26,7 +26,6 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>mockserver-integration-testing</artifactId>
-            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
 
