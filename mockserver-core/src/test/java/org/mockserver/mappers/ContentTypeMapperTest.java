@@ -1,12 +1,20 @@
 package org.mockserver.mappers;
 
+import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.HttpMessage;
 import org.junit.Test;
+import org.mockserver.model.HttpResponse;
 
+import javax.servlet.http.HttpServletRequest;
+import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class ContentTypeMapperTest {
 
@@ -107,5 +115,65 @@ public class ContentTypeMapperTest {
     @Test
     public void shouldDefaultToNotBinary() {
         assertThat("null should not be binary", ContentTypeMapper.isBinary(null), is(false));
+    }
+
+    @Test
+    public void shouldIdentifyCharsetInHttpMessageContentType() {
+        HttpHeaders mockHeaders = mock(HttpHeaders.class);
+        when(mockHeaders.get("Content-Type")).thenReturn("text/plain; charset=UTF-16");
+
+        HttpMessage mockMessage = mock(HttpMessage.class);
+        when(mockMessage.headers()).thenReturn(mockHeaders);
+
+        Charset charset = ContentTypeMapper.identifyCharsetFromHttpMessage(mockMessage);
+        assertThat(charset, is(Charset.forName("UTF-16")));
+    }
+
+    @Test
+    public void shouldIdentifyCharsetInHttpResponseContentType() {
+        HttpResponse mockResponse = mock(HttpResponse.class);
+        when(mockResponse.getHeader("Content-Type")).thenReturn(Collections.singletonList("text/plain; charset=UTF-16"));
+
+        Charset charset = ContentTypeMapper.identifyCharsetFromResponse(mockResponse);
+        assertThat(charset, is(Charset.forName("UTF-16")));
+    }
+
+    @Test
+    public void shouldIdentifyCharsetInServletRequestContentType() {
+        HttpServletRequest mockServletRequest = mock(HttpServletRequest.class);
+        when(mockServletRequest.getHeader("Content-Type")).thenReturn("text/plain; charset=UTF-16");
+
+        Charset charset = ContentTypeMapper.identifyCharsetFromServletRequest(mockServletRequest);
+        assertThat(charset, is(Charset.forName("UTF-16")));
+    }
+
+    @Test
+    public void shouldIdentifyCharsetInHttpMessageNoContentType() {
+        HttpHeaders mockHeaders = mock(HttpHeaders.class);
+        when(mockHeaders.get("Content-Type")).thenReturn(null);
+
+        HttpMessage mockMessage = mock(HttpMessage.class);
+        when(mockMessage.headers()).thenReturn(mockHeaders);
+
+        Charset charset = ContentTypeMapper.identifyCharsetFromHttpMessage(mockMessage);
+        assertThat(charset, is(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET));
+    }
+
+    @Test
+    public void shouldIdentifyCharsetInHttpResponseNoContentType() {
+        HttpResponse mockResponse = mock(HttpResponse.class);
+        when(mockResponse.getHeader("Content-Type")).thenReturn(null);
+
+        Charset charset = ContentTypeMapper.identifyCharsetFromResponse(mockResponse);
+        assertThat(charset, is(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET));
+    }
+
+    @Test
+    public void shouldIdentifyCharsetInServletRequestNoContentType() {
+        HttpServletRequest mockServletRequest = mock(HttpServletRequest.class);
+        when(mockServletRequest.getHeader("Content-Type")).thenReturn(null);
+
+        Charset charset = ContentTypeMapper.identifyCharsetFromServletRequest(mockServletRequest);
+        assertThat(charset, is(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET));
     }
 }

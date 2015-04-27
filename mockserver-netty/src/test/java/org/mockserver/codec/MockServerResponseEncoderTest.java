@@ -1,14 +1,15 @@
 package org.mockserver.codec;
 
-import com.google.common.base.Charsets;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaders;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockserver.mappers.ContentTypeMapper;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpResponse;
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -130,7 +131,7 @@ public class MockServerResponseEncoderTest {
 
         // then
         DefaultFullHttpResponse defaultFullHttpResponse = (DefaultFullHttpResponse) output.get(0);
-        assertThat(defaultFullHttpResponse.content().toString(Charsets.UTF_8), is("somebody"));
+        assertThat(defaultFullHttpResponse.content().toString(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET), is("somebody"));
     }
 
     @Test
@@ -156,6 +157,103 @@ public class MockServerResponseEncoderTest {
 
         // then
         DefaultFullHttpResponse defaultFullHttpResponse = (DefaultFullHttpResponse) output.get(0);
-        assertThat(defaultFullHttpResponse.content().toString(Charsets.UTF_8), is(""));
+        assertThat(defaultFullHttpResponse.content().toString(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET), is(""));
+    }
+
+    @Test
+    public void shouldRespectNonStandardContentTypeHeader() {
+        // given
+        String body = "A normal string with ASCII characters";
+        httpResponse.withBody(body);
+        httpResponse.withHeader(new Header("Content-Type", "text/plain; charset=UTF-16"));
+
+        // when
+        new MockServerResponseEncoder().encode(null, httpResponse, output);
+
+        // then
+        DefaultFullHttpResponse defaultFullHttpResponse = (DefaultFullHttpResponse) output.get(0);
+        assertThat(defaultFullHttpResponse.content().array(), is(body.getBytes(Charset.forName("UTF-16"))));
+    }
+
+    @Test
+    public void shouldPreferStringBodyCharacterSet() {
+        // given
+        String body = "Euro sign: €";
+        byte[] bodyAsUtf16Bytes = body.getBytes(Charset.forName("UTF-16"));
+        // specifying a character set in withBody() should override any Content-Type header
+        httpResponse.withBody(body, Charset.forName("UTF-16"));
+        httpResponse.withHeader(new Header("Content-Type", "text/plain; charset=US-ASCII"));
+
+        // when
+        new MockServerResponseEncoder().encode(null, httpResponse, output);
+
+        // then
+        DefaultFullHttpResponse defaultFullHttpResponse = (DefaultFullHttpResponse) output.get(0);
+        assertThat(defaultFullHttpResponse.content().array(), is(bodyAsUtf16Bytes));
+    }
+
+    @Test
+    public void shouldRespectUtf8ContentTypeHeader() {
+        // given
+        String body = "Euro sign: \u20AC";
+        httpResponse.withBody(body);
+        httpResponse.withHeader(new Header("Content-Type", "text/plain; charset=UTF-8"));
+
+        // when
+        new MockServerResponseEncoder().encode(null, httpResponse, output);
+
+        // then
+        DefaultFullHttpResponse defaultFullHttpResponse = (DefaultFullHttpResponse) output.get(0);
+        assertThat(defaultFullHttpResponse.content().array(), is(body.getBytes(Charset.forName("UTF-8"))));
+    }
+
+    @Test
+    public void shouldUseDefaultCharsetIfContentTypeAbsent() {
+        // given
+        // technically the euro sign is not encodable in the default charset, but whatever it is encoded as should be sent
+        // over the wire exactly as-is, even if it is default replacement byte
+        String body = "Euro sign: \u20AC";
+        httpResponse.withBody(body);
+
+        // when
+        new MockServerResponseEncoder().encode(null, httpResponse, output);
+
+        // then
+        DefaultFullHttpResponse defaultFullHttpResponse = (DefaultFullHttpResponse) output.get(0);
+        assertThat(defaultFullHttpResponse.content().array(), is(body.getBytes(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET)));
+    }
+
+    @Test
+    public void shouldUseDefaultCharsetIfCharsetAbsent() {
+        // given
+        // technically the euro sign is not encodable in the default charset, but whatever it is encoded as should be sent
+        // over the wire exactly as-is, even if it is default replacement byte
+        String body = "Euro sign: \u20AC";
+        httpResponse.withBody(body);
+        httpResponse.withHeader(new Header("Content-Type", "text/plain"));
+
+        // when
+        new MockServerResponseEncoder().encode(null, httpResponse, output);
+
+        // then
+        DefaultFullHttpResponse defaultFullHttpResponse = (DefaultFullHttpResponse) output.get(0);
+        assertThat(defaultFullHttpResponse.content().array(), is(body.getBytes(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET)));
+    }
+
+    @Test
+    public void shouldUseDefaultCharsetIfCharsetNotSupported() {
+        // given
+        // technically the euro sign is not encodable in the default charset, but whatever it is encoded as should be sent
+        // over the wire exactly as-is, even if it is default replacement byte
+        String body = "Euro sign: \u20AC";
+        httpResponse.withBody(body);
+        httpResponse.withHeader(new Header("Content-Type", "text/plain; charset=not-a-real-charset"));
+
+        // when
+        new MockServerResponseEncoder().encode(null, httpResponse, output);
+
+        // then
+        DefaultFullHttpResponse defaultFullHttpResponse = (DefaultFullHttpResponse) output.get(0);
+        assertThat(defaultFullHttpResponse.content().array(), is(body.getBytes(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET)));
     }
 }

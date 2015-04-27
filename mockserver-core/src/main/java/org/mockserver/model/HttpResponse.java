@@ -2,6 +2,7 @@ package org.mockserver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import java.nio.charset.Charset;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -50,9 +51,10 @@ public class HttpResponse extends Action {
     }
 
     /**
-     * Set response body to return as a simple UTF-8 string response body
+     * Set response body to return as a string response body. The character set will be determined by the Content-Type header
+     * on the response. To force the character set, use {@link #withBody(String, Charset)}.
      *
-     * @param body a UTF-8 string
+     * @param body a string
      */
     public HttpResponse withBody(String body) {
         if (body != null) {
@@ -60,6 +62,21 @@ public class HttpResponse extends Action {
         }
         return this;
     }
+
+    /**
+     * Set response body to return a string response body with the specified encoding. <b>Note:</b> The character set of the
+     * response will be forced to the specified charset, even if the Content-Type header specifies otherwise.
+     *
+     * @param body a string
+     * @param charset character set the string will be encoded in
+     */
+    public HttpResponse withBody(String body, Charset charset) {
+        if (body != null) {
+            this.body = new StringBody(body, charset);
+        }
+        return this;
+    }
+
 
     /**
      * Set response body to return as binary such as a pdf or image
