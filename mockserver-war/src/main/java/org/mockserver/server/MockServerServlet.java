@@ -83,7 +83,7 @@ public class MockServerServlet extends HttpServlet {
             } else if (requestPath.equals("/expectation")) {
 
                 Expectation expectation = expectationSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest));
-                mockServerMatcher.when(expectation.getHttpRequest(), expectation.getTimes()).thenRespond(expectation.getHttpResponse(false)).thenForward(expectation.getHttpForward()).thenCallback(expectation.getHttpCallback());
+                mockServerMatcher.when(expectation.getHttpRequest(), expectation.getTimes(), expectation.getTimeToLive()).thenRespond(expectation.getHttpResponse(false)).thenForward(expectation.getHttpForward()).thenCallback(expectation.getHttpCallback());
                 httpServletResponse.setStatus(HttpStatusCode.CREATED_201.code());
 
             } else if (requestPath.equals("/clear")) {

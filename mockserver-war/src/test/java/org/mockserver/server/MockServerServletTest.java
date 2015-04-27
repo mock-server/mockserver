@@ -145,18 +145,19 @@ public class MockServerServletTest {
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
         HttpRequest httpRequest = mock(HttpRequest.class);
         Times times = mock(Times.class);
-        Expectation expectation = new Expectation(httpRequest, times, TimeToLive.unlimited()).thenRespond(new HttpResponse());
+        TimeToLive timeToLive = mock(TimeToLive.class);
+        Expectation expectation = new Expectation(httpRequest, times, timeToLive).thenRespond(new HttpResponse());
 
         String requestBytes = "requestBytes";
         httpServletRequest.setContent(requestBytes.getBytes());
         when(mockExpectationSerializer.deserialize(requestBytes)).thenReturn(expectation);
-        when(mockMockServerMatcher.when(same(httpRequest), same(times))).thenReturn(expectation);
+        when(mockMockServerMatcher.when(same(httpRequest), same(times), same(timeToLive))).thenReturn(expectation);
 
         // when
         mockServerServlet.doPut(httpServletRequest, httpServletResponse);
 
         // then
-        verify(mockMockServerMatcher).when(same(httpRequest), same(times));
+        verify(mockMockServerMatcher).when(same(httpRequest), same(times), same(timeToLive));
         assertEquals(HttpServletResponse.SC_CREATED, httpServletResponse.getStatus());
     }
 

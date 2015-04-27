@@ -11,6 +11,8 @@ import org.mockserver.client.netty.SocketConnectionException;
 import org.mockserver.client.server.MockServerClient;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.matchers.MatchType;
+import org.mockserver.matchers.TimeToLive;
+import org.mockserver.matchers.Times;
 import org.mockserver.model.*;
 import org.mockserver.socket.PortFactory;
 import org.mockserver.verify.VerificationTimes;
@@ -783,6 +785,62 @@ public abstract class AbstractClientServerIntegrationTest {
                 .respond(
                         response()
                                 .withBody("some_body")
+                );
+
+        // then
+        // - in http
+        assertEquals(
+                response()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("some_path")),
+                        headersToIgnore)
+        );
+        // - in https
+        assertEquals(
+                response()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        request()
+                                .setSecure(true)
+                                .withPath(calculatePath("some_path")),
+                        headersToIgnore)
+        );
+        // - in http
+        assertEquals(
+                response()
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("some_path")),
+                        headersToIgnore)
+        );
+        // - in https
+        assertEquals(
+                response()
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
+                makeRequest(
+                        request()
+                                .setSecure(true)
+                                .withPath(calculatePath("some_path")),
+                        headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseWhenTimeToLiveHasNotExpired() {
+        // when
+        mockServerClient
+                .when(
+                        request().withPath(calculatePath("some_path")),
+                        exactly(2),
+                        TimeToLive.exactly(TimeUnit.HOURS, 1L)
+                )
+                .respond(
+                        response().withBody("some_body")
                 );
 
         // then
@@ -2331,6 +2389,51 @@ public abstract class AbstractClientServerIntegrationTest {
                                         header("requestHeaderNameOne", "requestHeaderValueOne"),
                                         header("requestHeaderNameTwo", "requestHeaderValueTwo")
                                 ),
+                        headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldNotReturnResponseForWhenTimeToLiveExpired() {
+        // when
+        mockServerClient
+                .when(
+                        request().withPath(calculatePath("some_path")),
+                        exactly(2),
+                        TimeToLive.exactly(TimeUnit.SECONDS, 5L)
+                )
+                .respond(
+                        response().withBody("some_body").withDelay(TimeUnit.SECONDS, 5L)
+                );
+
+        // then
+        assertEquals(
+                response()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("some_path")),
+                        headersToIgnore)
+        );
+
+        // - in http
+        assertEquals(
+                response()
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("some_path")),
+                        headersToIgnore)
+        );
+        // - in https
+        assertEquals(
+                response()
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
+                makeRequest(
+                        request()
+                                .setSecure(true)
+                                .withPath(calculatePath("some_path")),
                         headersToIgnore)
         );
     }

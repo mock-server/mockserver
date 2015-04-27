@@ -3,7 +3,6 @@ package org.mockserver.mockserver;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -14,6 +13,7 @@ import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.client.serialization.VerificationSequenceSerializer;
 import org.mockserver.client.serialization.VerificationSerializer;
 import org.mockserver.filters.LogFilter;
+import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.MockServerMatcher;
@@ -98,7 +98,7 @@ public class MockServerHandlerTest {
         when(mockVerificationSequenceSerializer.deserialize(anyString())).thenReturn(mockVerificationSequence);
 
         // given - an expectation that can be setup
-        when(mockMockServerMatcher.when(any(HttpRequest.class), any(Times.class))).thenReturn(mockExpectation);
+        when(mockMockServerMatcher.when(any(HttpRequest.class), any(Times.class), any(TimeToLive.class))).thenReturn(mockExpectation);
         when(mockExpectation.thenRespond(any(HttpResponse.class))).thenReturn(mockExpectation);
         when(mockExpectation.thenForward(any(HttpForward.class))).thenReturn(mockExpectation);
         when(mockExpectation.thenCallback(any(HttpCallback.class))).thenReturn(mockExpectation);
@@ -123,7 +123,7 @@ public class MockServerHandlerTest {
         verify(mockExpectationSerializer).deserialize("some_content");
 
         // and - expectation correctly setup
-        verify(mockMockServerMatcher).when(any(HttpRequest.class), any(Times.class));
+        verify(mockMockServerMatcher).when(any(HttpRequest.class), any(Times.class), any(TimeToLive.class));
         verify(mockExpectation).thenRespond(any(HttpResponse.class));
         verify(mockExpectation).thenForward(any(HttpForward.class));
         verify(mockExpectation).thenCallback(any(HttpCallback.class));

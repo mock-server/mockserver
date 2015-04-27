@@ -62,7 +62,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
             } else if (request.matches("PUT", "/expectation")) {
 
                 Expectation expectation = expectationSerializer.deserialize(request.getBodyAsString());
-                mockServerMatcher.when(expectation.getHttpRequest(), expectation.getTimes()).thenRespond(expectation.getHttpResponse(false)).thenForward(expectation.getHttpForward()).thenCallback(expectation.getHttpCallback());
+                mockServerMatcher.when(expectation.getHttpRequest(), expectation.getTimes(), expectation.getTimeToLive()).thenRespond(expectation.getHttpResponse(false)).thenForward(expectation.getHttpForward()).thenCallback(expectation.getHttpCallback());
                 logFormatter.infoLog("creating expectation:{}", expectation);
                 writeResponse(ctx, request, HttpResponseStatus.CREATED);
 

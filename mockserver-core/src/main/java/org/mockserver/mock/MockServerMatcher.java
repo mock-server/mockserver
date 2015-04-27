@@ -29,10 +29,10 @@ public class MockServerMatcher extends ObjectWithReflectiveEqualsHashCodeToStrin
     private Logger requestLogger = LoggerFactory.getLogger("REQUEST");
 
     public Expectation when(HttpRequest httpRequest) {
-        return when(httpRequest, Times.unlimited());
+        return when(httpRequest, Times.unlimited(), TimeToLive.unlimited());
     }
 
-    public Expectation when(final HttpRequest httpRequest, Times times) {
+    public Expectation when(final HttpRequest httpRequest, Times times, TimeToLive timeToLive) {
         Expectation expectation;
         if (times.isUnlimited()) {
             Collection<Expectation> existingExpectationsWithMatchingRequest = Collections2.filter(expectations, new Predicate<Expectation>() {
@@ -44,12 +44,12 @@ public class MockServerMatcher extends ObjectWithReflectiveEqualsHashCodeToStrin
                 for (Expectation existingExpectation : existingExpectationsWithMatchingRequest) {
                     existingExpectation.setNotUnlimitedResponses();
                 }
-                expectation = new Expectation(httpRequest, Times.once(), TimeToLive.unlimited());
+                expectation = new Expectation(httpRequest, Times.once(), timeToLive);
             } else {
-                expectation = new Expectation(httpRequest, Times.unlimited(), TimeToLive.unlimited());
+                expectation = new Expectation(httpRequest, Times.unlimited(), timeToLive);
             }
         } else {
-            expectation = new Expectation(httpRequest, times, TimeToLive.unlimited());
+            expectation = new Expectation(httpRequest, times, timeToLive);
         }
         expectations.add(expectation);
         return expectation;

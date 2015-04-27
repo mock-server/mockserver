@@ -2,6 +2,7 @@ package org.mockserver.mock;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.HttpRequest;
@@ -42,7 +43,7 @@ public class MockServerMatcherOverlappingRequestsTest {
     @Test
     public void respondWhenPathMatchesReturnFirstMatchingWithRemainingTimes() {
         // when
-        mockServerMatcher.when(new HttpRequest().withPath("somepath").withCookies(new Cookie("name", "value")), Times.once()).thenRespond(httpResponse[0].withBody("somebody1"));
+        mockServerMatcher.when(new HttpRequest().withPath("somepath").withCookies(new Cookie("name", "value")), Times.once(), TimeToLive.unlimited()).thenRespond(httpResponse[0].withBody("somebody1"));
         mockServerMatcher.when(new HttpRequest().withPath("somepath")).thenRespond(httpResponse[1].withBody("somebody2"));
 
         // then

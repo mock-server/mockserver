@@ -8,6 +8,8 @@ import org.mockserver.model.HttpForward;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
+import java.util.concurrent.TimeUnit;
+
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
@@ -26,9 +28,10 @@ public class ExpectationTest {
         HttpForward httpForward = new HttpForward();
         HttpCallback httpCallback = new HttpCallback();
         Times times = Times.exactly(3);
+        TimeToLive timeToLive = TimeToLive.exactly(TimeUnit.HOURS, 5l);
 
         // when
-        Expectation expectationThatResponds = new Expectation(httpRequest, times, TimeToLive.unlimited()).thenRespond(httpResponse);
+        Expectation expectationThatResponds = new Expectation(httpRequest, times, timeToLive).thenRespond(httpResponse);
 
         // then
         assertEquals(httpRequest, expectationThatResponds.getHttpRequest());
@@ -37,9 +40,10 @@ public class ExpectationTest {
         assertEquals(httpResponse, expectationThatResponds.getAction(false));
         assertNull(expectationThatResponds.getHttpCallback());
         assertEquals(times, expectationThatResponds.getTimes());
+        assertEquals(timeToLive, expectationThatResponds.getTimeToLive());
 
         // when
-        Expectation expectationThatForwards = new Expectation(httpRequest, times, TimeToLive.unlimited()).thenForward(httpForward);
+        Expectation expectationThatForwards = new Expectation(httpRequest, times, timeToLive).thenForward(httpForward);
 
         // then
         assertEquals(httpRequest, expectationThatForwards.getHttpRequest());
@@ -48,9 +52,10 @@ public class ExpectationTest {
         assertEquals(httpForward, expectationThatForwards.getAction(false));
         assertNull(expectationThatForwards.getHttpCallback());
         assertEquals(times, expectationThatForwards.getTimes());
+        assertEquals(timeToLive, expectationThatForwards.getTimeToLive());
 
         // when
-        Expectation expectationThatCallsback = new Expectation(httpRequest, times, TimeToLive.unlimited()).thenCallback(httpCallback);
+        Expectation expectationThatCallsback = new Expectation(httpRequest, times, timeToLive).thenCallback(httpCallback);
 
         // then
         assertEquals(httpRequest, expectationThatForwards.getHttpRequest());
@@ -58,7 +63,8 @@ public class ExpectationTest {
         assertNull(expectationThatCallsback.getHttpForward());
         assertEquals(httpCallback, expectationThatCallsback.getHttpCallback());
         assertEquals(httpCallback, expectationThatCallsback.getAction(false));
-        assertEquals(times, expectationThatForwards.getTimes());
+        assertEquals(times, expectationThatCallsback.getTimes());
+        assertEquals(timeToLive, expectationThatCallsback.getTimeToLive());
     }
 
     @Test
@@ -97,8 +103,12 @@ public class ExpectationTest {
         assertFalse(new Expectation(null, Times.exactly(0), TimeToLive.unlimited()).thenRespond(null).thenForward(null).matches(null));
         assertFalse(new Expectation(request(), Times.exactly(0), TimeToLive.unlimited()).thenRespond(null).thenForward(null).matches(request()));
         assertFalse(new Expectation(request().withPath("un-matching"), Times.exactly(0), TimeToLive.unlimited()).thenRespond(null).thenForward(null).matches(request()));
-    }
 
+        // when ttl expired should return false
+        assertFalse(new Expectation(null, Times.unlimited(), TimeToLive.exactly(TimeUnit.MICROSECONDS, 0l)).thenRespond(null).thenForward(null).matches(null));
+        assertFalse(new Expectation(request(), Times.unlimited(), TimeToLive.exactly(TimeUnit.MICROSECONDS, 0l)).thenRespond(null).thenForward(null).matches(request()));
+        assertFalse(new Expectation(request().withPath("un-matching"), Times.unlimited(), TimeToLive.exactly(TimeUnit.MICROSECONDS, 0l)).thenRespond(null).thenForward(null).matches(request()));
+    }
 
     @Test
     public void shouldReduceRemainingMatches() {
