@@ -8,7 +8,7 @@ script:
   - "./scripts/travis_build.sh"
 
 jdk:
-  - openjdk6
+  - oraclejdk7
 
 rvm:
   - "2.0.0"
