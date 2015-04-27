@@ -22,7 +22,9 @@ if [ $JAVA_VER -eq 17 ]; then
     echo "----- JAVA 1.7 -----"
     echo "--------------------"
     echo
-    mvn -q install
+    rm -rf $current_directory/target/travis
+    git clone -b travis `git config --get remote.origin.url` $current_directory/target/travis
+    mvn -q deploy --settings $current_directory/target/travis/settings.xml -Djava.security.egd=file:/dev/./urandom
 fi
 
 if [ $JAVA_VER -eq 18 ]; then
