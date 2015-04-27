@@ -1,6 +1,5 @@
 package org.mockserver.codec;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
@@ -12,6 +11,7 @@ import org.mockserver.mappers.ContentTypeMapper;
 import org.mockserver.model.*;
 import org.mockserver.url.URLParser;
 
+import java.nio.charset.Charset;
 import java.util.List;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.COOKIE;
@@ -29,20 +29,22 @@ public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
     }
 
     @Override
-    protected void decode(ChannelHandlerContext ctx, FullHttpRequest fullHttpResponse, List<Object> out) {
+    protected void decode(ChannelHandlerContext ctx, FullHttpRequest fullHttpRequest, List<Object> out) {
         HttpRequest httpRequest = new HttpRequest();
-        if (fullHttpResponse != null) {
-            setMethod(httpRequest, fullHttpResponse);
+        if (fullHttpRequest != null) {
+            setMethod(httpRequest, fullHttpRequest);
 
-            QueryStringDecoder queryStringDecoder = new QueryStringDecoder(fullHttpResponse.getUri());
+            Charset charsetFromRequest = ContentTypeMapper.identifyCharsetFromHttpMessage(fullHttpRequest);
+
+            QueryStringDecoder queryStringDecoder = new QueryStringDecoder(fullHttpRequest.getUri(), charsetFromRequest);
             setPath(httpRequest, queryStringDecoder);
             setQueryString(httpRequest, queryStringDecoder);
 
-            setBody(httpRequest, fullHttpResponse);
-            setHeaders(httpRequest, fullHttpResponse);
-            setCookies(httpRequest, fullHttpResponse);
+            setBody(httpRequest, fullHttpRequest);
+            setHeaders(httpRequest, fullHttpRequest);
+            setCookies(httpRequest, fullHttpRequest);
 
-            httpRequest.setKeepAlive(isKeepAlive(fullHttpResponse));
+            httpRequest.setKeepAlive(isKeepAlive(fullHttpRequest));
             httpRequest.setSecure(isSecure);
         }
         out.add(httpRequest);
@@ -60,15 +62,18 @@ public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
         httpRequest.withQueryStringParameters(queryStringDecoder.parameters());
     }
 
-    private void setBody(HttpRequest httpRequest, FullHttpRequest fullHttpResponse) {
-        if (fullHttpResponse.content() != null && fullHttpResponse.content().readableBytes() > 0) {
-            byte[] bodyBytes = new byte[fullHttpResponse.content().readableBytes()];
-            fullHttpResponse.content().readBytes(bodyBytes);
+    private void setBody(HttpRequest httpRequest, FullHttpRequest fullHttpRequest) {
+        if (fullHttpRequest.content() != null && fullHttpRequest.content().readableBytes() > 0) {
+            byte[] bodyBytes = new byte[fullHttpRequest.content().readableBytes()];
+            fullHttpRequest.content().readBytes(bodyBytes);
             if (bodyBytes.length > 0) {
-                if (ContentTypeMapper.isBinary(fullHttpResponse.headers().get(HttpHeaders.Names.CONTENT_TYPE))) {
+                if (ContentTypeMapper.isBinary(fullHttpRequest.headers().get(HttpHeaders.Names.CONTENT_TYPE))) {
                     httpRequest.withBody(new BinaryBody(bodyBytes));
                 } else {
-                    httpRequest.withBody(new StringBody(new String(bodyBytes, Charsets.UTF_8), bodyBytes));
+                    Charset charsetFromRequest = ContentTypeMapper.identifyCharsetFromHttpMessage(fullHttpRequest);
+                    String body = new String(bodyBytes, charsetFromRequest);
+
+                    httpRequest.withBody(new StringBody(body, charsetFromRequest));
                 }
             }
         }
