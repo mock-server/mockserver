@@ -3,6 +3,7 @@ package org.mockserver.client.serialization;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.junit.Test;
 import org.mockserver.client.serialization.model.*;
+import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
@@ -403,7 +404,8 @@ public class ExpectationSerializerIntegrationTest {
                                         .setPort(1234)
                                         .setScheme(HttpForward.Scheme.HTTPS)
                         )
-                        .setTimes(new TimesDTO(Times.exactly(5))).buildObject(), expectation
+                        .setTimes(new TimesDTO(Times.exactly(5)))
+                        .setTimeToLive(new TimeToLiveDTO(TimeToLive.unlimited())).buildObject(), expectation
         );
     }
 
@@ -644,6 +646,9 @@ public class ExpectationSerializerIntegrationTest {
                 "  \"times\" : {" + System.getProperty("line.separator") +
                 "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
                 "    \"unlimited\" : false" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
+                "    \"unlimited\" : true" + System.getProperty("line.separator") +
                 "  }" + System.getProperty("line.separator") +
                 "}", jsonExpectation);
     }
@@ -672,6 +677,7 @@ public class ExpectationSerializerIntegrationTest {
                                         .setScheme(HttpForward.Scheme.HTTPS)
                         )
                         .setTimes(new TimesDTO(Times.exactly(5)))
+                        .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2l)))
                         .buildObject()
         );
 
@@ -705,6 +711,11 @@ public class ExpectationSerializerIntegrationTest {
                 "  \"times\" : {" + System.getProperty("line.separator") +
                 "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
                 "    \"unlimited\" : false" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
+                "    \"timeUnit\" : \"HOURS\"," + System.getProperty("line.separator") +
+                "    \"timeToLive\" : 2," + System.getProperty("line.separator") +
+                "    \"unlimited\" : false" + System.getProperty("line.separator") +
                 "  }" + System.getProperty("line.separator") +
                 "}", jsonExpectation);
     }
@@ -730,6 +741,7 @@ public class ExpectationSerializerIntegrationTest {
                                         .setCallbackClass("someClass")
                         )
                         .setTimes(new TimesDTO(Times.exactly(5)))
+                        .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2l)))
                         .buildObject()
         );
 
@@ -761,6 +773,11 @@ public class ExpectationSerializerIntegrationTest {
                 "  \"times\" : {" + System.getProperty("line.separator") +
                 "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
                 "    \"unlimited\" : false" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                        "  \"timeToLive\" : {" + System.getProperty("line.separator") +
+                        "    \"timeUnit\" : \"HOURS\"," + System.getProperty("line.separator") +
+                        "    \"timeToLive\" : 2," + System.getProperty("line.separator") +
+                        "    \"unlimited\" : false" + System.getProperty("line.separator") +
                 "  }" + System.getProperty("line.separator") +
                 "}", jsonExpectation);
     }
@@ -778,6 +795,7 @@ public class ExpectationSerializerIntegrationTest {
                                         .setBody(new StringBodyDTO(new StringBody("someBody")))
                         )
                         .setTimes(new TimesDTO(Times.exactly(5)))
+                        .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2l)))
                         .buildObject()
         );
 
@@ -791,6 +809,11 @@ public class ExpectationSerializerIntegrationTest {
                 "  }," + System.getProperty("line.separator") +
                 "  \"times\" : {" + System.getProperty("line.separator") +
                 "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
+                "    \"unlimited\" : false" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
+                "    \"timeUnit\" : \"HOURS\"," + System.getProperty("line.separator") +
+                "    \"timeToLive\" : 2," + System.getProperty("line.separator") +
                 "    \"unlimited\" : false" + System.getProperty("line.separator") +
                 "  }" + System.getProperty("line.separator") +
                 "}", jsonExpectation);
@@ -810,6 +833,7 @@ public class ExpectationSerializerIntegrationTest {
                                         .setBody(new StringBodyDTO(new StringBody("someBody")))
                         )
                         .setTimes(new TimesDTO(Times.exactly(5)))
+                        .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2l)))
                         .buildObject()
         );
 
@@ -827,6 +851,11 @@ public class ExpectationSerializerIntegrationTest {
                 "  }," + System.getProperty("line.separator") +
                 "  \"times\" : {" + System.getProperty("line.separator") +
                 "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
+                "    \"unlimited\" : false" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
+                "    \"timeUnit\" : \"HOURS\"," + System.getProperty("line.separator") +
+                "    \"timeToLive\" : 2," + System.getProperty("line.separator") +
                 "    \"unlimited\" : false" + System.getProperty("line.separator") +
                 "  }" + System.getProperty("line.separator") +
                 "}", jsonExpectation);
@@ -864,6 +893,7 @@ public class ExpectationSerializerIntegrationTest {
                                         .setBody(new JsonBodyDTO(new JsonBody("{fieldOne: \"valueOne\", \"fieldTwo\": \"valueTwo\"}")))
                         )
                         .setTimes(new TimesDTO(Times.exactly(5)))
+                        .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2l)))
                         .buildObject()
         );
 
@@ -884,6 +914,11 @@ public class ExpectationSerializerIntegrationTest {
                 "  }," + System.getProperty("line.separator") +
                 "  \"times\" : {" + System.getProperty("line.separator") +
                 "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
+                "    \"unlimited\" : false" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
+                "    \"timeUnit\" : \"HOURS\"," + System.getProperty("line.separator") +
+                "    \"timeToLive\" : 2," + System.getProperty("line.separator") +
                 "    \"unlimited\" : false" + System.getProperty("line.separator") +
                 "  }" + System.getProperty("line.separator") +
                 "}", jsonExpectation);
@@ -925,6 +960,9 @@ public class ExpectationSerializerIntegrationTest {
                 "  \"times\" : {" + System.getProperty("line.separator") +
                 "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
                 "    \"unlimited\" : false" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
+                "    \"unlimited\" : true" + System.getProperty("line.separator") +
                 "  }" + System.getProperty("line.separator") +
                 "}", jsonExpectation);
     }
@@ -961,6 +999,9 @@ public class ExpectationSerializerIntegrationTest {
                 "  \"times\" : {" + System.getProperty("line.separator") +
                 "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
                 "    \"unlimited\" : false" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
+                "    \"unlimited\" : true" + System.getProperty("line.separator") +
                 "  }" + System.getProperty("line.separator") +
                 "}", jsonExpectation);
     }
@@ -1006,6 +1047,9 @@ public class ExpectationSerializerIntegrationTest {
                 "  \"times\" : {" + System.getProperty("line.separator") +
                 "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
                 "    \"unlimited\" : false" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
+                "    \"unlimited\" : true" + System.getProperty("line.separator") +
                 "  }" + System.getProperty("line.separator") +
                 "}", jsonExpectation);
     }
@@ -1036,6 +1080,9 @@ public class ExpectationSerializerIntegrationTest {
                 "  \"times\" : {" + System.getProperty("line.separator") +
                 "    \"remainingTimes\" : 1," + System.getProperty("line.separator") +
                 "    \"unlimited\" : false" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
+                "    \"unlimited\" : true" + System.getProperty("line.separator") +
                 "  }" + System.getProperty("line.separator") +
                 "}", jsonExpectation);
     }
@@ -1070,6 +1117,9 @@ public class ExpectationSerializerIntegrationTest {
                 "  \"times\" : {" + System.getProperty("line.separator") +
                 "    \"remainingTimes\" : 1," + System.getProperty("line.separator") +
                 "    \"unlimited\" : false" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
+                "    \"unlimited\" : true" + System.getProperty("line.separator") +
                 "  }" + System.getProperty("line.separator") +
                 "}, {" + System.getProperty("line.separator") +
                 "  \"httpRequest\" : {" + System.getProperty("line.separator") +
@@ -1081,6 +1131,9 @@ public class ExpectationSerializerIntegrationTest {
                 "  \"times\" : {" + System.getProperty("line.separator") +
                 "    \"remainingTimes\" : 1," + System.getProperty("line.separator") +
                 "    \"unlimited\" : false" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
+                "    \"unlimited\" : true" + System.getProperty("line.separator") +
                 "  }" + System.getProperty("line.separator") +
                 "}, {" + System.getProperty("line.separator") +
                 "  \"httpRequest\" : {" + System.getProperty("line.separator") +
@@ -1092,6 +1145,9 @@ public class ExpectationSerializerIntegrationTest {
                 "  \"times\" : {" + System.getProperty("line.separator") +
                 "    \"remainingTimes\" : 1," + System.getProperty("line.separator") +
                 "    \"unlimited\" : false" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
+                "    \"unlimited\" : true" + System.getProperty("line.separator") +
                 "  }" + System.getProperty("line.separator") +
                 "} ]", jsonExpectation);
     }

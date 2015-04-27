@@ -7,6 +7,7 @@ import org.mockserver.client.serialization.Base64Converter;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatcherBuilder;
+import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.*;
 import org.slf4j.Logger;
@@ -43,12 +44,12 @@ public class MockServerMatcher extends ObjectWithReflectiveEqualsHashCodeToStrin
                 for (Expectation existingExpectation : existingExpectationsWithMatchingRequest) {
                     existingExpectation.setNotUnlimitedResponses();
                 }
-                expectation = new Expectation(httpRequest, Times.once());
+                expectation = new Expectation(httpRequest, Times.once(), TimeToLive.unlimited());
             } else {
-                expectation = new Expectation(httpRequest, Times.unlimited());
+                expectation = new Expectation(httpRequest, Times.unlimited(), TimeToLive.unlimited());
             }
         } else {
-            expectation = new Expectation(httpRequest, times);
+            expectation = new Expectation(httpRequest, times, TimeToLive.unlimited());
         }
         expectations.add(expectation);
         return expectation;

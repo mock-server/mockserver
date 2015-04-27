@@ -8,6 +8,7 @@ import org.mockserver.collections.CircularMultiMap;
 import org.mockserver.logging.LogFormatter;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatcherBuilder;
+import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
@@ -109,18 +110,18 @@ public class LogFilter implements ResponseFilter, RequestFilter {
             for (Map.Entry<HttpRequest, HttpResponse> entry : requestResponseLog.entrySet()) {
                 if (httpRequestMatcher.matches(entry.getKey(), true)) {
                     if (asJava) {
-                        requestLogger.warn(expectationToJavaSerializer.serializeAsJava(0, new Expectation(entry.getKey(), Times.once()).thenRespond(entry.getValue())));
+                        requestLogger.warn(expectationToJavaSerializer.serializeAsJava(0, new Expectation(entry.getKey(), Times.once(), TimeToLive.unlimited()).thenRespond(entry.getValue())));
                     } else {
-                        requestLogger.warn(expectationSerializer.serialize(new Expectation(entry.getKey(), Times.once()).thenRespond(entry.getValue())));
+                        requestLogger.warn(expectationSerializer.serialize(new Expectation(entry.getKey(), Times.once(), TimeToLive.unlimited()).thenRespond(entry.getValue())));
                     }
                 }
             }
         } else {
             for (Map.Entry<HttpRequest, HttpResponse> entry : requestResponseLog.entrySet()) {
                 if (asJava) {
-                    requestLogger.warn(expectationToJavaSerializer.serializeAsJava(0, new Expectation(entry.getKey(), Times.once()).thenRespond(entry.getValue())));
+                    requestLogger.warn(expectationToJavaSerializer.serializeAsJava(0, new Expectation(entry.getKey(), Times.once(), TimeToLive.unlimited()).thenRespond(entry.getValue())));
                 } else {
-                    requestLogger.warn(expectationSerializer.serialize(new Expectation(entry.getKey(), Times.once()).thenRespond(entry.getValue())));
+                    requestLogger.warn(expectationSerializer.serialize(new Expectation(entry.getKey(), Times.once(), TimeToLive.unlimited()).thenRespond(entry.getValue())));
                 }
             }
         }
@@ -133,14 +134,14 @@ public class LogFilter implements ResponseFilter, RequestFilter {
             for (HttpRequest key : requestResponseLog.keySet()) {
                 for (HttpResponse value : requestResponseLog.getAll(key)) {
                     if (httpRequestMatcher.matches(key, true)) {
-                        expectations.add(new Expectation(key, Times.once()).thenRespond(value));
+                        expectations.add(new Expectation(key, Times.once(), TimeToLive.unlimited()).thenRespond(value));
                     }
                 }
             }
         } else {
             for (HttpRequest key : requestResponseLog.keySet()) {
                 for (HttpResponse value : requestResponseLog.getAll(key)) {
-                    expectations.add(new Expectation(key, Times.once()).thenRespond(value));
+                    expectations.add(new Expectation(key, Times.once(), TimeToLive.unlimited()).thenRespond(value));
                 }
             }
         }

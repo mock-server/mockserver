@@ -1,6 +1,7 @@
 package org.mockserver.mock;
 
 import org.junit.Test;
+import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpCallback;
 import org.mockserver.model.HttpForward;
@@ -27,7 +28,7 @@ public class ExpectationTest {
         Times times = Times.exactly(3);
 
         // when
-        Expectation expectationThatResponds = new Expectation(httpRequest, times).thenRespond(httpResponse);
+        Expectation expectationThatResponds = new Expectation(httpRequest, times, TimeToLive.unlimited()).thenRespond(httpResponse);
 
         // then
         assertEquals(httpRequest, expectationThatResponds.getHttpRequest());
@@ -38,7 +39,7 @@ public class ExpectationTest {
         assertEquals(times, expectationThatResponds.getTimes());
 
         // when
-        Expectation expectationThatForwards = new Expectation(httpRequest, times).thenForward(httpForward);
+        Expectation expectationThatForwards = new Expectation(httpRequest, times, TimeToLive.unlimited()).thenForward(httpForward);
 
         // then
         assertEquals(httpRequest, expectationThatForwards.getHttpRequest());
@@ -49,7 +50,7 @@ public class ExpectationTest {
         assertEquals(times, expectationThatForwards.getTimes());
 
         // when
-        Expectation expectationThatCallsback = new Expectation(httpRequest, times).thenCallback(httpCallback);
+        Expectation expectationThatCallsback = new Expectation(httpRequest, times, TimeToLive.unlimited()).thenCallback(httpCallback);
 
         // then
         assertEquals(httpRequest, expectationThatForwards.getHttpRequest());
@@ -63,7 +64,7 @@ public class ExpectationTest {
     @Test
     public void shouldAllowForNulls() {
         // when
-        Expectation expectation = new Expectation(null, null).thenRespond(null).thenForward(null).thenCallback(null);
+        Expectation expectation = new Expectation(null, null, TimeToLive.unlimited()).thenRespond(null).thenForward(null).thenCallback(null);
 
         // then
         expectation.setNotUnlimitedResponses();
@@ -80,29 +81,29 @@ public class ExpectationTest {
     @Test
     public void shouldMatchCorrectly() {
         // when request null should return true
-        assertTrue(new Expectation(null, null).thenRespond(null).thenForward(null).matches(null));
-        assertTrue(new Expectation(null, Times.unlimited()).thenRespond(null).thenForward(null).matches(null));
+        assertTrue(new Expectation(null, null, TimeToLive.unlimited()).thenRespond(null).thenForward(null).matches(null));
+        assertTrue(new Expectation(null, Times.unlimited(), TimeToLive.unlimited()).thenRespond(null).thenForward(null).matches(null));
 
         // when basic matching request should return true
-        assertTrue(new Expectation(request(), null).thenRespond(null).thenForward(null).matches(request()));
-        assertTrue(new Expectation(request(), Times.unlimited()).thenRespond(null).thenForward(null).matches(request()));
+        assertTrue(new Expectation(request(), null, TimeToLive.unlimited()).thenRespond(null).thenForward(null).matches(request()));
+        assertTrue(new Expectation(request(), Times.unlimited(), TimeToLive.unlimited()).thenRespond(null).thenForward(null).matches(request()));
 
         // when un-matching request should return false
-        assertFalse(new Expectation(request().withPath("un-matching"), null).thenRespond(null).thenForward(null).matches(request()));
-        assertFalse(new Expectation(request().withPath("un-matching"), Times.unlimited()).thenRespond(null).thenForward(null).matches(request()));
-        assertFalse(new Expectation(request().withPath("un-matching"), Times.once()).thenRespond(null).thenForward(null).matches(request()));
+        assertFalse(new Expectation(request().withPath("un-matching"), null, TimeToLive.unlimited()).thenRespond(null).thenForward(null).matches(request()));
+        assertFalse(new Expectation(request().withPath("un-matching"), Times.unlimited(), TimeToLive.unlimited()).thenRespond(null).thenForward(null).matches(request()));
+        assertFalse(new Expectation(request().withPath("un-matching"), Times.once(), TimeToLive.unlimited()).thenRespond(null).thenForward(null).matches(request()));
 
         // when no times left should return false
-        assertFalse(new Expectation(null, Times.exactly(0)).thenRespond(null).thenForward(null).matches(null));
-        assertFalse(new Expectation(request(), Times.exactly(0)).thenRespond(null).thenForward(null).matches(request()));
-        assertFalse(new Expectation(request().withPath("un-matching"), Times.exactly(0)).thenRespond(null).thenForward(null).matches(request()));
+        assertFalse(new Expectation(null, Times.exactly(0), TimeToLive.unlimited()).thenRespond(null).thenForward(null).matches(null));
+        assertFalse(new Expectation(request(), Times.exactly(0), TimeToLive.unlimited()).thenRespond(null).thenForward(null).matches(request()));
+        assertFalse(new Expectation(request().withPath("un-matching"), Times.exactly(0), TimeToLive.unlimited()).thenRespond(null).thenForward(null).matches(request()));
     }
 
 
     @Test
     public void shouldReduceRemainingMatches() {
         // given
-        Expectation expectation = new Expectation(null, Times.once());
+        Expectation expectation = new Expectation(null, Times.once(), TimeToLive.unlimited());
 
         // when
         expectation.decrementRemainingMatches();
@@ -114,7 +115,7 @@ public class ExpectationTest {
     @Test
     public void shouldNotThrowExceptionWithReducingNullRemainingMatches() {
         // given
-        Expectation expectation = new Expectation(null, null);
+        Expectation expectation = new Expectation(null, null, TimeToLive.unlimited());
 
         // when
         expectation.decrementRemainingMatches();
@@ -131,7 +132,7 @@ public class ExpectationTest {
         HttpForward httpForward = new HttpForward();
 
         // then
-        new Expectation(httpRequest, Times.once()).thenRespond(httpResponse).thenForward(httpForward);
+        new Expectation(httpRequest, Times.once(), TimeToLive.unlimited()).thenRespond(httpResponse).thenForward(httpForward);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -142,7 +143,7 @@ public class ExpectationTest {
         HttpForward httpForward = new HttpForward();
 
         // then
-        new Expectation(httpRequest, Times.once()).thenCallback(httpCallback).thenForward(httpForward);
+        new Expectation(httpRequest, Times.once(), TimeToLive.unlimited()).thenCallback(httpCallback).thenForward(httpForward);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -153,7 +154,7 @@ public class ExpectationTest {
         HttpForward httpForward = new HttpForward();
 
         // then
-        new Expectation(httpRequest, Times.once()).thenForward(httpForward).thenRespond(httpResponse);
+        new Expectation(httpRequest, Times.once(), TimeToLive.unlimited()).thenForward(httpForward).thenRespond(httpResponse);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -164,7 +165,7 @@ public class ExpectationTest {
         HttpResponse httpResponse = new HttpResponse();
 
         // then
-        new Expectation(httpRequest, Times.once()).thenCallback(httpCallback).thenRespond(httpResponse);
+        new Expectation(httpRequest, Times.once(), TimeToLive.unlimited()).thenCallback(httpCallback).thenRespond(httpResponse);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -175,7 +176,7 @@ public class ExpectationTest {
         HttpCallback httpCallback = new HttpCallback();
 
         // then
-        new Expectation(httpRequest, Times.once()).thenCallback(httpCallback).thenRespond(httpResponse);
+        new Expectation(httpRequest, Times.once(), TimeToLive.unlimited()).thenCallback(httpCallback).thenRespond(httpResponse);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -186,6 +187,6 @@ public class ExpectationTest {
         HttpForward httpForward = new HttpForward();
 
         // then
-        new Expectation(httpRequest, Times.once()).thenCallback(httpCallback).thenForward(httpForward);
+        new Expectation(httpRequest, Times.once(), TimeToLive.unlimited()).thenCallback(httpCallback).thenForward(httpForward);
     }
 }

@@ -2,6 +2,7 @@ package org.mockserver.client.serialization.java;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.junit.Test;
+import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
@@ -69,8 +70,8 @@ public class ExpectationToJavaSerializerTest {
                                                 new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
                                         )
                                         .withBody(new StringBody("somebody")),
-                                Times.once()
-                        ).thenRespond(
+                                Times.once(),
+                                TimeToLive.unlimited()).thenRespond(
                                 new HttpResponse()
                                         .withStatusCode(304)
                                         .withHeaders(
@@ -115,8 +116,8 @@ public class ExpectationToJavaSerializerTest {
                                                         new Parameter("requestBodyParameterNameTwo", "requestBodyParameterValueTwo")
                                                 )
                                         ),
-                                Times.once()
-                        ).thenRespond(
+                                Times.once(),
+                                TimeToLive.unlimited()).thenRespond(
                                 new HttpResponse()
                                         .withBody("responseBody")
                         )
@@ -145,8 +146,8 @@ public class ExpectationToJavaSerializerTest {
                                         .withBody(
                                                 new BinaryBody(new byte[0])
                                         ),
-                                Times.once()
-                        ).thenRespond(
+                                Times.once(),
+                                TimeToLive.unlimited()).thenRespond(
                                 new HttpResponse()
                                         .withBody("responseBody")
                         )
@@ -201,8 +202,8 @@ public class ExpectationToJavaSerializerTest {
                                                 new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
                                         )
                                         .withBody(new StringBody("somebody")),
-                                Times.once()
-                        ).thenForward(
+                                Times.once(),
+                                TimeToLive.unlimited()).thenForward(
                                 new HttpForward()
                                         .withHost("some_host")
                                         .withPort(9090)
@@ -257,8 +258,8 @@ public class ExpectationToJavaSerializerTest {
                                                 new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
                                         )
                                         .withBody(new StringBody("somebody")),
-                                Times.once()
-                        ).thenCallback(
+                                Times.once(),
+                                TimeToLive.unlimited()).thenCallback(
                                 new HttpCallback()
                                         .withCallbackClass("some_class")
                         )
@@ -308,8 +309,8 @@ public class ExpectationToJavaSerializerTest {
                                                 "        \"publicationDate\": \"1990\"" + System.getProperty("line.separator") +
                                                 "    }" + System.getProperty("line.separator") +
                                                 "]")),
-                                Times.once()
-                        ).thenRespond(
+                                Times.once(),
+                                TimeToLive.unlimited()).thenRespond(
                                 new HttpResponse()
                                         .withStatusCode(304)
                                         .withBody("[" + System.getProperty("line.separator") +
@@ -390,8 +391,8 @@ public class ExpectationToJavaSerializerTest {
                                 new HttpRequest()
                                         .withPath("somePath")
                                         .withBody(new JsonSchemaBody(jsonSchema)),
-                                Times.once()
-                        ).thenRespond(
+                                Times.once(),
+                                TimeToLive.unlimited()).thenRespond(
                                 new HttpResponse()
                                         .withStatusCode(304)
                                         .withBody("responseBody")
@@ -419,8 +420,8 @@ public class ExpectationToJavaSerializerTest {
                                 new HttpRequest()
                                         .withPath("somePath")
                                         .withBody(new StringBody("responseBody")),
-                                Times.once()
-                        ).thenRespond(
+                                Times.once(),
+                                TimeToLive.unlimited()).thenRespond(
                                 new HttpResponse()
                                         .withStatusCode(304)
                         )

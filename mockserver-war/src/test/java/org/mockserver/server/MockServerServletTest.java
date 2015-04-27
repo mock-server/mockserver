@@ -10,6 +10,7 @@ import org.mockserver.client.serialization.VerificationSequenceSerializer;
 import org.mockserver.client.serialization.VerificationSerializer;
 import org.mockserver.mappers.HttpServletToMockServerRequestMapper;
 import org.mockserver.mappers.MockServerToHttpServletResponseMapper;
+import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.MockServerMatcher;
@@ -144,7 +145,7 @@ public class MockServerServletTest {
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
         HttpRequest httpRequest = mock(HttpRequest.class);
         Times times = mock(Times.class);
-        Expectation expectation = new Expectation(httpRequest, times).thenRespond(new HttpResponse());
+        Expectation expectation = new Expectation(httpRequest, times, TimeToLive.unlimited()).thenRespond(new HttpResponse());
 
         String requestBytes = "requestBytes";
         httpServletRequest.setContent(requestBytes.getBytes());
@@ -265,7 +266,7 @@ public class MockServerServletTest {
         // given
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
         MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/reset");
-        Expectation expectation = new Expectation(new HttpRequest(), Times.unlimited()).thenRespond(new HttpResponse());
+        Expectation expectation = new Expectation(new HttpRequest(), Times.unlimited(), TimeToLive.unlimited()).thenRespond(new HttpResponse());
 
         String requestBytes = "requestBytes";
         httpServletRequest.setContent(requestBytes.getBytes());
@@ -304,7 +305,7 @@ public class MockServerServletTest {
         // given
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
         MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/retrieve");
-        Expectation expectation = new Expectation(new HttpRequest(), Times.unlimited()).thenRespond(new HttpResponse());
+        Expectation expectation = new Expectation(new HttpRequest(), Times.unlimited(), TimeToLive.unlimited()).thenRespond(new HttpResponse());
 
         httpServletRequest.setContent("requestBytes".getBytes());
         when(mockHttpRequestSerializer.deserialize(anyString())).thenReturn(expectation.getHttpRequest());

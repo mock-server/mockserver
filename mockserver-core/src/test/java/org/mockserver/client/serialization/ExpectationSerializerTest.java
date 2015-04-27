@@ -9,6 +9,7 @@ import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.serialization.model.*;
+import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
@@ -38,13 +39,16 @@ public class ExpectationSerializerTest {
                     .withBody(new StringBody("somebody"))
                     .withHeaders(new Header("headerName", "headerValue"))
                     .withCookies(new Cookie("cookieName", "cookieValue")),
-            Times.once()
-    ).thenRespond(new HttpResponse()
-            .withStatusCode(304)
-            .withBody("responseBody")
-            .withHeaders(new Header("headerName", "headerValue"))
-            .withCookies(new Cookie("cookieName", "cookieValue"))
-            .withDelay(new Delay(TimeUnit.MICROSECONDS, 1)));
+            Times.once(),
+            TimeToLive.exactly(TimeUnit.HOURS, 2l))
+            .thenRespond(
+                    new HttpResponse()
+                            .withStatusCode(304)
+                            .withBody("responseBody")
+                            .withHeaders(new Header("headerName", "headerValue"))
+                            .withCookies(new Cookie("cookieName", "cookieValue"))
+                            .withDelay(new Delay(TimeUnit.MICROSECONDS, 1))
+            );
     private final ExpectationDTO fullExpectationDTO = new ExpectationDTO()
             .setHttpRequest(
                     new HttpRequestDTO()
@@ -67,7 +71,10 @@ public class ExpectationSerializerTest {
                                             .setValue(1)
                             )
             )
-            .setTimes(new TimesDTO(Times.once()));
+            .setTimes(new TimesDTO(Times.once()))
+            .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2l)));
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
     @Mock
     private ObjectMapper objectMapper;
     @Mock
@@ -75,8 +82,6 @@ public class ExpectationSerializerTest {
     @InjectMocks
     private ExpectationSerializer expectationSerializer;
 
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
 
     @Before
     public void setupTestFixture() {
@@ -122,7 +127,7 @@ public class ExpectationSerializerTest {
         when(objectWriter.writeValueAsString(any(ExpectationDTO.class))).thenThrow(new RuntimeException("TEST EXCEPTION"));
 
         // when
-        expectationSerializer.serialize(new Expectation(null, null));
+        expectationSerializer.serialize(new Expectation(null, null, null));
     }
 
     @Test
@@ -135,7 +140,7 @@ public class ExpectationSerializerTest {
         when(objectWriter.writeValueAsString(any(ExpectationDTO[].class))).thenThrow(new RuntimeException("TEST EXCEPTION"));
 
         // when
-        expectationSerializer.serialize(new Expectation[]{new Expectation(null, null)});
+        expectationSerializer.serialize(new Expectation[]{new Expectation(null, null, null)});
     }
 
     @Test

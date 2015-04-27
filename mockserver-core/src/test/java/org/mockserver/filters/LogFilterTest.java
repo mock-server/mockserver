@@ -1,6 +1,7 @@
 package org.mockserver.filters;
 
 import org.junit.Test;
+import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.Cookie;
@@ -107,24 +108,24 @@ public class LogFilterTest {
         // then
         assertArrayEquals(logFilter.retrieve(null),
                 new Expectation[]{
-                        new Expectation(request("some_path"), Times.once()).thenRespond(response("body_one")),
-                        new Expectation(request("some_path"), Times.once()).thenRespond(response("body_three")),
-                        new Expectation(request("some_other_path"), Times.once()).thenRespond(response("body_two"))
+                        new Expectation(request("some_path"), Times.once(), TimeToLive.unlimited()).thenRespond(response("body_one")),
+                        new Expectation(request("some_path"), Times.once(), TimeToLive.unlimited()).thenRespond(response("body_three")),
+                        new Expectation(request("some_other_path"), Times.once(), TimeToLive.unlimited()).thenRespond(response("body_two"))
                 });
         assertArrayEquals(logFilter.retrieve(request()),
                 new Expectation[]{
-                        new Expectation(request("some_path"), Times.once()).thenRespond(response("body_one")),
-                        new Expectation(request("some_path"), Times.once()).thenRespond(response("body_three")),
-                        new Expectation(request("some_other_path"), Times.once()).thenRespond(response("body_two"))
+                        new Expectation(request("some_path"), Times.once(), TimeToLive.unlimited()).thenRespond(response("body_one")),
+                        new Expectation(request("some_path"), Times.once(), TimeToLive.unlimited()).thenRespond(response("body_three")),
+                        new Expectation(request("some_other_path"), Times.once(), TimeToLive.unlimited()).thenRespond(response("body_two"))
                 });
         assertArrayEquals(logFilter.retrieve(request("some_path")),
                 new Expectation[]{
-                        new Expectation(request("some_path"), Times.once()).thenRespond(response("body_one")),
-                        new Expectation(request("some_path"), Times.once()).thenRespond(response("body_three"))
+                        new Expectation(request("some_path"), Times.once(), TimeToLive.unlimited()).thenRespond(response("body_one")),
+                        new Expectation(request("some_path"), Times.once(), TimeToLive.unlimited()).thenRespond(response("body_three"))
                 });
         assertArrayEquals(logFilter.retrieve(request("some_other_path")),
                 new Expectation[]{
-                        new Expectation(request("some_other_path"), Times.once()).thenRespond(response("body_two"))
+                        new Expectation(request("some_other_path"), Times.once(), TimeToLive.unlimited()).thenRespond(response("body_two"))
                 });
     }
 

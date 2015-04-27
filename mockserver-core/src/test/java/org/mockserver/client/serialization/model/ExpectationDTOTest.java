@@ -1,6 +1,7 @@
 package org.mockserver.client.serialization.model;
 
 import org.junit.Test;
+import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpCallback;
@@ -27,7 +28,7 @@ public class ExpectationDTOTest {
         HttpCallback httpCallback = new HttpCallback().withCallbackClass("some_class");
 
         // when
-        ExpectationDTO expectationWithResponse = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3)).thenRespond(httpResponse));
+        ExpectationDTO expectationWithResponse = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited()).thenRespond(httpResponse));
 
         // then
         assertThat(expectationWithResponse.getHttpRequest(), is(new HttpRequestDTO(httpRequest)));
@@ -37,7 +38,7 @@ public class ExpectationDTOTest {
         assertNull(expectationWithResponse.getHttpCallback());
 
         // when
-        ExpectationDTO expectationWithForward = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3)).thenForward(httpForward));
+        ExpectationDTO expectationWithForward = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited()).thenForward(httpForward));
 
         // then
         assertThat(expectationWithForward.getHttpRequest(), is(new HttpRequestDTO(httpRequest)));
@@ -47,7 +48,7 @@ public class ExpectationDTOTest {
         assertNull(expectationWithForward.getHttpCallback());
 
         // when
-        ExpectationDTO expectationWithCallback = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3)).thenCallback(httpCallback));
+        ExpectationDTO expectationWithCallback = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited()).thenCallback(httpCallback));
 
         // then
         assertThat(expectationWithCallback.getHttpRequest(), is(new HttpRequestDTO(httpRequest)));
@@ -66,7 +67,7 @@ public class ExpectationDTOTest {
         HttpCallback httpCallback = new HttpCallback().withCallbackClass("some_class");
 
         // when
-        Expectation expectationWithResponse = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3)).thenRespond(httpResponse)).buildObject();
+        Expectation expectationWithResponse = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited()).thenRespond(httpResponse)).buildObject();
 
         // then
         assertThat(expectationWithResponse.getHttpRequest(), is(httpRequest));
@@ -76,7 +77,7 @@ public class ExpectationDTOTest {
         assertNull(expectationWithResponse.getHttpCallback());
 
         // when
-        Expectation expectationWithForward = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3)).thenForward(httpForward)).buildObject();
+        Expectation expectationWithForward = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited()).thenForward(httpForward)).buildObject();
 
         // then
         assertThat(expectationWithForward.getHttpRequest(), is(httpRequest));
@@ -86,7 +87,7 @@ public class ExpectationDTOTest {
         assertNull(expectationWithForward.getHttpCallback());
 
         // when
-        Expectation expectationWithCallback = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3)).thenCallback(httpCallback)).buildObject();
+        Expectation expectationWithCallback = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited()).thenCallback(httpCallback)).buildObject();
 
         // then
         assertThat(expectationWithCallback.getHttpRequest(), is(httpRequest));
@@ -99,7 +100,7 @@ public class ExpectationDTOTest {
     @Test
     public void shouldBuildObjectWithNulls() {
         // when
-        Expectation expectation = new ExpectationDTO(new Expectation(null, null).thenRespond(null).thenForward(null)).buildObject();
+        Expectation expectation = new ExpectationDTO(new Expectation(null, null, TimeToLive.unlimited()).thenRespond(null).thenForward(null)).buildObject();
 
         // then
         assertThat(expectation.getHttpRequest(), is(nullValue()));
@@ -149,7 +150,7 @@ public class ExpectationDTOTest {
     @Test
     public void shouldHandleNullFieldInput() {
         // when
-        ExpectationDTO expectationDTO = new ExpectationDTO(new Expectation(null, null));
+        ExpectationDTO expectationDTO = new ExpectationDTO(new Expectation(null, null, TimeToLive.unlimited()));
 
         // then
         assertThat(expectationDTO.getHttpRequest(), is(nullValue()));

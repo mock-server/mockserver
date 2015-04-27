@@ -2,6 +2,7 @@ package org.mockserver.mock;
 
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatcherBuilder;
+import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.*;
 
@@ -12,14 +13,16 @@ public class Expectation extends ObjectWithJsonToString {
 
     private final HttpRequest httpRequest;
     private final Times times;
+    private final TimeToLive timeToLive;
     private final HttpRequestMatcher httpRequestMatcher;
     private HttpResponse httpResponse;
     private HttpForward httpForward;
     private HttpCallback httpCallback;
 
-    public Expectation(HttpRequest httpRequest, Times times) {
+    public Expectation(HttpRequest httpRequest, Times times, TimeToLive timeToLive) {
         this.httpRequest = httpRequest;
         this.times = times;
+        this.timeToLive = timeToLive;
         this.httpRequestMatcher = new MatcherBuilder().transformsToMatcher(this.httpRequest);
     }
 
@@ -65,6 +68,10 @@ public class Expectation extends ObjectWithJsonToString {
         return times;
     }
 
+    public TimeToLive getTimeToLive() {
+        return timeToLive;
+    }
+
     public Expectation thenRespond(HttpResponse httpResponse) {
         if (httpResponse != null) {
             if (httpForward != null) {
@@ -106,11 +113,15 @@ public class Expectation extends ObjectWithJsonToString {
     }
 
     public boolean matches(HttpRequest httpRequest) {
-        return hasRemainingMatches() && httpRequestMatcher.matches(httpRequest, true);
+        return hasRemainingMatches() && isStillAlive() && httpRequestMatcher.matches(httpRequest, true);
     }
 
     private boolean hasRemainingMatches() {
         return times == null || times.greaterThenZero();
+    }
+
+    private boolean isStillAlive() {
+        return timeToLive == null || timeToLive.stillAlive();
     }
 
     public void decrementRemainingMatches() {

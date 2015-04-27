@@ -1,5 +1,6 @@
 package org.mockserver.client.serialization.model;
 
+import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
@@ -14,6 +15,7 @@ public class ExpectationDTO extends ObjectWithReflectiveEqualsHashCodeToString {
     private HttpForwardDTO httpForward;
     private HttpCallbackDTO httpCallback;
     private TimesDTO times;
+    private TimeToLiveDTO timeToLive;
 
     public ExpectationDTO(Expectation expectation) {
         if (expectation != null) {
@@ -37,6 +39,10 @@ public class ExpectationDTO extends ObjectWithReflectiveEqualsHashCodeToString {
             if (times != null) {
                 this.times = new TimesDTO(times);
             }
+            TimeToLive timeToLive = expectation.getTimeToLive();
+            if (timeToLive != null) {
+                this.timeToLive = new TimeToLiveDTO(timeToLive);
+            }
         }
     }
 
@@ -49,6 +55,7 @@ public class ExpectationDTO extends ObjectWithReflectiveEqualsHashCodeToString {
         HttpForward httpForward = null;
         HttpCallback httpCallback = null;
         Times times;
+        TimeToLive timeToLive;
         if (this.httpRequest != null) {
             httpRequest = this.httpRequest.buildObject();
         }
@@ -66,7 +73,12 @@ public class ExpectationDTO extends ObjectWithReflectiveEqualsHashCodeToString {
         } else {
             times = Times.once();
         }
-        return new Expectation(httpRequest, times).thenRespond(httpResponse).thenForward(httpForward).thenCallback(httpCallback);
+        if (this.timeToLive != null) {
+            timeToLive = this.timeToLive.buildObject();
+        } else {
+            timeToLive = TimeToLive.unlimited();
+        }
+        return new Expectation(httpRequest, times, timeToLive).thenRespond(httpResponse).thenForward(httpForward).thenCallback(httpCallback);
     }
 
     public HttpRequestDTO getHttpRequest() {
@@ -75,15 +87,6 @@ public class ExpectationDTO extends ObjectWithReflectiveEqualsHashCodeToString {
 
     public ExpectationDTO setHttpRequest(HttpRequestDTO httpRequest) {
         this.httpRequest = httpRequest;
-        return this;
-    }
-
-    public TimesDTO getTimes() {
-        return times;
-    }
-
-    public ExpectationDTO setTimes(TimesDTO times) {
-        this.times = times;
         return this;
     }
 
@@ -111,6 +114,24 @@ public class ExpectationDTO extends ObjectWithReflectiveEqualsHashCodeToString {
 
     public ExpectationDTO setHttpCallback(HttpCallbackDTO httpCallback) {
         this.httpCallback = httpCallback;
+        return this;
+    }
+
+    public TimesDTO getTimes() {
+        return times;
+    }
+
+    public ExpectationDTO setTimes(TimesDTO times) {
+        this.times = times;
+        return this;
+    }
+
+    public TimeToLiveDTO getTimeToLive() {
+        return timeToLive;
+    }
+
+    public ExpectationDTO setTimeToLive(TimeToLiveDTO timeToLive) {
+        this.timeToLive = timeToLive;
         return this;
     }
 }

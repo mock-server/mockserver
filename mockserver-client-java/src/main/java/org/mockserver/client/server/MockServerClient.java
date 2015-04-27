@@ -1,6 +1,7 @@
 package org.mockserver.client.server;
 
 import org.mockserver.client.AbstractClient;
+import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
@@ -8,6 +9,8 @@ import org.mockserver.model.HttpResponse;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.mockserver.verify.VerificationTimes;
+
+import java.util.concurrent.TimeUnit;
 
 import static org.mockserver.model.HttpRequest.request;
 
@@ -77,7 +80,7 @@ public class MockServerClient extends AbstractClient {
      *                   new HttpRequest()
      *                           .withPath("/some_path")
      *                           .withBody("some_request_body"),
-     *                   VerificationTimes.exactly(5)
+     *                   Times.exactly(5)
      *           )
      *           .respond(
      *                   new HttpResponse()
@@ -92,7 +95,36 @@ public class MockServerClient extends AbstractClient {
      * @return an Expectation object that can be used to specify the response
      */
     public ForwardChainExpectation when(HttpRequest httpRequest, Times times) {
-        return new ForwardChainExpectation(this, new Expectation(httpRequest, times));
+        return new ForwardChainExpectation(this, new Expectation(httpRequest, times, TimeToLive.unlimited()));
+    }
+
+    /**
+     * Specify an limited expectation that will respond a specified number of times when the http is matched
+     * for example:
+     *
+     *   mockServerClient
+     *           .when(
+     *                   new HttpRequest()
+     *                           .withPath("/some_path")
+     *                           .withBody("some_request_body"),
+     *                   Times.exactly(5),
+     *                   TimeToLive.exactly(TimeUnit.SECONDS, 120),
+     *           )
+     *           .respond(
+     *                   new HttpResponse()
+     *                           .withBody("some_response_body")
+     *                           .withHeaders(
+     *                                   new Header("responseName", "responseValue")
+     *                           )
+     *           );
+     *
+     * @param httpRequest the http request that must be matched for this expectation to respond
+     * @param times       the number of times to respond when this http is matched
+     * @param timeToLive  the length of time from when the server receives the expectation that the expectation should be active
+     * @return an Expectation object that can be used to specify the response
+     */
+    public ForwardChainExpectation when(HttpRequest httpRequest, Times times, TimeToLive timeToLive) {
+        return new ForwardChainExpectation(this, new Expectation(httpRequest, times, timeToLive));
     }
 
     /**

@@ -2,9 +2,13 @@ package org.mockserver.client.serialization.java;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
-import org.mockserver.model.*;
+import org.mockserver.model.Cookie;
+import org.mockserver.model.Header;
+import org.mockserver.model.Parameter;
+import org.mockserver.model.StringBody;
 
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
@@ -46,20 +50,22 @@ public class CompileGeneratedJavaCodeTest {
                                         new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
                                 )
                                 .withBody(new StringBody("somebody")),
-                        Times.once()
-                ).thenRespond(
-                        response()
-                                .withStatusCode(304)
-                                .withHeaders(
-                                        new Header("responseHeaderNameOne", "responseHeaderValueOneOne", "responseHeaderValueOneTwo"),
-                                        new Header("responseHeaderNameTwo", "responseHeaderValueTwo")
-                                )
-                                .withCookies(
-                                        new Cookie("responseCookieNameOne", "responseCookieValueOne"),
-                                        new Cookie("responseCookieNameTwo", "responseCookieValueTwo")
-                                )
-                                .withBody("responseBody")
+                        Times.once(),
+                        TimeToLive.unlimited()
                 )
+                        .thenRespond(
+                                response()
+                                        .withStatusCode(304)
+                                        .withHeaders(
+                                                new Header("responseHeaderNameOne", "responseHeaderValueOneOne", "responseHeaderValueOneTwo"),
+                                                new Header("responseHeaderNameTwo", "responseHeaderValueTwo")
+                                        )
+                                        .withCookies(
+                                                new Cookie("responseCookieNameOne", "responseCookieValueOne"),
+                                                new Cookie("responseCookieNameTwo", "responseCookieValueTwo")
+                                        )
+                                        .withBody("responseBody")
+                        )
         );
 
         assertTrue(compileJavaCode("" +

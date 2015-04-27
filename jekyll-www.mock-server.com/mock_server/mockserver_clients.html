@@ -126,6 +126,32 @@ sitemap:
     <span class="keyword">public</span> ForwardChainExpectation when(HttpRequest httpRequest, Times times);
 
     <span class="comment">/**
+     * Specify an limited expectation that will respond a specified number of times when the http is matched
+     * for example:
+     *
+     *   <span class="this_value">mockServerClient</span>
+     *           .when(
+     *                   <span class="keyword">new</span> HttpRequest()
+     *                           .withPath(<span class="string_literal">"/some_path"</span>)
+     *                           .withBody(<span class="string_literal">"some_request_body"</span>),
+     *                   Times.exactly(<span class="numeric_literal">5</span>)
+     *           )
+     *           .respond(
+     *                   <span class="keyword">new</span> HttpResponse()
+     *                           .withBody(<span class="string_literal">"some_response_body"</span>)
+     *                           .withHeaders(
+     *                                   <span class="keyword">new</span> Header(<span class="string_literal">"responseName"</span>, <span class="string_literal">"responseValue"</span>)
+     *                           )
+     *           );
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpRequest</span> the http request that must be matched for this expectation to respond
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">times</span>       the number of times to respond when this http is matched
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">timeToLive </span> the length of time from when the server receives the expectation that the expectation should be active
+     * <span class="javadoc_param_annotation">@return</span> an Expectation object that can be used to specify the response
+     */</span>
+    <span class="keyword">public</span> ForwardChainExpectation when(HttpRequest httpRequest, Times times, TimeToLive timeToLive);
+
+    <span class="comment">/**
      * Pretty-print the json for all expectations to the log.  They are printed into a dedicated log called mockserver_request.log
      */</span>
     <span class="keyword">public</span> MockServerClient dumpToLog();

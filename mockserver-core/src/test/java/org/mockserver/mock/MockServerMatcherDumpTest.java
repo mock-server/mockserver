@@ -68,6 +68,9 @@ public class MockServerMatcherDumpTest {
                 "  \"times\" : {" + System.getProperty("line.separator") +
                 "    \"remainingTimes\" : 0," + System.getProperty("line.separator") +
                 "    \"unlimited\" : true" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
+                "    \"unlimited\" : true" + System.getProperty("line.separator") +
                 "  }" + System.getProperty("line.separator") +
                 "}");
         verify(requestLogger).warn("{" + System.getProperty("line.separator") +
@@ -80,6 +83,9 @@ public class MockServerMatcherDumpTest {
                 "  }," + System.getProperty("line.separator") +
                 "  \"times\" : {" + System.getProperty("line.separator") +
                 "    \"remainingTimes\" : 0," + System.getProperty("line.separator") +
+                "    \"unlimited\" : true" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
                 "    \"unlimited\" : true" + System.getProperty("line.separator") +
                 "  }" + System.getProperty("line.separator") +
                 "}");
@@ -121,6 +127,9 @@ public class MockServerMatcherDumpTest {
                 "  }," + System.getProperty("line.separator") +
                 "  \"times\" : {" + System.getProperty("line.separator") +
                 "    \"remainingTimes\" : 0," + System.getProperty("line.separator") +
+                "    \"unlimited\" : true" + System.getProperty("line.separator") +
+                "  }," + System.getProperty("line.separator") +
+                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
                 "    \"unlimited\" : true" + System.getProperty("line.separator") +
                 "  }" + System.getProperty("line.separator") +
                 "}");
