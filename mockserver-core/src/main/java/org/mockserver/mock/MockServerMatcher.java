@@ -60,12 +60,16 @@ public class MockServerMatcher extends ObjectWithReflectiveEqualsHashCodeToStrin
         for (Expectation expectation : expectations) {
             if (expectation.matches(httpRequest)) {
                 expectation.decrementRemainingMatches();
-                if (!expectation.getTimes().greaterThenZero()) {
+                if (!expectation.hasRemainingMatches()) {
                     if (this.expectations.contains(expectation)) {
                         this.expectations.remove(expectation);
                     }
                 }
                 return expectation.getAction(true);
+            } else if (!expectation.isStillAlive()) {
+                if (this.expectations.contains(expectation)) {
+                    this.expectations.remove(expectation);
+                }
             }
         }
         return null;

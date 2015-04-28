@@ -123,6 +123,25 @@ public class ExpectationTest {
     }
 
     @Test
+    public void shouldCalculateRemainingMatches() {
+        assertThat(new Expectation(null, Times.once(), TimeToLive.unlimited()).hasRemainingMatches(), is(true));
+        assertThat(new Expectation(null, Times.unlimited(), TimeToLive.unlimited()).hasRemainingMatches(), is(true));
+        assertThat(new Expectation(null, Times.exactly(1), TimeToLive.unlimited()).hasRemainingMatches(), is(true));
+        assertThat(new Expectation(null, null, TimeToLive.unlimited()).hasRemainingMatches(), is(true));
+
+        assertThat(new Expectation(null, Times.exactly(0), TimeToLive.unlimited()).hasRemainingMatches(), is(false));
+    }
+
+    @Test
+    public void shouldCalculateRemainingLife() {
+        assertThat(new Expectation(null, Times.unlimited(), TimeToLive.unlimited()).isStillAlive(), is(true));
+        assertThat(new Expectation(null, Times.unlimited(), TimeToLive.exactly(TimeUnit.MINUTES, 5L)).isStillAlive(), is(true));
+        assertThat(new Expectation(null, Times.unlimited(), null).hasRemainingMatches(), is(true));
+
+        assertThat(new Expectation(null, Times.unlimited(), TimeToLive.exactly(TimeUnit.MICROSECONDS, 0L)).isStillAlive(), is(false));
+    }
+
+    @Test
     public void shouldNotThrowExceptionWithReducingNullRemainingMatches() {
         // given
         Expectation expectation = new Expectation(null, null, TimeToLive.unlimited());

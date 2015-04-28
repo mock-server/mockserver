@@ -116,11 +116,11 @@ public class Expectation extends ObjectWithJsonToString {
         return hasRemainingMatches() && isStillAlive() && httpRequestMatcher.matches(httpRequest, true);
     }
 
-    private boolean hasRemainingMatches() {
+    public boolean hasRemainingMatches() {
         return times == null || times.greaterThenZero();
     }
 
-    private boolean isStillAlive() {
+    public boolean isStillAlive() {
         return timeToLive == null || timeToLive.stillAlive();
     }
 
