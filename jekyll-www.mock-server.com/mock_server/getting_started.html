@@ -41,7 +41,29 @@ sitemap:
 	<li><strong>callback</strong> - execute a callback</li>
 </ul>
 
-<p>The following <strong>Java</strong> example shows the creation of an expectation with a respond action:</p>
+<h3>Java Examples</h3>
+
+<p>The following <strong>Java</strong> example shows the creation of an simple expectation with a respond action:</p>
+
+<pre><code class="code"><span class="keyword">new</span> MockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1080</span>)
+        .when(
+                request()
+                        .withMethod(<span class="string_literal">"POST"</span>)
+                        .withPath(<span class="string_literal">"/login"</span>)
+                        .withBody(<span class="string_literal">"{username: 'foo', password: 'bar'}"</span>)
+        )
+        .respond(
+                response()
+                        .withStatusCode(<span class="numeric_literal">302</span>)
+                        .withCookie(
+                                <span class="string_literal">"sessionId"</span>, <span class="string_literal">"2By8LOhBmaW5nZXJwcmludCIlMDAzMW"</span>
+                        )
+                        .withHeader(
+                                <span class="string_literal">"Location"</span>, <span class="string_literal">"https://www.mock-server.com"</span>
+                        )
+        );</code></pre>
+
+<p>The following <strong>Java</strong> example shows the creation of a more complex expectation with a respond action:</p>
 
 <pre><code class="code"><span class="keyword">new</span> MockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1080</span>)
         .when(
@@ -49,13 +71,13 @@ sitemap:
                         .withMethod(<span class="string_literal">"POST"</span>)
                         .withPath(<span class="string_literal">"/login"</span>)
                         .withQueryStringParameters(
-                                <span class="keyword">new</span> Parameter(<span class="string_literal">"returnUrl"</span>, <span class="string_literal">"/account"</span>)
+                                <span class="keyword">new</span> Parameter(<span class="string_literal">"returnUrl"</span>, <span class="string_literal">"/account"</span>),
+                                <span class="keyword">new</span> Parameter(<span class="string_literal">"_timestamp"</span>, <span class="string_literal">"1430199066291"</span>)
                         )
-                        .withCookies(
-                                <span class="keyword">new</span> Cookie(<span class="string_literal">"sessionId"</span>, <span class="string_literal">"2By8LOhBmaW5nZXJwcmludCIlMDAzMW"</span>)
-                        )
-                        .withBody(<span class="string_literal">"{username: 'foo', password: 'bar'}"</span>),
-                Times.exactly(<span class="numeric_literal">1</span>)
+                        .withCookie(<span class="string_literal">"sessionId"</span>, <span class="string_literal">"2By8LOhBmaW5nZXJwcmludCIlMDAzMW"</span>)
+                        .withBody(json(<span class="string_literal">"{username: 'foo', password: 'bar'}"</span>, MatchType.<span class="constant">STRICT</span>)),
+                Times.exactly(<span class="numeric_literal">1</span>),
+                TimeToLive.exactly(TimeUnit.<span class="constant">MINUTES</span>, <span class="numeric_literal">5l</span>)
         )
         .respond(
                 response()
@@ -68,7 +90,35 @@ sitemap:
                         .withDelay(<span class="keyword">new</span> Delay(TimeUnit.<span class="constant">SECONDS</span>, <span class="numeric_literal">1</span>))
         );</code></pre>
 
-<p style="margin-top: 2em;">The following <strong>JavaScript</strong> example shows the creation of an expectation with a respond action:</p>
+<h3>JavaScript Examples</h3>
+
+<p>The following <strong>JavaScript</strong> example shows the creation of an simple expectation with a respond action:</p>
+
+<pre><code class="code">mockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1080</span>).mockAnyResponse({
+    <span class="string_literal">"httpRequest"</span>: {
+        <span class="string_literal">"method"</span>: <span class="string_literal">"POST"</span>,
+        <span class="string_literal">"path"</span>: <span class="string_literal">"/login"</span>,
+        <span class="string_literal">"body"</span>: "{username: <span class="string_literal">'foo'</span>, password: <span class="string_literal">'bar'</span>}"
+    },
+    <span class="string_literal">"httpResponse"</span>: {
+        <span class="string_literal">"statusCode"</span>: <span class="numeric_literal">302</span>,
+        <span class="string_literal">"headers"</span>: [
+            {
+                <span class="string_literal">"name"</span>: <span class="string_literal">"Location"</span>,
+                <span class="string_literal">"values"</span>: <span class="string_literal">"https://www.mock-server.com"</span>
+            }
+        ],
+        <span class="string_literal">"cookies"</span>: [
+            {
+                <span class="string_literal">"name"</span>: <span class="string_literal">"sessionId"</span>,
+                <span class="string_literal">"value"</span>: <span class="string_literal">"2By8LOhBmaW5nZXJwcmludCIlMDAzMW"</span>
+            }
+        ]
+    }
+});
+</code></pre>
+
+<p>The following <strong>JavaScript</strong> example shows the creation of a more complex expectation with a respond action:</p>
 
 <pre><code class="code">mockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1080</span>).mockAnyResponse({
     <span class="string_literal">"httpRequest"</span>: {
@@ -78,6 +128,10 @@ sitemap:
             {
                 <span class="string_literal">"name"</span>: <span class="string_literal">"returnUrl"</span>,
                 <span class="string_literal">"values"</span>: [<span class="string_literal">"/account"</span>]
+            },
+            {
+                <span class="string_literal">"name"</span>: <span class="string_literal">"_timestamp"</span>,
+                <span class="string_literal">"values"</span>: [<span class="string_literal">"1430199066291"</span>]
             }
         ],
         <span class="string_literal">"cookies"</span>: [
@@ -88,7 +142,8 @@ sitemap:
         ],
         <span class="string_literal">"body"</span>: {
             <span class="string_literal">"type"</span>: <span class="string_literal">"JSON"</span>,
-            <span class="string_literal">"value"</span>: JSON.stringify({ username: <span class="string_literal">"foo"</span>, password: <span class="string_literal">"bar"</span> })
+            <span class="string_literal">"value"</span>: JSON.stringify({ username: <span class="string_literal">"foo"</span>, password: <span class="string_literal">"bar"</span> }),
+            <span class="string_literal">"matchType"</span>: <span class="string_literal">"STRICT"</span>
         }
     },
     <span class="string_literal">"httpResponse"</span>: {
@@ -112,11 +167,35 @@ sitemap:
     <span class="string_literal">"times"</span>: {
         <span class="string_literal">"remainingTimes"</span>: <span class="numeric_literal">1</span>,
         <span class="string_literal">"unlimited"</span>: <span class="keyword">false</span>
+    },
+    <span class="string_literal">"timeToLive"</span>: {
+        <span class="string_literal">"timeUnit"</span>: <span class="string_literal">"MINUTES</span>,
+        <span class="string_literal">"timeToLive"</span>: <span class="numeric_literal">5</span>,
+        <span class="string_literal">"unlimited"</span>: <span class="keyword">false</span>
     }
 });
 </code></pre>
 
-<p style="margin-top: 2em;">The following <strong>Ruby</strong> example shows the creation of an expectation with a respond action:</p>
+<h3>Ruby Examples</h3>
+
+<p>The following <strong>Ruby</strong> example shows the creation of an simple expectation with a respond action:</p>
+
+<pre><code class="code">client = MockServerClient.new(<span class="string_literal">'localhost'</span>, <span class="numeric_literal">1080</span>)
+expectation = expectation <span class="keyword">do</span> |expectation|
+     expectation.request <span class="keyword">do</span> |request|
+        request.method = <span class="string_literal">'POST'</span>
+        request.path = <span class="string_literal">'/login'</span>
+        request.body = exact({ username: <span class="string_literal">'foo'</span>, password: <span class="string_literal">'bar'</span> }.to_json)
+     end
+
+    expectation.response <span class="keyword">do</span> |response|
+        response.status_code = <span class="numeric_literal">302</span>
+        response.headers << header(<span class="string_literal">'Location'</span>, <span class="string_literal">'https://www.mock-server.com'</span>)
+    end
+end
+client.register(expectation)</code></pre>
+
+<p>The following <strong>Ruby</strong> example shows the creation of a more complex expectation with a respond action:</p>
 
 <pre><code class="code">client = MockServerClient.new(<span class="string_literal">'localhost'</span>, <span class="numeric_literal">1080</span>)
 expectation = expectation <span class="keyword">do</span> |expectation|
@@ -124,6 +203,7 @@ expectation = expectation <span class="keyword">do</span> |expectation|
         request.method = <span class="string_literal">'POST'</span>
         request.path = <span class="string_literal">'/login'</span>
         request.query_parameters << parameter(<span class="string_literal">'returnUrl'</span>, <span class="string_literal">'/account'</span>)
+        request.query_parameters << parameter(<span class="string_literal">'_timestamp'</span>, <span class="string_literal">'1430199066291'</span>)
         request.cookies = [cookie(<span class="string_literal">'sessionId'</span>, <span class="string_literal">'2By8LOhBmaW5nZXJwcmludCIlMDAzMW'</span>)]
         request.body = exact({ username: <span class="string_literal">'foo'</span>, password: <span class="string_literal">'bar'</span> }.to_json)
      end
@@ -135,6 +215,8 @@ expectation = expectation <span class="keyword">do</span> |expectation|
         response.body  = body({ message: <span class="string_literal">'incorrect username and password combination'</span> }.to_json)
         response.delay = delay_by(<span class="ruby_constant">:SECONDS</span>, <span class="numeric_literal">1</span>)
     end
+
+    expectation.times = exactly(<span class="numeric_literal">1</span>)
 end
 client.register(expectation)</code></pre>
 
