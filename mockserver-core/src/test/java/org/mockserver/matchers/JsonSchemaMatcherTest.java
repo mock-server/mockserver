@@ -18,42 +18,42 @@ public class JsonSchemaMatcherTest {
     @Mock
     protected Logger logger;
 
-    public static final String JSON_SCHEMA = "{" + System.getProperty("line.separator") +
-            "    \"type\": \"object\"," + System.getProperty("line.separator") +
-            "    \"properties\": {" + System.getProperty("line.separator") +
-            "        \"enumField\": {" + System.getProperty("line.separator") +
-            "            \"enum\": [ \"one\", \"two\" ]" + System.getProperty("line.separator") +
-            "        }," + System.getProperty("line.separator") +
-            "        \"arrayField\": {" + System.getProperty("line.separator") +
-            "            \"type\": \"array\"," + System.getProperty("line.separator") +
-            "            \"minItems\": 1," + System.getProperty("line.separator") +
-            "            \"items\": {" + System.getProperty("line.separator") +
-            "                \"type\": \"string\"" + System.getProperty("line.separator") +
-            "            }," + System.getProperty("line.separator") +
-            "            \"uniqueItems\": true" + System.getProperty("line.separator") +
-            "        }," + System.getProperty("line.separator") +
-            "        \"stringField\": {" + System.getProperty("line.separator") +
-            "            \"type\": \"string\"," + System.getProperty("line.separator") +
-            "            \"minLength\": 5," + System.getProperty("line.separator") +
-            "            \"maxLength\": 6" + System.getProperty("line.separator") +
-            "        }," + System.getProperty("line.separator") +
-            "        \"booleanField\": {" + System.getProperty("line.separator") +
-            "            \"type\": \"boolean\"" + System.getProperty("line.separator") +
-            "        }," + System.getProperty("line.separator") +
-            "        \"objectField\": {" + System.getProperty("line.separator") +
-            "            \"type\": \"object\"," + System.getProperty("line.separator") +
-            "            \"properties\": {" + System.getProperty("line.separator") +
-            "                \"stringField\": {" + System.getProperty("line.separator") +
-            "                    \"type\": \"string\"," + System.getProperty("line.separator") +
-            "                    \"minLength\": 1," + System.getProperty("line.separator") +
-            "                    \"maxLength\": 3" + System.getProperty("line.separator") +
-            "                }" + System.getProperty("line.separator") +
-            "            }," + System.getProperty("line.separator") +
-            "            \"required\": [ \"stringField\" ]" + System.getProperty("line.separator") +
-            "        }" + System.getProperty("line.separator") +
-            "    }," + System.getProperty("line.separator") +
-            "    \"additionalProperties\" : false," + System.getProperty("line.separator") +
-            "    \"required\": [ \"enumField\", \"arrayField\" ]" + System.getProperty("line.separator") +
+    public static final String JSON_SCHEMA = "{\n" +
+            "    \"type\": \"object\",\n" +
+            "    \"properties\": {\n" +
+            "        \"enumField\": {\n" +
+            "            \"enum\": [ \"one\", \"two\" ]\n" +
+            "        },\n" +
+            "        \"arrayField\": {\n" +
+            "            \"type\": \"array\",\n" +
+            "            \"minItems\": 1,\n" +
+            "            \"items\": {\n" +
+            "                \"type\": \"string\"\n" +
+            "            },\n" +
+            "            \"uniqueItems\": true\n" +
+            "        },\n" +
+            "        \"stringField\": {\n" +
+            "            \"type\": \"string\",\n" +
+            "            \"minLength\": 5,\n" +
+            "            \"maxLength\": 6\n" +
+            "        },\n" +
+            "        \"booleanField\": {\n" +
+            "            \"type\": \"boolean\"\n" +
+            "        },\n" +
+            "        \"objectField\": {\n" +
+            "            \"type\": \"object\",\n" +
+            "            \"properties\": {\n" +
+            "                \"stringField\": {\n" +
+            "                    \"type\": \"string\",\n" +
+            "                    \"minLength\": 1,\n" +
+            "                    \"maxLength\": 3\n" +
+            "                }\n" +
+            "            },\n" +
+            "            \"required\": [ \"stringField\" ]\n" +
+            "        }\n" +
+            "    },\n" +
+            "    \"additionalProperties\" : false,\n" +
+            "    \"required\": [ \"enumField\", \"arrayField\" ]\n" +
             "}";
 
     @Before
@@ -78,54 +78,54 @@ public class JsonSchemaMatcherTest {
         // and
         verify(logger).trace("Failed to perform JSON match \"{}\" with schema \"{}\" because {}",
                 "{}",
-                "{" + System.getProperty("line.separator") +
-                        "    \"type\": \"object\"," + System.getProperty("line.separator") +
-                        "    \"properties\": {" + System.getProperty("line.separator") +
-                        "        \"enumField\": {" + System.getProperty("line.separator") +
-                        "            \"enum\": [ \"one\", \"two\" ]" + System.getProperty("line.separator") +
-                        "        }," + System.getProperty("line.separator") +
-                        "        \"arrayField\": {" + System.getProperty("line.separator") +
-                        "            \"type\": \"array\"," + System.getProperty("line.separator") +
-                        "            \"minItems\": 1," + System.getProperty("line.separator") +
-                        "            \"items\": {" + System.getProperty("line.separator") +
-                        "                \"type\": \"string\"" + System.getProperty("line.separator") +
-                        "            }," + System.getProperty("line.separator") +
-                        "            \"uniqueItems\": true" + System.getProperty("line.separator") +
-                        "        }," + System.getProperty("line.separator") +
-                        "        \"stringField\": {" + System.getProperty("line.separator") +
-                        "            \"type\": \"string\"," + System.getProperty("line.separator") +
-                        "            \"minLength\": 5," + System.getProperty("line.separator") +
-                        "            \"maxLength\": 6" + System.getProperty("line.separator") +
-                        "        }," + System.getProperty("line.separator") +
-                        "        \"booleanField\": {" + System.getProperty("line.separator") +
-                        "            \"type\": \"boolean\"" + System.getProperty("line.separator") +
-                        "        }," + System.getProperty("line.separator") +
-                        "        \"objectField\": {" + System.getProperty("line.separator") +
-                        "            \"type\": \"object\"," + System.getProperty("line.separator") +
-                        "            \"properties\": {" + System.getProperty("line.separator") +
-                        "                \"stringField\": {" + System.getProperty("line.separator") +
-                        "                    \"type\": \"string\"," + System.getProperty("line.separator") +
-                        "                    \"minLength\": 1," + System.getProperty("line.separator") +
-                        "                    \"maxLength\": 3" + System.getProperty("line.separator") +
-                        "                }" + System.getProperty("line.separator") +
-                        "            }," + System.getProperty("line.separator") +
-                        "            \"required\": [ \"stringField\" ]" + System.getProperty("line.separator") +
-                        "        }" + System.getProperty("line.separator") +
-                        "    }," + System.getProperty("line.separator") +
-                        "    \"additionalProperties\" : false," + System.getProperty("line.separator") +
-                        "    \"required\": [ \"enumField\", \"arrayField\" ]" + System.getProperty("line.separator") +
+                "{\n" +
+                        "    \"type\": \"object\",\n" +
+                        "    \"properties\": {\n" +
+                        "        \"enumField\": {\n" +
+                        "            \"enum\": [ \"one\", \"two\" ]\n" +
+                        "        },\n" +
+                        "        \"arrayField\": {\n" +
+                        "            \"type\": \"array\",\n" +
+                        "            \"minItems\": 1,\n" +
+                        "            \"items\": {\n" +
+                        "                \"type\": \"string\"\n" +
+                        "            },\n" +
+                        "            \"uniqueItems\": true\n" +
+                        "        },\n" +
+                        "        \"stringField\": {\n" +
+                        "            \"type\": \"string\",\n" +
+                        "            \"minLength\": 5,\n" +
+                        "            \"maxLength\": 6\n" +
+                        "        },\n" +
+                        "        \"booleanField\": {\n" +
+                        "            \"type\": \"boolean\"\n" +
+                        "        },\n" +
+                        "        \"objectField\": {\n" +
+                        "            \"type\": \"object\",\n" +
+                        "            \"properties\": {\n" +
+                        "                \"stringField\": {\n" +
+                        "                    \"type\": \"string\",\n" +
+                        "                    \"minLength\": 1,\n" +
+                        "                    \"maxLength\": 3\n" +
+                        "                }\n" +
+                        "            },\n" +
+                        "            \"required\": [ \"stringField\" ]\n" +
+                        "        }\n" +
+                        "    },\n" +
+                        "    \"additionalProperties\" : false,\n" +
+                        "    \"required\": [ \"enumField\", \"arrayField\" ]\n" +
                         "}",
-                "com.github.fge.jsonschema.core.report.ListProcessingReport: failure" + System.getProperty("line.separator") +
-                        "--- BEGIN MESSAGES ---" + System.getProperty("line.separator") +
-                        "error: object has missing required properties ([\"arrayField\",\"enumField\"])" + System.getProperty("line.separator") +
-                        "    level: \"error\"" + System.getProperty("line.separator") +
-                        "    schema: {\"loadingURI\":\"#\",\"pointer\":\"\"}" + System.getProperty("line.separator") +
-                        "    instance: {\"pointer\":\"\"}" + System.getProperty("line.separator") +
-                        "    domain: \"validation\"" + System.getProperty("line.separator") +
-                        "    keyword: \"required\"" + System.getProperty("line.separator") +
-                        "    required: [\"arrayField\",\"enumField\"]" + System.getProperty("line.separator") +
-                        "    missing: [\"arrayField\",\"enumField\"]" + System.getProperty("line.separator") +
-                        "---  END MESSAGES  ---" + System.getProperty("line.separator") +
+                "com.github.fge.jsonschema.core.report.ListProcessingReport: failure\n" +
+                        "--- BEGIN MESSAGES ---\n" +
+                        "error: object has missing required properties ([\"arrayField\",\"enumField\"])\n" +
+                        "    level: \"error\"\n" +
+                        "    schema: {\"loadingURI\":\"#\",\"pointer\":\"\"}\n" +
+                        "    instance: {\"pointer\":\"\"}\n" +
+                        "    domain: \"validation\"\n" +
+                        "    keyword: \"required\"\n" +
+                        "    required: [\"arrayField\",\"enumField\"]\n" +
+                        "    missing: [\"arrayField\",\"enumField\"]\n" +
+                        "---  END MESSAGES  ---\n" +
                         "");
     }
 
@@ -141,44 +141,44 @@ public class JsonSchemaMatcherTest {
         // and
         verify(logger).trace("Failed to perform JSON match \"{}\" with \"{}\" because {}",
                 "{arrayField: [ ],         enumField: \\\"one\\\"}",
-                "{" + System.getProperty("line.separator") +
-                        "    \"type\": \"object\"," + System.getProperty("line.separator") +
-                        "    \"properties\": {" + System.getProperty("line.separator") +
-                        "        \"enumField\": {" + System.getProperty("line.separator") +
-                        "            \"enum\": [ \"one\", \"two\" ]" + System.getProperty("line.separator") +
-                        "        }," + System.getProperty("line.separator") +
-                        "        \"arrayField\": {" + System.getProperty("line.separator") +
-                        "            \"type\": \"array\"," + System.getProperty("line.separator") +
-                        "            \"minItems\": 1," + System.getProperty("line.separator") +
-                        "            \"items\": {" + System.getProperty("line.separator") +
-                        "                \"type\": \"string\"" + System.getProperty("line.separator") +
-                        "            }," + System.getProperty("line.separator") +
-                        "            \"uniqueItems\": true" + System.getProperty("line.separator") +
-                        "        }," + System.getProperty("line.separator") +
-                        "        \"stringField\": {" + System.getProperty("line.separator") +
-                        "            \"type\": \"string\"," + System.getProperty("line.separator") +
-                        "            \"minLength\": 5," + System.getProperty("line.separator") +
-                        "            \"maxLength\": 6" + System.getProperty("line.separator") +
-                        "        }," + System.getProperty("line.separator") +
-                        "        \"booleanField\": {" + System.getProperty("line.separator") +
-                        "            \"type\": \"boolean\"" + System.getProperty("line.separator") +
-                        "        }," + System.getProperty("line.separator") +
-                        "        \"objectField\": {" + System.getProperty("line.separator") +
-                        "            \"type\": \"object\"," + System.getProperty("line.separator") +
-                        "            \"properties\": {" + System.getProperty("line.separator") +
-                        "                \"stringField\": {" + System.getProperty("line.separator") +
-                        "                    \"type\": \"string\"," + System.getProperty("line.separator") +
-                        "                    \"minLength\": 1," + System.getProperty("line.separator") +
-                        "                    \"maxLength\": 3" + System.getProperty("line.separator") +
-                        "                }" + System.getProperty("line.separator") +
-                        "            }," + System.getProperty("line.separator") +
-                        "            \"required\": [ \"stringField\" ]" + System.getProperty("line.separator") +
-                        "        }" + System.getProperty("line.separator") +
-                        "    }," + System.getProperty("line.separator") +
-                        "    \"additionalProperties\" : false," + System.getProperty("line.separator") +
-                        "    \"required\": [ \"enumField\", \"arrayField\" ]" + System.getProperty("line.separator") +
+                "{\n" +
+                        "    \"type\": \"object\",\n" +
+                        "    \"properties\": {\n" +
+                        "        \"enumField\": {\n" +
+                        "            \"enum\": [ \"one\", \"two\" ]\n" +
+                        "        },\n" +
+                        "        \"arrayField\": {\n" +
+                        "            \"type\": \"array\",\n" +
+                        "            \"minItems\": 1,\n" +
+                        "            \"items\": {\n" +
+                        "                \"type\": \"string\"\n" +
+                        "            },\n" +
+                        "            \"uniqueItems\": true\n" +
+                        "        },\n" +
+                        "        \"stringField\": {\n" +
+                        "            \"type\": \"string\",\n" +
+                        "            \"minLength\": 5,\n" +
+                        "            \"maxLength\": 6\n" +
+                        "        },\n" +
+                        "        \"booleanField\": {\n" +
+                        "            \"type\": \"boolean\"\n" +
+                        "        },\n" +
+                        "        \"objectField\": {\n" +
+                        "            \"type\": \"object\",\n" +
+                        "            \"properties\": {\n" +
+                        "                \"stringField\": {\n" +
+                        "                    \"type\": \"string\",\n" +
+                        "                    \"minLength\": 1,\n" +
+                        "                    \"maxLength\": 3\n" +
+                        "                }\n" +
+                        "            },\n" +
+                        "            \"required\": [ \"stringField\" ]\n" +
+                        "        }\n" +
+                        "    },\n" +
+                        "    \"additionalProperties\" : false,\n" +
+                        "    \"required\": [ \"enumField\", \"arrayField\" ]\n" +
                         "}",
-                "Unexpected character ('\\' (code 92)): expected a valid value (number, String, array, object, 'true', 'false' or 'null')" + System.getProperty("line.separator") +
+                "Unexpected character ('\\' (code 92)): expected a valid value (number, String, array, object, 'true', 'false' or 'null')\n" +
                         " at [Source: {arrayField: [ ],         enumField: \\\"one\\\"}; line: 1, column: 39]");
     }
 
@@ -194,44 +194,44 @@ public class JsonSchemaMatcherTest {
         // and
         verify(logger).trace("Failed to perform JSON match \"{}\" with \"{}\" because {}",
                 "{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", stringField: \\\"1234567\\\"}",
-                "{" + System.getProperty("line.separator") +
-                        "    \"type\": \"object\"," + System.getProperty("line.separator") +
-                        "    \"properties\": {" + System.getProperty("line.separator") +
-                        "        \"enumField\": {" + System.getProperty("line.separator") +
-                        "            \"enum\": [ \"one\", \"two\" ]" + System.getProperty("line.separator") +
-                        "        }," + System.getProperty("line.separator") +
-                        "        \"arrayField\": {" + System.getProperty("line.separator") +
-                        "            \"type\": \"array\"," + System.getProperty("line.separator") +
-                        "            \"minItems\": 1," + System.getProperty("line.separator") +
-                        "            \"items\": {" + System.getProperty("line.separator") +
-                        "                \"type\": \"string\"" + System.getProperty("line.separator") +
-                        "            }," + System.getProperty("line.separator") +
-                        "            \"uniqueItems\": true" + System.getProperty("line.separator") +
-                        "        }," + System.getProperty("line.separator") +
-                        "        \"stringField\": {" + System.getProperty("line.separator") +
-                        "            \"type\": \"string\"," + System.getProperty("line.separator") +
-                        "            \"minLength\": 5," + System.getProperty("line.separator") +
-                        "            \"maxLength\": 6" + System.getProperty("line.separator") +
-                        "        }," + System.getProperty("line.separator") +
-                        "        \"booleanField\": {" + System.getProperty("line.separator") +
-                        "            \"type\": \"boolean\"" + System.getProperty("line.separator") +
-                        "        }," + System.getProperty("line.separator") +
-                        "        \"objectField\": {" + System.getProperty("line.separator") +
-                        "            \"type\": \"object\"," + System.getProperty("line.separator") +
-                        "            \"properties\": {" + System.getProperty("line.separator") +
-                        "                \"stringField\": {" + System.getProperty("line.separator") +
-                        "                    \"type\": \"string\"," + System.getProperty("line.separator") +
-                        "                    \"minLength\": 1," + System.getProperty("line.separator") +
-                        "                    \"maxLength\": 3" + System.getProperty("line.separator") +
-                        "                }" + System.getProperty("line.separator") +
-                        "            }," + System.getProperty("line.separator") +
-                        "            \"required\": [ \"stringField\" ]" + System.getProperty("line.separator") +
-                        "        }" + System.getProperty("line.separator") +
-                        "    }," + System.getProperty("line.separator") +
-                        "    \"additionalProperties\" : false," + System.getProperty("line.separator") +
-                        "    \"required\": [ \"enumField\", \"arrayField\" ]" + System.getProperty("line.separator") +
+                "{\n" +
+                        "    \"type\": \"object\",\n" +
+                        "    \"properties\": {\n" +
+                        "        \"enumField\": {\n" +
+                        "            \"enum\": [ \"one\", \"two\" ]\n" +
+                        "        },\n" +
+                        "        \"arrayField\": {\n" +
+                        "            \"type\": \"array\",\n" +
+                        "            \"minItems\": 1,\n" +
+                        "            \"items\": {\n" +
+                        "                \"type\": \"string\"\n" +
+                        "            },\n" +
+                        "            \"uniqueItems\": true\n" +
+                        "        },\n" +
+                        "        \"stringField\": {\n" +
+                        "            \"type\": \"string\",\n" +
+                        "            \"minLength\": 5,\n" +
+                        "            \"maxLength\": 6\n" +
+                        "        },\n" +
+                        "        \"booleanField\": {\n" +
+                        "            \"type\": \"boolean\"\n" +
+                        "        },\n" +
+                        "        \"objectField\": {\n" +
+                        "            \"type\": \"object\",\n" +
+                        "            \"properties\": {\n" +
+                        "                \"stringField\": {\n" +
+                        "                    \"type\": \"string\",\n" +
+                        "                    \"minLength\": 1,\n" +
+                        "                    \"maxLength\": 3\n" +
+                        "                }\n" +
+                        "            },\n" +
+                        "            \"required\": [ \"stringField\" ]\n" +
+                        "        }\n" +
+                        "    },\n" +
+                        "    \"additionalProperties\" : false,\n" +
+                        "    \"required\": [ \"enumField\", \"arrayField\" ]\n" +
                         "}",
-                "Unexpected character ('\\' (code 92)): expected a valid value (number, String, array, object, 'true', 'false' or 'null')" + System.getProperty("line.separator") +
+                "Unexpected character ('\\' (code 92)): expected a valid value (number, String, array, object, 'true', 'false' or 'null')\n" +
                         " at [Source: {arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", stringField: \\\"1234567\\\"}; line: 1, column: 17]");
     }
 
@@ -245,44 +245,44 @@ public class JsonSchemaMatcherTest {
         assertFalse(jsonSchemaMatcher.matches("{arrayField: [ \\\"one\\\" ], enumField: \\\"four\\\"}"));
 
         // and
-        verify(logger).trace("Failed to perform JSON match \"{}\" with \"{}\" because {}", "{arrayField: [ \\\"one\\\" ], enumField: \\\"four\\\"}", "{" + System.getProperty("line.separator") +
-                        "    \"type\": \"object\"," + System.getProperty("line.separator") +
-                        "    \"properties\": {" + System.getProperty("line.separator") +
-                        "        \"enumField\": {" + System.getProperty("line.separator") +
-                        "            \"enum\": [ \"one\", \"two\" ]" + System.getProperty("line.separator") +
-                        "        }," + System.getProperty("line.separator") +
-                        "        \"arrayField\": {" + System.getProperty("line.separator") +
-                        "            \"type\": \"array\"," + System.getProperty("line.separator") +
-                        "            \"minItems\": 1," + System.getProperty("line.separator") +
-                        "            \"items\": {" + System.getProperty("line.separator") +
-                        "                \"type\": \"string\"" + System.getProperty("line.separator") +
-                        "            }," + System.getProperty("line.separator") +
-                        "            \"uniqueItems\": true" + System.getProperty("line.separator") +
-                        "        }," + System.getProperty("line.separator") +
-                        "        \"stringField\": {" + System.getProperty("line.separator") +
-                        "            \"type\": \"string\"," + System.getProperty("line.separator") +
-                        "            \"minLength\": 5," + System.getProperty("line.separator") +
-                        "            \"maxLength\": 6" + System.getProperty("line.separator") +
-                        "        }," + System.getProperty("line.separator") +
-                        "        \"booleanField\": {" + System.getProperty("line.separator") +
-                        "            \"type\": \"boolean\"" + System.getProperty("line.separator") +
-                        "        }," + System.getProperty("line.separator") +
-                        "        \"objectField\": {" + System.getProperty("line.separator") +
-                        "            \"type\": \"object\"," + System.getProperty("line.separator") +
-                        "            \"properties\": {" + System.getProperty("line.separator") +
-                        "                \"stringField\": {" + System.getProperty("line.separator") +
-                        "                    \"type\": \"string\"," + System.getProperty("line.separator") +
-                        "                    \"minLength\": 1," + System.getProperty("line.separator") +
-                        "                    \"maxLength\": 3" + System.getProperty("line.separator") +
-                        "                }" + System.getProperty("line.separator") +
-                        "            }," + System.getProperty("line.separator") +
-                        "            \"required\": [ \"stringField\" ]" + System.getProperty("line.separator") +
-                        "        }" + System.getProperty("line.separator") +
-                        "    }," + System.getProperty("line.separator") +
-                        "    \"additionalProperties\" : false," + System.getProperty("line.separator") +
-                        "    \"required\": [ \"enumField\", \"arrayField\" ]" + System.getProperty("line.separator") +
+        verify(logger).trace("Failed to perform JSON match \"{}\" with \"{}\" because {}", "{arrayField: [ \\\"one\\\" ], enumField: \\\"four\\\"}", "{\n" +
+                        "    \"type\": \"object\",\n" +
+                        "    \"properties\": {\n" +
+                        "        \"enumField\": {\n" +
+                        "            \"enum\": [ \"one\", \"two\" ]\n" +
+                        "        },\n" +
+                        "        \"arrayField\": {\n" +
+                        "            \"type\": \"array\",\n" +
+                        "            \"minItems\": 1,\n" +
+                        "            \"items\": {\n" +
+                        "                \"type\": \"string\"\n" +
+                        "            },\n" +
+                        "            \"uniqueItems\": true\n" +
+                        "        },\n" +
+                        "        \"stringField\": {\n" +
+                        "            \"type\": \"string\",\n" +
+                        "            \"minLength\": 5,\n" +
+                        "            \"maxLength\": 6\n" +
+                        "        },\n" +
+                        "        \"booleanField\": {\n" +
+                        "            \"type\": \"boolean\"\n" +
+                        "        },\n" +
+                        "        \"objectField\": {\n" +
+                        "            \"type\": \"object\",\n" +
+                        "            \"properties\": {\n" +
+                        "                \"stringField\": {\n" +
+                        "                    \"type\": \"string\",\n" +
+                        "                    \"minLength\": 1,\n" +
+                        "                    \"maxLength\": 3\n" +
+                        "                }\n" +
+                        "            },\n" +
+                        "            \"required\": [ \"stringField\" ]\n" +
+                        "        }\n" +
+                        "    },\n" +
+                        "    \"additionalProperties\" : false,\n" +
+                        "    \"required\": [ \"enumField\", \"arrayField\" ]\n" +
                         "}",
-                "Unexpected character ('\\' (code 92)): expected a valid value (number, String, array, object, 'true', 'false' or 'null')" + System.getProperty("line.separator") +
+                "Unexpected character ('\\' (code 92)): expected a valid value (number, String, array, object, 'true', 'false' or 'null')\n" +
                         " at [Source: {arrayField: [ \\\"one\\\" ], enumField: \\\"four\\\"}; line: 1, column: 17]");
     }
 
@@ -298,44 +298,44 @@ public class JsonSchemaMatcherTest {
         // and
         verify(logger).trace("Failed to perform JSON match \"{}\" with \"{}\" because {}",
                 "{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", extra: \\\"field\\\"}",
-                "{" + System.getProperty("line.separator") +
-                        "    \"type\": \"object\"," + System.getProperty("line.separator") +
-                        "    \"properties\": {" + System.getProperty("line.separator") +
-                        "        \"enumField\": {" + System.getProperty("line.separator") +
-                        "            \"enum\": [ \"one\", \"two\" ]" + System.getProperty("line.separator") +
-                        "        }," + System.getProperty("line.separator") +
-                        "        \"arrayField\": {" + System.getProperty("line.separator") +
-                        "            \"type\": \"array\"," + System.getProperty("line.separator") +
-                        "            \"minItems\": 1," + System.getProperty("line.separator") +
-                        "            \"items\": {" + System.getProperty("line.separator") +
-                        "                \"type\": \"string\"" + System.getProperty("line.separator") +
-                        "            }," + System.getProperty("line.separator") +
-                        "            \"uniqueItems\": true" + System.getProperty("line.separator") +
-                        "        }," + System.getProperty("line.separator") +
-                        "        \"stringField\": {" + System.getProperty("line.separator") +
-                        "            \"type\": \"string\"," + System.getProperty("line.separator") +
-                        "            \"minLength\": 5," + System.getProperty("line.separator") +
-                        "            \"maxLength\": 6" + System.getProperty("line.separator") +
-                        "        }," + System.getProperty("line.separator") +
-                        "        \"booleanField\": {" + System.getProperty("line.separator") +
-                        "            \"type\": \"boolean\"" + System.getProperty("line.separator") +
-                        "        }," + System.getProperty("line.separator") +
-                        "        \"objectField\": {" + System.getProperty("line.separator") +
-                        "            \"type\": \"object\"," + System.getProperty("line.separator") +
-                        "            \"properties\": {" + System.getProperty("line.separator") +
-                        "                \"stringField\": {" + System.getProperty("line.separator") +
-                        "                    \"type\": \"string\"," + System.getProperty("line.separator") +
-                        "                    \"minLength\": 1," + System.getProperty("line.separator") +
-                        "                    \"maxLength\": 3" + System.getProperty("line.separator") +
-                        "                }" + System.getProperty("line.separator") +
-                        "            }," + System.getProperty("line.separator") +
-                        "            \"required\": [ \"stringField\" ]" + System.getProperty("line.separator") +
-                        "        }" + System.getProperty("line.separator") +
-                        "    }," + System.getProperty("line.separator") +
-                        "    \"additionalProperties\" : false," + System.getProperty("line.separator") +
-                        "    \"required\": [ \"enumField\", \"arrayField\" ]" + System.getProperty("line.separator") +
+                "{\n" +
+                        "    \"type\": \"object\",\n" +
+                        "    \"properties\": {\n" +
+                        "        \"enumField\": {\n" +
+                        "            \"enum\": [ \"one\", \"two\" ]\n" +
+                        "        },\n" +
+                        "        \"arrayField\": {\n" +
+                        "            \"type\": \"array\",\n" +
+                        "            \"minItems\": 1,\n" +
+                        "            \"items\": {\n" +
+                        "                \"type\": \"string\"\n" +
+                        "            },\n" +
+                        "            \"uniqueItems\": true\n" +
+                        "        },\n" +
+                        "        \"stringField\": {\n" +
+                        "            \"type\": \"string\",\n" +
+                        "            \"minLength\": 5,\n" +
+                        "            \"maxLength\": 6\n" +
+                        "        },\n" +
+                        "        \"booleanField\": {\n" +
+                        "            \"type\": \"boolean\"\n" +
+                        "        },\n" +
+                        "        \"objectField\": {\n" +
+                        "            \"type\": \"object\",\n" +
+                        "            \"properties\": {\n" +
+                        "                \"stringField\": {\n" +
+                        "                    \"type\": \"string\",\n" +
+                        "                    \"minLength\": 1,\n" +
+                        "                    \"maxLength\": 3\n" +
+                        "                }\n" +
+                        "            },\n" +
+                        "            \"required\": [ \"stringField\" ]\n" +
+                        "        }\n" +
+                        "    },\n" +
+                        "    \"additionalProperties\" : false,\n" +
+                        "    \"required\": [ \"enumField\", \"arrayField\" ]\n" +
                         "}",
-                "Unexpected character ('\\' (code 92)): expected a valid value (number, String, array, object, 'true', 'false' or 'null')" + System.getProperty("line.separator") +
+                "Unexpected character ('\\' (code 92)): expected a valid value (number, String, array, object, 'true', 'false' or 'null')\n" +
                         " at [Source: {arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", extra: \\\"field\\\"}; line: 1, column: 17]");
     }
 
@@ -353,44 +353,44 @@ public class JsonSchemaMatcherTest {
         verify(logger).trace(
                 "Failed to perform JSON match \"{}\" with \"{}\" because {}",
                 "{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", objectField: {stringField: \\\"1234\\\"} }",
-                "{" + System.getProperty("line.separator") +
-                        "    \"type\": \"object\"," + System.getProperty("line.separator") +
-                        "    \"properties\": {" + System.getProperty("line.separator") +
-                        "        \"enumField\": {" + System.getProperty("line.separator") +
-                        "            \"enum\": [ \"one\", \"two\" ]" + System.getProperty("line.separator") +
-                        "        }," + System.getProperty("line.separator") +
-                        "        \"arrayField\": {" + System.getProperty("line.separator") +
-                        "            \"type\": \"array\"," + System.getProperty("line.separator") +
-                        "            \"minItems\": 1," + System.getProperty("line.separator") +
-                        "            \"items\": {" + System.getProperty("line.separator") +
-                        "                \"type\": \"string\"" + System.getProperty("line.separator") +
-                        "            }," + System.getProperty("line.separator") +
-                        "            \"uniqueItems\": true" + System.getProperty("line.separator") +
-                        "        }," + System.getProperty("line.separator") +
-                        "        \"stringField\": {" + System.getProperty("line.separator") +
-                        "            \"type\": \"string\"," + System.getProperty("line.separator") +
-                        "            \"minLength\": 5," + System.getProperty("line.separator") +
-                        "            \"maxLength\": 6" + System.getProperty("line.separator") +
-                        "        }," + System.getProperty("line.separator") +
-                        "        \"booleanField\": {" + System.getProperty("line.separator") +
-                        "            \"type\": \"boolean\"" + System.getProperty("line.separator") +
-                        "        }," + System.getProperty("line.separator") +
-                        "        \"objectField\": {" + System.getProperty("line.separator") +
-                        "            \"type\": \"object\"," + System.getProperty("line.separator") +
-                        "            \"properties\": {" + System.getProperty("line.separator") +
-                        "                \"stringField\": {" + System.getProperty("line.separator") +
-                        "                    \"type\": \"string\"," + System.getProperty("line.separator") +
-                        "                    \"minLength\": 1," + System.getProperty("line.separator") +
-                        "                    \"maxLength\": 3" + System.getProperty("line.separator") +
-                        "                }" + System.getProperty("line.separator") +
-                        "            }," + System.getProperty("line.separator") +
-                        "            \"required\": [ \"stringField\" ]" + System.getProperty("line.separator") +
-                        "        }" + System.getProperty("line.separator") +
-                        "    }," + System.getProperty("line.separator") +
-                        "    \"additionalProperties\" : false," + System.getProperty("line.separator") +
-                        "    \"required\": [ \"enumField\", \"arrayField\" ]" + System.getProperty("line.separator") +
+                "{\n" +
+                        "    \"type\": \"object\",\n" +
+                        "    \"properties\": {\n" +
+                        "        \"enumField\": {\n" +
+                        "            \"enum\": [ \"one\", \"two\" ]\n" +
+                        "        },\n" +
+                        "        \"arrayField\": {\n" +
+                        "            \"type\": \"array\",\n" +
+                        "            \"minItems\": 1,\n" +
+                        "            \"items\": {\n" +
+                        "                \"type\": \"string\"\n" +
+                        "            },\n" +
+                        "            \"uniqueItems\": true\n" +
+                        "        },\n" +
+                        "        \"stringField\": {\n" +
+                        "            \"type\": \"string\",\n" +
+                        "            \"minLength\": 5,\n" +
+                        "            \"maxLength\": 6\n" +
+                        "        },\n" +
+                        "        \"booleanField\": {\n" +
+                        "            \"type\": \"boolean\"\n" +
+                        "        },\n" +
+                        "        \"objectField\": {\n" +
+                        "            \"type\": \"object\",\n" +
+                        "            \"properties\": {\n" +
+                        "                \"stringField\": {\n" +
+                        "                    \"type\": \"string\",\n" +
+                        "                    \"minLength\": 1,\n" +
+                        "                    \"maxLength\": 3\n" +
+                        "                }\n" +
+                        "            },\n" +
+                        "            \"required\": [ \"stringField\" ]\n" +
+                        "        }\n" +
+                        "    },\n" +
+                        "    \"additionalProperties\" : false,\n" +
+                        "    \"required\": [ \"enumField\", \"arrayField\" ]\n" +
                         "}",
-                "Unexpected character ('\\' (code 92)): expected a valid value (number, String, array, object, 'true', 'false' or 'null')" + System.getProperty("line.separator") +
+                "Unexpected character ('\\' (code 92)): expected a valid value (number, String, array, object, 'true', 'false' or 'null')\n" +
                         " at [Source: {arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", objectField: {stringField: \\\"1234\\\"} }; line: 1, column: 17]");
     }
 
@@ -407,44 +407,44 @@ public class JsonSchemaMatcherTest {
         // and
         verify(logger).trace("Failed to perform JSON match \"{}\" with \"{}\" because {}",
                 "{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", objectField: { } }",
-                "{" + System.getProperty("line.separator") +
-                        "    \"type\": \"object\"," + System.getProperty("line.separator") +
-                        "    \"properties\": {" + System.getProperty("line.separator") +
-                        "        \"enumField\": {" + System.getProperty("line.separator") +
-                        "            \"enum\": [ \"one\", \"two\" ]" + System.getProperty("line.separator") +
-                        "        }," + System.getProperty("line.separator") +
-                        "        \"arrayField\": {" + System.getProperty("line.separator") +
-                        "            \"type\": \"array\"," + System.getProperty("line.separator") +
-                        "            \"minItems\": 1," + System.getProperty("line.separator") +
-                        "            \"items\": {" + System.getProperty("line.separator") +
-                        "                \"type\": \"string\"" + System.getProperty("line.separator") +
-                        "            }," + System.getProperty("line.separator") +
-                        "            \"uniqueItems\": true" + System.getProperty("line.separator") +
-                        "        }," + System.getProperty("line.separator") +
-                        "        \"stringField\": {" + System.getProperty("line.separator") +
-                        "            \"type\": \"string\"," + System.getProperty("line.separator") +
-                        "            \"minLength\": 5," + System.getProperty("line.separator") +
-                        "            \"maxLength\": 6" + System.getProperty("line.separator") +
-                        "        }," + System.getProperty("line.separator") +
-                        "        \"booleanField\": {" + System.getProperty("line.separator") +
-                        "            \"type\": \"boolean\"" + System.getProperty("line.separator") +
-                        "        }," + System.getProperty("line.separator") +
-                        "        \"objectField\": {" + System.getProperty("line.separator") +
-                        "            \"type\": \"object\"," + System.getProperty("line.separator") +
-                        "            \"properties\": {" + System.getProperty("line.separator") +
-                        "                \"stringField\": {" + System.getProperty("line.separator") +
-                        "                    \"type\": \"string\"," + System.getProperty("line.separator") +
-                        "                    \"minLength\": 1," + System.getProperty("line.separator") +
-                        "                    \"maxLength\": 3" + System.getProperty("line.separator") +
-                        "                }" + System.getProperty("line.separator") +
-                        "            }," + System.getProperty("line.separator") +
-                        "            \"required\": [ \"stringField\" ]" + System.getProperty("line.separator") +
-                        "        }" + System.getProperty("line.separator") +
-                        "    }," + System.getProperty("line.separator") +
-                        "    \"additionalProperties\" : false," + System.getProperty("line.separator") +
-                        "    \"required\": [ \"enumField\", \"arrayField\" ]" + System.getProperty("line.separator") +
+                "{\n" +
+                        "    \"type\": \"object\",\n" +
+                        "    \"properties\": {\n" +
+                        "        \"enumField\": {\n" +
+                        "            \"enum\": [ \"one\", \"two\" ]\n" +
+                        "        },\n" +
+                        "        \"arrayField\": {\n" +
+                        "            \"type\": \"array\",\n" +
+                        "            \"minItems\": 1,\n" +
+                        "            \"items\": {\n" +
+                        "                \"type\": \"string\"\n" +
+                        "            },\n" +
+                        "            \"uniqueItems\": true\n" +
+                        "        },\n" +
+                        "        \"stringField\": {\n" +
+                        "            \"type\": \"string\",\n" +
+                        "            \"minLength\": 5,\n" +
+                        "            \"maxLength\": 6\n" +
+                        "        },\n" +
+                        "        \"booleanField\": {\n" +
+                        "            \"type\": \"boolean\"\n" +
+                        "        },\n" +
+                        "        \"objectField\": {\n" +
+                        "            \"type\": \"object\",\n" +
+                        "            \"properties\": {\n" +
+                        "                \"stringField\": {\n" +
+                        "                    \"type\": \"string\",\n" +
+                        "                    \"minLength\": 1,\n" +
+                        "                    \"maxLength\": 3\n" +
+                        "                }\n" +
+                        "            },\n" +
+                        "            \"required\": [ \"stringField\" ]\n" +
+                        "        }\n" +
+                        "    },\n" +
+                        "    \"additionalProperties\" : false,\n" +
+                        "    \"required\": [ \"enumField\", \"arrayField\" ]\n" +
                         "}",
-                "Unexpected character ('\\' (code 92)): expected a valid value (number, String, array, object, 'true', 'false' or 'null')" + System.getProperty("line.separator") +
+                "Unexpected character ('\\' (code 92)): expected a valid value (number, String, array, object, 'true', 'false' or 'null')\n" +
                         " at [Source: {arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", objectField: { } }; line: 1, column: 17]");
     }
 
@@ -461,44 +461,44 @@ public class JsonSchemaMatcherTest {
         // and
         verify(logger).trace("Failed to perform JSON match \"{}\" with \"{}\" because {}",
                 "{arrayField: [ ],  stringField: \\\"1234\\\"}",
-                "{" + System.getProperty("line.separator") +
-                        "    \"type\": \"object\"," + System.getProperty("line.separator") +
-                        "    \"properties\": {" + System.getProperty("line.separator") +
-                        "        \"enumField\": {" + System.getProperty("line.separator") +
-                        "            \"enum\": [ \"one\", \"two\" ]" + System.getProperty("line.separator") +
-                        "        }," + System.getProperty("line.separator") +
-                        "        \"arrayField\": {" + System.getProperty("line.separator") +
-                        "            \"type\": \"array\"," + System.getProperty("line.separator") +
-                        "            \"minItems\": 1," + System.getProperty("line.separator") +
-                        "            \"items\": {" + System.getProperty("line.separator") +
-                        "                \"type\": \"string\"" + System.getProperty("line.separator") +
-                        "            }," + System.getProperty("line.separator") +
-                        "            \"uniqueItems\": true" + System.getProperty("line.separator") +
-                        "        }," + System.getProperty("line.separator") +
-                        "        \"stringField\": {" + System.getProperty("line.separator") +
-                        "            \"type\": \"string\"," + System.getProperty("line.separator") +
-                        "            \"minLength\": 5," + System.getProperty("line.separator") +
-                        "            \"maxLength\": 6" + System.getProperty("line.separator") +
-                        "        }," + System.getProperty("line.separator") +
-                        "        \"booleanField\": {" + System.getProperty("line.separator") +
-                        "            \"type\": \"boolean\"" + System.getProperty("line.separator") +
-                        "        }," + System.getProperty("line.separator") +
-                        "        \"objectField\": {" + System.getProperty("line.separator") +
-                        "            \"type\": \"object\"," + System.getProperty("line.separator") +
-                        "            \"properties\": {" + System.getProperty("line.separator") +
-                        "                \"stringField\": {" + System.getProperty("line.separator") +
-                        "                    \"type\": \"string\"," + System.getProperty("line.separator") +
-                        "                    \"minLength\": 1," + System.getProperty("line.separator") +
-                        "                    \"maxLength\": 3" + System.getProperty("line.separator") +
-                        "                }" + System.getProperty("line.separator") +
-                        "            }," + System.getProperty("line.separator") +
-                        "            \"required\": [ \"stringField\" ]" + System.getProperty("line.separator") +
-                        "        }" + System.getProperty("line.separator") +
-                        "    }," + System.getProperty("line.separator") +
-                        "    \"additionalProperties\" : false," + System.getProperty("line.separator") +
-                        "    \"required\": [ \"enumField\", \"arrayField\" ]" + System.getProperty("line.separator") +
+                "{\n" +
+                        "    \"type\": \"object\",\n" +
+                        "    \"properties\": {\n" +
+                        "        \"enumField\": {\n" +
+                        "            \"enum\": [ \"one\", \"two\" ]\n" +
+                        "        },\n" +
+                        "        \"arrayField\": {\n" +
+                        "            \"type\": \"array\",\n" +
+                        "            \"minItems\": 1,\n" +
+                        "            \"items\": {\n" +
+                        "                \"type\": \"string\"\n" +
+                        "            },\n" +
+                        "            \"uniqueItems\": true\n" +
+                        "        },\n" +
+                        "        \"stringField\": {\n" +
+                        "            \"type\": \"string\",\n" +
+                        "            \"minLength\": 5,\n" +
+                        "            \"maxLength\": 6\n" +
+                        "        },\n" +
+                        "        \"booleanField\": {\n" +
+                        "            \"type\": \"boolean\"\n" +
+                        "        },\n" +
+                        "        \"objectField\": {\n" +
+                        "            \"type\": \"object\",\n" +
+                        "            \"properties\": {\n" +
+                        "                \"stringField\": {\n" +
+                        "                    \"type\": \"string\",\n" +
+                        "                    \"minLength\": 1,\n" +
+                        "                    \"maxLength\": 3\n" +
+                        "                }\n" +
+                        "            },\n" +
+                        "            \"required\": [ \"stringField\" ]\n" +
+                        "        }\n" +
+                        "    },\n" +
+                        "    \"additionalProperties\" : false,\n" +
+                        "    \"required\": [ \"enumField\", \"arrayField\" ]\n" +
                         "}",
-                "Unexpected character ('\\' (code 92)): expected a valid value (number, String, array, object, 'true', 'false' or 'null')" + System.getProperty("line.separator") +
+                "Unexpected character ('\\' (code 92)): expected a valid value (number, String, array, object, 'true', 'false' or 'null')\n" +
                         " at [Source: {arrayField: [ ],  stringField: \\\"1234\\\"}; line: 1, column: 34]");
     }
 
@@ -512,14 +512,14 @@ public class JsonSchemaMatcherTest {
         assertFalse(jsonSchemaMatcher.matches("illegal_json"));
 
         // and
-        verify(logger).trace("Failed to perform JSON match \"{}\" with \"{}\" because {}", "illegal_json", "illegal_json", "Unrecognized token 'illegal_json': was expecting ('true', 'false' or 'null')" + System.getProperty("line.separator") +
+        verify(logger).trace("Failed to perform JSON match \"{}\" with \"{}\" because {}", "illegal_json", "illegal_json", "Unrecognized token 'illegal_json': was expecting ('true', 'false' or 'null')\n" +
                 " at [Source: illegal_json; line: 1, column: 25]");
 
         // and
         assertFalse(jsonSchemaMatcher.matches("some_other_illegal_json"));
 
         // and
-        verify(logger).trace("Failed to perform JSON match \"{}\" with \"{}\" because {}", "some_other_illegal_json", "illegal_json", "Unrecognized token 'illegal_json': was expecting ('true', 'false' or 'null')" + System.getProperty("line.separator") +
+        verify(logger).trace("Failed to perform JSON match \"{}\" with \"{}\" because {}", "some_other_illegal_json", "illegal_json", "Unrecognized token 'illegal_json': was expecting ('true', 'false' or 'null')\n" +
                 " at [Source: illegal_json; line: 1, column: 25]");
     }
 
@@ -546,7 +546,7 @@ public class JsonSchemaMatcherTest {
         assertFalse(jsonSchemaMatcher.matches("some_value"));
 
         // and
-        verify(logger).trace("Failed to perform JSON match \"{}\" with \"{}\" because {}", "some_value", "", "No content to map due to end-of-input" + System.getProperty("line.separator") +
+        verify(logger).trace("Failed to perform JSON match \"{}\" with \"{}\" because {}", "some_value", "", "No content to map due to end-of-input\n" +
                 " at [Source: ; line: 1, column: 1]");
     }
 
@@ -560,7 +560,7 @@ public class JsonSchemaMatcherTest {
         assertFalse(jsonSchemaMatcher.matches(null));
 
         // and
-        verify(logger).trace("Failed to perform JSON match \"{}\" with \"{}\" because {}", null, "some_value", "Unrecognized token 'some_value': was expecting ('true', 'false' or 'null')" + System.getProperty("line.separator") +
+        verify(logger).trace("Failed to perform JSON match \"{}\" with \"{}\" because {}", null, "some_value", "Unrecognized token 'some_value': was expecting ('true', 'false' or 'null')\n" +
                 " at [Source: some_value; line: 1, column: 21]");
     }
 
@@ -574,7 +574,7 @@ public class JsonSchemaMatcherTest {
         assertFalse(jsonSchemaMatcher.matches(""));
 
         // and
-        verify(logger).trace("Failed to perform JSON match \"{}\" with \"{}\" because {}", "", "some_value", "Unrecognized token 'some_value': was expecting ('true', 'false' or 'null')" + System.getProperty("line.separator") +
+        verify(logger).trace("Failed to perform JSON match \"{}\" with \"{}\" because {}", "", "some_value", "Unrecognized token 'some_value': was expecting ('true', 'false' or 'null')\n" +
                 " at [Source: some_value; line: 1, column: 21]");
     }
 

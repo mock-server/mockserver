@@ -14,14 +14,14 @@ public class JsonSchemaBodyTest {
         JsonSchemaBody jsonSchemaBody = jsonSchemaFromResource("org/mockserver/model/testJsonSchema.json");
 
         // then
-        assertThat(jsonSchemaBody.getValue(), is("{" + System.getProperty("line.separator") +
-                "  \"type\": \"object\"," + System.getProperty("line.separator") +
-                "  \"properties\": {" + System.getProperty("line.separator") +
-                "    \"someField\": {" + System.getProperty("line.separator") +
-                "      \"type\": \"string\"" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"required\": [\"someField\"]" + System.getProperty("line.separator") +
+        assertThat(jsonSchemaBody.getValue(), is("{\n" +
+                "  \"type\": \"object\",\n" +
+                "  \"properties\": {\n" +
+                "    \"someField\": {\n" +
+                "      \"type\": \"string\"\n" +
+                "    }\n" +
+                "  },\n" +
+                "  \"required\": [\"someField\"]\n" +
                 "}"));
     }
 
