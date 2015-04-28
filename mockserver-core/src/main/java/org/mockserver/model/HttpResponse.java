@@ -1,10 +1,12 @@
 package org.mockserver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.mockserver.matchers.TimeToLive;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+
+import static org.mockserver.model.Cookie.cookie;
+import static org.mockserver.model.Header.header;
 
 /**
  * @author jamesdbloom
@@ -148,6 +150,23 @@ public class HttpResponse extends Action {
     }
 
     /**
+     * Add a header to return as a Header object, if a header with
+     * the same name already exists this will NOT be modified but
+     * two headers will exist
+     *
+     * @param name the header name
+     * @param values the header values which can be a varags of strings or regular expressions
+     */
+    public HttpResponse withHeader(String name, String... values) {
+        if (this.headers.containsKey(name)) {
+            this.headers.get(name).addValues(values);
+        } else {
+            this.headers.put(name, header(name, values));
+        }
+        return this;
+    }
+
+    /**
      * Update header to return as a Header object, if a header with
      * the same name already exists it will be modified
      *
@@ -155,6 +174,18 @@ public class HttpResponse extends Action {
      */
     public HttpResponse updateHeader(Header header) {
         this.headers.put(header.getName(), header);
+        return this;
+    }
+
+    /**
+     * Update header to return as a Header object, if a header with
+     * the same name already exists it will be modified
+     *
+     * @param name the header name
+     * @param values the header values which can be a varags of strings or regular expressions
+     */
+    public HttpResponse updateHeader(String name, String... values) {
+        this.headers.put(name, header(name, values));
         return this;
     }
 
@@ -202,6 +233,17 @@ public class HttpResponse extends Action {
      */
     public HttpResponse withCookie(Cookie cookie) {
         this.cookies.put(cookie.getName(), cookie);
+        return this;
+    }
+
+    /**
+     * Add cookie to return as Set-Cookie header
+     *
+     * @param name the cookies name
+     * @param value the cookies value which can be a string or regular expression
+     */
+    public HttpResponse withCookie(String name, String value) {
+        this.cookies.put(name, cookie(name, value));
         return this;
     }
 

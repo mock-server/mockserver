@@ -10,6 +10,9 @@ import org.mockserver.client.serialization.deserializers.body.BodyDTODeserialize
 import org.mockserver.client.serialization.deserializers.string.NottableStringDeserializer;
 import org.mockserver.client.serialization.model.*;
 import org.mockserver.client.serialization.serializers.body.*;
+import org.mockserver.client.serialization.serializers.request.HttpRequestDTOSerializer;
+import org.mockserver.client.serialization.serializers.response.HttpResponseDTOSerializer;
+import org.mockserver.client.serialization.serializers.response.HttpResponseSerializer;
 import org.mockserver.client.serialization.serializers.string.NottableStringSerializer;
 import org.mockserver.model.*;
 
@@ -56,7 +59,7 @@ public class ObjectMapperFactory {
         public Module() {
             // request
             addSerializer(HttpRequest.class, new org.mockserver.client.serialization.serializers.request.HttpRequestSerializer());
-            addSerializer(HttpRequestDTO.class, new org.mockserver.client.serialization.serializers.request.HttpRequestDTOSerializer());
+            addSerializer(HttpRequestDTO.class, new HttpRequestDTOSerializer());
             // request body
             addDeserializer(BodyDTO.class, new BodyDTODeserializer());
             addSerializer(StringBodyDTO.class, new StringBodyDTOSerializer());
@@ -72,6 +75,9 @@ public class ObjectMapperFactory {
             // nottable string
             addSerializer(NottableString.class, new NottableStringSerializer());
             addDeserializer(NottableString.class, new NottableStringDeserializer());
+            // response
+            addSerializer(HttpResponse.class, new HttpResponseSerializer());
+            addSerializer(HttpResponseDTO.class, new HttpResponseDTOSerializer());
         }
 
     }

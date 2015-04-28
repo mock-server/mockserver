@@ -152,7 +152,11 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
         if (response == null) {
             response = notFoundResponse();
         }
-        response.updateHeader(header(CONTENT_LENGTH, response.getBody().getRawBytes().length));
+        if (response.getBody() != null) {
+            response.updateHeader(header(CONTENT_LENGTH, response.getBody().getRawBytes().length));
+        } else {
+            response.updateHeader(header(CONTENT_LENGTH, 0));
+        }
         if (request.isKeepAlive()) {
             response.updateHeader(header(CONNECTION, HttpHeaders.Values.KEEP_ALIVE));
             ctx.write(response);

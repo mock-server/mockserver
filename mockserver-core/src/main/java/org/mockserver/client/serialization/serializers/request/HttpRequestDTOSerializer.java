@@ -32,14 +32,14 @@ public class HttpRequestDTOSerializer extends StdSerializer<HttpRequestDTO> {
         if (httpRequest.getQueryStringParameters() != null && !httpRequest.getQueryStringParameters().isEmpty()) {
             jgen.writeObjectField("queryStringParameters", httpRequest.getQueryStringParameters());
         }
-        if (httpRequest.getBody() != null) {
-            jgen.writeObjectField("body", httpRequest.getBody());
-        }
         if (httpRequest.getHeaders() != null && !httpRequest.getHeaders().isEmpty()) {
             jgen.writeObjectField("headers", httpRequest.getHeaders());
         }
         if (httpRequest.getCookies() != null && !httpRequest.getCookies().isEmpty()) {
             jgen.writeObjectField("cookies", httpRequest.getCookies());
+        }
+        if (httpRequest.getBody() != null) {
+            jgen.writeObjectField("body", httpRequest.getBody());
         }
         jgen.writeEndObject();
     }

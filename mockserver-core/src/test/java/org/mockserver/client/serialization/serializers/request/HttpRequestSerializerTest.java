@@ -37,7 +37,6 @@ public class HttpRequestSerializerTest {
                         "    \"name\" : \"parameterOneName\"," + System.getProperty("line.separator") +
                         "    \"values\" : [ \"parameterOneValue\" ]" + System.getProperty("line.separator") +
                         "  } ]," + System.getProperty("line.separator") +
-                        "  \"body\" : \"some_body\"," + System.getProperty("line.separator") +
                         "  \"headers\" : [ {" + System.getProperty("line.separator") +
                         "    \"name\" : \"name\"," + System.getProperty("line.separator") +
                         "    \"values\" : [ \"value\" ]" + System.getProperty("line.separator") +
@@ -45,7 +44,8 @@ public class HttpRequestSerializerTest {
                         "  \"cookies\" : [ {" + System.getProperty("line.separator") +
                         "    \"name\" : \"name\"," + System.getProperty("line.separator") +
                         "    \"value\" : \"[A-Z]{0,10}\"" + System.getProperty("line.separator") +
-                        "  } ]" + System.getProperty("line.separator") +
+                        "  } ]," + System.getProperty("line.separator") +
+                        "  \"body\" : \"some_body\"" + System.getProperty("line.separator") +
                         "}"));
     }
 
@@ -65,10 +65,6 @@ public class HttpRequestSerializerTest {
                         "    \"name\" : \"parameterOneName\"," + System.getProperty("line.separator") +
                         "    \"values\" : [ \"parameterOneValue\" ]" + System.getProperty("line.separator") +
                         "  } ]," + System.getProperty("line.separator") +
-                        "  \"body\" : {" + System.getProperty("line.separator") +
-                        "    \"type\" : \"JSON\"," + System.getProperty("line.separator") +
-                        "    \"json\" : \"{ \\\"key\\\": \\\"some_value\\\" }\"" + System.getProperty("line.separator") +
-                        "  }," + System.getProperty("line.separator") +
                         "  \"headers\" : [ {" + System.getProperty("line.separator") +
                         "    \"name\" : \"name\"," + System.getProperty("line.separator") +
                         "    \"values\" : [ \"value\" ]" + System.getProperty("line.separator") +
@@ -76,7 +72,11 @@ public class HttpRequestSerializerTest {
                         "  \"cookies\" : [ {" + System.getProperty("line.separator") +
                         "    \"name\" : \"name\"," + System.getProperty("line.separator") +
                         "    \"value\" : \"[A-Z]{0,10}\"" + System.getProperty("line.separator") +
-                        "  } ]" + System.getProperty("line.separator") +
+                        "  } ]," + System.getProperty("line.separator") +
+                        "  \"body\" : {" + System.getProperty("line.separator") +
+                        "    \"type\" : \"JSON\"," + System.getProperty("line.separator") +
+                        "    \"json\" : \"{ \\\"key\\\": \\\"some_value\\\" }\"" + System.getProperty("line.separator") +
+                        "  }" + System.getProperty("line.separator") +
                         "}"));
     }
 
@@ -96,10 +96,6 @@ public class HttpRequestSerializerTest {
                         "    \"name\" : \"parameterOneName\"," + System.getProperty("line.separator") +
                         "    \"values\" : [ \"parameterOneValue\" ]" + System.getProperty("line.separator") +
                         "  } ]," + System.getProperty("line.separator") +
-                        "  \"body\" : {" + System.getProperty("line.separator") +
-                        "    \"type\" : \"XPATH\"," + System.getProperty("line.separator") +
-                        "    \"xpath\" : \"//some/xml/path\"" + System.getProperty("line.separator") +
-                        "  }," + System.getProperty("line.separator") +
                         "  \"headers\" : [ {" + System.getProperty("line.separator") +
                         "    \"name\" : \"name\"," + System.getProperty("line.separator") +
                         "    \"values\" : [ \"value\" ]" + System.getProperty("line.separator") +
@@ -107,7 +103,11 @@ public class HttpRequestSerializerTest {
                         "  \"cookies\" : [ {" + System.getProperty("line.separator") +
                         "    \"name\" : \"name\"," + System.getProperty("line.separator") +
                         "    \"value\" : \"[A-Z]{0,10}\"" + System.getProperty("line.separator") +
-                        "  } ]" + System.getProperty("line.separator") +
+                        "  } ]," + System.getProperty("line.separator") +
+                        "  \"body\" : {" + System.getProperty("line.separator") +
+                        "    \"type\" : \"XPATH\"," + System.getProperty("line.separator") +
+                        "    \"xpath\" : \"//some/xml/path\"" + System.getProperty("line.separator") +
+                        "  }" + System.getProperty("line.separator") +
                         "}")
         );
     }

@@ -62,7 +62,6 @@ public class MockServerMatcherDumpTest {
                 "    \"path\" : \"some_path\"" + System.getProperty("line.separator") +
                 "  }," + System.getProperty("line.separator") +
                 "  \"httpResponse\" : {" + System.getProperty("line.separator") +
-                "    \"statusCode\" : 200," + System.getProperty("line.separator") +
                 "    \"body\" : \"some_response_body\"" + System.getProperty("line.separator") +
                 "  }," + System.getProperty("line.separator") +
                 "  \"times\" : {" + System.getProperty("line.separator") +
@@ -78,7 +77,6 @@ public class MockServerMatcherDumpTest {
                 "    \"path\" : \"some_other_path\"" + System.getProperty("line.separator") +
                 "  }," + System.getProperty("line.separator") +
                 "  \"httpResponse\" : {" + System.getProperty("line.separator") +
-                "    \"statusCode\" : 200," + System.getProperty("line.separator") +
                 "    \"body\" : \"some_other_response_body\"" + System.getProperty("line.separator") +
                 "  }," + System.getProperty("line.separator") +
                 "  \"times\" : {" + System.getProperty("line.separator") +
@@ -122,7 +120,6 @@ public class MockServerMatcherDumpTest {
                 "    \"path\" : \"some_path\"" + System.getProperty("line.separator") +
                 "  }," + System.getProperty("line.separator") +
                 "  \"httpResponse\" : {" + System.getProperty("line.separator") +
-                "    \"statusCode\" : 200," + System.getProperty("line.separator") +
                 "    \"body\" : \"some_response_body\"" + System.getProperty("line.separator") +
                 "  }," + System.getProperty("line.separator") +
                 "  \"times\" : {" + System.getProperty("line.separator") +

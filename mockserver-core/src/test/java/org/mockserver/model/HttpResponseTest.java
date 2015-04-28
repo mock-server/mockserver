@@ -51,17 +51,20 @@ public class HttpResponseTest {
     public void returnsHeaderByName() {
         assertThat(new HttpResponse().withHeaders(new Header("name", "value")).getHeader("name"), containsInAnyOrder("value"));
         assertThat(new HttpResponse().withHeaders(new Header("name", "valueOne", "valueTwo")).getHeader("name"), containsInAnyOrder("valueOne", "valueTwo"));
+        assertThat(new HttpResponse().withHeader("name", "valueOne", "valueTwo").getHeader("name"), containsInAnyOrder("valueOne", "valueTwo"));
         assertThat(new HttpResponse().withHeaders(new Header("name", "valueOne", "valueTwo")).getHeader("otherName"), hasSize(0));
     }
 
     @Test
     public void addDuplicateHeader() {
         assertThat(new HttpResponse().withHeader(new Header("name", "valueOne")).withHeader(new Header("name", "valueTwo")).getHeaders(), containsInAnyOrder(new Header("name", "valueOne", "valueTwo")));
+        assertThat(new HttpResponse().withHeader(new Header("name", "valueOne")).withHeader("name", "valueTwo").getHeaders(), containsInAnyOrder(new Header("name", "valueOne", "valueTwo")));
     }
 
     @Test
     public void updatesExistingHeader() {
         assertThat(new HttpResponse().withHeader(new Header("name", "valueOne")).updateHeader(new Header("name", "valueTwo")).getHeaders(), containsInAnyOrder(new Header("name", "valueTwo")));
+        assertThat(new HttpResponse().withHeader(new Header("name", "valueOne")).updateHeader("name", "valueTwo").getHeaders(), containsInAnyOrder(new Header("name", "valueTwo")));
     }
 
     @Test
@@ -71,7 +74,9 @@ public class HttpResponseTest {
         assertEquals(new Cookie("name", null), new HttpResponse().withCookies(new Cookie("name", null)).getCookies().get(0));
 
         assertEquals(new Cookie("name", "value"), new HttpResponse().withCookies(Arrays.asList(new Cookie("name", "value"))).getCookies().get(0));
+
         assertEquals(new Cookie("name", "value"), new HttpResponse().withCookie(new Cookie("name", "value")).getCookies().get(0));
+        assertEquals(new Cookie("name", "value"), new HttpResponse().withCookie("name", "value").getCookies().get(0));
         assertEquals(new Cookie("name", ""), new HttpResponse().withCookie(new Cookie("name", "")).getCookies().get(0));
         assertEquals(new Cookie("name", null), new HttpResponse().withCookie(new Cookie("name", null)).getCookies().get(0));
     }
@@ -107,8 +112,6 @@ public class HttpResponseTest {
     @Test
     public void shouldReturnFormattedRequestInToString() {
         assertEquals("{" + System.getProperty("line.separator") +
-                        "  \"statusCode\" : 200," + System.getProperty("line.separator") +
-                        "  \"body\" : \"some_body\"," + System.getProperty("line.separator") +
                         "  \"headers\" : [ {" + System.getProperty("line.separator") +
                         "    \"name\" : \"name\"," + System.getProperty("line.separator") +
                         "    \"values\" : [ \"value\" ]" + System.getProperty("line.separator") +
@@ -116,7 +119,8 @@ public class HttpResponseTest {
                         "  \"cookies\" : [ {" + System.getProperty("line.separator") +
                         "    \"name\" : \"name\"," + System.getProperty("line.separator") +
                         "    \"value\" : \"[A-Z]{0,10}\"" + System.getProperty("line.separator") +
-                        "  } ]" + System.getProperty("line.separator") +
+                        "  } ]," + System.getProperty("line.separator") +
+                        "  \"body\" : \"some_body\"" + System.getProperty("line.separator") +
                         "}",
                 response()
                         .withBody("some_body")

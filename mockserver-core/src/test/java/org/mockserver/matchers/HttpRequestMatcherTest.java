@@ -468,7 +468,6 @@ public class HttpRequestMatcherTest {
                         "    \"name\" : \"parameterOneName\"," + System.getProperty("line.separator") +
                         "    \"values\" : [ \"parameterOneValue\" ]" + System.getProperty("line.separator") +
                         "  } ]," + System.getProperty("line.separator") +
-                        "  \"body\" : \"some_body\"," + System.getProperty("line.separator") +
                         "  \"headers\" : [ {" + System.getProperty("line.separator") +
                         "    \"name\" : \"name\"," + System.getProperty("line.separator") +
                         "    \"values\" : [ \"value\" ]" + System.getProperty("line.separator") +
@@ -476,7 +475,8 @@ public class HttpRequestMatcherTest {
                         "  \"cookies\" : [ {" + System.getProperty("line.separator") +
                         "    \"name\" : \"name\"," + System.getProperty("line.separator") +
                         "    \"value\" : \"[A-Z]{0,10}\"" + System.getProperty("line.separator") +
-                        "  } ]" + System.getProperty("line.separator") +
+                        "  } ]," + System.getProperty("line.separator") +
+                        "  \"body\" : \"some_body\"" + System.getProperty("line.separator") +
                         "}",
                 new HttpRequestMatcher(
                         request()

@@ -76,7 +76,6 @@ public class HttpRequestTest {
     @Test
     public void shouldReturnFormattedRequestInToString() {
         TestCase.assertEquals("{" + System.getProperty("line.separator") +
-                        "  \"body\" : \"some_body\"," + System.getProperty("line.separator") +
                         "  \"headers\" : [ {" + System.getProperty("line.separator") +
                         "    \"name\" : \"name\"," + System.getProperty("line.separator") +
                         "    \"values\" : [ \"value\" ]" + System.getProperty("line.separator") +
@@ -84,7 +83,8 @@ public class HttpRequestTest {
                         "  \"cookies\" : [ {" + System.getProperty("line.separator") +
                         "    \"name\" : \"name\"," + System.getProperty("line.separator") +
                         "    \"value\" : \"[A-Z]{0,10}\"" + System.getProperty("line.separator") +
-                        "  } ]" + System.getProperty("line.separator") +
+                        "  } ]," + System.getProperty("line.separator") +
+                        "  \"body\" : \"some_body\"" + System.getProperty("line.separator") +
                         "}",
                 request()
                         .withBody("some_body")

@@ -277,7 +277,6 @@ public class HttpRequestSerializerIntegrationTest {
                 "    \"name\" : \"queryParameterName\"," + System.getProperty("line.separator") +
                 "    \"values\" : [ \"queryParameterValue\" ]" + System.getProperty("line.separator") +
                 "  } ]," + System.getProperty("line.separator") +
-                "  \"body\" : \"somebody\"," + System.getProperty("line.separator") +
                 "  \"headers\" : [ {" + System.getProperty("line.separator") +
                 "    \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
                 "    \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
@@ -285,7 +284,8 @@ public class HttpRequestSerializerIntegrationTest {
                 "  \"cookies\" : [ {" + System.getProperty("line.separator") +
                 "    \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
                 "    \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
-                "  } ]" + System.getProperty("line.separator") +
+                "  } ]," + System.getProperty("line.separator") +
+                "  \"body\" : \"somebody\"" + System.getProperty("line.separator") +
                 "}", jsonExpectation);
     }
 
@@ -313,19 +313,19 @@ public class HttpRequestSerializerIntegrationTest {
         assertEquals("[ {" + System.getProperty("line.separator") +
                 "  \"method\" : \"some_method_one\"," + System.getProperty("line.separator") +
                 "  \"path\" : \"some_path_one\"," + System.getProperty("line.separator") +
-                "  \"body\" : \"some_body_one\"," + System.getProperty("line.separator") +
                 "  \"headers\" : [ {" + System.getProperty("line.separator") +
                 "    \"name\" : \"some_header_name_one\"," + System.getProperty("line.separator") +
                 "    \"values\" : [ \"some_header_value_one\" ]" + System.getProperty("line.separator") +
-                "  } ]" + System.getProperty("line.separator") +
+                "  } ]," + System.getProperty("line.separator") +
+                "  \"body\" : \"some_body_one\"" + System.getProperty("line.separator") +
                 "}, {" + System.getProperty("line.separator") +
                 "  \"method\" : \"some_method_two\"," + System.getProperty("line.separator") +
                 "  \"path\" : \"some_path_two\"," + System.getProperty("line.separator") +
-                "  \"body\" : \"some_body_two\"," + System.getProperty("line.separator") +
                 "  \"headers\" : [ {" + System.getProperty("line.separator") +
                 "    \"name\" : \"some_header_name_two\"," + System.getProperty("line.separator") +
                 "    \"values\" : [ \"some_header_value_two\" ]" + System.getProperty("line.separator") +
-                "  } ]" + System.getProperty("line.separator") +
+                "  } ]," + System.getProperty("line.separator") +
+                "  \"body\" : \"some_body_two\"" + System.getProperty("line.separator") +
                 "} ]", jsonExpectation);
     }
 
@@ -353,19 +353,19 @@ public class HttpRequestSerializerIntegrationTest {
         assertEquals("[ {" + System.getProperty("line.separator") +
                 "  \"method\" : \"some_method_one\"," + System.getProperty("line.separator") +
                 "  \"path\" : \"some_path_one\"," + System.getProperty("line.separator") +
-                "  \"body\" : \"some_body_one\"," + System.getProperty("line.separator") +
                 "  \"headers\" : [ {" + System.getProperty("line.separator") +
                 "    \"name\" : \"some_header_name_one\"," + System.getProperty("line.separator") +
                 "    \"values\" : [ \"some_header_value_one\" ]" + System.getProperty("line.separator") +
-                "  } ]" + System.getProperty("line.separator") +
+                "  } ]," + System.getProperty("line.separator") +
+                "  \"body\" : \"some_body_one\"" + System.getProperty("line.separator") +
                 "}, {" + System.getProperty("line.separator") +
                 "  \"method\" : \"some_method_two\"," + System.getProperty("line.separator") +
                 "  \"path\" : \"some_path_two\"," + System.getProperty("line.separator") +
-                "  \"body\" : \"some_body_two\"," + System.getProperty("line.separator") +
                 "  \"headers\" : [ {" + System.getProperty("line.separator") +
                 "    \"name\" : \"some_header_name_two\"," + System.getProperty("line.separator") +
                 "    \"values\" : [ \"some_header_value_two\" ]" + System.getProperty("line.separator") +
-                "  } ]" + System.getProperty("line.separator") +
+                "  } ]," + System.getProperty("line.separator") +
+                "  \"body\" : \"some_body_two\"" + System.getProperty("line.separator") +
                 "} ]", jsonExpectation);
     }
 

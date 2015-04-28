@@ -617,7 +617,6 @@ public class ExpectationSerializerIntegrationTest {
                 "      \"name\" : \"queryStringParameterNameTwo\"," + System.getProperty("line.separator") +
                 "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + System.getProperty("line.separator") +
                 "    } ]," + System.getProperty("line.separator") +
-                "    \"body\" : \"someBody\"," + System.getProperty("line.separator") +
                 "    \"headers\" : [ {" + System.getProperty("line.separator") +
                 "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
                 "      \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
@@ -625,19 +624,20 @@ public class ExpectationSerializerIntegrationTest {
                 "    \"cookies\" : [ {" + System.getProperty("line.separator") +
                 "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
                 "      \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
-                "    } ]" + System.getProperty("line.separator") +
+                "    } ]," + System.getProperty("line.separator") +
+                "    \"body\" : \"someBody\"" + System.getProperty("line.separator") +
                 "  }," + System.getProperty("line.separator") +
                 "  \"httpResponse\" : {" + System.getProperty("line.separator") +
                 "    \"statusCode\" : 304," + System.getProperty("line.separator") +
-                "    \"body\" : \"someBody\"," + System.getProperty("line.separator") +
-                "    \"cookies\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
-                "      \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
                 "    \"headers\" : [ {" + System.getProperty("line.separator") +
                 "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
                 "      \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
                 "    } ]," + System.getProperty("line.separator") +
+                "    \"cookies\" : [ {" + System.getProperty("line.separator") +
+                "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
+                "      \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
+                "    } ]," + System.getProperty("line.separator") +
+                "    \"body\" : \"someBody\"," + System.getProperty("line.separator") +
                 "    \"delay\" : {" + System.getProperty("line.separator") +
                 "      \"timeUnit\" : \"MICROSECONDS\"," + System.getProperty("line.separator") +
                 "      \"value\" : 1" + System.getProperty("line.separator") +
@@ -693,7 +693,6 @@ public class ExpectationSerializerIntegrationTest {
                 "      \"name\" : \"queryStringParameterNameTwo\"," + System.getProperty("line.separator") +
                 "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + System.getProperty("line.separator") +
                 "    } ]," + System.getProperty("line.separator") +
-                "    \"body\" : \"someBody\"," + System.getProperty("line.separator") +
                 "    \"headers\" : [ {" + System.getProperty("line.separator") +
                 "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
                 "      \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
@@ -701,7 +700,8 @@ public class ExpectationSerializerIntegrationTest {
                 "    \"cookies\" : [ {" + System.getProperty("line.separator") +
                 "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
                 "      \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
-                "    } ]" + System.getProperty("line.separator") +
+                "    } ]," + System.getProperty("line.separator") +
+                "    \"body\" : \"someBody\"" + System.getProperty("line.separator") +
                 "  }," + System.getProperty("line.separator") +
                 "  \"httpForward\" : {" + System.getProperty("line.separator") +
                 "    \"host\" : \"someHost\"," + System.getProperty("line.separator") +
@@ -757,7 +757,6 @@ public class ExpectationSerializerIntegrationTest {
                 "      \"name\" : \"queryStringParameterNameTwo\"," + System.getProperty("line.separator") +
                 "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + System.getProperty("line.separator") +
                 "    } ]," + System.getProperty("line.separator") +
-                "    \"body\" : \"someBody\"," + System.getProperty("line.separator") +
                 "    \"headers\" : [ {" + System.getProperty("line.separator") +
                 "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
                 "      \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
@@ -765,7 +764,8 @@ public class ExpectationSerializerIntegrationTest {
                 "    \"cookies\" : [ {" + System.getProperty("line.separator") +
                 "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
                 "      \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
-                "    } ]" + System.getProperty("line.separator") +
+                "    } ]," + System.getProperty("line.separator") +
+                "    \"body\" : \"someBody\"" + System.getProperty("line.separator") +
                 "  }," + System.getProperty("line.separator") +
                 "  \"httpCallback\" : {" + System.getProperty("line.separator") +
                 "    \"callbackClass\" : \"someClass\"" + System.getProperty("line.separator") +
@@ -907,10 +907,7 @@ public class ExpectationSerializerIntegrationTest {
                 "    }" + System.getProperty("line.separator") +
                 "  }," + System.getProperty("line.separator") +
                 "  \"httpResponse\" : {" + System.getProperty("line.separator") +
-                "    \"body\" : {" + System.getProperty("line.separator") +
-                "      \"type\" : \"JSON\"," + System.getProperty("line.separator") +
-                "      \"json\" : \"{fieldOne: \\\"valueOne\\\", \\\"fieldTwo\\\": \\\"valueTwo\\\"}\"" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+                "    \"body\" : \"{fieldOne: \\\"valueOne\\\", \\\"fieldTwo\\\": \\\"valueTwo\\\"}\"" + System.getProperty("line.separator") +
                 "  }," + System.getProperty("line.separator") +
                 "  \"times\" : {" + System.getProperty("line.separator") +
                 "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
@@ -952,10 +949,7 @@ public class ExpectationSerializerIntegrationTest {
                 "    }" + System.getProperty("line.separator") +
                 "  }," + System.getProperty("line.separator") +
                 "  \"httpResponse\" : {" + System.getProperty("line.separator") +
-                "    \"body\" : {" + System.getProperty("line.separator") +
-                "      \"type\" : \"JSON\"," + System.getProperty("line.separator") +
-                "      \"json\" : \"" + StringEscapeUtils.escapeJava(jsonBody) + "\"" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+                "    \"body\" : \"" + StringEscapeUtils.escapeJava(jsonBody) + "\"" + System.getProperty("line.separator") +
                 "  }," + System.getProperty("line.separator") +
                 "  \"times\" : {" + System.getProperty("line.separator") +
                 "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
