@@ -4,8 +4,11 @@ before_install:
   - "./scripts/install_ca_certificate.sh"
   - "travis_retry mvn test-compile -T2C"
 
+gemfile: 
+  - "mockserver-client-ruby/Gemfile"
+
 script:
-  - "./scripts/travis_build.sh"
+  - "./scripts/travis_build.sh && cd ./mockserver-client-ruby && bundle exec rake spec"
 
 jdk:
   - oraclejdk7
