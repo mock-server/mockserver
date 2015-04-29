@@ -34,9 +34,10 @@ public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
         if (fullHttpRequest != null) {
             setMethod(httpRequest, fullHttpRequest);
 
-            Charset charsetFromRequest = ContentTypeMapper.identifyCharsetFromHttpMessage(fullHttpRequest);
-
-            QueryStringDecoder queryStringDecoder = new QueryStringDecoder(fullHttpRequest.getUri(), charsetFromRequest);
+            // URL query strings are nominally supposed to be US-ASCII, with all non-US-ASCII characters URL-escaped. some
+            // servers do allow UTF-8 encoding, so use the default specified by the netty QueryStringDecoder (UTF-8). all
+            // US-ASCII query strings will be properly decoded when interpreted as UTF-8.
+            QueryStringDecoder queryStringDecoder = new QueryStringDecoder(fullHttpRequest.getUri());
             setPath(httpRequest, queryStringDecoder);
             setQueryString(httpRequest, queryStringDecoder);
 
