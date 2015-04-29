@@ -3,7 +3,7 @@ require 'hashie'
 require_relative './parameter'
 require_relative './body'
 require_relative './enum'
-
+require "base64"
 #
 # A class to model a request in an expectation.
 # @author:: Nayyara Samuel (mailto: nayyara.samuel@opower.com)
@@ -17,7 +17,7 @@ module MockServer::Model
   end
 
   # Request model
-  class Request < Hashie::Dash
+  class Request < Hashie::Trash
     include Hashie::Extensions::MethodAccess
     include Hashie::Extensions::IgnoreUndeclared
     include Hashie::Extensions::Coercion
@@ -29,7 +29,11 @@ module MockServer::Model
     property :query_parameters, default: Parameters.new([])
     property :cookies, default: Parameters.new([])
     property :headers, default: Parameters.new([])
-    property :body
+    property :body, transform_with: lambda { |body| 
+      is_base_64_body = body != nil && body.type == :BINARY
+      body_value = is_base_64_body ? Base64.decode64(body.value) : body.value
+      Body.new(type: :STRING, value: body_value)
+    }
 
     coerce_key :method, HTTPMethod
     coerce_key :path, String
