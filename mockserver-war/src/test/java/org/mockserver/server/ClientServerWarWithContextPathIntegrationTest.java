@@ -36,7 +36,7 @@ public class ClientServerWarWithContextPathIntegrationTest extends AbstractClien
         tomcat.setPort(SERVER_HTTP_PORT);
 
         // add https connector
-        SSLFactory.getInstance().buildKeyStore(true);
+        SSLFactory.getInstance().buildKeyStore();
         Connector httpsConnector = new Connector();
         httpsConnector.setPort(SERVER_HTTPS_PORT);
         httpsConnector.setSecure(true);
