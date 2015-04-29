@@ -146,11 +146,14 @@ public class SSLFactory {
     }
 
     public KeyStore buildKeyStore() {
-        boolean rebuildKeyStore = ConfigurationProperties.rebuildKeyStore();
-        if (keystore == null || rebuildKeyStore) {
+        return buildKeyStore(ConfigurationProperties.rebuildKeyStore());
+    }
+
+    public KeyStore buildKeyStore(boolean forceRebuild) {
+        if (keystore == null || forceRebuild) {
             File keyStoreFile = new File(ConfigurationProperties.javaKeyStoreFilePath());
             System.setProperty("javax.net.ssl.trustStore", keyStoreFile.getAbsolutePath());
-            if (keyStoreFile.exists() && !rebuildKeyStore) {
+            if (keyStoreFile.exists() && !forceRebuild) {
                 keystore = loadKeyStore(keyStoreFile);
             } else {
                 dynamicallyCreateKeyStore();
