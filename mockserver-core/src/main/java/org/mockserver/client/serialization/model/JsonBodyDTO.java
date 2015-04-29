@@ -16,7 +16,7 @@ public class JsonBodyDTO extends BodyDTO {
         this(jsonBody, false);
     }
 
-    public JsonBodyDTO(JsonBody jsonBody, boolean not) {
+    public JsonBodyDTO(JsonBody jsonBody, Boolean not) {
         super(Body.Type.JSON, not);
         this.json = jsonBody.getValue();
         this.matchType = jsonBody.getMatchType();

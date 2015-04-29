@@ -9,17 +9,13 @@ public class NotDTO extends ObjectWithReflectiveEqualsHashCodeToString {
 
     Boolean not;
 
-    public NotDTO(boolean not) {
-        if (not) {
+    public NotDTO(Boolean not) {
+        if (not != null && not) {
             this.not = true;
         }
     }
 
     public NotDTO() {
-    }
-
-    public boolean isNot() {
-        return not != null && not;
     }
 
     public Boolean getNot() {

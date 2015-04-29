@@ -6,7 +6,6 @@ import org.mockserver.logging.LogFormatter;
 import org.mockserver.model.*;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static org.mockserver.model.NottableString.string;
@@ -58,11 +57,11 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
             switch (body.getType()) {
                 case STRING:
                     StringBody stringBody = (StringBody) body;
-                    this.bodyMatcher = new ExactStringMatcher(string(stringBody.getValue(), stringBody.isNot()));
+                    this.bodyMatcher = new ExactStringMatcher(string(stringBody.getValue(), stringBody.getNot()));
                     break;
                 case REGEX:
                     RegexBody regexBody = (RegexBody) body;
-                    this.bodyMatcher = new RegexStringMatcher(string(regexBody.getValue(), regexBody.isNot()));
+                    this.bodyMatcher = new RegexStringMatcher(string(regexBody.getValue(), regexBody.getNot()));
                     break;
                 case PARAMETERS:
                     ParameterBody parameterBody = (ParameterBody) body;

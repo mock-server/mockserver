@@ -20,8 +20,8 @@ public class HttpRequestDTOSerializer extends StdSerializer<HttpRequestDTO> {
     @Override
     public void serialize(HttpRequestDTO httpRequest, JsonGenerator jgen, SerializerProvider provider) throws IOException {
         jgen.writeStartObject();
-        if (httpRequest.isNot()) {
-            jgen.writeBooleanField("not", httpRequest.isNot());
+        if (httpRequest.getNot() != null && httpRequest.getNot()) {
+            jgen.writeBooleanField("not", httpRequest.getNot());
         }
         if (httpRequest.getMethod() != null && !Strings.isNullOrEmpty(httpRequest.getMethod().getValue())) {
             jgen.writeObjectField("method", httpRequest.getMethod());

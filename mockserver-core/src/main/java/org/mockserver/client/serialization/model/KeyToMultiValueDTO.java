@@ -11,7 +11,7 @@ public class KeyToMultiValueDTO extends NotDTO {
     private String name;
     private List<String> values;
 
-    protected KeyToMultiValueDTO(KeyToMultiValue keyToMultiValue, boolean not) {
+    protected KeyToMultiValueDTO(KeyToMultiValue keyToMultiValue, Boolean not) {
         super(not);
         name = keyToMultiValue.getName();
         values = keyToMultiValue.getValues();

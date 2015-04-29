@@ -32,7 +32,7 @@ public class KeyToMultiValue extends Not {
         if (keyToMultiValues != null) {
             for (KeyToMultiValue keyToMultiValue : keyToMultiValues) {
                 for (String item : keyToMultiValue.getValues()) {
-                    caseInsensitiveRegexMultiMap.put(NottableString.string(keyToMultiValue.getName(), keyToMultiValue.isNot()), item);
+                    caseInsensitiveRegexMultiMap.put(NottableString.string(keyToMultiValue.getName(), keyToMultiValue.getNot()), item);
                 }
             }
         }

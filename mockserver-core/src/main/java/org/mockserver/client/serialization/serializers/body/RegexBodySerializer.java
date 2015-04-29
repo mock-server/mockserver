@@ -19,8 +19,8 @@ public class RegexBodySerializer extends StdSerializer<RegexBody> {
     @Override
     public void serialize(RegexBody regexBody, JsonGenerator jgen, SerializerProvider provider) throws IOException {
         jgen.writeStartObject();
-        if (regexBody.isNot()) {
-            jgen.writeBooleanField("not", regexBody.isNot());
+        if (regexBody.getNot() != null && regexBody.getNot()) {
+            jgen.writeBooleanField("not", regexBody.getNot());
         }
         jgen.writeStringField("type", regexBody.getType().name());
         jgen.writeStringField("regex", regexBody.getValue());

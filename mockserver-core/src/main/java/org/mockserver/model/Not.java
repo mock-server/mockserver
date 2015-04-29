@@ -1,5 +1,7 @@
 package org.mockserver.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 /**
  * @author jamesdbloom
  */
@@ -13,12 +15,13 @@ public class Not extends ObjectWithJsonToString {
     }
 
     public static <T extends Not> T not(T t, Boolean not) {
-        if (not) {
+        if (not != null && not) {
             t.not = true;
         }
         return t;
     }
 
+    @JsonIgnore
     public boolean isNot() {
         return not != null && not;
     }

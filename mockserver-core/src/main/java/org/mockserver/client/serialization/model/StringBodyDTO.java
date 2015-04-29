@@ -13,7 +13,7 @@ public class StringBodyDTO extends BodyDTO {
         this(stringBody, false);
     }
 
-    public StringBodyDTO(StringBody stringBody, boolean not) {
+    public StringBodyDTO(StringBody stringBody, Boolean not) {
         super(stringBody.getType(), not);
         string = stringBody.getValue();
     }

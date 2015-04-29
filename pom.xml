@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <groupId>org.sonatype.oss</groupId>
         <artifactId>oss-parent</artifactId>
@@ -49,7 +49,7 @@
         <slf4j.version>1.7.10</slf4j.version>
         <!-- tomcat version &gt; 7.0.56 causes SSL to fail -->
         <tomcat.version>7.0.56</tomcat.version>
-        <jackson.version>2.5.2</jackson.version>
+        <jackson.version>2.5.3</jackson.version>
         <netty.version>4.0.26.Final</netty.version>
         <boucycastle.verion>1.51</boucycastle.verion>
         <skipTests>false</skipTests>

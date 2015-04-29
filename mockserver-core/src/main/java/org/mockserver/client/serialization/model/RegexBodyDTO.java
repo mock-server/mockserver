@@ -14,7 +14,7 @@ public class RegexBodyDTO extends BodyDTO {
         this(regexBody, false);
     }
 
-    public RegexBodyDTO(RegexBody regexBody, boolean not) {
+    public RegexBodyDTO(RegexBody regexBody, Boolean not) {
         super(Body.Type.REGEX, not);
         this.regex = regexBody.getValue();
     }

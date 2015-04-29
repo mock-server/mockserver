@@ -11,7 +11,7 @@ public class CookieDTO extends KeyAndValueDTO {
         this(cookie, false);
     }
 
-    public CookieDTO(Cookie cookie, boolean not) {
+    public CookieDTO(Cookie cookie, Boolean not) {
         super(cookie, not);
     }
 

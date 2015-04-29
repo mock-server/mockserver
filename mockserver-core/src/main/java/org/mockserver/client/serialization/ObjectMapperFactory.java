@@ -72,6 +72,8 @@ public class ObjectMapperFactory {
             addSerializer(JsonSchemaBody.class, new JsonSchemaBodySerializer());
             addSerializer(XPathBodyDTO.class, new XPathBodyDTOSerializer());
             addSerializer(XPathBody.class, new XPathBodySerializer());
+            addSerializer(ParameterBodyDTO.class, new ParameterBodyDTOSerializer());
+            addSerializer(ParameterBody.class, new ParameterBodySerializer());
             // nottable string
             addSerializer(NottableString.class, new NottableStringSerializer());
             addDeserializer(NottableString.class, new NottableStringDeserializer());

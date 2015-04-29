@@ -24,24 +24,24 @@ public class HttpRequestDTO extends NotDTO {
         this(httpRequest, false);
     }
 
-    public HttpRequestDTO(HttpRequest httpRequest, boolean not) {
+    public HttpRequestDTO(HttpRequest httpRequest, Boolean not) {
         super(not);
         if (httpRequest != null) {
             method = httpRequest.getMethod();
             path = httpRequest.getPath();
             headers = Lists.transform(httpRequest.getHeaders(), new Function<Header, HeaderDTO>() {
                 public HeaderDTO apply(Header header) {
-                    return new HeaderDTO(header, header.isNot());
+                    return new HeaderDTO(header, header.getNot());
                 }
             });
             cookies = Lists.transform(httpRequest.getCookies(), new Function<Cookie, CookieDTO>() {
                 public CookieDTO apply(Cookie cookie) {
-                    return new CookieDTO(cookie, cookie.isNot());
+                    return new CookieDTO(cookie, cookie.getNot());
                 }
             });
             queryStringParameters = Lists.transform(httpRequest.getQueryStringParameters(), new Function<Parameter, ParameterDTO>() {
                 public ParameterDTO apply(Parameter parameter) {
-                    return new ParameterDTO(parameter, parameter.isNot());
+                    return new ParameterDTO(parameter, parameter.getNot());
                 }
             });
             body = BodyDTO.createDTO(httpRequest.getBody());
@@ -57,20 +57,20 @@ public class HttpRequestDTO extends NotDTO {
                 .withPath(path)
                 .withHeaders(Lists.transform(headers, new Function<HeaderDTO, Header>() {
                     public Header apply(HeaderDTO header) {
-                        return Not.not(header.buildObject(), header.isNot());
+                        return Not.not(header.buildObject(), header.getNot());
                     }
                 }))
                 .withCookies(Lists.transform(cookies, new Function<CookieDTO, Cookie>() {
                     public Cookie apply(CookieDTO cookie) {
-                        return Not.not(cookie.buildObject(), cookie.isNot());
+                        return Not.not(cookie.buildObject(), cookie.getNot());
                     }
                 }))
                 .withQueryStringParameters(Lists.transform(queryStringParameters, new Function<ParameterDTO, Parameter>() {
                     public Parameter apply(ParameterDTO parameter) {
-                        return Not.not(parameter.buildObject(), parameter.isNot());
+                        return Not.not(parameter.buildObject(), parameter.getNot());
                     }
                 }))
-                .withBody((body != null ? Not.not(body.buildObject(), body.isNot()) : null));
+                .withBody((body != null ? Not.not(body.buildObject(), body.getNot()) : null));
     }
 
     public NottableString getMethod() {

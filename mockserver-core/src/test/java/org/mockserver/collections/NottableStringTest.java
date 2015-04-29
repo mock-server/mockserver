@@ -5,8 +5,8 @@ import org.junit.Test;
 import org.mockserver.model.NottableString;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsNot.not;
 import static org.mockserver.model.NottableString.string;
 
 public class NottableStringTest {
@@ -18,6 +18,7 @@ public class NottableStringTest {
 
         // then
         assertThat(nottableString.isNot(), is(true));
+        assertThat(nottableString.getNot(), is(true));
         assertThat(nottableString.getValue(), is("value"));
     }
 
@@ -28,6 +29,7 @@ public class NottableStringTest {
 
         // then
         assertThat(nottableString.isNot(), is(false));
+        assertThat(nottableString.getNot(), nullValue());
         assertThat(nottableString.getValue(), is("value"));
     }
 
@@ -38,6 +40,7 @@ public class NottableStringTest {
 
         // then
         assertThat(nottableString.isNot(), is(false));
+        assertThat(nottableString.getNot(), nullValue());
         assertThat(nottableString.getValue(), is("value"));
     }
 

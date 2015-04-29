@@ -1,8 +1,5 @@
 package org.mockserver.model;
 
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
-
 /**
  * @author jamesdbloom
  */
@@ -12,7 +9,7 @@ public class NottableString extends Not {
 
     private NottableString(String value, Boolean not) {
         this.value = value;
-        this.not = not != null && not;
+        this.not = not;
     }
 
     public static NottableString string(String value, Boolean not) {
@@ -20,7 +17,7 @@ public class NottableString extends Not {
     }
 
     public static NottableString string(String value) {
-        return new NottableString(value, Boolean.FALSE);
+        return new NottableString(value, null);
     }
 
     public static NottableString not(String value) {
@@ -39,7 +36,7 @@ public class NottableString extends Not {
             return false;
         }
         if (other instanceof String) {
-            return not != (value.equals(other));
+            return isNot() != (value.equals(other));
         } else if (other instanceof NottableString) {
             NottableString otherNottableString = (NottableString) other;
             return otherNottableString.isNot() == (isNot() == (value.equals(otherNottableString.getValue())));

@@ -9,7 +9,7 @@ public abstract class BodyDTO extends NotDTO {
 
     private Body.Type type;
 
-    public BodyDTO(Body.Type type, boolean not) {
+    public BodyDTO(Body.Type type, Boolean not) {
         super(not);
         this.type = type;
     }
@@ -22,25 +22,25 @@ public abstract class BodyDTO extends NotDTO {
 
         if (body instanceof StringBody) {
             StringBody stringBody = (StringBody) body;
-            result = new StringBodyDTO(stringBody, stringBody.isNot());
+            result = new StringBodyDTO(stringBody, stringBody.getNot());
         } else if (body instanceof RegexBody) {
             RegexBody regexBody = (RegexBody) body;
-            result = new RegexBodyDTO(regexBody, regexBody.isNot());
+            result = new RegexBodyDTO(regexBody, regexBody.getNot());
         } else if (body instanceof JsonBody) {
             JsonBody jsonBody = (JsonBody) body;
-            result = new JsonBodyDTO(jsonBody, jsonBody.isNot());
+            result = new JsonBodyDTO(jsonBody, jsonBody.getNot());
         } else if (body instanceof JsonSchemaBody) {
             JsonSchemaBody jsonSchemaBody = (JsonSchemaBody) body;
-            result = new JsonSchemaBodyDTO(jsonSchemaBody, jsonSchemaBody.isNot());
+            result = new JsonSchemaBodyDTO(jsonSchemaBody, jsonSchemaBody.getNot());
         } else if (body instanceof XPathBody) {
             XPathBody xPathBody = (XPathBody) body;
-            result = new XPathBodyDTO(xPathBody, xPathBody.isNot());
+            result = new XPathBodyDTO(xPathBody, xPathBody.getNot());
         } else if (body instanceof ParameterBody) {
             ParameterBody parameterBody = (ParameterBody) body;
-            result = new ParameterBodyDTO(parameterBody, parameterBody.isNot());
+            result = new ParameterBodyDTO(parameterBody, parameterBody.getNot());
         } else if (body instanceof BinaryBody) {
             BinaryBody binaryBody = (BinaryBody) body;
-            result = new BinaryBodyDTO(binaryBody, binaryBody.isNot());
+            result = new BinaryBodyDTO(binaryBody, binaryBody.getNot());
         }
 
         return result;

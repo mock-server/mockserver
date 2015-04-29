@@ -11,7 +11,7 @@ public class HeaderDTO extends KeyToMultiValueDTO {
         super(header, false);
     }
 
-    public HeaderDTO(Header header, boolean not) {
+    public HeaderDTO(Header header, Boolean not) {
         super(header, not);
     }
 

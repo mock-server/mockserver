@@ -12,7 +12,7 @@ public class ParameterDTO extends KeyToMultiValueDTO {
         this(parameter, false);
     }
 
-    public ParameterDTO(Parameter parameter, boolean not) {
+    public ParameterDTO(Parameter parameter, Boolean not) {
         super(parameter, not);
     }
 
@@ -20,6 +20,6 @@ public class ParameterDTO extends KeyToMultiValueDTO {
     }
 
     public Parameter buildObject() {
-        return Not.not(new Parameter(getName(), getValues()), isNot());
+        return Not.not(new Parameter(getName(), getValues()), getNot());
     }
 }
