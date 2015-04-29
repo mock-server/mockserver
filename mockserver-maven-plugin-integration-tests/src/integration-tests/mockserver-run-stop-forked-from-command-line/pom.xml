@@ -50,7 +50,7 @@
                 <version>2.17</version>
                 <configuration>
                     <!-- allow debugging tests -->
-                    <!--<forkMode>never</forkMode>-->
+                    <forkCount>0</forkCount>
                     <includes>
                         <include>**/*Test.java</include>
                     </includes>
@@ -65,7 +65,7 @@
                 <version>2.17</version>
                 <configuration>
                     <!-- allow debugging tests -->
-                    <!--<forkCount>0</forkCount>-->
+                    <forkCount>0</forkCount>
                     <includes>
                         <include>**/*StopTest.java</include>
                     </includes>
