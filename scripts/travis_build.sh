@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-export MAVEN_OPTS='-XX:MaxPermSize=1024m -Xmx2048m'
-export JAVA_OPTS='-XX:MaxPermSize=1024m -Xmx2048m'
+export MAVEN_OPTS="$MAVEN_OPTS -XX:MaxPermSize=1024m -Xmx2048m"
+export JAVA_OPTS="$JAVA_OPTS -XX:MaxPermSize=1024m -Xmx2048m"
 JAVA_VER=$(java -version 2>&1 | sed 's/java version "\(.*\)\.\(.*\)\..*"/\1\2/; 1q')
 current_directory=${PWD}
 
