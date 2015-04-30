@@ -20,7 +20,14 @@
         </rollingPolicy>
     </appender>
 
-    <!-- application console log (errors and warnings) -->
+    <!-- make application log asynchronous -->
+    <appender name="ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>500</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <appender-ref ref="FILE" />
+    </appender>
+
+    <!-- application console log (for errors and warnings) -->
     <appender name="STDERR" class="ch.qos.logback.core.ConsoleAppender">
         <target>System.err</target>
         <encoder>
@@ -31,7 +38,14 @@
         </filter>
     </appender>
 
-    <!-- application console log (errors and warnings) -->
+    <!-- make console log (for errors and warnings) asynchronous -->
+    <appender name="ASYNC_STDERR" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>500</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <appender-ref ref="STDERR" />
+    </appender>
+
+    <!-- application console log -->
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <target>System.out</target>
         <encoder>
@@ -46,6 +60,12 @@
         </filter>
     </appender>
 
+    <!-- make console log asynchronous -->
+    <appender name="ASYNC_STDOUT" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>500</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <appender-ref ref="STDOUT" />
+    </appender>
 
     <!-- request log configuration -->
     <appender name="REQUEST_LOG" class="org.mockserver.logging.DelayedFileCreationRollingFileAppender">
@@ -73,8 +93,8 @@
     <logger name="org.mockserver.mockserver" level="${mockserver.logLevel:-INFO}"/>
 
     <root level="${root.logLevel:-WARN}">
-        <appender-ref ref="FILE"/>
-        <appender-ref ref="STDERR"/>
-        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="ASYNC_FILE"/>
+        <appender-ref ref="ASYNC_STDERR"/>
+        <appender-ref ref="ASYNC_STDOUT"/>
     </root>
 </configuration>
