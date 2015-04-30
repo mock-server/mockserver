@@ -212,14 +212,9 @@ public class HttpRequest extends Not {
     }
 
     /**
-     * The body to match on such as "this is an exact string body" or a json expression such as "{username: 'foo', password: 'bar'}"
-     * or a regex (see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
-     * or an XPath expression which returns one or more values or evaluates to true (see http://saxon.sourceforge.net/saxon6.5.3/expressions.html)
+     * The exact string body to match on such as "this is an exact string body"
      *
      * @param body the body on such as "this is an exact string body"
-     *             or a regex such as "username[a-z]{4}"
-     *             or a json expression such as "{username: 'foo', password: 'bar'}"
-     *             or an XPath such as "/element[key = 'some_key' and value = 'some_value']"
      */
     public HttpRequest withBody(String body) {
         this.body = new StringBody(body);
@@ -246,26 +241,41 @@ public class HttpRequest extends Not {
      *
      *   - new StringBody("this is an exact string body")
      *
-     * exact match:
+     * regular expression match:
      *   - regex("username[a-z]{4}");
      *
      *   or
      *
-     *   - new StringBody("username[a-z]{4}", Body.Type.REGEX);
+     *   - new RegexBody("username[a-z]{4}");
      *
      * json match:
      *   - json("{username: 'foo', password: 'bar'}");
      *
      *   or
      *
-     *   - new StringBody("{username: 'foo', password: 'bar'}", Body.Type.JSON);
+     *   - json("{username: 'foo', password: 'bar'}", MatchType.STRICT);
+     *
+     *   or
+     *
+     *   - new JsonBody("{username: 'foo', password: 'bar'}");
+     *
+     * json schema match:
+     *   - jsonSchema("{type: 'object', properties: { 'username': { 'type': 'string' }, 'password': { 'type': 'string' } }, 'required': ['username', 'password']}");
+     *
+     *   or
+     *
+     *   - jsonSchemaFromResource("org/mockserver/model/loginSchema.json");
+     *
+     *   or
+     *
+     *   - new JsonSchemaBody("{type: 'object', properties: { 'username': { 'type': 'string' }, 'password': { 'type': 'string' } }, 'required': ['username', 'password']}");
      *
      * xpath match:
      *   - xpath("/element[key = 'some_key' and value = 'some_value']");
      *
      *   or
      *
-     *   - new StringBody("/element[key = 'some_key' and value = 'some_value']", Body.Type.XPATH);
+     *   - new XPathBody("/element[key = 'some_key' and value = 'some_value']");
      *
      * body parameter match:
      *   - params(
@@ -287,8 +297,10 @@ public class HttpRequest extends Not {
      *
      *   - new BinaryBody(IOUtils.readFully(getClass().getClassLoader().getResourceAsStream("example.pdf"), 1024));
      *
-     * for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html
-     * for more detail of XPath syntax see http://saxon.sourceforge.net/saxon6.5.3/expressions.html
+     * for more details of the supported regular expression syntax see <a href="http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html</a>
+     * for more details of the supported json syntax see <a href="http://jsonassert.skyscreamer.org">http://jsonassert.skyscreamer.org</a>
+     * for more details of the supported json schema syntax see <a href="http://json-schema.org/">http://json-schema.org/</a>
+     * for more detail of XPath syntax see <a href="http://saxon.sourceforge.net/saxon6.5.3/expressions.html">http://saxon.sourceforge.net/saxon6.5.3/expressions.html</a>
      *
      * @param body an instance of one of the Body subclasses including StringBody, ParameterBody or BinaryBody
      */
