@@ -1,7 +1,7 @@
 ---
 title: Request Matchers - JavaScript
 layout: page
-pageOrder: 4.6
+pageOrder: 4.06
 section: 'Mock Server'
 subsection: false
 ---
@@ -13,7 +13,7 @@ subsection: false
     <span class="string_literal">"path"</span>: <span class="string_literal">""</span>,
     <span class="string_literal">"queryParameters"</span>: []
     <span class="string_literal">"body"</span>: {
-       <span class="string_literal">"type"</span>: <span class="annotation">&lt;</span><span class="string_literal">"STRING"</span> <span class="annotation">or</span> <span class="string_literal">"REGEX"</span> <span class="annotation">or</span> <span class="string_literal">"JSON"</span> <span class="annotation">or</span> <span class="string_literal">"XPATH"</span> <span class="annotation">or</span> <span class="string_literal">"PARAMETERS"</span><span class="annotation">&gt;</span>,
+       <span class="string_literal">"type"</span>: <span class="annotation">&lt;</span><span class="string_literal">"STRING"</span> <span class="annotation">or</span> <span class="string_literal">"REGEX"</span> <span class="annotation">or</span> <span class="string_literal">"JSON"</span> <span class="annotation">or</span> <span class="string_literal">"JSON_SCHEMA"</span> <span class="annotation">or</span> <span class="string_literal">"XPATH"</span> <span class="annotation">or</span> <span class="string_literal">"PARAMETERS"</span><span class="annotation">&gt;</span>,
        <span class="string_literal">"value"</span>: <span class="string_literal">""</span> <span class="annotation">( or</span> <span class="string_literal">"parameters"</span> <span class="annotation">as shown in more detail below )</span>
     },
     <span class="string_literal">"cookies"</span>: [],
@@ -65,7 +65,7 @@ subsection: false
 <span class="string_literal">"XPATH"</span>
 <span class="string_literal">"PARAMETERS"</span></code></pre>
 
-<p>When the <span class="string_literal">"type"</span> field has a value of <span class="string_literal">"STRING"</span>, <span class="string_literal">"REGEX"</span>, <span class="string_literal">"JSON"</span> or <span class="string_literal">"XPATH"</span> the other field of
+<p>When the <span class="string_literal">"type"</span> field has a value of <span class="string_literal">"STRING"</span>, <span class="string_literal">"REGEX"</span>, <span class="string_literal">"JSON"</span>, <span class="string_literal">"JSON_SCHEMA"</span> or <span class="string_literal">"XPATH"</span> the other field of
 	<span class="string_literal">"body"</span>" should be <span class="string_literal">"value"</span> and it should provide a string to perform the match against, as shown in the example above.</p>
 
 <p><strong>Parameter Bodies</strong></p>

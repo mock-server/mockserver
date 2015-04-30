@@ -35,20 +35,24 @@ sitemap:
 
 <p>When MockServer is run from the command line, Maven plugin, Grunt plugin or npm module the log is written to a file called <strong>mockserver.log</strong> in the current working directory where the MockServer is running.</p>
 
-<p><strong>Logging when running from Command Line</strong></p>
+<h4>Logging when running from Command Line</h4>
 
 <p>When running MockServer directly from <a href="/mock_server/running_mock_server.html#running-from-command-line">the command line</a> the system property <span class="inline_code">mockserver.logLevel</span> can be used to set the log level, as follows:</p>
 
 <pre><code class="code">java -Dmockserver.logLevel=DEBUG -jar ~/Downloads/mockserver-netty-3.9.9-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span> -proxyPort <span class="numeric_literal">1090</span></code></pre>
 
-<p><strong>Logging when running with Grunt plugin and Node.js (npm) module</strong></p>
+<h4>Logging when running with Grunt plugin and Node.js (npm) module</h4>
 
 <p>When running MockServer using the <a href="/mock_server/running_mock_server.html#mockserver-grunt"><strong>mockserver-grunt</strong></a> Grunt plugin and Node.js (npm) module the <span class="inline_code">verbose</span> option can be used to enable <strong>INFO</strong> level logging and the <span class="inline_code">trace</span> option can be used to enable <strong>TRACE</strong> level logging. In addition the <span class="inline_code">--verbose</span> command line flag can be used for Grunt builds to enable the <strong>mockserver-grunt</strong> verbose option dynamically.</p>
 
-<p><strong>Logging when running with JUnit @Rule or API</strong></p>
+<h4>Logging when running with JUnit @Rule or API</h4>
 
 <p>If the MockSever is being launched using the <a href="/mock_server/running_mock_server.html#junit-rule"><strong>JUnit @Rule</strong></a> or <a href="/mock_server/running_mock_server.html#client-api"><strong>programmatically via an API</strong></a> then a <strong>logback.xml</strong> file can be used to specify the logging level. An example <a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-netty/src/main/resources/example_logback.xml">logback.xml</a> is available in github.</p>
 <p>To use a <strong>logback.xml</strong> file the <span class="inline_code">logback.configurationFile</span> system property should be set, for example <span class="inline_code">-Dlogback.configurationFile=~/git/mockserver/mockserver-netty/src/main/resources/example_logback.xml</span> specifying the exact location of the file.  The file will also be automatically picked up if it is called <strong>logback.xml</strong> and is in the root of the classpath.</p>
+
+<h4>Disabling Logging</h4>
+
+<p>When running MockServer using the <a href="/mock_server/running_mock_server.html#mockserver-grunt"><strong>mockserver-grunt</strong></a> Grunt plugin and Node.js (npm) module the <span class="inline_code">verbose</span> option can be used to enable <strong>INFO</strong> level logging and the <span class="inline_code">trace</span> option can be used to enable <strong>TRACE</strong> level logging. In addition the <span class="inline_code">--verbose</span> command line flag can be used for Grunt builds to enable the <strong>mockserver-grunt</strong> verbose option dynamically.</p>
 
 <h3>Dumping Expectations To Log</h3>
 
@@ -56,22 +60,22 @@ sitemap:
 
 <p>To dump <strong>all expectations</strong> to the log use <strong>dumpToLog</strong> as follows:</p>
 
-<p><strong>Java</strong></p>
+<h4>Java</h4>
 
 <pre><code class="code"><span class="keyword">new</span> MockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1080</span>).dumpToLog()</code></pre>
 
-<p><strong>JavaScript</strong></p>
+<h4>JavaScript</h4>
 
 <pre><code class="code">mockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1080</span>).dumpToLogs();</code></pre>
 
-<p><strong>Ruby</strong></p>
+<h4>Ruby</h4>
 
 <pre><code class="code">client = MockServerClient.new(<span class="string_literal">'localhost'</span>, <span class="numeric_literal">1080</span>)
 client.dump_log()</code></pre>
 
 <p>To dump <strong>only specific</strong> expectations to the log use <strong>dumpToLog</strong> as follows:</p>
 
-<p><strong>Java</strong></p>
+<h4>Java</h4>
 
 <pre><code class="code"><span class="keyword">new</span> MockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1080</span>).dumpToLog(
         request()
@@ -79,11 +83,11 @@ client.dump_log()</code></pre>
                 .withPath(<span class="string_literal">"/somePath"</span>)
 );</code></pre>
 
-<p><strong>JavaScript</strong></p>
+<h4>JavaScript</h4>
 
 <pre><code class="code">mockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1080</span>).dumpToLogs(<span class="string_literal">'/somePath'</span>);</code></pre>
 
-<p><strong>Ruby</strong></p>
+<h4>Ruby</h4>
 
 <pre><code class="code">client = MockServerClient.new(<span class="string_literal">'localhost'</span>, <span class="numeric_literal">1080</span>)
 client.dump_log(request(<span class="ruby_constant">:GET</span>, <span class="string_literal">'/somePath'</span>))</code></pre>

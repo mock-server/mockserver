@@ -1,0 +1,126 @@
+---
+title: Response Actions - Java
+layout: page
+pageOrder: 4.08
+section: 'Mock Server'
+subsection: false
+---
+
+<p>To mock a response in Java use the <strong>org.mockserver.model.HttpResponse</strong> class which specifies the details of each HTTP response with a fluent API:</p>
+
+<pre><code class="code"><span class="keyword">public class</span> HttpResponse {
+
+    <span class="comment">/**
+     * The status code to return, such as <span class="numeric_literal">200</span>, <span class="numeric_literal">404</span>, the status code specified
+     * here will result in the default status message for this status code for
+     * example for <span class="numeric_literal">200</span> the status message <span class="string_literal">"OK"</span> is used
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">statusCode</span> an integer such as <span class="numeric_literal">200</span> or <span class="numeric_literal">404</span>
+     */</span>
+    <span class="keyword">public</span> HttpResponse withStatusCode(Integer responseCode);
+
+    <span class="comment">/**
+     * The cookies to return as Set-Cookie headers as a list of Cookie objects
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">cookies</span> a list of Cookie objects
+     */</span>
+    <span class="keyword">public</span> HttpResponse withCookies(List&lt;Cookie&gt; cookies);
+    <span class="comment">/**
+     * The cookies to return as Set-Cookie headers as a varargs of Cookie objects
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">cookies</span> a varargs of Cookie objects
+     */</span>
+    <span class="keyword">public</span> HttpResponse withCookies(Cookie... cookies);
+
+    <span class="comment">/**
+     * Add cookie to return as Set-Cookie header
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">cookie</span> a Cookie object
+     */</span>
+    <span class="keyword">public</span> HttpResponse withCookie(Cookie cookie);
+
+    <span class="comment">/**
+     * Add cookie to return as Set-Cookie header
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">name</span> the cookies name
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">value</span> the cookies value which can be a string or regular expression
+     */</span>
+    <span class="keyword">public</span> HttpResponse withCookie(String name, String value);
+
+    <span class="comment">/**
+     * The headers to return as a list of Header objects
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">headers</span> a list of Header objects
+     */</span>
+    <span class="keyword">public</span> HttpResponse withHeaders(List&lt;Header&gt; headers);
+    <span class="comment">/**
+     * The headers to return as a varargs of Header objects
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">headers</span> a varargs of Header objects
+     */</span>
+    <span class="keyword">public</span> HttpResponse withHeaders(Header... headers);
+
+    <span class="comment">/**
+     * A header to return as a Header objects
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">header</span> a Header objects
+     */</span>
+    <span class="keyword">public</span> HttpResponse withHeader(Header header)
+
+    <span class="comment">/**
+     * A header to return as a Header objects
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">name</span> the header name
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">values</span> the header values which can be a varags of strings or regular expressions
+     */</span>
+    <span class="keyword">public</span> HttpResponse withHeader(String name, String... values)
+
+    <span class="comment">/**
+     * Set response body to return as a simple UTF-8 string response body
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">body</span> a <span class="string_literal">"UTF-8"</span> string
+     */</span>
+    <span class="keyword">public</span> HttpResponse withBody(String body);
+
+    <span class="comment">/**
+     * * Set response body to return as binary such as a pdf or image
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">body</span> a byte array
+     */</span>
+    <span class="keyword">public</span> HttpResponse withBody(<span class="keyword">byte</span>[] body);
+
+    <span class="comment">/**
+     * Set the body to return for example:
+     *
+     * string body:
+     *   - exact(<span class="string_literal">"&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;div&gt;a simple string body&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;"</span>); or
+     *   - new StringBody(<span class="string_literal">"&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;div&gt;a simple string body&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;"</span>)
+     *
+     * binary body:
+     *   - binary(IOUtils.readFully(getClass().getClassLoader().getResourceAsStream(<span class="string_literal">"example.pdf"</span>), <span class="numeric_literal">1024</span>)); or
+     *   - new BinaryBody(IOUtils.readFully(getClass().getClassLoader().getResourceAsStream(<span class="string_literal">"example.pdf"</span>), <span class="numeric_literal">1024</span>));
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">body</span> an instance of one of the Body subclasses including StringBody or BinaryBody
+     */</span>
+    <span class="keyword">public</span> HttpResponse withBody(Body body);
+
+    <span class="comment">/**
+     * The delay before responding with this request as a Delay object, for example <span class="keyword">new</span> Delay(TimeUnit.<span class="constant">SECONDS</span>, <span class="numeric_literal">3</span>)
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">delay</span> a Delay object, for example <span class="keyword">new</span> Delay(TimeUnit.<span class="constant">SECONDS</span>, <span class="numeric_literal">3</span>)
+     */</span>
+    <span class="keyword">public</span> HttpResponse withDelay(Delay delay);
+}</code></pre>
+
+<p>For example:</p>
+
+<pre><code class="code">HttpResponse httpResponse =
+        response()
+                .withStatusCode(<span class="numeric_literal">401</span>)
+                .withHeaders(
+                        <span class="keyword">new</span> Header(<span class="string_literal">"Content-Type"</span>, <span class="string_literal">"application/json; charset=utf-8"</span>),
+                        <span class="keyword">new</span> Header(<span class="string_literal">"Cache-Control"</span>, <span class="string_literal">"public, max-age=86400"</span>)
+                )
+                .withBody(<span class="string_literal">"{ message: 'incorrect username and password combination' }"</span>)
+                .withDelay(<span class="keyword">new</span> Delay(TimeUnit.<span class="constant">SECONDS</span>, <span class="numeric_literal">1</span>));
+</code></pre>

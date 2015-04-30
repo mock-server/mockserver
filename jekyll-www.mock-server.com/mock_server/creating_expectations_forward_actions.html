@@ -1,0 +1,30 @@
+---
+title: Forward Actions
+layout: page
+pageOrder: 4.10
+section: 'Mock Server'
+subsection: false
+---
+
+<p>Forward actions contain:</p>
+
+<ul>
+	<li><strong>host</strong> - the host to forward to i.e. www.mock-server.com</li>
+	<li><strong>port</strong> - the port to forward to, this defaults to 80 if not specified</li>
+	<li><strong>scheme</strong> - the scheme to use, either HTTP or HTTPS, this defaults to HTTP if not specified</li>
+</ul>
+
+<p>Forward actions can be further controlled using:</p>
+
+<ul>
+	<li>the <strong>number of times</strong> the request is forwarded (including unlimited)</li>
+	<li>a <strong>time to live</strong> the response will be continued to be returned (including unlimited)</li>
+</ul>
+
+<h4>Java</h4>
+
+{% include_subpage creating_expectations_java_forward_actions.html %}
+
+<h4>JavaScript</h4>
+
+{% include_subpage creating_expectations_javascript_forward_actions.html %}
