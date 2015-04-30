@@ -105,7 +105,7 @@
                     <parallelThreads>${maven-invoker-parallel-threads}</parallelThreads>
                     <projectsDirectory>${basedir}/src/integration-tests/</projectsDirectory>
                     <cloneProjectsTo>${project.build.directory}/integration-tests/</cloneProjectsTo>
-                    <!--<cloneClean>true</cloneClean>-->
+                    <cloneClean>true</cloneClean>
                     <ignoreFailures>false</ignoreFailures>
                     <addTestClassPath>true</addTestClassPath>
                     <!--<preBuildHookScript>setup</preBuildHookScript>-->
