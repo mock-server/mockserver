@@ -12,6 +12,10 @@ module MockServer::Model
     def allowed_values
       [true, false]
     end
+
+    def !
+      !@value
+    end
   end
 
   # Model for times class

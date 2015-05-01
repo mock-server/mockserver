@@ -27,8 +27,8 @@ describe MockServer::ProxyClient do
     expect(response).to eq([register_expectation, register_expectation])
   end
 
-  xit 'raises an error when verification fails' do
-    expect { client.verify(request(:POST, '/login'), exactly(2)) }.to raise_error(RuntimeError, 'Expected request to be present: [1] (exactly). But found: [2]')
+  it 'raises an error when verification fails' do
+    expect { client.verify(request(:POST, '/login')) }.to raise_error(RuntimeError, 'Expected request to be present: [1] (exactly). But found: [2]')
   end
 
   it 'dumps to logs correctly do' do
