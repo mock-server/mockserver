@@ -317,11 +317,12 @@ ol pre {
 }
 
 .inline {
-  display: inline-block;
+  display: inline;
   white-space: pre;
   word-wrap: normal;
   overflow: auto;
   margin: 0;
+  line-height: 3.5em;
 }
 
 .xml {
@@ -337,8 +338,9 @@ span.annotation {
 }
 
 span.inline_code {
-  color: #6c6c6c;
+  color: #2b2b2b;
   font-size: 1.1em;
+  font-weight: bolder;
 }
 
 span.numeric_literal {
