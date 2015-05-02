@@ -29,7 +29,6 @@ import java.util.concurrent.TimeUnit;
 @Mojo(name = "runForked", requiresProject = false, threadSafe = false)
 public class MockServerRunForkedMojo extends MockServerAbstractMojo {
 
-    private ProcessBuildFactory processBuildFactory = new ProcessBuildFactory();
     /**
      * Get a list of artifacts used by this plugin
      */
@@ -45,6 +44,7 @@ public class MockServerRunForkedMojo extends MockServerAbstractMojo {
      */
     @Component
     protected ArtifactResolver artifactResolver;
+    private ProcessBuildFactory processBuildFactory = new ProcessBuildFactory();
 
     public static String fileSeparators(String path) {
         StringBuilder ret = new StringBuilder();
@@ -148,13 +148,13 @@ public class MockServerRunForkedMojo extends MockServerAbstractMojo {
 
     @VisibleForTesting
     String getVersion() {
-        String version = "3.9.9";
+        String version = "3.9.11";
         try {
             java.util.Properties p = new java.util.Properties();
             InputStream is = getClass().getResourceAsStream("/META-INF/maven/org.mock-server/mockserver-maven-plugin/pom.properties");
             if (is != null) {
                 p.load(is);
-                version = p.getProperty("version", "3.9.9");
+                version = p.getProperty("version", "3.9.11");
             }
         } catch (Exception e) {
             // ignore
