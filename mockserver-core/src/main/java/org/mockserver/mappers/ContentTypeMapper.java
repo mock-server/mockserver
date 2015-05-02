@@ -70,7 +70,7 @@ public class ContentTypeMapper {
      * exists, or the character set is not supported, returns the {@link ContentTypeMapper#DEFAULT_HTTP_CHARACTER_SET}.
      *
      * @param httpMessage HTTP message
-     * @return character set from message headers, or null
+     * @return character set from the message headers, or {@link ContentTypeMapper#DEFAULT_HTTP_CHARACTER_SET} if no charset is specified
      */
     public static Charset identifyCharsetFromHttpMessage(HttpMessage httpMessage) {
         Charset charset = null;
@@ -93,7 +93,7 @@ public class ContentTypeMapper {
      * exists, or the character set is not supported, returns the {@link ContentTypeMapper#DEFAULT_HTTP_CHARACTER_SET}.
      *
      * @param servletRequest HTTP request
-     * @return character set from request headers, or null
+     * @return character set from the servlet request headers, or {@link ContentTypeMapper#DEFAULT_HTTP_CHARACTER_SET} if no charset is specified
      */
     public static Charset identifyCharsetFromServletRequest(HttpServletRequest servletRequest) {
         Charset charset = null;
@@ -116,7 +116,7 @@ public class ContentTypeMapper {
      * exists, or the character set is not supported, returns the {@link ContentTypeMapper#DEFAULT_HTTP_CHARACTER_SET}.
      *
      * @param httpResponse HTTP response
-     * @return character set from response headers, or null
+     * @return character set from the response headers, or {@link ContentTypeMapper#DEFAULT_HTTP_CHARACTER_SET} if no charset is specified
      */
     public static Charset identifyCharsetFromResponse(HttpResponse httpResponse) {
         Charset charset = null;
