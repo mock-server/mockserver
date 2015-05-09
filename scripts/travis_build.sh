@@ -27,11 +27,11 @@ if [ $JAVA_VER -eq 17 ]; then
     mvn deploy --settings $current_directory/target/travis/settings.xml -Djava.security.egd=file:/dev/./urandom
 fi
 
-if [ $JAVA_VER -eq 18 ]; then
-    echo
-    echo "--------------------"
-    echo "----- JAVA 1.8 -----"
-    echo "--------------------"
-    echo
-    mvn -q install
-fi
+#if [ $JAVA_VER -eq 18 ]; then
+#    echo
+#    echo "--------------------"
+#    echo "----- JAVA 1.8 -----"
+#    echo "--------------------"
+#    echo
+#    mvn -q install
+#fi
