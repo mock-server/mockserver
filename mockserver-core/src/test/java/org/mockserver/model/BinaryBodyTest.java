@@ -23,7 +23,7 @@ public class BinaryBodyTest {
     }
 
     @Test
-    public void shouldReturnValueSetInConstructor() {
+    public void shouldReturnValuesSetInConstructor() {
         // given
         byte[] body = DatatypeConverter.parseBase64Binary("some_body");
 

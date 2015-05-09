@@ -14,7 +14,7 @@ import static org.mockserver.model.Parameter.param;
 public class ParameterTest {
 
     @Test
-    public void shouldReturnValueSetInConstructors() {
+    public void shouldReturnValuesSetInConstructors() {
         // when
         Parameter firstParameter = new Parameter("first", "first_one", "first_two");
         Parameter secondParameter = new Parameter("second", Arrays.asList("second_one", "second_two"));

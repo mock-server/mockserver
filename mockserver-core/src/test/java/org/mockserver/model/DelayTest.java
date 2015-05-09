@@ -13,7 +13,7 @@ import static org.hamcrest.core.Is.is;
 public class DelayTest {
 
     @Test
-    public void shouldReturnValueSetInConstructor() {
+    public void shouldReturnValuesSetInConstructor() {
         // when
         Delay delay = new Delay(TimeUnit.DAYS, 5);
 

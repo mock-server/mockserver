@@ -12,7 +12,7 @@ import static org.hamcrest.core.Is.is;
 public class TimesDTOTest {
 
     @Test
-    public void shouldReturnValueSetInConstructor() {
+    public void shouldReturnValuesSetInConstructor() {
         // when
         TimesDTO times = new TimesDTO(Times.exactly(5));
 

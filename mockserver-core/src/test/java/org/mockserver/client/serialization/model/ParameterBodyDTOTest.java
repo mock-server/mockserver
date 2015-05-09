@@ -18,7 +18,7 @@ import static org.mockserver.model.ParameterBody.params;
 public class ParameterBodyDTOTest {
 
     @Test
-    public void shouldReturnValueSetInConstructor() {
+    public void shouldReturnValuesSetInConstructor() {
         // when
         ParameterBodyDTO parameterBody = new ParameterBodyDTO(new ParameterBody(
                 new Parameter("some", "value")

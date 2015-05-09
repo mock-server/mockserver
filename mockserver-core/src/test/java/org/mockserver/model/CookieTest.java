@@ -12,7 +12,7 @@ import static org.mockserver.model.Cookie.cookie;
 public class CookieTest {
 
     @Test
-    public void shouldReturnValueSetInConstructors() {
+    public void shouldReturnValuesSetInConstructors() {
         // when
         Cookie firstCookie = new Cookie("name", "value");
 

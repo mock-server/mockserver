@@ -12,7 +12,7 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 public class HeaderDTOTest {
 
     @Test
-    public void shouldReturnValueSetInConstructor() {
+    public void shouldReturnValuesSetInConstructor() {
         // when
         HeaderDTO header = new HeaderDTO(new Header("first", "first_one", "first_two"));
 

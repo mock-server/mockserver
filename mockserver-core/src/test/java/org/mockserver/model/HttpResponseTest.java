@@ -88,6 +88,20 @@ public class HttpResponseTest {
     }
 
     @Test
+    public void setsConnectionOptions() {
+        assertEquals(
+                new ConnectionOptions()
+                        .withContentLengthHeaderOverride(10),
+                new HttpResponse()
+                        .withConnectionOptions(
+                                new ConnectionOptions()
+                                        .withContentLengthHeaderOverride(10)
+                        )
+                        .getConnectionOptions()
+        );
+    }
+
+    @Test
     public void appliesDelay() throws InterruptedException {
         // given
         TimeUnit timeUnit = mock(TimeUnit.class);

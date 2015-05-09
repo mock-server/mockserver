@@ -12,7 +12,7 @@ import static org.mockserver.model.HttpRequest.request;
 public class VerificationSequenceDTOTest {
 
     @Test
-    public void shouldReturnValueSetInConstructor() {
+    public void shouldReturnValuesSetInConstructor() {
         // given
         VerificationSequence verification = new VerificationSequence()
                 .withRequests(
@@ -54,7 +54,7 @@ public class VerificationSequenceDTOTest {
     }
 
     @Test
-    public void shouldReturnValueSetInSetter() {
+    public void shouldReturnValuesSetInSetter() {
         // given
         VerificationSequence verification = new VerificationSequence();
 

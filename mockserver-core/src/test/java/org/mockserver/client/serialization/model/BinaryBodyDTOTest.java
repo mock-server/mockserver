@@ -15,7 +15,7 @@ import static org.hamcrest.core.Is.is;
 public class BinaryBodyDTOTest {
 
     @Test
-    public void shouldReturnValueSetInConstructor() {
+    public void shouldReturnValuesSetInConstructor() {
         // given
         byte[] body = DatatypeConverter.parseBase64Binary("some_body");
 

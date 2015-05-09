@@ -14,7 +14,7 @@ import static org.mockserver.model.RegexBody.regex;
 public class RegexBodyDTOTest {
 
     @Test
-    public void shouldReturnValueSetInConstructor() {
+    public void shouldReturnValuesSetInConstructor() {
         // when
         RegexBodyDTO regexBody = new RegexBodyDTO(new RegexBody("some_body"));
 

@@ -9,7 +9,7 @@ import static org.hamcrest.core.Is.is;
 public class VerificationTimesDTOTest {
 
     @Test
-    public void shouldReturnValueSetInConstructor() {
+    public void shouldReturnValuesSetInConstructor() {
         // when
         VerificationTimesDTO times = new VerificationTimesDTO(VerificationTimes.exactly(5));
 

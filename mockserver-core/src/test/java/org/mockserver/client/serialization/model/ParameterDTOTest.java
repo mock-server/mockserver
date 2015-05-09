@@ -12,7 +12,7 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 public class ParameterDTOTest {
 
     @Test
-    public void shouldReturnValueSetInConstructor() {
+    public void shouldReturnValuesSetInConstructor() {
         // when
         ParameterDTO parameter = new ParameterDTO(new Parameter("first", "first_one", "first_two"));
 

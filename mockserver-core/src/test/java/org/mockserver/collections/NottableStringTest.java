@@ -12,7 +12,7 @@ import static org.mockserver.model.NottableString.string;
 public class NottableStringTest {
 
     @Test
-    public void shouldReturnValueSetInConstructors() {
+    public void shouldReturnValuesSetInConstructors() {
         // when
         NottableString nottableString = NottableString.not("value");
 
@@ -23,7 +23,7 @@ public class NottableStringTest {
     }
 
     @Test
-    public void shouldReturnValueSetInConstructorsWithDefaultNotSetting() {
+    public void shouldReturnValuesSetInConstructorsWithDefaultNotSetting() {
         // when
         NottableString nottableString = string("value");
 
@@ -34,7 +34,7 @@ public class NottableStringTest {
     }
 
     @Test
-    public void shouldReturnValueSetInConstructorsWithNullNotParameter() {
+    public void shouldReturnValuesSetInConstructorsWithNullNotParameter() {
         // when
         NottableString nottableString = NottableString.string("value", null);
 

@@ -14,7 +14,7 @@ import static org.mockserver.model.StringBody.exact;
 public class StringBodyDTOTest {
 
     @Test
-    public void shouldReturnValueSetInConstructor() {
+    public void shouldReturnValuesSetInConstructor() {
         // when
         StringBodyDTO stringBody = new StringBodyDTO(new StringBody("some_body"));
 

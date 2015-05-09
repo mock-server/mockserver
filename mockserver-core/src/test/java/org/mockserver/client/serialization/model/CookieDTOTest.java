@@ -12,7 +12,7 @@ import static org.hamcrest.core.Is.is;
 public class CookieDTOTest {
 
     @Test
-    public void shouldReturnValueSetInConstructor() {
+    public void shouldReturnValuesSetInConstructor() {
         // when
         CookieDTO cookie = new CookieDTO(new Cookie("name", "value"));
 

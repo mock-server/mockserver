@@ -14,7 +14,7 @@ import static org.mockserver.model.XPathBody.xpath;
 public class XPathBodyDTOTest {
 
     @Test
-    public void shouldReturnValueSetInConstructor() {
+    public void shouldReturnValuesSetInConstructor() {
         // when
         XPathBodyDTO xpathBody = new XPathBodyDTO(new XPathBody("some_body"));
 

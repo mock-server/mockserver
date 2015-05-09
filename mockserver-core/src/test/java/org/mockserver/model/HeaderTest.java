@@ -14,7 +14,7 @@ import static org.mockserver.model.Header.header;
 public class HeaderTest {
 
     @Test
-    public void shouldReturnValueSetInConstructors() {
+    public void shouldReturnValuesSetInConstructors() {
         // when
         Header firstHeader = new Header("first", "first_one", "first_two");
         Header secondHeader = new Header("second", Arrays.asList("second_one", "second_two"));

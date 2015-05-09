@@ -41,6 +41,9 @@ public class HttpResponseDTOSerializer extends StdSerializer<HttpResponseDTO> {
         if (httpResponseDTO.getDelay() != null) {
             jgen.writeObjectField("delay", httpResponseDTO.getDelay());
         }
+        if (httpResponseDTO.getConnectionOptions() != null) {
+            jgen.writeObjectField("connectionOptions", httpResponseDTO.getConnectionOptions());
+        }
         jgen.writeEndObject();
     }
 }

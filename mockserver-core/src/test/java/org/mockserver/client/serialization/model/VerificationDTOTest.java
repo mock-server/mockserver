@@ -13,7 +13,7 @@ import static org.mockserver.model.HttpRequest.request;
 public class VerificationDTOTest {
 
     @Test
-    public void shouldReturnValueSetInConstructor() {
+    public void shouldReturnValuesSetInConstructor() {
         // given
         HttpRequest request = request();
         VerificationTimes times = VerificationTimes.atLeast(1);
@@ -47,7 +47,7 @@ public class VerificationDTOTest {
     }
 
     @Test
-    public void shouldReturnValueSetInSetter() {
+    public void shouldReturnValuesSetInSetter() {
         // given
         HttpRequestDTO request = new HttpRequestDTO(request());
         VerificationTimesDTO times = new VerificationTimesDTO(VerificationTimes.atLeast(1));

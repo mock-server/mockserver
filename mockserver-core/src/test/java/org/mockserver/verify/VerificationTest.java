@@ -14,7 +14,7 @@ import static org.mockserver.verify.VerificationTimes.atLeast;
 public class VerificationTest {
 
     @Test
-    public void shouldReturnValueSetInSetter() {
+    public void shouldReturnValuesSetInSetter() {
         // when
         HttpRequest request = request();
         VerificationTimes times = atLeast(2);

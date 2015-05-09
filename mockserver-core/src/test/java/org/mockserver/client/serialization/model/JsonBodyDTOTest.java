@@ -17,7 +17,7 @@ import static org.mockserver.model.JsonBody.json;
 public class JsonBodyDTOTest {
 
     @Test
-    public void shouldReturnValueSetInConstructor() {
+    public void shouldReturnValuesSetInConstructor() {
         // when
         JsonBodyDTO jsonBody = new JsonBodyDTO(new JsonBody("some_body"));
 
@@ -28,7 +28,7 @@ public class JsonBodyDTOTest {
     }
 
     @Test
-    public void shouldReturnValueSetInConstructorWithMatchType() {
+    public void shouldReturnValuesSetInConstructorWithMatchType() {
         // when
         JsonBodyDTO jsonBody = new JsonBodyDTO(new JsonBody("some_body", STRICT));
 

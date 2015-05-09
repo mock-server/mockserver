@@ -15,6 +15,7 @@ import org.mockserver.logging.LogFormatter;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.mock.action.ActionHandler;
+import org.mockserver.model.ConnectionOptions;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.socket.SSLFactory;
@@ -25,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONNECTION;
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH;
+import static org.mockserver.model.ConnectionOptions.isFalseOrNull;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
@@ -154,17 +156,55 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
         if (response == null) {
             response = notFoundResponse();
         }
-        if (response.getBody() != null) {
-            response.updateHeader(header(CONTENT_LENGTH, response.getBody().getRawBytes().length));
-        } else {
-            response.updateHeader(header(CONTENT_LENGTH, 0));
+
+        ConnectionOptions connectionOptions = response.getConnectionOptions();
+
+        addContentLengthHeader(response, connectionOptions);
+        addConnectionHeader(request, response, connectionOptions);
+        writeAndCloseSocket(ctx, request, response, connectionOptions);
+    }
+
+    private void addContentLengthHeader(HttpResponse response, ConnectionOptions connectionOptions) {
+        if (connectionOptions != null && connectionOptions.getContentLengthHeaderOverride() != null) {
+            response.updateHeader(header(CONTENT_LENGTH, connectionOptions.getContentLengthHeaderOverride()));
+        } else if (connectionOptions == null || isFalseOrNull(connectionOptions.getSuppressContentLengthHeader())) {
+            if (response.getBody() != null) {
+                response.updateHeader(header(CONTENT_LENGTH, response.getBody().getRawBytes().length));
+            } else {
+                response.updateHeader(header(CONTENT_LENGTH, 0));
+            }
         }
-        if (request.isKeepAlive()) {
-            response.updateHeader(header(CONNECTION, HttpHeaders.Values.KEEP_ALIVE));
-            ctx.write(response);
+    }
+
+    private void addConnectionHeader(HttpRequest request, HttpResponse response, ConnectionOptions connectionOptions) {
+        if (connectionOptions != null && connectionOptions.getKeepAliveOverride() != null) {
+            if (connectionOptions.getKeepAliveOverride()) {
+                response.updateHeader(header(CONNECTION, HttpHeaders.Values.KEEP_ALIVE));
+            } else {
+                response.updateHeader(header(CONNECTION, HttpHeaders.Values.CLOSE));
+            }
+        } else if (connectionOptions == null || isFalseOrNull(connectionOptions.getSuppressConnectionHeader())) {
+            if (request.isKeepAlive()) {
+                response.updateHeader(header(CONNECTION, HttpHeaders.Values.KEEP_ALIVE));
+            } else {
+                response.updateHeader(header(CONNECTION, HttpHeaders.Values.CLOSE));
+            }
+        }
+    }
+
+    private void writeAndCloseSocket(ChannelHandlerContext ctx, HttpRequest request, HttpResponse response, ConnectionOptions connectionOptions) {
+        if (connectionOptions != null && connectionOptions.getCloseSocket() != null) {
+            if (connectionOptions.getCloseSocket()) {
+                ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+            } else {
+                ctx.write(response);
+            }
         } else {
-            response.updateHeader(header(CONNECTION, HttpHeaders.Values.CLOSE));
-            ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+            if (request.isKeepAlive()) {
+                ctx.write(response);
+            } else {
+                ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+            }
         }
     }
 

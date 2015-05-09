@@ -20,7 +20,7 @@ import static org.junit.Assert.assertNull;
 public class ExpectationDTOTest {
 
     @Test
-    public void shouldReturnValueSetInConstructor() {
+    public void shouldReturnValuesSetInConstructor() {
         // given
         HttpRequest httpRequest = new HttpRequest().withBody("some_body");
         HttpResponse httpResponse = new HttpResponse().withBody("some_response_body");
@@ -111,7 +111,7 @@ public class ExpectationDTOTest {
     }
 
     @Test
-    public void shouldReturnValueSetInSetter() {
+    public void shouldReturnValuesSetInSetter() {
         // given
         HttpRequestDTO httpRequest = new HttpRequestDTO(new HttpRequest().withBody("some_body"));
         TimesDTO times = new TimesDTO(Times.exactly(3));

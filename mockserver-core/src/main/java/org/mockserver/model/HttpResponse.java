@@ -17,6 +17,7 @@ public class HttpResponse extends Action {
     private Map<String, Header> headers = new LinkedHashMap<String, Header>();
     private Map<String, Cookie> cookies = new LinkedHashMap<String, Cookie>();
     private Delay delay;
+    private ConnectionOptions connectionOptions;
 
     public HttpResponse() {
     }
@@ -274,6 +275,20 @@ public class HttpResponse extends Action {
 
     public Delay getDelay() {
         return delay;
+    }
+
+    /**
+     * The connection options for override the default connection behaviour, this allows full control of "hop-by-hop" headers such a "Connection" or "Content-Length"
+     *
+     * @param connectionOptions the connection options for override the default connection behaviour
+     */
+    public HttpResponse withConnectionOptions(ConnectionOptions connectionOptions) {
+        this.connectionOptions = connectionOptions;
+        return this;
+    }
+
+    public ConnectionOptions getConnectionOptions() {
+        return connectionOptions;
     }
 
     @JsonIgnore

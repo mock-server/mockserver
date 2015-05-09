@@ -24,7 +24,7 @@ import static org.mockserver.model.StringBody.exact;
 public class HttpRequestDTOTest {
 
     @Test
-    public void shouldReturnValueSetInConstructor() {
+    public void shouldReturnValuesSetInConstructor() {
         // given
         BodyDTO body = BodyDTO.createDTO(exact("body"));
         List<CookieDTO> cookies = Arrays.asList(new CookieDTO(new Cookie("name", "value")));
@@ -82,7 +82,7 @@ public class HttpRequestDTOTest {
     }
 
     @Test
-    public void shouldReturnValueSetInSetter() {
+    public void shouldReturnValuesSetInSetter() {
         // given
         BodyDTO body = BodyDTO.createDTO(exact("body"));
         List<CookieDTO> cookies = Arrays.asList(new CookieDTO());

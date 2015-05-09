@@ -1,13 +1,14 @@
 package org.mockserver.mockserver;
 
-import io.netty.channel.ChannelFuture;
+import com.google.common.base.Charsets;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.serialization.ExpectationSerializer;
@@ -21,10 +22,7 @@ import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.mock.action.ActionHandler;
-import org.mockserver.model.HttpCallback;
-import org.mockserver.model.HttpForward;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
+import org.mockserver.model.*;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 
@@ -33,6 +31,7 @@ import java.net.UnknownHostException;
 import java.util.Arrays;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Matchers.any;
@@ -65,7 +64,6 @@ public class MockServerHandlerTest {
     // mockserver
     private LogFilter mockLogFilter;
     private MockServerMatcher mockMockServerMatcher;
-    @Mock
     private MockServer mockMockServer;
     @Mock
     private ActionHandler mockActionHandler;
@@ -84,19 +82,18 @@ public class MockServerHandlerTest {
 
     @InjectMocks
     private MockServerHandler mockServerHandler;
+    private EmbeddedChannel embeddedChannel;
 
     @Before
     public void setupFixture() {
         // given - a mock server handler
         mockLogFilter = mock(LogFilter.class);
         mockMockServerMatcher = mock(MockServerMatcher.class);
+        mockMockServer = mock(MockServer.class);
         mockServerHandler = new MockServerHandler(mockMockServer, mockMockServerMatcher, mockLogFilter);
+        embeddedChannel = new EmbeddedChannel(mockServerHandler);
 
         initMocks(this);
-
-        // given - channel handle context
-        when(mockChannelHandlerContext.writeAndFlush(any(HttpResponse.class))).thenReturn(mock(ChannelFuture.class));
-        when(mockChannelHandlerContext.write(any(HttpResponse.class))).thenReturn(mock(ChannelFuture.class));
 
         // given - serializers
         when(mockExpectationSerializer.deserialize(anyString())).thenReturn(mockExpectation);
@@ -118,13 +115,77 @@ public class MockServerHandlerTest {
         when(mockExpectation.getHttpCallback()).thenReturn(mockHttpCallback);
     }
 
+    @After
+    public void closeEmbeddedChanel() {
+        assertThat(embeddedChannel.finish(), is(false));
+    }
+
+    @Test
+    public void shouldResetExpectations() {
+        // given
+        HttpRequest request = request("/reset").withMethod("PUT");
+
+        // when
+        embeddedChannel.writeInbound(request);
+
+        // then - filter and matcher is reset
+        verify(mockLogFilter).reset();
+        verify(mockMockServerMatcher).reset();
+
+        // and - correct response written to ChannelHandlerContext
+        HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
+        assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.ACCEPTED.code()));
+        assertThat(httpResponse.getBodyAsString(), is(""));
+    }
+
+    @Test
+    public void shouldClearExpectations() {
+        // given
+        HttpRequest request = request("/clear").withMethod("PUT").withBody("some_content");
+
+        // when
+        embeddedChannel.writeInbound(request);
+
+        // then - request deserialized
+        verify(mockHttpRequestSerializer).deserialize("some_content");
+
+        // then - filter and matcher is cleared
+        verify(mockLogFilter).clear(mockHttpRequest);
+        verify(mockMockServerMatcher).clear(mockHttpRequest);
+
+        // and - correct response written to ChannelHandlerContext
+        HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
+        assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.ACCEPTED.code()));
+        assertThat(httpResponse.getBodyAsString(), is(""));
+    }
+
+    @Test
+    public void shouldDumpExpectationsToLog() {
+        // given
+        HttpRequest request = request("/dumpToLog").withMethod("PUT").withBody("some_content");
+
+        // when
+        embeddedChannel.writeInbound(request);
+
+        // then - request deserialized
+        verify(mockHttpRequestSerializer).deserialize("some_content");
+
+        // then - expectations dumped to log
+        verify(mockMockServerMatcher).dumpToLog(mockHttpRequest);
+
+        // and - correct response written to ChannelHandlerContext
+        HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
+        assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.ACCEPTED.code()));
+        assertThat(httpResponse.getBodyAsString(), is(""));
+    }
+
     @Test
     public void shouldSetupExpectation() {
         // given
         HttpRequest request = request("/expectation").withMethod("PUT").withBody("some_content");
 
         // when
-        mockServerHandler.channelRead0(mockChannelHandlerContext, request);
+        embeddedChannel.writeInbound(request);
 
         // then - request deserialized
         verify(mockExpectationSerializer).deserialize("some_content");
@@ -136,9 +197,7 @@ public class MockServerHandlerTest {
         verify(mockExpectation).thenCallback(any(HttpCallback.class));
 
         // and - correct response written to ChannelHandlerContext
-        ArgumentCaptor<HttpResponse> responseCaptor = ArgumentCaptor.forClass(HttpResponse.class);
-        verify(mockChannelHandlerContext).writeAndFlush(responseCaptor.capture());
-        HttpResponse httpResponse = responseCaptor.getValue();
+        HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
         assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.CREATED.code()));
         assertThat(httpResponse.getBodyAsString(), is(""));
     }
@@ -157,7 +216,7 @@ public class MockServerHandlerTest {
         }
 
         // when
-        mockServerHandler.channelRead0(mockChannelHandlerContext, request);
+        embeddedChannel.writeInbound(request);
 
         // then
         if (inetAddress != null) {
@@ -165,71 +224,9 @@ public class MockServerHandlerTest {
         } else {
             Assert.assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()), containsInAnyOrder("localhost", "somehostname"));
         }
-    }
 
-    @Test
-    public void shouldResetExpectations() {
-        // given
-        HttpRequest request = request("/reset").withMethod("PUT");
-
-        // when
-        mockServerHandler.channelRead0(mockChannelHandlerContext, request);
-
-        // then - filter and matcher is reset
-        verify(mockLogFilter).reset();
-        verify(mockMockServerMatcher).reset();
-
-        // and - correct response written to ChannelHandlerContext
-        ArgumentCaptor<HttpResponse> responseCaptor = ArgumentCaptor.forClass(HttpResponse.class);
-        verify(mockChannelHandlerContext).writeAndFlush(responseCaptor.capture());
-        HttpResponse httpResponse = responseCaptor.getValue();
-        assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.ACCEPTED.code()));
-        assertThat(httpResponse.getBodyAsString(), is(""));
-    }
-
-    @Test
-    public void shouldClearExpectations() {
-        // given
-        HttpRequest request = request("/clear").withMethod("PUT").withBody("some_content");
-
-        // when
-        mockServerHandler.channelRead0(mockChannelHandlerContext, request);
-
-        // then - request deserialized
-        verify(mockHttpRequestSerializer).deserialize("some_content");
-
-        // then - filter and matcher is cleared
-        verify(mockLogFilter).clear(mockHttpRequest);
-        verify(mockMockServerMatcher).clear(mockHttpRequest);
-
-        // and - correct response written to ChannelHandlerContext
-        ArgumentCaptor<HttpResponse> responseCaptor = ArgumentCaptor.forClass(HttpResponse.class);
-        verify(mockChannelHandlerContext).writeAndFlush(responseCaptor.capture());
-        HttpResponse httpResponse = responseCaptor.getValue();
-        assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.ACCEPTED.code()));
-        assertThat(httpResponse.getBodyAsString(), is(""));
-    }
-
-    @Test
-    public void shouldDumpExpectationsToLog() {
-        // given
-        HttpRequest request = request("/dumpToLog").withMethod("PUT").withBody("some_content");
-
-        // when
-        mockServerHandler.channelRead0(mockChannelHandlerContext, request);
-
-        // then - request deserialized
-        verify(mockHttpRequestSerializer).deserialize("some_content");
-
-        // then - expectations dumped to log
-        verify(mockMockServerMatcher).dumpToLog(mockHttpRequest);
-
-        // and - correct response written to ChannelHandlerContext
-        ArgumentCaptor<HttpResponse> responseCaptor = ArgumentCaptor.forClass(HttpResponse.class);
-        verify(mockChannelHandlerContext).writeAndFlush(responseCaptor.capture());
-        HttpResponse httpResponse = responseCaptor.getValue();
-        assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.ACCEPTED.code()));
-        assertThat(httpResponse.getBodyAsString(), is(""));
+        // cleanup
+        embeddedChannel.readOutbound();
     }
 
     @Test
@@ -241,7 +238,7 @@ public class MockServerHandlerTest {
         HttpRequest request = request("/retrieve").withMethod("PUT").withBody("some_content");
 
         // when
-        mockServerHandler.channelRead0(mockChannelHandlerContext, request);
+        embeddedChannel.writeInbound(request);
 
         // then - request deserialized
         verify(mockHttpRequestSerializer).deserialize("some_content");
@@ -250,9 +247,7 @@ public class MockServerHandlerTest {
         verify(mockLogFilter).retrieve(mockHttpRequest);
 
         // and - correct response written to ChannelHandlerContext
-        ArgumentCaptor<HttpResponse> responseCaptor = ArgumentCaptor.forClass(HttpResponse.class);
-        verify(mockChannelHandlerContext).writeAndFlush(responseCaptor.capture());
-        HttpResponse httpResponse = responseCaptor.getValue();
+        HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
         assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.OK.code()));
         assertThat(httpResponse.getBodyAsString(), is("expectations"));
     }
@@ -264,12 +259,10 @@ public class MockServerHandlerTest {
         when(mockMockServerMatcher.handle(request)).thenThrow(new RuntimeException("TEST EXCEPTION"));
 
         // when
-        mockServerHandler.channelRead0(mockChannelHandlerContext, request);
+        embeddedChannel.writeInbound(request);
 
         // and - correct response written to ChannelHandlerContext
-        ArgumentCaptor<HttpResponse> responseCaptor = ArgumentCaptor.forClass(HttpResponse.class);
-        verify(mockChannelHandlerContext).writeAndFlush(responseCaptor.capture());
-        HttpResponse httpResponse = responseCaptor.getValue();
+        HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
         assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.BAD_REQUEST.code()));
         assertThat(httpResponse.getBodyAsString(), is(""));
     }
@@ -281,12 +274,10 @@ public class MockServerHandlerTest {
         when(mockMockServerMatcher.handle(request)).thenReturn(null);
 
         // when
-        mockServerHandler.channelRead0(mockChannelHandlerContext, request);
+        embeddedChannel.writeInbound(request);
 
         // and - correct response written to ChannelHandlerContext
-        ArgumentCaptor<HttpResponse> responseCaptor = ArgumentCaptor.forClass(HttpResponse.class);
-        verify(mockChannelHandlerContext).writeAndFlush(responseCaptor.capture());
-        HttpResponse httpResponse = responseCaptor.getValue();
+        HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
         assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.NOT_FOUND.code()));
         assertThat(httpResponse.getBodyAsString(), is(""));
     }
@@ -309,16 +300,299 @@ public class MockServerHandlerTest {
                 );
 
         // when
-        mockServerHandler.channelRead0(mockChannelHandlerContext, request);
+        embeddedChannel.writeInbound(request);
 
         // then
         verify(mockActionHandler).processAction(response().withBody("some_response"), request);
 
         // and - correct response written to ChannelHandlerContext
-        ArgumentCaptor<HttpResponse> responseCaptor = ArgumentCaptor.forClass(HttpResponse.class);
-        verify(mockChannelHandlerContext).writeAndFlush(responseCaptor.capture());
-        HttpResponse httpResponse = responseCaptor.getValue();
+        HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
+        assertThat(embeddedChannel.isOpen(), is(false));
         assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.PAYMENT_REQUIRED.code()));
+        assertThat(httpResponse.getBodyAsString(), is("some_content"));
+        assertThat(httpResponse.getHeader("Connection"), containsInAnyOrder("close"));
+        assertThat(httpResponse.getHeader("Content-Length"), containsInAnyOrder(Integer.toString("some_content".getBytes(Charsets.UTF_8).length)));
+        assertThat(httpResponse.getBodyAsString(), is("some_content"));
+    }
+
+    @Test
+    public void shouldSuppressHeadersViaConnectionOptions() {
+        // given - a request
+        HttpRequest request = request("/randomPath").withMethod("GET").withBody("some_content");
+
+        // and - a matcher
+        when(mockMockServerMatcher.handle(request)).thenReturn(response().withBody("some_response"));
+
+        // and - a action handler
+        when(mockActionHandler.processAction(response().withBody("some_response"), request.setKeepAlive(true)))
+                .thenReturn(
+                        response()
+                                .withBody("some_content")
+                                .withConnectionOptions(
+                                        new ConnectionOptions()
+                                                .withSuppressContentLengthHeader(true)
+                                                .withSuppressConnectionHeader(true)
+                                )
+
+                );
+
+        // when
+        embeddedChannel.writeInbound(request);
+
+        // then
+        verify(mockActionHandler).processAction(response().withBody("some_response"), request);
+
+        // and - correct response written to ChannelHandlerContext
+        HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
+        assertThat(embeddedChannel.isOpen(), is(true));
+        assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.OK.code()));
+        assertThat(httpResponse.getBodyAsString(), is("some_content"));
+        assertThat(httpResponse.getHeader("Connection"), empty());
+        assertThat(httpResponse.getHeader("Content-Length"), empty());
+        assertThat(httpResponse.getBodyAsString(), is("some_content"));
+    }
+
+    @Test
+    public void shouldOverrideContentLengthViaConnectionOptions() {
+        // given - a request
+        HttpRequest request = request("/randomPath").withMethod("GET").withBody("some_content");
+
+        // and - a matcher
+        when(mockMockServerMatcher.handle(request)).thenReturn(response().withBody("some_response"));
+
+        // and - a action handler
+        when(mockActionHandler.processAction(response().withBody("some_response"), request.setKeepAlive(true)))
+                .thenReturn(
+                        response()
+                                .withBody("some_content")
+                                .withConnectionOptions(
+                                        new ConnectionOptions()
+                                                .withContentLengthHeaderOverride(50)
+                                )
+
+                );
+
+        // when
+        embeddedChannel.writeInbound(request);
+
+        // then
+        verify(mockActionHandler).processAction(response().withBody("some_response"), request);
+
+        // and - correct response written to ChannelHandlerContext
+        HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
+        assertThat(embeddedChannel.isOpen(), is(true));
+        assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.OK.code()));
+        assertThat(httpResponse.getBodyAsString(), is("some_content"));
+        assertThat(httpResponse.getHeader("Connection"), containsInAnyOrder("keep-alive"));
+        assertThat(httpResponse.getHeader("Content-Length"), containsInAnyOrder(Integer.toString(50)));
+        assertThat(httpResponse.getBodyAsString(), is("some_content"));
+    }
+
+    @Test
+    public void shouldForceKeepAliveViaConnectionOptions() {
+        // given - a request
+        HttpRequest request = request("/randomPath").withMethod("GET").withBody("some_content");
+
+        // and - a matcher
+        when(mockMockServerMatcher.handle(request)).thenReturn(response().withBody("some_response"));
+
+        // and - a action handler
+        when(mockActionHandler.processAction(response().withBody("some_response"), request.setKeepAlive(false)))
+                .thenReturn(
+                        response()
+                                .withBody("some_content")
+                                .withConnectionOptions(
+                                        new ConnectionOptions()
+                                                .withKeepAliveOverride(true)
+                                )
+
+                );
+
+        // when
+        embeddedChannel.writeInbound(request);
+
+        // then
+        verify(mockActionHandler).processAction(response().withBody("some_response"), request);
+
+        // and - correct response written to ChannelHandlerContext
+        HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
+        assertThat(embeddedChannel.isOpen(), is(false));
+        assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.OK.code()));
+        assertThat(httpResponse.getBodyAsString(), is("some_content"));
+        assertThat(httpResponse.getHeader("Connection"), containsInAnyOrder("keep-alive"));
+        assertThat(httpResponse.getHeader("Content-Length"), containsInAnyOrder(Integer.toString("some_content".getBytes(Charsets.UTF_8).length)));
+        assertThat(httpResponse.getBodyAsString(), is("some_content"));
+    }
+
+    @Test
+    public void shouldSetKeepAliveViaIncomingRequest() {
+        // given - a request
+        HttpRequest request = request("/randomPath").withMethod("GET").withBody("some_content");
+
+        // and - a matcher
+        when(mockMockServerMatcher.handle(request)).thenReturn(response().withBody("some_response"));
+
+        // and - a action handler
+        when(mockActionHandler.processAction(response().withBody("some_response"), request.setKeepAlive(true)))
+                .thenReturn(
+                        response()
+                                .withBody("some_content")
+
+                );
+
+        // when
+        embeddedChannel.writeInbound(request);
+
+        // then
+        verify(mockActionHandler).processAction(response().withBody("some_response"), request);
+
+        // and - correct response written to ChannelHandlerContext
+        assertThat(embeddedChannel.isOpen(), is(true));
+        HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
+        assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.OK.code()));
+        assertThat(httpResponse.getBodyAsString(), is("some_content"));
+        assertThat(httpResponse.getHeader("Connection"), containsInAnyOrder("keep-alive"));
+        assertThat(httpResponse.getHeader("Content-Length"), containsInAnyOrder(Integer.toString("some_content".getBytes(Charsets.UTF_8).length)));
+        assertThat(httpResponse.getBodyAsString(), is("some_content"));
+    }
+
+    @Test
+    public void shouldForceNoKeepAliveViaConnectionOptions() {
+        // given - a request
+        HttpRequest request = request("/randomPath").withMethod("GET").withBody("some_content");
+
+        // and - a matcher
+        when(mockMockServerMatcher.handle(request)).thenReturn(response().withBody("some_response"));
+
+        // and - a action handler
+        when(mockActionHandler.processAction(response().withBody("some_response"), request.setKeepAlive(true)))
+                .thenReturn(
+                        response()
+                                .withBody("some_content")
+                                .withConnectionOptions(
+                                        new ConnectionOptions()
+                                                .withKeepAliveOverride(false)
+                                )
+
+                );
+
+        // when
+        embeddedChannel.writeInbound(request);
+
+        // then
+        verify(mockActionHandler).processAction(response().withBody("some_response"), request);
+
+        // and - correct response written to ChannelHandlerContext
+        HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
+        assertThat(embeddedChannel.isOpen(), is(true));
+        assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.OK.code()));
+        assertThat(httpResponse.getBodyAsString(), is("some_content"));
+        assertThat(httpResponse.getHeader("Connection"), containsInAnyOrder("close"));
+        assertThat(httpResponse.getHeader("Content-Length"), containsInAnyOrder(Integer.toString("some_content".getBytes(Charsets.UTF_8).length)));
+        assertThat(httpResponse.getBodyAsString(), is("some_content"));
+    }
+
+    @Test
+    public void shouldSetNoKeepAliveViaIncomingRequest() {
+        // given - a request
+        HttpRequest request = request("/randomPath").withMethod("GET").withBody("some_content");
+
+        // and - a matcher
+        when(mockMockServerMatcher.handle(request)).thenReturn(response().withBody("some_response"));
+
+        // and - a action handler
+        when(mockActionHandler.processAction(response().withBody("some_response"), request.setKeepAlive(false)))
+                .thenReturn(
+                        response()
+                                .withBody("some_content")
+
+                );
+
+        // when
+        embeddedChannel.writeInbound(request);
+
+        // then
+        verify(mockActionHandler).processAction(response().withBody("some_response"), request);
+
+        // and - correct response written to ChannelHandlerContext
+        assertThat(embeddedChannel.isOpen(), is(false));
+        HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
+        assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.OK.code()));
+        assertThat(httpResponse.getBodyAsString(), is("some_content"));
+        assertThat(httpResponse.getHeader("Connection"), containsInAnyOrder("close"));
+        assertThat(httpResponse.getHeader("Content-Length"), containsInAnyOrder(Integer.toString("some_content".getBytes(Charsets.UTF_8).length)));
+        assertThat(httpResponse.getBodyAsString(), is("some_content"));
+    }
+
+    @Test
+    public void shouldForceSocketClosedViaConnectionOptions() {
+        // given - a request
+        HttpRequest request = request("/randomPath").withMethod("GET").withBody("some_content");
+
+        // and - a matcher
+        when(mockMockServerMatcher.handle(request)).thenReturn(response().withBody("some_response"));
+
+        // and - a action handler
+        when(mockActionHandler.processAction(response().withBody("some_response"), request.setKeepAlive(true)))
+                .thenReturn(
+                        response()
+                                .withBody("some_content")
+                                .withConnectionOptions(
+                                        new ConnectionOptions()
+                                                .withCloseSocket(true)
+                                )
+
+                );
+
+        // when
+        embeddedChannel.writeInbound(request);
+
+        // then
+        verify(mockActionHandler).processAction(response().withBody("some_response"), request);
+
+        // and - correct response written to ChannelHandlerContext
+        HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
+        assertThat(embeddedChannel.isOpen(), is(false));
+        assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.OK.code()));
+        assertThat(httpResponse.getBodyAsString(), is("some_content"));
+        assertThat(httpResponse.getHeader("Connection"), containsInAnyOrder("keep-alive"));
+        assertThat(httpResponse.getHeader("Content-Length"), containsInAnyOrder(Integer.toString("some_content".getBytes(Charsets.UTF_8).length)));
+        assertThat(httpResponse.getBodyAsString(), is("some_content"));
+    }
+
+    @Test
+    public void shouldForceSocketOpenViaConnectionOptions() {
+        // given - a request
+        HttpRequest request = request("/randomPath").withMethod("GET").withBody("some_content");
+
+        // and - a matcher
+        when(mockMockServerMatcher.handle(request)).thenReturn(response().withBody("some_response"));
+
+        // and - a action handler
+        when(mockActionHandler.processAction(response().withBody("some_response"), request.setKeepAlive(false)))
+                .thenReturn(
+                        response()
+                                .withBody("some_content")
+                                .withConnectionOptions(
+                                        new ConnectionOptions()
+                                                .withCloseSocket(false)
+                                )
+
+                );
+
+        // when
+        embeddedChannel.writeInbound(request);
+
+        // then
+        verify(mockActionHandler).processAction(response().withBody("some_response"), request);
+
+        // and - correct response written to ChannelHandlerContext
+        HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
+        assertThat(embeddedChannel.isOpen(), is(true));
+        assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.OK.code()));
+        assertThat(httpResponse.getBodyAsString(), is("some_content"));
+        assertThat(httpResponse.getHeader("Connection"), containsInAnyOrder("close"));
+        assertThat(httpResponse.getHeader("Content-Length"), containsInAnyOrder(Integer.toString("some_content".getBytes(Charsets.UTF_8).length)));
         assertThat(httpResponse.getBodyAsString(), is("some_content"));
     }
 
@@ -331,7 +605,7 @@ public class MockServerHandlerTest {
         HttpRequest request = request("/verify").withMethod("PUT").withBody("some_content");
 
         // when
-        mockServerHandler.channelRead0(mockChannelHandlerContext, request);
+        embeddedChannel.writeInbound(request);
 
         // then - request deserialized
         verify(mockVerificationSerializer).deserialize("some_content");
@@ -340,9 +614,7 @@ public class MockServerHandlerTest {
         verify(mockLogFilter).verify(mockVerification);
 
         // and - correct response written to ChannelHandlerContext
-        ArgumentCaptor<HttpResponse> responseCaptor = ArgumentCaptor.forClass(HttpResponse.class);
-        verify(mockChannelHandlerContext).writeAndFlush(responseCaptor.capture());
-        HttpResponse httpResponse = responseCaptor.getValue();
+        HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
         assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.ACCEPTED.code()));
         assertThat(httpResponse.getBodyAsString(), is(""));
     }
@@ -356,7 +628,7 @@ public class MockServerHandlerTest {
         HttpRequest request = request("/verify").withMethod("PUT").withBody("some_content");
 
         // when
-        mockServerHandler.channelRead0(mockChannelHandlerContext, request);
+        embeddedChannel.writeInbound(request);
 
         // then - request deserialized
         verify(mockVerificationSerializer).deserialize("some_content");
@@ -365,9 +637,7 @@ public class MockServerHandlerTest {
         verify(mockLogFilter).verify(mockVerification);
 
         // and - correct response written to ChannelHandlerContext
-        ArgumentCaptor<HttpResponse> responseCaptor = ArgumentCaptor.forClass(HttpResponse.class);
-        verify(mockChannelHandlerContext).writeAndFlush(responseCaptor.capture());
-        HttpResponse httpResponse = responseCaptor.getValue();
+        HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
         assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.NOT_ACCEPTABLE.code()));
         assertThat(httpResponse.getBodyAsString(), is("failure response"));
     }
@@ -381,7 +651,7 @@ public class MockServerHandlerTest {
         HttpRequest request = request("/verifySequence").withMethod("PUT").withBody("some_content");
 
         // when
-        mockServerHandler.channelRead0(mockChannelHandlerContext, request);
+        embeddedChannel.writeInbound(request);
 
         // then - request deserialized
         verify(mockVerificationSequenceSerializer).deserialize("some_content");
@@ -390,9 +660,7 @@ public class MockServerHandlerTest {
         verify(mockLogFilter).verify(mockVerificationSequence);
 
         // and - correct response written to ChannelHandlerContext
-        ArgumentCaptor<HttpResponse> responseCaptor = ArgumentCaptor.forClass(HttpResponse.class);
-        verify(mockChannelHandlerContext).writeAndFlush(responseCaptor.capture());
-        HttpResponse httpResponse = responseCaptor.getValue();
+        HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
         assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.ACCEPTED.code()));
         assertThat(httpResponse.getBodyAsString(), is(""));
     }
@@ -406,7 +674,7 @@ public class MockServerHandlerTest {
         HttpRequest request = request("/verifySequence").withMethod("PUT").withBody("some_content");
 
         // when
-        mockServerHandler.channelRead0(mockChannelHandlerContext, request);
+        embeddedChannel.writeInbound(request);
 
         // then - request deserialized
         verify(mockVerificationSequenceSerializer).deserialize("some_content");
@@ -415,9 +683,7 @@ public class MockServerHandlerTest {
         verify(mockLogFilter).verify(mockVerificationSequence);
 
         // and - correct response written to ChannelHandlerContext
-        ArgumentCaptor<HttpResponse> responseCaptor = ArgumentCaptor.forClass(HttpResponse.class);
-        verify(mockChannelHandlerContext).writeAndFlush(responseCaptor.capture());
-        HttpResponse httpResponse = responseCaptor.getValue();
+        HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
         assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.NOT_ACCEPTABLE.code()));
         assertThat(httpResponse.getBodyAsString(), is("failure response"));
     }
@@ -428,15 +694,13 @@ public class MockServerHandlerTest {
         HttpRequest request = request("/stop").withMethod("PUT").withBody("some_content");
 
         // when
-        mockServerHandler.channelRead0(mockChannelHandlerContext, request);
+        embeddedChannel.writeInbound(request);
 
         // then - mock server is stopped
         verify(mockMockServer).stop();
 
         // and - correct response written to ChannelHandlerContext
-        ArgumentCaptor<HttpResponse> responseCaptor = ArgumentCaptor.forClass(HttpResponse.class);
-        verify(mockChannelHandlerContext).writeAndFlush(responseCaptor.capture());
-        HttpResponse httpResponse = responseCaptor.getValue();
+        HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
         assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.ACCEPTED.code()));
         assertThat(httpResponse.getBodyAsString(), is(""));
     }

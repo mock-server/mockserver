@@ -2,10 +2,7 @@ package org.mockserver.client.serialization.model;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
-import org.mockserver.model.Cookie;
-import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
-import org.mockserver.model.Header;
-import org.mockserver.model.HttpResponse;
+import org.mockserver.model.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +16,7 @@ public class HttpResponseDTO extends ObjectWithReflectiveEqualsHashCodeToString 
     private List<CookieDTO> cookies = new ArrayList<CookieDTO>();
     private List<HeaderDTO> headers = new ArrayList<HeaderDTO>();
     private DelayDTO delay;
+    private ConnectionOptionsDTO connectionOptions;
 
     public HttpResponseDTO(HttpResponse httpResponse) {
         if (httpResponse != null) {
@@ -35,6 +33,7 @@ public class HttpResponseDTO extends ObjectWithReflectiveEqualsHashCodeToString 
                 }
             });
             delay = (httpResponse.getDelay() != null ? new DelayDTO(httpResponse.getDelay()) : null);
+            connectionOptions = (httpResponse.getConnectionOptions() != null ? new ConnectionOptionsDTO(httpResponse.getConnectionOptions()) : null);
         }
     }
 
@@ -55,7 +54,8 @@ public class HttpResponseDTO extends ObjectWithReflectiveEqualsHashCodeToString 
                         return cookie.buildObject();
                     }
                 }))
-                .withDelay((delay != null ? delay.buildObject() : null));
+                .withDelay((delay != null ? delay.buildObject() : null))
+                .withConnectionOptions((connectionOptions != null ? connectionOptions.buildObject() : null));
     }
 
     public Integer getStatusCode() {
@@ -100,6 +100,15 @@ public class HttpResponseDTO extends ObjectWithReflectiveEqualsHashCodeToString 
 
     public HttpResponseDTO setDelay(DelayDTO delay) {
         this.delay = delay;
+        return this;
+    }
+
+    public ConnectionOptionsDTO getConnectionOptions() {
+        return connectionOptions;
+    }
+
+    public HttpResponseDTO setConnectionOptions(ConnectionOptionsDTO connectionOptions) {
+        this.connectionOptions = connectionOptions;
         return this;
     }
 }

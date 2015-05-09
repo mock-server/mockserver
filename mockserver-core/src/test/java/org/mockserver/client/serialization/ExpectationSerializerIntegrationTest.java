@@ -21,7 +21,6 @@ import static org.mockserver.model.NottableString.string;
  */
 public class ExpectationSerializerIntegrationTest {
 
-
     @Test
     public void shouldIgnoreExtraFields() throws IOException {
         // given
@@ -303,6 +302,13 @@ public class ExpectationSerializerIntegrationTest {
                 "    \"delay\" : {" + System.getProperty("line.separator") +
                 "      \"timeUnit\" : \"MICROSECONDS\"," + System.getProperty("line.separator") +
                 "      \"value\" : 1" + System.getProperty("line.separator") +
+                "    }," + System.getProperty("line.separator") +
+                "    \"connectionOptions\" : {" + System.getProperty("line.separator") +
+                "      \"suppressContentLengthHeader\" : true," + System.getProperty("line.separator") +
+                "      \"contentLengthHeaderOverride\" : 50," + System.getProperty("line.separator") +
+                "      \"suppressConnectionHeader\" : true," + System.getProperty("line.separator") +
+                "      \"keepAliveOverride\" : true," + System.getProperty("line.separator") +
+                "      \"closeSocket\" : true" + System.getProperty("line.separator") +
                 "    }" + System.getProperty("line.separator") +
                 "  }," + System.getProperty("line.separator") +
                 "  \"times\" : {" + System.getProperty("line.separator") +
@@ -338,6 +344,16 @@ public class ExpectationSerializerIntegrationTest {
                                         new DelayDTO()
                                                 .setTimeUnit(TimeUnit.MICROSECONDS)
                                                 .setValue(1)
+                                )
+                                .setConnectionOptions(
+                                        new ConnectionOptionsDTO(
+                                                new ConnectionOptions()
+                                                        .withSuppressContentLengthHeader(true)
+                                                        .withContentLengthHeaderOverride(50)
+                                                        .withSuppressConnectionHeader(true)
+                                                        .withKeepAliveOverride(true)
+                                                        .withCloseSocket(true)
+                                        )
                                 )
                 )
                 .setTimes(new TimesDTO(Times.exactly(5))).buildObject(), expectation);
@@ -600,6 +616,16 @@ public class ExpectationSerializerIntegrationTest {
                                                         .setTimeUnit(TimeUnit.MICROSECONDS)
                                                         .setValue(1)
                                         )
+                                        .setConnectionOptions(
+                                                new ConnectionOptionsDTO(
+                                                        new ConnectionOptions()
+                                                                .withSuppressContentLengthHeader(true)
+                                                                .withContentLengthHeaderOverride(50)
+                                                                .withSuppressConnectionHeader(true)
+                                                                .withKeepAliveOverride(true)
+                                                                .withCloseSocket(true)
+                                                )
+                                        )
                         )
                         .setTimes(new TimesDTO(Times.exactly(5)))
                         .buildObject()
@@ -641,6 +667,13 @@ public class ExpectationSerializerIntegrationTest {
                 "    \"delay\" : {" + System.getProperty("line.separator") +
                 "      \"timeUnit\" : \"MICROSECONDS\"," + System.getProperty("line.separator") +
                 "      \"value\" : 1" + System.getProperty("line.separator") +
+                "    }," + System.getProperty("line.separator") +
+                "    \"connectionOptions\" : {" + System.getProperty("line.separator") +
+                "      \"suppressContentLengthHeader\" : true," + System.getProperty("line.separator") +
+                "      \"contentLengthHeaderOverride\" : 50," + System.getProperty("line.separator") +
+                "      \"suppressConnectionHeader\" : true," + System.getProperty("line.separator") +
+                "      \"keepAliveOverride\" : true," + System.getProperty("line.separator") +
+                "      \"closeSocket\" : true" + System.getProperty("line.separator") +
                 "    }" + System.getProperty("line.separator") +
                 "  }," + System.getProperty("line.separator") +
                 "  \"times\" : {" + System.getProperty("line.separator") +
@@ -652,7 +685,6 @@ public class ExpectationSerializerIntegrationTest {
                 "  }" + System.getProperty("line.separator") +
                 "}", jsonExpectation);
     }
-
 
     @Test
     public void shouldSerializeCompleteObjectWithForward() throws IOException {

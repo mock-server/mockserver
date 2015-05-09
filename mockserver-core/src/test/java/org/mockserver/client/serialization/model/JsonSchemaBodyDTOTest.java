@@ -15,7 +15,7 @@ import static org.mockserver.model.JsonSchemaBody.jsonSchema;
 public class JsonSchemaBodyDTOTest {
 
     @Test
-    public void shouldReturnValueSetInConstructor() {
+    public void shouldReturnValuesSetInConstructor() {
         // when
         JsonSchemaBodyDTO jsonSchemaBodyDTO = new JsonSchemaBodyDTO(new JsonSchemaBody("some_body"));
 

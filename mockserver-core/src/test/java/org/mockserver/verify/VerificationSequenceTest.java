@@ -11,7 +11,7 @@ import static org.mockserver.model.HttpRequest.request;
 public class VerificationSequenceTest {
 
     @Test
-    public void shouldReturnValueSetInSetter() {
+    public void shouldReturnValuesSetInSetter() {
         // when
         VerificationSequence verification = new VerificationSequence()
                 .withRequests(request("one"), request("two"), request("three"));

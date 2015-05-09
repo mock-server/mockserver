@@ -15,7 +15,7 @@ import static org.hamcrest.core.Is.is;
 public class DelayDTOTest {
 
     @Test
-    public void shouldReturnValueSetInConstructor() {
+    public void shouldReturnValuesSetInConstructor() {
         // when
         DelayDTO delay = new DelayDTO(new Delay(TimeUnit.DAYS, 5));
 
@@ -25,7 +25,7 @@ public class DelayDTOTest {
     }
 
     @Test
-    public void shouldReturnValueSetInSetter() {
+    public void shouldReturnValuesSetInSetter() {
         // when
         DelayDTO delay = new DelayDTO();
         delay.setTimeUnit(TimeUnit.DAYS);

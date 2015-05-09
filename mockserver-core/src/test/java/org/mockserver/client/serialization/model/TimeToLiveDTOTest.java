@@ -14,7 +14,7 @@ import static org.hamcrest.core.Is.is;
 public class TimeToLiveDTOTest {
 
     @Test
-    public void shouldReturnValueSetInConstructor() {
+    public void shouldReturnValuesSetInConstructor() {
         // when
         TimeToLiveDTO timeToLive = new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.MINUTES, 5l));
 
