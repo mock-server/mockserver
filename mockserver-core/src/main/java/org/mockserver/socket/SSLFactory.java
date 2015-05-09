@@ -89,11 +89,8 @@ public class SSLFactory {
                 ConfigurationProperties.addSslSubjectAlternativeNameDomains(addr.getHostName());
                 ConfigurationProperties.addSslSubjectAlternativeNameDomains(addr.getCanonicalHostName());
             } catch (UnknownHostException uhe) {
-                // do nothing
+                ConfigurationProperties.addSslSubjectAlternativeNameDomains(hostWithoutPort);
             }
-
-            // add Subject Alternative Name for SSL certificate
-            ConfigurationProperties.addSslSubjectAlternativeNameDomains(hostWithoutPort);
         }
     }
 

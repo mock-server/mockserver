@@ -149,13 +149,22 @@ public class MockServerHandlerTest {
         System.clearProperty("mockserver.sslSubjectAlternativeNameDomains");
         HttpRequest request = request("/expectation").withMethod("PUT").withBody("some_content");
         when(mockHttpRequest.getFirstHeader(HttpHeaders.Names.HOST)).thenReturn("somehostname");
-        InetAddress inetAddress = InetAddress.getByName("somehostname");
+        InetAddress inetAddress = null;
+        try {
+            inetAddress = InetAddress.getByName("somehostname");
+        } catch (UnknownHostException uhe) {
+            // do nothing
+        }
 
         // when
         mockServerHandler.channelRead0(mockChannelHandlerContext, request);
 
         // then
-        Assert.assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()), containsInAnyOrder("localhost", inetAddress.getHostName(), inetAddress.getCanonicalHostName()));
+        if (inetAddress != null) {
+            Assert.assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()), containsInAnyOrder("localhost", inetAddress.getHostName(), inetAddress.getCanonicalHostName()));
+        } else {
+            Assert.assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()), containsInAnyOrder("localhost", "somehostname"));
+        }
     }
 
     @Test
