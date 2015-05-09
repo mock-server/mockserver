@@ -2,7 +2,9 @@ package org.mockserver.mockserver;
 
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -12,6 +14,7 @@ import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.client.serialization.VerificationSequenceSerializer;
 import org.mockserver.client.serialization.VerificationSerializer;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.filters.LogFilter;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
@@ -25,7 +28,12 @@ import org.mockserver.model.HttpResponse;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.Arrays;
+
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -38,7 +46,6 @@ import static org.mockserver.model.HttpResponse.response;
  * @author jamesdbloom
  */
 public class MockServerHandlerTest {
-
 
     // model objects
     @Mock
@@ -134,6 +141,21 @@ public class MockServerHandlerTest {
         HttpResponse httpResponse = responseCaptor.getValue();
         assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.CREATED.code()));
         assertThat(httpResponse.getBodyAsString(), is(""));
+    }
+
+    @Test
+    public void shouldAddSubjectAlternativeName() throws UnknownHostException {
+        // given
+        System.clearProperty("mockserver.sslSubjectAlternativeNameDomains");
+        HttpRequest request = request("/expectation").withMethod("PUT").withBody("some_content");
+        when(mockHttpRequest.getFirstHeader(HttpHeaders.Names.HOST)).thenReturn("somehostname");
+        InetAddress inetAddress = InetAddress.getByName("somehostname");
+
+        // when
+        mockServerHandler.channelRead0(mockChannelHandlerContext, request);
+
+        // then
+        Assert.assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()), containsInAnyOrder("localhost", inetAddress.getHostName(), inetAddress.getCanonicalHostName()));
     }
 
     @Test

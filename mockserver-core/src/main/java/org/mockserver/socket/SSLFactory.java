@@ -80,19 +80,21 @@ public class SSLFactory {
     }
 
     public static void addSubjectAlternativeName(String host) {
-        String hostWithoutPort = StringUtils.substringBefore(host, ":");
+        if (host != null) {
+            String hostWithoutPort = StringUtils.substringBefore(host, ":");
 
-        try {
-            // resolve host name for subject alternative name in case host name is ip address
-            InetAddress addr = InetAddress.getByName(hostWithoutPort);
-            ConfigurationProperties.addSslSubjectAlternativeNameDomains(addr.getHostName());
-            ConfigurationProperties.addSslSubjectAlternativeNameDomains(addr.getCanonicalHostName());
-        } catch (UnknownHostException uhe) {
-            // do nothing
+            try {
+                // resolve host name for subject alternative name in case host name is ip address
+                InetAddress addr = InetAddress.getByName(hostWithoutPort);
+                ConfigurationProperties.addSslSubjectAlternativeNameDomains(addr.getHostName());
+                ConfigurationProperties.addSslSubjectAlternativeNameDomains(addr.getCanonicalHostName());
+            } catch (UnknownHostException uhe) {
+                // do nothing
+            }
+
+            // add Subject Alternative Name for SSL certificate
+            ConfigurationProperties.addSslSubjectAlternativeNameDomains(hostWithoutPort);
         }
-
-        // add Subject Alternative Name for SSL certificate
-        ConfigurationProperties.addSslSubjectAlternativeNameDomains(hostWithoutPort);
     }
 
     public SSLContext sslContext() {
