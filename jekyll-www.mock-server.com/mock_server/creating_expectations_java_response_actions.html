@@ -110,6 +110,62 @@ subsection: false
      * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">delay</span> a Delay object, for example <span class="keyword">new</span> Delay(TimeUnit.<span class="constant">SECONDS</span>, <span class="numeric_literal">3</span>)
      */</span>
     <span class="keyword">public</span> HttpResponse withDelay(Delay delay);
+
+    <span class="comment">/**
+     * The connection options for override the default connection behaviour, this allows full control of headers such
+     * as <span class="string_literal">"Connection"</span> or <span class="string_literal">"Content-Length"</span> or controlling whether the socket is closed after the response has been sent
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">connectionOptions</span> the connection options for override the default connection behaviour
+     */</span>
+    <span class="keyword">public</span> HttpResponse withConnectionOptions(ConnectionOptions connectionOptions);
+}</code></pre>
+
+<p>To control whether the socket is closed after the response has been sent or headers such as <span class="string_literal">"Connection"</span> or <span class="string_literal">"Content-Length"</span> the <strong>org.mockserver.model.ConnectionOptions</strong> class can be used, as follows:</p>
+
+<pre><code class="code"><span class="keyword">public class</span> ConnectionOptions {
+
+    <span class="comment">/**
+     * Prevent a <span class="string_literal">"Content-Length"</span> header from being added to the response
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">suppressContentLengthHeader</span> if true no <span class="string_literal">"Content-Length"</span> header will be added to the response
+     */</span>
+    <span class="keyword">public</span> ConnectionOptions withSuppressContentLengthHeader(Boolean suppressContentLengthHeader);
+
+    <span class="comment">/**
+     * Override the <span class="string_literal">"Content-Length"</span> header with the specified amount, if not set the <span class="string_literal">"Content-Length"</span>
+     * header will have a value determined by the length of the body
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">contentLengthHeaderOverride</span> the value to use for the <span class="string_literal">"Content-Length"</span> header
+     */</span>
+    <span class="keyword">public</span> ConnectionOptions withContentLengthHeaderOverride(Integer contentLengthHeaderOverride);
+
+    <span class="comment">/**
+     * Prevent a <span class="string_literal">"Connection"</span> header from being added to the response
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">suppressConnectionHeader</span> if true no <span class="string_literal">"Connection"</span> header will be added to the response
+     */</span>
+    <span class="keyword">public</span> ConnectionOptions withSuppressConnectionHeader(Boolean suppressConnectionHeader);
+
+    <span class="comment">/**
+     * Override the <span class="string_literal">"Connection"</span> header:
+     *    if true the <span class="string_literal">"Connection"</span> header is specified with a value of <span class="string_literal">"keep-alive"</span>
+     *    if false the <span class="string_literal">"Connection"</span> header is specified with a value of <span class="string_literal">"close"</span>
+     *    if not set the <span class="string_literal">"Connection"</span> header will have a a value of <span class="string_literal">"close"</span> unless the request received is HTTP 1.1 and contains a <span class="string_literal">"Connection"</span> header with a value of <span class="string_literal">"keep-alive"</span>
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">keepAliveOverride</span> if true <span class="string_literal">"keep-alive"</span> is used if false <span class="string_literal">"close"</span> is used for the <span class="string_literal">"Connection"</span> header
+     */</span>
+    <span class="keyword">public</span> ConnectionOptions withKeepAliveOverride(Boolean keepAliveOverride);
+
+    <span class="comment">/**
+     * Override whether the socket is closed after a response is sent:
+     *    if true the socket will always be closed,
+     *    if false the socket will never be closed,
+     *    if not set the socket will be closed unless the request received is HTTP 1.1 and contains a <span class="string_literal">"Connection"</span> header with a value of <span class="string_literal">"keep-alive"</span>
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">closeSocket</span> set whether the socket is closed after a response is sent
+     */</span>
+    <span class="keyword">public</span> ConnectionOptions withCloseSocket(Boolean closeSocket);
+
 }</code></pre>
 
 <p>For example:</p>
@@ -122,5 +178,10 @@ subsection: false
                         <span class="keyword">new</span> Header(<span class="string_literal">"Cache-Control"</span>, <span class="string_literal">"public, max-age=86400"</span>)
                 )
                 .withBody(<span class="string_literal">"{ message: 'incorrect username and password combination' }"</span>)
-                .withDelay(<span class="keyword">new</span> Delay(TimeUnit.<span class="constant">SECONDS</span>, <span class="numeric_literal">1</span>));
+                .withDelay(<span class="keyword">new</span> Delay(TimeUnit.<span class="constant">SECONDS</span>, <span class="numeric_literal">1</span>))
+                .withConnectionOptions(
+                        <span class="keyword">new</span> ConnectionOptions()
+                                .withKeepAliveOverride(<span class="keyword">true</span>)
+                                .withCloseSocket(<span class="keyword">true</span>)
+                );
 </code></pre>

@@ -278,7 +278,8 @@ public class HttpResponse extends Action {
     }
 
     /**
-     * The connection options for override the default connection behaviour, this allows full control of "hop-by-hop" headers such a "Connection" or "Content-Length"
+     * The connection options for override the default connection behaviour, this allows full control of headers such
+     * as "Connection" or "Content-Length" or controlling whether the socket is closed after the response has been sent
      *
      * @param connectionOptions the connection options for override the default connection behaviour
      */
