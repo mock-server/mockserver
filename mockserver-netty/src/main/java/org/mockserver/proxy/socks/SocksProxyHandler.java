@@ -3,8 +3,8 @@ package org.mockserver.proxy.socks;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.socks.*;
-import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.proxy.unification.PortUnificationHandler;
+import org.mockserver.socket.SSLFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,17 +43,8 @@ public class SocksProxyHandler extends SimpleChannelInboundHandler<SocksRequest>
                     // assume SSL enabled, if this is incorrect client retries without SSL
                     PortUnificationHandler.enabledSslDownstream(ctx.channel());
 
-                    try {
-                        // resolve host name for subject alternative name when ip address used in SOCKS request
-                        InetAddress addr = InetAddress.getByName(req.host());
-                        ConfigurationProperties.addSslSubjectAlternativeNameDomains(addr.getHostName());
-                        ConfigurationProperties.addSslSubjectAlternativeNameDomains(addr.getCanonicalHostName());
-                    } catch (UnknownHostException uhe) {
-                        // do nothing
-                    }
-
                     // add Subject Alternative Name for SSL certificate
-                    ConfigurationProperties.addSslSubjectAlternativeNameDomains(req.host());
+                    SSLFactory.addSubjectAlternativeName(req.host());
 
                     ctx.pipeline().addLast(new SocksConnectHandler());
                     ctx.pipeline().remove(this);

@@ -1,6 +1,7 @@
 package org.mockserver.socket;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,7 +9,9 @@ import org.slf4j.LoggerFactory;
 import javax.net.ssl.*;
 import java.io.File;
 import java.io.FileInputStream;
+import java.net.InetAddress;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
@@ -74,6 +77,22 @@ public class SSLFactory {
         SSLEngine engine = SSLFactory.getInstance().sslContext().createSSLEngine();
         engine.setUseClientMode(false);
         return engine;
+    }
+
+    public static void addSubjectAlternativeName(String host) {
+        String hostWithoutPort = StringUtils.substringBefore(host, ":");
+
+        try {
+            // resolve host name for subject alternative name in case host name is ip address
+            InetAddress addr = InetAddress.getByName(hostWithoutPort);
+            ConfigurationProperties.addSslSubjectAlternativeNameDomains(addr.getHostName());
+            ConfigurationProperties.addSslSubjectAlternativeNameDomains(addr.getCanonicalHostName());
+        } catch (UnknownHostException uhe) {
+            // do nothing
+        }
+
+        // add Subject Alternative Name for SSL certificate
+        ConfigurationProperties.addSslSubjectAlternativeNameDomains(hostWithoutPort);
     }
 
     public SSLContext sslContext() {

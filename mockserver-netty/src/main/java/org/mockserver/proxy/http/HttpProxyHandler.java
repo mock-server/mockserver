@@ -4,13 +4,11 @@ import com.google.common.base.Strings;
 import io.netty.channel.*;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import org.apache.commons.lang3.StringUtils;
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.client.serialization.VerificationSequenceSerializer;
 import org.mockserver.client.serialization.VerificationSerializer;
-import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.filters.Filters;
 import org.mockserver.filters.HopByHopHeaderFilter;
 import org.mockserver.filters.LogFilter;
@@ -21,6 +19,7 @@ import org.mockserver.model.HttpResponse;
 import org.mockserver.proxy.Proxy;
 import org.mockserver.proxy.connect.HttpConnectHandler;
 import org.mockserver.proxy.unification.PortUnificationHandler;
+import org.mockserver.socket.SSLFactory;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.slf4j.Logger;
@@ -70,9 +69,7 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
                 // assume CONNECT always for SSL
                 PortUnificationHandler.enabledSslUpstreamAndDownstream(ctx.channel());
                 // add Subject Alternative Name for SSL certificate
-                ConfigurationProperties.addSslSubjectAlternativeNameDomains(
-                        StringUtils.substringBefore(request.getPath().getValue(), ":")
-                );
+                SSLFactory.addSubjectAlternativeName(request.getPath().getValue());
                 ctx.pipeline().addLast(new HttpConnectHandler());
                 ctx.pipeline().remove(this);
                 ctx.fireChannelRead(request);

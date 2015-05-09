@@ -84,7 +84,7 @@ public class ConfigurationProperties {
     }
 
     public static String[] sslSubjectAlternativeNameDomains() {
-        String sslSubjectAlternativeNameDomains = readPropertyHierarchically("mockserver.sslSubjectAlternativeNameDomains", "");
+        String sslSubjectAlternativeNameDomains = readPropertyHierarchically("mockserver.sslSubjectAlternativeNameDomains", "localhost");
         if (sslSubjectAlternativeNameDomains.isEmpty()) {
             return new String[0];
         } else {
@@ -112,7 +112,7 @@ public class ConfigurationProperties {
     }
 
     public static String[] sslSubjectAlternativeNameIps() {
-        String sslSubjectAlternativeNameIps = readPropertyHierarchically("mockserver.sslSubjectAlternativeNameIps", "");
+        String sslSubjectAlternativeNameIps = readPropertyHierarchically("mockserver.sslSubjectAlternativeNameIps", "127.0.0.1,0.0.0.0");
         if (sslSubjectAlternativeNameIps.isEmpty()) {
             return new String[0];
         } else {
