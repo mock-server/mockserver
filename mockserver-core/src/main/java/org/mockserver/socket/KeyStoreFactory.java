@@ -201,7 +201,7 @@ public class KeyStoreFactory {
     /**
      * Create a KeyStore with a server certificate for the given domain and subject alternative names.
      */
-    KeyStore generateCertificate(String certificationAlias, String certificateAuthorityAlias, char[] keyStorePassword, String domain, String[] subjectAlternativeNameDomains, String[] subjectAlternativeNameIps) throws Exception {
+    KeyStore generateCertificate(KeyStore keyStore, String certificationAlias, String certificateAuthorityAlias, char[] keyStorePassword, String domain, String[] subjectAlternativeNameDomains, String[] subjectAlternativeNameIps) throws Exception {
 
         //
         // personal keys
@@ -225,7 +225,18 @@ public class KeyStoreFactory {
             caPrivateKey = caKeyPair.getPrivate();
             caCert = createCACert(caPublicKey, caPrivateKey);
 
-            saveCertificateAsKeyStore("CertificateAuthorityKeyStore.jks", certificateAuthorityAlias, privateKey, keyStorePassword, new X509Certificate[]{caCert}, caCert);
+            KeyStore caKeyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+            caKeyStore.load(readFileFromClassPathOrPath("org/mockserver/socket/CertificateAuthorityKeyStore.jks"), ConfigurationProperties.javaKeyStorePassword().toCharArray());
+            saveCertificateAsKeyStore(
+                    caKeyStore,
+                    false,
+                    "CertificateAuthorityKeyStore.jks",
+                    certificateAuthorityAlias,
+                    privateKey,
+                    keyStorePassword,
+                    new X509Certificate[]{caCert},
+                    caCert
+            );
             saveCertificateAsPEMFile(caCert, "CertificateAuthorityCertificate.pem");
             saveCertificateAsPEMFile(caPublicKey, "CertificateAuthorityPublicKey.pem");
             saveCertificateAsPEMFile(caPrivateKey, "CertificateAuthorityPrivateKey.pem");
@@ -236,7 +247,16 @@ public class KeyStoreFactory {
         //
         X509Certificate clientCert = createClientCert(publicKey, caCert, caPrivateKey, caCert.getPublicKey(), domain, subjectAlternativeNameDomains, subjectAlternativeNameIps);
 
-        return saveCertificateAsKeyStore(ConfigurationProperties.javaKeyStoreFilePath(), certificationAlias, privateKey, keyStorePassword, new X509Certificate[]{clientCert, caCert}, caCert);
+        return saveCertificateAsKeyStore(
+                keyStore,
+                ConfigurationProperties.deleteGeneratedKeyStoreOnExit(),
+                ConfigurationProperties.javaKeyStoreFilePath(),
+                certificationAlias,
+                privateKey,
+                keyStorePassword,
+                new X509Certificate[]{clientCert, caCert},
+                caCert
+        );
     }
 
     /**
@@ -257,17 +277,30 @@ public class KeyStoreFactory {
     /**
      * Save X509Certificate in KeyStore file.
      */
-    private KeyStore saveCertificateAsKeyStore(String keyStoreFileName, String certificationAlias, Key privateKey, char[] keyStorePassword, Certificate[] chain, X509Certificate caCert) {
+    private KeyStore saveCertificateAsKeyStore(KeyStore existingKeyStore, boolean deleteOnExit, String keyStoreFileName, String certificationAlias, Key privateKey, char[] keyStorePassword, Certificate[] chain, X509Certificate caCert) {
         try {
-            // create new key store
-            KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-            keyStore.load(null, keyStorePassword);
+            KeyStore keyStore = existingKeyStore;
+            if (keyStore == null) {
+                // create new key store
+                keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+                keyStore.load(null, keyStorePassword);
+            }
 
             // add certificate
+            try {
+                keyStore.deleteEntry(certificationAlias);
+            } catch (KeyStoreException kse) {
+                // ignore as may not exist in keystore yet
+            }
             keyStore.setKeyEntry(certificationAlias, privateKey, keyStorePassword, chain);
 
             // add CA certificate
-            keyStore.setCertificateEntry("mockserver-ca", caCert);
+            try {
+                keyStore.deleteEntry(SSLFactory.KEY_STORE_CA_ALIAS);
+            } catch (KeyStoreException kse) {
+                // ignore as may not exist in keystore yet
+            }
+            keyStore.setCertificateEntry(SSLFactory.KEY_STORE_CA_ALIAS, caCert);
 
             // save as JKS file
             File keyStoreFile = new File(keyStoreFileName);
@@ -279,7 +312,7 @@ public class KeyStoreFactory {
             } finally {
                 IOUtils.closeQuietly(fileOutputStream);
             }
-            if (ConfigurationProperties.deleteGeneratedKeyStoreOnExit()) {
+            if (deleteOnExit) {
                 keyStoreFile.deleteOnExit();
             }
             return keyStore;

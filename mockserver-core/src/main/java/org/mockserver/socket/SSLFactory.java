@@ -22,9 +22,9 @@ public class SSLFactory {
 
     public static final String KEY_STORE_PASSWORD = "changeit";
     public static final String CERTIFICATE_DOMAIN = "localhost";
-    public static final String KEY_STORE_CERT_ALIAS = "certAlias";
+    public static final String KEY_STORE_CERT_ALIAS = "mockserver-client-cert";
+    public static final String KEY_STORE_CA_ALIAS = "mockserver-ca-cert";
     private static final Logger logger = LoggerFactory.getLogger(SSLFactory.class);
-    private static final String KEY_STORE_CA_ALIAS = "caAlias";
     private static final SSLFactory SSL_FACTORY = new SSLFactory();
     private static final TrustManager DUMMY_TRUST_MANAGER = new X509TrustManager() {
         @Override
@@ -50,11 +50,11 @@ public class SSLFactory {
 
     public static String defaultKeyStoreFileName() {
         if ("jks".equalsIgnoreCase(ConfigurationProperties.javaKeyStoreType())) {
-            return "keystore.jks";
+            return "mockserver_keystore.jks";
         } else if ("pkcs12".equalsIgnoreCase(ConfigurationProperties.javaKeyStoreType())) {
-            return "keystore.p12";
+            return "mockserver_keystore.p12";
         } else if ("jceks".equalsIgnoreCase(ConfigurationProperties.javaKeyStoreType())) {
-            return "keystore.jceks";
+            return "mockserver_keystore.jceks";
         } else {
             throw new IllegalArgumentException(ConfigurationProperties.javaKeyStoreType() + " is not a supported keystore type");
         }
@@ -153,11 +153,13 @@ public class SSLFactory {
         if (keystore == null || forceRebuild) {
             File keyStoreFile = new File(ConfigurationProperties.javaKeyStoreFilePath());
             System.setProperty("javax.net.ssl.trustStore", keyStoreFile.getAbsolutePath());
-            if (keyStoreFile.exists() && !forceRebuild) {
-                keystore = loadKeyStore(keyStoreFile);
+            if (keyStoreFile.exists()) {
+                keystore = updateExistingKeyStore(keyStoreFile);
             } else {
-                dynamicallyCreateKeyStore();
+                createNewKeyStore();
             }
+            // don't rebuild again and again and again
+            ConfigurationProperties.rebuildKeyStore(false);
         }
         return keystore;
     }
@@ -170,9 +172,10 @@ public class SSLFactory {
         return KeyManagerFactory.getInstance(algorithm);
     }
 
-    private void dynamicallyCreateKeyStore() {
+    private void createNewKeyStore() {
         try {
             keystore = new KeyStoreFactory().generateCertificate(
+                    null,
                     KEY_STORE_CERT_ALIAS,
                     KEY_STORE_CA_ALIAS,
                     ConfigurationProperties.javaKeyStorePassword().toCharArray(),
@@ -185,7 +188,7 @@ public class SSLFactory {
         }
     }
 
-    private KeyStore loadKeyStore(File keyStoreFile) {
+    private KeyStore updateExistingKeyStore(File keyStoreFile) {
         try {
             FileInputStream fileInputStream = null;
             try {
@@ -193,6 +196,15 @@ public class SSLFactory {
                 logger.trace("Loading key store from file [" + keyStoreFile + "]");
                 KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
                 keystore.load(fileInputStream, ConfigurationProperties.javaKeyStorePassword().toCharArray());
+                new KeyStoreFactory().generateCertificate(
+                        keystore,
+                        KEY_STORE_CERT_ALIAS,
+                        KEY_STORE_CA_ALIAS,
+                        ConfigurationProperties.javaKeyStorePassword().toCharArray(),
+                        ConfigurationProperties.sslCertificateDomainName(),
+                        ConfigurationProperties.sslSubjectAlternativeNameDomains(),
+                        ConfigurationProperties.sslSubjectAlternativeNameIps()
+                );
                 return keystore;
             } finally {
                 IOUtils.closeQuietly(fileInputStream);
