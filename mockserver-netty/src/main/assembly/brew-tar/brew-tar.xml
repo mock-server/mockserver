@@ -2,7 +2,7 @@
 <assembly xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
           xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2"
           xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
-    <id>bundled-tar</id>
+    <id>brew-tar</id>
     <formats>
         <format>tar</format>
     </formats>
@@ -14,7 +14,7 @@
             <destName>mockserver-netty-jar-with-dependencies.jar</destName>
         </file>
         <file>
-            <source>${basedir}/src/main/assembly/bundled-tar/run_mockserver.sh</source>
+            <source>${basedir}/src/main/assembly/brew-tar/run_mockserver.sh</source>
             <outputDirectory>/bin</outputDirectory>
         </file>
     </files>

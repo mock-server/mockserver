@@ -77,11 +77,5 @@ then
     COMMAND_LINE_OPTS="$COMMAND_LINE_OPTS -proxyRemoteHost $proxyRemoteHost"
 fi
 
-if [ -z "$MOCKSERVER_HOME" ]
-then
-    MOCKSERVER_BIN_DIRECTORY=`dirname $0`
-    MOCKSERVER_HOME="$MOCKSERVER_BIN_DIRECTORY/.."
-fi
-
-echo "java -Dfile.encoding=UTF-8 -Dmockserver.logLevel=$LOG_LEVEL -Dlog.dir=$MOCKSERVER_HOME/log/ -jar $MOCKSERVER_HOME/lib/mockserver-netty-jar-with-dependencies.jar $COMMAND_LINE_OPTS"
-java -Dfile.encoding=UTF-8 -Dmockserver.logLevel=$LOG_LEVEL -Dlog.dir=$MOCKSERVER_HOME/log/ -jar $MOCKSERVER_HOME/lib/mockserver-netty-jar-with-dependencies.jar $COMMAND_LINE_OPTS
+echo "java -Dfile.encoding=UTF-8 -Dmockserver.logLevel=$LOG_LEVEL -Dlog.dir=/usr/local/var/log/mockserver/ -jar /usr/local/lib/mockserver/mockserver-netty-jar-with-dependencies.jar $COMMAND_LINE_OPTS"
+java -Dfile.encoding=UTF-8 -Dmockserver.logLevel=$LOG_LEVEL -Dlog.dir=/usr/local/var/log/mockserver/ -jar /usr/local/lib/mockserver/mockserver-netty-jar-with-dependencies.jar $COMMAND_LINE_OPTS
