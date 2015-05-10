@@ -62,5 +62,10 @@ If you have any problems, please [check the project issues](https://github.com/j
 
 Pull requests are, of course, very welcome! Please read our [contributing to the project](https://github.com/jamesdbloom/mockserver/wiki/Contributing-to-the-project) guide first. Then head over to the [open issues](https://github.com/jamesdbloom/mockserver/issues?state=open) to see what we need help with. Make sure you let us know if you intend to work on something. Also, check out the [milestones](https://github.com/jamesdbloom/mockserver/milestones) to see what is planned for future releases.
 
+## Donations
+We accept tips through [Gratipay](https://gratipay.com/jamesdbloom/).
+
+[![Gratipay](https://img.shields.io/gratipay/jamesdbloom.svg?style=flat)](https://gratipay.com/jamesdbloom/)
+
 # Maintainers
 * [James D Bloom](http://blog.jamesdbloom.com)
