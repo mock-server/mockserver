@@ -51,7 +51,7 @@ then
     exit 1
 fi
 
-LOG_LEVEL="WARN"
+LOG_LEVEL="INFO"
 
 if [ -n "$logLevel" ]
 then
@@ -79,7 +79,7 @@ fi
 
 if [ -z "$MOCKSERVER_HOME" ]
 then
-    MOCKSERVER_HOME="/opt/mockserver"
+    MOCKSERVER_HOME="${PWD}"
 fi
 
 echo "java -Dfile.encoding=UTF-8 -Dmockserver.logLevel=$LOG_LEVEL -jar $MOCKSERVER_HOME/mockserver-netty-jar-with-dependencies.jar $COMMAND_LINE_OPTS"
