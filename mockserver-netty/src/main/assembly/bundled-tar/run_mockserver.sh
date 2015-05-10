@@ -79,8 +79,9 @@ fi
 
 if [ -z "$MOCKSERVER_HOME" ]
 then
-    MOCKSERVER_HOME="${PWD}"
+    MOCKSERVER_BIN_DIRECTORY=`dirname $0`
+    MOCKSERVER_HOME="$MOCKSERVER_BIN_DIRECTORY/.."
 fi
 
-echo "java -Dfile.encoding=UTF-8 -Dmockserver.logLevel=$LOG_LEVEL -jar $MOCKSERVER_HOME/mockserver-netty-jar-with-dependencies.jar $COMMAND_LINE_OPTS"
-java -Dfile.encoding=UTF-8 -Dmockserver.logLevel=$LOG_LEVEL -jar $MOCKSERVER_HOME/mockserver-netty-jar-with-dependencies.jar $COMMAND_LINE_OPTS
+echo "java -Dfile.encoding=UTF-8 -Dmockserver.logLevel=$LOG_LEVEL -Dlog.dir=$MOCKSERVER_HOME/log/ -jar $MOCKSERVER_HOME/lib/mockserver-netty-jar-with-dependencies.jar $COMMAND_LINE_OPTS"
+java -Dfile.encoding=UTF-8 -Dmockserver.logLevel=$LOG_LEVEL -Dlog.dir=$MOCKSERVER_HOME/log/ -jar $MOCKSERVER_HOME/lib/mockserver-netty-jar-with-dependencies.jar $COMMAND_LINE_OPTS

@@ -3,7 +3,7 @@
 
     <!-- application log -->
     <appender name="FILE" class="org.mockserver.logging.DelayedFileCreationRollingFileAppender">
-        <file>mockserver.log</file>
+        <file>${log.dir}mockserver.log</file>
         <encoder>
             <pattern>%date %level [%thread] %logger{35} [%file:%line] %msg%n</pattern>
         </encoder>
@@ -12,7 +12,7 @@
         </filter>
 
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>mockserver.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <fileNamePattern>${log.dir}mockserver.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
             <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
                 <maxFileSize>100MB</maxFileSize>
             </timeBasedFileNamingAndTriggeringPolicy>
