@@ -10,12 +10,8 @@ import org.mockserver.model.BinaryBody;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.StringBody;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import javax.mail.internet.ContentType;
 import java.nio.charset.Charset;
-import java.nio.charset.UnsupportedCharsetException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,26 +34,26 @@ public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpRespo
     }
 
     private ByteBuf getBody(HttpResponse httpResponse) {
+        ByteBuf content = Unpooled.buffer(0, 0);
         if (httpResponse.getBody() != null) {
             if (httpResponse.getBody() instanceof BinaryBody) {
-                // if the body is binary, copy the bytes from the body object verbatim.
-                return Unpooled.copiedBuffer(httpResponse.getBody().getRawBytes());
+                content = Unpooled.copiedBuffer(httpResponse.getBody().getRawBytes());
             } else {
-                // if the body is a StringBody, use the character set on the StringBody if present. otherwise,
-                // derive the character set from the response headers and encode the string using that character set.
-                Charset charset;
-                if (httpResponse.getBody() instanceof StringBody && ((StringBody) httpResponse.getBody()).getCharset() != null) {
-                    charset = ((StringBody) httpResponse.getBody()).getCharset();
-                } else {
-                    charset = ContentTypeMapper.identifyCharsetFromResponse(httpResponse);
+                // use response charset (if set)
+                Charset charset = ContentTypeMapper.determineCharsetFromResponseContentType(httpResponse);
+
+                // unless StringBody has charset defined
+                if (httpResponse.getBody() instanceof StringBody) {
+                    StringBody stringBody = (StringBody) httpResponse.getBody();
+                    if (stringBody.getCharset() != null) {
+                        charset = stringBody.getCharset();
+                    }
                 }
 
-                return Unpooled.copiedBuffer(httpResponse.getBodyAsString().getBytes(charset));
+                content = Unpooled.copiedBuffer(httpResponse.getBodyAsString().getBytes(charset));
             }
-        } else {
-            // no body content set, so return a zero-length buffer
-            return Unpooled.buffer(0, 0);
         }
+        return content;
     }
 
     private void setHeaders(HttpResponse httpResponse, DefaultFullHttpResponse httpServletResponse) {

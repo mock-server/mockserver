@@ -1,5 +1,6 @@
 package org.mockserver.client.serialization.deserializers.body;
 
+import com.google.common.base.Charsets;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.junit.Test;
 import org.mockserver.client.serialization.ObjectMapperFactory;
@@ -73,6 +74,30 @@ public class BodyDTODeserializerTest {
                 .setHttpRequest(
                         new HttpRequestDTO()
                                 .setBody(new StringBodyDTO(new StringBody("")))
+                ), expectationDTO);
+    }
+
+    @Test
+    public void shouldParseJSONWithCharsetInBody() throws IOException {
+        // given
+        String json = ("{" + System.getProperty("line.separator") +
+                "    \"httpRequest\": {" + System.getProperty("line.separator") +
+                "        \"body\" : {" + System.getProperty("line.separator") +
+                "            \"charset\" : \"UTF-16\"," + System.getProperty("line.separator") +
+                "            \"type\" : \"STRING\"," + System.getProperty("line.separator") +
+                "            \"string\" : \"some_value\"" + System.getProperty("line.separator") +
+                "        }" + System.getProperty("line.separator") +
+                "    }" + System.getProperty("line.separator") +
+                "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+                .setHttpRequest(
+                        new HttpRequestDTO()
+                                .setBody(new StringBodyDTO(new StringBody("some_value", Charsets.UTF_16)))
                 ), expectationDTO);
     }
 

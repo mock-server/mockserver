@@ -1,9 +1,7 @@
-package org.mockserver.client.serialization.model;
+package org.mockserver.model;
 
 import com.google.common.base.Charsets;
 import org.junit.Test;
-import org.mockserver.model.Body;
-import org.mockserver.model.StringBody;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.nullValue;
@@ -13,15 +11,15 @@ import static org.mockserver.model.StringBody.exact;
 /**
  * @author jamesdbloom
  */
-public class StringBodyDTOTest {
+public class StringBodyTest {
 
     @Test
     public void shouldReturnValuesSetInConstructor() {
         // when
-        StringBodyDTO stringBody = new StringBodyDTO(new StringBody("some_body"));
+        StringBody stringBody = new StringBody("some_body");
 
         // then
-        assertThat(stringBody.getString(), is("some_body"));
+        assertThat(stringBody.getValue(), is("some_body"));
         assertThat(stringBody.getType(), is(Body.Type.STRING));
         assertThat(stringBody.getCharset(), nullValue());
     }
@@ -29,18 +27,7 @@ public class StringBodyDTOTest {
     @Test
     public void shouldReturnValuesSetInConstructorWithCharset() {
         // when
-        StringBodyDTO stringBody = new StringBodyDTO(new StringBody("some_body", Charsets.UTF_16));
-
-        // then
-        assertThat(stringBody.getString(), is("some_body"));
-        assertThat(stringBody.getType(), is(Body.Type.STRING));
-        assertThat(stringBody.getCharset(), is(Charsets.UTF_16));
-    }
-
-    @Test
-    public void shouldBuildCorrectObject() {
-        // when
-        StringBody stringBody = new StringBodyDTO(new StringBody("some_body", Charsets.UTF_16)).buildObject();
+        StringBody stringBody = new StringBody("some_body", Charsets.UTF_16);
 
         // then
         assertThat(stringBody.getValue(), is("some_body"));
@@ -49,13 +36,25 @@ public class StringBodyDTOTest {
     }
 
     @Test
-    public void shouldReturnCorrectObjectFromStaticBuilder() {
-        assertThat(exact("some_body"), is(new StringBody("some_body")));
-        assertThat(exact("some_body", Charsets.UTF_16), is(new StringBody("some_body", Charsets.UTF_16)));
+    public void shouldReturnValueSetInStaticConstructor() {
+        // when
+        StringBody stringBody = exact("some_body", Charsets.UTF_16);
+
+        // then
+        assertThat(stringBody.getValue(), is("some_body"));
+        assertThat(stringBody.getType(), is(Body.Type.STRING));
+        assertThat(stringBody.getCharset(), is(Charsets.UTF_16));
     }
 
     @Test
-    public void coverage() {
-        new StringBodyDTO();
+    public void shouldReturnValueSetInStaticConstructorWithCharset() {
+        // when
+        StringBody stringBody = exact("some_body", Charsets.UTF_16);
+
+        // then
+        assertThat(stringBody.getValue(), is("some_body"));
+        assertThat(stringBody.getType(), is(Body.Type.STRING));
+        assertThat(stringBody.getCharset(), is(Charsets.UTF_16));
     }
+
 }

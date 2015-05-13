@@ -6,6 +6,7 @@ import io.netty.handler.codec.MessageToMessageDecoder;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.QueryStringDecoder;
+import io.netty.util.CharsetUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.mappers.ContentTypeMapper;
 import org.mockserver.model.*;
@@ -71,10 +72,8 @@ public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
                 if (ContentTypeMapper.isBinary(fullHttpRequest.headers().get(HttpHeaders.Names.CONTENT_TYPE))) {
                     httpRequest.withBody(new BinaryBody(bodyBytes));
                 } else {
-                    Charset charsetFromRequest = ContentTypeMapper.identifyCharsetFromHttpMessage(fullHttpRequest);
-                    String body = new String(bodyBytes, charsetFromRequest);
-
-                    httpRequest.withBody(new StringBody(body, charsetFromRequest));
+                    Charset requestCharset = ContentTypeMapper.determineCharsetForRequestContentType(fullHttpRequest);
+                    httpRequest.withBody(new StringBody(new String(bodyBytes, requestCharset), requestCharset));
                 }
             }
         }

@@ -3,8 +3,6 @@ package org.mockserver.client.serialization.serializers.body;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.Test;
 import org.mockserver.client.serialization.ObjectMapperFactory;
-import org.mockserver.client.serialization.model.ParameterBodyDTO;
-import org.mockserver.model.XPathBody;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -15,7 +13,7 @@ import static org.mockserver.model.ParameterBody.params;
 public class ParameterBodySerializerTest {
 
     @Test
-    public void shouldSerializeXPathBodyDTO() throws JsonProcessingException {
+    public void shouldSerializeXPathBody() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(params(
                         param("queryStringParameterOneName", "queryStringParameterOneValueOne", "queryStringParameterOneValueTwo"),
                         param("queryStringParameterTwoName", "queryStringParameterTwoValue")
@@ -30,7 +28,7 @@ public class ParameterBodySerializerTest {
     }
 
     @Test
-    public void shouldSerializeXPathBodyDTOWithNot() throws JsonProcessingException {
+    public void shouldSerializeXPathBodyWithNot() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(not(params(
                         param("queryStringParameterOneName", "queryStringParameterOneValueOne", "queryStringParameterOneValueTwo"),
                         param("queryStringParameterTwoName", "queryStringParameterTwoValue")
@@ -46,7 +44,7 @@ public class ParameterBodySerializerTest {
     }
 
     @Test
-    public void shouldSerializeXPathBodyDTOWithNotParameter() throws JsonProcessingException {
+    public void shouldSerializeXPathBodyWithNotParameter() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(params(
                         org.mockserver.model.Not.not(param("queryStringParameterOneName", "queryStringParameterOneValueOne", "queryStringParameterOneValueTwo")),
                         param("queryStringParameterTwoName", "queryStringParameterTwoValue")

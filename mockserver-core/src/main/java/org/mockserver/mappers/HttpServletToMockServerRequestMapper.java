@@ -48,7 +48,7 @@ public class HttpServletToMockServerRequestMapper {
             if (ContentTypeMapper.isBinary(httpServletRequest.getHeader(HttpHeaders.Names.CONTENT_TYPE))) {
                 httpRequest.withBody(new BinaryBody(bodyBytes));
             } else {
-                Charset charsetFromRequest = ContentTypeMapper.identifyCharsetFromServletRequest(httpServletRequest);
+                Charset charsetFromRequest = ContentTypeMapper.determineCharsetForRequestContentType(httpServletRequest);
                 String body = new String(bodyBytes, charsetFromRequest);
 
                 httpRequest.withBody(new StringBody(body, charsetFromRequest));

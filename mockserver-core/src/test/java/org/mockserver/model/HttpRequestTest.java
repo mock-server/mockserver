@@ -61,6 +61,13 @@ public class HttpRequestTest {
     }
 
     @Test
+    public void returnsFirstHeaders() {
+        assertEquals("value1", new HttpRequest().withHeaders(new Header("name", "value1")).getFirstHeader("name"));
+        assertEquals("value1", new HttpRequest().withHeaders(new Header("name", "value1", "value2")).getFirstHeader("name"));
+        assertEquals("value1", new HttpRequest().withHeaders(new Header("name", "value1", "value2"), new Header("name", "value3")).getFirstHeader("name"));
+    }
+
+    @Test
     public void returnsCookies() {
         assertEquals(new Cookie("name", "value"), new HttpRequest().withCookies(new Cookie("name", "value")).getCookies().get(0));
         assertEquals(new Cookie("name", ""), new HttpRequest().withCookies(new Cookie("name", "")).getCookies().get(0));

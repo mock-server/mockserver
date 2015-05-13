@@ -1,6 +1,7 @@
 package org.mockserver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.base.Strings;
 
 import java.nio.charset.Charset;
 import java.util.*;
@@ -217,6 +218,20 @@ public class HttpResponse extends Action {
             headerValues.addAll(headers.get(name).getValues());
         }
         return headerValues;
+    }
+
+    public String getFirstHeader(String name) {
+        String firstHeadValue = "";
+        if (headers.containsKey(name) || headers.containsKey(name.toLowerCase())) {
+            Header header = headers.get(name);
+            if (header == null) {
+                header = headers.get(name.toLowerCase());
+            }
+            if (!header.getValues().isEmpty() && !Strings.isNullOrEmpty(header.getValues().get(0))) {
+                firstHeadValue = header.getValues().get(0);
+            }
+        }
+        return firstHeadValue;
     }
 
     /**

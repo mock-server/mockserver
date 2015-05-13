@@ -13,6 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.UnsupportedCharsetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -47,6 +49,7 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
         String valueJsonValue = "";
         Body.Type type = null;
         boolean not = false;
+        Charset charset = null;
         MatchType matchType = JsonBody.DEFAULT_MATCH_TYPE;
         List<Parameter> parameters = new ArrayList<Parameter>();
         if (currentToken == JsonToken.START_OBJECT) {
@@ -80,6 +83,14 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         matchType = MatchType.valueOf(jsonParser.getText());
                     } catch (IllegalArgumentException iae) {
                         logger.warn("Ignoring incorrect JsonBodyMatchType with value \"" + jsonParser.getText() + "\"");
+                    }
+                }
+                if (jsonParser.getCurrentToken() == JsonToken.FIELD_NAME && jsonParser.getText().equalsIgnoreCase("charset")) {
+                    jsonParser.nextToken();
+                    try {
+                        charset = Charset.forName(jsonParser.getText());
+                    } catch (UnsupportedCharsetException uce) {
+                        logger.warn("Ignoring unsupported Charset with value \"" + jsonParser.getText() + "\"");
                     }
                 }
                 if (jsonParser.getCurrentToken() == JsonToken.FIELD_NAME && containsIgnoreCase(jsonParser.getText(), "parameters", "value")) {
@@ -142,7 +153,7 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
             if (type != null) {
                 switch (type) {
                     case STRING:
-                        return new StringBodyDTO(new StringBody(valueJsonValue), not);
+                        return new StringBodyDTO(new StringBody(valueJsonValue, charset), not);
                     case REGEX:
                         return new RegexBodyDTO(new RegexBody(valueJsonValue), not);
                     case JSON:
