@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 
+import java.nio.charset.Charset;
 import java.util.*;
 
 import static org.mockserver.model.Cookie.cookie;
@@ -218,6 +219,19 @@ public class HttpRequest extends Not {
      */
     public HttpRequest withBody(String body) {
         this.body = new StringBody(body);
+        return this;
+    }
+
+    /**
+     * The exact string body to match on such as "this is an exact string body"
+     *
+     * @param body the body on such as "this is an exact string body"
+     * @param charset character set the string will be encoded in
+     */
+    public HttpRequest withBody(String body, Charset charset) {
+        if (body != null) {
+            this.body = new StringBody(body, charset);
+        }
         return this;
     }
 

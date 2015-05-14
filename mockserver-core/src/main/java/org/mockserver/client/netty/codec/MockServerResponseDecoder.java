@@ -1,17 +1,14 @@
 package org.mockserver.client.netty.codec;
 
-import com.google.common.base.Charsets;
-import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
 import io.netty.handler.codec.http.CookieDecoder;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaders;
 import org.mockserver.mappers.ContentTypeMapper;
-import org.mockserver.model.Cookie;
-import org.mockserver.model.Header;
-import org.mockserver.model.HttpResponse;
+import org.mockserver.model.*;
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -65,11 +62,15 @@ public class MockServerResponseDecoder extends MessageToMessageDecoder<FullHttpR
 
     private void setBody(HttpResponse httpResponse, FullHttpResponse fullHttpResponse) {
         if (fullHttpResponse.content().readableBytes() > 0) {
-            ByteBuf byteBuf = fullHttpResponse.content().readBytes(fullHttpResponse.content().readableBytes());
-            if (ContentTypeMapper.isBinary(fullHttpResponse.headers().get(HttpHeaders.Names.CONTENT_TYPE))) {
-                httpResponse.withBody(byteBuf.array());
-            } else {
-                httpResponse.withBody(byteBuf.toString(Charsets.UTF_8));
+            byte[] bodyBytes = new byte[fullHttpResponse.content().readableBytes()];
+            fullHttpResponse.content().readBytes(bodyBytes);
+            if (bodyBytes.length > 0) {
+                if (ContentTypeMapper.isBinary(fullHttpResponse.headers().get(HttpHeaders.Names.CONTENT_TYPE))) {
+                    httpResponse.withBody(new BinaryBody(bodyBytes));
+                } else {
+                    Charset requestCharset = ContentTypeMapper.determineCharsetForRequestContentType(fullHttpResponse);
+                    httpResponse.withBody(new String(bodyBytes, requestCharset));
+                }
             }
         }
     }

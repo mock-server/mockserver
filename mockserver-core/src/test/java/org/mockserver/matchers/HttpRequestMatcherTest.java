@@ -1,5 +1,6 @@
 package org.mockserver.matchers;
 
+import com.google.common.base.Charsets;
 import org.junit.Test;
 import org.mockserver.model.*;
 
@@ -261,6 +262,11 @@ public class HttpRequestMatcherTest {
     }
 
     @Test
+    public void matchesMatchingBodyWithCharset() {
+        assertTrue(new HttpRequestMatcher(new HttpRequest().withBody(new StringBody("我说中国话", Charsets.UTF_16))).matches(new HttpRequest().withBody("我说中国话", Charsets.UTF_16)));
+    }
+
+    @Test
     public void doesNotMatchIncorrectBody() {
         assertFalse(new HttpRequestMatcher(new HttpRequest().withBody(exact("somebody"))).matches(new HttpRequest().withBody("bodysome")));
     }
@@ -302,6 +308,16 @@ public class HttpRequestMatcherTest {
                 "   \"some_other_field\": \"some_other_value\" " +
                 "}";
         assertTrue(new HttpRequestMatcher(new HttpRequest().withBody(json("{ \"some_field\": \"some_value\" }"))).matches(new HttpRequest().withBody(matched)));
+    }
+
+    @Test
+    public void matchesMatchingJSONBodyWithCharset() {
+        String matched = "" +
+                "{ " +
+                "   \"some_field\": \"我说中国话\", " +
+                "   \"some_other_field\": \"some_other_value\" " +
+                "}";
+        assertTrue(new HttpRequestMatcher(new HttpRequest().withBody(json("{ \"some_field\": \"我说中国话\" }", Charsets.UTF_16, MatchType.ONLY_MATCHING_FIELDS))).matches(new HttpRequest().withBody(matched, Charsets.UTF_16)));
     }
 
     @Test

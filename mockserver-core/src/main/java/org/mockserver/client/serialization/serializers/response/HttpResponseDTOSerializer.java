@@ -31,7 +31,7 @@ public class HttpResponseDTOSerializer extends StdSerializer<HttpResponseDTO> {
         BodyDTO body = httpResponseDTO.getBody();
         if (body != null) {
             if (body instanceof StringBodyDTO && !((StringBodyDTO) body).getString().isEmpty()) {
-                jgen.writeObjectField("body", ((StringBodyDTO) body).getString());
+                jgen.writeObjectField("body", body);
             } else if (body instanceof JsonBodyDTO && !((JsonBodyDTO) body).getJson().isEmpty()) {
                 jgen.writeObjectField("body", ((JsonBodyDTO) body).getJson());
             } else if (body instanceof BinaryBodyDTO) {

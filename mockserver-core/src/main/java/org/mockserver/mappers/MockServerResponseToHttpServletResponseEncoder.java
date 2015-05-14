@@ -1,5 +1,6 @@
 package org.mockserver.mappers;
 
+import com.google.common.base.Strings;
 import io.netty.handler.codec.http.DefaultCookie;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.ServerCookieEncoder;
@@ -12,12 +13,14 @@ import org.mockserver.streams.IOStreamUtils;
 
 import javax.servlet.http.HttpServletResponse;
 
+import java.nio.charset.Charset;
+
 import static io.netty.handler.codec.http.HttpHeaders.Names.SET_COOKIE;
 
 /**
  * @author jamesdbloom
  */
-public class MockServerToHttpServletResponseMapper {
+public class MockServerResponseToHttpServletResponseEncoder {
 
     public void mapMockServerResponseToHttpServletResponse(HttpResponse httpResponse, HttpServletResponse httpServletResponse) {
         setStatusCode(httpResponse, httpServletResponse);
@@ -47,6 +50,7 @@ public class MockServerToHttpServletResponseMapper {
                 }
             }
         }
+        addContentTypeHeader(httpResponse, httpServletResponse);
     }
 
     private void setCookies(HttpResponse httpResponse, HttpServletResponse httpServletResponse) {
@@ -62,7 +66,20 @@ public class MockServerToHttpServletResponseMapper {
             if (httpResponse.getBody() instanceof BinaryBody) {
                 IOStreamUtils.writeToOutputStream(Base64Converter.base64StringToBytes(httpResponse.getBodyAsString()), httpServletResponse);
             } else {
-                IOStreamUtils.writeToOutputStream(httpResponse.getBodyAsString().getBytes(), httpServletResponse);
+                Charset bodyCharset = httpResponse.getBody().getCharset(ContentTypeMapper.determineCharsetFromResponseContentType(httpResponse));
+                IOStreamUtils.writeToOutputStream(httpResponse.getBodyAsString().getBytes(bodyCharset), httpServletResponse);
+            }
+        }
+    }
+
+    private void addContentTypeHeader(HttpResponse httpResponse, HttpServletResponse httpServletResponse) {
+        if (httpResponse.getBody() != null && Strings.isNullOrEmpty(httpServletResponse.getHeader(HttpHeaders.Names.CONTENT_TYPE))) {
+            Charset bodyCharset = httpResponse.getBody().getCharset(null);
+            String bodyContentType = httpResponse.getBody().getContentType();
+            if (bodyCharset != null) {
+                httpServletResponse.addHeader(HttpHeaders.Names.CONTENT_TYPE, bodyContentType + "; charset=" + bodyCharset.name().toLowerCase());
+            } else if (bodyContentType != null) {
+                httpServletResponse.addHeader(HttpHeaders.Names.CONTENT_TYPE, bodyContentType);
             }
         }
     }

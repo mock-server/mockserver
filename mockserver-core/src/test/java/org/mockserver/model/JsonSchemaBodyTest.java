@@ -1,12 +1,9 @@
 package org.mockserver.model;
 
 import org.junit.Test;
-import org.mockserver.matchers.MatchType;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.*;
-import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.JsonSchemaBody.jsonSchema;
 import static org.mockserver.model.JsonSchemaBody.jsonSchemaFromResource;
 

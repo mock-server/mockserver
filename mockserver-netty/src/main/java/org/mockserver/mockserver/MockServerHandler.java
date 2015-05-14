@@ -1,5 +1,6 @@
 package org.mockserver.mockserver;
 
+import com.google.common.base.Strings;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -23,6 +24,8 @@ import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.nio.charset.Charset;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONNECTION;
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH;
@@ -161,7 +164,21 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
         addContentLengthHeader(response, connectionOptions);
         addConnectionHeader(request, response, connectionOptions);
+        addContentTypeHeader(response);
+
         writeAndCloseSocket(ctx, request, response, connectionOptions);
+    }
+
+    private void addContentTypeHeader(HttpResponse response) {
+        if (response.getBody() != null && Strings.isNullOrEmpty(response.getFirstHeader(HttpHeaders.Names.CONTENT_TYPE))) {
+            Charset bodyCharset = response.getBody().getCharset(null);
+            String bodyContentType = response.getBody().getContentType();
+            if (bodyCharset != null) {
+                response.updateHeader(header(HttpHeaders.Names.CONTENT_TYPE, bodyContentType + "; charset=" + bodyCharset.name().toLowerCase()));
+            } else if (bodyContentType != null) {
+                response.updateHeader(header(HttpHeaders.Names.CONTENT_TYPE, bodyContentType));
+            }
+        }
     }
 
     private void addContentLengthHeader(HttpResponse response, ConnectionOptions connectionOptions) {

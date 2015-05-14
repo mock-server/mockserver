@@ -31,7 +31,7 @@ public class HttpResponseSerializer extends StdSerializer<HttpResponse> {
         Body body = httpResponse.getBody();
         if (body != null) {
             if (body instanceof StringBody && !((StringBody) body).getValue().isEmpty()) {
-                jgen.writeObjectField("body", ((StringBody) body).getValue());
+                jgen.writeObjectField("body", body);
             } else if (body instanceof JsonBody && !((JsonBody) body).getValue().isEmpty()) {
                 jgen.writeObjectField("body", ((JsonBody) body).getValue());
             } else if (body instanceof BinaryBody) {

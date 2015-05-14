@@ -6,8 +6,8 @@ import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.client.serialization.VerificationSequenceSerializer;
 import org.mockserver.client.serialization.VerificationSerializer;
 import org.mockserver.filters.LogFilter;
-import org.mockserver.mappers.HttpServletToMockServerRequestMapper;
-import org.mockserver.mappers.MockServerToHttpServletResponseMapper;
+import org.mockserver.mappers.HttpServletRequestToMockServerRequestDecoder;
+import org.mockserver.mappers.MockServerResponseToHttpServletResponseEncoder;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.mock.action.ActionHandler;
@@ -33,8 +33,8 @@ public class MockServerServlet extends HttpServlet {
     private LogFilter logFilter = new LogFilter();
     private ActionHandler actionHandler = new ActionHandler(logFilter);
     // mappers
-    private HttpServletToMockServerRequestMapper httpServletToMockServerRequestMapper = new HttpServletToMockServerRequestMapper();
-    private MockServerToHttpServletResponseMapper mockServerToHttpServletResponseMapper = new MockServerToHttpServletResponseMapper();
+    private HttpServletRequestToMockServerRequestDecoder httpServletRequestToMockServerRequestDecoder = new HttpServletRequestToMockServerRequestDecoder();
+    private MockServerResponseToHttpServletResponseEncoder mockServerResponseToHttpServletResponseEncoder = new MockServerResponseToHttpServletResponseEncoder();
     // serializers
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
@@ -153,7 +153,7 @@ public class MockServerServlet extends HttpServlet {
     }
 
     private void mockResponse(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
-        HttpRequest httpRequest = httpServletToMockServerRequestMapper.mapHttpServletRequestToMockServerRequest(httpServletRequest);
+        HttpRequest httpRequest = httpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(httpServletRequest);
         HttpResponse httpResponse = actionHandler.processAction(mockServerMatcher.handle(httpRequest), httpRequest);
         mapResponse(httpResponse, httpServletResponse);
     }
@@ -161,7 +161,7 @@ public class MockServerServlet extends HttpServlet {
 
     private void mapResponse(HttpResponse httpResponse, HttpServletResponse httpServletResponse) {
         if (httpResponse != null) {
-            mockServerToHttpServletResponseMapper.mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
+            mockServerResponseToHttpServletResponseEncoder.mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
         } else {
             httpServletResponse.setStatus(HttpStatusCode.NOT_FOUND_404.code());
         }

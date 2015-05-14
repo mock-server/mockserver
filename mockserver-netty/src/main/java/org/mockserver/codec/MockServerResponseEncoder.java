@@ -9,7 +9,6 @@ import org.mockserver.mappers.ContentTypeMapper;
 import org.mockserver.model.BinaryBody;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpResponse;
-import org.mockserver.model.StringBody;
 
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -39,18 +38,8 @@ public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpRespo
             if (httpResponse.getBody() instanceof BinaryBody) {
                 content = Unpooled.copiedBuffer(httpResponse.getBody().getRawBytes());
             } else {
-                // use response charset (if set)
-                Charset charset = ContentTypeMapper.determineCharsetFromResponseContentType(httpResponse);
-
-                // unless StringBody has charset defined
-                if (httpResponse.getBody() instanceof StringBody) {
-                    StringBody stringBody = (StringBody) httpResponse.getBody();
-                    if (stringBody.getCharset() != null) {
-                        charset = stringBody.getCharset();
-                    }
-                }
-
-                content = Unpooled.copiedBuffer(httpResponse.getBodyAsString().getBytes(charset));
+                Charset bodyCharset = httpResponse.getBody().getCharset(ContentTypeMapper.determineCharsetFromResponseContentType(httpResponse));
+                content = Unpooled.copiedBuffer(httpResponse.getBodyAsString().getBytes(bodyCharset));
             }
         }
         return content;

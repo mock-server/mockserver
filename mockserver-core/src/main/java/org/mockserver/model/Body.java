@@ -2,6 +2,8 @@ package org.mockserver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import java.nio.charset.Charset;
+
 /**
  * @author jamesdbloom
  */
@@ -22,6 +24,16 @@ public abstract class Body<T> extends Not {
     @JsonIgnore
     public byte[] getRawBytes() {
         return toString().getBytes();
+    }
+
+    @JsonIgnore
+    public Charset getCharset(Charset defaultIfNotSet) {
+        return defaultIfNotSet;
+    }
+
+    @JsonIgnore
+    public String getContentType() {
+        return null;
     }
 
     public enum Type {

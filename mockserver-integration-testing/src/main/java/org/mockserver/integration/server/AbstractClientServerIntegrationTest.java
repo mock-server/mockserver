@@ -1,5 +1,6 @@
 package org.mockserver.integration.server;
 
+import com.google.common.base.Charsets;
 import com.google.common.net.HttpHeaders;
 import com.google.common.net.MediaType;
 import com.google.common.util.concurrent.Uninterruptibles;
@@ -12,7 +13,6 @@ import org.mockserver.client.server.MockServerClient;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.matchers.MatchType;
 import org.mockserver.matchers.TimeToLive;
-import org.mockserver.matchers.Times;
 import org.mockserver.model.*;
 import org.mockserver.socket.PortFactory;
 import org.mockserver.verify.VerificationTimes;
@@ -341,6 +341,68 @@ public abstract class AbstractClientServerIntegrationTest {
                 response()
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withBody("some_body"),
+                makeRequest(
+                        request()
+                                .setSecure(true)
+                                .withPath(calculatePath("")),
+                        headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnMatchRequestWithBodyInUTF16() {
+        // when
+        String body = "我说中国话";
+        mockServerClient.when(request().withBody(body, Charsets.UTF_16)).respond(response().withBody(body, Charsets.UTF_8));
+
+        // then
+        // - in http
+        assertEquals(
+                response()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody(body),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath(""))
+                                .withBody(body, Charsets.UTF_16),
+                        headersToIgnore)
+        );
+        // - in https
+        assertEquals(
+                response()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody(body),
+                makeRequest(
+                        request()
+                                .setSecure(true)
+                                .withPath(calculatePath(""))
+                                .withBody(body, Charsets.UTF_16),
+                        headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseWithBodyInUTF8() {
+        // when
+        String body = "我说中国话";
+        mockServerClient.when(request()).respond(response().withBody(body, Charsets.UTF_8));
+
+        // then
+        // - in http
+        assertEquals(
+                response()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody(body),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("")),
+                        headersToIgnore)
+        );
+        // - in https
+        assertEquals(
+                response()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody(body),
                 makeRequest(
                         request()
                                 .setSecure(true)

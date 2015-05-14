@@ -157,7 +157,7 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                     case REGEX:
                         return new RegexBodyDTO(new RegexBody(valueJsonValue), not);
                     case JSON:
-                        return new JsonBodyDTO(new JsonBody(valueJsonValue, matchType), not);
+                        return new JsonBodyDTO(new JsonBody(valueJsonValue, charset, matchType), not);
                     case JSON_SCHEMA:
                         return new JsonSchemaBodyDTO(new JsonSchemaBody(valueJsonValue), not);
                     case XPATH:

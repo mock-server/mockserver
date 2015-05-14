@@ -11,6 +11,7 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.model.OutboundHttpRequest;
 import org.mockserver.model.Parameter;
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -110,6 +111,16 @@ public class MockServerRequestEncoder extends MessageToMessageEncoder<OutboundHt
             request.headers().set(CONNECTION, KEEP_ALIVE);
         } else {
             request.headers().set(CONNECTION, HttpHeaders.Values.CLOSE);
+        }
+
+        if (httpRequest.getBody() != null) {
+            Charset bodyCharset = httpRequest.getBody().getCharset(null);
+            String bodyContentType = httpRequest.getBody().getContentType();
+            if (bodyCharset != null) {
+                request.headers().set(CONTENT_TYPE, bodyContentType + "; charset=" + bodyCharset.name().toLowerCase());
+            } else if (bodyContentType != null) {
+                request.headers().set(CONTENT_TYPE, bodyContentType);
+            }
         }
     }
 }

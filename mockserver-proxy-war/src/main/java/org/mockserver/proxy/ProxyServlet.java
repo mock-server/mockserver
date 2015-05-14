@@ -8,8 +8,8 @@ import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.client.serialization.VerificationSequenceSerializer;
 import org.mockserver.client.serialization.VerificationSerializer;
 import org.mockserver.filters.*;
-import org.mockserver.mappers.HttpServletToMockServerRequestMapper;
-import org.mockserver.mappers.MockServerToHttpServletResponseMapper;
+import org.mockserver.mappers.HttpServletRequestToMockServerRequestDecoder;
+import org.mockserver.mappers.MockServerResponseToHttpServletResponseEncoder;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -31,14 +31,14 @@ import static org.mockserver.model.OutboundHttpRequest.outboundRequest;
 public class ProxyServlet extends HttpServlet {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    public LogFilter logFilter = new LogFilter();
     // mockserver
     private Filters filters = new Filters();
-    public LogFilter logFilter = new LogFilter();
     // http client
     private NettyHttpClient httpClient = new NettyHttpClient();
     // mappers
-    private HttpServletToMockServerRequestMapper httpServletToMockServerRequestMapper = new HttpServletToMockServerRequestMapper();
-    private MockServerToHttpServletResponseMapper mockServerToHttpServletResponseMapper = new MockServerToHttpServletResponseMapper();
+    private HttpServletRequestToMockServerRequestDecoder httpServletRequestToMockServerRequestDecoder = new HttpServletRequestToMockServerRequestDecoder();
+    private MockServerResponseToHttpServletResponseEncoder mockServerResponseToHttpServletResponseEncoder = new MockServerResponseToHttpServletResponseEncoder();
     // serializers
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
@@ -169,8 +169,8 @@ public class ProxyServlet extends HttpServlet {
     }
 
     private void forwardRequest(HttpServletRequest request, HttpServletResponse httpServletResponse) {
-        HttpResponse httpResponse = sendRequest(filters.applyOnRequestFilters(httpServletToMockServerRequestMapper.mapHttpServletRequestToMockServerRequest(request)));
-        mockServerToHttpServletResponseMapper.mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
+        HttpResponse httpResponse = sendRequest(filters.applyOnRequestFilters(httpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(request)));
+        mockServerResponseToHttpServletResponseEncoder.mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
     }
 
     private HttpResponse sendRequest(HttpRequest httpRequest) {

@@ -1,14 +1,15 @@
 package org.mockserver.client.serialization.model;
 
+import com.google.common.base.Charsets;
 import org.junit.Test;
 import org.mockserver.model.Body;
 import org.mockserver.model.JsonBody;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 import static org.mockserver.matchers.MatchType.ONLY_MATCHING_FIELDS;
 import static org.mockserver.matchers.MatchType.STRICT;
-import static org.mockserver.model.JsonBody.json;
 
 
 /**
@@ -25,6 +26,7 @@ public class JsonBodyDTOTest {
         assertThat(jsonBody.getJson(), is("some_body"));
         assertThat(jsonBody.getType(), is(Body.Type.JSON));
         assertThat(jsonBody.getMatchType(), is(ONLY_MATCHING_FIELDS));
+        assertThat(jsonBody.getCharset(), nullValue());
     }
 
     @Test
@@ -36,6 +38,19 @@ public class JsonBodyDTOTest {
         assertThat(jsonBody.getJson(), is("some_body"));
         assertThat(jsonBody.getType(), is(Body.Type.JSON));
         assertThat(jsonBody.getMatchType(), is(STRICT));
+        assertThat(jsonBody.getCharset(), nullValue());
+    }
+
+    @Test
+    public void shouldReturnValuesSetInConstructorWithMatchTypeAndCharset() {
+        // when
+        JsonBodyDTO jsonBody = new JsonBodyDTO(new JsonBody("some_body", Charsets.UTF_16, STRICT));
+
+        // then
+        assertThat(jsonBody.getJson(), is("some_body"));
+        assertThat(jsonBody.getType(), is(Body.Type.JSON));
+        assertThat(jsonBody.getMatchType(), is(STRICT));
+        assertThat(jsonBody.getCharset(), is(Charsets.UTF_16));
     }
 
     @Test
@@ -47,6 +62,7 @@ public class JsonBodyDTOTest {
         assertThat(jsonBody.getValue(), is("some_body"));
         assertThat(jsonBody.getType(), is(Body.Type.JSON));
         assertThat(jsonBody.getMatchType(), is(ONLY_MATCHING_FIELDS));
+        assertThat(jsonBody.getCharset(), nullValue());
     }
 
     @Test
@@ -58,12 +74,19 @@ public class JsonBodyDTOTest {
         assertThat(jsonBody.getValue(), is("some_body"));
         assertThat(jsonBody.getType(), is(Body.Type.JSON));
         assertThat(jsonBody.getMatchType(), is(STRICT));
+        assertThat(jsonBody.getCharset(), nullValue());
     }
 
     @Test
-    public void shouldReturnCorrectObjectFromStaticBuilder() {
-        assertThat(json("some_body"), is(new JsonBody("some_body")));
-        assertThat(json("some_body", STRICT), is(new JsonBody("some_body", STRICT)));
+    public void shouldBuildCorrectObjectWithMatchTypeAndCharset() {
+        // when
+        JsonBody jsonBody = new JsonBodyDTO(new JsonBody("some_body", Charsets.UTF_16, STRICT)).buildObject();
+
+        // then
+        assertThat(jsonBody.getValue(), is("some_body"));
+        assertThat(jsonBody.getType(), is(Body.Type.JSON));
+        assertThat(jsonBody.getMatchType(), is(STRICT));
+        assertThat(jsonBody.getCharset(), is(Charsets.UTF_16));
     }
 
     @Test

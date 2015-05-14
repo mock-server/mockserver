@@ -6,7 +6,6 @@ import io.netty.handler.codec.MessageToMessageDecoder;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.QueryStringDecoder;
-import io.netty.util.CharsetUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.mappers.ContentTypeMapper;
 import org.mockserver.model.*;
@@ -17,6 +16,7 @@ import java.util.List;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.COOKIE;
 import static io.netty.handler.codec.http.HttpHeaders.isKeepAlive;
+import static org.mockserver.mappers.ContentTypeMapper.*;
 
 /**
  * @author jamesdbloom
@@ -35,9 +35,6 @@ public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
         if (fullHttpRequest != null) {
             setMethod(httpRequest, fullHttpRequest);
 
-            // URL query strings are nominally supposed to be US-ASCII, with all non-US-ASCII characters URL-escaped. some
-            // servers do allow UTF-8 encoding, so use the default specified by the netty QueryStringDecoder (UTF-8). all
-            // US-ASCII query strings will be properly decoded when interpreted as UTF-8.
             QueryStringDecoder queryStringDecoder = new QueryStringDecoder(fullHttpRequest.getUri());
             setPath(httpRequest, queryStringDecoder);
             setQueryString(httpRequest, queryStringDecoder);
@@ -72,8 +69,8 @@ public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
                 if (ContentTypeMapper.isBinary(fullHttpRequest.headers().get(HttpHeaders.Names.CONTENT_TYPE))) {
                     httpRequest.withBody(new BinaryBody(bodyBytes));
                 } else {
-                    Charset requestCharset = ContentTypeMapper.determineCharsetForRequestContentType(fullHttpRequest);
-                    httpRequest.withBody(new StringBody(new String(bodyBytes, requestCharset), requestCharset));
+                    Charset requestCharset = determineCharsetForRequestContentType(fullHttpRequest);
+                    httpRequest.withBody(new StringBody(new String(bodyBytes, requestCharset), DEFAULT_HTTP_CHARACTER_SET.equals(requestCharset) ? null : requestCharset));
                 }
             }
         }

@@ -19,7 +19,7 @@ import static org.mockserver.model.NottableString.string;
  * @author jamesdbloom
  */
 @SuppressWarnings("unchecked")
-public class HttpServletToMockServerRequestMapperTest {
+public class HttpServletRequestToMockServerRequestDecoderTest {
 
     @Test
     public void shouldMapHttpServletRequestToHttpRequest() {
@@ -34,7 +34,7 @@ public class HttpServletToMockServerRequestMapperTest {
         httpServletRequest.setContent("bodyParameterNameOne=bodyParameterValueOne_One&bodyParameterNameOne=bodyParameterValueOne_Two&bodyParameterNameTwo=bodyParameterValueTwo_One".getBytes());
 
         // when
-        HttpRequest httpRequest = new HttpServletToMockServerRequestMapper().mapHttpServletRequestToMockServerRequest(httpServletRequest);
+        HttpRequest httpRequest = new HttpServletRequestToMockServerRequestDecoder().mapHttpServletRequestToMockServerRequest(httpServletRequest);
 
         // then
         assertEquals(string("/requestURI"), httpRequest.getPath());
@@ -60,7 +60,7 @@ public class HttpServletToMockServerRequestMapperTest {
         httpServletRequest.setContent("".getBytes());
 
         // when
-        HttpRequest httpRequest = new HttpServletToMockServerRequestMapper().mapHttpServletRequestToMockServerRequest(httpServletRequest);
+        HttpRequest httpRequest = new HttpServletRequestToMockServerRequestDecoder().mapHttpServletRequestToMockServerRequest(httpServletRequest);
 
         // then
         assertEquals(string("/pathInfo"), httpRequest.getPath());
@@ -79,6 +79,6 @@ public class HttpServletToMockServerRequestMapperTest {
         when(httpServletRequest.getInputStream()).thenThrow(new IOException("TEST EXCEPTION"));
 
         // when
-        new HttpServletToMockServerRequestMapper().mapHttpServletRequestToMockServerRequest(httpServletRequest);
+        new HttpServletRequestToMockServerRequestDecoder().mapHttpServletRequestToMockServerRequest(httpServletRequest);
     }
 }

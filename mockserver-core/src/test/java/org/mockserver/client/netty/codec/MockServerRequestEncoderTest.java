@@ -6,6 +6,7 @@ import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockserver.matchers.MatchType;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.OutboundHttpRequest;
@@ -16,12 +17,15 @@ import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.collection.IsEmptyIterable.emptyIterable;
 import static org.hamcrest.core.Is.is;
 import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.OutboundHttpRequest.outboundRequest;
 import static org.mockserver.model.Parameter.param;
+import static io.netty.handler.codec.http.HttpHeaders.Names.*;
 
 /**
  * @author jamesdbloom
@@ -234,6 +238,35 @@ public class MockServerRequestEncoderTest {
         // then
         FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
         assertThat(fullHttpRequest.content().toString(Charsets.UTF_8), is("somebody"));
+        assertThat(fullHttpRequest.headers().get(CONTENT_TYPE), is("plain/text"));
+    }
+
+    @Test
+    public void shouldEncodeStringBodyWithCharset() {
+        // given
+        httpRequest.withBody("我说中国话", Charsets.UTF_16);
+
+        // when
+        new MockServerRequestEncoder().encode(null, httpRequest, output);
+
+        // then
+        FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
+        assertThat(fullHttpRequest.content().toString(Charsets.UTF_16), is("我说中国话"));
+        assertThat(fullHttpRequest.headers().get(CONTENT_TYPE), is("plain/text; charset=utf-16"));
+    }
+
+    @Test
+    public void shouldEncodeJsonBodyWithCharset() {
+        // given
+        httpRequest.withBody(json("{ \"some_field\": \"我说中国话\" }", Charsets.UTF_16, MatchType.ONLY_MATCHING_FIELDS));
+
+        // when
+        new MockServerRequestEncoder().encode(null, httpRequest, output);
+
+        // then
+        FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
+        assertThat(fullHttpRequest.content().toString(Charsets.UTF_16), is("{ \"some_field\": \"我说中国话\" }"));
+        assertThat(fullHttpRequest.headers().get(CONTENT_TYPE), is("application/json; charset=utf-16"));
     }
 
     @Test
@@ -247,6 +280,7 @@ public class MockServerRequestEncoderTest {
         // then
         FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
         assertThat(fullHttpRequest.content().array(), is("somebody".getBytes()));
+        assertThat(fullHttpRequest.headers().get(CONTENT_TYPE), nullValue());
     }
 
     @Test

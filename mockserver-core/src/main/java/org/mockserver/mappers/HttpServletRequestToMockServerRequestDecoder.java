@@ -12,10 +12,12 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 
+import static org.mockserver.mappers.ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET;
+
 /**
  * @author jamesdbloom
  */
-public class HttpServletToMockServerRequestMapper {
+public class HttpServletRequestToMockServerRequestDecoder {
     public HttpRequest mapHttpServletRequestToMockServerRequest(HttpServletRequest httpServletRequest) {
         HttpRequest httpRequest = new HttpRequest();
         setMethod(httpRequest, httpServletRequest);
@@ -48,10 +50,8 @@ public class HttpServletToMockServerRequestMapper {
             if (ContentTypeMapper.isBinary(httpServletRequest.getHeader(HttpHeaders.Names.CONTENT_TYPE))) {
                 httpRequest.withBody(new BinaryBody(bodyBytes));
             } else {
-                Charset charsetFromRequest = ContentTypeMapper.determineCharsetForRequestContentType(httpServletRequest);
-                String body = new String(bodyBytes, charsetFromRequest);
-
-                httpRequest.withBody(new StringBody(body, charsetFromRequest));
+                Charset requestCharset = ContentTypeMapper.determineCharsetForRequestContentType(httpServletRequest);
+                httpRequest.withBody(new StringBody(new String(bodyBytes, requestCharset), DEFAULT_HTTP_CHARACTER_SET.equals(requestCharset) ? null : requestCharset));
             }
         }
     }

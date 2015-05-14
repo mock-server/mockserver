@@ -22,6 +22,9 @@ public class StringBodyTest {
         assertThat(stringBody.getValue(), is("some_body"));
         assertThat(stringBody.getType(), is(Body.Type.STRING));
         assertThat(stringBody.getCharset(), nullValue());
+        assertThat(stringBody.getCharset(null), nullValue());
+        assertThat(stringBody.getCharset(Charsets.UTF_8), is(Charsets.UTF_8));
+        assertThat(stringBody.getContentType(), is("plain/text"));
     }
 
     @Test
@@ -33,17 +36,23 @@ public class StringBodyTest {
         assertThat(stringBody.getValue(), is("some_body"));
         assertThat(stringBody.getType(), is(Body.Type.STRING));
         assertThat(stringBody.getCharset(), is(Charsets.UTF_16));
+        assertThat(stringBody.getCharset(null), is(Charsets.UTF_16));
+        assertThat(stringBody.getCharset(Charsets.UTF_8), is(Charsets.UTF_16));
+        assertThat(stringBody.getContentType(), is("plain/text"));
     }
 
     @Test
     public void shouldReturnValueSetInStaticConstructor() {
         // when
-        StringBody stringBody = exact("some_body", Charsets.UTF_16);
+        StringBody stringBody = exact("some_body");
 
         // then
         assertThat(stringBody.getValue(), is("some_body"));
         assertThat(stringBody.getType(), is(Body.Type.STRING));
-        assertThat(stringBody.getCharset(), is(Charsets.UTF_16));
+        assertThat(stringBody.getCharset(), nullValue());
+        assertThat(stringBody.getCharset(null), nullValue());
+        assertThat(stringBody.getCharset(Charsets.UTF_8), is(Charsets.UTF_8));
+        assertThat(stringBody.getContentType(), is("plain/text"));
     }
 
     @Test
@@ -55,6 +64,9 @@ public class StringBodyTest {
         assertThat(stringBody.getValue(), is("some_body"));
         assertThat(stringBody.getType(), is(Body.Type.STRING));
         assertThat(stringBody.getCharset(), is(Charsets.UTF_16));
+        assertThat(stringBody.getCharset(null), is(Charsets.UTF_16));
+        assertThat(stringBody.getCharset(Charsets.UTF_8), is(Charsets.UTF_16));
+        assertThat(stringBody.getContentType(), is("plain/text"));
     }
 
 }

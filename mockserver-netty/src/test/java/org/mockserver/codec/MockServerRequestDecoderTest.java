@@ -1,17 +1,16 @@
 package org.mockserver.codec;
 
+import com.google.common.base.Charsets;
 import io.netty.buffer.Unpooled;
-import io.netty.handler.codec.http.DefaultFullHttpRequest;
-import io.netty.handler.codec.http.FullHttpRequest;
-import io.netty.handler.codec.http.HttpMethod;
-import io.netty.handler.codec.http.HttpVersion;
+import io.netty.handler.codec.http.*;
 import org.hamcrest.core.Is;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.mappers.ContentTypeMapper;
 import org.mockserver.model.*;
+import org.mockserver.model.Cookie;
+import org.mockserver.model.HttpRequest;
 
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -153,11 +152,9 @@ public class MockServerRequestDecoderTest {
     }
 
     @Test
-    public void shouldDecodeBodyWithoutCharset() {
+    public void shouldDecodeBodyWithContentTypeAndNoCharset() {
         // given
-        String content = "A normal string with ASCII characters";
-        byte[] contentInDefaultCharset = content.getBytes(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET);
-        fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/uri", Unpooled.wrappedBuffer(contentInDefaultCharset));
+        fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/uri", Unpooled.wrappedBuffer("A normal string with ASCII characters".getBytes(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET)));
         fullHttpRequest.headers().add("Content-Type", "plain/text");
 
         // when
@@ -165,36 +162,26 @@ public class MockServerRequestDecoderTest {
 
         // then
         Body body = ((HttpRequest) output.get(0)).getBody();
-        assertThat((String)body.getValue(), is(content));
-        assertThat(body.getRawBytes(), is(contentInDefaultCharset));
+        assertThat(body, Is.<Body>is(exact("A normal string with ASCII characters")));
     }
 
     @Test
-    public void shouldDecodeBodyWithoutContentType() {
+    public void shouldDecodeBodyWithNoContentType() {
         // given
-        String content = "A normal string with ASCII characters";
-        byte[] contentInDefaultCharset = content.getBytes(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET);
-        fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/uri", Unpooled.wrappedBuffer(contentInDefaultCharset));
+        fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/uri", Unpooled.wrappedBuffer("A normal string with ASCII characters".getBytes(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET)));
 
         // when
         mockServerRequestDecoder.decode(null, fullHttpRequest, output);
 
         // then
         Body body = ((HttpRequest) output.get(0)).getBody();
-        assertThat((String)body.getValue(), is(content));
-        assertThat(body.getRawBytes(), is(contentInDefaultCharset));
+        assertThat(body, Is.<Body>is(exact("A normal string with ASCII characters")));
     }
 
     @Test
     public void shouldTransmitUnencodableCharacters() {
         // given
-        String originalContent = "Euro sign: \u20AC";
-        byte[] contentInDefaultCharset = originalContent.getBytes(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET);
-        // the euro sign is not encodable in ISO-8859-1, so the last character of the string should actually be the default replacement byte ('?').
-        // the default replacement byte should still be encoded and sent over the wire properly.
-        String reencodedContent = new String(contentInDefaultCharset, ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET);
-
-        fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/uri", Unpooled.wrappedBuffer(contentInDefaultCharset));
+        fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/uri", Unpooled.wrappedBuffer("Euro sign: \u20AC".getBytes(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET)));
         fullHttpRequest.headers().add("Content-Type", "plain/text");
 
         // when
@@ -202,18 +189,28 @@ public class MockServerRequestDecoderTest {
 
         // then
         Body body = ((HttpRequest) output.get(0)).getBody();
-        // the raw bytes should match the original decoding
-        assertThat(body.getRawBytes(), is(contentInDefaultCharset));
-        // the re-encoded string will not match the original content, since it is unencodable, but it should match the re-encoded string
-        assertThat((String)body.getValue(), is(reencodedContent));
+        assertThat(body.getRawBytes(), is("Euro sign: \u20AC".getBytes(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET)));
+        assertThat((String)body.getValue(), is(new String("Euro sign: \u20AC".getBytes(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET), ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET)));
     }
 
     @Test
-    public void shouldDecodeUTF8Body() {
+    public void shouldUseDefaultCharsetIfCharsetNotSupported() {
         // given
-        String content = "Euro sign: \u20AC";
-        byte[] contentBytes = content.getBytes(Charset.forName("UTF-8"));
-        fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/uri", Unpooled.wrappedBuffer(contentBytes));
+        fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/uri", Unpooled.wrappedBuffer("A normal string with ASCII characters".getBytes(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET)));
+        fullHttpRequest.headers().add("Content-Type", "plain/text; charset=invalid-charset");
+
+        // when
+        mockServerRequestDecoder.decode(null, fullHttpRequest, output);
+
+        // then
+        Body body = ((HttpRequest) output.get(0)).getBody();
+        assertThat(body, Is.<Body>is(exact("A normal string with ASCII characters")));
+    }
+
+    @Test
+    public void shouldDecodeBodyWithUTF8ContentType() {
+        // given
+        fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/uri", Unpooled.wrappedBuffer("avro işarəsi: \u20AC".getBytes(Charsets.UTF_8)));
         fullHttpRequest.headers().add("Content-Type", "plain/text; charset=UTF-8");
 
         // when
@@ -221,31 +218,22 @@ public class MockServerRequestDecoderTest {
 
         // then
         Body body = ((HttpRequest) output.get(0)).getBody();
-        byte[] bodyBytes = body.getRawBytes();
-        assertThat(bodyBytes, is(contentBytes));
-        assertThat(body, Is.<Body>is(new StringBody(content, Charset.forName("UTF-8"))));
-        assertThat((String)body.getValue(), is(content));
+        assertThat(body, Is.<Body>is(exact("avro işarəsi: \u20AC", Charsets.UTF_8)));
     }
 
     @Test
-    public void shouldDecodeNonStandardEncodingBody() {
+    public void shouldDecodeBodyWithUTF16ContentType() {
         // given
-        String content = "Euro sign: \u20AC";
-        byte[] contentBytes = content.getBytes(Charset.forName("UTF-16"));
-        fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/uri", Unpooled.wrappedBuffer(contentBytes));
-        fullHttpRequest.headers().add("Content-Type", "plain/text; charset=UTF-16");
+        fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/uri", Unpooled.wrappedBuffer("我说中国话".getBytes(Charsets.UTF_16)));
+        fullHttpRequest.headers().add("Content-Type", "plain/text; charset=utf-16");
 
         // when
         mockServerRequestDecoder.decode(null, fullHttpRequest, output);
 
         // then
         Body body = ((HttpRequest) output.get(0)).getBody();
-        byte[] bodyBytes = body.getRawBytes();
-        assertThat(bodyBytes, is(contentBytes));
-        assertThat(body, Is.<Body>is(new StringBody(content, Charset.forName("UTF-16"))));
-        assertThat((String)body.getValue(), is(content));
+        assertThat(body, Is.<Body>is(exact("我说中国话", Charsets.UTF_16)));
     }
-
 
     @Test
     public void shouldDecodeBinaryBody() {

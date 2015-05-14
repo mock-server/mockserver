@@ -1,5 +1,6 @@
 package org.mockserver.client.server;
 
+import com.google.common.base.Charsets;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -302,7 +303,7 @@ public class MockServerClientTest {
         mockServerClient.dumpToLog();
 
         // then
-        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, "", request().withMethod("PUT").withPath("/dumpToLog").withBody("")));
+        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, "", request().withMethod("PUT").withPath("/dumpToLog").withBody("", Charsets.UTF_8)));
     }
 
     @Test
@@ -320,7 +321,7 @@ public class MockServerClientTest {
                 "{" + System.getProperty("line.separator") +
                 "  \"path\" : \"/some_path\"," + System.getProperty("line.separator") +
                 "  \"body\" : \"some_request_body\"" + System.getProperty("line.separator") +
-                "}")));
+                "}", Charsets.UTF_8)));
     }
 
     @Test
@@ -330,7 +331,7 @@ public class MockServerClientTest {
                 .clear(null);
 
         // then
-        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, "", request().withMethod("PUT").withPath("/clear").withBody("")));
+        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, "", request().withMethod("PUT").withPath("/clear").withBody("", Charsets.UTF_8)));
     }
 
     @Test
@@ -353,7 +354,7 @@ public class MockServerClientTest {
                 "{" + System.getProperty("line.separator") +
                 "  \"path\" : \"/some_path\"," + System.getProperty("line.separator") +
                 "  \"body\" : \"some_request_body\"" + System.getProperty("line.separator") +
-                "}")));
+                "}", Charsets.UTF_8)));
         verify(mockExpectationSerializer).deserializeArray("body");
     }
 
@@ -368,7 +369,7 @@ public class MockServerClientTest {
         assertSame(expectations, mockServerClient.retrieveAsExpectations(null));
 
         // then
-        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, "", request().withMethod("PUT").withPath("/retrieve").withBody("")));
+        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, "", request().withMethod("PUT").withPath("/retrieve").withBody("", Charsets.UTF_8)));
         verify(mockExpectationSerializer).deserializeArray("body");
     }
 
@@ -391,7 +392,7 @@ public class MockServerClientTest {
                 "{" + System.getProperty("line.separator") +
                 "  \"path\" : \"/some_path\"," + System.getProperty("line.separator") +
                 "  \"body\" : \"some_request_body\"" + System.getProperty("line.separator") +
-                "}")));
+                "}", Charsets.UTF_8)));
     }
 
     @Test
@@ -404,7 +405,7 @@ public class MockServerClientTest {
         assertEquals(expectations, mockServerClient.retrieveAsJSON(null));
 
         // then
-        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, "", request().withMethod("PUT").withPath("/retrieve").withBody("")));
+        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, "", request().withMethod("PUT").withPath("/retrieve").withBody("", Charsets.UTF_8)));
     }
 
     @Test
@@ -423,7 +424,7 @@ public class MockServerClientTest {
             fail();
         } catch (AssertionError ae) {
             verify(mockVerificationSequenceSerializer).serialize(new VerificationSequence().withRequests(httpRequest));
-            verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, "", request().withMethod("PUT").withPath("/verifySequence").withBody("verification_json")));
+            verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, "", request().withMethod("PUT").withPath("/verifySequence").withBody("verification_json", Charsets.UTF_8)));
             assertThat(ae.getMessage(), is("Request not found at least once expected:<foo> but was:<bar>"));
         }
     }
@@ -444,7 +445,7 @@ public class MockServerClientTest {
             fail();
         } catch (AssertionError ae) {
             verify(mockVerificationSequenceSerializer).serialize(new VerificationSequence().withRequests(httpRequest, httpRequest));
-            verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, "", request().withMethod("PUT").withPath("/verifySequence").withBody("verification_json")));
+            verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, "", request().withMethod("PUT").withPath("/verifySequence").withBody("verification_json", Charsets.UTF_8)));
             assertThat(ae.getMessage(), is("Request not found at least once expected:<foo> but was:<bar>"));
         }
     }
@@ -468,7 +469,7 @@ public class MockServerClientTest {
 
         // then
         verify(mockVerificationSequenceSerializer).serialize(new VerificationSequence().withRequests(httpRequest));
-        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, "", request().withMethod("PUT").withPath("/verifySequence").withBody("verification_json")));
+        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, "", request().withMethod("PUT").withPath("/verifySequence").withBody("verification_json", Charsets.UTF_8)));
     }
 
     @Test
@@ -490,7 +491,7 @@ public class MockServerClientTest {
 
         // then
         verify(mockVerificationSerializer).serialize(new Verification().withRequest(httpRequest).withTimes(once()));
-        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, "", request().withMethod("PUT").withPath("/verify").withBody("verification_json")));
+        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, "", request().withMethod("PUT").withPath("/verify").withBody("verification_json", Charsets.UTF_8)));
     }
 
     @Test
@@ -509,7 +510,7 @@ public class MockServerClientTest {
             fail();
         } catch (AssertionError ae) {
             verify(mockVerificationSerializer).serialize(new Verification().withRequest(httpRequest).withTimes(atLeast(1)));
-            verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, "", request().withMethod("PUT").withPath("/verify").withBody("verification_json")));
+            verify(mockHttpClient).sendRequest(outboundRequest("localhost", 8080, "", request().withMethod("PUT").withPath("/verify").withBody("verification_json", Charsets.UTF_8)));
             assertThat(ae.getMessage(), is("Request not found at least once expected:<foo> but was:<bar>"));
         }
     }

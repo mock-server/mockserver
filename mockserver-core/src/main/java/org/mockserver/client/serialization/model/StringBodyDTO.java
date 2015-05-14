@@ -13,7 +13,7 @@ public class StringBodyDTO extends BodyDTO {
     private Charset charset;
 
     public StringBodyDTO(StringBody stringBody) {
-        this(stringBody, false);
+        this(stringBody, stringBody.getNot());
     }
 
     public StringBodyDTO(StringBody stringBody, Boolean not) {

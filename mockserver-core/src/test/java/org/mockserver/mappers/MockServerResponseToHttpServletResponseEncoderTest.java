@@ -19,7 +19,7 @@ import static org.mockito.Mockito.when;
 /**
  * @author jamesdbloom
  */
-public class MockServerToHttpServletResponseMapperTest {
+public class MockServerResponseToHttpServletResponseEncoderTest {
 
     @Test
     public void shouldMapHttpResponseToHttpServletResponse() throws UnsupportedEncodingException {
@@ -34,7 +34,7 @@ public class MockServerToHttpServletResponseMapperTest {
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
 
         // when
-        new MockServerToHttpServletResponseMapper().mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
+        new MockServerResponseToHttpServletResponseEncoder().mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
 
         // then
         assertEquals(HttpStatusCode.OK_200.code(), httpServletResponse.getStatus());
@@ -61,6 +61,6 @@ public class MockServerToHttpServletResponseMapperTest {
         when(httpServletResponse.getOutputStream()).thenThrow(new IOException("TEST EXCEPTION"));
 
         // when
-        new MockServerToHttpServletResponseMapper().mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
+        new MockServerResponseToHttpServletResponseEncoder().mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
     }
 }

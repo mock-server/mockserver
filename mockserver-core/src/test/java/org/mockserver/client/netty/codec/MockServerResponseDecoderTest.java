@@ -1,10 +1,8 @@
 package org.mockserver.client.netty.codec;
 
+import com.google.common.base.Charsets;
 import io.netty.buffer.Unpooled;
-import io.netty.handler.codec.http.DefaultFullHttpResponse;
-import io.netty.handler.codec.http.FullHttpResponse;
-import io.netty.handler.codec.http.HttpResponseStatus;
-import io.netty.handler.codec.http.HttpVersion;
+import io.netty.handler.codec.http.*;
 import org.hamcrest.core.Is;
 import org.junit.Before;
 import org.junit.Test;
@@ -103,6 +101,20 @@ public class MockServerResponseDecoderTest {
         // then
         Body body = ((HttpResponse) output.get(0)).getBody();
         assertThat(body, Is.<Body>is(exact("some_random_string")));
+    }
+
+    @Test
+    public void shouldDecodeUTF16Body() {
+        // given
+        fullHttpResponse = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.wrappedBuffer("我说中国话".getBytes(Charsets.UTF_16)));
+        fullHttpResponse.headers().add("Content-Type", "plain/text; charset=utf-16");
+
+        // when
+        mockServerResponseDecoder.decode(null, fullHttpResponse, output);
+
+        // then
+        Body body = ((HttpResponse) output.get(0)).getBody();
+        assertThat(body, Is.<Body>is(exact("我说中国话")));
     }
 
     @Test
