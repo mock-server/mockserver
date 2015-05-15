@@ -6,6 +6,7 @@ import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMessage;
 import io.netty.util.CharsetUtil;
 import org.apache.commons.lang3.StringUtils;
+import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,27 +69,34 @@ public class ContentTypeMapper {
         return binary;
     }
 
-    public static Charset determineCharsetForRequestContentType(HttpMessage httpMessage) {
+    public static Charset determineCharsetForMessage(HttpMessage httpMessage) {
         return getCharsetFromContentTypeHeader(httpMessage.headers().get(HttpHeaders.Names.CONTENT_TYPE));
     }
 
-    public static Charset determineCharsetForRequestContentType(HttpServletRequest servletRequest) {
+    public static Charset determineCharsetForMessage(HttpServletRequest servletRequest) {
         return getCharsetFromContentTypeHeader(servletRequest.getHeader(HttpHeaders.Names.CONTENT_TYPE));
     }
 
-    public static Charset determineCharsetFromResponseContentType(HttpResponse httpResponse) {
+    public static Charset determineCharsetForMessage(HttpResponse httpResponse) {
         return getCharsetFromContentTypeHeader(httpResponse.getFirstHeader(HttpHeaders.Names.CONTENT_TYPE));
+    }
+
+    public static Charset determineCharsetForMessage(HttpRequest httpRequest) {
+        return getCharsetFromContentTypeHeader(httpRequest.getFirstHeader(HttpHeaders.Names.CONTENT_TYPE));
     }
 
     private static Charset getCharsetFromContentTypeHeader(String contentType) {
         Charset charset = DEFAULT_HTTP_CHARACTER_SET;
         if (contentType != null) {
-            try {
-                charset = Charset.forName(StringUtils.substringAfterLast(contentType, HttpHeaders.Values.CHARSET + (char) HttpConstants.EQUALS));
-            } catch (UnsupportedCharsetException uce) {
-                logger.info("Unsupported character set {} in Content-Type header: {}.", StringUtils.substringAfterLast(contentType, HttpHeaders.Values.CHARSET + HttpConstants.EQUALS), contentType);
-            } catch (IllegalCharsetNameException icne) {
-                logger.info("Illegal character set {} in Content-Type header: {}.", StringUtils.substringAfterLast(contentType, HttpHeaders.Values.CHARSET + HttpConstants.EQUALS), contentType);
+            String charsetName = StringUtils.substringAfterLast(contentType, HttpHeaders.Values.CHARSET + (char) HttpConstants.EQUALS);
+            if (!Strings.isNullOrEmpty(charsetName)) {
+                try {
+                    charset = Charset.forName(charsetName);
+                } catch (UnsupportedCharsetException uce) {
+                    logger.info("Unsupported character set {} in Content-Type header: {}.", StringUtils.substringAfterLast(contentType, HttpHeaders.Values.CHARSET + HttpConstants.EQUALS), contentType);
+                } catch (IllegalCharsetNameException icne) {
+                    logger.info("Illegal character set {} in Content-Type header: {}.", StringUtils.substringAfterLast(contentType, HttpHeaders.Values.CHARSET + HttpConstants.EQUALS), contentType);
+                }
             }
         }
         return charset;

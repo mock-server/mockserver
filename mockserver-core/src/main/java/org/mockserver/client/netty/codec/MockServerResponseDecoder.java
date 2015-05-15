@@ -68,7 +68,7 @@ public class MockServerResponseDecoder extends MessageToMessageDecoder<FullHttpR
                 if (ContentTypeMapper.isBinary(fullHttpResponse.headers().get(HttpHeaders.Names.CONTENT_TYPE))) {
                     httpResponse.withBody(new BinaryBody(bodyBytes));
                 } else {
-                    Charset requestCharset = ContentTypeMapper.determineCharsetForRequestContentType(fullHttpResponse);
+                    Charset requestCharset = ContentTypeMapper.determineCharsetForMessage(fullHttpResponse);
                     httpResponse.withBody(new String(bodyBytes, requestCharset));
                 }
             }

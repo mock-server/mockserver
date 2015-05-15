@@ -1,5 +1,6 @@
 package org.mockserver.server;
 
+import com.google.common.net.HttpHeaders;
 import org.junit.Test;
 import org.mockserver.integration.server.AbstractClientServerSharedClassloadersIntegrationTest;
 import org.mockserver.model.HttpStatusCode;
@@ -43,7 +44,8 @@ public abstract class AbstractClientServerSharedClassloadersAndTestClasspathInte
                 response()
                         .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
                         .withHeaders(
-                                header("x-callback", "test_callback_header")
+                                header("x-callback", "test_callback_header"),
+                                header(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         )
                         .withBody("a_callback_response"),
                 makeRequest(
@@ -64,7 +66,8 @@ public abstract class AbstractClientServerSharedClassloadersAndTestClasspathInte
                 response()
                         .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
                         .withHeaders(
-                                header("x-callback", "test_callback_header")
+                                header("x-callback", "test_callback_header"),
+                                header(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         )
                         .withBody("a_callback_response"),
                 makeRequest(

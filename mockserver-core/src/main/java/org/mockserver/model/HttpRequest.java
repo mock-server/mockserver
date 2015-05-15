@@ -334,7 +334,11 @@ public class HttpRequest extends Not {
 
     @JsonIgnore
     public String getBodyAsString() {
-        return this.body != null ? new String(this.body.getRawBytes(), Charsets.UTF_8) : "";
+        if (body != null) {
+            return body.toString();
+        } else {
+            return null;
+        }
     }
 
     /**

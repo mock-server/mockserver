@@ -1,5 +1,6 @@
 package org.mockserver.web.controller;
 
+import io.netty.handler.codec.http.HttpHeaders;
 import org.junit.*;
 import org.mockserver.integration.ClientAndProxy;
 import org.mockserver.integration.ClientAndServer;
@@ -82,7 +83,7 @@ public abstract class BooksPageIntegrationTest {
                 .respond(
                         response()
                                 .withHeaders(
-                                        new Header("Content-Type", "application/json")
+                                        new Header(HttpHeaders.Names.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                                 )
                                 .withBody("" +
                                         "[" + System.getProperty("line.separator") +
@@ -113,7 +114,7 @@ public abstract class BooksPageIntegrationTest {
         // when
         MvcResult response = mockMvc.perform(get("/books").accept(MediaType.TEXT_HTML))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType("text/html;charset=UTF-8"))
+                .andExpect(content().contentType("text/html; charset=utf-8"))
                 .andReturn();
 
         // then
@@ -144,7 +145,7 @@ public abstract class BooksPageIntegrationTest {
                 .respond(
                         response()
                                 .withHeaders(
-                                        new Header("Content-Type", "application/json")
+                                        new Header(HttpHeaders.Names.CONTENT_TYPE, "application/json")
                                 )
                                 .withBody("" +
                                         "{" + System.getProperty("line.separator") +
@@ -158,7 +159,7 @@ public abstract class BooksPageIntegrationTest {
 
         MvcResult response = mockMvc.perform(get("/book/1").accept(MediaType.TEXT_HTML))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType("text/html;charset=UTF-8"))
+                .andExpect(content().contentType("text/html; charset=utf-8"))
                 .andReturn();
 
         BookPage bookPage = new BookPage(response);

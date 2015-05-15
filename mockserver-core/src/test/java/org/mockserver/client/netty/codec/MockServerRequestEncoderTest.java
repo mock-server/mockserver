@@ -1,15 +1,15 @@
 package org.mockserver.client.netty.codec;
 
 import com.google.common.base.Charsets;
+import com.google.common.net.MediaType;
+import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.FullHttpRequest;
-import io.netty.handler.codec.http.HttpHeaders;
-import io.netty.handler.codec.http.HttpMethod;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockserver.mappers.ContentTypeMapper;
 import org.mockserver.matchers.MatchType;
+import org.mockserver.model.*;
 import org.mockserver.model.Cookie;
-import org.mockserver.model.Header;
-import org.mockserver.model.OutboundHttpRequest;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -238,35 +238,7 @@ public class MockServerRequestEncoderTest {
         // then
         FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
         assertThat(fullHttpRequest.content().toString(Charsets.UTF_8), is("somebody"));
-        assertThat(fullHttpRequest.headers().get(CONTENT_TYPE), is("plain/text"));
-    }
-
-    @Test
-    public void shouldEncodeStringBodyWithCharset() {
-        // given
-        httpRequest.withBody("我说中国话", Charsets.UTF_16);
-
-        // when
-        new MockServerRequestEncoder().encode(null, httpRequest, output);
-
-        // then
-        FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
-        assertThat(fullHttpRequest.content().toString(Charsets.UTF_16), is("我说中国话"));
-        assertThat(fullHttpRequest.headers().get(CONTENT_TYPE), is("plain/text; charset=utf-16"));
-    }
-
-    @Test
-    public void shouldEncodeJsonBodyWithCharset() {
-        // given
-        httpRequest.withBody(json("{ \"some_field\": \"我说中国话\" }", Charsets.UTF_16, MatchType.ONLY_MATCHING_FIELDS));
-
-        // when
-        new MockServerRequestEncoder().encode(null, httpRequest, output);
-
-        // then
-        FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
-        assertThat(fullHttpRequest.content().toString(Charsets.UTF_16), is("{ \"some_field\": \"我说中国话\" }"));
-        assertThat(fullHttpRequest.headers().get(CONTENT_TYPE), is("application/json; charset=utf-16"));
+        assertThat(fullHttpRequest.headers().get(CONTENT_TYPE), is(MediaType.create("text", "plain").toString()));
     }
 
     @Test
@@ -294,5 +266,130 @@ public class MockServerRequestEncoderTest {
         // then
         FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
         assertThat(fullHttpRequest.content().toString(Charsets.UTF_8), is(""));
+    }
+
+    @Test
+    public void shouldDecodeBodyWithContentTypeAndNoCharset() {
+        // given
+        httpRequest.withBody("A normal string with ASCII characters");
+        httpRequest.withHeader(new Header(HttpHeaders.Names.CONTENT_TYPE, MediaType.create("text", "plain").toString()));
+
+        // when
+        new MockServerRequestEncoder().encode(null, httpRequest, output);
+
+        // then
+        FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
+        assertThat(fullHttpRequest.content().toString(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET), is("A normal string with ASCII characters"));
+    }
+
+    @Test
+    public void shouldDecodeBodyWithNoContentType() {
+        // given
+        httpRequest.withBody("A normal string with ASCII characters");
+
+        // when
+        new MockServerRequestEncoder().encode(null, httpRequest, output);
+
+        // then
+        FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
+        assertThat(fullHttpRequest.content().toString(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET), is("A normal string with ASCII characters"));
+    }
+
+    @Test
+    public void shouldTransmitUnencodableCharacters() {
+        // given
+        httpRequest.withBody("Euro sign: \u20AC", ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET);
+        httpRequest.withHeader(new Header(HttpHeaders.Names.CONTENT_TYPE, MediaType.create("text", "plain").toString()));
+
+        // when
+        new MockServerRequestEncoder().encode(null, httpRequest, output);
+
+        // then
+        FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
+        assertThat(fullHttpRequest.content().toString(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET), is(new String("Euro sign: \u20AC".getBytes(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET), ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET)));
+    }
+
+    @Test
+    public void shouldUseDefaultCharsetIfCharsetNotSupported() {
+        // given
+        httpRequest.withBody("A normal string with ASCII characters");
+        httpRequest.withHeader(new Header(HttpHeaders.Names.CONTENT_TYPE, "text/plain; charset=invalid-charset"));
+
+        // when
+        new MockServerRequestEncoder().encode(null, httpRequest, output);
+
+        // then
+        FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
+        assertThat(fullHttpRequest.content().toString(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET), is("A normal string with ASCII characters"));
+    }
+
+    @Test
+    public void shouldDecodeBodyWithUTF8ContentType() {
+        // given
+        httpRequest.withBody("avro işarəsi: \u20AC", Charsets.UTF_8);
+        httpRequest.withHeader(new Header(HttpHeaders.Names.CONTENT_TYPE, MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString()));
+
+        // when
+        new MockServerRequestEncoder().encode(null, httpRequest, output);
+
+        // then
+        FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
+        assertThat(fullHttpRequest.content().toString(Charsets.UTF_8), is("avro işarəsi: \u20AC"));
+    }
+
+    @Test
+    public void shouldDecodeBodyWithUTF16ContentType() {
+        // given
+        httpRequest.withBody("我说中国话", Charsets.UTF_16);
+        httpRequest.withHeader(new Header(HttpHeaders.Names.CONTENT_TYPE, MediaType.create("text", "plain").withCharset(Charsets.UTF_16).toString()));
+
+        // when
+        new MockServerRequestEncoder().encode(null, httpRequest, output);
+
+        // then
+        FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
+        assertThat(fullHttpRequest.content().toString(Charsets.UTF_16), is("我说中国话"));
+    }
+
+    @Test
+    public void shouldEncodeStringBodyWithCharset() {
+        // given
+        httpRequest.withBody("我说中国话", Charsets.UTF_16);
+
+        // when
+        new MockServerRequestEncoder().encode(null, httpRequest, output);
+
+        // then
+        FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
+        assertThat(fullHttpRequest.content().toString(Charsets.UTF_16), is("我说中国话"));
+        assertThat(fullHttpRequest.headers().get(CONTENT_TYPE), is(MediaType.create("text", "plain").withCharset(Charsets.UTF_16).toString()));
+    }
+
+    @Test
+    public void shouldEncodeJsonBodyWithCharset() {
+        // given
+        httpRequest.withBody(json("{ \"some_field\": \"我说中国话\" }", Charsets.UTF_16, MatchType.ONLY_MATCHING_FIELDS));
+
+        // when
+        new MockServerRequestEncoder().encode(null, httpRequest, output);
+
+        // then
+        FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
+        assertThat(fullHttpRequest.content().toString(Charsets.UTF_16), is("{ \"some_field\": \"我说中国话\" }"));
+        assertThat(fullHttpRequest.headers().get(CONTENT_TYPE), is(MediaType.JSON_UTF_8.withCharset(Charsets.UTF_16).toString()));
+    }
+
+    @Test
+    public void shouldPreferStringBodyCharacterSet() {
+        // given
+        httpRequest.withBody("avro işarəsi: \u20AC", Charsets.UTF_16);
+        httpRequest.withHeader(new Header(HttpHeaders.Names.CONTENT_TYPE, MediaType.create("text", "plain").withCharset(Charsets.US_ASCII).toString()));
+
+        // when
+        new MockServerRequestEncoder().encode(null, httpRequest, output);
+
+        // then
+        FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
+        assertThat(fullHttpRequest.content().toString(Charsets.UTF_16), is("avro işarəsi: \u20AC"));
     }
 }

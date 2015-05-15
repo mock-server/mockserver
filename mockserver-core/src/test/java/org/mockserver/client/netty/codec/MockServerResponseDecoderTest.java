@@ -1,6 +1,7 @@
 package org.mockserver.client.netty.codec;
 
 import com.google.common.base.Charsets;
+import com.google.common.net.MediaType;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.*;
 import org.hamcrest.core.Is;
@@ -93,7 +94,7 @@ public class MockServerResponseDecoderTest {
     public void shouldDecodeUTF8Body() {
         // given
         fullHttpResponse = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.wrappedBuffer("some_random_string".getBytes()));
-        fullHttpResponse.headers().add("Content-Type", "plain/text");
+        fullHttpResponse.headers().add(HttpHeaders.Names.CONTENT_TYPE, MediaType.create("text", "plain").toString());
 
         // when
         mockServerResponseDecoder.decode(null, fullHttpResponse, output);
@@ -107,7 +108,7 @@ public class MockServerResponseDecoderTest {
     public void shouldDecodeUTF16Body() {
         // given
         fullHttpResponse = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.wrappedBuffer("我说中国话".getBytes(Charsets.UTF_16)));
-        fullHttpResponse.headers().add("Content-Type", "plain/text; charset=utf-16");
+        fullHttpResponse.headers().add(HttpHeaders.Names.CONTENT_TYPE, MediaType.create("text", "plain").withCharset(Charsets.UTF_16).toString());
 
         // when
         mockServerResponseDecoder.decode(null, fullHttpResponse, output);
@@ -121,7 +122,7 @@ public class MockServerResponseDecoderTest {
     public void shouldDecodeBinaryBody() {
         // given
         fullHttpResponse = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.wrappedBuffer("some_random_bytes".getBytes()));
-        fullHttpResponse.headers().add("Content-Type", "image/jpeg");
+        fullHttpResponse.headers().add(HttpHeaders.Names.CONTENT_TYPE, "image/jpeg");
 
         // when
         mockServerResponseDecoder.decode(null, fullHttpResponse, output);

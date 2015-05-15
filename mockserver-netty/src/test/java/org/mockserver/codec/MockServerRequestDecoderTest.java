@@ -1,6 +1,7 @@
 package org.mockserver.codec;
 
 import com.google.common.base.Charsets;
+import com.google.common.net.MediaType;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.*;
 import org.hamcrest.core.Is;
@@ -155,7 +156,7 @@ public class MockServerRequestDecoderTest {
     public void shouldDecodeBodyWithContentTypeAndNoCharset() {
         // given
         fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/uri", Unpooled.wrappedBuffer("A normal string with ASCII characters".getBytes(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET)));
-        fullHttpRequest.headers().add("Content-Type", "plain/text");
+        fullHttpRequest.headers().add(HttpHeaders.Names.CONTENT_TYPE, MediaType.create("text", "plain").toString());
 
         // when
         mockServerRequestDecoder.decode(null, fullHttpRequest, output);
@@ -182,7 +183,7 @@ public class MockServerRequestDecoderTest {
     public void shouldTransmitUnencodableCharacters() {
         // given
         fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/uri", Unpooled.wrappedBuffer("Euro sign: \u20AC".getBytes(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET)));
-        fullHttpRequest.headers().add("Content-Type", "plain/text");
+        fullHttpRequest.headers().add(HttpHeaders.Names.CONTENT_TYPE, MediaType.create("text", "plain").toString());
 
         // when
         mockServerRequestDecoder.decode(null, fullHttpRequest, output);
@@ -197,7 +198,7 @@ public class MockServerRequestDecoderTest {
     public void shouldUseDefaultCharsetIfCharsetNotSupported() {
         // given
         fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/uri", Unpooled.wrappedBuffer("A normal string with ASCII characters".getBytes(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET)));
-        fullHttpRequest.headers().add("Content-Type", "plain/text; charset=invalid-charset");
+        fullHttpRequest.headers().add(HttpHeaders.Names.CONTENT_TYPE, "plain/text; charset=invalid-charset");
 
         // when
         mockServerRequestDecoder.decode(null, fullHttpRequest, output);
@@ -211,7 +212,7 @@ public class MockServerRequestDecoderTest {
     public void shouldDecodeBodyWithUTF8ContentType() {
         // given
         fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/uri", Unpooled.wrappedBuffer("avro işarəsi: \u20AC".getBytes(Charsets.UTF_8)));
-        fullHttpRequest.headers().add("Content-Type", "plain/text; charset=UTF-8");
+        fullHttpRequest.headers().add(HttpHeaders.Names.CONTENT_TYPE, MediaType.PLAIN_TEXT_UTF_8.toString());
 
         // when
         mockServerRequestDecoder.decode(null, fullHttpRequest, output);
@@ -225,7 +226,7 @@ public class MockServerRequestDecoderTest {
     public void shouldDecodeBodyWithUTF16ContentType() {
         // given
         fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/uri", Unpooled.wrappedBuffer("我说中国话".getBytes(Charsets.UTF_16)));
-        fullHttpRequest.headers().add("Content-Type", "plain/text; charset=utf-16");
+        fullHttpRequest.headers().add(HttpHeaders.Names.CONTENT_TYPE, MediaType.create("text", "plain").withCharset(Charsets.UTF_16).toString());
 
         // when
         mockServerRequestDecoder.decode(null, fullHttpRequest, output);
@@ -239,7 +240,7 @@ public class MockServerRequestDecoderTest {
     public void shouldDecodeBinaryBody() {
         // given
         fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/uri", Unpooled.wrappedBuffer("some_random_bytes".getBytes()));
-        fullHttpRequest.headers().add("Content-Type", "image/jpeg");
+        fullHttpRequest.headers().add(HttpHeaders.Names.CONTENT_TYPE, MediaType.JPEG);
 
         // when
         mockServerRequestDecoder.decode(null, fullHttpRequest, output);

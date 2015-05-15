@@ -50,7 +50,7 @@ public class HttpServletRequestToMockServerRequestDecoder {
             if (ContentTypeMapper.isBinary(httpServletRequest.getHeader(HttpHeaders.Names.CONTENT_TYPE))) {
                 httpRequest.withBody(new BinaryBody(bodyBytes));
             } else {
-                Charset requestCharset = ContentTypeMapper.determineCharsetForRequestContentType(httpServletRequest);
+                Charset requestCharset = ContentTypeMapper.determineCharsetForMessage(httpServletRequest);
                 httpRequest.withBody(new StringBody(new String(bodyBytes, requestCharset), DEFAULT_HTTP_CHARACTER_SET.equals(requestCharset) ? null : requestCharset));
             }
         }

@@ -1,16 +1,14 @@
 package org.mockserver.mappers;
 
 import com.google.common.base.Charsets;
+import com.google.common.net.MediaType;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMessage;
 import org.junit.Test;
-import org.mockserver.model.HttpResponse;
 import org.springframework.mock.web.MockHttpServletRequest;
 
-import javax.servlet.http.HttpServletRequest;
 import java.nio.charset.Charset;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -124,13 +122,13 @@ public class ContentTypeMapperTest {
     public void shouldDetermineCharsetForRequestContentTypeForHttpMessage() {
         // given
         HttpHeaders mockHeaders = mock(HttpHeaders.class);
-        when(mockHeaders.get(HttpHeaders.Names.CONTENT_TYPE)).thenReturn("text/plain; charset=UTF-16");
+        when(mockHeaders.get(HttpHeaders.Names.CONTENT_TYPE)).thenReturn(MediaType.create("text", "plain").withCharset(Charsets.UTF_16).toString());
 
         HttpMessage mockMessage = mock(HttpMessage.class);
         when(mockMessage.headers()).thenReturn(mockHeaders);
 
         // when
-        Charset charset = ContentTypeMapper.determineCharsetForRequestContentType(mockMessage);
+        Charset charset = ContentTypeMapper.determineCharsetForMessage(mockMessage);
 
         // then
         assertThat(charset, is(Charsets.UTF_16));
@@ -140,10 +138,10 @@ public class ContentTypeMapperTest {
     public void shouldDetermineCharsetForRequestContentTypeForHttpServletRequest() {
         // given
         MockHttpServletRequest mockServletRequest = new MockHttpServletRequest();
-        mockServletRequest.addHeader(HttpHeaders.Names.CONTENT_TYPE, "text/plain; charset=UTF-16");
+        mockServletRequest.addHeader(HttpHeaders.Names.CONTENT_TYPE, MediaType.create("text", "plain").withCharset(Charsets.UTF_16).toString());
 
         // when
-        Charset charset = ContentTypeMapper.determineCharsetForRequestContentType(mockServletRequest);
+        Charset charset = ContentTypeMapper.determineCharsetForMessage(mockServletRequest);
 
         // then
         assertThat(charset, is(Charsets.UTF_16));
@@ -152,9 +150,9 @@ public class ContentTypeMapperTest {
     @Test
     public void shouldDetermineCharsetFromResponseContentTypeForHttpResponse() {
         // when
-        Charset charset = ContentTypeMapper.determineCharsetFromResponseContentType(
+        Charset charset = ContentTypeMapper.determineCharsetForMessage(
                 response()
-                        .withHeader(HttpHeaders.Names.CONTENT_TYPE, "text/plain; charset=UTF-16")
+                        .withHeader(HttpHeaders.Names.CONTENT_TYPE, MediaType.create("text", "plain").withCharset(Charsets.UTF_16).toString())
         );
 
         // then
@@ -171,7 +169,7 @@ public class ContentTypeMapperTest {
         when(mockMessage.headers()).thenReturn(mockHeaders);
 
         // when
-        Charset charset = ContentTypeMapper.determineCharsetForRequestContentType(mockMessage);
+        Charset charset = ContentTypeMapper.determineCharsetForMessage(mockMessage);
 
         // then
         assertThat(charset, is(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET));
@@ -184,7 +182,7 @@ public class ContentTypeMapperTest {
         mockServletRequest.addHeader(HttpHeaders.Names.CONTENT_TYPE, "some_rubbish");
 
         // when
-        Charset charset = ContentTypeMapper.determineCharsetForRequestContentType(mockServletRequest);
+        Charset charset = ContentTypeMapper.determineCharsetForMessage(mockServletRequest);
 
         // then
         assertThat(charset, is(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET));
@@ -193,7 +191,7 @@ public class ContentTypeMapperTest {
     @Test
     public void shouldDetermineCharsetFromResponseContentTypeForHttpResponseWhenIllegalContentTypeHeader() {
         // when
-        Charset charset = ContentTypeMapper.determineCharsetFromResponseContentType(
+        Charset charset = ContentTypeMapper.determineCharsetForMessage(
                 response()
                         .withHeader(HttpHeaders.Names.CONTENT_TYPE, "some_rubbish")
         );
@@ -212,7 +210,7 @@ public class ContentTypeMapperTest {
         when(mockMessage.headers()).thenReturn(mockHeaders);
 
         // when
-        Charset charset = ContentTypeMapper.determineCharsetForRequestContentType(mockMessage);
+        Charset charset = ContentTypeMapper.determineCharsetForMessage(mockMessage);
 
         // then
         assertThat(charset, is(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET));
@@ -225,7 +223,7 @@ public class ContentTypeMapperTest {
         mockServletRequest.addHeader(HttpHeaders.Names.CONTENT_TYPE, "text/plain; charset=some_rubbish");
 
         // when
-        Charset charset = ContentTypeMapper.determineCharsetForRequestContentType(mockServletRequest);
+        Charset charset = ContentTypeMapper.determineCharsetForMessage(mockServletRequest);
 
         // then
         assertThat(charset, is(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET));
@@ -234,7 +232,7 @@ public class ContentTypeMapperTest {
     @Test
     public void shouldDetermineCharsetFromResponseContentTypeForHttpResponseWhenUnsupportedCharset() {
         // when
-        Charset charset = ContentTypeMapper.determineCharsetFromResponseContentType(
+        Charset charset = ContentTypeMapper.determineCharsetForMessage(
                 response()
                         .withHeader(HttpHeaders.Names.CONTENT_TYPE, "text/plain; charset=some_rubbish")
         );
@@ -253,7 +251,7 @@ public class ContentTypeMapperTest {
         when(mockMessage.headers()).thenReturn(mockHeaders);
 
         // when
-        Charset charset = ContentTypeMapper.determineCharsetForRequestContentType(mockMessage);
+        Charset charset = ContentTypeMapper.determineCharsetForMessage(mockMessage);
 
         // then
         assertThat(charset, is(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET));
@@ -262,7 +260,7 @@ public class ContentTypeMapperTest {
     @Test
     public void shouldDetermineCharsetForRequestContentTypeForHttpServletRequestWhenNoContentTypeHeader() {
         // when
-        Charset charset = ContentTypeMapper.determineCharsetForRequestContentType(new MockHttpServletRequest());
+        Charset charset = ContentTypeMapper.determineCharsetForMessage(new MockHttpServletRequest());
 
         // then
         assertThat(charset, is(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET));
@@ -271,7 +269,7 @@ public class ContentTypeMapperTest {
     @Test
     public void shouldDetermineCharsetFromResponseContentTypeForHttpResponseWhenNoContentTypeHeader() {
         // when
-        Charset charset = ContentTypeMapper.determineCharsetFromResponseContentType(
+        Charset charset = ContentTypeMapper.determineCharsetForMessage(
                 response()
         );
 

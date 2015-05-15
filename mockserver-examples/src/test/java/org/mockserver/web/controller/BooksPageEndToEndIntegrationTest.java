@@ -57,7 +57,7 @@ public abstract class BooksPageEndToEndIntegrationTest {
         // when
         MvcResult response = mockMvc.perform(get("/books").accept(MediaType.TEXT_HTML))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType("text/html;charset=UTF-8"))
+                .andExpect(content().contentType("text/html; charset=utf-8"))
                 .andReturn();
 
         // then
@@ -75,7 +75,7 @@ public abstract class BooksPageEndToEndIntegrationTest {
         // when
         MvcResult response = mockMvc.perform(get("/book/1").accept(MediaType.TEXT_HTML))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType("text/html;charset=UTF-8"))
+                .andExpect(content().contentType("text/html; charset=utf-8"))
                 .andReturn();
 
         // then

@@ -1,6 +1,7 @@
 package org.mockserver.model;
 
 import com.google.common.base.Charsets;
+import com.google.common.net.MediaType;
 import org.junit.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -24,7 +25,7 @@ public class StringBodyTest {
         assertThat(stringBody.getCharset(), nullValue());
         assertThat(stringBody.getCharset(null), nullValue());
         assertThat(stringBody.getCharset(Charsets.UTF_8), is(Charsets.UTF_8));
-        assertThat(stringBody.getContentType(), is("plain/text"));
+        assertThat(stringBody.getContentType(), is(MediaType.create("text", "plain").toString()));
     }
 
     @Test
@@ -38,7 +39,7 @@ public class StringBodyTest {
         assertThat(stringBody.getCharset(), is(Charsets.UTF_16));
         assertThat(stringBody.getCharset(null), is(Charsets.UTF_16));
         assertThat(stringBody.getCharset(Charsets.UTF_8), is(Charsets.UTF_16));
-        assertThat(stringBody.getContentType(), is("plain/text"));
+        assertThat(stringBody.getContentType(), is(MediaType.create("text", "plain").toString()));
     }
 
     @Test
@@ -52,7 +53,7 @@ public class StringBodyTest {
         assertThat(stringBody.getCharset(), nullValue());
         assertThat(stringBody.getCharset(null), nullValue());
         assertThat(stringBody.getCharset(Charsets.UTF_8), is(Charsets.UTF_8));
-        assertThat(stringBody.getContentType(), is("plain/text"));
+        assertThat(stringBody.getContentType(), is(MediaType.create("text", "plain").toString()));
     }
 
     @Test
@@ -66,7 +67,7 @@ public class StringBodyTest {
         assertThat(stringBody.getCharset(), is(Charsets.UTF_16));
         assertThat(stringBody.getCharset(null), is(Charsets.UTF_16));
         assertThat(stringBody.getCharset(Charsets.UTF_8), is(Charsets.UTF_16));
-        assertThat(stringBody.getContentType(), is("plain/text"));
+        assertThat(stringBody.getContentType(), is(MediaType.create("text", "plain").toString()));
     }
 
 }

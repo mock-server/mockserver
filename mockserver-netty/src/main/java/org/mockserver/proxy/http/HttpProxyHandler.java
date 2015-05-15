@@ -1,6 +1,7 @@
 package org.mockserver.proxy.http;
 
 import com.google.common.base.Strings;
+import com.google.common.net.MediaType;
 import io.netty.channel.*;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -109,7 +110,7 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
                 if (result.isEmpty()) {
                     writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
                 } else {
-                    writeResponse(ctx, request, HttpResponseStatus.NOT_ACCEPTABLE, result, "plain/text");
+                    writeResponse(ctx, request, HttpResponseStatus.NOT_ACCEPTABLE, result, MediaType.create("text", "plain").toString());
                 }
 
             } else if (request.matches("PUT", "/verifySequence")) {
@@ -120,7 +121,7 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
                 if (result.isEmpty()) {
                     writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
                 } else {
-                    writeResponse(ctx, request, HttpResponseStatus.NOT_ACCEPTABLE, result, "plain/text");
+                    writeResponse(ctx, request, HttpResponseStatus.NOT_ACCEPTABLE, result, MediaType.create("text", "plain").toString());
                 }
 
             } else if (request.matches("PUT", "/stop")) {

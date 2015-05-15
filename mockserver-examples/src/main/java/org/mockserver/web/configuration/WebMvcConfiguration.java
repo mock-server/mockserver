@@ -1,5 +1,6 @@
 package org.mockserver.web.configuration;
 
+import com.google.common.net.MediaType;
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.cache.MultiTemplateLoader;
 import freemarker.cache.TemplateLoader;
@@ -53,7 +54,7 @@ public class WebMvcConfiguration extends WebMvcConfigurerAdapter {
         freeMarkerViewResolver.setOrder(1);
         freeMarkerViewResolver.setPrefix("view/");
         freeMarkerViewResolver.setSuffix(".ftl");
-        freeMarkerViewResolver.setContentType("text/html;charset=UTF-8");
+        freeMarkerViewResolver.setContentType(MediaType.HTML_UTF_8.toString());
         return freeMarkerViewResolver;
     }
 

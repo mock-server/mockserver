@@ -47,6 +47,10 @@ public class JsonBody extends Body {
         return new JsonBody(json, matchType);
     }
 
+    public static JsonBody json(String json, Charset charset) {
+        return new JsonBody(json, charset, DEFAULT_MATCH_TYPE);
+    }
+
     public static JsonBody json(String json, Charset charset, MatchType matchType) {
         return new JsonBody(json, charset, matchType);
     }

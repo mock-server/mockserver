@@ -83,6 +83,19 @@ public class JsonBodyTest {
     }
 
     @Test
+    public void shouldReturnValuesFromStaticBuilderWithCharset() {
+        // when
+        JsonBody jsonBody = json("some_body", Charsets.UTF_16);
+
+        // then
+        assertThat(jsonBody.getValue(), is("some_body"));
+        assertThat(jsonBody.getType(), is(Body.Type.JSON));
+        assertThat(jsonBody.getMatchType(), is(ONLY_MATCHING_FIELDS));
+        assertThat(jsonBody.getContentType(), is("application/json"));
+        assertThat(jsonBody.getCharset(), is(Charsets.UTF_16));
+    }
+
+    @Test
     public void shouldReturnValuesFromStaticBuilderWithMatchTypeAndCharset() {
         // when
         JsonBody jsonBody = json("some_body", Charsets.UTF_16, STRICT);

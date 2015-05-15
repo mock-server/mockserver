@@ -6,10 +6,10 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageEncoder;
 import io.netty.handler.codec.http.*;
-import org.mockserver.model.Header;
+import io.netty.handler.codec.http.Cookie;
+import org.mockserver.mappers.ContentTypeMapper;
+import org.mockserver.model.*;
 import org.mockserver.model.HttpRequest;
-import org.mockserver.model.OutboundHttpRequest;
-import org.mockserver.model.Parameter;
 
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -61,9 +61,19 @@ public class MockServerRequestEncoder extends MessageToMessageEncoder<OutboundHt
     }
 
     private ByteBuf getBody(HttpRequest httpRequest) {
-        ByteBuf content = Unpooled.buffer(0);
-        if (httpRequest.getBody() != null) {
-            content = Unpooled.copiedBuffer(httpRequest.getBodyAsRawBytes());
+        ByteBuf content = Unpooled.buffer(0, 0);
+
+        Body body = httpRequest.getBody();
+        if (body != null) {
+            Object bodyContents = body.getValue();
+            Charset bodyCharset = body.getCharset(ContentTypeMapper.determineCharsetForMessage(httpRequest));
+            if (bodyContents instanceof byte[]) {
+                content = Unpooled.copiedBuffer((byte[]) bodyContents);
+            } else if (bodyContents instanceof String) {
+                content = Unpooled.copiedBuffer(((String) bodyContents).getBytes(bodyCharset));
+            } else if (body.toString() != null) {
+                content = Unpooled.copiedBuffer(body.toString().getBytes(bodyCharset));
+            }
         }
         return content;
     }
@@ -113,13 +123,15 @@ public class MockServerRequestEncoder extends MessageToMessageEncoder<OutboundHt
             request.headers().set(CONNECTION, HttpHeaders.Values.CLOSE);
         }
 
-        if (httpRequest.getBody() != null) {
-            Charset bodyCharset = httpRequest.getBody().getCharset(null);
-            String bodyContentType = httpRequest.getBody().getContentType();
-            if (bodyCharset != null) {
-                request.headers().set(CONTENT_TYPE, bodyContentType + "; charset=" + bodyCharset.name().toLowerCase());
-            } else if (bodyContentType != null) {
-                request.headers().set(CONTENT_TYPE, bodyContentType);
+        if (!request.headers().contains(CONTENT_TYPE)) {
+            if (httpRequest.getBody() != null) {
+                Charset bodyCharset = httpRequest.getBody().getCharset(null);
+                String bodyContentType = httpRequest.getBody().getContentType();
+                if (bodyCharset != null) {
+                    request.headers().set(CONTENT_TYPE, bodyContentType + "; charset=" + bodyCharset.name().toLowerCase());
+                } else if (bodyContentType != null) {
+                    request.headers().set(CONTENT_TYPE, bodyContentType);
+                }
             }
         }
     }

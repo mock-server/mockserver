@@ -1,6 +1,7 @@
 package org.mockserver.mockserver;
 
 import com.google.common.base.Strings;
+import com.google.common.net.MediaType;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -13,9 +14,11 @@ import org.mockserver.client.serialization.VerificationSequenceSerializer;
 import org.mockserver.client.serialization.VerificationSerializer;
 import org.mockserver.filters.LogFilter;
 import org.mockserver.logging.LogFormatter;
+import org.mockserver.mappers.ContentTypeMapper;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.mock.action.ActionHandler;
+import org.mockserver.model.Body;
 import org.mockserver.model.ConnectionOptions;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -106,7 +109,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                 if (result.isEmpty()) {
                     writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
                 } else {
-                    writeResponse(ctx, request, HttpResponseStatus.NOT_ACCEPTABLE, result, "plain/text");
+                    writeResponse(ctx, request, HttpResponseStatus.NOT_ACCEPTABLE, result, MediaType.create("text", "plain").toString());
                 }
 
             } else if (request.matches("PUT", "/verifySequence")) {
@@ -117,7 +120,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                 if (result.isEmpty()) {
                     writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
                 } else {
-                    writeResponse(ctx, request, HttpResponseStatus.NOT_ACCEPTABLE, result, "plain/text");
+                    writeResponse(ctx, request, HttpResponseStatus.NOT_ACCEPTABLE, result, MediaType.create("text", "plain").toString());
                 }
 
             } else if (request.matches("PUT", "/stop")) {
@@ -185,11 +188,20 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
         if (connectionOptions != null && connectionOptions.getContentLengthHeaderOverride() != null) {
             response.updateHeader(header(CONTENT_LENGTH, connectionOptions.getContentLengthHeaderOverride()));
         } else if (connectionOptions == null || isFalseOrNull(connectionOptions.getSuppressContentLengthHeader())) {
-            if (response.getBody() != null) {
-                response.updateHeader(header(CONTENT_LENGTH, response.getBody().getRawBytes().length));
-            } else {
-                response.updateHeader(header(CONTENT_LENGTH, 0));
+            Body body = response.getBody();
+            byte[] bodyBytes = new byte[0];
+            if (body != null) {
+                Object bodyContents = body.getValue();
+                Charset bodyCharset = body.getCharset(ContentTypeMapper.determineCharsetForMessage(response));
+                if (bodyContents instanceof byte[]) {
+                    bodyBytes = (byte[]) bodyContents;
+                } else if (bodyContents instanceof String) {
+                    bodyBytes = ((String) bodyContents).getBytes(bodyCharset);
+                } else if (body.toString() != null) {
+                    bodyBytes = body.toString().getBytes(bodyCharset);
+                }
             }
+            response.updateHeader(header(CONTENT_LENGTH, bodyBytes.length));
         }
     }
 

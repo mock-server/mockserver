@@ -1,6 +1,7 @@
 package org.mockserver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.net.MediaType;
 
 import java.nio.charset.Charset;
 
@@ -58,7 +59,7 @@ public class StringBody extends Body<String> {
 
     @JsonIgnore
     public String getContentType() {
-        return "plain/text";
+        return MediaType.create("text", "plain").toString();
     }
 
     @Override
