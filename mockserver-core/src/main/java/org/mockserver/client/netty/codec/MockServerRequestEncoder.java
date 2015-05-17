@@ -6,7 +6,9 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageEncoder;
 import io.netty.handler.codec.http.*;
-import io.netty.handler.codec.http.Cookie;
+import io.netty.handler.codec.http.cookie.DefaultCookie;
+import io.netty.handler.codec.http.cookie.Cookie;
+import io.netty.handler.codec.http.cookie.ClientCookieEncoder;
 import org.mockserver.mappers.ContentTypeMapper;
 import org.mockserver.model.*;
 import org.mockserver.model.HttpRequest;
@@ -79,14 +81,14 @@ public class MockServerRequestEncoder extends MessageToMessageEncoder<OutboundHt
     }
 
     private void setCookies(HttpRequest httpRequest, FullHttpRequest request) {
-        List<io.netty.handler.codec.http.Cookie> cookies = new ArrayList<Cookie>();
+        List<Cookie> cookies = new ArrayList<Cookie>();
         for (org.mockserver.model.Cookie cookie : httpRequest.getCookies()) {
             cookies.add(new DefaultCookie(cookie.getName(), cookie.getValue()));
         }
         if (cookies.size() > 0) {
             request.headers().set(
                     HttpHeaders.Names.COOKIE,
-                    ClientCookieEncoder.encode(cookies)
+                    ClientCookieEncoder.LAX.encode(cookies)
             );
         }
     }

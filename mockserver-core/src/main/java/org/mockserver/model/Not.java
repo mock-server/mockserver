@@ -26,7 +26,9 @@ public class Not extends ObjectWithJsonToString {
         return not != null && not;
     }
 
-    public Boolean getNot() { return not; }
+    public Boolean getNot() {
+        return not;
+    }
 
     public void setNot(Boolean not) {
         this.not = not;

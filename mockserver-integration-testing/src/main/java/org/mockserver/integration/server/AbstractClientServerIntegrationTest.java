@@ -1464,8 +1464,7 @@ public abstract class AbstractClientServerIntegrationTest {
     @Test
     public void shouldReturnPDFResponseByMatchingPath() throws IOException {
         // when
-        byte[] pdfBytes = new byte[1024];
-        IOUtils.readFully(getClass().getClassLoader().getResourceAsStream("test.pdf"), pdfBytes);
+        byte[] pdfBytes = IOUtils.toByteArray(getClass().getClassLoader().getResourceAsStream("test.pdf"));
         mockServerClient
                 .when(
                         request()
@@ -1521,8 +1520,7 @@ public abstract class AbstractClientServerIntegrationTest {
     @Test
     public void shouldReturnPNGResponseByMatchingPath() throws IOException {
         // when
-        byte[] pngBytes = new byte[1024];
-        IOUtils.readFully(getClass().getClassLoader().getResourceAsStream("test.png"), pngBytes);
+        byte[] pngBytes = IOUtils.toByteArray(getClass().getClassLoader().getResourceAsStream("test.png"));
         mockServerClient
                 .when(
                         request()
@@ -1576,8 +1574,7 @@ public abstract class AbstractClientServerIntegrationTest {
     @Test
     public void shouldReturnPDFResponseByMatchingBinaryPDFBody() throws IOException {
         // when
-        byte[] pdfBytes = new byte[1024];
-        IOUtils.readFully(getClass().getClassLoader().getResourceAsStream("test.pdf"), pdfBytes);
+        byte[] pdfBytes = IOUtils.toByteArray(getClass().getClassLoader().getResourceAsStream("test.pdf"));
         mockServerClient
                 .when(
                         request().withBody(binary(pdfBytes))
@@ -1634,8 +1631,7 @@ public abstract class AbstractClientServerIntegrationTest {
     @Test
     public void shouldReturnPNGResponseByMatchingBinaryPNGBody() throws IOException {
         // when
-        byte[] pngBytes = new byte[1024];
-        IOUtils.readFully(getClass().getClassLoader().getResourceAsStream("test.png"), pngBytes);
+        byte[] pngBytes = IOUtils.toByteArray(getClass().getClassLoader().getResourceAsStream("test.png"));
         mockServerClient
                 .when(
                         request().withBody(binary(pngBytes))

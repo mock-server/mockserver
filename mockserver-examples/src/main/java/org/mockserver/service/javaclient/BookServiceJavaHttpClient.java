@@ -1,17 +1,8 @@
-package org.mockserver.service.apacheclient;
+package org.mockserver.service.javaclient;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
-import org.apache.http.HttpHost;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
-import org.apache.http.util.EntityUtils;
 import org.mockserver.model.Book;
 import org.mockserver.service.BookService;
 import org.springframework.core.env.Environment;
@@ -19,26 +10,29 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
+import java.net.URL;
 
 /**
  * @author jamesdbloom
  */
 @Component
-public class BookServiceApacheHttpClient implements BookService {
+public class BookServiceJavaHttpClient implements BookService {
 
     @Resource
     private Environment environment;
     private Integer port;
     private String host;
     private ObjectMapper objectMapper;
-    private HttpClient httpClient;
 
     @PostConstruct
     private void initialise() {
         port = environment.getProperty("bookService.port", Integer.class);
         host = environment.getProperty("bookService.host", "localhost");
         objectMapper = createObjectMapper();
-        httpClient = createHttpClient();
     }
 
     private ObjectMapper createObjectMapper() {
@@ -59,42 +53,32 @@ public class BookServiceApacheHttpClient implements BookService {
         return objectMapper;
     }
 
-    private HttpClient createHttpClient() {
-        HttpHost httpHost = new HttpHost(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort")));
-        DefaultProxyRoutePlanner defaultProxyRoutePlanner = new DefaultProxyRoutePlanner(httpHost);
-        return HttpClients.custom().setRoutePlanner(defaultProxyRoutePlanner).build();
+    private HttpURLConnection sendGETRequest(String uri, InetSocketAddress serverAddress, final InetSocketAddress proxyAddress) throws IOException {
+        URL url = new URL("http://" + serverAddress.getHostName() + ":" + serverAddress.getPort() + uri);
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection(new Proxy(Proxy.Type.SOCKS, proxyAddress));
+        connection.setRequestMethod("GET");
+        return connection;
     }
 
     public Book[] getAllBooks() {
-        String responseBody = "";
+        InetSocketAddress proxyAddress = new InetSocketAddress(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort")));
+        InetSocketAddress serverAddress = new InetSocketAddress(host, port);
+
         try {
-            HttpResponse response = httpClient.execute(new HttpGet(new URIBuilder()
-                    .setScheme("http")
-                    .setHost(host)
-                    .setPort(port)
-                    .setPath("/get_books")
-                    .build()));
-            responseBody = new String(EntityUtils.toByteArray(response.getEntity()), Charsets.UTF_8);
+            HttpURLConnection connection = sendGETRequest("/get_books", serverAddress, proxyAddress);
+            return objectMapper.readValue(connection.getInputStream(), Book[].class);
         } catch (Exception e) {
             throw new RuntimeException("Exception making request to retrieve all books", e);
-        }
-        try {
-            return objectMapper.readValue(responseBody, Book[].class);
-        } catch (Exception e) {
-            throw new RuntimeException("Exception parsing JSON response [" + responseBody + "]", e);
         }
     }
 
     public Book getBook(String id) {
+        InetSocketAddress proxyAddress = new InetSocketAddress(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort")));
+        InetSocketAddress serverAddress = new InetSocketAddress(host, port);
+
         try {
-            HttpResponse response = httpClient.execute(new HttpGet(new URIBuilder()
-                    .setScheme("http")
-                    .setHost(host)
-                    .setPort(port)
-                    .setPath("/get_book")
-                    .setParameter("id", id)
-                    .build()));
-            return objectMapper.readValue(EntityUtils.toByteArray(response.getEntity()), Book.class);
+            HttpURLConnection connection = sendGETRequest("/get_book?id=" + id, serverAddress, proxyAddress);
+            return objectMapper.readValue(connection.getInputStream(), Book.class);
         } catch (Exception e) {
             throw new RuntimeException("Exception making request to retrieve a book with id [" + id + "]", e);
         }

@@ -542,7 +542,7 @@ public class MockServerClientTest {
         exception.expectMessage(containsString("verify(HttpRequest...) requires a non null non empty array of HttpRequest objects"));
 
         // when
-        mockServerClient.verify(null);
+        mockServerClient.verify((HttpRequest)null);
     }
 
     @Test

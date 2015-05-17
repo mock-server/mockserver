@@ -127,7 +127,7 @@ public class ProxyClient extends AbstractClient {
      * @throws AssertionError if the request has not been found
      */
     public ProxyClient verify(HttpRequest... httpRequests) throws AssertionError {
-        if (httpRequests == null || httpRequests.length == 0) {
+        if (httpRequests == null || httpRequests.length == 0 || httpRequests[0] == null) {
             throw new IllegalArgumentException("verify(HttpRequest...) requires a non null non empty array of HttpRequest objects");
         }
 

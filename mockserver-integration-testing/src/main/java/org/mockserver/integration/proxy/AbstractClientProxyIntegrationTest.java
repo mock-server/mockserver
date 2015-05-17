@@ -7,13 +7,11 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.conn.routing.HttpRoutePlanner;
-import org.apache.http.conn.ssl.AllowAllHostnameVerifier;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
-import org.apache.http.impl.conn.SystemDefaultRoutePlanner;
 import org.apache.http.util.EntityUtils;
 import org.junit.Test;
 import org.mockserver.client.proxy.ProxyClient;
@@ -22,10 +20,8 @@ import org.mockserver.socket.SSLFactory;
 import org.mockserver.streams.IOStreamUtils;
 
 import java.io.OutputStream;
-import java.net.ProxySelector;
 import java.net.Socket;
 
-import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.StringStartsWith.startsWith;
 import static org.junit.Assert.*;
 import static org.mockserver.model.HttpRequest.request;
@@ -43,8 +39,7 @@ public abstract class AbstractClientProxyIntegrationTest {
     protected HttpClient createHttpClient() throws Exception {
         return HttpClients
                 .custom()
-                .setSslcontext(SSLFactory.getInstance().sslContext())
-                .setHostnameVerifier(new AllowAllHostnameVerifier())
+                .setSSLSocketFactory(new SSLConnectionSocketFactory(SSLFactory.getInstance().sslContext(), NoopHostnameVerifier.INSTANCE))
                 .setRoutePlanner(new DefaultProxyRoutePlanner(
                         new HttpHost(
                                 System.getProperty("http.proxyHost", "localhost"),

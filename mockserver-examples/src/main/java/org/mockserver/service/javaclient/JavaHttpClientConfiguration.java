@@ -1,4 +1,4 @@
-package org.mockserver.service.grizzlyclient;
+package org.mockserver.service.javaclient;
 
 import org.mockserver.service.BookService;
 import org.springframework.context.annotation.Bean;
@@ -12,12 +12,12 @@ import org.springframework.context.annotation.PropertySource;
  * @author jamesdbloom
  */
 @Configuration
-@Profile("grizzlyClient")
+@Profile("javaClient")
 @PropertySource({"classpath:application.properties"})
-public class GrizzlyHttpClientConfiguration {
+public class JavaHttpClientConfiguration {
 
     @Bean
     BookService bookService() {
-        return new BookServiceGrizzlyHttpClient();
+        return new BookServiceJavaHttpClient();
     }
 }

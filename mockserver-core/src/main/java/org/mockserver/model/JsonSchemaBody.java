@@ -1,6 +1,6 @@
 package org.mockserver.model;
 
-import org.apache.commons.io.Charsets;
+import com.google.common.base.Charsets;
 import org.apache.commons.io.IOUtils;
 
 import java.io.FileInputStream;
@@ -33,7 +33,7 @@ public class JsonSchemaBody extends Body {
             if (inputStream == null) {
                 inputStream = new FileInputStream(filePath);
             }
-            return IOUtils.toString(inputStream, Charsets.UTF_8);
+            return IOUtils.toString(inputStream, Charsets.UTF_8.name());
         } catch (IOException e) {
             throw new RuntimeException("Exception while loading \"" + filePath + "\"");
         }

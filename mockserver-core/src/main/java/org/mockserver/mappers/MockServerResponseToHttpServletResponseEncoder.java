@@ -1,9 +1,9 @@
 package org.mockserver.mappers;
 
 import com.google.common.base.Strings;
-import io.netty.handler.codec.http.DefaultCookie;
+import io.netty.handler.codec.http.cookie.DefaultCookie;
 import io.netty.handler.codec.http.HttpHeaders;
-import io.netty.handler.codec.http.ServerCookieEncoder;
+import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
 import org.mockserver.client.serialization.Base64Converter;
 import org.mockserver.model.BinaryBody;
 import org.mockserver.model.Cookie;
@@ -56,7 +56,7 @@ public class MockServerResponseToHttpServletResponseEncoder {
     private void setCookies(HttpResponse httpResponse, HttpServletResponse httpServletResponse) {
         if (httpResponse.getCookies() != null) {
             for (Cookie cookie : httpResponse.getCookies()) {
-                httpServletResponse.addHeader(SET_COOKIE, ServerCookieEncoder.encode(new DefaultCookie(cookie.getName(), cookie.getValue())));
+                httpServletResponse.addHeader(SET_COOKIE, ServerCookieEncoder.LAX.encode(new DefaultCookie(cookie.getName(), cookie.getValue())));
             }
         }
     }

@@ -66,10 +66,6 @@ public abstract class BooksPageIntegrationTest {
     @After
     public void stopMockServer() {
         mockServer.stop();
-
-        // for debugging test
-        proxy.dumpToLogAsJSON();
-        proxy.dumpToLogAsJava();
     }
 
     @Test
@@ -118,8 +114,7 @@ public abstract class BooksPageIntegrationTest {
                 .andReturn();
 
         // then
-        BooksPage booksPage = new BooksPage(response);
-        booksPage.containsListOfBooks(Arrays.asList(
+        new BooksPage(response).containsListOfBooks(Arrays.asList(
                 new Book(1, "Xenophon's imperial fiction : on the education of Cyrus", "James Tatum", "0691067570", "1989"),
                 new Book(2, "You are here : personal geographies and other maps of the imagination", "Katharine A. Harmon", "1568984308", "2004"),
                 new Book(3, "You just don't understand : women and men in conversation", "Deborah Tannen", "0345372050", "1990")
@@ -157,13 +152,14 @@ public abstract class BooksPageIntegrationTest {
                                         "}")
                 );
 
+        // when
         MvcResult response = mockMvc.perform(get("/book/1").accept(MediaType.TEXT_HTML))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("text/html; charset=utf-8"))
                 .andReturn();
 
-        BookPage bookPage = new BookPage(response);
-        bookPage.containsBook(new Book(1, "Xenophon's imperial fiction : on the education of Cyrus", "James Tatum", "0691067570", "1989"));
+        // then
+        new BookPage(response).containsBook(new Book(1, "Xenophon's imperial fiction : on the education of Cyrus", "James Tatum", "0691067570", "1989"));
         proxy.verify(
                 request()
                         .withPath("/get_book")

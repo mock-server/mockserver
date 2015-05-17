@@ -1,9 +1,9 @@
-package org.mockserver.web.controller.grizzlyclient;
+package org.mockserver.web.controller.javaclient;
 
 import org.junit.runner.RunWith;
 import org.mockserver.configuration.RootConfiguration;
 import org.mockserver.web.configuration.WebMvcConfiguration;
-import org.mockserver.web.controller.BooksPageIntegrationTest;
+import org.mockserver.web.controller.BooksPageEndToEndIntegrationTest;
 import org.mockserver.web.controller.PropertyMockingApplicationContextInitializer;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
@@ -29,7 +29,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
                 }
         )
 })
-@ActiveProfiles(profiles = {"grizzlyClient"})
-public class BooksPageGrizzlyClientIntegrationTest extends BooksPageIntegrationTest {
+@ActiveProfiles(profiles = {"backend", "javaClient"})
+public class BooksPageJavaClientEndToEndIntegrationTest extends BooksPageEndToEndIntegrationTest {
 
 }

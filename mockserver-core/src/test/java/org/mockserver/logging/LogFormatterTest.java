@@ -25,7 +25,7 @@ public class LogFormatterTest {
         verify(mockLogger).isInfoEnabled();
         verify(mockLogger).info(
                 "some random message with {} and {}" + System.getProperty("line.separator"),
-                new String[]{
+                new Object[]{
                         System.getProperty("line.separator") +
                                 System.getProperty("line.separator") +
                                 "\tsome" + System.getProperty("line.separator") +

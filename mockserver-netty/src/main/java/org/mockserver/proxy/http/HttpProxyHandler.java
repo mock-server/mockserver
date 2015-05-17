@@ -14,7 +14,9 @@ import org.mockserver.filters.Filters;
 import org.mockserver.filters.HopByHopHeaderFilter;
 import org.mockserver.filters.LogFilter;
 import org.mockserver.logging.LogFormatter;
+import org.mockserver.mappers.ContentTypeMapper;
 import org.mockserver.mock.Expectation;
+import org.mockserver.model.Body;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.proxy.Proxy;
@@ -27,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
+import java.nio.charset.Charset;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONNECTION;
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH;
@@ -64,6 +67,8 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
     protected void channelRead0(ChannelHandlerContext ctx, HttpRequest request) {
 
         try {
+
+            logFormatter.traceLog("received request:{}" + System.getProperty("line.separator"), request);
 
             if (request.getMethod().getValue().equals("CONNECT")) {
 
@@ -169,7 +174,7 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
                 inetSocketAddress = new InetSocketAddress(hostHeaderParts[0], port);
             } else {
                 logger.error("Host header must be provided for requests being forwarded, the following request does not include the \"Host\" header:" + System.getProperty("line.separator") + httpRequest);
-                throw new IllegalArgumentException("Host header must be provided for requests being forwarded");
+                return notFoundResponse();
             }
 
             HttpResponse httpResponse = filters.applyOnResponseFilters(httpRequest, httpClient.sendRequest(outboundRequest(inetSocketAddress, "", httpRequest)));
@@ -194,7 +199,7 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
     }
 
     private void writeResponse(ChannelHandlerContext ctx, HttpRequest request, HttpResponse response) {
-        response.updateHeader(header(CONTENT_LENGTH, response.getBody().getRawBytes().length));
+        addContentLengthHeader(response);
         if (request.isKeepAlive()) {
             response.updateHeader(header(CONNECTION, HttpHeaders.Values.KEEP_ALIVE));
             ctx.write(response);
@@ -202,6 +207,23 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
             response.updateHeader(header(CONNECTION, HttpHeaders.Values.CLOSE));
             ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
         }
+    }
+
+    private void addContentLengthHeader(HttpResponse response) {
+        Body body = response.getBody();
+        byte[] bodyBytes = new byte[0];
+        if (body != null) {
+            Object bodyContents = body.getValue();
+            Charset bodyCharset = body.getCharset(ContentTypeMapper.determineCharsetForMessage(response));
+            if (bodyContents instanceof byte[]) {
+                bodyBytes = (byte[]) bodyContents;
+            } else if (bodyContents instanceof String) {
+                bodyBytes = ((String) bodyContents).getBytes(bodyCharset);
+            } else if (body.toString() != null) {
+                bodyBytes = body.toString().getBytes(bodyCharset);
+            }
+        }
+        response.updateHeader(header(CONTENT_LENGTH, bodyBytes.length));
     }
 
     @Override

@@ -46,7 +46,7 @@ public class IOStreamUtils {
 
     public static String readInputStreamToString(ServletRequest request) {
         try {
-            return IOUtils.toString(request.getInputStream(), Charsets.UTF_8);
+            return IOUtils.toString(request.getInputStream(), Charsets.UTF_8.name());
         } catch (IOException ioe) {
             logger.error("IOException while reading HttpServletRequest input stream", ioe);
             throw new RuntimeException("IOException while reading HttpServletRequest input stream", ioe);

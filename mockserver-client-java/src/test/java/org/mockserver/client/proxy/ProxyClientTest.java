@@ -354,7 +354,7 @@ public class ProxyClientTest {
         exception.expectMessage(containsString("verify(HttpRequest...) requires a non null non empty array of HttpRequest objects"));
 
         // when
-        proxyClient.verify(null);
+        proxyClient.verify((HttpRequest)null);
     }
 
     @Test

@@ -31,7 +31,9 @@ public class MappedRequest {
         return this.method.equals(method) && this.path.equals(path);
     }
 
-    public HttpMethod method() { return method; }
+    public HttpMethod method() {
+        return method;
+    }
 
     public String content() {
         return content;

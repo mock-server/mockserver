@@ -6,17 +6,11 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.config.Registry;
-import org.apache.http.config.RegistryBuilder;
-import org.apache.http.conn.ConnectTimeoutException;
-import org.apache.http.conn.socket.ConnectionSocketFactory;
-import org.apache.http.conn.ssl.AllowAllHostnameVerifier;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.apache.http.impl.conn.SystemDefaultRoutePlanner;
-import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.junit.Test;
 import org.mockserver.client.proxy.ProxyClient;
@@ -25,11 +19,8 @@ import org.mockserver.socket.SSLFactory;
 import org.mockserver.streams.IOStreamUtils;
 
 import javax.net.ssl.SSLSocket;
-import java.io.IOException;
 import java.io.OutputStream;
-import java.net.*;
-import java.util.Arrays;
-import java.util.List;
+import java.net.Socket;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.model.HttpRequest.request;
@@ -153,8 +144,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
         // given
         HttpClient httpClient = HttpClients
                 .custom()
-                .setSslcontext(SSLFactory.getInstance().sslContext())
-                .setHostnameVerifier(new AllowAllHostnameVerifier())
+                .setSSLSocketFactory(new SSLConnectionSocketFactory(SSLFactory.getInstance().sslContext(), NoopHostnameVerifier.INSTANCE))
                 .setRoutePlanner(
                         new DefaultProxyRoutePlanner(
                                 new HttpHost(

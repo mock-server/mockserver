@@ -3,15 +3,15 @@ package org.mockserver.logging;
 import com.google.common.base.Charsets;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufHolder;
-import io.netty.channel.ChannelDuplexHandler;
+import io.netty.channel.*;
 import io.netty.channel.ChannelHandler.Sharable;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelPromise;
 import io.netty.handler.ssl.SslHandshakeCompletionEvent;
+import io.netty.util.internal.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.SocketAddress;
+import java.util.List;
 
 @Sharable
 public class LoggingHandler extends ChannelDuplexHandler {
@@ -68,21 +68,12 @@ public class LoggingHandler extends ChannelDuplexHandler {
 
     protected final Logger logger;
 
-    public LoggingHandler() {
-        logger = LoggerFactory.getLogger(this.getClass());
-    }
-
     public LoggingHandler(String loggerName) {
         logger = LoggerFactory.getLogger(loggerName);
     }
 
     public LoggingHandler(Logger logger) {
         this.logger = logger;
-    }
-
-    protected String format(ChannelHandlerContext ctx, String message) {
-        String chStr = ctx.channel().toString();
-        return chStr + ' ' + message;
     }
 
     @Override
@@ -177,6 +168,26 @@ public class LoggingHandler extends ChannelDuplexHandler {
 
     private void logMessage(ChannelHandlerContext ctx, String eventName, Object msg) {
         logger.trace(format(ctx, formatMessage(eventName, msg)));
+    }
+
+    protected String format(ChannelHandlerContext ctx, String message) {
+        String chStr = ctx.channel().toString();
+        if (logger.isTraceEnabled()) {
+            chStr += " " + format(ctx.pipeline());
+        }
+        return chStr + ' ' + message;
+    }
+
+    private String format(ChannelPipeline channelPipeline) {
+        StringBuilder buf = new StringBuilder().append(StringUtil.simpleClassName(channelPipeline)).append(":");
+        List<String> names = channelPipeline.names();
+        for (String name : names) {
+            if (channelPipeline.get(name) != null) {
+                buf.append("\n\t").append(name).append(" = ").append(StringUtil.simpleClassName(channelPipeline.get(name)));
+            }
+        }
+        buf.append("\n\n");
+        return buf.toString();
     }
 
     private String formatMessage(String eventName, Object msg) {
