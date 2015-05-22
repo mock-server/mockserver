@@ -13,7 +13,7 @@ module MockServer::Model
     # @raise [Exception] if the supplied value is not valid for this enum
     def initialize(supplied_value)
       supplied_value = pre_process_value(supplied_value)
-      fail "Supplied value: #{supplied_value} is not valid. Allowed values are: #{supplied_value}" unless allowed_values.include?(supplied_value)
+      fail "Supplied value: #{supplied_value} is not valid. Allowed values are: #{allowed_values.inspect}" unless allowed_values.include?(supplied_value)
       @value = supplied_value
     end
 
