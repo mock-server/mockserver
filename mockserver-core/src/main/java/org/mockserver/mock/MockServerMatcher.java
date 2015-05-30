@@ -35,11 +35,12 @@ public class MockServerMatcher extends ObjectWithReflectiveEqualsHashCodeToStrin
     public Expectation when(final HttpRequest httpRequest, Times times, TimeToLive timeToLive) {
         Expectation expectation;
         if (times.isUnlimited()) {
-            Collection<Expectation> existingExpectationsWithMatchingRequest = Collections2.filter(expectations, new Predicate<Expectation>() {
-                public boolean apply(Expectation expectation) {
-                    return expectation.contains(httpRequest);
+            Collection<Expectation> existingExpectationsWithMatchingRequest = new ArrayList<Expectation>();
+            for (Expectation potentialExpectation : new ArrayList<Expectation>(this.expectations)) {
+                if (potentialExpectation.contains(httpRequest)) {
+                    existingExpectationsWithMatchingRequest.add(potentialExpectation);
                 }
-            });
+            }
             if (!existingExpectationsWithMatchingRequest.isEmpty()) {
                 for (Expectation existingExpectation : existingExpectationsWithMatchingRequest) {
                     existingExpectation.setNotUnlimitedResponses();
@@ -51,13 +52,12 @@ public class MockServerMatcher extends ObjectWithReflectiveEqualsHashCodeToStrin
         } else {
             expectation = new Expectation(httpRequest, times, timeToLive);
         }
-        expectations.add(expectation);
+        this.expectations.add(expectation);
         return expectation;
     }
 
     public Action handle(HttpRequest httpRequest) {
-        ArrayList<Expectation> expectations = new ArrayList<Expectation>(this.expectations);
-        for (Expectation expectation : expectations) {
+        for (Expectation expectation : new ArrayList<Expectation>(this.expectations)) {
             if (expectation.matches(httpRequest)) {
                 expectation.decrementRemainingMatches();
                 if (!expectation.hasRemainingMatches()) {
@@ -78,7 +78,7 @@ public class MockServerMatcher extends ObjectWithReflectiveEqualsHashCodeToStrin
     public void clear(HttpRequest httpRequest) {
         if (httpRequest != null) {
             HttpRequestMatcher httpRequestMatcher = new MatcherBuilder().transformsToMatcher(httpRequest);
-            for (Expectation expectation : new ArrayList<Expectation>(expectations)) {
+            for (Expectation expectation : new ArrayList<Expectation>(this.expectations)) {
                 if (httpRequestMatcher.matches(expectation.getHttpRequest(), true)) {
                     if (this.expectations.contains(expectation)) {
                         this.expectations.remove(expectation);
@@ -97,14 +97,14 @@ public class MockServerMatcher extends ObjectWithReflectiveEqualsHashCodeToStrin
     public void dumpToLog(HttpRequest httpRequest) {
         if (httpRequest != null) {
             ExpectationSerializer expectationSerializer = new ExpectationSerializer();
-            for (Expectation expectation : new ArrayList<Expectation>(expectations)) {
+            for (Expectation expectation : new ArrayList<Expectation>(this.expectations)) {
                 if (expectation.matches(httpRequest)) {
                     requestLogger.warn(cleanBase64Response(expectationSerializer.serialize(expectation)));
                 }
             }
         } else {
             ExpectationSerializer expectationSerializer = new ExpectationSerializer();
-            for (Expectation expectation : new ArrayList<Expectation>(expectations)) {
+            for (Expectation expectation : new ArrayList<Expectation>(this.expectations)) {
                 requestLogger.warn(cleanBase64Response(expectationSerializer.serialize(expectation)));
             }
         }
