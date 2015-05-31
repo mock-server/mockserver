@@ -8,6 +8,10 @@ import org.mockserver.configuration.ConfigurationProperties;
 /**
  * Stop the a forked instance of the MockServer
  *
+ * To run from command line:
+ *
+ *    mvn -Dmockserver.serverPort="1080" -Dmockserver.proxyPort="1090" org.mock-server:mockserver-maven-plugin:3.9.15:stopForked
+ *
  * @author jamesdbloom
  */
 @Mojo(name = "stopForked", requiresProject = false, threadSafe = false)

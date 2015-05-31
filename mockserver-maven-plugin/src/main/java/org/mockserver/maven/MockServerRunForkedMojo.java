@@ -24,6 +24,12 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
+ * Run a forked instance of the MockServer
+ *
+ * To run from command line:
+ *
+ *    mvn -Dmockserver.serverPort="1080" -Dmockserver.proxyPort="1090" -Dmockserver.logLevel="TRACE" org.mock-server:mockserver-maven-plugin:3.9.15:runForked
+ *
  * @author jamesdbloom
  */
 @Mojo(name = "runForked", requiresProject = false, threadSafe = false)
@@ -62,6 +68,12 @@ public class MockServerRunForkedMojo extends MockServerAbstractMojo {
         if (skip) {
             getLog().info("Skipping plugin execution");
         } else {
+            getEmbeddedJettyHolder().stop(serverPort, proxyPort);
+            try {
+                TimeUnit.SECONDS.sleep(1);
+            } catch (InterruptedException e) {
+                throw new RuntimeException("Exception while waiting for existing mock server JVM to stop", e);
+            }
             if (getLog().isInfoEnabled()) {
                 getLog().info("mockserver:runForked about to start MockServer on: "
                                 + (serverPort != -1 ? " serverPort " + serverPort : "")
