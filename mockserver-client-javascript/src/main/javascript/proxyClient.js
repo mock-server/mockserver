@@ -113,8 +113,8 @@ var proxyClient = function (host, port) {
      * Clear all recorded requests that match the specified path
      *
      * @param pathOrRequestMatcher  if a string is passed in the value will be treated as the path to
-     *                              decide which expectations to cleared, however if an object is passed
-     *                              in the value will be treated as a full request matcher object
+     *                              decide which recorded requests to cleared, however if an object is
+     *                              passed in the value will be treated as a full request matcher object
      */
     var clear = function (pathOrRequestMatcher) {
         xmlhttp.open("PUT", proxyUrl + "/clear", false);
@@ -133,8 +133,8 @@ var proxyClient = function (host, port) {
      * as Expectations to the log. They are printed into a dedicated log called mockserver_request.log
      *
      * @param pathOrRequestMatcher  if a string is passed in the value will be treated as the path to
-     *                              decide which expectations to to dump to the log, however if an object
-     *                              is passed in the value will be treated as a full request matcher object
+     *                              decide which recorded requests to cleared, however if an object is
+     *                              passed in the value will be treated as a full request matcher object
      */
     var dumpToLogs = function (pathOrRequestMatcher) {
         xmlhttp.open("PUT", proxyUrl + "/dumpToLog", false);
