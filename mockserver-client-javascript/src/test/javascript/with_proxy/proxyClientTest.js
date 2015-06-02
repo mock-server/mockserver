@@ -184,7 +184,7 @@ describe("proxyClient client:", function () {
         }).toThrow();
     });
 
-    it("should clear proxy", function () {
+    it("should clear proxy by path", function () {
         // given
         var client = proxyClient("localhost", 1090);
         xmlhttp.open("POST", "http://localhost:1080/somePath", false);
@@ -204,6 +204,76 @@ describe("proxyClient client:", function () {
 
         // when
         client.clear('/somePath');
+
+        // then
+        expect(function () {
+            client.verify(
+                {
+                    'method': 'POST',
+                    'path': '/somePath',
+                    'body': 'someBody'
+                }, 1);
+        }).toThrow();
+    });
+
+    it("should clear expectations by request matcher", function () {
+        // given
+        var client = proxyClient("localhost", 1090);
+        xmlhttp.open("POST", "http://localhost:1080/somePath", false);
+        xmlhttp.send("someBody");
+        expect(xmlhttp.status).toEqual(404);
+        xmlhttp.open("POST", "http://localhost:1080/somePath", false);
+        xmlhttp.send("someBody");
+        expect(xmlhttp.status).toEqual(404);
+
+        // then
+        client.verify(
+            {
+                'method': 'POST',
+                'path': '/somePath',
+                'body': 'someBody'
+            }, 1);
+
+        // when
+        client.clear({
+            "path": "/somePath"
+        });
+
+        // then
+        expect(function () {
+            client.verify(
+                {
+                    'method': 'POST',
+                    'path': '/somePath',
+                    'body': 'someBody'
+                }, 1);
+        }).toThrow();
+    });
+
+    it("should clear expectations by expectation matcher", function () {
+        // given
+        var client = proxyClient("localhost", 1090);
+        xmlhttp.open("POST", "http://localhost:1080/somePath", false);
+        xmlhttp.send("someBody");
+        expect(xmlhttp.status).toEqual(404);
+        xmlhttp.open("POST", "http://localhost:1080/somePath", false);
+        xmlhttp.send("someBody");
+        expect(xmlhttp.status).toEqual(404);
+
+        // then
+        client.verify(
+            {
+                'method': 'POST',
+                'path': '/somePath',
+                'body': 'someBody'
+            }, 1);
+
+        // when
+        client.clear({
+            "httpRequest": {
+                "path": "/somePath"
+            }
+        });
 
         // then
         expect(function () {

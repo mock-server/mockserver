@@ -30,6 +30,7 @@ var proxyClient = function (host, port) {
      */
     var retrieve = function (request) {
         xmlhttp.open("PUT", proxyUrl + "/retrieve", false);
+        xmlhttp.setRequestHeader("Content-Type", "application/json; charset=utf-8");
         xmlhttp.send(JSON.stringify(request));
         return xmlhttp.responseText && JSON.parse(xmlhttp.responseText);
     };
@@ -50,6 +51,7 @@ var proxyClient = function (host, port) {
             count = 1;
         }
         xmlhttp.open("PUT", proxyUrl + "/verify", false);
+        xmlhttp.setRequestHeader("Content-Type", "application/json; charset=utf-8");
         xmlhttp.send(JSON.stringify({
             "httpRequest": request,
             "times": {
@@ -85,6 +87,7 @@ var proxyClient = function (host, port) {
      */
     var verifySequence = function () {
         xmlhttp.open("PUT", proxyUrl + "/verifySequence", false);
+        xmlhttp.setRequestHeader("Content-Type", "application/json; charset=utf-8");
         var requestSequence = [];
         for (var i = 0; i < arguments.length; i++) {
             requestSequence.push(arguments[i]);
@@ -109,22 +112,40 @@ var proxyClient = function (host, port) {
     /**
      * Clear all recorded requests that match the specified path
      *
-     * @param path the path to decide which expectations to cleared
+     * @param pathOrRequestMatcher  if a string is passed in the value will be treated as the path to
+     *                              decide which expectations to cleared, however if an object is passed
+     *                              in the value will be treated as a full request matcher object
      */
-    var clear = function (path) {
+    var clear = function (pathOrRequestMatcher) {
         xmlhttp.open("PUT", proxyUrl + "/clear", false);
-        xmlhttp.send(JSON.stringify(createResponseMatcher(path || ".*")));
+        xmlhttp.setRequestHeader("Content-Type", "application/json; charset=utf-8");
+        if (typeof pathOrRequestMatcher === "string") {
+            xmlhttp.send(JSON.stringify(createResponseMatcher(pathOrRequestMatcher)));
+        } else if (pathOrRequestMatcher) {
+            xmlhttp.send(JSON.stringify(pathOrRequestMatcher));
+        } else {
+            xmlhttp.send(JSON.stringify(createResponseMatcher(".*")));
+        }
         return _this;
     };
     /**
      * Pretty-print the json for all requests / responses that match the specified path
      * as Expectations to the log. They are printed into a dedicated log called mockserver_request.log
      *
-     * @param path the path to decide which expectations to dump to the log
+     * @param pathOrRequestMatcher  if a string is passed in the value will be treated as the path to
+     *                              decide which expectations to to dump to the log, however if an object
+     *                              is passed in the value will be treated as a full request matcher object
      */
-    var dumpToLogs = function (path) {
+    var dumpToLogs = function (pathOrRequestMatcher) {
         xmlhttp.open("PUT", proxyUrl + "/dumpToLog", false);
-        xmlhttp.send(JSON.stringify(createResponseMatcher(path || ".*")));
+        xmlhttp.setRequestHeader("Content-Type", "application/json; charset=utf-8");
+        if (typeof pathOrRequestMatcher === "string") {
+            xmlhttp.send(JSON.stringify(createResponseMatcher(pathOrRequestMatcher)));
+        } else if (pathOrRequestMatcher) {
+            xmlhttp.send(JSON.stringify(pathOrRequestMatcher));
+        } else {
+            xmlhttp.send(JSON.stringify(createResponseMatcher(".*")));
+        }
         return _this;
     };
 
