@@ -22,7 +22,7 @@
 
     <!-- make application log asynchronous -->
     <appender name="ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender">
-        <queueSize>500</queueSize>
+        <queueSize>128</queueSize>
         <discardingThreshold>0</discardingThreshold>
         <appender-ref ref="FILE" />
     </appender>
@@ -40,7 +40,7 @@
 
     <!-- make console log (for errors and warnings) asynchronous -->
     <appender name="ASYNC_STDERR" class="ch.qos.logback.classic.AsyncAppender">
-        <queueSize>500</queueSize>
+        <queueSize>128</queueSize>
         <discardingThreshold>0</discardingThreshold>
         <appender-ref ref="STDERR" />
     </appender>
@@ -62,7 +62,7 @@
 
     <!-- make console log asynchronous -->
     <appender name="ASYNC_STDOUT" class="ch.qos.logback.classic.AsyncAppender">
-        <queueSize>500</queueSize>
+        <queueSize>128</queueSize>
         <discardingThreshold>0</discardingThreshold>
         <appender-ref ref="STDOUT" />
     </appender>

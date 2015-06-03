@@ -8,7 +8,7 @@
     </appender>
 
     <appender name="ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender">
-        <queueSize>500</queueSize>
+        <queueSize>128</queueSize>
         <discardingThreshold>0</discardingThreshold>
         <appender-ref ref="FILE" />
     </appender>
