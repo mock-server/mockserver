@@ -28,7 +28,6 @@ public class SSLFactory {
     public static final String KEY_STORE_CA_ALIAS = "mockserver-ca-cert";
     private static final Logger logger = LoggerFactory.getLogger(SSLFactory.class);
     private static final SSLFactory SSL_FACTORY = new SSLFactory();
-
     private KeyStore keystore;
 
     private SSLFactory() {
@@ -47,23 +46,23 @@ public class SSLFactory {
         }
     }
 
-    public synchronized static SSLFactory getInstance() {
+    public static SSLFactory getInstance() {
         return SSL_FACTORY;
     }
 
-    public synchronized static SSLEngine createClientSSLEngine() {
+    public static SSLEngine createClientSSLEngine() {
         SSLEngine engine = SSLFactory.getInstance().sslContext().createSSLEngine();
         engine.setUseClientMode(true);
         return engine;
     }
 
-    public synchronized static SSLEngine createServerSSLEngine() {
+    public static SSLEngine createServerSSLEngine() {
         SSLEngine engine = SSLFactory.getInstance().sslContext().createSSLEngine();
         engine.setUseClientMode(false);
         return engine;
     }
 
-    public synchronized static void addSubjectAlternativeName(String host) {
+    public static void addSubjectAlternativeName(String host) {
         if (host != null) {
             String hostWithoutPort = StringUtils.substringBefore(host, ":");
 
@@ -76,6 +75,17 @@ public class SSLFactory {
                 ConfigurationProperties.addSslSubjectAlternativeNameDomains(hostWithoutPort);
             }
         }
+    }
+
+    public SSLSocket wrapSocket(Socket socket) throws Exception {
+        // ssl socket factory
+        SSLSocketFactory sslSocketFactory = sslContext().getSocketFactory();
+
+        // ssl socket
+        SSLSocket sslSocket = (SSLSocket) sslSocketFactory.createSocket(socket, socket.getInetAddress().getHostAddress(), socket.getPort(), true);
+        sslSocket.setUseClientMode(true);
+        sslSocket.startHandshake();
+        return sslSocket;
     }
 
     public synchronized SSLContext sslContext() {
@@ -91,17 +101,6 @@ public class SSLFactory {
         } catch (Exception e) {
             throw new RuntimeException("Failed to initialize the SSLContext", e);
         }
-    }
-
-    public synchronized SSLSocket wrapSocket(Socket socket) throws Exception {
-        // ssl socket factory
-        SSLSocketFactory sslSocketFactory = sslContext().getSocketFactory();
-
-        // ssl socket
-        SSLSocket sslSocket = (SSLSocket) sslSocketFactory.createSocket(socket, socket.getInetAddress().getHostAddress(), socket.getPort(), true);
-        sslSocket.setUseClientMode(true);
-        sslSocket.startHandshake();
-        return sslSocket;
     }
 
     public synchronized KeyStore buildKeyStore() {
@@ -147,7 +146,7 @@ public class SSLFactory {
         }
     }
 
-    private KeyStore updateExistingKeyStore(File keyStoreFile) {
+    private synchronized KeyStore updateExistingKeyStore(File keyStoreFile) {
         try {
             FileInputStream fileInputStream = null;
             try {
