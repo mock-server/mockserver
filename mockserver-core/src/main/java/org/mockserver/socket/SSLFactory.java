@@ -28,22 +28,7 @@ public class SSLFactory {
     public static final String KEY_STORE_CA_ALIAS = "mockserver-ca-cert";
     private static final Logger logger = LoggerFactory.getLogger(SSLFactory.class);
     private static final SSLFactory SSL_FACTORY = new SSLFactory();
-    private static final TrustManager DUMMY_TRUST_MANAGER = new X509TrustManager() {
-        @Override
-        public X509Certificate[] getAcceptedIssuers() {
-            return new X509Certificate[0];
-        }
 
-        @Override
-        public void checkClientTrusted(X509Certificate[] chain, String authType) {
-            logger.trace("Approving client certificate for: " + chain[0].getSubjectDN());
-        }
-
-        @Override
-        public void checkServerTrusted(X509Certificate[] chain, String authType) {
-            logger.trace("Approving server certificate for: " + chain[0].getSubjectDN());
-        }
-    };
     private KeyStore keystore;
 
     private SSLFactory() {
@@ -62,23 +47,23 @@ public class SSLFactory {
         }
     }
 
-    public static SSLFactory getInstance() {
+    public synchronized static SSLFactory getInstance() {
         return SSL_FACTORY;
     }
 
-    public static SSLEngine createClientSSLEngine() {
+    public synchronized static SSLEngine createClientSSLEngine() {
         SSLEngine engine = SSLFactory.getInstance().sslContext().createSSLEngine();
         engine.setUseClientMode(true);
         return engine;
     }
 
-    public static SSLEngine createServerSSLEngine() {
+    public synchronized static SSLEngine createServerSSLEngine() {
         SSLEngine engine = SSLFactory.getInstance().sslContext().createSSLEngine();
         engine.setUseClientMode(false);
         return engine;
     }
 
-    public static void addSubjectAlternativeName(String host) {
+    public synchronized static void addSubjectAlternativeName(String host) {
         if (host != null) {
             String hostWithoutPort = StringUtils.substringBefore(host, ":");
 
@@ -93,7 +78,7 @@ public class SSLFactory {
         }
     }
 
-    public SSLContext sslContext() {
+    public synchronized SSLContext sslContext() {
         try {
             // key manager
             KeyManagerFactory keyManagerFactory = getKeyManagerFactoryInstance(KeyManagerFactory.getDefaultAlgorithm());
@@ -108,7 +93,7 @@ public class SSLFactory {
         }
     }
 
-    public SSLSocket wrapSocket(Socket socket) throws Exception {
+    public synchronized SSLSocket wrapSocket(Socket socket) throws Exception {
         // ssl socket factory
         SSLSocketFactory sslSocketFactory = sslContext().getSocketFactory();
 
@@ -119,11 +104,11 @@ public class SSLFactory {
         return sslSocket;
     }
 
-    public KeyStore buildKeyStore() {
+    public synchronized KeyStore buildKeyStore() {
         return buildKeyStore(ConfigurationProperties.rebuildKeyStore());
     }
 
-    public KeyStore buildKeyStore(boolean forceRebuild) {
+    public synchronized KeyStore buildKeyStore(boolean forceRebuild) {
         if (keystore == null || forceRebuild) {
             File keyStoreFile = new File(ConfigurationProperties.javaKeyStoreFilePath());
             System.setProperty("javax.net.ssl.trustStore", keyStoreFile.getAbsolutePath());
@@ -162,7 +147,7 @@ public class SSLFactory {
         }
     }
 
-    private synchronized KeyStore updateExistingKeyStore(File keyStoreFile) {
+    private KeyStore updateExistingKeyStore(File keyStoreFile) {
         try {
             FileInputStream fileInputStream = null;
             try {
