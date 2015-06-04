@@ -15,7 +15,6 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
-import java.security.cert.X509Certificate;
 
 /**
  * @author jamesdbloom
@@ -68,9 +67,11 @@ public class SSLFactory {
 
             try {
                 // resolve host name for subject alternative name in case host name is ip address
-                InetAddress addr = InetAddress.getByName(hostWithoutPort);
-                ConfigurationProperties.addSslSubjectAlternativeNameDomains(addr.getHostName());
-                ConfigurationProperties.addSslSubjectAlternativeNameDomains(addr.getCanonicalHostName());
+                for (InetAddress addr : InetAddress.getAllByName(hostWithoutPort)) {
+                    ConfigurationProperties.addSslSubjectAlternativeNameIps(addr.getHostAddress());
+                    ConfigurationProperties.addSslSubjectAlternativeNameDomains(addr.getHostName());
+                    ConfigurationProperties.addSslSubjectAlternativeNameDomains(addr.getCanonicalHostName());
+                }
             } catch (UnknownHostException uhe) {
                 ConfigurationProperties.addSslSubjectAlternativeNameDomains(hostWithoutPort);
             }

@@ -171,6 +171,9 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
                     port = Integer.parseInt(hostHeaderParts[1]);  // non-default
                 }
 
+                // add Subject Alternative Name for SSL certificate (just in case this hasn't been added before)
+                SSLFactory.addSubjectAlternativeName(hostHeaderParts[0]);
+
                 inetSocketAddress = new InetSocketAddress(hostHeaderParts[0], port);
             } else {
                 logger.error("Host header must be provided for requests being forwarded, the following request does not include the \"Host\" header:" + System.getProperty("line.separator") + httpRequest);

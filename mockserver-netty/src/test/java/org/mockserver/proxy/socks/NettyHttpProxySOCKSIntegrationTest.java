@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.*;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -87,19 +88,20 @@ public class NettyHttpProxySOCKSIntegrationTest {
 
     @Before
     public void resetProxy() {
-        proxyClient.reset();
+        if (proxyClient != null) {
+            proxyClient.reset();
+        }
     }
 
     @Test
-    @Ignore("Fails only on drone.io, runs correctly on travis and multiple local machines")
-    public void shouldProxyRequestsUsingHttpClientViaSOCKSConfiguredForJVM() throws Exception {
+    public void shouldProxyRequestsUsingHttpClientViaSOCKSConfiguredForJVMToExampleDotCom() throws Exception {
         ProxySelector defaultProxySelector = ProxySelector.getDefault();
         try {
             // given - SOCKS proxy JVM settings
             ProxySelector.setDefault(new ProxySelector() {
                 @Override
                 public List<java.net.Proxy> select(URI uri) {
-                    return Arrays.asList(
+                    return Collections.singletonList(
                             new java.net.Proxy(
                                     java.net.Proxy.Type.SOCKS,
                                     new InetSocketAddress(
@@ -118,18 +120,60 @@ public class NettyHttpProxySOCKSIntegrationTest {
             });
 
             // and - an HTTP client
-            HttpClient httpClient = HttpClientBuilder.create().build();
+            HttpClient httpClient = HttpClientBuilder.create().setSslcontext(SSLFactory.getInstance().sslContext()).build();
 
             // when
-            HttpResponse response = httpClient.execute(new HttpHost("google.com", 443, "https"), new HttpGet("/"));
+            String ipAddress = Inet4Address.getByName("example.com").getHostAddress();
+            HttpResponse response = httpClient.execute(new HttpHost(ipAddress, 443, "https"), new HttpGet("/"));
 
             // then
-            assertThat(response.getStatusLine().getStatusCode(), is(200));
-            proxyClient.verify(request().withHeader("Host", "google.com:443"));
+            assertThat(response.getStatusLine().getStatusCode(), is(404));
+            proxyClient.verify(request().withHeader("Host", ipAddress + ":443"));
         } finally {
             ProxySelector.setDefault(defaultProxySelector);
         }
     }
+
+    @Test
+    public void shouldProxyRequestsUsingHttpClientViaSOCKSConfiguredForJVMToLocalSecureServer() throws Exception {
+        ProxySelector defaultProxySelector = ProxySelector.getDefault();
+        try {
+            // given - SOCKS proxy JVM settings
+            ProxySelector.setDefault(new ProxySelector() {
+                @Override
+                public List<java.net.Proxy> select(URI uri) {
+                    return Collections.singletonList(
+                            new java.net.Proxy(
+                                    java.net.Proxy.Type.SOCKS,
+                                    new InetSocketAddress(
+                                            System.getProperty("http.proxyHost"),
+                                            Integer.parseInt(System.getProperty("http.proxyPort"))
+                                    )
+                            )
+                    );
+                }
+
+                @Override
+                public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {
+                    System.out.println("Connection could not be established to proxy at socket [" + sa + "]");
+                    ioe.printStackTrace();
+                }
+            });
+
+            // and - an HTTP client
+            HttpClient httpClient = HttpClientBuilder.create().setSslcontext(SSLFactory.getInstance().sslContext()).build();
+
+            // when
+            HttpResponse response = httpClient.execute(new HttpHost("127.0.0.1", SERVER_HTTPS_PORT, "https"), new HttpGet("/"));
+
+            // then
+            assertThat(response.getStatusLine().getStatusCode(), is(200));
+            proxyClient.verify(request().withHeader("Host", "127.0.0.1" + ":" + SERVER_HTTPS_PORT));
+        } finally {
+            ProxySelector.setDefault(defaultProxySelector);
+        }
+    }
+
 
     @Test
     public void shouldProxyRequestsUsingHttpClientViaSOCKS() throws Exception {
@@ -211,7 +255,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
             ProxySelector.setDefault(new ProxySelector() {
                 @Override
                 public List<java.net.Proxy> select(URI uri) {
-                    return Arrays.asList(
+                    return Collections.singletonList(
                             new java.net.Proxy(java.net.Proxy.Type.SOCKS, new InetSocketAddress("127.0.0.1", PROXY_HTTP_PORT))
                     );
                 }
@@ -268,7 +312,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
             ProxySelector.setDefault(new ProxySelector() {
                 @Override
                 public List<java.net.Proxy> select(URI uri) {
-                    return Arrays.asList(
+                    return Collections.singletonList(
                             new java.net.Proxy(java.net.Proxy.Type.SOCKS, new InetSocketAddress("127.0.0.1", PROXY_HTTP_PORT))
                     );
                 }
@@ -393,7 +437,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
             ProxySelector.setDefault(new ProxySelector() {
                 @Override
                 public List<java.net.Proxy> select(URI uri) {
-                    return Arrays.asList(
+                    return Collections.singletonList(
                             new java.net.Proxy(java.net.Proxy.Type.SOCKS, new InetSocketAddress("127.0.0.1", PROXY_HTTP_PORT))
                     );
                 }
@@ -450,7 +494,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
             ProxySelector.setDefault(new ProxySelector() {
                 @Override
                 public List<java.net.Proxy> select(URI uri) {
-                    return Arrays.asList(
+                    return Collections.singletonList(
                             new java.net.Proxy(java.net.Proxy.Type.SOCKS, new InetSocketAddress("127.0.0.1", PROXY_HTTP_PORT))
                     );
                 }
