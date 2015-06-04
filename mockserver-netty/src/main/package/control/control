@@ -1,0 +1,8 @@
+Package: [[artifactId]]
+Version: [[project.version]]
+Section: misc
+Priority: important
+Architecture: all
+Depends: default-jre | java6-runtime | java7-runtime | java8-runtime | oracle-java6-installer | oracle-java7-installer | oracle-java8-installer
+Description: [[description]]
+Maintainer: James D Bloom <admin@mock-server.com>

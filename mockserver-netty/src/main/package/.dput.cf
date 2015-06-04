@@ -1,0 +1,6 @@
+[mockserver-ppa]
+fqdn = ppa.launchpad.net
+method = sftp
+incoming = ~mockserver/ppa/ubuntu/
+login = mockserver
+allow_unsigned_uploads = 0
