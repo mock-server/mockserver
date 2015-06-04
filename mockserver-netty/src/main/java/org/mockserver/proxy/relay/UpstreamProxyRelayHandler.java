@@ -30,7 +30,7 @@ public class UpstreamProxyRelayHandler extends SimpleChannelInboundHandler<FullH
                 if (future.isSuccess()) {
                     ctx.channel().read();
                 } else {
-                    logger.error("Exception while returning writing " + request, future.cause());
+                    logger.error("Exception while returning response for request \"" + request.getMethod() + " " + request.getUri() + "\"", future.cause());
                     future.channel().close();
                 }
             }
