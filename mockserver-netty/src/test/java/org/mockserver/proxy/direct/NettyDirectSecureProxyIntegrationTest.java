@@ -26,7 +26,7 @@ import static org.mockserver.verify.VerificationTimes.exactly;
  */
 public class NettyDirectSecureProxyIntegrationTest {
 
-    private final static Logger logger = LoggerFactory.getLogger(NettyDirectSecureProxyIntegrationTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(NettyDirectSecureProxyIntegrationTest.class);
 
     private final static Integer SERVER_HTTPS_PORT = PortFactory.findFreePort();
     private final static Integer PROXY_DIRECT_SECURE_PORT = PortFactory.findFreePort();

@@ -20,7 +20,7 @@ public class PortUnificationEchoServer {
     private NioEventLoopGroup eventLoopGroup;
 
     public PortUnificationEchoServer(final int port) {
-        final Logger logger = LoggerFactory.getLogger(PortUnificationEchoServer.class);
+        Logger logger = LoggerFactory.getLogger(PortUnificationEchoServer.class);
         final SettableFuture<String> hasStarted = SettableFuture.create();
 
         new Thread(new Runnable() {

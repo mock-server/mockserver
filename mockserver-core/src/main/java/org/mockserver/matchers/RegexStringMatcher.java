@@ -13,7 +13,7 @@ import static org.mockserver.model.NottableString.string;
  * @author jamesdbloom
  */
 public class RegexStringMatcher extends BodyMatcher<NottableString> {
-    private static Logger logger = LoggerFactory.getLogger(RegexStringMatcher.class);
+    private static final Logger logger = LoggerFactory.getLogger(RegexStringMatcher.class);
     private final NottableString matcher;
 
     public RegexStringMatcher(String matcher) {

@@ -22,7 +22,7 @@ import static org.mockserver.test.Assert.assertContains;
  */
 public class NettyDirectProxyIntegrationTest {
 
-    private final static Logger logger = LoggerFactory.getLogger(NettyDirectProxyIntegrationTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(NettyDirectProxyIntegrationTest.class);
 
     private final static Integer SERVER_HTTP_PORT = PortFactory.findFreePort();
     private final static Integer PROXY_DIRECT_PORT = PortFactory.findFreePort();

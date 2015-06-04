@@ -10,6 +10,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Method;
 import java.security.KeyStore;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -219,12 +220,40 @@ public class ConfigurationProperties {
         return System.getProperty(key, PROPERTIES.getProperty(key, defaultValue));
     }
 
+    /**
+     * Override the debug WARN logging level
+     *
+     * @param level the log level, which can be ALL, DEBUG, INFO, WARN, ERROR, OFF
+     */
     public static void overrideLogLevel(String level) {
         if (level != null) {
             if (!Arrays.asList("TRACE", "DEBUG", "INFO", "WARN", "ERROR", "OFF").contains(level)) {
                 throw new IllegalArgumentException("log level \"" + level + "\" is not legel it must be one of \"TRACE\", \"DEBUG\", \"INFO\", \"WARN\", \"ERROR\", \"OFF\"");
             }
             System.setProperty("mockserver.logLevel", level);
+            System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", level);
+            overrideLogLevelWithReflection(level, "org.mockserver");
+            overrideLogLevelWithReflection(level, "org.mockserver.mockserver");
+            overrideLogLevelWithReflection(level, "org.mockserver.proxy");
         }
     }
+
+    private static void overrideLogLevelWithReflection(String level, String loggerName) {
+        Logger rootLogger = LoggerFactory.getLogger(loggerName);
+
+        try {
+            // create level instance
+            Class logbackLevelClass = ConfigurationProperties.class.getClassLoader().loadClass("ch.qos.logback.classic.Level");
+            Method toLevelMethod = logbackLevelClass.getMethod("toLevel", String.class);
+            Object levelInstance = toLevelMethod.invoke(logbackLevelClass, level);
+
+            // update root level
+            Method setLevelMethod = rootLogger.getClass().getMethod("setLevel", logbackLevelClass);
+            setLevelMethod.invoke(rootLogger, levelInstance);
+        } catch (Exception e) {
+            logger.warn("Exception updating logging level using reflection, likely cause is Logback is not on the classpath");
+        }
+    }
+
+
 }

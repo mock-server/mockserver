@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
  */
 public class NettyHttpProxyIntegrationTest extends AbstractClientProxyIntegrationTest {
 
-    private final static Logger logger = LoggerFactory.getLogger(NettyHttpProxyIntegrationTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(NettyHttpProxyIntegrationTest.class);
 
     private final static Integer SERVER_HTTP_PORT = PortFactory.findFreePort();
     private final static Integer PROXY_HTTP_PORT = PortFactory.findFreePort();

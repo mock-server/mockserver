@@ -12,7 +12,7 @@ import java.io.IOException;
  * @author jamesdbloom
  */
 public class VerificationSequenceSerializer {
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
 
     public String serialize(VerificationSequence verificationSequence) {

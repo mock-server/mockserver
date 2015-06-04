@@ -20,7 +20,7 @@ public class EchoServer {
     private NioEventLoopGroup eventLoopGroup;
 
     public EchoServer(final int port, final boolean secure) {
-        final Logger logger = LoggerFactory.getLogger(EchoServer.class);
+        Logger logger = LoggerFactory.getLogger(EchoServer.class);
         final SettableFuture<String> hasStarted = SettableFuture.create();
 
         new Thread(new Runnable() {
