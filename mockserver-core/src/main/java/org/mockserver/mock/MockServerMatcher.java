@@ -45,7 +45,7 @@ public class MockServerMatcher extends ObjectWithReflectiveEqualsHashCodeToStrin
                 for (Expectation existingExpectation : existingExpectationsWithMatchingRequest) {
                     existingExpectation.setNotUnlimitedResponses();
                 }
-                expectation = new Expectation(httpRequest, Times.once(), timeToLive);
+                 expectation = new Expectation(httpRequest, times, timeToLive);
             } else {
                 expectation = new Expectation(httpRequest, Times.unlimited(), timeToLive);
             }
