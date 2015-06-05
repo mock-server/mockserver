@@ -51,6 +51,8 @@ Thumbs.db
 # Eclipse config files #
 ########################
 .project
+.classpath
+.settings
 
 # Maven build artifacts files #
 ###############################
