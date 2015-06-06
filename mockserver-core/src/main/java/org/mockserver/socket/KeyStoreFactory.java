@@ -14,6 +14,7 @@ import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
+import org.bouncycastle.util.IPAddress;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
+import java.security.cert.Certificate;
 
 /**
  * @author jamesdbloom, ganskef
@@ -176,13 +178,18 @@ public class KeyStoreFactory {
         List<ASN1Encodable> subjectAlternativeNames = new ArrayList<ASN1Encodable>();
         if (subjectAlternativeNameDomains != null) {
             subjectAlternativeNames.add(new GeneralName(GeneralName.dNSName, domain));
-            for (String subjectAlternativeName : subjectAlternativeNameDomains) {
-                subjectAlternativeNames.add(new GeneralName(GeneralName.dNSName, subjectAlternativeName));
+            for (String subjectAlternativeNameDomain : subjectAlternativeNameDomains) {
+                subjectAlternativeNames.add(new GeneralName(GeneralName.dNSName, subjectAlternativeNameDomain));
             }
         }
         if (subjectAlternativeNameIps != null) {
-            for (String subjectAlternativeName : subjectAlternativeNameIps) {
-                subjectAlternativeNames.add(new GeneralName(GeneralName.iPAddress, subjectAlternativeName));
+            for (String subjectAlternativeNameIp : subjectAlternativeNameIps) {
+                if (IPAddress.isValidIPv6WithNetmask(subjectAlternativeNameIp)
+                        || IPAddress.isValidIPv6(subjectAlternativeNameIp)
+                        || IPAddress.isValidIPv4WithNetmask(subjectAlternativeNameIp)
+                        || IPAddress.isValidIPv4(subjectAlternativeNameIp)) {
+                    subjectAlternativeNames.add(new GeneralName(GeneralName.iPAddress, subjectAlternativeNameIp));
+                }
             }
         }
         if (subjectAlternativeNames.size() > 0) {
