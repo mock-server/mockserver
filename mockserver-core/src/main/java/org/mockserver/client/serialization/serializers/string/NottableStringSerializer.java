@@ -19,12 +19,23 @@ public class NottableStringSerializer extends StdSerializer<NottableString> {
     @Override
     public void serialize(NottableString nottableString, JsonGenerator jgen, SerializerProvider provider) throws IOException {
         if (nottableString.getNot() != null && nottableString.getNot()) {
-            jgen.writeStartObject();
-            jgen.writeBooleanField("not", true);
-            jgen.writeStringField("value", nottableString.getValue());
-            jgen.writeEndObject();
+            if (nottableString.getValue().startsWith("!")) {
+                jgen.writeStartObject();
+                jgen.writeBooleanField("not", true);
+                jgen.writeStringField("value", nottableString.getValue());
+                jgen.writeEndObject();
+            } else {
+                jgen.writeString("!" + nottableString.getValue());
+            }
         } else {
-            jgen.writeString(nottableString.getValue());
+            if (nottableString.getValue().startsWith("!")) {
+                jgen.writeStartObject();
+                jgen.writeBooleanField("not", false);
+                jgen.writeStringField("value", nottableString.getValue());
+                jgen.writeEndObject();
+            } else {
+                jgen.writeString(nottableString.getValue());
+            }
         }
     }
 }

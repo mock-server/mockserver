@@ -94,48 +94,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
     }
 
     @Test
-    public void shouldProxyRequestsUsingHttpClientViaSOCKSConfiguredForJVMToExampleDotCom() throws Exception {
-        ProxySelector defaultProxySelector = ProxySelector.getDefault();
-        try {
-            // given - SOCKS proxy JVM settings
-            ProxySelector.setDefault(new ProxySelector() {
-                @Override
-                public List<java.net.Proxy> select(URI uri) {
-                    return Collections.singletonList(
-                            new java.net.Proxy(
-                                    java.net.Proxy.Type.SOCKS,
-                                    new InetSocketAddress(
-                                            System.getProperty("http.proxyHost"),
-                                            Integer.parseInt(System.getProperty("http.proxyPort"))
-                                    )
-                            )
-                    );
-                }
-
-                @Override
-                public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {
-                    System.out.println("Connection could not be established to proxy at socket [" + sa + "]");
-                    ioe.printStackTrace();
-                }
-            });
-
-            // and - an HTTP client
-            HttpClient httpClient = HttpClientBuilder.create().setSslcontext(SSLFactory.getInstance().sslContext()).build();
-
-            // when
-            String ipAddress = Inet4Address.getByName("example.com").getHostAddress();
-            HttpResponse response = httpClient.execute(new HttpHost(ipAddress, 443, "https"), new HttpGet("/"));
-
-            // then
-            assertThat(response.getStatusLine().getStatusCode(), is(404));
-            proxyClient.verify(request().withHeader("Host", ipAddress + ":443"));
-        } finally {
-            ProxySelector.setDefault(defaultProxySelector);
-        }
-    }
-
-    @Test
-    public void shouldProxyRequestsUsingHttpClientViaSOCKSConfiguredForJVMToLocalSecureServer() throws Exception {
+    public void shouldProxyRequestsUsingHttpClientViaSOCKSConfiguredForJVM() throws Exception {
         ProxySelector defaultProxySelector = ProxySelector.getDefault();
         try {
             // given - SOCKS proxy JVM settings

@@ -6,6 +6,7 @@ import java.util.Arrays;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.mockserver.model.NottableString.string;
 import static org.mockserver.model.Parameter.param;
 
 /**
@@ -20,8 +21,8 @@ public class ParameterTest {
         Parameter secondParameter = new Parameter("second", Arrays.asList("second_one", "second_two"));
 
         // then
-        assertThat(firstParameter.getValues(), containsInAnyOrder("first_one", "first_two"));
-        assertThat(secondParameter.getValues(), containsInAnyOrder("second_one", "second_two"));
+        assertThat(firstParameter.getValues(), containsInAnyOrder(string("first_one"), string("first_two")));
+        assertThat(secondParameter.getValues(), containsInAnyOrder(string("second_one"), string("second_two")));
     }
 
     @Test
@@ -31,8 +32,8 @@ public class ParameterTest {
         Parameter secondParameter = param("second", Arrays.asList("second_one", "second_two"));
 
         // then
-        assertThat(firstParameter.getValues(), containsInAnyOrder("first_one", "first_two"));
-        assertThat(secondParameter.getValues(), containsInAnyOrder("second_one", "second_two"));
+        assertThat(firstParameter.getValues(), containsInAnyOrder(string("first_one"), string("first_two")));
+        assertThat(secondParameter.getValues(), containsInAnyOrder(string("second_one"), string("second_two")));
     }
 
 

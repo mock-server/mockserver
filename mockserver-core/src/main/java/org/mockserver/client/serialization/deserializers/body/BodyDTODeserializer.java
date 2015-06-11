@@ -20,6 +20,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.mockserver.model.NottableString.string;
+
 /**
  * @author jamesdbloom
  */
@@ -97,9 +99,8 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                     jsonParser.nextToken();
                     if (jsonParser.isExpectedStartArrayToken()) {
                         int objectDepth = 1;
-                        String parameterName = "";
-                        List<String> parameterValues = new ArrayList<String>();
-                        boolean parameterNot = false;
+                        NottableString parameterName = string("");
+                        List<NottableString> parameterValues = new ArrayList<NottableString>();
                         while (objectDepth > 0) {
                             JsonToken token = jsonParser.getCurrentToken();
                             switch (token) {
@@ -107,32 +108,30 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                                     break;
                                 case START_OBJECT:
                                     objectDepth++;
-                                    parameterName = "";
-                                    parameterValues = new ArrayList<String>();
-                                    parameterNot = false;
+                                    parameterName = string("");
+                                    parameterValues = new ArrayList<NottableString>();
                                     break;
                                 case END_OBJECT:
                                     objectDepth--;
                                     if (objectDepth >= 1) {
-                                        if (parameterNot) {
-                                            parameters.add(Not.not(new Parameter(parameterName, parameterValues)));
-                                        } else {
-                                            parameters.add(new Parameter(parameterName, parameterValues));
-                                        }
+                                        parameters.add(new Parameter(parameterName, parameterValues));
                                     }
                                     break;
                                 case FIELD_NAME:
                                     if (jsonParser.getText().equalsIgnoreCase("name")) {
-                                        jsonParser.nextToken();
-                                        parameterName = jsonParser.getText();
-                                    } else if (jsonParser.getText().equalsIgnoreCase("not")) {
-                                        jsonParser.nextToken();
-                                        parameterNot = Boolean.parseBoolean(jsonParser.getText());
+                                        JsonToken nextToken = jsonParser.nextToken();
+                                        if (nextToken == JsonToken.START_OBJECT) {
+                                            parameterName = parseNottableString(jsonParser);
+                                        } else if (nextToken == JsonToken.VALUE_STRING) {
+                                            parameterName = string(jsonParser.getText());
+                                        }
                                     } else if (jsonParser.getText().equalsIgnoreCase("values")) {
                                         if (jsonParser.nextToken() == JsonToken.START_ARRAY) {
                                             while (jsonParser.nextToken() != null && jsonParser.getCurrentToken() != JsonToken.END_ARRAY) {
-                                                if (jsonParser.getCurrentToken() == JsonToken.VALUE_STRING) {
-                                                    parameterValues.add(jsonParser.getText());
+                                                if (jsonParser.getCurrentToken() == JsonToken.START_OBJECT) {
+                                                    parameterValues.add(parseNottableString(jsonParser));
+                                                } else if (jsonParser.getCurrentToken() == JsonToken.VALUE_STRING) {
+                                                    parameterValues.add(string(jsonParser.getText()));
                                                 }
                                             }
                                         }
@@ -172,6 +171,37 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
             return new StringBodyDTO(new StringBody(jsonParser.getText()));
         }
         return null;
+    }
+
+    private NottableString parseNottableString(JsonParser jsonParser) throws IOException {
+        boolean isNot = false;
+        String value = "";
+
+        JsonToken currentToken;
+        while ((currentToken = jsonParser.nextToken()) != JsonToken.END_OBJECT) {
+            switch (currentToken) {
+                case START_ARRAY:
+                    break;
+                case START_OBJECT:
+                    break;
+                case END_OBJECT:
+                    break;
+                case FIELD_NAME:
+                    if (jsonParser.getText().equalsIgnoreCase("not")) {
+                        isNot = jsonParser.nextToken() == JsonToken.VALUE_TRUE;
+                    } else if (jsonParser.getText().equalsIgnoreCase("value")) {
+                        jsonParser.nextToken();
+                        value = jsonParser.getText();
+                    }
+                    break;
+                case VALUE_TRUE:
+                    break;
+                case VALUE_STRING:
+                    break;
+            }
+        }
+
+        return string(value, isNot);
     }
 
     private boolean containsIgnoreCase(String valueToMatch, String... listOfValues) {

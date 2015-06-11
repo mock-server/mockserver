@@ -2,6 +2,7 @@ package org.mockserver.matchers;
 
 import io.netty.handler.codec.http.QueryStringDecoder;
 import org.mockserver.model.KeyToMultiValue;
+import org.mockserver.model.NottableString;
 import org.mockserver.model.Parameter;
 
 import java.util.ArrayList;
@@ -37,6 +38,7 @@ public class ParameterStringMatcher extends BodyMatcher<String> {
         Map<String, Parameter> mappedParameters = new HashMap<String, Parameter>();
         Map<String, List<String>> parameters = new QueryStringDecoder("?" + matched).parameters();
         for (String name : parameters.keySet()) {
+            // TODO(jamesdbloom) support nottable parameters
             for (String value : parameters.get(name)) {
                 if (mappedParameters.containsKey(name)) {
                     mappedParameters.get(name).addValue(value);

@@ -24,12 +24,24 @@ public class NottableStringDeserializerTest {
     public void shouldSerializeNottableString() throws IOException {
         assertThat(ObjectMapperFactory.createObjectMapper().readValue("\"some_string\"", NottableString.class),
                 is(string("some_string")));
+
+        assertThat(ObjectMapperFactory.createObjectMapper().readValue("{\"not\":false,\"value\":\"some_string\"}", NottableString.class),
+                is(string("some_string")));
     }
 
     @Test
     public void shouldSerializeNotNottableString() throws IOException {
+        assertThat(ObjectMapperFactory.createObjectMapper().readValue("\"!some_string\"", NottableString.class),
+                is(not("some_string")));
+
         assertThat(ObjectMapperFactory.createObjectMapper().readValue("{\"not\":true,\"value\":\"some_string\"}", NottableString.class),
                 is(not("some_string")));
+    }
+
+    @Test
+    public void shouldSerializeNottableStringWithExclamationMark() throws IOException {
+        assertThat(ObjectMapperFactory.createObjectMapper().readValue("{\"not\":false,\"value\":\"!some_string\"}", NottableString.class),
+                is(string("!some_string")));
     }
 
 
@@ -124,4 +136,16 @@ public class NottableStringDeserializerTest {
                                 .setPath(string("/some/path"))
                 )));
     }
+
+
+    /*
+    	  "name" : {
+	        "not" : false,
+	        "value" : "!name"
+	      },
+	      "value" : {
+	        "not" : true,
+	        "value" : "!value"
+	      }
+     */
 }

@@ -8,7 +8,7 @@ import org.mockserver.model.*;
 /**
  * @author jamesdbloom
  */
-public class ExpectationDTO extends ObjectWithReflectiveEqualsHashCodeToString {
+public class ExpectationDTO extends ObjectWithJsonToString {
 
     private HttpRequestDTO httpRequest;
     private HttpResponseDTO httpResponse;

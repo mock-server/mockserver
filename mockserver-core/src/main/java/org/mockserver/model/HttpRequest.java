@@ -18,10 +18,10 @@ import static org.mockserver.model.Parameter.param;
 public class HttpRequest extends Not {
     NottableString method = string("");
     NottableString path = string("");
-    Map<String, Parameter> queryStringParameters = new LinkedHashMap<String, Parameter>();
+    Map<NottableString, Parameter> queryStringParameters = new LinkedHashMap<NottableString, Parameter>();
     Body body = null;
-    Map<String, Header> headers = new LinkedHashMap<String, Header>();
-    Map<String, Cookie> cookies = new LinkedHashMap<String, Cookie>();
+    Map<NottableString, Header> headers = new LinkedHashMap<NottableString, Header>();
+    Map<NottableString, Cookie> cookies = new LinkedHashMap<NottableString, Cookie>();
     boolean isKeepAlive = false;
     boolean secure;
 
@@ -167,7 +167,7 @@ public class HttpRequest extends Not {
      */
     public HttpRequest withQueryStringParameter(Parameter parameter) {
         if (this.queryStringParameters.containsKey(parameter.getName())) {
-            this.queryStringParameters.get(parameter.getName()).addValues(parameter.getValues());
+            this.queryStringParameters.get(parameter.getName()).addNottableValues(parameter.getValues());
         } else {
             this.queryStringParameters.put(parameter.getName(), parameter);
         }
@@ -175,13 +175,31 @@ public class HttpRequest extends Not {
     }
 
     /**
-     * Adds one query string parameter to match on as a Parameter object where the parameter values list can be a list of strings or regular expressions
+     * Adds one query string parameter to match which can specified using plain strings or regular expressions
      * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
      *
      * @param name the parameter name
      * @param values the parameter values which can be a varags of strings or regular expressions
      */
     public HttpRequest withQueryStringParameter(String name, String... values) {
+        if (this.queryStringParameters.containsKey(string(name))) {
+            this.queryStringParameters.get(string(name)).addValues(values);
+        } else {
+            this.queryStringParameters.put(string(name), param(name, values));
+        }
+        return this;
+    }
+
+    /**
+     * Adds one query string parameter to match on or to not match on using the NottableString, each NottableString can either be a positive matching
+     * value, such as string("match"), or a value to not match on, such as not("do not match"), the string values passed to the NottableString
+     * can also be a plain string or a regex (for more details of the supported regex syntax
+     * see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     *
+     * @param name the parameter name as a NottableString
+     * @param values the parameter values which can be a varags of NottableStrings
+     */
+    public HttpRequest withQueryStringParameter(NottableString name, NottableString... values) {
         if (this.queryStringParameters.containsKey(name)) {
             this.queryStringParameters.get(name).addValues(values);
         } else {
@@ -195,15 +213,19 @@ public class HttpRequest extends Not {
     }
 
     public boolean hasQueryStringParameter(String name, String expectedValue) {
-        if (Strings.isNullOrEmpty(name)) {
-            throw new IllegalArgumentException("Name must not be null or empty");
+        return hasQueryStringParameter(string(name), string(expectedValue));
+    }
+
+    public boolean hasQueryStringParameter(NottableString name, NottableString expectedValue) {
+        if (name == null) {
+            throw new IllegalArgumentException("Name must not be null");
         }
         if (expectedValue == null) {
             throw new IllegalArgumentException("Expected value must not be null");
         }
         Parameter parameter = queryStringParameters.get(name);
         if (parameter != null) {
-            for (String actualValue : parameter.getValues()) {
+            for (NottableString actualValue : parameter.getValues()) {
                 if (expectedValue.equals(actualValue)) {
                     return true;
                 }
@@ -376,7 +398,7 @@ public class HttpRequest extends Not {
      */
     public HttpRequest withHeader(Header header) {
         if (this.headers.containsKey(header.getName())) {
-            this.headers.get(header.getName()).addValues(header.getValues());
+            this.headers.get(header.getName()).addNottableValues(header.getValues());
         } else {
             this.headers.put(header.getName(), header);
         }
@@ -384,13 +406,31 @@ public class HttpRequest extends Not {
     }
 
     /**
-     * Adds one header to match on as a Header object where the header values list can be a list of strings or regular expressions
+     * Adds one header to match which can specified using plain strings or regular expressions
      * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
      *
      * @param name the header name
      * @param values the header values which can be a varags of strings or regular expressions
      */
     public HttpRequest withHeader(String name, String... values) {
+        if (this.headers.containsKey(string(name))) {
+            this.headers.get(string(name)).addValues(values);
+        } else {
+            this.headers.put(string(name), header(name, values));
+        }
+        return this;
+    }
+
+    /**
+     * Adds one header to match on or to not match on using the NottableString, each NottableString can either be a positive matching value,
+     * such as string("match"), or a value to not match on, such as not("do not match"), the string values passed to the NottableString
+     * can also be a plain string or a regex (for more details of the supported regex syntax
+     * see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     *
+     * @param name the header name as a NottableString
+     * @param values the header values which can be a varags of NottableStrings
+     */
+    public HttpRequest withHeader(NottableString name, NottableString... values) {
         if (this.headers.containsKey(name)) {
             this.headers.get(name).addValues(values);
         } else {
@@ -406,8 +446,8 @@ public class HttpRequest extends Not {
      * @param header the Header object which can have a values list of strings or regular expressions
      */
     public HttpRequest replaceHeader(Header header) {
-        for (String key : new HashSet<String>(this.headers.keySet())) {
-            if (header.getName().equalsIgnoreCase(key)) {
+        for (NottableString key : new HashSet<NottableString>(this.headers.keySet())) {
+            if (header.getName().getValue().equalsIgnoreCase(key.getValue()) && header.getName().isNot() == key.isNot()) {
                 this.headers.remove(key);
             }
         }
@@ -421,13 +461,13 @@ public class HttpRequest extends Not {
 
     public String getFirstHeader(String name) {
         String firstHeadValue = "";
-        if (headers.containsKey(name) || headers.containsKey(name.toLowerCase())) {
-            Header header = headers.get(name);
+        if (headers.containsKey(string(name)) || headers.containsKey(string(name.toLowerCase()))) {
+            Header header = headers.get(string(name));
             if (header == null) {
-                header = headers.get(name.toLowerCase());
+                header = headers.get(string(name.toLowerCase()));
             }
-            if (!header.getValues().isEmpty() && !Strings.isNullOrEmpty(header.getValues().get(0))) {
-                firstHeadValue = header.getValues().get(0);
+            if (!header.getValues().isEmpty() && !Strings.isNullOrEmpty(header.getValues().get(0).getValue())) {
+                firstHeadValue = header.getValues().get(0).getValue();
             }
         }
         return firstHeadValue;
@@ -440,7 +480,7 @@ public class HttpRequest extends Not {
      * @return true if a header has been added with that name otherwise false
      */
     public boolean containsHeader(String name) {
-        return headers.containsKey(name);
+        return headers.containsKey(string(name)) || headers.containsKey(string(name.toLowerCase()));
     }
 
     /**
@@ -482,13 +522,27 @@ public class HttpRequest extends Not {
     }
 
     /**
-     * Adds one cookie to match on as a Cookie object where the cookie values list can be a list of strings or regular expressions
+     * Adds one cookie to match on, which can specified using either plain strings or regular expressions
      * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
      *
      * @param name the cookies name
      * @param value the cookies value which can be a string or regular expression
      */
     public HttpRequest withCookie(String name, String value) {
+        this.cookies.put(string(name), cookie(name, value));
+        return this;
+    }
+
+    /**
+     * Adds one cookie to match on or to not match on using the NottableString, each NottableString can either be a positive matching value,
+     * such as string("match"), or a value to not match on, such as not("do not match"), the string values passed to the NottableString
+     * can be a plain string or a regex (for more details of the supported regex syntax see
+     * http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     *
+     * @param name the cookies name
+     * @param value the cookies value which can be a string or regular expression
+     */
+    public HttpRequest withCookie(NottableString name, NottableString value) {
         this.cookies.put(name, cookie(name, value));
         return this;
     }

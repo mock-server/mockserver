@@ -28,7 +28,7 @@ public class HopByHopHeaderFilter implements RequestFilter {
             );
             List<Header> filteredHeaders = new ArrayList<Header>();
             for (Header header : httpRequest.getHeaders()) {
-                if (!headersToRemove.contains(header.getName().toLowerCase(Locale.ENGLISH))) {
+                if (!headersToRemove.contains(header.getName().getValue().toLowerCase(Locale.ENGLISH))) {
                     filteredHeaders.add(header);
                 }
             }

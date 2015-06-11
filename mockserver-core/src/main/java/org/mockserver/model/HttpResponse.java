@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.mockserver.model.Cookie.cookie;
 import static org.mockserver.model.Header.header;
+import static org.mockserver.model.NottableString.string;
 
 /**
  * @author jamesdbloom
@@ -16,8 +17,8 @@ import static org.mockserver.model.Header.header;
 public class HttpResponse extends Action {
     private Integer statusCode = 200;
     private Body body = new StringBody("");
-    private Map<String, Header> headers = new LinkedHashMap<String, Header>();
-    private Map<String, Cookie> cookies = new LinkedHashMap<String, Cookie>();
+    private Map<NottableString, Header> headers = new LinkedHashMap<NottableString, Header>();
+    private Map<NottableString, Cookie> cookies = new LinkedHashMap<NottableString, Cookie>();
     private Delay delay;
     private ConnectionOptions connectionOptions;
 
@@ -161,7 +162,7 @@ public class HttpResponse extends Action {
      */
     public HttpResponse withHeader(Header header) {
         if (this.headers.containsKey(header.getName())) {
-            this.headers.get(header.getName()).addValues(header.getValues());
+            this.headers.get(header.getName()).addNottableValues(header.getValues());
         } else {
             this.headers.put(header.getName(), header);
         }
@@ -177,10 +178,10 @@ public class HttpResponse extends Action {
      * @param values the header values which can be a varags of strings or regular expressions
      */
     public HttpResponse withHeader(String name, String... values) {
-        if (this.headers.containsKey(name)) {
-            this.headers.get(name).addValues(values);
+        if (this.headers.containsKey(string(name))) {
+            this.headers.get(string(name)).addValues(values);
         } else {
-            this.headers.put(name, header(name, values));
+            this.headers.put(string(name), header(name, values));
         }
         return this;
     }
@@ -204,7 +205,7 @@ public class HttpResponse extends Action {
      * @param values the header values which can be a varags of strings or regular expressions
      */
     public HttpResponse updateHeader(String name, String... values) {
-        this.headers.put(name, header(name, values));
+        this.headers.put(string(name), header(name, values));
         return this;
     }
 
@@ -214,21 +215,23 @@ public class HttpResponse extends Action {
 
     public List<String> getHeader(String name) {
         List<String> headerValues = new ArrayList<String>();
-        if (headers.containsKey(name)) {
-            headerValues.addAll(headers.get(name).getValues());
+        if (headers.containsKey(string(name))) {
+            for (NottableString headerValue : headers.get(string(name)).getValues()) {
+                headerValues.add(headerValue.getValue());
+            }
         }
         return headerValues;
     }
 
     public String getFirstHeader(String name) {
         String firstHeadValue = "";
-        if (headers.containsKey(name) || headers.containsKey(name.toLowerCase())) {
-            Header header = headers.get(name);
+        if (headers.containsKey(string(name)) || headers.containsKey(string(name.toLowerCase()))) {
+            Header header = headers.get(string(name));
             if (header == null) {
-                header = headers.get(name.toLowerCase());
+                header = headers.get(string(name.toLowerCase()));
             }
-            if (!header.getValues().isEmpty() && !Strings.isNullOrEmpty(header.getValues().get(0))) {
-                firstHeadValue = header.getValues().get(0);
+            if (!header.getValues().isEmpty() && !Strings.isNullOrEmpty(header.getValues().get(0).getValue())) {
+                firstHeadValue = header.getValues().get(0).getValue();
             }
         }
         return firstHeadValue;
@@ -276,7 +279,7 @@ public class HttpResponse extends Action {
      * @param value the cookies value which can be a string or regular expression
      */
     public HttpResponse withCookie(String name, String value) {
-        this.cookies.put(name, cookie(name, value));
+        this.cookies.put(string(name), cookie(name, value));
         return this;
     }
 

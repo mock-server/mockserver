@@ -7,6 +7,7 @@ import org.mockserver.model.NottableString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNot.not;
 import static org.mockserver.model.NottableString.string;
 
 public class NottableStringTest {
@@ -52,14 +53,21 @@ public class NottableStringTest {
     }
 
     @Test
+    public void shouldEqualWhenNull() {
+        assertThat(string(null), is(string(null)));
+        assertThat(string("value"), not(string(null)));
+        assertThat(string(null), not(string("value")));
+    }
+
+    @Test
     public void shouldEqualForDoubleNegative() {
-        assertThat(NottableString.not("value"), IsNot.not(string("value")));
-        assertThat(NottableString.not("value"), IsNot.not((Object) "value"));
+        assertThat(NottableString.not("value"), not(string("value")));
+        assertThat(NottableString.not("value"), not((Object) "value"));
 
-        assertThat(string("value"), IsNot.not(string("other_value")));
-        assertThat(NottableString.string("value"), IsNot.not((Object) "other_value"));
+        assertThat(string("value"), not(string("other_value")));
+        assertThat(NottableString.string("value"), not((Object) "other_value"));
 
-        assertThat(string("value"), IsNot.not(NottableString.not("value")));
+        assertThat(string("value"), not(NottableString.not("value")));
     }
 
 }

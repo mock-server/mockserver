@@ -11,6 +11,7 @@ import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockserver.model.NottableString.not;
 
 public class BodyDTODeserializerTest {
 
@@ -284,20 +285,27 @@ public class BodyDTODeserializerTest {
     public void shouldParseJSONWithParametersBodyWithNotParameter() throws IOException {
         // given
         String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"type\" : \"PARAMETERS\"," + System.getProperty("line.separator") +
-                "            \"parameters\" : [ {" + System.getProperty("line.separator") +
-                "                    \"not\" : true," + System.getProperty("line.separator") +
-                "                    \"name\" : \"parameterOneName\"," + System.getProperty("line.separator") +
-                "                    \"values\" : [ \"parameterOneValueOne\", \"parameterOneValueTwo\" ]" + System.getProperty("line.separator") +
-                "                }, {" + System.getProperty("line.separator") +
-                "                    \"not\" : false," + System.getProperty("line.separator") +
-                "                    \"name\" : \"parameterTwoName\"," + System.getProperty("line.separator") +
-                "                    \"values\" : [ \"parameterTwoValue\" ]" + System.getProperty("line.separator") +
-                "            } ]" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
+                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
+                "    \"body\" : {" + System.getProperty("line.separator") +
+                "      \"type\" : \"PARAMETERS\"," + System.getProperty("line.separator") +
+                "      \"parameters\" : [ {" + System.getProperty("line.separator") +
+                "        \"name\" : {" + System.getProperty("line.separator") +
+                "          \"not\" : true," + System.getProperty("line.separator") +
+                "          \"value\" : \"parameterOneName\"" + System.getProperty("line.separator") +
+                "        }," + System.getProperty("line.separator") +
+                "        \"values\" : [ {" + System.getProperty("line.separator") +
+                "          \"not\" : true," + System.getProperty("line.separator") +
+                "          \"value\" : \"parameterOneValueOne\"" + System.getProperty("line.separator") +
+                "        }, {" + System.getProperty("line.separator") +
+                "          \"not\" : true," + System.getProperty("line.separator") +
+                "          \"value\" : \"parameterOneValueTwo\"" + System.getProperty("line.separator") +
+                "        } ]" + System.getProperty("line.separator") +
+                "      }, {" + System.getProperty("line.separator") +
+                "        \"name\" : \"parameterTwoName\"," + System.getProperty("line.separator") +
+                "        \"values\" : [ \"parameterTwoValue\" ]" + System.getProperty("line.separator") +
+                "      } ]" + System.getProperty("line.separator") +
                 "    }" + System.getProperty("line.separator") +
+                "  }" + System.getProperty("line.separator") +
                 "}");
 
         // when
@@ -307,10 +315,12 @@ public class BodyDTODeserializerTest {
         assertEquals(new ExpectationDTO()
                 .setHttpRequest(
                         new HttpRequestDTO()
-                                .setBody(new ParameterBodyDTO(new ParameterBody(
-                                        Not.not(new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo")),
-                                        new Parameter("parameterTwoName", "parameterTwoValue")
-                                )))
+                                .setBody(new ParameterBodyDTO(
+                                        new ParameterBody(
+                                                new Parameter(not("parameterOneName"), not("parameterOneValueOne"), not("parameterOneValueTwo")),
+                                                new Parameter("parameterTwoName", "parameterTwoValue")
+                                        )
+                                ))
                 ), expectationDTO);
     }
 

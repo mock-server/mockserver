@@ -5,6 +5,7 @@ import org.junit.Test;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.mockserver.model.Cookie.cookie;
+import static org.mockserver.model.NottableString.string;
 
 /**
  * @author jamesdbloom
@@ -17,8 +18,8 @@ public class CookieTest {
         Cookie firstCookie = new Cookie("name", "value");
 
         // then
-        assertThat(firstCookie.getName(), is("name"));
-        assertThat(firstCookie.getValue(), is("value"));
+        assertThat(firstCookie.getName(), is(string("name")));
+        assertThat(firstCookie.getValue(), is(string("value")));
     }
 
     @Test
@@ -27,8 +28,8 @@ public class CookieTest {
         Cookie firstCookie = cookie("name", "value");
 
         // then
-        assertThat(firstCookie.getName(), is("name"));
-        assertThat(firstCookie.getValue(), is("value"));
+        assertThat(firstCookie.getName(), is(string("name")));
+        assertThat(firstCookie.getValue(), is(string("value")));
     }
 
 }

@@ -1,13 +1,15 @@
 package org.mockserver.matchers;
 
 import org.junit.Test;
+import org.mockserver.model.Not;
 import org.mockserver.model.Parameter;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockserver.matchers.NotMatcher.not;
+import static org.mockserver.model.NottableString.not;
 
 /**
  * @author jamesdbloom
@@ -23,13 +25,48 @@ public class ParameterStringMatcherTest {
                 "parameterOneName=parameterOneValueOne" +
                 "&parameterOneName=parameterOneValueTwo" +
                 "&parameterTwoName=parameterTwoValue"));
+
+        assertTrue(new ParameterStringMatcher(Collections.singletonList(
+                new Parameter("parameter.*", "parameter.*")
+        )).matches("" +
+                "parameterOneName=parameterOneValueOne" +
+                "&parameterOneName=parameterOneValueTwo" +
+                "&parameterTwoName=parameterTwoValue"));
     }
 
     @Test
     public void shouldNotMatchMatchingStringWhenNotApplied() {
-        assertFalse(not(new ParameterStringMatcher(Arrays.asList(
+        // given
+        assertTrue(new ParameterStringMatcher(Arrays.asList(
                 new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
                 new Parameter("parameterTwoName", "parameterTwoValue")
+        )).matches("" +
+                "parameterOneName=parameterOneValueOne" +
+                "&parameterOneName=parameterOneValueTwo" +
+                "&parameterTwoName=parameterTwoValue"));
+        
+        // then - not matcher
+        assertFalse(NotMatcher.not(new ParameterStringMatcher(Arrays.asList(
+                new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
+                new Parameter("parameterTwoName", "parameterTwoValue")
+        ))).matches("" +
+                "parameterOneName=parameterOneValueOne" +
+                "&parameterOneName=parameterOneValueTwo" +
+                "&parameterTwoName=parameterTwoValue"));
+
+        // and - not parameter
+        assertFalse(new ParameterStringMatcher(Arrays.asList(
+                new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
+                new Parameter(not("parameterTwoName"), not("parameterTwoValue"))
+        )).matches("" +
+                "parameterOneName=parameterOneValueOne" +
+                "&parameterOneName=parameterOneValueTwo" +
+                "&parameterTwoName=parameterTwoValue"));
+
+        // and - not parameter
+        assertTrue(NotMatcher.not(new ParameterStringMatcher(Arrays.asList(
+                new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
+                new Parameter(not("parameterTwoName"), not("parameterTwoValue"))
         ))).matches("" +
                 "parameterOneName=parameterOneValueOne" +
                 "&parameterOneName=parameterOneValueTwo" +
@@ -38,19 +75,80 @@ public class ParameterStringMatcherTest {
 
     @Test
     public void shouldMatchMatchingStringWithNotParameterAndNormalParameter() {
-        assertTrue(new ParameterStringMatcher(Arrays.asList(
+        // not matching parameter
+        assertFalse(new ParameterStringMatcher(Arrays.asList(
                 new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
-                org.mockserver.model.Not.not(new Parameter("parameterThree", "parameterThreeValueOne"))
+                new Parameter(not("parameterTwoName"), not("parameterTwoValue"))
         )).matches("" +
                 "parameterOneName=parameterOneValueOne" +
                 "&parameterOneName=parameterOneValueTwo" +
                 "&parameterTwoName=parameterTwoValue"));
+
+        // not extra parameter
+        assertTrue(new ParameterStringMatcher(Arrays.asList(
+                new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
+                new Parameter(not("parameterThree"), not("parameterThreeValueOne"))
+        )).matches("" +
+                "parameterOneName=parameterOneValueOne" +
+                "&parameterOneName=parameterOneValueTwo" +
+                "&parameterTwoName=parameterTwoValue"));
+
+        // not only parameter
+        assertTrue(new ParameterStringMatcher(Collections.singletonList(
+                new Parameter(not("parameterThree"), not("parameterThreeValueOne"))
+        )).matches("" +
+                "parameterOneName=parameterOneValueOne" +
+                "&parameterOneName=parameterOneValueTwo" +
+                "&parameterTwoName=parameterTwoValue"));
+
+        // not all parameters (but matching)
+        assertFalse(new ParameterStringMatcher(Collections.singletonList(
+                new Parameter(not("parameter.*"), not(".*"))
+        )).matches("" +
+                "parameterOneName=parameterOneValueOne" +
+                "&parameterOneName=parameterOneValueTwo" +
+                "&parameterTwoName=parameterTwoValue"));
+
+        // not all parameters (but not matching name)
+        assertFalse(new ParameterStringMatcher(Collections.singletonList(
+                new Parameter(not("parameter.*"), not("parameter.*"))
+        )).matches("" +
+                "notParameterOneName=parameterOneValueOne" +
+                "&notParameterOneName=parameterOneValueTwo" +
+                "&notParameterTwoName=parameterTwoValue"));
+
+        // not all parameters (but not matching value)
+        assertFalse(new ParameterStringMatcher(Collections.singletonList(
+                new Parameter(not("parameter.*"), not("parameter.*"))
+        )).matches("" +
+                "parameterOneName=notParameterOneValueOne" +
+                "&parameterOneName=notParameterOneValueTwo" +
+                "&parameterTwoName=notParameterTwoValue"));
     }
 
     @Test
     public void shouldMatchMatchingStringWithOnlyParameter() {
-        assertTrue(new ParameterStringMatcher(Arrays.asList(
-                org.mockserver.model.Not.not(new Parameter("parameterThree", "parameterThreeValueOne"))
+        assertTrue(new ParameterStringMatcher(Collections.singletonList(
+                new Parameter(not("parameterThree"), not("parameterThreeValueOne"))
+        )).matches("" +
+                "parameterOneName=parameterOneValueOne" +
+                "&parameterOneName=parameterOneValueTwo" +
+                "&parameterTwoName=parameterTwoValue"));
+        assertFalse(new ParameterStringMatcher(Collections.singletonList(
+                new Parameter("parameterThree", "parameterThreeValueOne")
+        )).matches("" +
+                "parameterOneName=parameterOneValueOne" +
+                "&parameterOneName=parameterOneValueTwo" +
+                "&parameterTwoName=parameterTwoValue"));
+
+        assertFalse(new ParameterStringMatcher(Collections.singletonList(
+                new Parameter(not("parameterOneName"), not("parameterOneValueOne"), not("parameterOneValueTwo"))
+        )).matches("" +
+                "parameterOneName=parameterOneValueOne" +
+                "&parameterOneName=parameterOneValueTwo" +
+                "&parameterTwoName=parameterTwoValue"));
+        assertTrue(new ParameterStringMatcher(Collections.singletonList(
+                new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo")
         )).matches("" +
                 "parameterOneName=parameterOneValueOne" +
                 "&parameterOneName=parameterOneValueTwo" +
@@ -59,8 +157,16 @@ public class ParameterStringMatcherTest {
 
     @Test
     public void shouldMatchMatchingStringWithOnlyParameterForEmptyBody() {
-        assertTrue(new ParameterStringMatcher(Arrays.asList(
-                org.mockserver.model.Not.not(new Parameter("parameterThree", "parameterThreeValueOne"))
+        assertTrue(new ParameterStringMatcher(
+                        Collections.<Parameter>emptyList()
+        ).matches("parameterThree=parameterThreeValueOne"));
+
+        assertFalse(new ParameterStringMatcher(Collections.singletonList(
+                new Parameter("parameterThree", "parameterThreeValueOne")
+        )).matches(""));
+
+        assertTrue(new ParameterStringMatcher(Collections.singletonList(
+                new Parameter(not("parameterThree"), not("parameterThreeValueOne"))
         )).matches(""));
     }
 
@@ -68,8 +174,7 @@ public class ParameterStringMatcherTest {
     public void shouldNotMatchMatchingStringWithNotParameterAndNormalParameter() {
         assertFalse(new ParameterStringMatcher(Arrays.asList(
                 new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
-                org.mockserver.model.Not.not(new Parameter("parameterTwoName", "parameterTwoValue")
-                ))).matches("" +
+                new Parameter(not("parameterTwoName"), not("parameterTwoValue")))).matches("" +
                 "parameterOneName=parameterOneValueOne" +
                 "&parameterOneName=parameterOneValueTwo" +
                 "&parameterTwoName=parameterTwoValue"));
@@ -77,9 +182,8 @@ public class ParameterStringMatcherTest {
 
     @Test
     public void shouldNotMatchMatchingStringWithOnlyNotParameter() {
-        assertFalse(new ParameterStringMatcher(Arrays.asList(
-                org.mockserver.model.Not.not(new Parameter("parameterTwoName", "parameterTwoValue")
-                ))).matches("" +
+        assertFalse(new ParameterStringMatcher(Collections.singletonList(
+                new Parameter(not("parameterTwoName"), not("parameterTwoValue")))).matches("" +
                 "parameterOneName=parameterOneValueOne" +
                 "&parameterOneName=parameterOneValueTwo" +
                 "&parameterTwoName=parameterTwoValue"));
@@ -87,9 +191,8 @@ public class ParameterStringMatcherTest {
 
     @Test
     public void shouldNotMatchMatchingStringWithOnlyNotParameterForBodyWithSingleParameter() {
-        assertFalse(new ParameterStringMatcher(Arrays.asList(
-                org.mockserver.model.Not.not(new Parameter("parameterTwoName", "parameterTwoValue")
-                ))).matches("" +
+        assertFalse(new ParameterStringMatcher(Collections.singletonList(
+                new Parameter(not("parameterTwoName"), not("parameterTwoValue")))).matches("" +
                 "parameterTwoName=parameterTwoValue"));
     }
 
@@ -100,17 +203,17 @@ public class ParameterStringMatcherTest {
 
     @Test
     public void shouldNotMatchNullExpectationWhenNotApplied() {
-        assertFalse(not(new ParameterStringMatcher(null)).matches("some_value"));
+        assertFalse(NotMatcher.not(new ParameterStringMatcher(null)).matches("some_value"));
     }
 
     @Test
     public void shouldMatchEmptyExpectation() {
-        assertTrue(new ParameterStringMatcher(Arrays.<Parameter>asList()).matches("some_value"));
+        assertTrue(new ParameterStringMatcher(Collections.<Parameter>emptyList()).matches("some_value"));
     }
 
     @Test
     public void shouldNotMatchEmptyExpectationWhenNotApplied() {
-        assertFalse(not(new ParameterStringMatcher(Arrays.<Parameter>asList())).matches("some_value"));
+        assertFalse(NotMatcher.not(new ParameterStringMatcher(Collections.<Parameter>emptyList())).matches("some_value"));
     }
 
     @Test
@@ -126,7 +229,7 @@ public class ParameterStringMatcherTest {
 
     @Test
     public void shouldMatchIncorrectParameterNameWhenNotApplied() {
-        assertTrue(not(new ParameterStringMatcher(Arrays.asList(
+        assertTrue(NotMatcher.not(new ParameterStringMatcher(Arrays.asList(
                 new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
                 new Parameter("parameterTwoName", "parameterTwoValue")
         ))).matches("" +
@@ -148,7 +251,7 @@ public class ParameterStringMatcherTest {
 
     @Test
     public void shouldMatchIncorrectParameterValueWhenNotApplied() {
-        assertTrue(not(new ParameterStringMatcher(Arrays.asList(
+        assertTrue(NotMatcher.not(new ParameterStringMatcher(Arrays.asList(
                 new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
                 new Parameter("parameterTwoName", "parameterTwoValue")
         ))).matches("" +
@@ -170,7 +273,7 @@ public class ParameterStringMatcherTest {
 
     @Test
     public void shouldMatchIncorrectParameterNameAndValueWhenNotApplied() {
-        assertTrue(not(new ParameterStringMatcher(Arrays.asList(
+        assertTrue(NotMatcher.not(new ParameterStringMatcher(Arrays.asList(
                 new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
                 new Parameter("parameterTwoName", "parameterTwoValue")
         ))).matches("" +
@@ -191,7 +294,7 @@ public class ParameterStringMatcherTest {
 
     @Test
     public void shouldMatchNullParameterValueWhenNotApplied() {
-        assertTrue(not(new ParameterStringMatcher(Arrays.asList(
+        assertTrue(NotMatcher.not(new ParameterStringMatcher(Arrays.asList(
                 new Parameter("parameterOneName", "parameterValueOne"),
                 new Parameter("parameterTwoName", "parameterTwoValue")
         ))).matches("" +
@@ -220,7 +323,7 @@ public class ParameterStringMatcherTest {
 
     @Test
     public void shouldMatchMissingParameterWhenNotApplied() {
-        assertTrue(not(new ParameterStringMatcher(Arrays.asList(
+        assertTrue(NotMatcher.not(new ParameterStringMatcher(Arrays.asList(
                 new Parameter("parameterOneName", "parameterValueOne"),
                 new Parameter("parameterTwoName", "parameterTwoValue")
         ))).matches("" +
@@ -229,21 +332,21 @@ public class ParameterStringMatcherTest {
 
     @Test
     public void shouldMatchNullTest() {
-        assertTrue(new ParameterStringMatcher(Arrays.<Parameter>asList()).matches(null));
+        assertTrue(new ParameterStringMatcher(Collections.<Parameter>emptyList()).matches(null));
     }
 
     @Test
     public void shouldNotMatchNullTestWhenNotApplied() {
-        assertFalse(not(new ParameterStringMatcher(Arrays.<Parameter>asList())).matches(null));
+        assertFalse(NotMatcher.not(new ParameterStringMatcher(Collections.<Parameter>emptyList())).matches(null));
     }
 
     @Test
     public void shouldMatchEmptyTest() {
-        assertTrue(new ParameterStringMatcher(Arrays.<Parameter>asList()).matches(""));
+        assertTrue(new ParameterStringMatcher(Collections.<Parameter>emptyList()).matches(""));
     }
 
     @Test
     public void shouldNotMatchEmptyTestWhenNotApplied() {
-        assertFalse(not(new ParameterStringMatcher(Arrays.<Parameter>asList())).matches(""));
+        assertFalse(NotMatcher.not(new ParameterStringMatcher(Collections.<Parameter>emptyList())).matches(""));
     }
 }

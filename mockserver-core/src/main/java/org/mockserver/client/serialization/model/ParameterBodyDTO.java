@@ -22,7 +22,7 @@ public class ParameterBodyDTO extends BodyDTO {
         super(parameterBody.getType(), not);
         parameters = Lists.transform(parameterBody.getValue(), new Function<Parameter, ParameterDTO>() {
             public ParameterDTO apply(Parameter parameter) {
-                return new ParameterDTO(parameter, parameter.getNot());
+                return new ParameterDTO(parameter);
             }
         });
     }

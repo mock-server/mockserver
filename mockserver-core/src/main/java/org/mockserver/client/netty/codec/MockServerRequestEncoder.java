@@ -55,8 +55,8 @@ public class MockServerRequestEncoder extends MessageToMessageEncoder<OutboundHt
         }
         QueryStringEncoder queryStringEncoder = new QueryStringEncoder(contextPath + httpRequest.getPath().getValue());
         for (Parameter parameter : httpRequest.getQueryStringParameters()) {
-            for (String value : parameter.getValues()) {
-                queryStringEncoder.addParam(parameter.getName(), value);
+            for (NottableString value : parameter.getValues()) {
+                queryStringEncoder.addParam(parameter.getName().getValue(), value.getValue());
             }
         }
         return queryStringEncoder.toString();
@@ -83,7 +83,7 @@ public class MockServerRequestEncoder extends MessageToMessageEncoder<OutboundHt
     private void setCookies(HttpRequest httpRequest, FullHttpRequest request) {
         List<Cookie> cookies = new ArrayList<Cookie>();
         for (org.mockserver.model.Cookie cookie : httpRequest.getCookies()) {
-            cookies.add(new DefaultCookie(cookie.getName(), cookie.getValue()));
+            cookies.add(new DefaultCookie(cookie.getName().getValue(), cookie.getValue().getValue()));
         }
         if (cookies.size() > 0) {
             request.headers().set(
@@ -95,15 +95,15 @@ public class MockServerRequestEncoder extends MessageToMessageEncoder<OutboundHt
 
     private void setHeader(OutboundHttpRequest httpRequest, FullHttpRequest request) {
         for (Header header : httpRequest.getHeaders()) {
-            String headerName = header.getName();
+            String headerName = header.getName().getValue();
             // do not set hop-by-hop headers
             if (!headerName.equalsIgnoreCase(CONTENT_LENGTH)
                     && !headerName.equalsIgnoreCase(TRANSFER_ENCODING)
                     && !headerName.equalsIgnoreCase(HOST)
                     && !headerName.equalsIgnoreCase(ACCEPT_ENCODING)) {
                 if (!header.getValues().isEmpty()) {
-                    for (String headerValue : header.getValues()) {
-                        request.headers().add(headerName, headerValue);
+                    for (NottableString headerValue : header.getValues()) {
+                        request.headers().add(headerName, headerValue.getValue());
                     }
                 } else {
                     request.headers().add(headerName, "");

@@ -28,10 +28,7 @@ public class ParameterBodySerializer extends StdSerializer<ParameterBody> {
             jgen.writeArrayFieldStart("value");
             for (Parameter parameter : parameterBody.getValue()) {
                 jgen.writeStartObject();
-                if (parameter.getNot() != null && parameter.getNot()) {
-                    jgen.writeBooleanField("not", parameter.getNot());
-                }
-                jgen.writeStringField("name", parameter.getName());
+                jgen.writeObjectField("name", parameter.getName());
                 jgen.writeObjectField("values", parameter.getValues());
                 jgen.writeEndObject();
             }

@@ -1,6 +1,7 @@
 package org.mockserver.matchers;
 
 import org.junit.Test;
+import org.mockserver.model.NottableString;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -16,6 +17,37 @@ public class RegexStringMatcherTest {
     public void shouldMatchMatchingString() {
         assertTrue(new RegexStringMatcher("some_value").matches("some_value"));
     }
+
+    @Test
+    public void shouldMatchUnMatchingNottedString() {
+        assertTrue(new RegexStringMatcher("some_value").matches(NottableString.not("not_value")));
+    }
+
+    @Test
+    public void shouldMatchUnMatchingNottedMatcher() {
+        assertTrue(new RegexStringMatcher(NottableString.not("not_value")).matches("some_value"));
+    }
+
+    @Test
+    public void shouldMatchUnMatchingNottedMatcherAndNottedString() {
+        assertTrue(new RegexStringMatcher(NottableString.not("not_matcher")).matches(NottableString.not("not_value")));
+    }
+
+    @Test
+    public void shouldNotMatchMatchingNottedString() {
+        assertFalse(new RegexStringMatcher("some_value").matches(NottableString.not("some_value")));
+    }
+
+    @Test
+    public void shouldNotMatchMatchingNottedMatcher() {
+        assertFalse(new RegexStringMatcher(NottableString.not("some_value")).matches("some_value"));
+    }
+
+    @Test
+    public void shouldNotMatchMatchingNottedMatcherAndNottedString() {
+        assertFalse(new RegexStringMatcher(NottableString.not("some_value")).matches(NottableString.not("some_value")));
+    }
+
     @Test
     public void shouldNotMatchMatchingString() {
         assertFalse(not(new RegexStringMatcher("some_value")).matches("some_value"));

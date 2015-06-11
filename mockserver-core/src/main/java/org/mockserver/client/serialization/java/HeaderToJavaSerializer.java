@@ -2,6 +2,7 @@ package org.mockserver.client.serialization.java;
 
 import com.google.common.base.Strings;
 import org.mockserver.model.Header;
+import org.mockserver.model.NottableString;
 
 import java.util.Arrays;
 import java.util.List;
@@ -14,9 +15,9 @@ public class HeaderToJavaSerializer implements MultiValueToJavaSerializer<Header
     public String serializeAsJava(int numberOfSpacesToIndent, Header header) {
         StringBuilder output = new StringBuilder();
         output.append(System.getProperty("line.separator")).append(Strings.padStart("", numberOfSpacesToIndent, ' '));
-        output.append("new Header(\"").append(header.getName()).append("\"");
-        for (String value : header.getValues()) {
-            output.append(", \"").append(value).append("\"");
+        output.append("new Header(").append(NottableStringToJavaSerializer.serializeNottableString(header.getName()));
+        for (NottableString value : header.getValues()) {
+            output.append(", ").append(NottableStringToJavaSerializer.serializeNottableString(value));
         }
         output.append(")");
         return output.toString();

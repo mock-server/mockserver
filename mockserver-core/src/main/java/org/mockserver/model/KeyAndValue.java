@@ -5,23 +5,29 @@ import org.mockserver.collections.CaseInsensitiveRegexHashMap;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.mockserver.model.NottableString.string;
+
 /**
  * @author jamesdbloom
  */
-public class KeyAndValue extends Not {
-    private final String name;
-    private final String value;
+public class KeyAndValue extends ObjectWithJsonToString {
+    private final NottableString name;
+    private final NottableString value;
 
     public KeyAndValue(String name, String value) {
+        this(string(name), string(value));
+    }
+
+    public KeyAndValue(NottableString name, NottableString value) {
         this.name = name;
         this.value = value;
     }
 
     public static CaseInsensitiveRegexHashMap toHashMap(List<? extends KeyAndValue> keyAndValue) {
-        CaseInsensitiveRegexHashMap<String> caseInsensitiveRegexHashMap = new CaseInsensitiveRegexHashMap<String>();
+        CaseInsensitiveRegexHashMap caseInsensitiveRegexHashMap = new CaseInsensitiveRegexHashMap();
         if (keyAndValue != null) {
             for (KeyAndValue keyToMultiValue : keyAndValue) {
-                caseInsensitiveRegexHashMap.put(NottableString.string(keyToMultiValue.getName(), keyToMultiValue.getNot()), keyToMultiValue.getValue());
+                caseInsensitiveRegexHashMap.put(keyToMultiValue.getName(), keyToMultiValue.getValue());
             }
         }
         return caseInsensitiveRegexHashMap;
@@ -31,11 +37,11 @@ public class KeyAndValue extends Not {
         return toHashMap(Arrays.asList(keyToMultiValues));
     }
 
-    public String getName() {
+    public NottableString getName() {
         return name;
     }
 
-    public String getValue() {
+    public NottableString getValue() {
         return value;
     }
 

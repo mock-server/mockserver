@@ -7,10 +7,7 @@ import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.cookie.ClientCookieDecoder;
 import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 import org.mockserver.mappers.ContentTypeMapper;
-import org.mockserver.model.BinaryBody;
-import org.mockserver.model.Cookie;
-import org.mockserver.model.Header;
-import org.mockserver.model.HttpResponse;
+import org.mockserver.model.*;
 
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -51,17 +48,17 @@ public class MockServerResponseDecoder extends MessageToMessageDecoder<FullHttpR
     private void setCookies(HttpResponse httpResponse) {
         Map<String, Cookie> mappedCookies = new HashMap<String, Cookie>();
         for (Header header : httpResponse.getHeaders()) {
-            if (header.getName().equals("Set-Cookie")) {
-                for (String cookieHeader : header.getValues()) {
-                    io.netty.handler.codec.http.cookie.Cookie httpCookie = ClientCookieDecoder.LAX.decode(cookieHeader);
+            if (header.getName().getValue().equalsIgnoreCase("Set-Cookie")) {
+                for (NottableString cookieHeader : header.getValues()) {
+                    io.netty.handler.codec.http.cookie.Cookie httpCookie = ClientCookieDecoder.LAX.decode(cookieHeader.getValue());
                     String name = httpCookie.name().trim();
                     String value = httpCookie.value().trim();
                     mappedCookies.put(name, new Cookie(name, value));
                 }
             }
-            if (header.getName().equals("Cookie")) {
-                for (String cookieHeader : header.getValues()) {
-                    for (io.netty.handler.codec.http.cookie.Cookie httpCookie : ServerCookieDecoder.LAX.decode(cookieHeader)) {
+            if (header.getName().getValue().equalsIgnoreCase("Cookie")) {
+                for (NottableString cookieHeader : header.getValues()) {
+                    for (io.netty.handler.codec.http.cookie.Cookie httpCookie : ServerCookieDecoder.LAX.decode(cookieHeader.getValue())) {
                         String name = httpCookie.name().trim();
                         String value = httpCookie.value().trim();
                         mappedCookies.put(name, new Cookie(name, value));

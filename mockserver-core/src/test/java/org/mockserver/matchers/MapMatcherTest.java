@@ -45,7 +45,7 @@ public class MapMatcherTest {
         multimap.put("foo", "");
 
         // when
-        keyToMultiValues.add(new KeyToMultiValue("foo", "bar"));
+        keyToMultiValues.add(new KeyToMultiValue("foo", "bar", "bob"));
 
         // then
         assertTrue(mapMatcher.matches(keyToMultiValues));
@@ -57,7 +57,7 @@ public class MapMatcherTest {
         multimap.put("foo", "b.*");
 
         // when
-        keyToMultiValues.add(new KeyToMultiValue("foo", "bar"));
+        keyToMultiValues.add(new KeyToMultiValue("foo", "bar", "bob"));
 
         // then
         assertTrue(mapMatcher.matches(keyToMultiValues));

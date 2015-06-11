@@ -8,11 +8,7 @@ import org.mockserver.model.Header;
 public class HeaderDTO extends KeyToMultiValueDTO {
 
     public HeaderDTO(Header header) {
-        super(header, false);
-    }
-
-    public HeaderDTO(Header header, Boolean not) {
-        super(header, not);
+        super(header);
     }
 
     protected HeaderDTO() {

@@ -10,6 +10,7 @@ import org.mockserver.model.NottableString;
 
 import java.io.IOException;
 
+import static org.mockserver.model.NottableString.not;
 import static org.mockserver.model.NottableString.string;
 
 /**
@@ -40,7 +41,12 @@ public class NottableStringDeserializer extends JsonDeserializer<NottableString>
 
             return string(string, not);
         } else if (jp.getCurrentToken() == JsonToken.VALUE_STRING) {
-            return string(jp.readValueAs(String.class));
+            String value = jp.readValueAs(String.class);
+            if (value.startsWith("!")) {
+                return not(value.replaceFirst("^!", ""));
+            } else {
+                return string(value.replaceFirst("^!", ""));
+            }
         }
         return null;
     }

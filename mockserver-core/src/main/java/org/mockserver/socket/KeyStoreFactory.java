@@ -32,7 +32,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
-import java.security.cert.Certificate;
 
 /**
  * @author jamesdbloom, ganskef

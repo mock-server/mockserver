@@ -31,17 +31,17 @@ public class HttpRequestDTO extends NotDTO {
             path = httpRequest.getPath();
             headers = Lists.transform(httpRequest.getHeaders(), new Function<Header, HeaderDTO>() {
                 public HeaderDTO apply(Header header) {
-                    return new HeaderDTO(header, header.getNot());
+                    return new HeaderDTO(header);
                 }
             });
             cookies = Lists.transform(httpRequest.getCookies(), new Function<Cookie, CookieDTO>() {
                 public CookieDTO apply(Cookie cookie) {
-                    return new CookieDTO(cookie, cookie.getNot());
+                    return new CookieDTO(cookie);
                 }
             });
             queryStringParameters = Lists.transform(httpRequest.getQueryStringParameters(), new Function<Parameter, ParameterDTO>() {
                 public ParameterDTO apply(Parameter parameter) {
-                    return new ParameterDTO(parameter, parameter.getNot());
+                    return new ParameterDTO(parameter);
                 }
             });
             body = BodyDTO.createDTO(httpRequest.getBody());
@@ -57,17 +57,17 @@ public class HttpRequestDTO extends NotDTO {
                 .withPath(path)
                 .withHeaders(Lists.transform(headers, new Function<HeaderDTO, Header>() {
                     public Header apply(HeaderDTO header) {
-                        return Not.not(header.buildObject(), header.getNot());
+                        return header.buildObject();
                     }
                 }))
                 .withCookies(Lists.transform(cookies, new Function<CookieDTO, Cookie>() {
                     public Cookie apply(CookieDTO cookie) {
-                        return Not.not(cookie.buildObject(), cookie.getNot());
+                        return cookie.buildObject();
                     }
                 }))
                 .withQueryStringParameters(Lists.transform(queryStringParameters, new Function<ParameterDTO, Parameter>() {
                     public Parameter apply(ParameterDTO parameter) {
-                        return Not.not(parameter.buildObject(), parameter.getNot());
+                        return parameter.buildObject();
                     }
                 }))
                 .withBody((body != null ? Not.not(body.buildObject(), body.getNot()) : null));

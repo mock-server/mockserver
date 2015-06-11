@@ -5,10 +5,7 @@ import io.netty.handler.codec.http.cookie.DefaultCookie;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
 import org.mockserver.client.serialization.Base64Converter;
-import org.mockserver.model.BinaryBody;
-import org.mockserver.model.Cookie;
-import org.mockserver.model.Header;
-import org.mockserver.model.HttpResponse;
+import org.mockserver.model.*;
 import org.mockserver.streams.IOStreamUtils;
 
 import javax.servlet.http.HttpServletResponse;
@@ -38,14 +35,14 @@ public class MockServerResponseToHttpServletResponseEncoder {
     private void setHeaders(HttpResponse httpResponse, HttpServletResponse httpServletResponse) {
         if (httpResponse.getHeaders() != null) {
             for (Header header : httpResponse.getHeaders()) {
-                String headerName = header.getName();
+                String headerName = header.getName().getValue();
                 if (!headerName.equalsIgnoreCase(HttpHeaders.Names.CONTENT_LENGTH)
                         && !headerName.equalsIgnoreCase(HttpHeaders.Names.TRANSFER_ENCODING)
                         && !headerName.equalsIgnoreCase(HttpHeaders.Names.HOST)
                         && !headerName.equalsIgnoreCase(HttpHeaders.Names.ACCEPT_ENCODING)
                         && !headerName.equalsIgnoreCase(HttpHeaders.Names.CONNECTION)) {
-                    for (String value : header.getValues()) {
-                        httpServletResponse.addHeader(headerName, value);
+                    for (NottableString value : header.getValues()) {
+                        httpServletResponse.addHeader(headerName, value.getValue());
                     }
                 }
             }
@@ -56,7 +53,7 @@ public class MockServerResponseToHttpServletResponseEncoder {
     private void setCookies(HttpResponse httpResponse, HttpServletResponse httpServletResponse) {
         if (httpResponse.getCookies() != null) {
             for (Cookie cookie : httpResponse.getCookies()) {
-                httpServletResponse.addHeader(SET_COOKIE, ServerCookieEncoder.LAX.encode(new DefaultCookie(cookie.getName(), cookie.getValue())));
+                httpServletResponse.addHeader(SET_COOKIE, ServerCookieEncoder.LAX.encode(new DefaultCookie(cookie.getName().getValue(), cookie.getValue().getValue())));
             }
         }
     }

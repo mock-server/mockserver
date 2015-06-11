@@ -28,10 +28,7 @@ public class ParameterBodyDTOSerializer extends StdSerializer<ParameterBodyDTO> 
             jgen.writeArrayFieldStart("parameters");
             for (ParameterDTO parameter : parameterBodyDTO.getParameters()) {
                 jgen.writeStartObject();
-                if (parameter.getNot() != null && parameter.getNot()) {
-                    jgen.writeBooleanField("not", parameter.getNot());
-                }
-                jgen.writeStringField("name", parameter.getName());
+                jgen.writeObjectField("name", parameter.getName());
                 jgen.writeObjectField("values", parameter.getValues());
                 jgen.writeEndObject();
             }
