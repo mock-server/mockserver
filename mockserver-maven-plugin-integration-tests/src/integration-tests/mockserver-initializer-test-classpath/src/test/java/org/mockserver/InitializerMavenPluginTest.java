@@ -72,7 +72,7 @@ public class InitializerMavenPluginTest {
         HttpResponse httpResponse = httpClient.sendRequest(outboundRequest("localhost", port, "", httpRequest));
         List<Header> headers = new ArrayList<Header>();
         for (Header header : httpResponse.getHeaders()) {
-            if (!headersToIgnore.contains(header.getName().toLowerCase())) {
+            if (!headersToIgnore.contains(header.getName().getValue().toLowerCase())) {
                 headers.add(header);
             }
         }
