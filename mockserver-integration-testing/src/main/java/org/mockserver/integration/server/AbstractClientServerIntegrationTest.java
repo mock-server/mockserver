@@ -2533,7 +2533,6 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    @Ignore
     public void shouldReturnResponseByNotMatchingBodyParameterWithNotOperator() {
         // when
         mockServerClient

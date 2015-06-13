@@ -325,6 +325,40 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
+    public void shouldParseJSONWithParametersBodyWithNotParameterWithExclamationMark() throws IOException {
+        // given
+        String json = ("{" + System.getProperty("line.separator") +
+                "    \"httpRequest\": {" + System.getProperty("line.separator") +
+                "        \"body\" : {" + System.getProperty("line.separator") +
+                "            \"type\" : \"PARAMETERS\"," + System.getProperty("line.separator") +
+                "            \"parameters\" : [ {" + System.getProperty("line.separator") +
+                "                    \"name\" : \"!parameterOneName\"," + System.getProperty("line.separator") +
+                "                    \"values\" : [ \"!parameterOneValueOne\", \"!parameterOneValueTwo\" ]" + System.getProperty("line.separator") +
+                "                }, {" + System.getProperty("line.separator") +
+                "                    \"name\" : \"parameterTwoName\"," + System.getProperty("line.separator") +
+                "                    \"values\" : [ \"parameterTwoValue\" ]" + System.getProperty("line.separator") +
+                "            } ]" + System.getProperty("line.separator") +
+                "        }" + System.getProperty("line.separator") +
+                "    }" + System.getProperty("line.separator") +
+                "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+                .setHttpRequest(
+                        new HttpRequestDTO()
+                                .setBody(new ParameterBodyDTO(
+                                        new ParameterBody(
+                                                new Parameter(not("parameterOneName"), not("parameterOneValueOne"), not("parameterOneValueTwo")),
+                                                new Parameter("parameterTwoName", "parameterTwoValue")
+                                        )
+                                ))
+                ), expectationDTO);
+    }
+
+    @Test
     public void shouldParseJSONWithExactStringBodyAsString() throws IOException {
         // given
         String json = ("{" + System.getProperty("line.separator") +

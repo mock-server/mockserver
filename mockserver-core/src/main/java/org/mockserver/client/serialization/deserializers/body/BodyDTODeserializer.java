@@ -119,20 +119,12 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                                     break;
                                 case FIELD_NAME:
                                     if (jsonParser.getText().equalsIgnoreCase("name")) {
-                                        JsonToken nextToken = jsonParser.nextToken();
-                                        if (nextToken == JsonToken.START_OBJECT) {
-                                            parameterName = parseNottableString(jsonParser);
-                                        } else if (nextToken == JsonToken.VALUE_STRING) {
-                                            parameterName = string(jsonParser.getText());
-                                        }
+                                        jsonParser.nextToken();
+                                        parameterName = parseNottableString(jsonParser);
                                     } else if (jsonParser.getText().equalsIgnoreCase("values")) {
                                         if (jsonParser.nextToken() == JsonToken.START_ARRAY) {
                                             while (jsonParser.nextToken() != null && jsonParser.getCurrentToken() != JsonToken.END_ARRAY) {
-                                                if (jsonParser.getCurrentToken() == JsonToken.START_OBJECT) {
-                                                    parameterValues.add(parseNottableString(jsonParser));
-                                                } else if (jsonParser.getCurrentToken() == JsonToken.VALUE_STRING) {
-                                                    parameterValues.add(string(jsonParser.getText()));
-                                                }
+                                                parameterValues.add(parseNottableString(jsonParser));
                                             }
                                         }
                                     }
@@ -174,34 +166,51 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
     }
 
     private NottableString parseNottableString(JsonParser jsonParser) throws IOException {
-        boolean isNot = false;
-        String value = "";
+        NottableString nottableString = null;
 
-        JsonToken currentToken;
-        while ((currentToken = jsonParser.nextToken()) != JsonToken.END_OBJECT) {
-            switch (currentToken) {
-                case START_ARRAY:
-                    break;
-                case START_OBJECT:
-                    break;
-                case END_OBJECT:
-                    break;
-                case FIELD_NAME:
-                    if (jsonParser.getText().equalsIgnoreCase("not")) {
-                        isNot = jsonParser.nextToken() == JsonToken.VALUE_TRUE;
-                    } else if (jsonParser.getText().equalsIgnoreCase("value")) {
-                        jsonParser.nextToken();
-                        value = jsonParser.getText();
-                    }
-                    break;
-                case VALUE_TRUE:
-                    break;
-                case VALUE_STRING:
-                    break;
+        if (jsonParser.getCurrentToken() == JsonToken.START_OBJECT) {
+
+            boolean isNot = false;
+            String value = "";
+
+            JsonToken currentToken;
+            while ((currentToken = jsonParser.nextToken()) != JsonToken.END_OBJECT) {
+                switch (currentToken) {
+                    case START_ARRAY:
+                        break;
+                    case START_OBJECT:
+                        break;
+                    case END_OBJECT:
+                        break;
+                    case FIELD_NAME:
+                        if (jsonParser.getText().equalsIgnoreCase("not")) {
+                            isNot = jsonParser.nextToken() == JsonToken.VALUE_TRUE;
+                        } else if (jsonParser.getText().equalsIgnoreCase("value")) {
+                            jsonParser.nextToken();
+                            value = jsonParser.getText();
+                        }
+                        break;
+                    case VALUE_TRUE:
+                        break;
+                    case VALUE_STRING:
+                        break;
+                }
             }
+
+            nottableString = string(value, isNot);
+
+        } else if (jsonParser.getCurrentToken() == JsonToken.VALUE_STRING) {
+
+            String text = jsonParser.getText();
+            if (text.startsWith("!")) {
+                nottableString = NottableString.not(text.replaceFirst("^!", ""));
+            } else {
+                nottableString = string(text);
+            }
+
         }
 
-        return string(value, isNot);
+        return nottableString;
     }
 
     private boolean containsIgnoreCase(String valueToMatch, String... listOfValues) {

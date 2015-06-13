@@ -42,16 +42,16 @@ public class ParameterBody extends Body<List<Parameter>> {
         for (int i = 0; i < bodyParameters.size(); i++) {
             Parameter parameter = bodyParameters.get(i);
             if (parameter.getValues().isEmpty()) {
-                body.append(parameter.getName().isNot() ? "!" : "").append(parameter.getName().getValue());
+                body.append(parameter.getName().getValue());
                 body.append('=');
             } else {
                 List<NottableString> values = parameter.getValues();
                 for (int j = 0; j < values.size(); j++) {
                     String value = values.get(j).getValue();
-                    body.append(parameter.getName().isNot() ? "!" : "").append(parameter.getName().getValue());
+                    body.append(parameter.getName().getValue());
                     body.append('=');
                     try {
-                        body.append(values.get(j).isNot() ? "!" : "").append(URLEncoder.encode(value, Charsets.UTF_8.name()));
+                        body.append(URLEncoder.encode(value, Charsets.UTF_8.name()));
                     } catch (UnsupportedEncodingException uee) {
                         throw new RuntimeException("UnsupportedEncodingException while encoding body parameters for " + parameters, uee);
                     }
