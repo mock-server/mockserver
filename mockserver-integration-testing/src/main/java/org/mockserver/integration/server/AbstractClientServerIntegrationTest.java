@@ -42,6 +42,7 @@ import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.JsonSchemaBody.jsonSchema;
 import static org.mockserver.model.NottableString.not;
+import static org.mockserver.model.NottableString.string;
 import static org.mockserver.model.OutboundHttpRequest.outboundRequest;
 import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.ParameterBody.params;
@@ -2533,7 +2534,7 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void shouldReturnResponseByNotMatchingBodyParameterWithNotOperator() {
+    public void shouldReturnResponseByNotMatchingBodyParameterWithNotOperatorForNameAndValue() {
         // when
         mockServerClient
                 .when(
@@ -2580,7 +2581,99 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withMethod("POST")
                                 .withPath(calculatePath("some_pathRequest"))
-                                .withBody(new StringBody("OTHERBodyParameterOneName=Other Parameter+One+Value+One" +
+                                .withBody(new StringBody("OTHERBodyParameterOneName=Parameter+One+Value+One" +
+                                        "&OTHERBodyParameterOneName=Parameter+One+Value+Two" +
+                                        "&bodyParameterTwoName=Parameter+Two"))
+                                .withHeaders(header("headerNameRequest", "headerValueRequest"))
+                                .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
+                        headersToIgnore)
+        );
+        // wrong query string parameter value
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withBody("some_body_response"),
+                makeRequest(
+                        request()
+                                .withMethod("POST")
+                                .withPath(calculatePath("some_pathRequest"))
+                                .withBody(params(
+                                        param("bodyParameterOneName", "OTHER Parameter One Value One", "OTHER Parameter One Value Two"),
+                                        param("bodyParameterTwoName", "Parameter Two")
+                                ))
+                                .withHeaders(header("headerNameRequest", "headerValueRequest"))
+                                .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
+                        headersToIgnore)
+        );
+        // wrong query string parameter value
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withBody("some_body_response"),
+                makeRequest(
+                        request()
+                                .withMethod("POST")
+                                .withPath(calculatePath("some_pathRequest"))
+                                .withBody(new StringBody("bodyParameterOneName=OTHER Parameter+One+Value+One" +
+                                        "&bodyParameterOneName=OTHER Parameter+One+Value+Two" +
+                                        "&bodyParameterTwoName=Parameter+Two"))
+                                .withHeaders(header("headerNameRequest", "headerValueRequest"))
+                                .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
+                        headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByNotMatchingBodyParameterWithNotOperatorForName() {
+        // when
+        mockServerClient
+                .when(
+                        request()
+                                .withMethod("POST")
+                                .withPath(calculatePath("some_pathRequest"))
+                                .withBody(params(
+                                        param(not("bodyParameterOneName"), string("Parameter One Value One"), string("Parameter One Value Two")),
+                                        param("bodyParameterTwoName", "Parameter Two")
+                                ))
+                )
+                .respond(
+                        response()
+                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                                .withBody("some_body_response")
+                );
+
+        // then
+        // wrong query string parameter name
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withBody("some_body_response"),
+                makeRequest(
+                        request()
+                                .withMethod("POST")
+                                .withPath(calculatePath("some_pathRequest"))
+                                .withBody(params(
+                                        param("OTHERBodyParameterOneName", "Parameter One Value One", "Parameter One Value Two"),
+                                        param("bodyParameterTwoName", "Parameter Two")
+                                ))
+                                .withHeaders(header("headerNameRequest", "headerValueRequest"))
+                                .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
+                        headersToIgnore)
+        );
+        // wrong query string parameter name
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withBody("some_body_response"),
+                makeRequest(
+                        request()
+                                .withMethod("POST")
+                                .withPath(calculatePath("some_pathRequest"))
+                                .withBody(new StringBody("OTHERBodyParameterOneName=Parameter+One+Value+One" +
                                         "&OTHERBodyParameterOneName=Parameter+One+Value+Two" +
                                         "&bodyParameterTwoName=Parameter+Two"))
                                 .withHeaders(header("headerNameRequest", "headerValueRequest"))
@@ -2590,7 +2683,64 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void shouldReturnResponseByNotMatchingQueryStringParameterWithNotOperator() {
+    public void shouldReturnResponseByNotMatchingBodyParameterWithNotOperatorForValue() {
+        // when
+        mockServerClient
+                .when(
+                        request()
+                                .withMethod("POST")
+                                .withPath(calculatePath("some_pathRequest"))
+                                .withBody(params(
+                                        param(string("bodyParameterOneName"), not("Parameter One Value One"), not("Parameter One Value Two")),
+                                        param("bodyParameterTwoName", "Parameter Two")
+                                ))
+                )
+                .respond(
+                        response()
+                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                                .withBody("some_body_response")
+                );
+
+        // then
+        // wrong query string parameter value
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withBody("some_body_response"),
+                makeRequest(
+                        request()
+                                .withMethod("POST")
+                                .withPath(calculatePath("some_pathRequest"))
+                                .withBody(params(
+                                        param("bodyParameterOneName", "OTHER Parameter One Value One", "OTHER Parameter One Value Two"),
+                                        param("bodyParameterTwoName", "Parameter Two")
+                                ))
+                                .withHeaders(header("headerNameRequest", "headerValueRequest"))
+                                .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
+                        headersToIgnore)
+        );
+        // wrong query string parameter value
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withBody("some_body_response"),
+                makeRequest(
+                        request()
+                                .withMethod("POST")
+                                .withPath(calculatePath("some_pathRequest"))
+                                .withBody(new StringBody("bodyParameterOneName=OTHER Parameter+One+Value+One" +
+                                        "&bodyParameterOneName=OTHER Parameter+One+Value+Two" +
+                                        "&bodyParameterTwoName=Parameter+Two"))
+                                .withHeaders(header("headerNameRequest", "headerValueRequest"))
+                                .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
+                        headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByNotMatchingQueryStringParameterWithNotOperatorForNameAndValue() {
         // when
         mockServerClient
                 .when(
@@ -2620,11 +2770,49 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withMethod("POST")
                                 .withPath(calculatePath("some_pathRequest"))
                                 .withQueryStringParameters(
-                                        param("OTHERBodyParameterOneName", "Parameter One Value One", "Parameter One Value Two"),
+                                        param("OTHERQueryStringParameterOneName", "Parameter One Value One", "Parameter One Value Two"),
                                         param("queryStringParameterTwoName", "Parameter Two")
                                 ),
                         headersToIgnore)
         );
+        // wrong query string parameter value
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withBody("some_body_response"),
+                makeRequest(
+                        request()
+                                .withMethod("POST")
+                                .withPath(calculatePath("some_pathRequest"))
+                                .withQueryStringParameters(
+                                        param("queryStringParameterOneName", "OTHER Parameter One Value One", "OTHER Parameter One Value Two"),
+                                        param("queryStringParameterTwoName", "Parameter Two")
+                                ),
+                        headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByNotMatchingQueryStringParameterWithNotOperatorForName() {
+        // when
+        mockServerClient
+                .when(
+                        request()
+                                .withMethod("POST")
+                                .withPath(calculatePath("some_pathRequest"))
+                                .withQueryStringParameters(
+                                        param(not("queryStringParameterOneName"), string("Parameter One Value One"), string("Parameter One Value Two")),
+                                        param("queryStringParameterTwoName", "Parameter Two")
+                                )
+                )
+                .respond(
+                        response()
+                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                                .withBody("some_body_response")
+                );
+
+        // then
         // wrong query string parameter name
         assertEquals(
                 response()
@@ -2636,7 +2824,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withMethod("POST")
                                 .withPath(calculatePath("some_pathRequest"))
                                 .withQueryStringParameters(
-                                        param("OTHERBodyParameterOneName", "Parameter One Value One", "Parameter One Value Two"),
+                                        param("OTHERQueryStringParameterOneName", "Parameter One Value One", "Parameter One Value Two"),
                                         param("queryStringParameterTwoName", "Parameter Two")
                                 ),
                         headersToIgnore)
@@ -2644,7 +2832,45 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void shouldReturnResponseByNotMatchingCookieWithNotOperator() {
+    public void shouldReturnResponseByNotMatchingQueryStringParameterWithNotOperatorForValue() {
+        // when
+        mockServerClient
+                .when(
+                        request()
+                                .withMethod("POST")
+                                .withPath(calculatePath("some_pathRequest"))
+                                .withQueryStringParameters(
+                                        param(string("queryStringParameterOneName"), not("Parameter One Value One"), not("Parameter One Value Two")),
+                                        param("queryStringParameterTwoName", "Parameter Two")
+                                )
+                )
+                .respond(
+                        response()
+                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                                .withBody("some_body_response")
+                );
+
+        // then
+        // wrong query string parameter value
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withBody("some_body_response"),
+                makeRequest(
+                        request()
+                                .withMethod("POST")
+                                .withPath(calculatePath("some_pathRequest"))
+                                .withQueryStringParameters(
+                                        param("queryStringParameterOneName", "OTHER Parameter One Value One", "OTHER Parameter One Value Two"),
+                                        param("queryStringParameterTwoName", "Parameter Two")
+                                ),
+                        headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByNotMatchingCookieWithNotOperatorForNameAndValue() {
         // when
         mockServerClient
                 .when(
@@ -2652,7 +2878,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withMethod("GET")
                                 .withPath(calculatePath("some_pathRequest"))
                                 .withCookies(
-                                        cookie(not("OTHERrequestCookieNameOne"), not("requestCookieValueOne")),
+                                        cookie(not("requestCookieNameOne"), not("requestCookieValueOne")),
                                         cookie("requestCookieNameTwo", "requestCookieValueTwo")
                                 )
                 )
@@ -2663,7 +2889,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 );
 
         // then
-        // wrong query string parameter name
+        // wrong query string cookie name
         assertEquals(
                 response()
                         .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
@@ -2674,12 +2900,12 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withMethod("GET")
                                 .withPath(calculatePath("some_pathRequest"))
                                 .withCookies(
-                                        cookie("requestCookieNameOne", "requestCookieValueOne"),
+                                        cookie("OTHERrequestCookieNameOne", "requestCookieValueOne"),
                                         cookie("requestCookieNameTwo", "requestCookieValueTwo")
                                 ),
                         headersToIgnore)
         );
-        // wrong query string parameter name
+        // wrong query string cookie value
         assertEquals(
                 response()
                         .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
@@ -2690,7 +2916,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withMethod("GET")
                                 .withPath(calculatePath("some_pathRequest"))
                                 .withCookies(
-                                        cookie("requestCookieNameOne", "requestCookieValueOne"),
+                                        cookie("requestCookieNameOne", "OTHERrequestCookieValueOne"),
                                         cookie("requestCookieNameTwo", "requestCookieValueTwo")
                                 ),
                         headersToIgnore)
@@ -2698,7 +2924,83 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void shouldReturnResponseByNotMatchingHeaderWithNotOperator() {
+    public void shouldReturnResponseByNotMatchingCookieWithNotOperatorForName() {
+        // when
+        mockServerClient
+                .when(
+                        request()
+                                .withMethod("GET")
+                                .withPath(calculatePath("some_pathRequest"))
+                                .withCookies(
+                                        cookie(not("requestCookieNameOne"), string("requestCookieValueOne")),
+                                        cookie("requestCookieNameTwo", "requestCookieValueTwo")
+                                )
+                )
+                .respond(
+                        response()
+                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                                .withBody("some_body_response")
+                );
+
+        // then
+        // wrong query string cookie name
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withBody("some_body_response"),
+                makeRequest(
+                        request()
+                                .withMethod("GET")
+                                .withPath(calculatePath("some_pathRequest"))
+                                .withCookies(
+                                        cookie("OTHERrequestCookieNameOne", "requestCookieValueOne"),
+                                        cookie("requestCookieNameTwo", "requestCookieValueTwo")
+                                ),
+                        headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByNotMatchingCookieWithNotOperatorForValue() {
+        // when
+        mockServerClient
+                .when(
+                        request()
+                                .withMethod("GET")
+                                .withPath(calculatePath("some_pathRequest"))
+                                .withCookies(
+                                        cookie(string("requestCookieNameOne"), not("requestCookieValueOne")),
+                                        cookie("requestCookieNameTwo", "requestCookieValueTwo")
+                                )
+                )
+                .respond(
+                        response()
+                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                                .withBody("some_body_response")
+                );
+
+        // then
+        // wrong query string cookie value
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withBody("some_body_response"),
+                makeRequest(
+                        request()
+                                .withMethod("GET")
+                                .withPath(calculatePath("some_pathRequest"))
+                                .withCookies(
+                                        cookie("requestCookieNameOne", "OTHERrequestCookieValueOne"),
+                                        cookie("requestCookieNameTwo", "requestCookieValueTwo")
+                                ),
+                        headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByNotMatchingHeaderWithNotOperatorForNameAndValue() {
         // when
         mockServerClient
                 .when(
@@ -2706,7 +3008,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withMethod("GET")
                                 .withPath(calculatePath("some_pathRequest"))
                                 .withHeaders(
-                                        header(not("OTHERrequestHeaderNameOne"), not("requestHeaderValueOne")),
+                                        header(not("requestHeaderNameOne"), not("requestHeaderValueOne")),
                                         header("requestHeaderNameTwo", "requestHeaderValueTwo")
                                 )
                 )
@@ -2717,7 +3019,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 );
 
         // then
-        // wrong query string parameter name
+        // wrong query string header name
         assertEquals(
                 response()
                         .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
@@ -2728,12 +3030,12 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withMethod("GET")
                                 .withPath(calculatePath("some_pathRequest"))
                                 .withHeaders(
-                                        header("requestHeaderNameOne", "requestHeaderValueOne"),
+                                        header("OTHERrequestHeaderNameOne", "requestHeaderValueOne"),
                                         header("requestHeaderNameTwo", "requestHeaderValueTwo")
                                 ),
                         headersToIgnore)
         );
-        // wrong query string parameter name
+        // wrong query string header value
         assertEquals(
                 response()
                         .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
@@ -2744,7 +3046,83 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withMethod("GET")
                                 .withPath(calculatePath("some_pathRequest"))
                                 .withHeaders(
-                                        header("requestHeaderNameOne", "requestHeaderValueOne"),
+                                        header("requestHeaderNameOne", "OTHERrequestHeaderValueOne"),
+                                        header("requestHeaderNameTwo", "requestHeaderValueTwo")
+                                ),
+                        headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByNotMatchingHeaderWithNotOperatorForName() {
+        // when
+        mockServerClient
+                .when(
+                        request()
+                                .withMethod("GET")
+                                .withPath(calculatePath("some_pathRequest"))
+                                .withHeaders(
+                                        header(not("requestHeaderNameOne"), string("requestHeaderValueOne")),
+                                        header("requestHeaderNameTwo", "requestHeaderValueTwo")
+                                )
+                )
+                .respond(
+                        response()
+                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                                .withBody("some_body_response")
+                );
+
+        // then
+        // wrong query string header name
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withBody("some_body_response"),
+                makeRequest(
+                        request()
+                                .withMethod("GET")
+                                .withPath(calculatePath("some_pathRequest"))
+                                .withHeaders(
+                                        header("OTHERrequestHeaderNameOne", "requestHeaderValueOne"),
+                                        header("requestHeaderNameTwo", "requestHeaderValueTwo")
+                                ),
+                        headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByNotMatchingHeaderWithNotOperatorForValue() {
+        // when
+        mockServerClient
+                .when(
+                        request()
+                                .withMethod("GET")
+                                .withPath(calculatePath("some_pathRequest"))
+                                .withHeaders(
+                                        header(string("requestHeaderNameOne"), not("requestHeaderValueOne")),
+                                        header("requestHeaderNameTwo", "requestHeaderValueTwo")
+                                )
+                )
+                .respond(
+                        response()
+                                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                                .withBody("some_body_response")
+                );
+
+        // then
+        // wrong query string header value
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withBody("some_body_response"),
+                makeRequest(
+                        request()
+                                .withMethod("GET")
+                                .withPath(calculatePath("some_pathRequest"))
+                                .withHeaders(
+                                        header("requestHeaderNameOne", "OTHERrequestHeaderValueOne"),
                                         header("requestHeaderNameTwo", "requestHeaderValueTwo")
                                 ),
                         headersToIgnore)

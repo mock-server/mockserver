@@ -302,6 +302,32 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsAll {
                 new NottableString[]{not("notKeyOne"), not("notKeyOneValue")},
                 new NottableString[]{not("notKeyTwo"), not("notKeyTwoValue")}
         )), is(true));
+
+        // and then
+        assertThat(hashMap.containsAll(hashMap(
+                new NottableString[]{not("notKeyOne"), not("keyOneValue")},
+                new NottableString[]{string("keyTwo"), string("keyTwoValue")}
+        )), is(true));
+        assertThat(hashMap.containsAll(hashMap(
+                new NottableString[]{not("keyOne"), not("notKeyOneValue")},
+                new NottableString[]{string("keyTwo"), string("keyTwoValue")}
+        )), is(true));
+        assertThat(hashMap.containsAll(hashMap(
+                new NottableString[]{string("keyOne"), string("keyOneValue")},
+                new NottableString[]{not("notKeyTwo"), not("keyTwoValue")}
+        )), is(true));
+        assertThat(hashMap.containsAll(hashMap(
+                new NottableString[]{string("keyOne"), string("keyOneValue")},
+                new NottableString[]{not("keyTwo"), not("notKeyTwoValue")}
+        )), is(true));
+        assertThat(hashMap.containsAll(hashMap(
+                new NottableString[]{not("notKeyOne"), not("keyOneValue")},
+                new NottableString[]{not("notKeyTwo"), not("keyTwoValue")}
+        )), is(true));
+        assertThat(hashMap.containsAll(hashMap(
+                new NottableString[]{not("keyOne"), not("notKeyOneValue")},
+                new NottableString[]{not("keyTwo"), not("notKeyTwoValue")}
+        )), is(true));
     }
 
     @Test
