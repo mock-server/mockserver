@@ -16,6 +16,10 @@ module MockServer::Model
     def !
       !@value
     end
+
+    def initialize(supplied_value)
+      @value = pre_process_value(supplied_value)
+    end
   end
 
   # Model for times class

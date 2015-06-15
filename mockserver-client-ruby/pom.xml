@@ -56,6 +56,7 @@
                                 <argument>exec</argument>
                                 <argument>rake</argument>
                                 <argument>build</argument>
+                                <argument>spec</argument>
                             </arguments>
                             <environmentVariables>
                                 <BUNDLE_GEMFILE>${basedir}/Gemfile</BUNDLE_GEMFILE>
