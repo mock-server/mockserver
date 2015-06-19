@@ -3,7 +3,7 @@ MockServer
 
 **Backlog:**
 
-[![Still Maintained](http://stillmaintained.com/jamesdbloom/mockserver.png)](http://stillmaintained.com/jamesdbloom/mockserver) [![Stories in Backlog](https://badge.waffle.io/jamesdbloom/mockserver.png?label=proposal&title=Proposals)](https://waffle.io/jamesdbloom/mockserver) [![Stories in Backlog](https://badge.waffle.io/jamesdbloom/mockserver.png?label=ready&title=Ready)](https://waffle.io/jamesdbloom/mockserver) [![Stories in Backlog](https://badge.waffle.io/jamesdbloom/mockserver.png?label=in%20progress&title=In%20Progress)](https://waffle.io/jamesdbloom/mockserver)
+[![Still Maintained](http://stillmaintained.com/jamesdbloom/mockserver.png)](http://stillmaintained.com/jamesdbloom/mockserver) [![Stories in Backlog](https://badge.waffle.io/jamesdbloom/mockserver.png?label=proposal&title=Proposals)](https://waffle.io/jamesdbloom/mockserver) [![Stories in Backlog](https://badge.waffle.io/jamesdbloom/mockserver.png?label=ready&title=Ready)](https://waffle.io/jamesdbloom/mockserver) [![Stories in Backlog](https://badge.waffle.io/jamesdbloom/mockserver.png?label=in%20progress&title=In%20Progress)](https://waffle.io/jamesdbloom/mockserver) [![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/jamesdbloom/mockserver/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
 
 <br />
 ### For usage guide please see: [www.mock-server.com](http://www.mock-server.com/)
@@ -60,7 +60,3 @@ Pull requests are, of course, very welcome! Please read our [contributing to the
 
 # Maintainers
 * [James D Bloom](http://blog.jamesdbloom.com)
-
-
-[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/jamesdbloom/mockserver/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
-
