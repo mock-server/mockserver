@@ -60,3 +60,7 @@ Pull requests are, of course, very welcome! Please read our [contributing to the
 
 # Maintainers
 * [James D Bloom](http://blog.jamesdbloom.com)
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/jamesdbloom/mockserver/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
