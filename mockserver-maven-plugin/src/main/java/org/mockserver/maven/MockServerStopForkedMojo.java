@@ -10,7 +10,7 @@ import org.mockserver.configuration.ConfigurationProperties;
  *
  * To run from command line:
  *
- *    mvn -Dmockserver.serverPort="1080" -Dmockserver.proxyPort="1090" org.mock-server:mockserver-maven-plugin:3.9.15:stopForked
+ *    mvn -Dmockserver.serverPort="1080" -Dmockserver.proxyPort="1090" org.mock-server:mockserver-maven-plugin:3.9.16:stopForked
  *
  * @author jamesdbloom
  */

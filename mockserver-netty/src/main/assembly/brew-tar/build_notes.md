@@ -13,7 +13,7 @@ The following build steps are typically run on Jenkins when a Homebrew pull-requ
 1. brew style mockserver
 1. brew bottle --rb mockserver
 1. brew uninstall --force mockserver
-1. brew install ./mockserver-3.9.15.yosemite.bottle.tar.gz
+1. brew install ./mockserver-3.9.16.yosemite.bottle.tar.gz
 1. brew test --verbose mockserver
 1. brew uninstall --force mockserver
 1. brew cleanup --prune=30
