@@ -11,7 +11,7 @@ module MockServer::Model
   # An enum for body type
   class BodyType < SymbolizedEnum
     def allowed_values
-      [:STRING, :REGEX, :XPATH, :PARAMETERS]
+      [:STRING, :REGEX, :XPATH, :PARAMETERS, :BINARY]
     end
   end
 
