@@ -74,13 +74,12 @@ node_modules
 npm-debug.log
 tmp
 custom_tmp
+.bundle
 
 # vagrant #
 ###########
-
 .vagrant
 
 # drone.io build testing #
 ##########################
-
 drone.io
