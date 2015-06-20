@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
  *
  * To run from command line:
  *
- *    mvn -Dmockserver.serverPort="1080" -Dmockserver.proxyPort="1090" -Dmockserver.logLevel="TRACE" org.mock-server:mockserver-maven-plugin:3.9.15:runForked
+ *    mvn -Dmockserver.serverPort="1080" -Dmockserver.proxyPort="1090" -Dmockserver.logLevel="TRACE" org.mock-server:mockserver-maven-plugin:3.9.16:runForked
  *
  * @author jamesdbloom
  */
@@ -160,13 +160,13 @@ public class MockServerRunForkedMojo extends MockServerAbstractMojo {
 
     @VisibleForTesting
     String getVersion() {
-        String version = "3.9.15";
+        String version = "3.9.16";
         try {
             java.util.Properties p = new java.util.Properties();
             InputStream is = getClass().getResourceAsStream("/META-INF/maven/org.mock-server/mockserver-maven-plugin/pom.properties");
             if (is != null) {
                 p.load(is);
-                version = p.getProperty("version", "3.9.15");
+                version = p.getProperty("version", "3.9.16");
             }
         } catch (Exception e) {
             // ignore
