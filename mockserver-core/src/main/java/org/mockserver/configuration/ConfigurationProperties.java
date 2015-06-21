@@ -1,6 +1,7 @@
 package org.mockserver.configuration;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.Sets;
 import org.apache.commons.io.IOUtils;
 import org.mockserver.socket.SSLFactory;
 import org.slf4j.Logger;
@@ -12,8 +13,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.security.KeyStore;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author jamesdbloom
@@ -23,6 +28,10 @@ public class ConfigurationProperties {
     static final long DEFAULT_MAX_TIMEOUT = 120;
     static final Logger logger = LoggerFactory.getLogger(ConfigurationProperties.class);
     static final Properties PROPERTIES = readPropertyFile();
+
+    static final Set<String> allSubjectAlternativeDomains = Sets.newConcurrentHashSet();
+    static final Set<String> allSubjectAlternativeIps = Sets.newConcurrentHashSet();
+    static final AtomicBoolean rebuildKeyStore = new AtomicBoolean(false);
 
     // property file config
     public static String propertyFile() {
@@ -85,18 +94,11 @@ public class ConfigurationProperties {
     }
 
     public static String[] sslSubjectAlternativeNameDomains() {
-        String sslSubjectAlternativeNameDomains = readPropertyHierarchically("mockserver.sslSubjectAlternativeNameDomains", "localhost");
-        if (sslSubjectAlternativeNameDomains.isEmpty()) {
-            return new String[0];
-        } else {
-            return sslSubjectAlternativeNameDomains.split(",");
-        }
+        return allSubjectAlternativeDomains.toArray(new String[allSubjectAlternativeDomains.size()]);
     }
 
     public static void addSslSubjectAlternativeNameDomains(String... newSubjectAlternativeNameDomains) {
         boolean subjectAlternativeDomainsModified = false;
-        Set<String> allSubjectAlternativeDomains = new TreeSet<String>();
-        Collections.addAll(allSubjectAlternativeDomains, sslSubjectAlternativeNameDomains());
         for (String subjectAlternativeDomain : newSubjectAlternativeNameDomains) {
             if (allSubjectAlternativeDomains.add(subjectAlternativeDomain)) {
                 subjectAlternativeDomainsModified = true;
@@ -108,19 +110,16 @@ public class ConfigurationProperties {
         }
     }
 
+    public static boolean containsSslSubjectAlternativeName(String domainOrIp) {
+        return allSubjectAlternativeDomains.contains(domainOrIp) || allSubjectAlternativeIps.contains(domainOrIp);
+    }
+
     public static String[] sslSubjectAlternativeNameIps() {
-        String sslSubjectAlternativeNameIps = readPropertyHierarchically("mockserver.sslSubjectAlternativeNameIps", "127.0.0.1,0.0.0.0");
-        if (sslSubjectAlternativeNameIps.isEmpty()) {
-            return new String[0];
-        } else {
-            return sslSubjectAlternativeNameIps.split(",");
-        }
+        return allSubjectAlternativeIps.toArray(new String[allSubjectAlternativeIps.size()]);
     }
 
     public static void addSslSubjectAlternativeNameIps(String... newSubjectAlternativeNameIps) {
         boolean subjectAlternativeIpsModified = false;
-        Set<String> allSubjectAlternativeIps = new TreeSet<String>();
-        Collections.addAll(allSubjectAlternativeIps, sslSubjectAlternativeNameIps());
         for (String subjectAlternativeDomain : newSubjectAlternativeNameIps) {
             if (allSubjectAlternativeIps.add(subjectAlternativeDomain)) {
                 subjectAlternativeIpsModified = true;
@@ -133,11 +132,11 @@ public class ConfigurationProperties {
     }
 
     public static boolean rebuildKeyStore() {
-        return Boolean.parseBoolean(System.getProperty("mockserver.rebuildKeyStore", "false"));
+        return rebuildKeyStore.get();
     }
 
     public static void rebuildKeyStore(boolean rebuildKeyStore) {
-        System.setProperty("mockserver.rebuildKeyStore", Boolean.toString(rebuildKeyStore));
+        ConfigurationProperties.rebuildKeyStore.set(rebuildKeyStore);
     }
 
     // mockserver config
