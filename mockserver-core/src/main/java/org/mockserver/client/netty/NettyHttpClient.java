@@ -12,7 +12,6 @@ import org.mockserver.model.OutboundHttpRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.net.ConnectException;
 import java.net.UnknownHostException;
 import java.util.concurrent.ExecutionException;
@@ -66,18 +65,18 @@ public class NettyHttpClient {
         } catch (TimeoutException e) {
             throw new SocketCommunicationException("Response was not received after " + ConfigurationProperties.maxSocketTimeout() + " milliseconds, to make the proxy wait longer please use \"mockserver.maxSocketTimeout\" system property or ConfigurationProperties.maxSocketTimeout(long milliseconds)", e.getCause());
         } catch (ExecutionException e) {
-            if (e.getCause() instanceof ConnectException) {
-                throw new SocketConnectionException("Unable to connect to socket " + httpRequest.getDestination(), e.getCause());
-            } else if (e.getCause() instanceof UnknownHostException) {
-                throw new SocketConnectionException("Unable to resolve host " + httpRequest.getDestination(), e.getCause());
-            } else if (e.getCause() instanceof IOException) {
-                if (retry) {
-                    return sendRequest((OutboundHttpRequest) httpRequest.setSecure(!httpRequest.isSecure()), false);
-                } else {
-                    throw new SocketCommunicationException("Error while communicating to " + httpRequest.getDestination(), e.getCause());
-                }
+            if (retry) {
+                return sendRequest(httpRequest.setSecure(!httpRequest.isSecure()), false);
             } else {
-                throw new RuntimeException("Exception while sending request", e);
+                if (e.getCause() instanceof ConnectException) {
+                    throw new SocketConnectionException("Unable to connect to socket " + httpRequest.getDestination(), e.getCause());
+                } else {
+                    if (e.getCause() instanceof UnknownHostException) {
+                        throw new SocketConnectionException("Unable to resolve host " + httpRequest.getDestination(), e.getCause());
+                    } else {
+                        throw new RuntimeException("Exception while sending request", e);
+                    }
+                }
             }
         } catch (InterruptedException e) {
             throw new RuntimeException("Exception while sending request", e);

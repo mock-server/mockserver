@@ -3,19 +3,21 @@ package org.mockserver.client.netty;
 import com.google.common.util.concurrent.SettableFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.handler.ssl.NotSslRecordException;
+import io.netty.handler.codec.DecoderException;
 import org.mockserver.model.HttpResponse;
+
+import javax.net.ssl.SSLException;
 
 public class HttpClientHandler extends SimpleChannelInboundHandler<HttpResponse> {
 
     private final SettableFuture<HttpResponse> responseFuture = SettableFuture.<HttpResponse>create();
 
-    public SettableFuture<HttpResponse> getResponseFuture() {
-        return responseFuture;
-    }
-
     public HttpClientHandler() {
         super(false);
+    }
+
+    public SettableFuture<HttpResponse> getResponseFuture() {
+        return responseFuture;
     }
 
     @Override
@@ -26,7 +28,7 @@ public class HttpClientHandler extends SimpleChannelInboundHandler<HttpResponse>
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        if (!(cause instanceof NotSslRecordException)) {
+        if (!(cause.getCause() instanceof SSLException || cause instanceof DecoderException)) {
             cause.printStackTrace();
         }
         responseFuture.setException(cause);
