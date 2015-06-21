@@ -7,11 +7,13 @@ import java.net.InetSocketAddress;
  */
 public class OutboundHttpRequest extends HttpRequest {
 
-    private final InetSocketAddress destination;
-    private final String contextPath;
+    private String hostname;
+    private int port;
+    private String contextPath;
 
-    public OutboundHttpRequest(InetSocketAddress destination, String contextPath, HttpRequest httpRequest) {
-        this.destination = destination;
+    public OutboundHttpRequest(String hostname, int port, String contextPath, HttpRequest httpRequest) {
+        this.hostname = hostname;
+        this.port = port;
         this.contextPath = contextPath;
         this.secure = httpRequest.secure;
         this.method = httpRequest.method;
@@ -23,19 +25,27 @@ public class OutboundHttpRequest extends HttpRequest {
         this.isKeepAlive = httpRequest.isKeepAlive;
     }
 
-    public static OutboundHttpRequest outboundRequest(String host, int port, String contextPath, HttpRequest httpRequest) {
-        return new OutboundHttpRequest(new InetSocketAddress(host, port), contextPath, httpRequest);
+    public static OutboundHttpRequest outboundRequest(InetSocketAddress inetSocketAddress, String contextPath, HttpRequest httpRequest) {
+        return outboundRequest(inetSocketAddress.getHostName(), inetSocketAddress.getPort(), contextPath, httpRequest);
     }
 
-    public static OutboundHttpRequest outboundRequest(InetSocketAddress destination, String contextPath, HttpRequest httpRequest) {
-        return new OutboundHttpRequest(destination, contextPath, httpRequest);
+    public static OutboundHttpRequest outboundRequest(String hostname, int port, String contextPath, HttpRequest httpRequest) {
+        return new OutboundHttpRequest(hostname, port, contextPath, httpRequest);
     }
 
     public InetSocketAddress getDestination() {
-        return destination;
+        return new InetSocketAddress(hostname, port);
     }
 
     public String getContextPath() {
         return contextPath;
+    }
+
+    public OutboundHttpRequest setSecure(boolean secure) {
+        if (!secure && port == 443) {
+            port = 80;
+        }
+        super.setSecure(secure);
+        return this;
     }
 }
