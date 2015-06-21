@@ -5,6 +5,11 @@ import io.netty.channel.*;
 import io.netty.handler.codec.http.FullHttpRequest;
 import org.slf4j.Logger;
 
+import java.nio.channels.ClosedChannelException;
+import java.nio.channels.ClosedSelectorException;
+
+import static org.mockserver.proxy.error.Logging.shouldIgnoreException;
+
 public class UpstreamProxyRelayHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
     private final Logger logger;
@@ -14,6 +19,15 @@ public class UpstreamProxyRelayHandler extends SimpleChannelInboundHandler<FullH
         super(false);
         this.downstreamChannel = downstreamChannel;
         this.logger = logger;
+    }
+
+    /**
+     * Closes the specified channel after all queued write requests are flushed.
+     */
+    public static void closeOnFlush(Channel ch) {
+        if (ch != null && ch.isActive()) {
+            ch.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+        }
     }
 
     @Override
@@ -30,11 +44,17 @@ public class UpstreamProxyRelayHandler extends SimpleChannelInboundHandler<FullH
                 if (future.isSuccess()) {
                     ctx.channel().read();
                 } else {
-                    logger.error("Exception while returning response for request \"" + request.getMethod() + " " + request.getUri() + "\"", future.cause());
+                    if (isNotSocketClosedException(future.cause())) {
+                        logger.error("Exception while returning response for request \"" + request.getMethod() + " " + request.getUri() + "\"", future.cause());
+                    }
                     future.channel().close();
                 }
             }
         });
+    }
+
+    private boolean isNotSocketClosedException(Throwable cause) {
+        return !(cause instanceof ClosedChannelException || cause instanceof ClosedSelectorException);
     }
 
     @Override
@@ -44,17 +64,10 @@ public class UpstreamProxyRelayHandler extends SimpleChannelInboundHandler<FullH
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        logger.error("Exception while reading from channel " + ctx.channel(), cause);
-        closeOnFlush(ctx.channel());
-    }
-
-    /**
-     * Closes the specified channel after all queued write requests are flushed.
-     */
-    public static void closeOnFlush(Channel ch) {
-        if (ch != null && ch.isActive()) {
-            ch.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+        if (!shouldIgnoreException(cause)) {
+            logger.warn("Exception caught by upstream relay handler -> closing pipeline " + ctx.channel(), cause);
         }
+        closeOnFlush(ctx.channel());
     }
 
 }

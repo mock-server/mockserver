@@ -1,6 +1,8 @@
 package org.mockserver.proxy.unification;
 
+import com.google.common.annotations.VisibleForTesting;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
@@ -13,6 +15,10 @@ import io.netty.handler.ssl.SslHandler;
 import io.netty.util.AttributeKey;
 import org.mockserver.proxy.socks.SocksProxyHandler;
 import org.mockserver.socket.SSLFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static org.mockserver.proxy.error.Logging.shouldIgnoreException;
 
 /**
  * @author jamesdbloom
@@ -22,6 +28,9 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
 
     public static final AttributeKey<Boolean> SSL_ENABLED_UPSTREAM = AttributeKey.valueOf("PROXY_SSL_ENABLED_UPSTREAM");
     public static final AttributeKey<Boolean> SSL_ENABLED_DOWNSTREAM = AttributeKey.valueOf("SSL_ENABLED_DOWNSTREAM");
+
+    @VisibleForTesting
+    public static Logger logger = LoggerFactory.getLogger(PortUnificationHandler.class);
 
     public PortUnificationHandler() {
         super(false);
@@ -44,11 +53,24 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
         channel.attr(PortUnificationHandler.SSL_ENABLED_DOWNSTREAM).set(Boolean.TRUE);
     }
 
+    public static void disableSslDownstream(Channel channel) {
+        channel.attr(PortUnificationHandler.SSL_ENABLED_DOWNSTREAM).set(Boolean.FALSE);
+    }
+
     public static boolean isSslEnabledDownstream(Channel channel) {
         if (channel.attr(SSL_ENABLED_DOWNSTREAM).get() != null) {
             return channel.attr(SSL_ENABLED_DOWNSTREAM).get();
         } else {
             return false;
+        }
+    }
+
+    /**
+     * Closes the specified channel after all queued write requests are flushed.
+     */
+    public static void closeOnFlush(Channel ch) {
+        if (ch != null && ch.isActive()) {
+            ch.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
         }
     }
 
@@ -118,6 +140,7 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
     private void enableSsl(ChannelHandlerContext ctx, ByteBuf msg) {
         ChannelPipeline pipeline = ctx.pipeline();
         pipeline.addFirst(new SslHandler(SSLFactory.createServerSSLEngine()));
+//        pipeline.addFirst(new LoggingHandler(logger));
 
         // re-unify (with SSL enabled)
         PortUnificationHandler.enabledSslUpstreamAndDownstream(ctx.channel());
@@ -155,4 +178,12 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
     }
 
     protected abstract void configurePipeline(ChannelHandlerContext ctx, ChannelPipeline pipeline);
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        if (!shouldIgnoreException(cause)) {
+            logger.warn("Exception caught by port unification handler -> closing pipeline " + ctx.channel(), cause);
+        }
+        closeOnFlush(ctx.channel());
+    }
 }

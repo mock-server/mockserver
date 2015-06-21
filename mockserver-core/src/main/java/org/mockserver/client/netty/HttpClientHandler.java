@@ -4,6 +4,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.DecoderException;
+import io.netty.handler.ssl.NotSslRecordException;
 import org.mockserver.model.HttpResponse;
 
 import javax.net.ssl.SSLException;
@@ -28,10 +29,14 @@ public class HttpClientHandler extends SimpleChannelInboundHandler<HttpResponse>
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        if (!(cause.getCause() instanceof SSLException || cause instanceof DecoderException)) {
+        if (isNotSslException(cause)) {
             cause.printStackTrace();
         }
         responseFuture.setException(cause);
         ctx.close();
+    }
+
+    private boolean isNotSslException(Throwable cause) {
+        return !(cause.getCause() instanceof SSLException || cause instanceof DecoderException | cause instanceof NotSslRecordException);
     }
 }

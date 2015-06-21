@@ -33,7 +33,7 @@ public class ConfigurationPropertiesTest {
         StringWriter stringWriter = new StringWriter();
         System.getProperties().store(stringWriter, "");
         propertiesBeforeTest = stringWriter.toString();
-        System.clearProperty("mockserver.rebuildKeyStore");
+        ConfigurationProperties.rebuildKeyStore(false);
     }
 
     @After
@@ -137,7 +137,7 @@ public class ConfigurationPropertiesTest {
     @Test
     public void shouldSetAndReadSslSubjectAlternativeNameDomains() {
         // given
-        System.clearProperty("mockserver.sslSubjectAlternativeNameDomains");
+        ConfigurationProperties.clearSslSubjectAlternativeNameDomains();
 
         // when
         assertThat(Arrays.asList(new ConfigurationProperties().sslSubjectAlternativeNameDomains()), containsInAnyOrder("localhost"));
@@ -152,8 +152,8 @@ public class ConfigurationPropertiesTest {
     @Test
     public void shouldAddSslSubjectAlternativeNameDomains() {
         // given
-        System.clearProperty("mockserver.sslSubjectAlternativeNameDomains");
-        System.clearProperty("mockserver.rebuildKeyStore");
+        ConfigurationProperties.clearSslSubjectAlternativeNameDomains();
+        ConfigurationProperties.rebuildKeyStore(false);
 
         // when
         assertThat(Arrays.asList(new ConfigurationProperties().sslSubjectAlternativeNameDomains()), containsInAnyOrder("localhost"));
@@ -172,7 +172,7 @@ public class ConfigurationPropertiesTest {
         assertEquals(true, ConfigurationProperties.rebuildKeyStore());
 
         // given
-        System.clearProperty("mockserver.rebuildKeyStore");
+        ConfigurationProperties.rebuildKeyStore(false);
 
         // when
         ConfigurationProperties.addSslSubjectAlternativeNameDomains("e", "f", "g");
@@ -186,7 +186,7 @@ public class ConfigurationPropertiesTest {
     @Test
     public void shouldSetAndReadSslSubjectAlternativeNameIps() {
         // given
-        System.clearProperty("mockserver.sslSubjectAlternativeNameIps");
+        ConfigurationProperties.clearSslSubjectAlternativeNameIps();
 
         // when
         assertThat(Arrays.asList(new ConfigurationProperties().sslSubjectAlternativeNameIps()), containsInAnyOrder("127.0.0.1", "0.0.0.0"));
@@ -201,8 +201,8 @@ public class ConfigurationPropertiesTest {
     @Test
     public void shouldAddSslSubjectAlternativeNameIps() {
         // given
-        System.clearProperty("mockserver.sslSubjectAlternativeNameIps");
-        System.clearProperty("mockserver.rebuildKeyStore");
+        ConfigurationProperties.clearSslSubjectAlternativeNameIps();
+        ConfigurationProperties.rebuildKeyStore(false);
 
         // when
         assertThat(Arrays.asList(new ConfigurationProperties().sslSubjectAlternativeNameIps()), containsInAnyOrder("127.0.0.1", "0.0.0.0"));
@@ -221,7 +221,7 @@ public class ConfigurationPropertiesTest {
         assertEquals(true, ConfigurationProperties.rebuildKeyStore());
 
         // given
-        System.clearProperty("mockserver.rebuildKeyStore");
+        ConfigurationProperties.rebuildKeyStore(false);
 
         // when
         ConfigurationProperties.addSslSubjectAlternativeNameIps("5", "6", "7");
@@ -235,7 +235,7 @@ public class ConfigurationPropertiesTest {
     @Test
     public void shouldSetAndReadRebuildKeyStore() {
         // given
-        System.clearProperty("mockserver.rebuildKeyStore");
+        ConfigurationProperties.rebuildKeyStore(false);
 
         // when
         assertEquals(false, new ConfigurationProperties().rebuildKeyStore());

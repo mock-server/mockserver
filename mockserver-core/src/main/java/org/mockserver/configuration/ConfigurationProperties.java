@@ -13,10 +13,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.security.KeyStore;
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -32,6 +29,11 @@ public class ConfigurationProperties {
     static final Set<String> allSubjectAlternativeDomains = Sets.newConcurrentHashSet();
     static final Set<String> allSubjectAlternativeIps = Sets.newConcurrentHashSet();
     static final AtomicBoolean rebuildKeyStore = new AtomicBoolean(false);
+
+    static {
+        addSslSubjectAlternativeNameDomains(readPropertyHierarchically("mockserver.sslSubjectAlternativeNameDomains", "localhost").split(","));
+        addSslSubjectAlternativeNameIps(readPropertyHierarchically("mockserver.sslSubjectAlternativeNameIps", "127.0.0.1,0.0.0.0").split(","));
+    }
 
     // property file config
     public static String propertyFile() {
@@ -100,14 +102,19 @@ public class ConfigurationProperties {
     public static void addSslSubjectAlternativeNameDomains(String... newSubjectAlternativeNameDomains) {
         boolean subjectAlternativeDomainsModified = false;
         for (String subjectAlternativeDomain : newSubjectAlternativeNameDomains) {
-            if (allSubjectAlternativeDomains.add(subjectAlternativeDomain)) {
+            if (allSubjectAlternativeDomains.add(subjectAlternativeDomain.trim())) {
                 subjectAlternativeDomainsModified = true;
             }
         }
         if (subjectAlternativeDomainsModified) {
-            System.setProperty("mockserver.sslSubjectAlternativeNameDomains", Joiner.on(",").join(allSubjectAlternativeDomains));
+            System.setProperty("mockserver.sslSubjectAlternativeNameDomains", Joiner.on(",").join(new TreeSet(allSubjectAlternativeDomains)));
             rebuildKeyStore(true);
         }
+    }
+
+    public static void clearSslSubjectAlternativeNameDomains() {
+        allSubjectAlternativeDomains.clear();
+        addSslSubjectAlternativeNameDomains(readPropertyHierarchically("mockserver.sslSubjectAlternativeNameDomains", "localhost").split(","));
     }
 
     public static boolean containsSslSubjectAlternativeName(String domainOrIp) {
@@ -121,14 +128,19 @@ public class ConfigurationProperties {
     public static void addSslSubjectAlternativeNameIps(String... newSubjectAlternativeNameIps) {
         boolean subjectAlternativeIpsModified = false;
         for (String subjectAlternativeDomain : newSubjectAlternativeNameIps) {
-            if (allSubjectAlternativeIps.add(subjectAlternativeDomain)) {
+            if (allSubjectAlternativeIps.add(subjectAlternativeDomain.trim())) {
                 subjectAlternativeIpsModified = true;
             }
         }
         if (subjectAlternativeIpsModified) {
-            System.setProperty("mockserver.sslSubjectAlternativeNameIps", Joiner.on(",").join(allSubjectAlternativeIps));
+            System.setProperty("mockserver.sslSubjectAlternativeNameIps", Joiner.on(",").join(new TreeSet(allSubjectAlternativeIps)));
             rebuildKeyStore(true);
         }
+    }
+
+    public static void clearSslSubjectAlternativeNameIps() {
+        allSubjectAlternativeIps.clear();
+        addSslSubjectAlternativeNameIps(readPropertyHierarchically("mockserver.sslSubjectAlternativeNameIps", "127.0.0.1,0.0.0.0").split(","));
     }
 
     public static boolean rebuildKeyStore() {

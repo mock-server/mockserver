@@ -1,7 +1,6 @@
 package org.mockserver.proxy.relay;
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.socket.nio.NioSocketChannel;
@@ -9,7 +8,6 @@ import io.netty.handler.codec.http.HttpClientCodec;
 import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
-import io.netty.handler.ssl.NotSslRecordException;
 import io.netty.handler.ssl.SslHandler;
 import org.mockserver.logging.LoggingHandler;
 import org.mockserver.proxy.http.HttpProxy;
@@ -19,6 +17,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
+
+import static org.mockserver.proxy.error.Logging.shouldIgnoreException;
 
 @ChannelHandler.Sharable
 public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler<T> {
@@ -104,12 +104,14 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
     }
 
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        failure("Exception caught by http proxy CONNECT handler closing pipeline", cause, ctx, failureResponse(null));
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        failure("Exception caught by CONNECT proxy handler -> closing pipeline ", cause, ctx, failureResponse(null));
     }
 
     private void failure(String message, Throwable cause, ChannelHandlerContext ctx, Object response) {
-        logger.warn(message, cause);
+        if (!shouldIgnoreException(cause)) {
+            logger.warn(message, cause);
+        }
         Channel channel = ctx.channel();
         channel.writeAndFlush(response);
         if (channel.isActive()) {
@@ -126,6 +128,12 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
     protected void removeHandler(ChannelPipeline pipeline, Class<? extends ChannelHandler> handlerType) {
         if (pipeline.get(handlerType) != null) {
             pipeline.remove(handlerType);
+        }
+    }
+
+    protected void removeHandler(ChannelPipeline pipeline, ChannelHandler channelHandler) {
+        if (pipeline.toMap().containsValue(channelHandler)) {
+            pipeline.remove(channelHandler);
         }
     }
 

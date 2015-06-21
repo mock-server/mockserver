@@ -10,6 +10,7 @@ import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.client.serialization.VerificationSequenceSerializer;
 import org.mockserver.client.serialization.VerificationSerializer;
+import org.mockserver.client.serialization.curl.OutboundRequestToCurlSerializer;
 import org.mockserver.filters.Filters;
 import org.mockserver.filters.HopByHopHeaderFilter;
 import org.mockserver.filters.LogFilter;
@@ -19,6 +20,7 @@ import org.mockserver.mock.Expectation;
 import org.mockserver.model.Body;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.model.OutboundHttpRequest;
 import org.mockserver.proxy.Proxy;
 import org.mockserver.proxy.connect.HttpConnectHandler;
 import org.mockserver.proxy.unification.PortUnificationHandler;
@@ -37,6 +39,7 @@ import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.OutboundHttpRequest.outboundRequest;
+import static org.mockserver.proxy.error.Logging.shouldIgnoreException;
 
 @ChannelHandler.Sharable
 public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
@@ -52,6 +55,7 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
     // serializers
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
+    private OutboundRequestToCurlSerializer outboundRequestToCurlSerializer = new OutboundRequestToCurlSerializer();
     private VerificationSerializer verificationSerializer = new VerificationSerializer();
     private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer();
 
@@ -138,9 +142,21 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
             } else {
 
-                HttpResponse response = sendRequest(ctx.channel(), filters.applyOnRequestFilters(request));
-                logFormatter.infoLog("returning response:{}" + System.getProperty("line.separator") + " for request:{}", response, request);
-                writeResponse(ctx, request, response);
+                OutboundHttpRequest outboundHttpRequest = toOutboundRequest(ctx.channel(), filters.applyOnRequestFilters(request));
+
+                // allow for filter to set request to null
+                if (outboundHttpRequest != null) {
+                    HttpResponse response = sendRequest(outboundHttpRequest);
+                    logFormatter.infoLog(
+                            "returning response:{}" + System.getProperty("line.separator") + " for request as json:{}" + System.getProperty("line.separator") + " as curl:{}",
+                            response,
+                            request,
+                            outboundRequestToCurlSerializer.toCurl(outboundHttpRequest)
+                    );
+                    writeResponse(ctx, request, response);
+                } else {
+                    writeResponse(ctx, request, notFoundResponse());
+                }
 
             }
         } catch (Exception e) {
@@ -150,17 +166,25 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
     }
 
-    private HttpResponse sendRequest(Channel channel, HttpRequest httpRequest) {
-        // if HttpRequest was set to null by a filter don't send request
+    private HttpResponse sendRequest(OutboundHttpRequest outboundHttpRequest) {
+        HttpResponse httpResponse = filters.applyOnResponseFilters(outboundHttpRequest, httpClient.sendRequest(outboundHttpRequest));
+        // allow for filter to set response to null
+        if (httpResponse == null) {
+            httpResponse = notFoundResponse();
+        }
+        return httpResponse;
+    }
+
+    private OutboundHttpRequest toOutboundRequest(Channel channel, HttpRequest httpRequest) {
         if (httpRequest != null) {
-
-
             InetSocketAddress inetSocketAddress = channel.attr(HttpProxy.REMOTE_SOCKET).get();
 
             // read remote socket from channel attribute to direct proxy (port forwarding)
             if (inetSocketAddress != null) {
                 if (inetSocketAddress.getPort() == 443 || inetSocketAddress.getPort() == 8443) {
                     httpRequest.setSecure(true);
+                } else if (inetSocketAddress.getPort() == 80 || inetSocketAddress.getPort() == 8080) {
+                    httpRequest.setSecure(false);
                 }
             } else if (!Strings.isNullOrEmpty(httpRequest.getFirstHeader("Host"))) {
                 // read remote socket from host header for HTTP proxy
@@ -168,7 +192,7 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
                 Integer port = (httpRequest.isSecure() ? 443 : 80); // default
                 if (hostHeaderParts.length > 1) {
-                    port = Integer.parseInt(hostHeaderParts[1]);  // non-default
+                    port = Integer.parseInt(hostHeaderParts[1]);    // non-default
                 }
 
                 // add Subject Alternative Name for SSL certificate (just in case this hasn't been added before)
@@ -177,15 +201,12 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
                 inetSocketAddress = new InetSocketAddress(hostHeaderParts[0], port);
             } else {
                 logger.error("Host header must be provided for requests being forwarded, the following request does not include the \"Host\" header:" + System.getProperty("line.separator") + httpRequest);
-                return notFoundResponse();
+                return null;
             }
 
-            HttpResponse httpResponse = filters.applyOnResponseFilters(httpRequest, httpClient.sendRequest(outboundRequest(inetSocketAddress, "", httpRequest)));
-            if (httpResponse != null) {
-                return httpResponse;
-            }
+            return outboundRequest(inetSocketAddress, "", httpRequest);
         }
-        return notFoundResponse();
+        return null;
     }
 
     private void writeResponse(ChannelHandlerContext ctx, HttpRequest request, HttpResponseStatus responseStatus) {
@@ -235,9 +256,9 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
     }
 
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        if (!cause.getMessage().contains("Connection reset by peer")) {
-            logger.warn("Exception caught by MockServer handler closing pipeline", cause);
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        if (!shouldIgnoreException(cause)) {
+            logger.warn("Exception caught by HTTP proxy handler -> closing pipeline " + ctx.channel(), cause);
         }
         ctx.close();
     }

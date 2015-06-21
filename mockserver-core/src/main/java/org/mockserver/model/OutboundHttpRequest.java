@@ -1,5 +1,7 @@
 package org.mockserver.model;
 
+import com.google.common.base.Strings;
+
 import java.net.InetSocketAddress;
 
 /**
@@ -14,7 +16,7 @@ public class OutboundHttpRequest extends HttpRequest {
     public OutboundHttpRequest(String hostname, int port, String contextPath, HttpRequest httpRequest) {
         this.hostname = hostname;
         this.port = port;
-        this.contextPath = contextPath;
+        this.contextPath = Strings.nullToEmpty(contextPath);
         this.secure = httpRequest.secure;
         this.method = httpRequest.method;
         this.path = httpRequest.path;

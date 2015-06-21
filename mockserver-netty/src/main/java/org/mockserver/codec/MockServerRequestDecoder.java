@@ -10,6 +10,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.mockserver.mappers.ContentTypeMapper;
 import org.mockserver.model.*;
 import org.mockserver.url.URLParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.charset.Charset;
 import java.util.List;
@@ -23,6 +25,7 @@ import static org.mockserver.mappers.ContentTypeMapper.*;
  */
 public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRequest> {
 
+    private static final Logger logger = LoggerFactory.getLogger(MockServerRequestDecoder.class);
     private final boolean isSecure;
 
     public MockServerRequestDecoder(boolean isSecure) {
@@ -58,7 +61,11 @@ public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
     }
 
     private void setQueryString(HttpRequest httpRequest, QueryStringDecoder queryStringDecoder) {
-        httpRequest.withQueryStringParameters(queryStringDecoder.parameters());
+        try {
+            httpRequest.withQueryStringParameters(queryStringDecoder.parameters());
+        } catch (IllegalArgumentException iae) {
+            logger.debug("Exception while parsing query string", iae);
+        }
     }
 
     private void setBody(HttpRequest httpRequest, FullHttpRequest fullHttpRequest) {

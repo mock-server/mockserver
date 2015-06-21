@@ -8,8 +8,7 @@ import org.mockserver.socket.SSLFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import static org.mockserver.proxy.error.Logging.shouldIgnoreException;
 
 public class SocksProxyHandler extends SimpleChannelInboundHandler<SocksRequest> {
 
@@ -40,8 +39,14 @@ public class SocksProxyHandler extends SimpleChannelInboundHandler<SocksRequest>
                 SocksCmdRequest req = (SocksCmdRequest) socksRequest;
                 if (req.cmdType() == SocksCmdType.CONNECT) {
 
-                    // assume SSL enabled, if this is incorrect client retries without SSL
-                    PortUnificationHandler.enabledSslDownstream(ctx.channel());
+                    if (req.port() == 80 || req.port() == 8080) {
+                        PortUnificationHandler.disableSslDownstream(ctx.channel());
+                    } else if (req.port() == 443 || req.port() == 8443) {
+                        PortUnificationHandler.enabledSslDownstream(ctx.channel());
+                    } else {
+                        // assume SSL enabled by default, if this is incorrect client retries without SSL
+                        PortUnificationHandler.enabledSslDownstream(ctx.channel());
+                    }
 
                     // add Subject Alternative Name for SSL certificate
                     SSLFactory.addSubjectAlternativeName(req.host());
@@ -71,9 +76,9 @@ public class SocksProxyHandler extends SimpleChannelInboundHandler<SocksRequest>
     }
 
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        if (!cause.getMessage().contains("Connection reset by peer")) {
-            logger.warn("Exception caught by MockServer handler closing pipeline", cause);
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        if (!shouldIgnoreException(cause)) {
+            logger.warn("Exception caught by SOCKS proxy handler -> closing pipeline " + ctx.channel(), cause);
         }
         ctx.close();
     }

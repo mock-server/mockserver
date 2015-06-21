@@ -20,7 +20,7 @@ public final class SocksConnectHandler extends RelayConnectHandler<SocksCmdReque
         removeHandler(pipeline, HttpContentDecompressor.class);
         removeHandler(pipeline, HttpObjectAggregator.class);
         removeHandler(pipeline, SocksMessageEncoder.class);
-        pipeline.remove(this);
+        removeHandler(pipeline, this);
     }
 
     protected Object successResponse(Object request) {
