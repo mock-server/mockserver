@@ -27,6 +27,7 @@ public class SSLFactory {
     public static final String KEY_STORE_CA_ALIAS = "mockserver-ca-cert";
     private static final Logger logger = LoggerFactory.getLogger(SSLFactory.class);
     private static final SSLFactory SSL_FACTORY = new SSLFactory();
+    private static SSLContext sslContext;
     private KeyStore keystore;
 
     private SSLFactory() {
@@ -49,13 +50,13 @@ public class SSLFactory {
         return SSL_FACTORY;
     }
 
-    public static SSLEngine createClientSSLEngine() {
+    public synchronized static SSLEngine createClientSSLEngine() {
         SSLEngine engine = SSLFactory.getInstance().sslContext().createSSLEngine();
         engine.setUseClientMode(true);
         return engine;
     }
 
-    public static SSLEngine createServerSSLEngine() {
+    public synchronized static SSLEngine createServerSSLEngine() {
         SSLEngine engine = SSLFactory.getInstance().sslContext().createSSLEngine();
         engine.setUseClientMode(false);
         return engine;
@@ -65,20 +66,22 @@ public class SSLFactory {
         if (host != null) {
             String hostWithoutPort = StringUtils.substringBefore(host, ":");
 
-            try {
-                // resolve host name for subject alternative name in case host name is ip address
-                for (InetAddress addr : InetAddress.getAllByName(hostWithoutPort)) {
-                    ConfigurationProperties.addSslSubjectAlternativeNameIps(addr.getHostAddress());
-                    ConfigurationProperties.addSslSubjectAlternativeNameDomains(addr.getHostName());
-                    ConfigurationProperties.addSslSubjectAlternativeNameDomains(addr.getCanonicalHostName());
+            if (!ConfigurationProperties.containsSslSubjectAlternativeName(hostWithoutPort)) {
+                try {
+                    // resolve host name for subject alternative name in case host name is ip address
+                    for (InetAddress addr : InetAddress.getAllByName(hostWithoutPort)) {
+                        ConfigurationProperties.addSslSubjectAlternativeNameIps(addr.getHostAddress());
+                        ConfigurationProperties.addSslSubjectAlternativeNameDomains(addr.getHostName());
+                        ConfigurationProperties.addSslSubjectAlternativeNameDomains(addr.getCanonicalHostName());
+                    }
+                } catch (UnknownHostException uhe) {
+                    ConfigurationProperties.addSslSubjectAlternativeNameDomains(hostWithoutPort);
                 }
-            } catch (UnknownHostException uhe) {
-                ConfigurationProperties.addSslSubjectAlternativeNameDomains(hostWithoutPort);
             }
         }
     }
 
-    public SSLSocket wrapSocket(Socket socket) throws Exception {
+    public synchronized SSLSocket wrapSocket(Socket socket) throws Exception {
         // ssl socket factory
         SSLSocketFactory sslSocketFactory = sslContext().getSocketFactory();
 
@@ -89,27 +92,25 @@ public class SSLFactory {
         return sslSocket;
     }
 
-    public synchronized SSLContext sslContext() {
-        try {
-            // key manager
-            KeyManagerFactory keyManagerFactory = getKeyManagerFactoryInstance(KeyManagerFactory.getDefaultAlgorithm());
-            keyManagerFactory.init(buildKeyStore(), ConfigurationProperties.javaKeyStorePassword().toCharArray());
+    public SSLContext sslContext() {
+        if (sslContext == null || ConfigurationProperties.rebuildKeyStore()) {
+            try {
+                // key manager
+                KeyManagerFactory keyManagerFactory = getKeyManagerFactoryInstance(KeyManagerFactory.getDefaultAlgorithm());
+                keyManagerFactory.init(buildKeyStore(), ConfigurationProperties.javaKeyStorePassword().toCharArray());
 
-            // ssl context
-            SSLContext sslContext = getSSLContextInstance("TLS");
-            sslContext.init(keyManagerFactory.getKeyManagers(), InsecureTrustManagerFactory.INSTANCE.getTrustManagers(), null);
-            return sslContext;
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to initialize the SSLContext", e);
+                // ssl context
+                sslContext = getSSLContextInstance("TLS");
+                sslContext.init(keyManagerFactory.getKeyManagers(), InsecureTrustManagerFactory.INSTANCE.getTrustManagers(), null);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to initialize the SSLContext", e);
+            }
         }
+        return sslContext;
     }
 
-    public synchronized KeyStore buildKeyStore() {
-        return buildKeyStore(ConfigurationProperties.rebuildKeyStore());
-    }
-
-    public synchronized KeyStore buildKeyStore(boolean forceRebuild) {
-        if (keystore == null || forceRebuild) {
+    public KeyStore buildKeyStore() {
+        if (keystore == null || ConfigurationProperties.rebuildKeyStore()) {
             File keyStoreFile = new File(ConfigurationProperties.javaKeyStoreFilePath());
             System.setProperty("javax.net.ssl.trustStore", keyStoreFile.getAbsolutePath());
             if (keyStoreFile.exists()) {
@@ -147,7 +148,7 @@ public class SSLFactory {
         }
     }
 
-    private synchronized KeyStore updateExistingKeyStore(File keyStoreFile) {
+    private KeyStore updateExistingKeyStore(File keyStoreFile) {
         try {
             FileInputStream fileInputStream = null;
             try {
