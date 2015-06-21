@@ -1,6 +1,6 @@
 The following build steps are typically run on Jenkins when a Homebrew pull-request is tested
 
-1. ln -s /Users//james.bloom/git/homebrew/Library/Formula/mockserver.rb /usr/local/Library/Formula/mockserver.rb
+1. ln -s ~/git/homebrew/Library/Formula/mockserver.rb /usr/local/Library/Formula/mockserver.rb
 1. brew update
 1. brew doctor
 1. brew --env
