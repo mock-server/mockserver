@@ -47,7 +47,7 @@ public class NettyHttpClientErrorHandlingTest {
     }
 
     @Test
-//    @Ignore
+    @Ignore
     public void shouldHandleConnectionClosure() {
         // given
         EchoServer echoServer = new EchoServer(freePort, true, EchoServer.Error.CLOSE_CONNECTION);
