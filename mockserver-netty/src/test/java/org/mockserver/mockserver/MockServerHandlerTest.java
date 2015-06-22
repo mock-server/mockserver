@@ -220,9 +220,9 @@ public class MockServerHandlerTest {
 
         // then
         if (inetAddress != null) {
-            Assert.assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()), containsInAnyOrder("localhost", inetAddress.getHostName(), inetAddress.getCanonicalHostName()));
+            assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()), containsInAnyOrder("localhost", inetAddress.getHostName(), inetAddress.getCanonicalHostName()));
         } else {
-            Assert.assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()), containsInAnyOrder("localhost", "somehostname"));
+            assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()), containsInAnyOrder("localhost", "somehostname"));
         }
 
         // cleanup

@@ -1,4 +1,4 @@
-package org.mockserver.proxy.http;
+package org.mockserver.proxy.direct;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
@@ -12,6 +12,8 @@ import io.netty.handler.codec.socks.SocksMessageEncoder;
 import io.netty.handler.ssl.SslHandler;
 import org.apache.commons.codec.binary.Hex;
 import org.junit.Test;
+import org.mockserver.proxy.http.HttpProxy;
+import org.mockserver.proxy.http.HttpProxyUnificationHandler;
 import org.mockserver.proxy.relay.RelayConnectHandler;
 import org.mockserver.proxy.socks.SocksProxyHandler;
 import org.slf4j.Logger;
@@ -19,13 +21,13 @@ import org.slf4j.Logger;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
-import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 
-public class HttpProxyUnificationHandlerTest {
+public class DirectProxyUnificationHandlerTest {
 
     @Test
     public void shouldSwitchToSsl() {

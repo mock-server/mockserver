@@ -23,38 +23,15 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
-public class HttpProxyUnificationHandlerTest {
-
-    @Test
-    public void shouldSwitchToSsl() {
-        // given
-        EmbeddedChannel embeddedChannel = new EmbeddedChannel(new HttpProxyUnificationHandler());
-
-        // and - no SSL handler
-        assertThat(embeddedChannel.pipeline().get(SslHandler.class), is(nullValue()));
-
-        // when - first part of a 5-byte handshake message
-        embeddedChannel.writeInbound(Unpooled.wrappedBuffer(new byte[]{
-                22, // handshake
-                3,  // major version
-                1,
-                0,
-                5   // package length (5-byte)
-        }));
-
-        // then - should add SSL handlers first
-        assertThat(embeddedChannel.pipeline().names(), contains(
-                "SslHandler#0",
-                "HttpProxyUnificationHandler#0",
-                "EmbeddedChannel$LastInboundHandler#0",
-                "DefaultChannelPipeline$TailContext#0"
-        ));
-    }
+public class HttpProxyUnificationHandlerSOCKSErrorTest {
 
     @Test
-    public void shouldSwitchToSOCKS() throws IOException, InterruptedException {
+    public void shouldHandleErrorsDuringSOCKSConnection() throws IOException, InterruptedException {
         // given - embedded channel
         short localPort = 1234;
         EmbeddedChannel embeddedChannel = new EmbeddedChannel(new HttpProxyUnificationHandler());
@@ -92,6 +69,30 @@ public class HttpProxyUnificationHandlerTest {
                 "EmbeddedChannel$LastInboundHandler#0",
                 "DefaultChannelPipeline$TailContext#0"
         ));
+
+        // and when - SOCKS CONNECT command
+        embeddedChannel.writeInbound(Unpooled.wrappedBuffer(new byte[]{
+                (byte) 0x05,                                        // SOCKS5
+                (byte) 0x01,                                        // command type CONNECT
+                (byte) 0x00,                                        // reserved (must be 0x00)
+                (byte) 0x01,                                        // address type IPv4
+                (byte) 0x7f, (byte) 0x00, (byte) 0x00, (byte) 0x01, // ip address
+                (byte) (localPort & 0xFF00), (byte) localPort       // port
+        }));
+
+        // then - CONNECT response
+        assertThat(ByteBufUtil.hexDump((ByteBuf) embeddedChannel.readOutbound()), is(Hex.encodeHexString(new byte[]{
+                (byte) 0x05,                                        // SOCKS5
+                (byte) 0x01,                                        // general failure (caused by connection failure)
+                (byte) 0x00,                                        // reserved (must be 0x00)
+                (byte) 0x01,                                        // address type IPv4
+                (byte) 0x7f, (byte) 0x00, (byte) 0x00, (byte) 0x01, // ip address
+                (byte) (localPort & 0xFF00), (byte) localPort       // port
+        })));
+
+        // then - channel is closed after error
+        assertThat(embeddedChannel.isOpen(), is(false));
+        verify(RelayConnectHandler.logger).warn(eq("Connection failed to 0.0.0.0/0.0.0.0:1234"), any(IllegalStateException.class));
     }
 
     @Test
@@ -138,4 +139,5 @@ public class HttpProxyUnificationHandlerTest {
         // and - close channel
         assertThat(embeddedChannel.isOpen(), is(false));
     }
+
 }

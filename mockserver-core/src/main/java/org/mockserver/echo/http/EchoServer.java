@@ -20,6 +20,10 @@ public class EchoServer {
     private NioEventLoopGroup eventLoopGroup;
 
     public EchoServer(final int port, final boolean secure) {
+        this(port, secure, null);
+    }
+
+    public EchoServer(final int port, final boolean secure, final Error error) {
         Logger logger = LoggerFactory.getLogger(EchoServer.class);
         final SettableFuture<String> hasStarted = SettableFuture.create();
 
@@ -33,7 +37,7 @@ public class EchoServer {
                         .channel(NioServerSocketChannel.class)
                         .option(ChannelOption.SO_BACKLOG, 100)
                         .handler(new LoggingHandler("EchoServer Handler"))
-                        .childHandler(new EchoServerInitializer(secure))
+                        .childHandler(new EchoServerInitializer(secure, error))
                         .bind(port)
                         .addListener(new ChannelFutureListener() {
                             @Override
@@ -60,5 +64,12 @@ public class EchoServer {
 
     public void stop() {
         eventLoopGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
+    }
+
+    public enum Error {
+        CLOSE_CONNECTION,
+        LARGER_CONTENT_LENGTH,
+        SMALLER_CONTENT_LENGTH,
+        RANDOM_BYTES_RESPONSE
     }
 }

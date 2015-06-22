@@ -1,5 +1,6 @@
 package org.mockserver.proxy.relay;
 
+import com.google.common.annotations.VisibleForTesting;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
@@ -22,7 +23,8 @@ import static org.mockserver.proxy.error.Logging.shouldIgnoreException;
 
 @ChannelHandler.Sharable
 public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler<T> {
-    protected final Logger logger = LoggerFactory.getLogger(this.getClass());
+    @VisibleForTesting
+    public static Logger logger = LoggerFactory.getLogger(RelayConnectHandler.class);
 
     @Override
     public void channelRead0(final ChannelHandlerContext serverCtx, final T request) throws Exception {

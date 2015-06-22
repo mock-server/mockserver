@@ -12,6 +12,7 @@ import org.mockserver.model.OutboundHttpRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.ConnectException;
 import java.net.UnknownHostException;
 import java.util.concurrent.ExecutionException;
@@ -68,14 +69,15 @@ public class NettyHttpClient {
             if (retry) {
                 return sendRequest(httpRequest.setSecure(!httpRequest.isSecure()), false);
             } else {
-                if (e.getCause() instanceof ConnectException) {
-                    throw new SocketConnectionException("Unable to connect to socket " + httpRequest.getDestination(), e.getCause());
+                Throwable cause = e.getCause();
+                if (cause instanceof ConnectException) {
+                    throw new SocketConnectionException("Unable to connect to socket " + httpRequest.getDestination(), cause);
+                } else if (cause instanceof UnknownHostException) {
+                    throw new SocketConnectionException("Unable to resolve host " + httpRequest.getDestination(), cause);
+                } else if (cause instanceof IOException) {
+                    throw new SocketConnectionException(cause.getMessage(), cause);
                 } else {
-                    if (e.getCause() instanceof UnknownHostException) {
-                        throw new SocketConnectionException("Unable to resolve host " + httpRequest.getDestination(), e.getCause());
-                    } else {
-                        throw new RuntimeException("Exception while sending request", e);
-                    }
+                    throw new RuntimeException("Exception while sending request", e);
                 }
             }
         } catch (InterruptedException e) {

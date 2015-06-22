@@ -19,7 +19,13 @@ import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 @ChannelHandler.Sharable
 public class EchoServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
-    protected void channelRead0(ChannelHandlerContext ctx11, FullHttpRequest request) {
+    private final EchoServer.Error error;
+
+    public EchoServerHandler(EchoServer.Error error) {
+        this.error = error;
+    }
+
+    protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) {
         HttpResponseStatus responseStatus = OK;
         if (request.getUri().equals("/not_found")) {
             responseStatus = NOT_FOUND;
@@ -29,20 +35,30 @@ public class EchoServerHandler extends SimpleChannelInboundHandler<FullHttpReque
         response.headers().add(request.headers());
 
         // set hop-by-hop headers
-        response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
+        if (error == EchoServer.Error.LARGER_CONTENT_LENGTH) {
+            response.headers().set(CONTENT_LENGTH, response.content().readableBytes() * 2);
+        } else if (error == EchoServer.Error.SMALLER_CONTENT_LENGTH) {
+            response.headers().set(CONTENT_LENGTH, response.content().readableBytes() / 2);
+        } else {
+            response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
+        }
         if (isKeepAlive(request)) {
             response.headers().set(CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
         }
         if (is100ContinueExpected(request)) {
-            ctx11.write(new DefaultFullHttpResponse(HTTP_1_1, CONTINUE));
+            ctx.write(new DefaultFullHttpResponse(HTTP_1_1, CONTINUE));
         }
 
         // write and flush
-        ctx11.writeAndFlush(response);
+        ctx.writeAndFlush(response);
+
+        if (error == EchoServer.Error.LARGER_CONTENT_LENGTH || error == EchoServer.Error.SMALLER_CONTENT_LENGTH) {
+            ctx.close();
+        }
     }
 
-    public void exceptionCaught(ChannelHandlerContext ctx11, Throwable cause) {
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         cause.printStackTrace();
-        ctx11.close();
+        ctx.close();
     }
 }

@@ -25,7 +25,7 @@ public final class SocksConnectHandler extends RelayConnectHandler<SocksCmdReque
 
     protected Object successResponse(Object request) {
         if (request != null && request instanceof SocksCmdRequest) {
-            return new SocksCmdResponse(SocksCmdStatus.SUCCESS, ((SocksCmdRequest) request).addressType());
+            return new SocksCmdResponse(SocksCmdStatus.SUCCESS, ((SocksCmdRequest) request).addressType(), ((SocksCmdRequest) request).host(), ((SocksCmdRequest) request).port());
         } else {
             return new SocksCmdResponse(SocksCmdStatus.SUCCESS, SocksAddressType.UNKNOWN);
         }
@@ -33,7 +33,7 @@ public final class SocksConnectHandler extends RelayConnectHandler<SocksCmdReque
 
     protected Object failureResponse(Object request) {
         if (request != null && request instanceof SocksCmdRequest) {
-            return new SocksCmdResponse(SocksCmdStatus.FAILURE, ((SocksCmdRequest) request).addressType());
+            return new SocksCmdResponse(SocksCmdStatus.FAILURE, ((SocksCmdRequest) request).addressType(), ((SocksCmdRequest) request).host(), ((SocksCmdRequest) request).port());
         } else {
             return new SocksCmdResponse(SocksCmdStatus.FAILURE, SocksAddressType.UNKNOWN);
         }

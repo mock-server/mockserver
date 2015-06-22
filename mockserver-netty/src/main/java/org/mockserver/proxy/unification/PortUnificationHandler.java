@@ -140,7 +140,6 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
     private void enableSsl(ChannelHandlerContext ctx, ByteBuf msg) {
         ChannelPipeline pipeline = ctx.pipeline();
         pipeline.addFirst(new SslHandler(SSLFactory.createServerSSLEngine()));
-//        pipeline.addFirst(new LoggingHandler(logger));
 
         // re-unify (with SSL enabled)
         PortUnificationHandler.enabledSslUpstreamAndDownstream(ctx.channel());
