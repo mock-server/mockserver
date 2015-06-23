@@ -1,13 +1,17 @@
 MockServer
 ========== 
 
-**Backlog:**
+## Backlog
 
 [![Still Maintained](http://stillmaintained.com/jamesdbloom/mockserver.png)](http://stillmaintained.com/jamesdbloom/mockserver) [![Stories in Backlog](https://badge.waffle.io/jamesdbloom/mockserver.png?label=proposal&title=Proposals)](https://waffle.io/jamesdbloom/mockserver) [![Stories in Backlog](https://badge.waffle.io/jamesdbloom/mockserver.png?label=ready&title=Ready)](https://waffle.io/jamesdbloom/mockserver) [![Stories in Backlog](https://badge.waffle.io/jamesdbloom/mockserver.png?label=in%20progress&title=In%20Progress)](https://waffle.io/jamesdbloom/mockserver) [![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/jamesdbloom/mockserver/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
 
-<br />
-### For usage guide please see: [www.mock-server.com](http://www.mock-server.com/)
-<br />
+## Documentation
+
+For usage guide please see: [www.mock-server.com](http://www.mock-server.com/)
+
+## Chat Room
+
+[![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/jamesdbloom/mockserver?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 # Versions
 
