@@ -1,8 +1,10 @@
 package org.mockserver.proxy.socks;
 
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.socks.*;
+import org.mockserver.proxy.http.HttpProxy;
 import org.mockserver.proxy.unification.PortUnificationHandler;
 import org.mockserver.socket.SSLFactory;
 import org.slf4j.Logger;
@@ -39,13 +41,15 @@ public class SocksProxyHandler extends SimpleChannelInboundHandler<SocksRequest>
                 SocksCmdRequest req = (SocksCmdRequest) socksRequest;
                 if (req.cmdType() == SocksCmdType.CONNECT) {
 
+                    Channel channel = ctx.channel();
                     if (req.port() == 80 || req.port() == 8080) {
-                        PortUnificationHandler.disableSslDownstream(ctx.channel());
+                        PortUnificationHandler.disableSslDownstream(channel);
                     } else if (req.port() == 443 || req.port() == 8443) {
-                        PortUnificationHandler.enabledSslDownstream(ctx.channel());
+                        PortUnificationHandler.enabledSslDownstream(channel);
                     } else {
                         // assume SSL enabled by default, if this is incorrect client retries without SSL
-                        PortUnificationHandler.enabledSslDownstream(ctx.channel());
+                        PortUnificationHandler.enabledSslDownstream(channel);
+                        channel.attr(HttpProxy.ONWARD_SSL_UNKNOWN).set(true);
                     }
 
                     // add Subject Alternative Name for SSL certificate

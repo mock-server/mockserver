@@ -77,7 +77,7 @@ public class HttpProxyHandlerTest {
         // given - a mock server handler
         mockLogFilter = mock(LogFilter.class);
         mockHttpProxy = mock(Proxy.class);
-        httpProxyHandler = new HttpProxyHandler(mockHttpProxy, mockLogFilter);
+        httpProxyHandler = new HttpProxyHandler(mockHttpProxy, mockLogFilter, false);
         embeddedChannel = new EmbeddedChannel(httpProxyHandler);
 
         initMocks(this);

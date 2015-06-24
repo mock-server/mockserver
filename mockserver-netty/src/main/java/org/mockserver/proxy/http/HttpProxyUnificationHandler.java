@@ -16,7 +16,11 @@ public class HttpProxyUnificationHandler extends PortUnificationHandler {
     @Override
     protected void configurePipeline(ChannelHandlerContext ctx, ChannelPipeline pipeline) {
         pipeline.addLast(new MockServerServerCodec(isSslEnabledDownstream(ctx.channel())));
-        pipeline.addLast(new HttpProxyHandler(ctx.channel().attr(Proxy.HTTP_PROXY).get(), ctx.channel().attr(Proxy.LOG_FILTER).get()));
+        pipeline.addLast(new HttpProxyHandler(
+                ctx.channel().attr(Proxy.HTTP_PROXY).get(),
+                ctx.channel().attr(Proxy.LOG_FILTER).get(),
+                ctx.channel().attr(HttpProxy.ONWARD_SSL_UNKNOWN).get()
+        ));
     }
 
 }

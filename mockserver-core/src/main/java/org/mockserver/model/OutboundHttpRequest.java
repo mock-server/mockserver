@@ -1,6 +1,7 @@
 package org.mockserver.model;
 
 import com.google.common.base.Strings;
+import org.mockserver.socket.SSLFactory;
 
 import java.net.InetSocketAddress;
 
@@ -28,7 +29,29 @@ public class OutboundHttpRequest extends HttpRequest {
     }
 
     public static OutboundHttpRequest outboundRequest(InetSocketAddress inetSocketAddress, String contextPath, HttpRequest httpRequest) {
-        return outboundRequest(inetSocketAddress.getHostName(), inetSocketAddress.getPort(), contextPath, httpRequest);
+        if (httpRequest != null) {
+            if (inetSocketAddress == null) {
+                if (!Strings.isNullOrEmpty(httpRequest.getFirstHeader("Host"))) {
+                    // read remote socket from host header for HTTP proxy
+                    String[] hostHeaderParts = httpRequest.getFirstHeader("Host").split(":");
+
+                    Integer port = (httpRequest.isSecure() ? 443 : 80); // default port
+                    if (hostHeaderParts.length > 1) {
+                        port = Integer.parseInt(hostHeaderParts[1]);    // non-default port
+                    }
+
+                    // add Subject Alternative Name for SSL certificate (just in case this hasn't been added before)
+                    SSLFactory.addSubjectAlternativeName(hostHeaderParts[0]);
+
+                    inetSocketAddress = new InetSocketAddress(hostHeaderParts[0], port);
+                } else {
+                    throw new IllegalArgumentException("Host header must be provided for requests being forwarded, the following request does not include the \"Host\" header:" + System.getProperty("line.separator") + httpRequest);
+                }
+            }
+
+            return outboundRequest(inetSocketAddress.getHostName(), inetSocketAddress.getPort(), contextPath, httpRequest);
+        }
+        return null;
     }
 
     public static OutboundHttpRequest outboundRequest(String hostname, int port, String contextPath, HttpRequest httpRequest) {
@@ -46,6 +69,8 @@ public class OutboundHttpRequest extends HttpRequest {
     public OutboundHttpRequest setSecure(boolean secure) {
         if (!secure && port == 443) {
             port = 80;
+        } else if (secure && port == 80) {
+            port = 443;
         }
         super.setSecure(secure);
         return this;

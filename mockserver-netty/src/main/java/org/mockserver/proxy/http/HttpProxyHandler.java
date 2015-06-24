@@ -1,6 +1,5 @@
 package org.mockserver.proxy.http;
 
-import com.google.common.base.Strings;
 import com.google.common.net.MediaType;
 import io.netty.channel.*;
 import io.netty.handler.codec.http.HttpHeaders;
@@ -30,7 +29,6 @@ import org.mockserver.verify.VerificationSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONNECTION;
@@ -48,6 +46,7 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
     // mockserver
     private final Proxy server;
     private final LogFilter logFilter;
+    private final boolean onwardSslStatusUnknown;
     private final Filters filters = new Filters();
     private LogFormatter logFormatter = new LogFormatter(logger);
     // http client
@@ -59,10 +58,11 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
     private VerificationSerializer verificationSerializer = new VerificationSerializer();
     private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer();
 
-    public HttpProxyHandler(Proxy server, LogFilter logFilter) {
+    public HttpProxyHandler(Proxy server, LogFilter logFilter, Boolean onwardSslStatusUnknown) {
         super(false);
         this.server = server;
         this.logFilter = logFilter;
+        this.onwardSslStatusUnknown = (onwardSslStatusUnknown != null ? onwardSslStatusUnknown : false);
         filters.withFilter(new org.mockserver.model.HttpRequest(), new HopByHopHeaderFilter());
         filters.withFilter(new org.mockserver.model.HttpRequest(), logFilter);
     }
@@ -142,7 +142,7 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
             } else {
 
-                OutboundHttpRequest outboundHttpRequest = toOutboundRequest(ctx.channel(), filters.applyOnRequestFilters(request));
+                OutboundHttpRequest outboundHttpRequest = outboundRequest(ctx.channel().attr(HttpProxy.REMOTE_SOCKET).get(), "", filters.applyOnRequestFilters(request));
 
                 // allow for filter to set request to null
                 if (outboundHttpRequest != null) {
@@ -167,46 +167,12 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
     }
 
     private HttpResponse sendRequest(OutboundHttpRequest outboundHttpRequest) {
-        HttpResponse httpResponse = filters.applyOnResponseFilters(outboundHttpRequest, httpClient.sendRequest(outboundHttpRequest));
+        HttpResponse httpResponse = filters.applyOnResponseFilters(outboundHttpRequest, httpClient.sendRequest(outboundHttpRequest, onwardSslStatusUnknown));
         // allow for filter to set response to null
         if (httpResponse == null) {
             httpResponse = notFoundResponse();
         }
         return httpResponse;
-    }
-
-    private OutboundHttpRequest toOutboundRequest(Channel channel, HttpRequest httpRequest) {
-        if (httpRequest != null) {
-            InetSocketAddress inetSocketAddress = channel.attr(HttpProxy.REMOTE_SOCKET).get();
-
-            // read remote socket from channel attribute to direct proxy (port forwarding)
-            if (inetSocketAddress != null) {
-                if (inetSocketAddress.getPort() == 443 || inetSocketAddress.getPort() == 8443) {
-                    httpRequest.setSecure(true);
-                } else if (inetSocketAddress.getPort() == 80 || inetSocketAddress.getPort() == 8080) {
-                    httpRequest.setSecure(false);
-                }
-            } else if (!Strings.isNullOrEmpty(httpRequest.getFirstHeader("Host"))) {
-                // read remote socket from host header for HTTP proxy
-                String[] hostHeaderParts = httpRequest.getFirstHeader("Host").split(":");
-
-                Integer port = (httpRequest.isSecure() ? 443 : 80); // default
-                if (hostHeaderParts.length > 1) {
-                    port = Integer.parseInt(hostHeaderParts[1]);    // non-default
-                }
-
-                // add Subject Alternative Name for SSL certificate (just in case this hasn't been added before)
-                SSLFactory.addSubjectAlternativeName(hostHeaderParts[0]);
-
-                inetSocketAddress = new InetSocketAddress(hostHeaderParts[0], port);
-            } else {
-                logger.error("Host header must be provided for requests being forwarded, the following request does not include the \"Host\" header:" + System.getProperty("line.separator") + httpRequest);
-                return null;
-            }
-
-            return outboundRequest(inetSocketAddress, "", httpRequest);
-        }
-        return null;
     }
 
     private void writeResponse(ChannelHandlerContext ctx, HttpRequest request, HttpResponseStatus responseStatus) {

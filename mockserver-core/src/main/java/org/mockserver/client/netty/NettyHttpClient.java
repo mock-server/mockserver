@@ -6,6 +6,7 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.ssl.NotSslRecordException;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.OutboundHttpRequest;
@@ -24,10 +25,10 @@ public class NettyHttpClient {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public HttpResponse sendRequest(final OutboundHttpRequest httpRequest) throws SocketConnectionException {
-        return sendRequest(httpRequest, true);
+        return sendRequest(httpRequest, false);
     }
 
-    private HttpResponse sendRequest(final OutboundHttpRequest httpRequest, final boolean retry) throws SocketConnectionException {
+    public HttpResponse sendRequest(final OutboundHttpRequest httpRequest, final boolean retryIfSslFails) throws SocketConnectionException {
         logger.debug("Sending request: {}", httpRequest);
 
         // configure the client
@@ -66,14 +67,16 @@ public class NettyHttpClient {
         } catch (TimeoutException e) {
             throw new SocketCommunicationException("Response was not received after " + ConfigurationProperties.maxSocketTimeout() + " milliseconds, to make the proxy wait longer please use \"mockserver.maxSocketTimeout\" system property or ConfigurationProperties.maxSocketTimeout(long milliseconds)", e.getCause());
         } catch (ExecutionException e) {
-            if (retry) {
-                return sendRequest(httpRequest.setSecure(!httpRequest.isSecure()), false);
+            if (retryIfSslFails) {
+                return sendRequest(httpRequest.setSecure(!httpRequest.isSecure()));
             } else {
                 Throwable cause = e.getCause();
                 if (cause instanceof ConnectException) {
                     throw new SocketConnectionException("Unable to connect to socket " + httpRequest.getDestination(), cause);
                 } else if (cause instanceof UnknownHostException) {
                     throw new SocketConnectionException("Unable to resolve host " + httpRequest.getDestination(), cause);
+                } else if (cause instanceof NotSslRecordException) {
+                    return sendRequest(httpRequest.setSecure(false));
                 } else if (cause instanceof IOException) {
                     throw new SocketConnectionException(cause.getMessage(), cause);
                 } else {
