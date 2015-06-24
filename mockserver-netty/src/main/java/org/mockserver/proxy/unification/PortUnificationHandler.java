@@ -13,6 +13,7 @@ import io.netty.handler.codec.socks.SocksMessageEncoder;
 import io.netty.handler.codec.socks.SocksProtocolVersion;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.util.AttributeKey;
+import org.mockserver.logging.LoggingHandler;
 import org.mockserver.proxy.socks.SocksProxyHandler;
 import org.mockserver.socket.SSLFactory;
 import org.slf4j.Logger;
@@ -93,6 +94,16 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
             ctx.close();
         }
 
+        if (logger.isTraceEnabled()) {
+            if (ctx.pipeline().get(LoggingHandler.class) != null) {
+                ctx.pipeline().remove(LoggingHandler.class);
+            }
+            if (ctx.pipeline().get(SslHandler.class) != null) {
+                ctx.pipeline().addAfter("SslHandler#0", "LoggingHandler#0", new LoggingHandler(logger));
+            } else {
+                ctx.pipeline().addFirst(new LoggingHandler(logger));
+            }
+        }
     }
 
     private boolean isSsl(ByteBuf buf) {
