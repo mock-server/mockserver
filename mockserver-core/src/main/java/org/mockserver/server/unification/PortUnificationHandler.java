@@ -43,6 +43,16 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
             ctx.close();
         }
 
+        if (logger.isTraceEnabled()) {
+            if (ctx.pipeline().get(org.mockserver.logging.LoggingHandler.class) != null) {
+                ctx.pipeline().remove(org.mockserver.logging.LoggingHandler.class);
+            }
+            if (ctx.pipeline().get(SslHandler.class) != null) {
+                ctx.pipeline().addAfter("SslHandler#0", "LoggingHandler#0", new org.mockserver.logging.LoggingHandler(logger));
+            } else {
+                ctx.pipeline().addFirst(new org.mockserver.logging.LoggingHandler(logger));
+            }
+        }
     }
 
     private boolean isSsl(ByteBuf buf) {
