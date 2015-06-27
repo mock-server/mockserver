@@ -24,7 +24,7 @@ public class MockServerClient extends AbstractClient {
      * Start the client communicating to a MockServer at the specified host and port
      * for example:
      *
-     *   MockServerClient mockServerClient = new MockServerClient("localhost", 8080);
+     *   MockServerClient mockServerClient = new MockServerClient("localhost", 1080);
      *
      * @param host the host for the MockServer to communicate with
      * @param port the port for the MockServer to communicate with
@@ -37,7 +37,7 @@ public class MockServerClient extends AbstractClient {
      * Start the client communicating to a MockServer at the specified host and port
      * and contextPath for example:
      *
-     *   MockServerClient mockServerClient = new MockServerClient("localhost", 8080, "/mockserver");
+     *   MockServerClient mockServerClient = new MockServerClient("localhost", 1080, "/mockserver");
      *
      * @param host the host for the MockServer to communicate with
      * @param port the port for the MockServer to communicate with

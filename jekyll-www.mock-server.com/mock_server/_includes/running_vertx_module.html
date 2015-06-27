@@ -5,13 +5,13 @@
 <p>Then to run MockServer as Vert.X module run the following command:</p>
 
 <pre><code class="code">vertx install org.mock-server~mockserver-vertx~2.9
-export VERTX_OPTS=<span class="string_literal">"-Dmockserver.serverPort=8080 -Dmockserver.serverSecurePort=1443 -Dmockserver.logLevel=TRACE"</span>
+export VERTX_OPTS=<span class="string_literal">"-Dmockserver.serverPort=1080 -Dmockserver.serverSecurePort=1443 -Dmockserver.logLevel=TRACE"</span>
 vertx runmod org.mock-server~mockserver-vertx~2.9</code></pre>
 
 <p>The specify the HTTP port and / or HTTPS port the <strong>VERTX_OPTS</strong> environment variable must be set specifying the system property <strong>mockserver.serverPort</strong> for the HTTP port and <strong>mockserver.serverSecurePort</strong> for the HTTPS port.</p>
 
 <p><strong>Note:</strong> At least one of either the HTTP or the HTTPS port must be specified for MockServer to run.</p>
 
-<pre><code class="code">export VERTX_OPTS=<span class="string_literal">"-Dmockserver.serverPort=8080 -Dmockserver.serverSecurePort=1443 -Dmockserver.logLevel=TRACE"</span></code></pre>
+<pre><code class="code">export VERTX_OPTS=<span class="string_literal">"-Dmockserver.serverPort=1080 -Dmockserver.serverSecurePort=1443 -Dmockserver.logLevel=TRACE"</span></code></pre>
 
 <p>It is also possible to update the default logging level by setting the system properties <strong>mockserver.logLevel</strong> as above.</p>

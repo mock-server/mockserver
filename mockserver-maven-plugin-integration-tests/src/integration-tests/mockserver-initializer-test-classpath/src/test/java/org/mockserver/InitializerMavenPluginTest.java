@@ -18,8 +18,8 @@ import static org.mockserver.model.OutboundHttpRequest.outboundRequest;
  */
 public class InitializerMavenPluginTest {
 
-    private final static int SERVER_HTTP_PORT = 8082;
-    private final static int SERVER_HTTPS_PORT = 8083;
+    private final static int SERVER_HTTP_PORT = 1082;
+    private final static int SERVER_HTTPS_PORT = 1083;
     // http client
     private NettyHttpClient httpClient = new NettyHttpClient();
 

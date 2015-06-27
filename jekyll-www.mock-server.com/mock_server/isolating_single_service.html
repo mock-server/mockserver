@@ -21,7 +21,8 @@ sitemap:
 
 <p><a href="../images/isolate_single_service_with_mockserver.png" target="_blank"><img src="../images/isolate_single_service_with_mockserver.png" alt="Isolating Single Service" style="max-width:100%;"></a></p>
 
-<p>Once of the simplest ways to do this is using Node.js.  In the example below all requests matching path <span class="inline_code string_literal">"/rest.*"</span> (i.e. starting with <strong>/rest</strong>) will go to the local machine on port <strong>8080</strong> whereas all other requests will go to a remote machine (i.e. a load balancer or remote server) on ip <strong>192.168.50.10</strong> and port <strong>443</strong>.</p>
+<p>One of the simplest ways to do this is using Node.js. In the example below all requests matching path <span class="inline_code string_literal">"/rest.*"</span> (i.e. starting with <strong>/rest</strong>) will go to the local machine on port
+	<strong>8080</strong> whereas all other requests will go to a remote machine (i.e. a load balancer or remote server) on ip <strong>192.168.50.10</strong> and port <strong>443</strong>.</p>
 
 <p>First create a <strong>package.json</strong> file as follows:</p>
 

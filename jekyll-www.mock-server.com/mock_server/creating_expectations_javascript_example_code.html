@@ -67,7 +67,7 @@ subsection: false
 <p>It is also possible to make AJAX calls directly without the client as follows:</p>
 
 <pre><code class="code"><span class="keyword">var</span> xmlHttpRequest = <span class="keyword">new</span> XMLHttpRequest();
-xmlHttpRequest.open(<span class="string_literal">"PUT"</span>, <span class="string_literal">"http://localhost:8080/expectation"</span>, <span class="keyword">false</span>);
+xmlHttpRequest.open(<span class="string_literal">"PUT"</span>, <span class="string_literal">"http://localhost:1080/expectation"</span>, <span class="keyword">false</span>);
 xmlHttpRequest.setRequestHeader(<span class="string_literal">"Content-Type"</span>, <span class="string_literal">"application/json; charset=utf-8"</span>);
 xmlHttpRequest.send(JSON.stringify({
     <span class="string_literal">"httpRequest"</span>: {
