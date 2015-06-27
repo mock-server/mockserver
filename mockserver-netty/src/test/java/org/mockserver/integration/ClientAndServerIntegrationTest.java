@@ -6,8 +6,6 @@ import org.mockserver.echo.http.EchoServer;
 import org.mockserver.server.AbstractClientServerSharedClassloadersAndTestClasspathIntegrationTest;
 import org.mockserver.socket.PortFactory;
 
-import java.util.concurrent.ExecutionException;
-
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 
 /**
@@ -20,7 +18,7 @@ public class ClientAndServerIntegrationTest extends AbstractClientServerSharedCl
     private static EchoServer echoServer;
 
     @BeforeClass
-    public static void startServer() throws InterruptedException, ExecutionException {
+    public static void startServer() {
         // start mock server and client
         mockServerClient = startClientAndServer(SERVER_HTTP_PORT);
 
@@ -37,6 +35,11 @@ public class ClientAndServerIntegrationTest extends AbstractClientServerSharedCl
 
         // stop echo server
         echoServer.stop();
+    }
+
+    @Override
+    public void startServerAgain() {
+        startClientAndServer(SERVER_HTTP_PORT);
     }
 
     @Override

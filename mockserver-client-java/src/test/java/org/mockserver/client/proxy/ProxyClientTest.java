@@ -11,7 +11,6 @@ import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.VerificationSequenceSerializer;
 import org.mockserver.client.serialization.VerificationSerializer;
 import org.mockserver.mock.Expectation;
-import org.mockserver.model.Body;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.OutboundHttpRequest;
 import org.mockserver.model.StringBody;
@@ -66,7 +65,6 @@ public class ProxyClientTest {
         exception.expect(IllegalArgumentException.class);
         exception.expectMessage(containsString("Host can not be null or empty"));
 
-
         // when
         new ProxyClient(null, 8080);
     }
@@ -76,7 +74,6 @@ public class ProxyClientTest {
         // given
         exception.expect(IllegalArgumentException.class);
         exception.expectMessage(containsString("ContextPath can not be null"));
-
 
         // when
         new ProxyClient("localhost", 8080, null);

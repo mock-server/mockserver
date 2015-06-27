@@ -3,9 +3,7 @@ package org.mockserver.mockserver;
 import com.google.common.util.concurrent.SettableFuture;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.util.AttributeKey;
@@ -28,7 +26,7 @@ public class MockServer {
     // mockserver
     private final MockServerMatcher mockServerMatcher = new MockServerMatcher();
     private final LogFilter logFilter = new LogFilter();
-    private final SettableFuture<String> hasStarted;
+    private final SettableFuture<Integer> hasStarted;
     // netty
     private final EventLoopGroup bossGroup = new NioEventLoopGroup();
     private final EventLoopGroup workerGroup = new NioEventLoopGroup();
@@ -59,16 +57,23 @@ public class MockServer {
                             .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                             .childAttr(LOG_FILTER, logFilter)
                             .bind(port)
-                            .sync()
+                            .addListener(new ChannelFutureListener() {
+                                @Override
+                                public void operationComplete(ChannelFuture future) throws Exception {
+                                    if (future.isSuccess()) {
+                                        hasStarted.set(((InetSocketAddress) future.channel().localAddress()).getPort());
+                                    } else {
+                                        hasStarted.setException(future.cause());
+                                    }
+                                }
+                            })
                             .channel();
 
-                    logger.info("MockServer started on port: {}", ((InetSocketAddress) channel.localAddress()).getPort());
+                    logger.info("MockServer started on port: {}", hasStarted.get());
 
-                    hasStarted.set("STARTED");
-
-                    channel.closeFuture().sync();
-                } catch (InterruptedException ie) {
-                    logger.error("MockServer receive InterruptedException", ie);
+                    channel.closeFuture().syncUninterruptibly();
+                } catch (Exception e) {
+                    throw new RuntimeException("Exception while starting MockServer", e.getCause());
                 } finally {
                     bossGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
                     workerGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
@@ -79,7 +84,7 @@ public class MockServer {
         try {
             hasStarted.get();
         } catch (Exception e) {
-            logger.warn("Exception while waiting for MockServer to complete starting up", e);
+            logger.error("Exception while waiting for MockServer to complete starting up", e);
         }
     }
 
@@ -109,6 +114,10 @@ public class MockServer {
     }
 
     public Integer getPort() {
-        return ((InetSocketAddress) channel.localAddress()).getPort();
+        try {
+            return hasStarted.get();
+        } catch (Exception e) {
+            throw new RuntimeException("Exception while starting MockServer", e);
+        }
     }
 }

@@ -7,6 +7,8 @@ import org.mockserver.echo.http.EchoServer;
 import org.mockserver.mockserver.MockServer;
 import org.mockserver.socket.PortFactory;
 
+import static org.mockserver.integration.ClientAndServer.startClientAndServer;
+
 /**
  * @author jamesdbloom
  */
@@ -18,7 +20,7 @@ public class ClientServerNettyIntegrationTest extends AbstractClientServerShared
     private static EchoServer echoServer;
 
     @BeforeClass
-    public static void startServer() throws Exception {
+    public static void startServer() {
         // start mock server
         mockServer = new MockServer(SERVER_HTTP_PORT);
 
@@ -39,6 +41,11 @@ public class ClientServerNettyIntegrationTest extends AbstractClientServerShared
     }
 
     @Override
+    public void startServerAgain() {
+        startClientAndServer(SERVER_HTTP_PORT);
+    }
+
+    @Override
     public int getMockServerPort() {
         return SERVER_HTTP_PORT;
     }
@@ -52,5 +59,4 @@ public class ClientServerNettyIntegrationTest extends AbstractClientServerShared
     public int getTestServerPort() {
         return TEST_SERVER_HTTP_PORT;
     }
-
 }

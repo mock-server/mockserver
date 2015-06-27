@@ -1,10 +1,13 @@
 package org.mockserver.server;
 
 import com.google.common.net.HttpHeaders;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.mockserver.integration.server.AbstractClientServerSharedClassloadersIntegrationTest;
 import org.mockserver.model.HttpStatusCode;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpCallback.callback;
@@ -15,6 +18,21 @@ import static org.mockserver.model.HttpResponse.response;
  * @author jamesdbloom
  */
 public abstract class AbstractClientServerSharedClassloadersAndTestClasspathIntegrationTest extends AbstractClientServerSharedClassloadersIntegrationTest {
+
+    @Rule
+    public ExpectedException exception = ExpectedException.none();
+
+    public abstract void startServerAgain();
+
+    @Test
+    public void shouldThrowExceptionIfFailToBindToSocket() {
+        // given
+        exception.expect(RuntimeException.class);
+        exception.expectMessage(containsString("Exception while starting MockServer"));
+
+        // when
+        startServerAgain();
+    }
 
     @Test
     public void shouldCallbackToSpecifiedClassInTestClasspath() {

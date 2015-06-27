@@ -15,8 +15,8 @@ import static org.mockserver.integration.ClientAndServer.startClientAndServer;
  */
 public class ClientAndServerIntegrationAutoAllocatedPortTest extends AbstractClientServerSharedClassloadersAndTestClasspathIntegrationTest {
 
-    private static int severHttpPort;
     private final static int TEST_SERVER_HTTP_PORT = PortFactory.findFreePort();
+    private static int severHttpPort;
     private static EchoServer echoServer;
 
     @BeforeClass
@@ -38,6 +38,11 @@ public class ClientAndServerIntegrationAutoAllocatedPortTest extends AbstractCli
 
         // stop echo server
         echoServer.stop();
+    }
+
+    @Override
+    public void startServerAgain() {
+        startClientAndServer(severHttpPort);
     }
 
     @Override
