@@ -14,7 +14,7 @@ public class ClientServerMavenPluginStopTest {
 
         @Test(expected = RuntimeException.class)
     public void shouldNotBeAbleToReachMockServer() {
-        new MockServerClient("127.0.0.1", 8084).reset();
+        new MockServerClient("127.0.0.1", 1084).reset();
     }
 
 }
