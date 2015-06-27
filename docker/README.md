@@ -27,8 +27,8 @@ MockServer supports:
 
 This docker container will run an instance of the MockServer on the following ports:
 
-* serverPort **8080**
-* proxyPort **9090**
+* serverPort **1080**
+* proxyPort **1090**
 
 For information on how to use the MockServer please see http://www.mock-server.com
 

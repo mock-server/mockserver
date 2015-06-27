@@ -20,7 +20,7 @@ RUN (cd /opt/mockserver && wget -O mockserver-netty-jar-with-dependencies.jar ht
 RUN (cd /opt/mockserver && wget https://raw.github.com/jamesdbloom/mockserver/master/docker/run_mockserver.sh && chmod +x /opt/mockserver/run_mockserver.sh)
 
 # expose ports.
-EXPOSE 8080 9090
+EXPOSE 1080 1090
 
 # define default command.
-CMD ["/opt/mockserver/run_mockserver.sh", "-serverPort", "8080", "-proxyPort", "9090"]
+CMD ["/opt/mockserver/run_mockserver.sh", "-serverPort", "1080", "-proxyPort", "1090"]
