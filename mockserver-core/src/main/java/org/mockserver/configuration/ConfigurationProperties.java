@@ -11,6 +11,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.security.KeyStore;
 import java.util.*;
@@ -245,24 +246,52 @@ public class ConfigurationProperties {
             System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", level);
             overrideLogLevelWithReflection(level, "org.mockserver");
             overrideLogLevelWithReflection(level, "org.mockserver.mockserver");
+            overrideLogLevelWithReflection(level, "org.mockserver.mockserver.MockServerHandler");
             overrideLogLevelWithReflection(level, "org.mockserver.proxy");
+            overrideLogLevelWithReflection(level, "org.mockserver.proxy.http.HttpProxyHandler");
+            overrideLogLevelWithReflection(level, "org.mockserver.matchers.HttpRequestMatcher");
+            overrideLogLevelWithReflection(level, "org.mockserver.filters.LogFilter");
         }
     }
 
     private static void overrideLogLevelWithReflection(String level, String loggerName) {
-        Logger rootLogger = LoggerFactory.getLogger(loggerName);
+        Logger logger = LoggerFactory.getLogger(loggerName);
 
         try {
-            // create level instance
+            // check if logback-classic is being used
             Class logbackLevelClass = ConfigurationProperties.class.getClassLoader().loadClass("ch.qos.logback.classic.Level");
-            Method toLevelMethod = logbackLevelClass.getMethod("toLevel", String.class);
+
+            // convert string to log level
+            Method toLevelMethod = logbackLevelClass.getDeclaredMethod("toLevel", String.class);
+            toLevelMethod.setAccessible(true);
             Object levelInstance = toLevelMethod.invoke(logbackLevelClass, level);
 
-            // update root level
-            Method setLevelMethod = rootLogger.getClass().getMethod("setLevel", logbackLevelClass);
-            setLevelMethod.invoke(rootLogger, levelInstance);
+            // update log level
+            Method setLevelMethod = logger.getClass().getDeclaredMethod("setLevel", logbackLevelClass);
+            if (setLevelMethod != null) {
+                setLevelMethod.invoke(logger, levelInstance);
+            }
         } catch (Exception e) {
-            logger.warn("Exception updating logging level using reflection, likely cause is Logback is not on the classpath");
+            ConfigurationProperties.logger.warn("Exception updating logging level using reflection, likely cause is Logback is not on the classpath");
+        }
+
+
+        try {
+            // check if SimpleLogger is used (i.e. in maven plugin)
+            Class loggerClass = logger.getClass();
+            if (logger.getClass().getName().equals("org.slf4j.impl.SimpleLogger")) {
+                // convert string to log level
+                Method stringToLevelMethod = loggerClass.getDeclaredMethod("stringToLevel", String.class);
+                stringToLevelMethod.setAccessible(true);
+                Object logLevelInstance = stringToLevelMethod.invoke(logger, level);
+
+                // update log level
+                Field currentLogLevelField = loggerClass.getDeclaredField("currentLogLevel");
+                currentLogLevelField.setAccessible(true);
+                currentLogLevelField.set(logger, logLevelInstance);
+            }
+        } catch (Exception e) {
+            ConfigurationProperties.logger.warn("Exception updating logging level using reflection, likely cause is Logback is not on the classpath");
         }
     }
 

@@ -30,7 +30,7 @@ import static org.mockserver.model.HttpResponse.notFoundResponse;
  */
 public class LogFilter implements ResponseFilter, RequestFilter {
 
-    private static final Logger logger = LoggerFactory.getLogger(ResponseFilter.class);
+    private static final Logger logger = LoggerFactory.getLogger(LogFilter.class);
     // request / response persistence
     private final CircularMultiMap<HttpRequest, HttpResponse> requestResponseLog = new CircularMultiMap<HttpRequest, HttpResponse>(100, 100);
     private final CircularLinkedList<HttpRequest> requestLog = new CircularLinkedList<HttpRequest>(100);
