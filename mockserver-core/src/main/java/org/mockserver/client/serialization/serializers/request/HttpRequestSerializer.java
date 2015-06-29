@@ -38,6 +38,12 @@ public class HttpRequestSerializer extends StdSerializer<HttpRequest> {
         if (httpRequest.getCookies() != null && !httpRequest.getCookies().isEmpty()) {
             jgen.writeObjectField("cookies", httpRequest.getCookies());
         }
+        if (httpRequest.isKeepAlive() != null) {
+            jgen.writeBooleanField("keepAlive", httpRequest.isKeepAlive());
+        }
+        if (httpRequest.isSecure() != null) {
+            jgen.writeBooleanField("secure", httpRequest.isSecure());
+        }
         if (httpRequest.getBody() != null && !Strings.isNullOrEmpty(String.valueOf(httpRequest.getBody().getValue()))) {
             jgen.writeObjectField("body", httpRequest.getBody());
         }

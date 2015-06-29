@@ -26,7 +26,7 @@ public class HttpServletRequestToMockServerRequestDecoder {
         setBody(httpRequest, httpServletRequest);
         setHeaders(httpRequest, httpServletRequest);
         setCookies(httpRequest, httpServletRequest);
-        httpRequest.setSecure(httpServletRequest.isSecure());
+        httpRequest.withSecure(httpServletRequest.isSecure());
         return httpRequest;
     }
 

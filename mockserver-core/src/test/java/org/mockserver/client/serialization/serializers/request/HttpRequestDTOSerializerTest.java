@@ -36,8 +36,9 @@ public class HttpRequestDTOSerializerTest {
                                         .withQueryStringParameters(param("parameterOneName", "parameterOneValue"))
                                         .withBody("some_body")
                                         .withHeaders(new Header("name", "value"))
-                                        .withCookies(new Cookie("name", "[A-Z]{0,10}")
-                                        )
+                                        .withCookies(new Cookie("name", "[A-Z]{0,10}"))
+                                        .withKeepAlive(true)
+                                        .withSecure(true)
                         )
                 ),
                 is("{" + System.getProperty("line.separator") +
@@ -55,6 +56,8 @@ public class HttpRequestDTOSerializerTest {
                         "    \"name\" : \"name\"," + System.getProperty("line.separator") +
                         "    \"value\" : \"[A-Z]{0,10}\"" + System.getProperty("line.separator") +
                         "  } ]," + System.getProperty("line.separator") +
+                        "  \"keepAlive\" : true," + System.getProperty("line.separator") +
+                        "  \"secure\" : true," + System.getProperty("line.separator") +
                         "  \"body\" : \"some_body\"" + System.getProperty("line.separator") +
                         "}"));
     }
@@ -69,8 +72,7 @@ public class HttpRequestDTOSerializerTest {
                                         .withQueryStringParameters(param("parameterOneName", "parameterOneValue"))
                                         .withBody(json("{ \"key\": \"some_value\" }"))
                                         .withHeaders(new Header("name", "value"))
-                                        .withCookies(new Cookie("name", "[A-Z]{0,10}")
-                                        )
+                                        .withCookies(new Cookie("name", "[A-Z]{0,10}"))
                         )
                 ),
                 is("{" + System.getProperty("line.separator") +
@@ -105,8 +107,7 @@ public class HttpRequestDTOSerializerTest {
                                         .withQueryStringParameters(param("parameterOneName", "parameterOneValue"))
                                         .withBody(xpath("//some/xml/path"))
                                         .withHeaders(new Header("name", "value"))
-                                        .withCookies(new Cookie("name", "[A-Z]{0,10}")
-                                        )
+                                        .withCookies(new Cookie("name", "[A-Z]{0,10}"))
                         )
                 ),
                 is("{" + System.getProperty("line.separator") +

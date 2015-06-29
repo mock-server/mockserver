@@ -112,8 +112,9 @@ public class MockServerRequestEncoder extends MessageToMessageEncoder<OutboundHt
         }
 
         String port = "";
-        if ((!httpRequest.isSecure() && httpRequest.getDestination().getPort() != 80) ||
-                (httpRequest.isSecure() && httpRequest.getDestination().getPort() != 443)) {
+        boolean isSsl = httpRequest.isSecure() != null && httpRequest.isSecure();
+        if ((!isSsl && httpRequest.getDestination().getPort() != 80) ||
+                (isSsl && httpRequest.getDestination().getPort() != 443)) {
             port = ":" + httpRequest.getDestination().getPort();
         }
         request.headers().add(HOST, httpRequest.getDestination().getHostName() + port);

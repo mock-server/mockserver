@@ -58,7 +58,7 @@ public class NettyHttpClientErrorHandlingTest {
             exception.expectMessage(containsString("Connection reset by peer"));
 
             // when
-            new NettyHttpClient().sendRequest(outboundRequest("127.0.0.1", freePort, "", request()).setSecure(true));
+            new NettyHttpClient().sendRequest(outboundRequest("127.0.0.1", freePort, "", request()).withSsl(true));
         } finally {
             echoServer.stop();
         }
@@ -78,7 +78,7 @@ public class NettyHttpClientErrorHandlingTest {
             exception.expectMessage(containsString("Response was not received after 5 milliseconds, to make the proxy wait longer please use \"mockserver.maxSocketTimeout\" system property or ConfigurationProperties.maxSocketTimeout(long milliseconds)"));
 
             // when
-            new NettyHttpClient().sendRequest(outboundRequest("127.0.0.1", freePort, "", request().withBody(exact("this is an example body"))).setSecure(true));
+            new NettyHttpClient().sendRequest(outboundRequest("127.0.0.1", freePort, "", request().withBody(exact("this is an example body"))).withSsl(true));
         } finally {
             echoServer.stop();
             ConfigurationProperties.maxSocketTimeout(originalMaxSocketTimeout);
@@ -92,7 +92,7 @@ public class NettyHttpClientErrorHandlingTest {
 
         try {
             // when
-            HttpResponse httpResponse = new NettyHttpClient().sendRequest(outboundRequest("127.0.0.1", freePort, "", request().withBody(exact("this is an example body"))).setSecure(true));
+            HttpResponse httpResponse = new NettyHttpClient().sendRequest(outboundRequest("127.0.0.1", freePort, "", request().withBody(exact("this is an example body"))).withSsl(true));
 
             // then
             assertThat(httpResponse, is(

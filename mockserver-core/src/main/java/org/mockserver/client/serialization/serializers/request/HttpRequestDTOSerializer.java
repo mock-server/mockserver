@@ -38,6 +38,12 @@ public class HttpRequestDTOSerializer extends StdSerializer<HttpRequestDTO> {
         if (httpRequest.getCookies() != null && !httpRequest.getCookies().isEmpty()) {
             jgen.writeObjectField("cookies", httpRequest.getCookies());
         }
+        if (httpRequest.getKeepAlive() != null) {
+            jgen.writeBooleanField("keepAlive", httpRequest.getKeepAlive());
+        }
+        if (httpRequest.getSecure() != null) {
+            jgen.writeBooleanField("secure", httpRequest.getSecure());
+        }
         if (httpRequest.getBody() != null) {
             jgen.writeObjectField("body", httpRequest.getBody());
         }

@@ -38,7 +38,9 @@ public class HttpRequestDTOTest {
                 .withHeaders(new Header("name", "value"))
                 .withMethod(method)
                 .withPath(path)
-                .withQueryStringParameter(new Parameter("name", "value"));
+                .withQueryStringParameter(new Parameter("name", "value"))
+                .withKeepAlive(true)
+                .withSecure(true);
 
         // when
         HttpRequestDTO httpRequestDTO = new HttpRequestDTO(httpRequest);
@@ -50,6 +52,8 @@ public class HttpRequestDTOTest {
         assertThat(httpRequestDTO.getMethod(), is(string(method)));
         assertThat(httpRequestDTO.getPath(), is(string(path)));
         assertThat(httpRequestDTO.getQueryStringParameters(), is(queryStringParameters));
+        assertThat(httpRequestDTO.getKeepAlive(), is(Boolean.TRUE));
+        assertThat(httpRequestDTO.getSecure(), is(Boolean.TRUE));
     }
 
     @Test
@@ -67,7 +71,9 @@ public class HttpRequestDTOTest {
                 .withHeaders(header)
                 .withMethod(method)
                 .withPath(path)
-                .withQueryStringParameter(parameter);
+                .withQueryStringParameter(parameter)
+                .withKeepAlive(true)
+                .withSecure(true);
 
         // when
         HttpRequest builtHttpRequest = new HttpRequestDTO(httpRequest).buildObject();
@@ -79,6 +85,8 @@ public class HttpRequestDTOTest {
         assertThat(builtHttpRequest.getMethod(), is(string(method)));
         assertThat(builtHttpRequest.getPath(), is(string(path)));
         assertThat(builtHttpRequest.getQueryStringParameters(), containsInAnyOrder(parameter));
+        assertThat(builtHttpRequest.isKeepAlive(), is(Boolean.TRUE));
+        assertThat(builtHttpRequest.isSecure(), is(Boolean.TRUE));
     }
 
     @Test
@@ -100,6 +108,8 @@ public class HttpRequestDTOTest {
         httpRequestDTO.setMethod(string(method));
         httpRequestDTO.setPath(string(path));
         httpRequestDTO.setQueryStringParameters(queryStringParameters);
+        httpRequestDTO.setKeepAlive(Boolean.TRUE);
+        httpRequestDTO.setSecure(Boolean.TRUE);
 
         // then
         assertThat(httpRequestDTO.getBody(), is(body));
@@ -108,6 +118,8 @@ public class HttpRequestDTOTest {
         assertThat(httpRequestDTO.getMethod(), is(string(method)));
         assertThat(httpRequestDTO.getPath(), is(string(path)));
         assertThat(httpRequestDTO.getQueryStringParameters(), is(queryStringParameters));
+        assertThat(httpRequestDTO.getKeepAlive(), is(Boolean.TRUE));
+        assertThat(httpRequestDTO.getSecure(), is(Boolean.TRUE));
     }
 
 
@@ -123,6 +135,8 @@ public class HttpRequestDTOTest {
         assertThat(httpRequestDTO.getMethod(), is(string("")));
         assertThat(httpRequestDTO.getPath(), is(string("")));
         assertThat(httpRequestDTO.getQueryStringParameters(), is(empty()));
+        assertThat(httpRequestDTO.getKeepAlive(), is(nullValue()));
+        assertThat(httpRequestDTO.getSecure(), is(nullValue()));
     }
 
     @Test
@@ -137,5 +151,7 @@ public class HttpRequestDTOTest {
         assertThat(httpRequestDTO.getMethod(), is(string("")));
         assertThat(httpRequestDTO.getPath(), is(string("")));
         assertThat(httpRequestDTO.getQueryStringParameters(), is(empty()));
+        assertThat(httpRequestDTO.getKeepAlive(), is(nullValue()));
+        assertThat(httpRequestDTO.getSecure(), is(nullValue()));
     }
 }

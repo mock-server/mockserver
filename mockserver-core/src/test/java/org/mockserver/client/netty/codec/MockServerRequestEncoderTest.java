@@ -156,7 +156,7 @@ public class MockServerRequestEncoderTest {
     @Test
     public void shouldEncodeDefaultSecureHostHeader() {
         // given
-        httpRequest = outboundRequest("localhost", 443, "", request().setSecure(true));
+        httpRequest = outboundRequest("localhost", 443, "", request().withSecure(true));
 
         // when
         mockServerRequestEncoder.encode(null, httpRequest, output);
@@ -169,7 +169,7 @@ public class MockServerRequestEncoderTest {
     @Test
     public void shouldEncodeNonDefaultSecureHostHeader() {
         // given
-        httpRequest = outboundRequest("localhost", 999, "", request().setSecure(true));
+        httpRequest = outboundRequest("localhost", 999, "", request().withSecure(true));
 
         // when
         mockServerRequestEncoder.encode(null, httpRequest, output);

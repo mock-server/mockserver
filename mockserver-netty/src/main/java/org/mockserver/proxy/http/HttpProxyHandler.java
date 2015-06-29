@@ -190,7 +190,7 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
     private void writeResponse(ChannelHandlerContext ctx, HttpRequest request, HttpResponse response) {
         addContentLengthHeader(response);
-        if (request.isKeepAlive()) {
+        if (request.isKeepAlive() != null && request.isKeepAlive()) {
             response.updateHeader(header(CONNECTION, HttpHeaders.Values.KEEP_ALIVE));
             ctx.write(response);
         } else {

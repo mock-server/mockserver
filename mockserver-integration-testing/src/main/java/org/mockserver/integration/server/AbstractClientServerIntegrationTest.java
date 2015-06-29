@@ -6,7 +6,6 @@ import com.google.common.net.MediaType;
 import com.google.common.util.concurrent.Uninterruptibles;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.netty.SocketConnectionException;
@@ -131,7 +130,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("an_example_body_https"),
                 makeRequest(
                         request()
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("echo"))
                                 .withMethod("POST")
                                 .withHeaders(
@@ -191,7 +190,7 @@ public abstract class AbstractClientServerIntegrationTest {
                             .withBody("an_example_body_https"),
                     makeRequest(
                             request()
-                                    .setSecure(true)
+                                    .withSecure(true)
                                     .withPath(calculatePath("echo"))
                                     .withMethod("POST")
                                     .withHeaders(
@@ -319,7 +318,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("a_callback_response"),
                 makeRequest(
                         request()
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("callback"))
                                 .withMethod("POST")
                                 .withHeaders(
@@ -356,7 +355,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body"),
                 makeRequest(
                         request()
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("")),
                         headersToIgnore)
         );
@@ -389,7 +388,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody(body),
                 makeRequest(
                         request()
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath(""))
                                 .withBody(body, Charsets.UTF_16),
                         headersToIgnore)
@@ -434,7 +433,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         request()
                                 .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath(""))
                                 .withBody(body),
                         headersToIgnore)
@@ -467,7 +466,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody(body),
                 makeRequest(
                         request()
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("")),
                         headersToIgnore)
         );
@@ -507,7 +506,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody(body),
                 makeRequest(
                         request()
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("")),
                         headersToIgnore)
         );
@@ -544,7 +543,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withStatusCode(HttpStatusCode.OK_200.code()),
                 makeRequest(
                         request()
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST"),
                         headersToIgnore)
@@ -589,12 +588,64 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body"),
                 makeRequest(
                         request()
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("some_path")),
                         headersToIgnore)
         );
         mockServerClient.verify(request().withPath(calculatePath("some_path")), VerificationTimes.atLeast(1));
         mockServerClient.verify(request().withPath(calculatePath("some_path")), VerificationTimes.exactly(2));
+    }
+
+    @Test
+    public void shouldVerifyReceivedRequestInSsl() {
+        // when
+        mockServerClient
+                .when(
+                        request()
+                                .withPath(calculatePath("some.*path")), exactly(2)
+                )
+                .respond(
+                        response()
+                                .withBody("some_body")
+                );
+
+        // then
+        // - in http
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("some_path")),
+                        headersToIgnore)
+        );
+        mockServerClient.verify(request()
+                .withPath(calculatePath("some_path"))
+                .withSecure(false));
+        mockServerClient.verify(request()
+                .withPath(calculatePath("some_path"))
+                .withSecure(false), VerificationTimes.exactly(1));
+
+        // - in https
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("some_secure_path"))
+                                .withSecure(true),
+                        headersToIgnore)
+        );
+        mockServerClient.verify(request()
+                .withPath(calculatePath("some_secure_path"))
+                .withSecure(true));
+        mockServerClient.verify(request()
+                .withPath(calculatePath("some_secure_path"))
+                .withSecure(true), VerificationTimes.exactly(1));
     }
 
     @Test
@@ -706,6 +757,71 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
+    public void shouldVerifyNoMatchingRequestsReceivedInSsl() {
+        // when
+        mockServerClient.when(request().withPath(calculatePath("some.*path")), exactly(2)).respond(response().withBody("some_body"));
+
+        // then
+        // - in http
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("some_path")),
+                        headersToIgnore)
+        );
+        try {
+            mockServerClient.verify(
+                    request()
+                            .withPath(calculatePath("some_path"))
+                            .withSecure(true),
+                    VerificationTimes.atLeast(1)
+            );
+            fail();
+        } catch (AssertionError ae) {
+            assertThat(ae.getMessage(), startsWith("Request not found at least once, expected:<{" + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path") + "\"," + System.getProperty("line.separator") +
+                    "  \"secure\" : true" + System.getProperty("line.separator") +
+                    "}> but was:<{" + System.getProperty("line.separator") +
+                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path") + "\"," + System.getProperty("line.separator")));
+        }
+
+        // - in https
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("some_secure_path"))
+                                .withSecure(true),
+                        headersToIgnore)
+        );
+        try {
+            mockServerClient.verify(
+                    request()
+                            .withPath(calculatePath("some_secure_path"))
+                            .withSecure(false),
+                    VerificationTimes.atLeast(1)
+            );
+            fail();
+        } catch (AssertionError ae) {
+            assertThat(ae.getMessage(), startsWith("Request not found at least once, expected:<{" + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_secure_path") + "\"," + System.getProperty("line.separator") +
+                    "  \"secure\" : false" + System.getProperty("line.separator") +
+                    "}> but was:<[ {" + System.getProperty("line.separator") +
+                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path") + "\"," + System.getProperty("line.separator")));
+        }
+
+    }
+
+    @Test
     public void shouldVerifySequenceOfRequestsReceived() {
         // when
         mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(6)).respond(response().withBody("some_body"));
@@ -738,21 +854,21 @@ public abstract class AbstractClientServerIntegrationTest {
         assertEquals(
                 response("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
                 makeRequest(
-                        request().setSecure(true)
+                        request().withSecure(true)
                                 .withPath(calculatePath("some_path_one")),
                         headersToIgnore)
         );
         assertEquals(
                 response("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
                 makeRequest(
-                        request().setSecure(true)
+                        request().withSecure(true)
                                 .withPath(calculatePath("some_path_two")),
                         headersToIgnore)
         );
         assertEquals(
                 response("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
                 makeRequest(
-                        request().setSecure(true)
+                        request().withSecure(true)
                                 .withPath(calculatePath("some_path_three")),
                         headersToIgnore)
         );
@@ -794,21 +910,21 @@ public abstract class AbstractClientServerIntegrationTest {
         assertEquals(
                 response("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
                 makeRequest(
-                        request().setSecure(true)
+                        request().withSecure(true)
                                 .withPath(calculatePath("some_path_one")),
                         headersToIgnore)
         );
         assertEquals(
                 notFoundResponse().withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
                 makeRequest(
-                        request().setSecure(true)
+                        request().withSecure(true)
                                 .withPath(calculatePath("not_found")),
                         headersToIgnore)
         );
         assertEquals(
                 response("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
                 makeRequest(
-                        request().setSecure(true)
+                        request().withSecure(true)
                                 .withPath(calculatePath("some_path_three")),
                         headersToIgnore)
         );
@@ -930,7 +1046,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body2"),
                 makeRequest(
                         request()
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("some_path2")),
                         headersToIgnore)
         );
@@ -941,7 +1057,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body1"),
                 makeRequest(
                         request()
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("some_path1")),
                         headersToIgnore)
         );
@@ -980,7 +1096,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body"),
                 makeRequest(
                         request()
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("some_path")),
                         headersToIgnore)
         );
@@ -1001,7 +1117,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("some_path")),
                         headersToIgnore)
         );
@@ -1040,7 +1156,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body"),
                 makeRequest(
                         request()
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("some_path")),
                         headersToIgnore)
         );
@@ -1061,7 +1177,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("some_path")),
                         headersToIgnore)
         );
@@ -1115,7 +1231,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body"),
                 makeRequest(
                         request()
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
                                 .withBody(new StringBody("" +
@@ -1192,7 +1308,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body"),
                 makeRequest(
                         request()
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
                                 .withBody("{" + System.getProperty("line.separator") +
@@ -1254,7 +1370,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body"),
                 makeRequest(
                         request()
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
                                 .withBody(json("{" + System.getProperty("line.separator") +
@@ -1317,7 +1433,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body"),
                 makeRequest(
                         request()
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.create("text", "plain").withCharset(Charsets.UTF_16).toString())
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
@@ -1375,7 +1491,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
                 makeRequest(
                         request()
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
                                 .withBody("{" + System.getProperty("line.separator") +
@@ -1450,7 +1566,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body"),
                 makeRequest(
                         request()
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
                                 .withBody("{" + System.getProperty("line.separator") +
@@ -1512,7 +1628,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody(binary(pdfBytes)),
                 makeRequest(
                         request()
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("ws/rest/user/1/document/2.pdf"))
                                 .withMethod("GET"),
                         headersToIgnore)
@@ -1566,7 +1682,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody(binary(pngBytes)),
                 makeRequest(
                         request()
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("ws/rest/user/1/icon/1.png"))
                                 .withMethod("GET"),
                         headersToIgnore)
@@ -1622,7 +1738,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody(binary(pdfBytes)),
                 makeRequest(
                         request()
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("ws/rest/user/1/document/2.pdf"))
                                 .withBody(binary(pdfBytes))
                                 .withMethod("POST"),
@@ -1676,7 +1792,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody(binary(pngBytes)),
                 makeRequest(
                         request()
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("ws/rest/user/1/icon/1.png"))
                                 .withBody(binary(pngBytes))
                                 .withMethod("POST"),
@@ -1738,7 +1854,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body2"),
                 makeRequest(
                         request()
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("some_path2")),
                         headersToIgnore)
         );
@@ -1749,7 +1865,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body1"),
                 makeRequest(
                         request()
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("some_path1")),
                         headersToIgnore)
         );
@@ -1798,7 +1914,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         request()
                                 .withMethod("GET")
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("some_pathRequest"))
                                 .withQueryStringParameters(
                                         param("queryStringParameterOneName", "queryStringParameterOneValue"),
@@ -1940,7 +2056,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         request()
                                 .withMethod("POST")
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("some_pathRequest"))
                                 .withQueryStringParameters(
                                         param("queryStringParameterOneName", "queryStringParameterOneValue"),
@@ -2009,7 +2125,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         request()
                                 .withMethod("GET")
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("some_pathRequest"))
                                 .withQueryStringParameters(
                                         param("queryStringParameterOneName", "queryStringParameterOneValue"),
@@ -2076,7 +2192,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         request()
                                 .withMethod("GET")
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("some_pathRequest"))
                                 .withHeaders(
                                         header("requestHeaderNameOne", "requestHeaderValueOne_One", "requestHeaderValueOne_Two"),
@@ -2177,7 +2293,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         request()
                                 .withMethod("GET")
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("some_pathRequest"))
                                 .withHeaders(
                                         header("headerNameRequest", "headerValueRequest")
@@ -2204,7 +2320,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         request()
                                 .withMethod("GET")
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("some_pathRequest"))
                                 .withHeaders(
                                         header("headerNameRequest", "headerValueRequest"),
@@ -2260,7 +2376,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body"),
                 makeRequest(
                         request()
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withMethod("POST")
                                 .withPath(calculatePath("some_pathRequest"))
                                 .withQueryStringParameters(
@@ -3171,7 +3287,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("some_path")),
                         headersToIgnore)
         );
@@ -3228,7 +3344,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         request()
                                 .withMethod("GET")
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("some_path"))
                                 .withQueryStringParameters(
                                         param("queryStringParameterOneName", "queryStringParameterOneValue"),
@@ -3287,7 +3403,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
                                 .withBody("{" + System.getProperty("line.separator") +
@@ -3314,7 +3430,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
                                 .withBody(new StringBody("" +
@@ -3348,7 +3464,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
                                 .withBody(new StringBody("" +
@@ -3412,7 +3528,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
                                 .withBody("{" + System.getProperty("line.separator") +
@@ -3469,7 +3585,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
                                 .withBody("{" + System.getProperty("line.separator") +
@@ -3542,7 +3658,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
                                 .withBody("{" + System.getProperty("line.separator") +
@@ -3606,7 +3722,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         request()
                                 .withMethod("GET")
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("some_other_path"))
                                 .withQueryStringParameters(
                                         param("queryStringParameterOneName", "queryStringParameterOneValue"),
@@ -4053,7 +4169,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         request()
                                 .withMethod("GET")
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("some_path"))
                                 .withQueryStringParameters(
                                         param("queryStringParameterOneName", "queryStringParameterOneValue"),
@@ -4117,7 +4233,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         request()
                                 .withMethod("GET")
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("some_path"))
                                 .withQueryStringParameters(
                                         param("queryStringParameterOneName", "queryStringParameterOneValue"),
@@ -4233,7 +4349,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         request()
                                 .withMethod("GET")
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("some_path"))
                                 .withQueryStringParameters(
                                         param("queryStringParameterOneName", "queryStringParameterOneValue"),
@@ -4297,7 +4413,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         request()
                                 .withMethod("GET")
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("some_path"))
                                 .withQueryStringParameters(
                                         param("queryStringParameterOneName", "queryStringParameterOneValue"),
@@ -4420,7 +4536,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body2"),
                 makeRequest(
                         request()
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("some_path2")),
                         headersToIgnore)
         );
@@ -4430,7 +4546,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("some_path1")),
                         headersToIgnore)
         );
@@ -4488,7 +4604,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("some_path1")),
                         headersToIgnore)
         );
@@ -4498,7 +4614,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("some_path2")),
                         headersToIgnore)
         );
@@ -4561,7 +4677,8 @@ public abstract class AbstractClientServerIntegrationTest {
         int attemptsRemaining = 10;
         while (attemptsRemaining > 0) {
             try {
-                int port = (httpRequest.isSecure() ? getMockServerSecurePort() : getMockServerPort());
+                boolean isSsl = httpRequest.isSecure() != null && httpRequest.isSecure();
+                int port = (isSsl ? getMockServerSecurePort() : getMockServerPort());
                 HttpResponse httpResponse = httpClient.sendRequest(outboundRequest("localhost", port, servletContext, httpRequest));
                 List<Header> headers = new ArrayList<Header>();
                 for (Header header : httpResponse.getHeaders()) {

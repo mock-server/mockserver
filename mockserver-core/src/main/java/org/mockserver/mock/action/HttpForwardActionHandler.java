@@ -5,7 +5,6 @@ import org.mockserver.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.mockserver.model.Header.header;
 import static org.mockserver.model.OutboundHttpRequest.outboundRequest;
 
 /**
@@ -19,9 +18,9 @@ public class HttpForwardActionHandler {
 
     public HttpResponse handle(HttpForward httpForward, HttpRequest httpRequest) {
         if (httpForward.getScheme().equals(HttpForward.Scheme.HTTPS)) {
-            httpRequest.setSecure(true);
+            httpRequest.withSecure(true);
         } else {
-            httpRequest.setSecure(false);
+            httpRequest.withSecure(false);
         }
         return sendRequest(outboundRequest(httpForward.getHost(), httpForward.getPort(), "", httpRequest));
     }

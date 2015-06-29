@@ -10,6 +10,7 @@ import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.ssl.SslHandler;
+import io.netty.util.AttributeKey;
 import org.mockserver.socket.SSLFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +21,7 @@ import org.slf4j.LoggerFactory;
 @ChannelHandler.Sharable
 public abstract class PortUnificationHandler extends SimpleChannelInboundHandler<ByteBuf> {
 
+    public static final AttributeKey<Boolean> SSL_ENABLED = AttributeKey.valueOf("SSL_ENABLED");
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public PortUnificationHandler() {
@@ -77,6 +79,7 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
     private void enableSsl(ChannelHandlerContext ctx, ByteBuf msg) {
         ChannelPipeline pipeline = ctx.pipeline();
         pipeline.addFirst(new SslHandler(SSLFactory.createServerSSLEngine()));
+        ctx.channel().attr(PortUnificationHandler.SSL_ENABLED).set(Boolean.TRUE);
 
         // re-unify (with SSL enabled)
         ctx.pipeline().fireChannelRead(msg);

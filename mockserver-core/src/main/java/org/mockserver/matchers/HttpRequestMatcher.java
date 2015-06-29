@@ -23,6 +23,8 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
     private BodyMatcher bodyMatcher = null;
     private MultiValueMapMatcher headerMatcher = null;
     private HashMapMatcher cookieMatcher = null;
+    private BooleanMatcher keepAliveMatcher = null;
+    private BooleanMatcher sslMatcher = null;
 
     public HttpRequestMatcher(HttpRequest httpRequest) {
         this.httpRequest = httpRequest;
@@ -33,6 +35,8 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
             withBody(httpRequest.getBody());
             withHeaders(httpRequest.getHeaders());
             withCookies(httpRequest.getCookies());
+            withKeepAlive(httpRequest.isKeepAlive());
+            withSsl(httpRequest.isSecure());
         }
         addFieldsExcludedFromEqualsAndHashCode("logFormatter");
     }
@@ -111,6 +115,16 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
         return this;
     }
 
+    private HttpRequestMatcher withKeepAlive(Boolean keepAlive) {
+        this.keepAliveMatcher = new BooleanMatcher(keepAlive);
+        return this;
+    }
+
+    private HttpRequestMatcher withSsl(Boolean isSsl) {
+        this.sslMatcher = new BooleanMatcher(isSsl);
+        return this;
+    }
+
     public boolean matches(HttpRequest httpRequest) {
         return matches(httpRequest, false);
     }
@@ -120,42 +134,58 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
             return true;
         } else if (this.httpRequest == null) {
             return true;
-        } else if (httpRequest != null) {
-            boolean methodMatches = matches(methodMatcher, httpRequest.getMethod());
-            boolean pathMatches = matches(pathMatcher, httpRequest.getPath());
-            boolean queryStringParametersMatches = matches(queryStringParameterMatcher, (httpRequest.getQueryStringParameters() != null ? new ArrayList<KeyToMultiValue>(httpRequest.getQueryStringParameters()) : null));
-            boolean bodyMatches;
-            if (bodyMatcher instanceof BinaryMatcher) {
-                bodyMatches = matches(bodyMatcher, httpRequest.getBodyAsRawBytes());
-            } else if (bodyMatcher instanceof ExactStringMatcher || bodyMatcher instanceof RegexStringMatcher) {
-                bodyMatches = matches(bodyMatcher, string(httpRequest.getBody() != null ? new String(httpRequest.getBody().getRawBytes(), httpRequest.getBody().getCharset(Charsets.UTF_8)) : ""));
-            } else {
-                bodyMatches = matches(bodyMatcher, (httpRequest.getBody() != null ? new String(httpRequest.getBody().getRawBytes(), httpRequest.getBody().getCharset(Charsets.UTF_8)) : ""));
-            }
-            boolean headersMatch = matches(headerMatcher, (httpRequest.getHeaders() != null ? new ArrayList<KeyToMultiValue>(httpRequest.getHeaders()) : null));
-            boolean cookiesMatch = matches(cookieMatcher, (httpRequest.getCookies() != null ? new ArrayList<KeyAndValue>(httpRequest.getCookies()) : null));
-            boolean result = methodMatches && pathMatches && queryStringParametersMatches && bodyMatches && headersMatch && cookiesMatch;
-            boolean resultAfterNotOperatorsApplied = httpRequest.isNot() == (this.httpRequest.isNot() == (not != result));
-            if (logMatchResults && logger.isInfoEnabled()) {
-                if (!resultAfterNotOperatorsApplied) {
-                    String because = "" +
-                            "methodMatches = " + methodMatches + System.getProperty("line.separator") +
-                            "pathMatches = " + pathMatches + System.getProperty("line.separator") +
-                            "queryStringParametersMatch = " + queryStringParametersMatches + System.getProperty("line.separator") +
-                            "bodyMatches = " + bodyMatches + System.getProperty("line.separator") +
-                            "headersMatch = " + headersMatch + System.getProperty("line.separator") +
-                            "cookiesMatch = " + cookiesMatch +
-                            (httpRequest.isNot() ? System.getProperty("line.separator") + "request not operator is enabled" : "") +
-                            (this.httpRequest.isNot() ? System.getProperty("line.separator") + "expectation's request not operator is enabled" : "") +
-                            (not ? System.getProperty("line.separator") + "expectation's request matcher not operator is enabled" : "");
-                    logFormatter.infoLog("request:{}" + System.getProperty("line.separator") + " did" + (result ? "" : " not") + " match expectation:{}" + System.getProperty("line.separator") + " because:{}", httpRequest, this, because);
-                } else {
-                    logFormatter.infoLog("request:{}" + System.getProperty("line.separator") + " matched expectation:{}", httpRequest, this);
-                }
-            }
-            return resultAfterNotOperatorsApplied;
         } else {
-            return false;
+            if (httpRequest != null) {
+                boolean methodMatches = matches(methodMatcher, httpRequest.getMethod());
+                boolean pathMatches = matches(pathMatcher, httpRequest.getPath());
+                boolean queryStringParametersMatches = matches(queryStringParameterMatcher, (httpRequest.getQueryStringParameters() != null ? new ArrayList<KeyToMultiValue>(httpRequest.getQueryStringParameters()) : null));
+                boolean bodyMatches;
+                if (bodyMatcher instanceof BinaryMatcher) {
+                    bodyMatches = matches(bodyMatcher, httpRequest.getBodyAsRawBytes());
+                } else if (bodyMatcher instanceof ExactStringMatcher || bodyMatcher instanceof RegexStringMatcher) {
+                    bodyMatches = matches(bodyMatcher, string(httpRequest.getBody() != null ? new String(httpRequest.getBody().getRawBytes(), httpRequest.getBody().getCharset(Charsets.UTF_8)) : ""));
+                } else {
+                    bodyMatches = matches(bodyMatcher, (httpRequest.getBody() != null ? new String(httpRequest.getBody().getRawBytes(), httpRequest.getBody().getCharset(Charsets.UTF_8)) : ""));
+                }
+                boolean headersMatch = matches(headerMatcher, (httpRequest.getHeaders() != null ? new ArrayList<KeyToMultiValue>(httpRequest.getHeaders()) : null));
+                boolean cookiesMatch = matches(cookieMatcher, (httpRequest.getCookies() != null ? new ArrayList<KeyAndValue>(httpRequest.getCookies()) : null));
+                boolean keepAliveMatches = matches(keepAliveMatcher, httpRequest.isKeepAlive());
+                boolean sslMatches = matches(sslMatcher, httpRequest.isSecure());
+
+                boolean totalResult = methodMatches && pathMatches && queryStringParametersMatches && bodyMatches && headersMatch && cookiesMatch && keepAliveMatches && sslMatches;
+                boolean totalResultAfterNotOperatorApplied = httpRequest.isNot() == (this.httpRequest.isNot() == (not != totalResult));
+
+                if (logMatchResults && logger.isInfoEnabled()) {
+                    if (!totalResultAfterNotOperatorApplied) {
+                        StringBuilder becauseBuilder = new StringBuilder();
+                        becauseBuilder.append("method matches = ").append(methodMatches).append(System.getProperty("line.separator"));
+                        becauseBuilder.append("path matches = ").append(pathMatches).append(System.getProperty("line.separator"));
+                        becauseBuilder.append("query string parameters match = ").append(queryStringParametersMatches).append(System.getProperty("line.separator"));
+                        becauseBuilder.append("body matches = ").append(bodyMatches).append(System.getProperty("line.separator"));
+                        becauseBuilder.append("headers match = ").append(headersMatch).append(System.getProperty("line.separator"));
+                        becauseBuilder.append("cookies match = ").append(cookiesMatch).append(System.getProperty("line.separator"));
+                        becauseBuilder.append("cookies match = ").append(cookiesMatch).append(System.getProperty("line.separator"));
+                        becauseBuilder.append("cookies match = ").append(cookiesMatch).append(System.getProperty("line.separator"));
+                        becauseBuilder.append("keep-alive matches = ").append(keepAliveMatches).append(System.getProperty("line.separator"));
+                        becauseBuilder.append("ssl matches = ").append(sslMatches).append(System.getProperty("line.separator"));
+                        if (httpRequest.isNot()) {
+                            becauseBuilder.append("request \'not\' operator is enabled").append(System.getProperty("line.separator"));
+                        }
+                        if (this.httpRequest.isNot()) {
+                            becauseBuilder.append("expectation's request \'not\' operator is enabled").append(System.getProperty("line.separator"));
+                        }
+                        if (not) {
+                            becauseBuilder.append("expectation's request matcher \'not\' operator is enabled").append(System.getProperty("line.separator"));
+                        }
+                        logFormatter.infoLog("request:{}" + System.getProperty("line.separator") + " did" + (totalResult ? "" : " not") + " match expectation:{}" + System.getProperty("line.separator") + " because:{}", httpRequest, this, becauseBuilder.toString());
+                    } else {
+                        logFormatter.infoLog("request:{}" + System.getProperty("line.separator") + " matched expectation:{}", httpRequest, this);
+                    }
+                }
+                return totalResultAfterNotOperatorApplied;
+            } else {
+                return false;
+            }
         }
     }
 

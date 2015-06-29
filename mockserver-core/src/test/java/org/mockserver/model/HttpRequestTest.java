@@ -33,6 +33,18 @@ public class HttpRequestTest {
     }
 
     @Test
+    public void returnsKeepAlive() {
+        assertEquals(true, new HttpRequest().withKeepAlive(true).isKeepAlive());
+        assertEquals(false, new HttpRequest().withKeepAlive(false).isKeepAlive());
+    }
+
+    @Test
+    public void returnsSsl() {
+        assertEquals(true, new HttpRequest().withSecure(true).isSecure());
+        assertEquals(false, new HttpRequest().withSecure(false).isSecure());
+    }
+
+    @Test
     public void returnsQueryStringParameters() {
         assertEquals(new Parameter("name", "value"), new HttpRequest().withQueryStringParameters(new Parameter("name", "value")).getQueryStringParameters().get(0));
         assertEquals(new Parameter("name", "value"), new HttpRequest().withQueryStringParameters(Arrays.asList(new Parameter("name", "value"))).getQueryStringParameters().get(0));

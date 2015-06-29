@@ -90,7 +90,7 @@ public abstract class AbstractClientServerSharedClassloadersAndTestClasspathInte
                         .withBody("a_callback_response"),
                 makeRequest(
                         request()
-                                .setSecure(true)
+                                .withSecure(true)
                                 .withPath(calculatePath("callback"))
                                 .withMethod("POST")
                                 .withHeaders(

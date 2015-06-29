@@ -23,13 +23,17 @@ public class HttpRequestSerializerTest {
 
     @Test
     public void shouldReturnFormattedRequestWithAllFieldsSet() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(request()
-                        .withMethod("GET")
-                        .withPath("/some/path")
-                        .withQueryStringParameters(param("parameterOneName", "parameterOneValue"))
-                        .withBody("some_body")
-                        .withHeaders(new Header("name", "value"))
-                        .withCookies(new Cookie("name", "[A-Z]{0,10}"))),
+        assertThat(ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(
+                        request()
+                                .withMethod("GET")
+                                .withPath("/some/path")
+                                .withQueryStringParameters(param("parameterOneName", "parameterOneValue"))
+                                .withBody("some_body")
+                                .withHeaders(new Header("name", "value"))
+                                .withCookies(new Cookie("name", "[A-Z]{0,10}"))
+                                .withSecure(true)
+                                .withKeepAlive(true)
+                ),
                 is("{" + System.getProperty("line.separator") +
                         "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
                         "  \"path\" : \"/some/path\"," + System.getProperty("line.separator") +
@@ -45,6 +49,8 @@ public class HttpRequestSerializerTest {
                         "    \"name\" : \"name\"," + System.getProperty("line.separator") +
                         "    \"value\" : \"[A-Z]{0,10}\"" + System.getProperty("line.separator") +
                         "  } ]," + System.getProperty("line.separator") +
+                        "  \"keepAlive\" : true," + System.getProperty("line.separator") +
+                        "  \"secure\" : true," + System.getProperty("line.separator") +
                         "  \"body\" : \"some_body\"" + System.getProperty("line.separator") +
                         "}"));
     }

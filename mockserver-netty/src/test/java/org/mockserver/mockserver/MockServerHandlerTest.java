@@ -6,7 +6,6 @@ import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -205,7 +204,7 @@ public class MockServerHandlerTest {
     @Test
     public void shouldAddSubjectAlternativeName() throws UnknownHostException {
         // given
-        System.clearProperty("mockserver.sslSubjectAlternativeNameDomains");
+        ConfigurationProperties.clearSslSubjectAlternativeNameDomains();
         HttpRequest request = request("/expectation").withMethod("PUT").withBody("some_content");
         when(mockHttpRequest.getFirstHeader(HttpHeaders.Names.HOST)).thenReturn("somehostname");
         InetAddress inetAddress = null;
@@ -324,7 +323,7 @@ public class MockServerHandlerTest {
         when(mockMockServerMatcher.handle(request)).thenReturn(response().withBody("some_response"));
 
         // and - a action handler
-        when(mockActionHandler.processAction(response().withBody("some_response"), request.setKeepAlive(true)))
+        when(mockActionHandler.processAction(response().withBody("some_response"), request.withKeepAlive(true)))
                 .thenReturn(
                         response()
                                 .withBody("some_content")
@@ -361,7 +360,7 @@ public class MockServerHandlerTest {
         when(mockMockServerMatcher.handle(request)).thenReturn(response().withBody("some_response"));
 
         // and - a action handler
-        when(mockActionHandler.processAction(response().withBody("some_response"), request.setKeepAlive(true)))
+        when(mockActionHandler.processAction(response().withBody("some_response"), request.withKeepAlive(true)))
                 .thenReturn(
                         response()
                                 .withBody("some_content")
@@ -397,7 +396,7 @@ public class MockServerHandlerTest {
         when(mockMockServerMatcher.handle(request)).thenReturn(response().withBody("some_response"));
 
         // and - a action handler
-        when(mockActionHandler.processAction(response().withBody("some_response"), request.setKeepAlive(false)))
+        when(mockActionHandler.processAction(response().withBody("some_response"), request.withKeepAlive(false)))
                 .thenReturn(
                         response()
                                 .withBody("some_content")
@@ -433,7 +432,7 @@ public class MockServerHandlerTest {
         when(mockMockServerMatcher.handle(request)).thenReturn(response().withBody("some_response"));
 
         // and - a action handler
-        when(mockActionHandler.processAction(response().withBody("some_response"), request.setKeepAlive(true)))
+        when(mockActionHandler.processAction(response().withBody("some_response"), request.withKeepAlive(true)))
                 .thenReturn(
                         response()
                                 .withBody("some_content")
@@ -465,7 +464,7 @@ public class MockServerHandlerTest {
         when(mockMockServerMatcher.handle(request)).thenReturn(response().withBody("some_response"));
 
         // and - a action handler
-        when(mockActionHandler.processAction(response().withBody("some_response"), request.setKeepAlive(true)))
+        when(mockActionHandler.processAction(response().withBody("some_response"), request.withKeepAlive(true)))
                 .thenReturn(
                         response()
                                 .withBody("some_content")
@@ -501,7 +500,7 @@ public class MockServerHandlerTest {
         when(mockMockServerMatcher.handle(request)).thenReturn(response().withBody("some_response"));
 
         // and - a action handler
-        when(mockActionHandler.processAction(response().withBody("some_response"), request.setKeepAlive(false)))
+        when(mockActionHandler.processAction(response().withBody("some_response"), request.withKeepAlive(false)))
                 .thenReturn(
                         response()
                                 .withBody("some_content")
@@ -533,7 +532,7 @@ public class MockServerHandlerTest {
         when(mockMockServerMatcher.handle(request)).thenReturn(response().withBody("some_response"));
 
         // and - a action handler
-        when(mockActionHandler.processAction(response().withBody("some_response"), request.setKeepAlive(true)))
+        when(mockActionHandler.processAction(response().withBody("some_response"), request.withKeepAlive(true)))
                 .thenReturn(
                         response()
                                 .withBody("some_content")
@@ -569,7 +568,7 @@ public class MockServerHandlerTest {
         when(mockMockServerMatcher.handle(request)).thenReturn(response().withBody("some_response"));
 
         // and - a action handler
-        when(mockActionHandler.processAction(response().withBody("some_response"), request.setKeepAlive(false)))
+        when(mockActionHandler.processAction(response().withBody("some_response"), request.withKeepAlive(false)))
                 .thenReturn(
                         response()
                                 .withBody("some_content")

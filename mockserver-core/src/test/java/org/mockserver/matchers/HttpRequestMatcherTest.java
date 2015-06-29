@@ -24,33 +24,75 @@ import static org.mockserver.model.XPathBody.xpath;
 public class HttpRequestMatcherTest {
 
     @Test
-    public void shouldNotMatchMatchingRequestWithNotMatcher() {
-        assertFalse(not(new HttpRequestMatcher(new HttpRequest().withMethod("HEAD"))).matches(new HttpRequest().withMethod("HEAD")));
-    }
-
-    @Test
-    public void shouldNotMatchMatchingRequestWithNotRequestInMatcher() {
+    public void shouldAllowUseOfNotWithMatchingRequests() {
+        // requests match - matcher HttpRequest notted
         assertFalse(new HttpRequestMatcher(org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD"))).matches(new HttpRequest().withMethod("HEAD")));
-    }
 
-    @Test
-    public void shouldNotMatchMatchingRequestWithNotRequestPassedToMatches() {
+        // requests match - matched HttpRequest notted
         assertFalse(new HttpRequestMatcher(new HttpRequest().withMethod("HEAD")).matches(org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD"))));
+
+        // requests match - matcher HttpRequest notted & HttpRequestMatch notted
+        assertTrue(not(new HttpRequestMatcher(org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD")))).matches(new HttpRequest().withMethod("HEAD")));
+
+        // requests match - matched HttpRequest notted & HttpRequestMatch notted
+        assertTrue(not(new HttpRequestMatcher(new HttpRequest().withMethod("HEAD"))).matches(org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD"))));
+
+        // requests match - matcher HttpRequest notted & matched HttpRequest notted & HttpRequestMatch notted
+        assertFalse(not(new HttpRequestMatcher(org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD")))).matches(org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD"))));
     }
 
     @Test
-    public void shouldMatchNotMatchingRequestWithNotMatcher() {
-        assertTrue(not(new HttpRequestMatcher(new HttpRequest().withMethod("HEAD"))).matches(new HttpRequest().withMethod("OPTIONS")));
-    }
-
-    @Test
-    public void shouldMatchNotMatchingRequestWithNotRequestInMatcher() {
+    public void shouldAllowUseOfNotWithNonMatchingRequests() {
+        // requests don't match - matcher HttpRequest notted
         assertTrue(new HttpRequestMatcher(org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD"))).matches(new HttpRequest().withMethod("OPTIONS")));
+
+        // requests don't match - matched HttpRequest notted
+        assertTrue(new HttpRequestMatcher(new HttpRequest().withMethod("HEAD")).matches(org.mockserver.model.Not.not(new HttpRequest().withMethod("OPTIONS"))));
+
+        // requests don't match - matcher HttpRequest notted & HttpRequestMatch notted
+        assertFalse(not(new HttpRequestMatcher(org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD")))).matches(new HttpRequest().withMethod("OPTIONS")));
+
+        // requests don't match - matched HttpRequest notted & HttpRequestMatch notted
+        assertFalse(not(new HttpRequestMatcher(new HttpRequest().withMethod("HEAD"))).matches(org.mockserver.model.Not.not(new HttpRequest().withMethod("OPTIONS"))));
+
+        // requests don't match - matcher HttpRequest notted & matched HttpRequest notted & HttpRequestMatch notted
+        assertTrue(not(new HttpRequestMatcher(org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD")))).matches(org.mockserver.model.Not.not(new HttpRequest().withMethod("OPTIONS"))));
     }
 
     @Test
-    public void shouldMatchNotMatchingRequestWithNotRequestPassedToMatches() {
-        assertTrue(new HttpRequestMatcher(new HttpRequest().withMethod("HEAD")).matches(org.mockserver.model.Not.not(new HttpRequest().withMethod("OPTIONS"))));
+    public void matchesMatchingKeepAlive() {
+        assertTrue(new HttpRequestMatcher(new HttpRequest().withKeepAlive(true)).matches(new HttpRequest().withKeepAlive(true)));
+        assertTrue(new HttpRequestMatcher(new HttpRequest().withKeepAlive(false)).matches(new HttpRequest().withKeepAlive(false)));
+        assertTrue(new HttpRequestMatcher(new HttpRequest().withKeepAlive(null)).matches(new HttpRequest().withKeepAlive(null)));
+        assertTrue(new HttpRequestMatcher(new HttpRequest().withKeepAlive(null)).matches(new HttpRequest().withKeepAlive(false)));
+        assertTrue(new HttpRequestMatcher(new HttpRequest().withKeepAlive(null)).matches(new HttpRequest()));
+        assertTrue(new HttpRequestMatcher(new HttpRequest()).matches(new HttpRequest().withKeepAlive(null)));
+    }
+
+    @Test
+    public void doesNotMatchIncorrectKeepAlive() {
+        assertFalse(new HttpRequestMatcher(new HttpRequest().withKeepAlive(true)).matches(new HttpRequest().withKeepAlive(false)));
+        assertFalse(new HttpRequestMatcher(new HttpRequest().withKeepAlive(false)).matches(new HttpRequest().withKeepAlive(true)));
+        assertFalse(new HttpRequestMatcher(new HttpRequest().withKeepAlive(true)).matches(new HttpRequest().withKeepAlive(null)));
+        assertFalse(new HttpRequestMatcher(new HttpRequest().withKeepAlive(false)).matches(new HttpRequest().withKeepAlive(null)));
+    }
+
+    @Test
+    public void matchesMatchingSsl() {
+        assertTrue(new HttpRequestMatcher(new HttpRequest().withSecure(true)).matches(new HttpRequest().withSecure(true)));
+        assertTrue(new HttpRequestMatcher(new HttpRequest().withSecure(false)).matches(new HttpRequest().withSecure(false)));
+        assertTrue(new HttpRequestMatcher(new HttpRequest().withSecure(null)).matches(new HttpRequest().withSecure(null)));
+        assertTrue(new HttpRequestMatcher(new HttpRequest().withSecure(null)).matches(new HttpRequest().withSecure(false)));
+        assertTrue(new HttpRequestMatcher(new HttpRequest().withSecure(null)).matches(new HttpRequest()));
+        assertTrue(new HttpRequestMatcher(new HttpRequest()).matches(new HttpRequest().withSecure(null)));
+    }
+
+    @Test
+    public void doesNotMatchIncorrectSsl() {
+        assertFalse(new HttpRequestMatcher(new HttpRequest().withSecure(true)).matches(new HttpRequest().withSecure(false)));
+        assertFalse(new HttpRequestMatcher(new HttpRequest().withSecure(false)).matches(new HttpRequest().withSecure(true)));
+        assertFalse(new HttpRequestMatcher(new HttpRequest().withSecure(true)).matches(new HttpRequest().withSecure(null)));
+        assertFalse(new HttpRequestMatcher(new HttpRequest().withSecure(false)).matches(new HttpRequest().withSecure(null)));
     }
 
     @Test

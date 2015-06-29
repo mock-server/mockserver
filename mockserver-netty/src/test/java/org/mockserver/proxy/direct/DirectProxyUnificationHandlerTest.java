@@ -16,7 +16,9 @@ import org.mockserver.proxy.http.HttpProxy;
 import org.mockserver.proxy.http.HttpProxyUnificationHandler;
 import org.mockserver.proxy.relay.RelayConnectHandler;
 import org.mockserver.proxy.socks.SocksProxyHandler;
+import org.mockserver.proxy.unification.PortUnificationHandler;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -47,12 +49,22 @@ public class DirectProxyUnificationHandlerTest {
         }));
 
         // then - should add SSL handlers first
-        assertThat(embeddedChannel.pipeline().names(), contains(
-                "SslHandler#0",
-                "HttpProxyUnificationHandler#0",
-                "EmbeddedChannel$LastInboundHandler#0",
-                "DefaultChannelPipeline$TailContext#0"
-        ));
+        if (LoggerFactory.getLogger(PortUnificationHandler.class).isTraceEnabled()) {
+            assertThat(embeddedChannel.pipeline().names(), contains(
+                    "SslHandler#0",
+                    "LoggingHandler#0",
+                    "HttpProxyUnificationHandler#0",
+                    "EmbeddedChannel$LastInboundHandler#0",
+                    "DefaultChannelPipeline$TailContext#0"
+            ));
+        } else {
+            assertThat(embeddedChannel.pipeline().names(), contains(
+                    "SslHandler#0",
+                    "HttpProxyUnificationHandler#0",
+                    "EmbeddedChannel$LastInboundHandler#0",
+                    "DefaultChannelPipeline$TailContext#0"
+            ));
+        }
     }
 
     @Test
@@ -86,14 +98,26 @@ public class DirectProxyUnificationHandlerTest {
         })));
 
         // and then - should add SOCKS handlers first
-        assertThat(embeddedChannel.pipeline().names(), contains(
-                "SocksCmdRequestDecoder#0",
-                "SocksMessageEncoder#0",
-                "SocksProxyHandler#0",
-                "HttpProxyUnificationHandler#0",
-                "EmbeddedChannel$LastInboundHandler#0",
-                "DefaultChannelPipeline$TailContext#0"
-        ));
+        if (LoggerFactory.getLogger(PortUnificationHandler.class).isTraceEnabled()) {
+            assertThat(embeddedChannel.pipeline().names(), contains(
+                    "LoggingHandler#0",
+                    "SocksCmdRequestDecoder#0",
+                    "SocksMessageEncoder#0",
+                    "SocksProxyHandler#0",
+                    "HttpProxyUnificationHandler#0",
+                    "EmbeddedChannel$LastInboundHandler#0",
+                    "DefaultChannelPipeline$TailContext#0"
+            ));
+        } else {
+            assertThat(embeddedChannel.pipeline().names(), contains(
+                    "SocksCmdRequestDecoder#0",
+                    "SocksMessageEncoder#0",
+                    "SocksProxyHandler#0",
+                    "HttpProxyUnificationHandler#0",
+                    "EmbeddedChannel$LastInboundHandler#0",
+                    "DefaultChannelPipeline$TailContext#0"
+            ));
+        }
     }
 
     @Test
@@ -110,15 +134,28 @@ public class DirectProxyUnificationHandlerTest {
         embeddedChannel.writeInbound(Unpooled.wrappedBuffer("GET /somePath HTTP/1.1\r\nHost: some.random.host\r\n\r\n".getBytes()));
 
         // then - should add HTTP handlers last
-        assertThat(embeddedChannel.pipeline().names(), contains(
-                "EmbeddedChannel$LastInboundHandler#0",
-                "HttpServerCodec#0",
-                "HttpContentDecompressor#0",
-                "HttpObjectAggregator#0",
-                "MockServerServerCodec#0",
-                "HttpProxyHandler#0",
-                "DefaultChannelPipeline$TailContext#0"
-        ));
+        if (LoggerFactory.getLogger(PortUnificationHandler.class).isTraceEnabled()) {
+            assertThat(embeddedChannel.pipeline().names(), contains(
+                    "LoggingHandler#0",
+                    "EmbeddedChannel$LastInboundHandler#0",
+                    "HttpServerCodec#0",
+                    "HttpContentDecompressor#0",
+                    "HttpObjectAggregator#0",
+                    "MockServerServerCodec#0",
+                    "HttpProxyHandler#0",
+                    "DefaultChannelPipeline$TailContext#0"
+            ));
+        } else {
+            assertThat(embeddedChannel.pipeline().names(), contains(
+                    "EmbeddedChannel$LastInboundHandler#0",
+                    "HttpServerCodec#0",
+                    "HttpContentDecompressor#0",
+                    "HttpObjectAggregator#0",
+                    "MockServerServerCodec#0",
+                    "HttpProxyHandler#0",
+                    "DefaultChannelPipeline$TailContext#0"
+            ));
+        }
     }
 
     @Test

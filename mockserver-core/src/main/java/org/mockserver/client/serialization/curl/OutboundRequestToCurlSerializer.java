@@ -22,10 +22,11 @@ public class OutboundRequestToCurlSerializer {
     public String toCurl(OutboundHttpRequest outboundHttpRequest) {
         StringBuilder curlString = new StringBuilder();
         if (outboundHttpRequest != null) {
+            boolean isSsl = outboundHttpRequest.isSecure() != null && outboundHttpRequest.isSecure();
             curlString.append("curl -v");
             curlString.append(" ");
             curlString.append("'");
-            curlString.append((outboundHttpRequest.isSecure() ? "https" : "http"));
+            curlString.append((isSsl ? "https" : "http"));
             curlString.append("://");
             curlString.append(getHostAndPort(outboundHttpRequest));
             curlString.append(getUri(outboundHttpRequest));

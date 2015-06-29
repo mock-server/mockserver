@@ -1,7 +1,6 @@
 package org.mockserver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 
 import java.nio.charset.Charset;
@@ -22,8 +21,8 @@ public class HttpRequest extends Not {
     Body body = null;
     Map<NottableString, Header> headers = new LinkedHashMap<NottableString, Header>();
     Map<NottableString, Cookie> cookies = new LinkedHashMap<NottableString, Cookie>();
-    boolean isKeepAlive = false;
-    boolean secure;
+    Boolean keepAlive = null;
+    Boolean secure = null;
 
     public static HttpRequest request() {
         return new HttpRequest();
@@ -33,23 +32,31 @@ public class HttpRequest extends Not {
         return new HttpRequest().withPath(path);
     }
 
-    @JsonIgnore
-    public boolean isKeepAlive() {
-        return isKeepAlive;
+    public Boolean isKeepAlive() {
+        return keepAlive;
     }
 
-    public HttpRequest setKeepAlive(boolean isKeepAlive) {
-        this.isKeepAlive = isKeepAlive;
+    /**
+     * Match on whether the request was made using an HTTP persistent connection, also called HTTP keep-alive, or HTTP connection reuse
+     *
+     * @param isKeepAlive true if the request was made with an HTTP persistent connection
+     */
+    public HttpRequest withKeepAlive(Boolean isKeepAlive) {
+        this.keepAlive = isKeepAlive;
         return this;
     }
 
-    @JsonIgnore
-    public boolean isSecure() {
+    public Boolean isSecure() {
         return secure;
     }
 
-    public HttpRequest setSecure(boolean secure) {
-        this.secure = secure;
+    /**
+     * Match on whether the request was made over SSL (i.e. HTTPS)
+     *
+     * @param isSsl true if the request was made with SSL
+     */
+    public HttpRequest withSecure(Boolean isSsl) {
+        this.secure = isSsl;
         return this;
     }
 

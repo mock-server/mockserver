@@ -53,7 +53,7 @@ public class MockServer {
                             .option(ChannelOption.SO_BACKLOG, 1024)
                             .channel(NioServerSocketChannel.class)
                             .childOption(ChannelOption.AUTO_READ, true)
-                            .childHandler(new MockServerInitializer(mockServerMatcher, MockServer.this, false))
+                            .childHandler(new MockServerInitializer(mockServerMatcher, MockServer.this))
                             .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                             .childAttr(LOG_FILTER, logFilter)
                             .bind(port)

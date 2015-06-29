@@ -181,7 +181,8 @@ public class ProxyServlet extends HttpServlet {
             if (!Strings.isNullOrEmpty(hostHeader)) {
                 String[] hostHeaderParts = hostHeader.split(":");
 
-                Integer port = (httpRequest.isSecure() ? 443 : 80); // default
+                boolean isSsl = httpRequest.isSecure() != null && httpRequest.isSecure();
+                Integer port = (isSsl ? 443 : 80); // default
                 if (hostHeaderParts.length > 1) {
                     port = Integer.parseInt(hostHeaderParts[1]);  // non-default
                 }

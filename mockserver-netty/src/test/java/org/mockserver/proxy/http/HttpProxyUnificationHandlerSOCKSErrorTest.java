@@ -9,12 +9,13 @@ import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.socks.SocksInitRequestDecoder;
 import io.netty.handler.codec.socks.SocksMessageEncoder;
-import io.netty.handler.ssl.SslHandler;
 import org.apache.commons.codec.binary.Hex;
 import org.junit.Test;
 import org.mockserver.proxy.relay.RelayConnectHandler;
 import org.mockserver.proxy.socks.SocksProxyHandler;
+import org.mockserver.proxy.unification.PortUnificationHandler;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -61,14 +62,26 @@ public class HttpProxyUnificationHandlerSOCKSErrorTest {
         })));
 
         // and then - should add SOCKS handlers first
-        assertThat(embeddedChannel.pipeline().names(), contains(
-                "SocksCmdRequestDecoder#0",
-                "SocksMessageEncoder#0",
-                "SocksProxyHandler#0",
-                "HttpProxyUnificationHandler#0",
-                "EmbeddedChannel$LastInboundHandler#0",
-                "DefaultChannelPipeline$TailContext#0"
-        ));
+        if (LoggerFactory.getLogger(PortUnificationHandler.class).isTraceEnabled()) {
+            assertThat(embeddedChannel.pipeline().names(), contains(
+                    "LoggingHandler#0",
+                    "SocksCmdRequestDecoder#0",
+                    "SocksMessageEncoder#0",
+                    "SocksProxyHandler#0",
+                    "HttpProxyUnificationHandler#0",
+                    "EmbeddedChannel$LastInboundHandler#0",
+                    "DefaultChannelPipeline$TailContext#0"
+            ));
+        } else {
+            assertThat(embeddedChannel.pipeline().names(), contains(
+                    "SocksCmdRequestDecoder#0",
+                    "SocksMessageEncoder#0",
+                    "SocksProxyHandler#0",
+                    "HttpProxyUnificationHandler#0",
+                    "EmbeddedChannel$LastInboundHandler#0",
+                    "DefaultChannelPipeline$TailContext#0"
+            ));
+        }
 
         // and when - SOCKS CONNECT command
         embeddedChannel.writeInbound(Unpooled.wrappedBuffer(new byte[]{
@@ -109,15 +122,28 @@ public class HttpProxyUnificationHandlerSOCKSErrorTest {
         embeddedChannel.writeInbound(Unpooled.wrappedBuffer("GET /somePath HTTP/1.1\r\nHost: some.random.host\r\n\r\n".getBytes()));
 
         // then - should add HTTP handlers last
-        assertThat(embeddedChannel.pipeline().names(), contains(
-                "EmbeddedChannel$LastInboundHandler#0",
-                "HttpServerCodec#0",
-                "HttpContentDecompressor#0",
-                "HttpObjectAggregator#0",
-                "MockServerServerCodec#0",
-                "HttpProxyHandler#0",
-                "DefaultChannelPipeline$TailContext#0"
-        ));
+        if (LoggerFactory.getLogger(PortUnificationHandler.class).isTraceEnabled()) {
+            assertThat(embeddedChannel.pipeline().names(), contains(
+                    "LoggingHandler#0",
+                    "EmbeddedChannel$LastInboundHandler#0",
+                    "HttpServerCodec#0",
+                    "HttpContentDecompressor#0",
+                    "HttpObjectAggregator#0",
+                    "MockServerServerCodec#0",
+                    "HttpProxyHandler#0",
+                    "DefaultChannelPipeline$TailContext#0"
+            ));
+        } else {
+            assertThat(embeddedChannel.pipeline().names(), contains(
+                    "EmbeddedChannel$LastInboundHandler#0",
+                    "HttpServerCodec#0",
+                    "HttpContentDecompressor#0",
+                    "HttpObjectAggregator#0",
+                    "MockServerServerCodec#0",
+                    "HttpProxyHandler#0",
+                    "DefaultChannelPipeline$TailContext#0"
+            ));
+        }
     }
 
     @Test

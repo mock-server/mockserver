@@ -46,8 +46,8 @@ public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
             setHeaders(httpRequest, fullHttpRequest);
             setCookies(httpRequest, fullHttpRequest);
 
-            httpRequest.setKeepAlive(isKeepAlive(fullHttpRequest));
-            httpRequest.setSecure(isSecure);
+            httpRequest.withKeepAlive(isKeepAlive(fullHttpRequest));
+            httpRequest.withSecure(isSecure);
         }
         out.add(httpRequest);
     }

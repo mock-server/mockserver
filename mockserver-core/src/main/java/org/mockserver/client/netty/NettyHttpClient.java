@@ -34,8 +34,9 @@ public class NettyHttpClient {
         // configure the client
         EventLoopGroup group = new NioEventLoopGroup();
 
+        boolean isSsl = httpRequest.isSecure() != null && httpRequest.isSecure();
         try {
-            final HttpClientInitializer channelInitializer = new HttpClientInitializer(httpRequest.isSecure());
+            final HttpClientInitializer channelInitializer = new HttpClientInitializer(isSsl);
 
             // make the connection attempt
             new Bootstrap()
@@ -68,7 +69,7 @@ public class NettyHttpClient {
             throw new SocketCommunicationException("Response was not received after " + ConfigurationProperties.maxSocketTimeout() + " milliseconds, to make the proxy wait longer please use \"mockserver.maxSocketTimeout\" system property or ConfigurationProperties.maxSocketTimeout(long milliseconds)", e.getCause());
         } catch (ExecutionException e) {
             if (retryIfSslFails) {
-                return sendRequest(httpRequest.setSecure(!httpRequest.isSecure()));
+                return sendRequest(httpRequest.withSsl(!isSsl));
             } else {
                 Throwable cause = e.getCause();
                 if (cause instanceof ConnectException) {
@@ -76,7 +77,7 @@ public class NettyHttpClient {
                 } else if (cause instanceof UnknownHostException) {
                     throw new SocketConnectionException("Unable to resolve host " + httpRequest.getDestination(), cause);
                 } else if (cause instanceof NotSslRecordException) {
-                    return sendRequest(httpRequest.setSecure(false));
+                    return sendRequest(httpRequest.withSsl(false));
                 } else if (cause instanceof IOException) {
                     throw new SocketConnectionException(cause.getMessage(), cause);
                 } else {

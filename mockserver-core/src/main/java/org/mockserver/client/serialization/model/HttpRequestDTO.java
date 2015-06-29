@@ -19,6 +19,8 @@ public class HttpRequestDTO extends NotDTO {
     private BodyDTO body;
     private List<CookieDTO> cookies = new ArrayList<CookieDTO>();
     private List<HeaderDTO> headers = new ArrayList<HeaderDTO>();
+    private Boolean keepAlive = null;
+    private Boolean secure = null;
 
     public HttpRequestDTO(HttpRequest httpRequest) {
         this(httpRequest, false);
@@ -45,6 +47,8 @@ public class HttpRequestDTO extends NotDTO {
                 }
             });
             body = BodyDTO.createDTO(httpRequest.getBody());
+            keepAlive = httpRequest.isKeepAlive();
+            secure = httpRequest.isSecure();
         }
     }
 
@@ -70,7 +74,9 @@ public class HttpRequestDTO extends NotDTO {
                         return parameter.buildObject();
                     }
                 }))
-                .withBody((body != null ? Not.not(body.buildObject(), body.getNot()) : null));
+                .withBody((body != null ? Not.not(body.buildObject(), body.getNot()) : null))
+                .withSecure(secure)
+                .withKeepAlive(keepAlive);
     }
 
     public NottableString getMethod() {
@@ -125,5 +131,21 @@ public class HttpRequestDTO extends NotDTO {
     public HttpRequestDTO setCookies(List<CookieDTO> cookies) {
         this.cookies = cookies;
         return this;
+    }
+
+    public Boolean getKeepAlive() {
+        return keepAlive;
+    }
+
+    public void setKeepAlive(Boolean keepAlive) {
+        this.keepAlive = keepAlive;
+    }
+
+    public Boolean getSecure() {
+        return secure;
+    }
+
+    public void setSecure(Boolean secure) {
+        this.secure = secure;
     }
 }

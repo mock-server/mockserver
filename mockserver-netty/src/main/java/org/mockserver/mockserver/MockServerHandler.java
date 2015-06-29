@@ -213,7 +213,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                 response.updateHeader(header(CONNECTION, HttpHeaders.Values.CLOSE));
             }
         } else if (connectionOptions == null || isFalseOrNull(connectionOptions.getSuppressConnectionHeader())) {
-            if (request.isKeepAlive()) {
+            if (request.isKeepAlive() != null && request.isKeepAlive()) {
                 response.updateHeader(header(CONNECTION, HttpHeaders.Values.KEEP_ALIVE));
             } else {
                 response.updateHeader(header(CONNECTION, HttpHeaders.Values.CLOSE));
@@ -229,7 +229,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                 ctx.write(response);
             }
         } else {
-            if (request.isKeepAlive()) {
+            if (request.isKeepAlive() != null && request.isKeepAlive()) {
                 ctx.write(response);
             } else {
                 ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);

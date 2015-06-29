@@ -13,12 +13,10 @@ public class MockServerInitializer extends PortUnificationHandler {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final MockServerMatcher mockServerMatcher;
-    private final boolean secure;
     private final MockServer mockServer;
 
-    public MockServerInitializer(MockServerMatcher mockServerMatcher, MockServer mockServer, boolean secure) {
+    public MockServerInitializer(MockServerMatcher mockServerMatcher, MockServer mockServer) {
         this.mockServerMatcher = mockServerMatcher;
-        this.secure = secure;
         this.mockServer = mockServer;
     }
 
@@ -29,7 +27,11 @@ public class MockServerInitializer extends PortUnificationHandler {
             pipeline.addLast(new LoggingHandler(logger));
         }
 
-        pipeline.addLast(new MockServerServerCodec(secure));
+        boolean isSecure = false;
+        if (ctx.channel().attr(PortUnificationHandler.SSL_ENABLED).get() != null) {
+            isSecure = ctx.channel().attr(PortUnificationHandler.SSL_ENABLED).get();
+        }
+        pipeline.addLast(new MockServerServerCodec(isSecure));
 
         // add mock server handlers
         pipeline.addLast(new MockServerHandler(mockServer, mockServerMatcher, ctx.channel().attr(MockServer.LOG_FILTER).get()));

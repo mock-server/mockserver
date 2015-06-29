@@ -25,7 +25,7 @@ public class OutboundHttpRequest extends HttpRequest {
         this.body = httpRequest.body;
         this.headers = httpRequest.headers;
         this.cookies = httpRequest.cookies;
-        this.isKeepAlive = httpRequest.isKeepAlive;
+        this.keepAlive = httpRequest.keepAlive;
     }
 
     public static OutboundHttpRequest outboundRequest(InetSocketAddress inetSocketAddress, String contextPath, HttpRequest httpRequest) {
@@ -35,7 +35,8 @@ public class OutboundHttpRequest extends HttpRequest {
                     // read remote socket from host header for HTTP proxy
                     String[] hostHeaderParts = httpRequest.getFirstHeader("Host").split(":");
 
-                    Integer port = (httpRequest.isSecure() ? 443 : 80); // default port
+                    boolean isSsl = httpRequest.isSecure() != null && httpRequest.isSecure();
+                    Integer port = isSsl ? 443 : 80; // default port
                     if (hostHeaderParts.length > 1) {
                         port = Integer.parseInt(hostHeaderParts[1]);    // non-default port
                     }
@@ -66,13 +67,13 @@ public class OutboundHttpRequest extends HttpRequest {
         return contextPath;
     }
 
-    public OutboundHttpRequest setSecure(boolean secure) {
-        if (!secure && port == 443) {
+    public OutboundHttpRequest withSsl(boolean isSsl) {
+        if (!isSsl && port == 443) {
             port = 80;
-        } else if (secure && port == 80) {
+        } else if (isSsl && port == 80) {
             port = 443;
         }
-        super.setSecure(secure);
+        super.withSecure(isSsl);
         return this;
     }
 }
