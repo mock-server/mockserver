@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.model.OutboundHttpRequest.outboundRequest;
@@ -71,7 +70,8 @@ public class InitializerMavenPluginTest {
     );
 
     protected HttpResponse makeRequest(HttpRequest httpRequest, Collection<String> headersToIgnore) {
-        int port = (httpRequest.isSecure() ? SERVER_HTTPS_PORT : SERVER_HTTP_PORT);
+        boolean isSsl = httpRequest.isSecure() != null && httpRequest.isSecure();
+        int port = (isSsl ? SERVER_HTTPS_PORT : SERVER_HTTP_PORT);
         HttpResponse httpResponse = httpClient.sendRequest(outboundRequest("localhost", port, "", httpRequest));
         List<Header> headers = new ArrayList<Header>();
         for (Header header : httpResponse.getHeaders()) {
