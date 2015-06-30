@@ -362,6 +362,66 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
+    public void shouldReturnResponseForRequestInSsl() {
+        // when
+        mockServerClient.when(request().withSecure(true)).respond(response().withBody("some_body"));
+
+        // then
+        // - in http
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("")),
+                        headersToIgnore)
+        );
+        // - in https
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        request()
+                                .withSecure(true)
+                                .withPath(calculatePath("")),
+                        headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseForRequestNotInSsl() {
+        // when
+        mockServerClient.when(request().withSecure(false)).respond(response().withBody("some_body"));
+
+        // then
+        // - in http
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("")),
+                        headersToIgnore)
+        );
+        // - in https
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
+                makeRequest(
+                        request()
+                                .withSecure(true)
+                                .withPath(calculatePath("")),
+                        headersToIgnore)
+        );
+    }
+
+    @Test
     public void shouldReturnMatchRequestWithBodyInUTF16() {
         // when
         String body = "我说中国话";
