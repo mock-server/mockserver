@@ -16,7 +16,7 @@ RUN mkdir -p /opt/mockserver
 WORKDIR /opt/mockserver
 
 # download MockServer
-RUN (cd /opt/mockserver && wget -O mockserver-netty-jar-with-dependencies.jar https://oss.sonatype.org/content/repositories/releases/org/mock-server/mockserver-netty/3.9.16/mockserver-netty-3.9.16-jar-with-dependencies.jar)
+RUN (cd /opt/mockserver && wget -O mockserver-netty-jar-with-dependencies.jar https://oss.sonatype.org/content/repositories/releases/org/mock-server/mockserver-netty/3.9.17/mockserver-netty-3.9.17-jar-with-dependencies.jar)
 RUN (cd /opt/mockserver && wget https://raw.github.com/jamesdbloom/mockserver/master/docker/run_mockserver.sh && chmod +x /opt/mockserver/run_mockserver.sh)
 
 # expose ports.
