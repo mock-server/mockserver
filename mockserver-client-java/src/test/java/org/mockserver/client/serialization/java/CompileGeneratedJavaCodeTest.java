@@ -49,6 +49,8 @@ public class CompileGeneratedJavaCodeTest {
                                         new Cookie("requestCookieNameOne", "requestCookieValueOne"),
                                         new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
                                 )
+                                .withSecure(false)
+                                .withKeepAlive(true)
                                 .withBody(new StringBody("somebody")),
                         Times.once(),
                         TimeToLive.unlimited()

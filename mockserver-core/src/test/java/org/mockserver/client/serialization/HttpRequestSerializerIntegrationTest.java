@@ -44,7 +44,7 @@ public class HttpRequestSerializerIntegrationTest {
         // given
         String requestBytes = "{" + System.getProperty("line.separator") +
                 "  \"method\" : \"someMethod\"," + System.getProperty("line.separator") +
-                "  \"path\" : \"somePath\"," + System.getProperty("line.separator") +
+                "  \"keepAlive\" : false," + System.getProperty("line.separator") +
                 "  \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
                 "    \"name\" : \"queryParameterName\"," + System.getProperty("line.separator") +
                 "    \"values\" : [ \"queryParameterValue\" ]" + System.getProperty("line.separator") +
@@ -60,7 +60,9 @@ public class HttpRequestSerializerIntegrationTest {
                 "  \"headers\" : [ {" + System.getProperty("line.separator") +
                 "    \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
                 "    \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
-                "  } ]" + System.getProperty("line.separator") +
+                "  } ]," + System.getProperty("line.separator") +
+                "  \"path\" : \"somePath\"," + System.getProperty("line.separator") +
+                "  \"secure\" : true" + System.getProperty("line.separator") +
                 "}";
 
         // when
@@ -74,6 +76,8 @@ public class HttpRequestSerializerIntegrationTest {
                 .setBody(BodyDTO.createDTO(new StringBody("somebody")))
                 .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
                 .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
+                .setSecure(true)
+                .setKeepAlive(false)
                 .buildObject(), expectation);
     }
 

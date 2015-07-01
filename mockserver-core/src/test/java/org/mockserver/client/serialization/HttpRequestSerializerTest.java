@@ -37,7 +37,9 @@ public class HttpRequestSerializerTest {
                     )
                     .withBody(new StringBody("somebody"))
                     .withHeaders(new Header("headerName", "headerValue"))
-                    .withCookies(new Cookie("cookieName", "cookieValue"));
+                    .withCookies(new Cookie("cookieName", "cookieValue"))
+                    .withSecure(true)
+                    .withKeepAlive(true);
     private final HttpRequestDTO fullHttpRequestDTO =
             new HttpRequestDTO()
                     .setMethod(string("GET"))
@@ -48,16 +50,17 @@ public class HttpRequestSerializerTest {
                     ))
                     .setBody(BodyDTO.createDTO(new StringBody("somebody")))
                     .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("headerName", Arrays.asList("headerValue")))))
-                    .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("cookieName", "cookieValue"))));
+                    .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("cookieName", "cookieValue"))))
+                    .setSecure(true)
+                    .setKeepAlive(true);
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
     @Mock
     private ObjectMapper objectMapper;
     @Mock
     private ObjectWriter objectWriter;
     @InjectMocks
     private HttpRequestSerializer httpRequestSerializer;
-
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
 
     @Before
     public void setupTestFixture() {

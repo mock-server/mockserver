@@ -137,15 +137,17 @@ public class HttpRequestDTO extends NotDTO {
         return keepAlive;
     }
 
-    public void setKeepAlive(Boolean keepAlive) {
+    public HttpRequestDTO setKeepAlive(Boolean keepAlive) {
         this.keepAlive = keepAlive;
+        return this;
     }
 
     public Boolean getSecure() {
         return secure;
     }
 
-    public void setSecure(Boolean secure) {
+    public HttpRequestDTO setSecure(Boolean secure) {
         this.secure = secure;
+        return this;
     }
 }

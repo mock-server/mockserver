@@ -29,6 +29,14 @@ public class HttpRequestToJavaSerializer implements ToJavaSerializer<HttpRequest
             outputHeaders(numberOfSpacesToIndent + 8, output, httpRequest.getHeaders());
             outputCookies(numberOfSpacesToIndent + 8, output, httpRequest.getCookies());
             outputParameters(numberOfSpacesToIndent + 8, output, "QueryStringParameter", httpRequest.getQueryStringParameters());
+            if (httpRequest.isSecure() != null) {
+                appendNewLineAndIndent(numberOfSpacesToIndent + 8, output);
+                output.append(".withSecure(").append(httpRequest.isSecure().toString()).append(")");
+            }
+            if (httpRequest.isKeepAlive() != null) {
+                appendNewLineAndIndent(numberOfSpacesToIndent + 8, output);
+                output.append(".withKeepAlive(").append(httpRequest.isKeepAlive().toString()).append(")");
+            }
             if (httpRequest.getBody() != null) {
                 if (httpRequest.getBody() instanceof JsonBody) {
                     appendNewLineAndIndent(numberOfSpacesToIndent + 8, output);

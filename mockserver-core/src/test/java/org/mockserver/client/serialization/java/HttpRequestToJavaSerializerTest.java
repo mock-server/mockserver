@@ -14,7 +14,7 @@ import static org.junit.Assert.assertEquals;
 public class HttpRequestToJavaSerializerTest {
 
     @Test
-    public void shouldSerializeFullObjectWithResponseAsJava() throws IOException {
+    public void shouldSerializeFullObjectAsJava() throws IOException {
         assertEquals(System.getProperty("line.separator") +
                         "  request()" + System.getProperty("line.separator") +
                         "          .withMethod(\"GET\")" + System.getProperty("line.separator") +
@@ -31,6 +31,8 @@ public class HttpRequestToJavaSerializerTest {
                         "                  new Parameter(\"requestQueryStringParameterNameOne\", \"requestQueryStringParameterValueOneOne\", \"requestQueryStringParameterValueOneTwo\")," + System.getProperty("line.separator") +
                         "                  new Parameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")" + System.getProperty("line.separator") +
                         "          )" + System.getProperty("line.separator") +
+                        "          .withSecure(true)" + System.getProperty("line.separator") +
+                        "          .withKeepAlive(false)" + System.getProperty("line.separator") +
                         "          .withBody(new StringBody(\"responseBody\"))",
                 new HttpRequestToJavaSerializer().serializeAsJava(2,
                         new HttpRequest()
@@ -48,6 +50,8 @@ public class HttpRequestToJavaSerializerTest {
                                         new Cookie("requestCookieNameOne", "requestCookieValueOne"),
                                         new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
                                 )
+                                .withSecure(true)
+                                .withKeepAlive(false)
                                 .withBody(new StringBody("responseBody"))
                 )
         );
@@ -87,86 +91,6 @@ public class HttpRequestToJavaSerializerTest {
                                         new BinaryBody(new byte[0])
                                 )
                 ));
-    }
-
-    @Test
-    public void shouldSerializeFullObjectWithForwardAsJava() throws IOException {
-        assertEquals(System.getProperty("line.separator") +
-                        "  request()" + System.getProperty("line.separator") +
-                        "          .withMethod(\"GET\")" + System.getProperty("line.separator") +
-                        "          .withPath(\"somePath\")" + System.getProperty("line.separator") +
-                        "          .withHeaders(" + System.getProperty("line.separator") +
-                        "                  new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\")," + System.getProperty("line.separator") +
-                        "                  new Header(\"requestHeaderNameTwo\", \"requestHeaderValueTwo\")" + System.getProperty("line.separator") +
-                        "          )" + System.getProperty("line.separator") +
-                        "          .withCookies(" + System.getProperty("line.separator") +
-                        "                  new Cookie(\"requestCookieNameOne\", \"requestCookieValueOne\")," + System.getProperty("line.separator") +
-                        "                  new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")" + System.getProperty("line.separator") +
-                        "          )" + System.getProperty("line.separator") +
-                        "          .withQueryStringParameters(" + System.getProperty("line.separator") +
-                        "                  new Parameter(\"requestQueryStringParameterNameOne\", \"requestQueryStringParameterValueOneOne\", \"requestQueryStringParameterValueOneTwo\")," + System.getProperty("line.separator") +
-                        "                  new Parameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")" + System.getProperty("line.separator") +
-                        "          )" + System.getProperty("line.separator") +
-                        "          .withBody(new StringBody(\"responseBody\"))",
-                new HttpRequestToJavaSerializer().serializeAsJava(2,
-                        new HttpRequest()
-                                .withMethod("GET")
-                                .withPath("somePath")
-                                .withQueryStringParameters(
-                                        new Parameter("requestQueryStringParameterNameOne", "requestQueryStringParameterValueOneOne", "requestQueryStringParameterValueOneTwo"),
-                                        new Parameter("requestQueryStringParameterNameTwo", "requestQueryStringParameterValueTwo")
-                                )
-                                .withHeaders(
-                                        new Header("requestHeaderNameOne", "requestHeaderValueOneOne", "requestHeaderValueOneTwo"),
-                                        new Header("requestHeaderNameTwo", "requestHeaderValueTwo")
-                                )
-                                .withCookies(
-                                        new Cookie("requestCookieNameOne", "requestCookieValueOne"),
-                                        new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
-                                )
-                                .withBody("responseBody")
-                )
-        );
-    }
-
-    @Test
-    public void shouldSerializeFullObjectWithCallbackAsJava() throws IOException {
-        assertEquals(System.getProperty("line.separator") +
-                        "  request()" + System.getProperty("line.separator") +
-                        "          .withMethod(\"GET\")" + System.getProperty("line.separator") +
-                        "          .withPath(\"somePath\")" + System.getProperty("line.separator") +
-                        "          .withHeaders(" + System.getProperty("line.separator") +
-                        "                  new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\")," + System.getProperty("line.separator") +
-                        "                  new Header(\"requestHeaderNameTwo\", \"requestHeaderValueTwo\")" + System.getProperty("line.separator") +
-                        "          )" + System.getProperty("line.separator") +
-                        "          .withCookies(" + System.getProperty("line.separator") +
-                        "                  new Cookie(\"requestCookieNameOne\", \"requestCookieValueOne\")," + System.getProperty("line.separator") +
-                        "                  new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")" + System.getProperty("line.separator") +
-                        "          )" + System.getProperty("line.separator") +
-                        "          .withQueryStringParameters(" + System.getProperty("line.separator") +
-                        "                  new Parameter(\"requestQueryStringParameterNameOne\", \"requestQueryStringParameterValueOneOne\", \"requestQueryStringParameterValueOneTwo\")," + System.getProperty("line.separator") +
-                        "                  new Parameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")" + System.getProperty("line.separator") +
-                        "          )" + System.getProperty("line.separator") +
-                        "          .withBody(new StringBody(\"responseBody\"))",
-                new HttpRequestToJavaSerializer().serializeAsJava(2,
-                        new HttpRequest()
-                                .withMethod("GET")
-                                .withPath("somePath")
-                                .withQueryStringParameters(
-                                        new Parameter("requestQueryStringParameterNameOne", "requestQueryStringParameterValueOneOne", "requestQueryStringParameterValueOneTwo"),
-                                        new Parameter("requestQueryStringParameterNameTwo", "requestQueryStringParameterValueTwo")
-                                )
-                                .withHeaders(
-                                        new Header("requestHeaderNameOne", "requestHeaderValueOneOne", "requestHeaderValueOneTwo"),
-                                        new Header("requestHeaderNameTwo", "requestHeaderValueTwo")
-                                )
-                                .withCookies(
-                                        new Cookie("requestCookieNameOne", "requestCookieValueOne"),
-                                        new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
-                                )
-                                .withBody("responseBody")
-                )
-        );
     }
 
     @Test
