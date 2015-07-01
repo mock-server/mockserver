@@ -171,6 +171,69 @@ public class MainTest {
     }
 
     @Test
+    public void shouldPrintOutUsageForInvalidServerPort() {
+        Main.main("-serverPort", "A", "-proxyPort", "1");
+
+        verify(mockPrintStream, times(1)).print(Main.USAGE);
+        verify(mockPrintStream, times(1)).println(System.getProperty("line.separator") + "   ==================================================================");
+        verify(mockPrintStream, times(1)).println("   serverPort value \"A\" is invalid, please specify a port i.e. \"1080\"");
+        verify(mockPrintStream, times(1)).println("   ==================================================================" + System.getProperty("line.separator"));
+        verify(mockRuntime, times(1)).exit(1);
+        verifyZeroInteractions(mockProxyBuilder);
+    }
+
+    @Test
+    public void shouldPrintOutUsageForInvalidProxyPort() {
+        Main.main("-serverPort", "1", "-proxyPort", "A");
+
+        verify(mockPrintStream, times(1)).print(Main.USAGE);
+        verify(mockPrintStream, times(1)).println(System.getProperty("line.separator") + "   =================================================================");
+        verify(mockPrintStream, times(1)).println("   proxyPort value \"A\" is invalid, please specify a port i.e. \"1080\"");
+        verify(mockPrintStream, times(1)).println("   =================================================================" + System.getProperty("line.separator"));
+        verify(mockRuntime, times(1)).exit(1);
+        verifyZeroInteractions(mockProxyBuilder);
+    }
+
+    @Test
+    public void shouldPrintOutUsageForInvalidProxyRemotePort() {
+        Main.main("-serverPort", "1", "-proxyPort", "2", "-proxyRemotePort", "A", "-proxyRemoteHost", "1234567890");
+
+        verify(mockPrintStream, times(1)).print(Main.USAGE);
+        verify(mockPrintStream, times(1)).println(System.getProperty("line.separator") + "   =======================================================================");
+        verify(mockPrintStream, times(1)).println("   proxyRemotePort value \"A\" is invalid, please specify a port i.e. \"1080\"");
+        verify(mockPrintStream, times(1)).println("   =======================================================================" + System.getProperty("line.separator"));
+        verify(mockRuntime, times(1)).exit(1);
+        verifyZeroInteractions(mockProxyBuilder);
+    }
+
+    @Test
+    public void shouldPrintOutUsageForInvalidProxyRemoteHost() {
+        Main.main("-serverPort", "1", "-proxyPort", "2", "-proxyRemotePort", "3", "-proxyRemoteHost", "http://localhost");
+
+        verify(mockPrintStream, times(1)).print(Main.USAGE);
+        verify(mockPrintStream, times(1)).println(System.getProperty("line.separator") + "   ===============================================================================================================");
+        verify(mockPrintStream, times(1)).println("   proxyRemoteHost value \"http://localhost\" is invalid, please specify a host name i.e. \"localhost\" or \"127.0.0.1\"");
+        verify(mockPrintStream, times(1)).println("   ===============================================================================================================" + System.getProperty("line.separator"));
+        verify(mockRuntime, times(1)).exit(1);
+        verifyZeroInteractions(mockProxyBuilder);
+    }
+
+    @Test
+    public void shouldPrintOutUsageForMultipleInvalidArguments() {
+        Main.main("-serverPort", "A", "-proxyPort", "B", "-proxyRemotePort", "C", "-proxyRemoteHost", "http://localhost");
+
+        verify(mockPrintStream, times(1)).print(Main.USAGE);
+        verify(mockPrintStream, times(1)).println(System.getProperty("line.separator") + "   ===============================================================================================================");
+        verify(mockPrintStream, times(1)).println("   serverPort value \"A\" is invalid, please specify a port i.e. \"1080\"");
+        verify(mockPrintStream, times(1)).println("   proxyPort value \"B\" is invalid, please specify a port i.e. \"1080\"");
+        verify(mockPrintStream, times(1)).println("   proxyRemotePort value \"C\" is invalid, please specify a port i.e. \"1080\"");
+        verify(mockPrintStream, times(1)).println("   proxyRemoteHost value \"http://localhost\" is invalid, please specify a host name i.e. \"localhost\" or \"127.0.0.1\"");
+        verify(mockPrintStream, times(1)).println("   ===============================================================================================================" + System.getProperty("line.separator"));
+        verify(mockRuntime, times(1)).exit(1);
+        verifyZeroInteractions(mockProxyBuilder);
+    }
+
+    @Test
     public void shouldPrintOutUsageForMissingFirstPort() {
         Main.main("-serverPort", "-proxyPort", "2");
 

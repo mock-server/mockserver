@@ -9,10 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.PrintStream;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author jamesdbloom
@@ -48,6 +45,8 @@ public class Main {
             "                                     value is provided for proxyRemoteHost when        " + System.getProperty("line.separator") +
             "                                     proxyRemotePort has been specified,               " + System.getProperty("line.separator") +
             "                                     proxyRemoteHost will default to \"localhost\"     " + System.getProperty("line.separator") +
+            "                                                                                       " + System.getProperty("line.separator") +
+            "   i.e. java -jar ./mockserver-jetty-jar-with-dependencies.jar -serverPort 1080 -proxyPort 1090 -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com" + System.getProperty("line.separator") +
             "                                                                                       " + System.getProperty("line.separator");
 
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
@@ -79,7 +78,7 @@ public class Main {
                     Joiner.on(", ").withKeyValueSeparator("=").join(parsedArguments) + System.getProperty("line.separator"));
         }
 
-        if (parsedArguments.size() > 0) {
+        if (parsedArguments.size() > 0 && validateArguments(parsedArguments)) {
             if (parsedArguments.containsKey(SERVER_PORT_KEY)) {
                 mockServerBuilder.withHTTPPort(Integer.parseInt(parsedArguments.get(SERVER_PORT_KEY))).build();
             }
@@ -99,39 +98,73 @@ public class Main {
         }
     }
 
+    private static boolean validateArguments(Map<String, String> parsedArguments) {
+        List<String> errorMessages = new ArrayList<String>();
+        validatePortArgument(parsedArguments, SERVER_PORT_KEY, errorMessages);
+        validatePortArgument(parsedArguments, PROXY_PORT_KEY, errorMessages);
+        validatePortArgument(parsedArguments, PROXY_REMOTE_PORT_KEY, errorMessages);
+        validateHostnameArgument(parsedArguments, PROXY_REMOTE_HOST_KEY, errorMessages);
+
+        if (!errorMessages.isEmpty()) {
+            int maxLengthMessage = 0;
+            for (String errorMessage : errorMessages) {
+               if (errorMessage.length() > maxLengthMessage) {
+                   maxLengthMessage = errorMessage.length();
+               }
+            }
+            outputPrintStream.println(System.getProperty("line.separator") + "   " + Strings.padEnd("", maxLengthMessage, '='));
+            for (String errorMessage : errorMessages) {
+                outputPrintStream.println("   " + errorMessage);
+            }
+            outputPrintStream.println("   " + Strings.padEnd("", maxLengthMessage, '=') + System.getProperty("line.separator"));
+            return false;
+        }
+        return true;
+    }
+
+    private static void validatePortArgument(Map<String, String> parsedArguments, String argumentKey, List<String> errorMessages) {
+        if (parsedArguments.containsKey(argumentKey) && !parsedArguments.get(argumentKey).matches("^\\d+$")) {
+            errorMessages.add(argumentKey + " value \"" + parsedArguments.get(argumentKey) + "\" is invalid, please specify a port i.e. \"1080\"");
+        }
+    }
+
+    private static void validateHostnameArgument(Map<String, String> parsedArguments, String argumentKey, List<String> errorMessages) {
+        String validIpAddressRegex = "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$";
+        String validHostnameRegex = "^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]*[a-zA-Z0-9])\\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\\-]*[A-Za-z0-9])$";
+        if (parsedArguments.containsKey(argumentKey) && !(parsedArguments.get(argumentKey).matches(validIpAddressRegex) || parsedArguments.get(argumentKey).matches(validHostnameRegex))) {
+            errorMessages.add(argumentKey + " value \"" + parsedArguments.get(argumentKey) + "\" is invalid, please specify a host name i.e. \"localhost\" or \"127.0.0.1\"");
+        }
+    }
+
     private static Map<String, String> parseArguments(String... arguments) {
-        Map<String, String> parsedIntegerArguments = new HashMap<String, String>();
+        Map<String, String> parsedArguments = new HashMap<String, String>();
         Iterator<String> argumentsIterator = Arrays.asList(arguments).iterator();
         while (argumentsIterator.hasNext()) {
             String argumentName = argumentsIterator.next();
             if (argumentsIterator.hasNext()) {
                 String argumentValue = argumentsIterator.next();
-                if (!parsePort(parsedIntegerArguments, SERVER_PORT_KEY, argumentName, argumentValue)
-                        && !parsePort(parsedIntegerArguments, PROXY_PORT_KEY, argumentName, argumentValue)
-                        && !parsePort(parsedIntegerArguments, PROXY_REMOTE_PORT_KEY, argumentName, argumentValue)
+                if (!parsePort(parsedArguments, SERVER_PORT_KEY, argumentName, argumentValue)
+                        && !parsePort(parsedArguments, PROXY_PORT_KEY, argumentName, argumentValue)
+                        && !parsePort(parsedArguments, PROXY_REMOTE_PORT_KEY, argumentName, argumentValue)
                         && !("-" + PROXY_REMOTE_HOST_KEY).equalsIgnoreCase(argumentName)) {
                     showUsage();
                     break;
                 }
                 if (("-" + PROXY_REMOTE_HOST_KEY).equalsIgnoreCase(argumentName)) {
-                    parsedIntegerArguments.put(PROXY_REMOTE_HOST_KEY, argumentValue);
+                    parsedArguments.put(PROXY_REMOTE_HOST_KEY, argumentValue);
                 }
             } else {
                 showUsage();
                 break;
             }
         }
-        return parsedIntegerArguments;
+        return parsedArguments;
     }
 
     private static boolean parsePort(Map<String, String> parsedArguments, final String key, final String argumentName, final String argumentValue) {
         if (argumentName.equals("-" + key)) {
-            try {
-                parsedArguments.put(key, String.valueOf(Integer.parseInt(argumentValue)));
-                return true;
-            } catch (NumberFormatException nfe) {
-                logger.error("Please provide a value integer for -" + key + ", [" + argumentValue + "] is not a valid integer", nfe);
-            }
+            parsedArguments.put(key, argumentValue);
+            return true;
         }
         return false;
     }
