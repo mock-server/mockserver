@@ -52,7 +52,7 @@ public class ExpectationToJavaSerializerTest {
                         "                        )" + System.getProperty("line.separator") +
                         "                        .withBody(\"responseBody\")" + System.getProperty("line.separator") +
                         "        );",
-                new ExpectationToJavaSerializer().serializeAsJava(0,
+                new ExpectationToJavaSerializer().serializeAsJava(1,
                         new Expectation(
                                 new HttpRequest()
                                         .withMethod("GET")
@@ -107,7 +107,7 @@ public class ExpectationToJavaSerializerTest {
                         "                        .withStatusCode(200)" + System.getProperty("line.separator") +
                         "                        .withBody(\"responseBody\")" + System.getProperty("line.separator") +
                         "        );",
-                new ExpectationToJavaSerializer().serializeAsJava(0,
+                new ExpectationToJavaSerializer().serializeAsJava(1,
                         new Expectation(
                                 new HttpRequest()
                                         .withBody(
@@ -140,7 +140,7 @@ public class ExpectationToJavaSerializerTest {
                         "                        .withStatusCode(200)" + System.getProperty("line.separator") +
                         "                        .withBody(\"responseBody\")" + System.getProperty("line.separator") +
                         "        );",
-                new ExpectationToJavaSerializer().serializeAsJava(0,
+                new ExpectationToJavaSerializer().serializeAsJava(1,
                         new Expectation(
                                 new HttpRequest()
                                         .withBody(
@@ -184,7 +184,7 @@ public class ExpectationToJavaSerializerTest {
                         "                        .withPort(9090)" + System.getProperty("line.separator") +
                         "                        .withScheme(HttpForward.Scheme.HTTPS)" + System.getProperty("line.separator") +
                         "        );",
-                new ExpectationToJavaSerializer().serializeAsJava(0,
+                new ExpectationToJavaSerializer().serializeAsJava(1,
                         new Expectation(
                                 new HttpRequest()
                                         .withMethod("GET")
@@ -240,7 +240,7 @@ public class ExpectationToJavaSerializerTest {
                         "                callback()" + System.getProperty("line.separator") +
                         "                        .withCallbackClass(\"some_class\")" + System.getProperty("line.separator") +
                         "        );",
-                new ExpectationToJavaSerializer().serializeAsJava(0,
+                new ExpectationToJavaSerializer().serializeAsJava(1,
                         new Expectation(
                                 new HttpRequest()
                                         .withMethod("GET")
@@ -282,7 +282,7 @@ public class ExpectationToJavaSerializerTest {
                         "                        .withStatusCode(304)" + System.getProperty("line.separator") +
                         "                        .withBody(\"[" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    {" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"id\\\": \\\"1\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"title\\\": \\\"Xenophon's imperial fiction : on the education of Cyrus\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"author\\\": \\\"James Tatum\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"isbn\\\": \\\"0691067570\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"publicationDate\\\": \\\"1989\\\"" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    }," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    {" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"id\\\": \\\"2\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"title\\\": \\\"You are here : personal geographies and other maps of the imagination\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"author\\\": \\\"Katharine A. Harmon\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"isbn\\\": \\\"1568984308\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"publicationDate\\\": \\\"2004\\\"" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    }," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    {" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"id\\\": \\\"3\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"title\\\": \\\"You just don't understand : women and men in conversation\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"author\\\": \\\"Deborah Tannen\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"isbn\\\": \\\"0345372050\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"publicationDate\\\": \\\"1990\\\"" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    }" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "]\")" + System.getProperty("line.separator") +
                         "        );",
-                new ExpectationToJavaSerializer().serializeAsJava(0,
+                new ExpectationToJavaSerializer().serializeAsJava(1,
                         new Expectation(
                                 new HttpRequest()
                                         .withPath("somePath")
@@ -386,7 +386,7 @@ public class ExpectationToJavaSerializerTest {
                         "                        .withStatusCode(304)" + System.getProperty("line.separator") +
                         "                        .withBody(\"responseBody\")" + System.getProperty("line.separator") +
                         "        );",
-                new ExpectationToJavaSerializer().serializeAsJava(0,
+                new ExpectationToJavaSerializer().serializeAsJava(1,
                         new Expectation(
                                 new HttpRequest()
                                         .withPath("somePath")
@@ -415,7 +415,7 @@ public class ExpectationToJavaSerializerTest {
                         "                response()" + System.getProperty("line.separator") +
                         "                        .withStatusCode(304)" + System.getProperty("line.separator") +
                         "        );",
-                new ExpectationToJavaSerializer().serializeAsJava(0,
+                new ExpectationToJavaSerializer().serializeAsJava(1,
                         new Expectation(
                                 new HttpRequest()
                                         .withPath("somePath")

@@ -12,25 +12,26 @@ public class ExpectationToJavaSerializer implements ToJavaSerializer<Expectation
     public String serializeAsJava(int numberOfSpacesToIndent, Expectation expectation) {
         StringBuffer output = new StringBuffer();
         if (expectation != null) {
-            appendNewLineAndIndent(8, output).append("new MockServerClient(\"localhost\", 1080)");
-            appendNewLineAndIndent(8, output).append(".when(");
-            output.append(new HttpRequestToJavaSerializer().serializeAsJava(16, expectation.getHttpRequest())).append(",");
-            appendNewLineAndIndent(16, output).append("Times.once()");
-            appendNewLineAndIndent(8, output).append(")");
+            int indentSize = 8;
+            appendNewLineAndIndent(numberOfSpacesToIndent * indentSize, output).append("new MockServerClient(\"localhost\", 1080)");
+            appendNewLineAndIndent(numberOfSpacesToIndent * indentSize, output).append(".when(");
+            output.append(new HttpRequestToJavaSerializer().serializeAsJava((numberOfSpacesToIndent + 1) * indentSize, expectation.getHttpRequest())).append(",");
+            appendNewLineAndIndent((numberOfSpacesToIndent + 1) * indentSize, output).append("Times.once()");
+            appendNewLineAndIndent(numberOfSpacesToIndent * indentSize, output).append(")");
             if (expectation.getHttpResponse(false) != null) {
-                appendNewLineAndIndent(8, output).append(".respond(");
-                output.append(new HttpResponseToJavaSerializer().serializeAsJava(16, expectation.getHttpResponse(false)));
-                appendNewLineAndIndent(8, output).append(")");
+                appendNewLineAndIndent(numberOfSpacesToIndent * indentSize, output).append(".respond(");
+                output.append(new HttpResponseToJavaSerializer().serializeAsJava((numberOfSpacesToIndent + 1) * indentSize, expectation.getHttpResponse(false)));
+                appendNewLineAndIndent(numberOfSpacesToIndent * indentSize, output).append(")");
             }
             if (expectation.getHttpForward() != null) {
-                appendNewLineAndIndent(8, output).append(".forward(");
-                output.append(new HttpForwardToJavaSerializer().serializeAsJava(16, expectation.getHttpForward()));
-                appendNewLineAndIndent(8, output).append(")");
+                appendNewLineAndIndent(numberOfSpacesToIndent * indentSize, output).append(".forward(");
+                output.append(new HttpForwardToJavaSerializer().serializeAsJava((numberOfSpacesToIndent + 1) * indentSize, expectation.getHttpForward()));
+                appendNewLineAndIndent(numberOfSpacesToIndent * indentSize, output).append(")");
             }
             if (expectation.getHttpCallback() != null) {
-                appendNewLineAndIndent(8, output).append(".callback(");
-                output.append(new HttpCallbackToJavaSerializer().serializeAsJava(16, expectation.getHttpCallback()));
-                appendNewLineAndIndent(8, output).append(")");
+                appendNewLineAndIndent(numberOfSpacesToIndent * indentSize, output).append(".callback(");
+                output.append(new HttpCallbackToJavaSerializer().serializeAsJava((numberOfSpacesToIndent + 1) * indentSize, expectation.getHttpCallback()));
+                appendNewLineAndIndent(numberOfSpacesToIndent * indentSize, output).append(")");
             }
             output.append(";");
         }

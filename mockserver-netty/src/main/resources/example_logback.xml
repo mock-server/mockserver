@@ -75,7 +75,7 @@
         <file>${log.dir:-./}mockserver_request.log</file>
 
         <encoder>
-            <pattern>%date %msg%n</pattern>
+            <pattern>%msg%n</pattern>
         </encoder>
 
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">

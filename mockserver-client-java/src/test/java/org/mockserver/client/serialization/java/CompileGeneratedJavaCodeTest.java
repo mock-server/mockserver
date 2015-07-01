@@ -32,7 +32,7 @@ public class CompileGeneratedJavaCodeTest {
     @Test
     public void shouldCompileGeneratedCode() throws URISyntaxException {
 
-        String expectationAsJavaCode = new ExpectationToJavaSerializer().serializeAsJava(8,
+        String expectationAsJavaCode = new ExpectationToJavaSerializer().serializeAsJava(1,
                 new Expectation(
                         request()
                                 .withMethod("GET")
