@@ -52,7 +52,8 @@ The default command executed when the container runs is:
 This can be modified to change the command line options passed to the `/opt/mockserver/run_mockserver.sh` script, which supports the following options:
 
 ```
-run_mockserver.sh [-logLevel <level>] [-serverPort <port>] [-proxyPort <port>] [-proxyRemotePort <port>] [-proxyRemoteHost <hostname>]
+run_mockserver.sh [-logLevel <level>] [-serverPort <port>] [-proxyPort <port>] \ 
+                  [-proxyRemotePort <port>] [-proxyRemoteHost <hostname>]
 
  valid options are:
     -logLevel <level>            OFF, ERROR, WARN, INFO, DEBUG, TRACE or ALL
