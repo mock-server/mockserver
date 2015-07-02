@@ -31,13 +31,13 @@ docker run -d --name mockserver -p <serverPort>:1080 -p <proxyPort>:1090 jamesdb
 docker run --name mockserver -p <serverPort>:1080 -p <proxyPort>:1090 jamesdbloom/mockserver
 ```
 
-* **THEN** stop the container
+* **THEN** when your finished stop the container
 
 ```bash
 docker stop mockserver && docker rm mockserver
 ```
 
-* **DEBUG** to debug any issues or change the command line options you can run the container with a shell prompt
+* **DEBUG** any issues or change the command line options you can run the container with a shell prompt
 
 ```bash
 docker run -i -t --name mockserver -p 1080:1080 -p 1090:1090 jamesdbloom/mockserver /bin/bash
@@ -51,7 +51,7 @@ The default command executed when the container runs is:
 
 This can be modified to change the command line options passed to the `/opt/mockserver/run_mockserver.sh` script, which supports the following options:
 
-```bash
+```
 run_mockserver.sh [-logLevel <level>] [-serverPort <port>] [-proxyPort <port>] [-proxyRemotePort <port>] [-proxyRemoteHost <hostname>]
 
  valid options are:
