@@ -55,9 +55,10 @@ This can be modified to change the command line options passed to the `/opt/mock
 run_mockserver.sh [-logLevel <level>] [-serverPort <port>] [-proxyPort <port>] [-proxyRemotePort <port>] [-proxyRemoteHost <hostname>]
 
  valid options are:
-    -logLevel <level>            OFF, ERROR, WARN, INFO, DEBUG, TRACE or ALL, as follows:
+    -logLevel <level>            OFF, ERROR, WARN, INFO, DEBUG, TRACE or ALL
+                                 as follows:
                                  WARN - exceptions and errors
-                                 INFO - all interactions (summerised)
+                                 INFO - all interactions
 
     -serverPort <port>           Specifies the HTTP, HTTPS, SOCKS and HTTP
                                  CONNECT port for proxy. Port unification

@@ -8,7 +8,7 @@ function showUsage {
     echo >&2 "     valid options are:                                                            "
     echo >&2 "        -logLevel <level>            OFF, ERROR, WARN, INFO, DEBUG, TRACE or ALL, as follows: "
     echo >&2 "                                     WARN - exceptions and errors                  "
-    echo >&2 "                                     INFO - all interactions (summerised)          "
+    echo >&2 "                                     INFO - all interactions                       "
     echo >&2 "                                                                                   "
     echo >&2 "        -serverPort <port>           Specifies the HTTP, HTTPS, SOCKS and HTTP     "
     echo >&2 "                                     CONNECT port for proxy. Port unification      "
