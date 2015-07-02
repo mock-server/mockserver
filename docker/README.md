@@ -84,7 +84,8 @@ run_mockserver.sh [-logLevel <level>] [-serverPort <port>] [-proxyPort <port>] \
                                  proxyRemotePort has been specified,
                                  proxyRemoteHost will default to "localhost".
 
-i.e. run_mockserver.sh -logLevel INFO -serverPort 1080 -proxyPort 1090 -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com
+i.e. run_mockserver.sh -logLevel INFO -serverPort 1080 -proxyPort 1090 \ 
+                       -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com
 ```
 
 ### What is MockServer
