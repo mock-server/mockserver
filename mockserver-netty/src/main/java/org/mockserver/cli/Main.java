@@ -23,28 +23,28 @@ public class Main {
             "   java -jar <path to mockserver-jetty-jar-with-dependencies.jar> [-serverPort <port>] [-proxyPort <port>] [-proxyRemotePort <port>] [-proxyRemoteHost <hostname>]" + System.getProperty("line.separator") +
             "                                                                                       " + System.getProperty("line.separator") +
             "     valid options are:                                                                " + System.getProperty("line.separator") +
-            "        -serverPort <port>           specifies the HTTP, HTTPS, SOCKS and HTTP         " + System.getProperty("line.separator") +
-            "                                     CONNECT port for proxy, port unification          " + System.getProperty("line.separator") +
-            "                                     supports for all protocols on the same port       " + System.getProperty("line.separator") +
+            "        -serverPort <port>           Specifies the HTTP, HTTPS, SOCKS and HTTP         " + System.getProperty("line.separator") +
+            "                                     CONNECT port for proxy. Port unification          " + System.getProperty("line.separator") +
+            "                                     supports for all protocols on the same port.      " + System.getProperty("line.separator") +
             "                                                                                       " + System.getProperty("line.separator") +
-            "        -proxyPort <port>            specifies the HTTP and HTTPS port for the         " + System.getProperty("line.separator") +
-            "                                     MockServer port unification is used to            " + System.getProperty("line.separator") +
-            "                                     support HTTP and HTTPS on the same port           " + System.getProperty("line.separator") +
+            "        -proxyPort <port>            Specifies the HTTP and HTTPS port for the         " + System.getProperty("line.separator") +
+            "                                     MockServer. Port unification is used to           " + System.getProperty("line.separator") +
+            "                                     support HTTP and HTTPS on the same port.          " + System.getProperty("line.separator") +
             "                                                                                       " + System.getProperty("line.separator") +
-            "        -proxyRemotePort <port>      specifies the port to forward all proxy           " + System.getProperty("line.separator") +
+            "        -proxyRemotePort <port>      Specifies the port to forward all proxy           " + System.getProperty("line.separator") +
             "                                     requests to (i.e. all requests received on        " + System.getProperty("line.separator") +
-            "                                     portPort), this setting is used to enable         " + System.getProperty("line.separator") +
+            "                                     portPort). This setting is used to enable         " + System.getProperty("line.separator") +
             "                                     the port forwarding mode therefore this           " + System.getProperty("line.separator") +
             "                                     option disables the HTTP, HTTPS, SOCKS and        " + System.getProperty("line.separator") +
-            "                                     HTTP CONNECT support                              " + System.getProperty("line.separator") +
+            "                                     HTTP CONNECT support.                             " + System.getProperty("line.separator") +
             "                                                                                       " + System.getProperty("line.separator") +
-            "        -proxyRemoteHost <hostname>  specified the host to forward all proxy           " + System.getProperty("line.separator") +
+            "        -proxyRemoteHost <hostname>  Specified the host to forward all proxy           " + System.getProperty("line.separator") +
             "                                     requests to (i.e. all requests received on        " + System.getProperty("line.separator") +
-            "                                     portPort), this setting is ignored unless         " + System.getProperty("line.separator") +
-            "                                     proxyRemotePort has been specified, if no         " + System.getProperty("line.separator") +
+            "                                     portPort). This setting is ignored unless         " + System.getProperty("line.separator") +
+            "                                     proxyRemotePort has been specified. If no         " + System.getProperty("line.separator") +
             "                                     value is provided for proxyRemoteHost when        " + System.getProperty("line.separator") +
             "                                     proxyRemotePort has been specified,               " + System.getProperty("line.separator") +
-            "                                     proxyRemoteHost will default to \"localhost\"     " + System.getProperty("line.separator") +
+            "                                     proxyRemoteHost will default to \"localhost\".    " + System.getProperty("line.separator") +
             "                                                                                       " + System.getProperty("line.separator") +
             "   i.e. java -jar ./mockserver-jetty-jar-with-dependencies.jar -serverPort 1080 -proxyPort 1090 -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com" + System.getProperty("line.separator") +
             "                                                                                       " + System.getProperty("line.separator");
