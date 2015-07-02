@@ -81,7 +81,10 @@ done
 
 if [ -z $serverPort ] && [ -z $proxyPort ]
 then
-   showUsage
+    echo
+    echo "   Error: At least 'serverPort' or 'proxyPort' must be provided"
+    echo
+    showUsage
 fi
 
 LOG_LEVEL="INFO"
@@ -91,7 +94,7 @@ then
     LOG_LEVEL="$logLevel"
 fi
 
-validateArgument $LOG_LEVEL "OFF ERROR WARN INFO DEBUG TRACE ALL." "Invalid value for 'logLevel': '$LOG_LEVEL'"
+validateArgument $LOG_LEVEL "OFF ERROR WARN INFO DEBUG TRACE ALL." "Invalid value '$LOG_LEVEL' for 'logLevel'"
 
 COMMAND_LINE_OPTS=""
 
