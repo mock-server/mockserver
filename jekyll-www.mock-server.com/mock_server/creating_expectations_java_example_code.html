@@ -56,19 +56,6 @@ subsection: false
 mockServer
         .when(
                 request()
-                        .withMethod(<span class="string_literal">"POST"</span>)
-                        .withPath(<span class="string_literal">"/login"</span>)
-                        .withQueryStringParameters(
-                                <span class="keyword">new</span> Parameter(<span class="string_literal">"returnUrl"</span>, <span class="string_literal">"/account"</span>)
-                        )
-                        .withCookies(
-                                <span class="keyword">new</span> Cookie(<span class="string_literal">"sessionId"</span>, <span class="string_literal">"2By8LOhBmaW5nZXJwcmludCIlMDAzMW"</span>)
-                        )
-                        .withBody(exact(<span class="string_literal">"{username: 'foo', password: 'bar'}"</span>)),
-                exactly(<span class="numeric_literal">1</span>)
-        )
-        .when(
-                request()
                         .withPath(<span class="string_literal">"/callback"</span>)
         )
         .callback(
