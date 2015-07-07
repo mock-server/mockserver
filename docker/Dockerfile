@@ -11,16 +11,15 @@ FROM java
 # maintainer details
 MAINTAINER James Bloom "jamesdbloom@gmail.com"
 
-# set working directory
-RUN mkdir -p /opt/mockserver
-WORKDIR /opt/mockserver
-
 # download MockServer
 RUN  \
-  cd /opt/mockserver && \
-  wget -O mockserver-netty-jar-with-dependencies.jar https://oss.sonatype.org/content/repositories/releases/org/mock-server/mockserver-netty/3.9.17/mockserver-netty-3.9.17-jar-with-dependencies.jar && \
-  wget https://raw.github.com/jamesdbloom/mockserver/master/docker/run_mockserver.sh && \
+  mkdir -p /opt/mockserver && \
+  wget -O /opt/mockserver/mockserver-netty-jar-with-dependencies.jar https://oss.sonatype.org/content/repositories/releases/org/mock-server/mockserver-netty/3.9.17/mockserver-netty-3.9.17-jar-with-dependencies.jar && \
+  wget -O /opt/mockserver/run_mockserver.sh https://raw.github.com/jamesdbloom/mockserver/master/docker/run_mockserver.sh && \
   chmod +x /opt/mockserver/run_mockserver.sh
+
+# set working directory
+WORKDIR /opt/mockserver
 
 # expose ports.
 EXPOSE 1080 1090

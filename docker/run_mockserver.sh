@@ -33,7 +33,7 @@ function showUsage {
     echo >&2 "                                     proxyRemotePort has been specified,           "
     echo >&2 "                                     proxyRemoteHost will default to \"localhost\"."
     echo >&2 "                                                                                   "
-    echo >&2 "   i.e. run_mockserver.sh -logLevel INFO -serverPort 1080 -proxyPort 1090 -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com"
+    echo >&2 "   i.e. /opt/mockserver/run_mockserver.sh -logLevel INFO -serverPort 1080 -proxyPort 1090 -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com"
     echo >&2 "                                                                                   "
     exit 1
 }
