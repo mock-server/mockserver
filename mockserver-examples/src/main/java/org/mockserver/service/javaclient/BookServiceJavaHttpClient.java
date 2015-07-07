@@ -53,19 +53,15 @@ public class BookServiceJavaHttpClient implements BookService {
         return objectMapper;
     }
 
-    private HttpURLConnection sendGETRequest(String uri, InetSocketAddress serverAddress, final InetSocketAddress proxyAddress) throws IOException {
-        URL url = new URL("http://" + serverAddress.getHostName() + ":" + serverAddress.getPort() + uri);
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection(new Proxy(Proxy.Type.SOCKS, proxyAddress));
-        connection.setRequestMethod("GET");
-        return connection;
+    private HttpURLConnection sendRequestViaProxy(URL url) throws IOException {
+        Proxy proxy = new Proxy(Proxy.Type.SOCKS, new InetSocketAddress(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort"))));
+        return (HttpURLConnection) url.openConnection(proxy);
     }
 
     public Book[] getAllBooks() {
-        InetSocketAddress proxyAddress = new InetSocketAddress(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort")));
-        InetSocketAddress serverAddress = new InetSocketAddress(host, port);
-
         try {
-            HttpURLConnection connection = sendGETRequest("/get_books", serverAddress, proxyAddress);
+            HttpURLConnection connection = sendRequestViaProxy(new URL("http://" + host + ":" + port + "/get_books"));
+            connection.setRequestMethod("GET");
             return objectMapper.readValue(connection.getInputStream(), Book[].class);
         } catch (Exception e) {
             throw new RuntimeException("Exception making request to retrieve all books", e);
@@ -73,11 +69,9 @@ public class BookServiceJavaHttpClient implements BookService {
     }
 
     public Book getBook(String id) {
-        InetSocketAddress proxyAddress = new InetSocketAddress(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort")));
-        InetSocketAddress serverAddress = new InetSocketAddress(host, port);
-
         try {
-            HttpURLConnection connection = sendGETRequest("/get_book?id=" + id, serverAddress, proxyAddress);
+            HttpURLConnection connection = sendRequestViaProxy(new URL("http://" + host + ":" + port + "/get_book?id=" + id));
+            connection.setRequestMethod("GET");
             return objectMapper.readValue(connection.getInputStream(), Book.class);
         } catch (Exception e) {
             throw new RuntimeException("Exception making request to retrieve a book with id [" + id + "]", e);

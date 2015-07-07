@@ -3,15 +3,14 @@ package org.mockserver.service.googleclient;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.api.client.http.GenericUrl;
-import com.google.api.client.http.HttpRequestFactory;
-import com.google.api.client.http.HttpResponse;
+import com.google.api.client.http.*;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import org.mockserver.model.Book;
 import org.mockserver.service.BookService;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.io.IOException;
@@ -56,13 +55,13 @@ public class BookServiceGoogleHttpClient implements BookService {
         return objectMapper;
     }
 
-    private HttpResponse sendGETRequest(String uri, InetSocketAddress serverAddress, final InetSocketAddress proxyAddress) throws IOException {
+    private HttpResponse sendRequestViaProxy(URL url, String method, @Nullable HttpContent content) throws IOException {
         ProxySelector defaultProxySelector = ProxySelector.getDefault();
         try {
             ProxySelector.setDefault(new ProxySelector() {
                 @Override
                 public List<Proxy> select(URI uri) {
-                    return Arrays.asList(new Proxy(Proxy.Type.SOCKS, proxyAddress));
+                    return Arrays.asList(new Proxy(Proxy.Type.SOCKS, new InetSocketAddress(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort")))));
                 }
 
                 @Override
@@ -72,18 +71,15 @@ public class BookServiceGoogleHttpClient implements BookService {
                 }
             });
             HttpRequestFactory requestFactory = new NetHttpTransport().createRequestFactory();
-            return requestFactory.buildGetRequest(new GenericUrl(new URL("http", serverAddress.getHostName(), serverAddress.getPort(), uri))).execute();
+            return requestFactory.buildRequest(method, new GenericUrl(url), content).execute();
         } finally {
             ProxySelector.setDefault(defaultProxySelector);
         }
     }
 
     public Book[] getAllBooks() {
-        InetSocketAddress proxyAddress = new InetSocketAddress(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort")));
-        InetSocketAddress serverAddress = new InetSocketAddress(host, port);
-
         try {
-            HttpResponse httpResponse = sendGETRequest("/get_books", serverAddress, proxyAddress);
+            HttpResponse httpResponse = sendRequestViaProxy(new URL("http://" + host + ":" + port + "/get_books"), HttpMethods.GET, null);
             return objectMapper.readValue(httpResponse.getContent(), Book[].class);
         } catch (Exception e) {
             throw new RuntimeException("Exception making request to retrieve all books", e);
@@ -91,11 +87,8 @@ public class BookServiceGoogleHttpClient implements BookService {
     }
 
     public Book getBook(String id) {
-        InetSocketAddress proxyAddress = new InetSocketAddress(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort")));
-        InetSocketAddress serverAddress = new InetSocketAddress(host, port);
-
         try {
-            HttpResponse httpResponse = sendGETRequest("/get_book?id=" + id, serverAddress, proxyAddress);
+            HttpResponse httpResponse = sendRequestViaProxy(new URL("http://" + host + ":" + port + "/get_book?id=" + id), HttpMethods.GET, null);
             return objectMapper.readValue(httpResponse.getContent(), Book.class);
         } catch (Exception e) {
             throw new RuntimeException("Exception making request to retrieve a book with id [" + id + "]", e);
