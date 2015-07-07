@@ -172,8 +172,26 @@ public class InstanceHolderTest {
         instanceHolder.stop(1, 2, false);
 
         // then
-        verify(mockMockServerClient).stop();
-        verify(mockProxyClient).stop();
+        verify(mockMockServerClient).stop(false);
+        verify(mockProxyClient).stop(false);
+
+        // and - no new clients added
+        assertThat(InstanceHolder.mockServerClients.size(), is(1));
+        assertThat(InstanceHolder.proxyClients.size(), is(1));
+    }
+
+    @Test
+    public void shouldStopMockServerAndProxyRemotelyAndIgnoreErrors() {
+        // given
+        InstanceHolder.mockServerClients.put(1, mockMockServerClient);
+        InstanceHolder.proxyClients.put(2, mockProxyClient);
+
+        // when
+        instanceHolder.stop(1, 2, true);
+
+        // then
+        verify(mockMockServerClient).stop(true);
+        verify(mockProxyClient).stop(true);
 
         // and - no new clients added
         assertThat(InstanceHolder.mockServerClients.size(), is(1));
@@ -190,8 +208,8 @@ public class InstanceHolderTest {
         instanceHolder.stop(1, -1, false);
 
         // then
-        verify(mockMockServerClient).stop();
-        verify(mockProxyClient, times(0)).stop();
+        verify(mockMockServerClient).stop(false);
+        verify(mockProxyClient, times(0)).stop(anyBoolean());
 
         // and - no new clients added
         assertThat(InstanceHolder.mockServerClients.size(), is(1));
@@ -208,8 +226,8 @@ public class InstanceHolderTest {
         instanceHolder.stop(-1, 2, false);
 
         // then
-        verify(mockMockServerClient, times(0)).stop();
-        verify(mockProxyClient).stop();
+        verify(mockMockServerClient, times(0)).stop(anyBoolean());
+        verify(mockProxyClient).stop(false);
 
         // and - no new clients added
         assertThat(InstanceHolder.mockServerClients.size(), is(1));
@@ -226,8 +244,8 @@ public class InstanceHolderTest {
         instanceHolder.stop(-1, -1, false);
 
         // then
-        verify(mockMockServerClient, times(0)).stop();
-        verify(mockProxyClient, times(0)).stop();
+        verify(mockMockServerClient, times(0)).stop(anyBoolean());
+        verify(mockProxyClient, times(0)).stop(anyBoolean());
 
         // and - no new clients added
         assertThat(InstanceHolder.mockServerClients.size(), is(1));

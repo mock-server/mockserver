@@ -105,9 +105,10 @@ public class MockServerRunForkedMojo extends MockServerAbstractMojo {
                 ConfigurationProperties.proxyPort(proxyPort);
             }
             getLog().info(" ");
-            getLog().info(StringUtils.rightPad("", 72, "-"));
-            getLog().info("Running MockServer: " + Joiner.on(" ").join(arguments));
-            getLog().info(StringUtils.rightPad("", 72, "-"));
+            String message = "Running: " + Joiner.on(" ").join(arguments);
+            getLog().info(StringUtils.rightPad("", message.length(), "-"));
+            getLog().info(message);
+            getLog().info(StringUtils.rightPad("", message.length(), "-"));
             getLog().info(" ");
             ProcessBuilder processBuilder = processBuildFactory.create(arguments);
             if (pipeLogToConsole) {
