@@ -92,10 +92,16 @@ public class ProxyClient extends AbstractClient {
      * Stop the proxy gracefully (only support for Netty and Vert.X versions, not supported for WAR version)
      */
     public ProxyClient stop() {
+        return stop(false);
+    }
+
+    public ProxyClient stop(boolean ignoreFailure) {
         try {
             sendRequest(request().withMethod("PUT").withPath(calculatePath("stop")));
         } catch (Exception e) {
-            logger.warn("Failed to send stop request to proxy " + e.getMessage());
+            if (!ignoreFailure) {
+                logger.warn("Failed to send stop request to proxy " + e.getMessage());
+            }
         }
         return this;
     }

@@ -22,7 +22,7 @@ public class MockServerStopForkedMojo extends MockServerAbstractMojo {
         if (skip) {
             getLog().info("Skipping plugin execution");
         } else {
-            getEmbeddedJettyHolder().stop(serverPort, proxyPort);
+            getEmbeddedJettyHolder().stop(serverPort, proxyPort, false);
             if (serverPort != -1) {
                 getLog().info("Stopped MockServer running on port [" + serverPort + "]");
             }

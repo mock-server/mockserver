@@ -157,10 +157,16 @@ public class MockServerClient extends AbstractClient {
      * Stop MockServer gracefully (only support for Netty and Vert.X versions, not supported for WAR version)
      */
     public MockServerClient stop() {
+        return stop(false);
+    }
+
+    public MockServerClient stop(boolean ignoreFailure) {
         try {
             sendRequest(request().withMethod("PUT").withPath(calculatePath("stop")));
         } catch (Exception e) {
-            logger.warn("Failed to send stop request to proxy " + e.getMessage());
+            if (!ignoreFailure) {
+                logger.warn("Failed to send stop request to MockServer " + e.getMessage());
+            }
         }
         return this;
     }

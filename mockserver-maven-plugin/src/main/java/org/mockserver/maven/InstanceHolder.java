@@ -65,12 +65,12 @@ public class InstanceHolder extends ObjectWithReflectiveEqualsHashCodeToString {
         }
     }
 
-    public void stop(final int mockServerPort, final int proxyPort) {
+    public void stop(final int mockServerPort, final int proxyPort, boolean ignoreFailure) {
         if (mockServerPort != -1) {
-            getMockServerClient(mockServerPort).stop();
+            getMockServerClient(mockServerPort).stop(ignoreFailure);
         }
         if (proxyPort != -1) {
-            getProxyClient(proxyPort).stop();
+            getProxyClient(proxyPort).stop(ignoreFailure);
         }
     }
 

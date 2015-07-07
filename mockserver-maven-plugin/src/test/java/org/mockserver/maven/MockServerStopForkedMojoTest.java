@@ -35,7 +35,7 @@ public class MockServerStopForkedMojoTest {
         mockServerStopForkedMojo.execute();
 
         // then
-        verify(mockEmbeddedJettyHolder).stop(1, 2);
+        verify(mockEmbeddedJettyHolder).stop(1, 2, false);
     }
 
     @Test
