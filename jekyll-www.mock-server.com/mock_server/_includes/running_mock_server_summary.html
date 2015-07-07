@@ -1,26 +1,28 @@
-<p>The MockServer and MockServer Proxy can be run:</p>
+<h3>The MockServer and MockServer Proxy can be run:</h3>
 
 <ul>
-	<li>via a <a href="/mock_server/running_mock_server.html#maven-plugin"><strong>Maven Plugin</strong></a> as part of a Maven build cycle</li>
-	<li><a href="/mock_server/running_mock_server.html#client-api"><strong>programmatically via an API</strong></a> in an <span class="annotation">@Before</span> or <span class="annotation">@After</span> method</li>
-	<li><a href="/mock_server/running_mock_server.html#junit-rule"><strong>using a JUnit @Rule</strong></a> via a <span class="annotation">@Rule</span> annotated field in a JUnit test</li>
-	<li><a href="/mock_server/running_mock_server.html#running-from-command-line"><strong>from the command line</strong></a> as a stand-alone process in a test environment</li>
-	<li>as a <a href="/mock_server/running_mock_server.html#deployable-war"><strong>deployable WAR</strong></a> to an existing application server</li>
-	<li>as a <a href="/mock_server/running_mock_server.html#mockserver-grunt"><strong>Grunt plugin</strong></a> as part of a Grunt build cycle</li>
-	<li>as a <a href="/mock_server/running_mock_server.html#mockserver-grunt"><strong>Node.js (npm) module</strong></a> from any Node.js code</li>
-	<li>as a <a href="/mock_server/running_mock_server.html#docker-container"><strong>Docker container</strong></a> in any Docker enabled environment</li>
+	<li>via a <a href="/mock_server/running_mock_server.html#maven_plugin"><strong>Maven Plugin</strong></a> as part of a Maven build cycle</li>
+	<li>programmatically via a <a href="/mock_server/running_mock_server.html#client_api"><strong>Java API</strong></a> in an <span class="annotation">@Before</span> or <span class="annotation">@After</span> method</li>
+	<li>using a <a href="/mock_server/running_mock_server.html#junit_rule"><strong>JUnit @Rule</strong></a> via a <span class="annotation">@Rule</span> annotated field in a JUnit test</li>
+	<li>from the <a href="/mock_server/running_mock_server.html#running_from_command_line"><strong>command line</strong></a> as a stand-alone process in a test environment</li>
+	<li>as a <a href="/mock_server/running_mock_server.html#deployable_war"><strong>deployable WAR</strong></a> to an existing application server</li>
+	<li>as a <a href="/mock_server/running_mock_server.html#mockserver_grunt"><strong>Grunt plugin</strong></a> as part of a Grunt build cycle</li>
+	<li>as a <a href="/mock_server/running_mock_server.html#mockserver_grunt"><strong>Node.js (npm) module</strong></a> from any Node.js code</li>
+	<li>as a <a href="/mock_server/running_mock_server.html#docker_container"><strong>Docker container</strong></a> in any Docker enabled environment</li>
 </ul>
 
-<p>MockServer and MockServer Proxy is available as:</p>
+<h3>MockServer and MockServer Proxy is available as:</h3>
 
 <ul>
 	<li>a stand alone <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/3.9.17/mockserver-netty-3.9.17-jar-with-dependencies.jar">Netty web server</a> that is fully self contained</li>
 	<li>a <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-war/3.9.17/mockserver-war-3.9.17.war">deployable WAR</a> that runs on any JEE web server</li>
-	<li>a <a href="https://www.npmjs.org/package/mockserver-grunt">Grunt plugin</a> that contains the embedded Netty web server</li>
-	<li>an <a href="https://www.npmjs.org/package/mockserver-grunt">npm plugin</a> that contains the embedded Netty web server</li>
+	<li>a <a href="#maven_plugin">maven plugin</a></li>
+	<li>a <a href="https://www.npmjs.org/package/mockserver-grunt">Grunt plugin</a></li>
+	<li>an <a href="https://www.npmjs.org/package/mockserver-grunt">npm plugin</a></li>
 	<li>a fully encapsulated <a href="https://registry.hub.docker.com/u/jamesdbloom/mockserver/">Docker container</a></li>
+	<li>a <a href="#running_from_command_line_using_homebrew">Homebrew package</a></li>
 </ul>
 
 <p>It is also possible to <a href="/mock_server/running_mock_server.html#build-and-run-from-source">build and run MockServer directly from source code</a></p>
 
-<p>To simplify configuration all MockServer versions (except the deployable WAR) only use a single port to support both HTTP and HTTPS.  This is achieved by dynamically detecting if the client is using HTTP or HTTPS.</p>
+<p>To simplify configuration all MockServer versions (except the deployable WAR) only use a single port to support HTTP, HTTPS and SOCKS. This is achieved by dynamically detecting if the client is using HTTP, HTTPS or SOCKS.</p>

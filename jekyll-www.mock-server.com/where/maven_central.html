@@ -10,9 +10,10 @@ sitemap:
   lastmod: 2015-04-18T22:40:27+01:00
 ---
 
-<h2>Maven Central&nbsp;&nbsp;<a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver"><img src="https://camo.githubusercontent.com/e81e59784109e88f76e25361cd6b4da7a5a18947/68747470733a2f2f6d6176656e2d6261646765732e6865726f6b756170702e636f6d2f6d6176656e2d63656e7472616c2f6f72672e6d6f636b2d7365727665722f6d6f636b7365727665722d6e657474792f62616467652e7376673f7374796c653d666c6174" alt="mockserver" data-canonical-src="https://maven-badges.herokuapp.com/maven-central/org.mock-server/mockserver-netty/badge.svg?style=flat" style="max-width:100%;"></a></h2>
+<h2>Maven Central &nbsp;&nbsp;<a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver"><img src="https://camo.githubusercontent.com/e81e59784109e88f76e25361cd6b4da7a5a18947/68747470733a2f2f6d6176656e2d6261646765732e6865726f6b756170702e636f6d2f6d6176656e2d63656e7472616c2f6f72672e6d6f636b2d7365727665722f6d6f636b7365727665722d6e657474792f62616467652e7376673f7374796c653d666c6174" alt="mockserver" data-canonical-src="https://maven-badges.herokuapp.com/maven-central/org.mock-server/mockserver-netty/badge.svg?style=flat" style="max-width:100%;"></a>
+</h2>
 
-<p>Maven Central contains the following MockServer artifacts:</p>
+<p>Maven Central contains the following released MockServer artifacts:</p>
 
 <ul>
 	<li><a href="http://search.maven.org/#search%7Cga%7C1%7Cmockserver-netty">mockserver-netty</a> - a web server for mocking and proxying using Netty, can be added to a maven build as follows:
@@ -55,16 +56,53 @@ sitemap:
 &lt;/<span class="element">dependency</span>&gt;</code></pre></li>
 </ul>
 
-<p>In addition the continuous integration build on Travis deploys a SNAPSHOT version on every github commit these SNAPSHOT artifacts can be found at <a href="https://oss.sonatype.org/index.html#nexus-search;quick%7Emockserver">https://oss.sonatype.org/index.html#nexus-search;quick~mockserver</a> by adding the correct repository to maven:</p>
+<a name="sonatype_snapshot" class="anchor" href="#sonatype_snapshot">&nbsp;</a>
 
-<pre><code class="code xml">&lt;<span class="element">repositories</span>&gt;
-	&lt;<span class="element">repository</span>&gt;
-		&lt;<span class="element">id</span>&gt;<span class="element_value">sonatype-snapshots</span>&lt;/<span class="element">id</span>&gt;
-		&lt;<span class="element">url</span>&gt;<span class="element_value">https://oss.sonatype.org/content/repositories/snapshots</span>&lt;/<span class="element">url</span>&gt;
-	&lt;/<span class="element">repository</span>&gt;
-&lt;/<span class="element">repositories</span>&gt;</code></pre>
+<h2>Sonatype SNAPSHOT</h2>
 
-<p>then specifying the latest SNAPSHOT build, for example for <strong>mockserver-netty</strong> this would be as follows:</p>
+<p>The continuous integration build on <a href="/where/continuous_integration.html">Travis CI</a> deploys a SNAPSHOT version on every github commit these SNAPSHOT artifacts can be found at <a href="https://oss.sonatype.org/index.html#nexus-search;gav~org.mock-server~~~~">Sonatype</a></p>
+
+<p>To use the SNAPSHOT version you need to configure your maven <strong>settings.xml</strong> or your <strong>pom.xml</strong> to include the Sonatype SNAPSHOT repository as follows:</p>
+
+<pre><code class="code xml">&lt;<span class="element">profile</span>&gt;
+    &lt;<span class="element">id</span>&gt;<span class="element_value">sonatype</span>&lt;/<span class="element">id</span>&gt;
+    &lt;<span class="element">activation</span>&gt;
+        &lt;<span class="element">activeByDefault</span>&gt;<span class="element_value">true</span>&lt;/<span class="element">activeByDefault</span>&gt;
+    &lt;/<span class="element">activation</span>&gt;
+    &lt;<span class="element">repositories</span>&gt;
+        &lt;<span class="element">repository</span>&gt;
+            &lt;<span class="element">id</span>&gt;<span class="element_value">sonatype-nexus-snapshots</span>&lt;/<span class="element">id</span>&gt;
+            &lt;<span class="element">name</span>&gt;<span class="element_value">sonatype-nexus-snapshots</span>&lt;/<span class="element">name</span>&gt;
+            &lt;<span class="element">url</span>&gt;<span class="element_value">https://oss.sonatype.org/content/repositories/snapshots</span>&lt;/<span class="element">url</span>&gt;
+            &lt;<span class="element">layout</span>&gt;<span class="element_value">default</span>&lt;/<span class="element">layout</span>&gt;
+            &lt;<span class="element">releases</span>&gt;
+                &lt;<span class="element">enabled</span>&gt;<span class="element_value">true</span>&lt;/<span class="element">enabled</span>&gt;
+            &lt;/<span class="element">releases</span>&gt;
+            &lt;<span class="element">snapshots</span>&gt;
+                &lt;<span class="element">enabled</span>&gt;<span class="element_value">true</span>&lt;/<span class="element">enabled</span>&gt;
+            &lt;/<span class="element">snapshots</span>&gt;
+        &lt;/<span class="element">repository</span>&gt;
+    &lt;/<span class="element">repositories</span>&gt;
+    &lt;<span class="element">pluginRepositories</span>&gt;
+        &lt;<span class="element">pluginRepository</span>&gt;
+            &lt;<span class="element">id</span>&gt;<span class="element_value">sonatype-nexus-snapshots</span>&lt;/<span class="element">id</span>&gt;
+            &lt;<span class="element">name</span>&gt;<span class="element_value">sonatype-nexus-snapshots</span>&lt;/<span class="element">name</span>&gt;
+            &lt;<span class="element">url</span>&gt;<span class="element_value">https://oss.sonatype.org/content/repositories/snapshots</span>&lt;/<span class="element">url</span>&gt;
+            &lt;<span class="element">layout</span>&gt;<span class="element_value">default</span>&lt;/<span class="element">layout</span>&gt;
+            &lt;<span class="element">releases</span>&gt;
+                &lt;<span class="element">enabled</span>&gt;<span class="element_value">true</span>&lt;/<span class="element">enabled</span>&gt;
+            &lt;/<span class="element">releases</span>&gt;
+            &lt;<span class="element">snapshots</span>&gt;
+                &lt;<span class="element">enabled</span>&gt;<span class="element_value">true</span>&lt;/<span class="element">enabled</span>&gt;
+            &lt;/<span class="element">snapshots</span>&gt;
+        &lt;/<span class="element">pluginRepository</span>&gt;
+    &lt;/<span class="element">pluginRepositories</span>&gt;
+&lt;/<span class="element">profile</span>&gt;</code></pre>
+
+<p><strong>Note:</strong> typically it is best practice to configure the <strong>~/.m2/settings.xml</strong> file instead of the <strong>settings.xml</strong> file located inside the <strong>conf</strong> directory in the maven installation directory (i.e. <strong>$M2_HOME</strong>). This is because the
+	<strong>~/.m2/settings.xml</strong> file will be consistent between maven version upgrades and any changes to this file will only affect a single user.</p>
+
+<p>Once the Sonatype SNAPSHOT repository has been added, as above, the latest SNAPSHOT build can referenced.</p><p>For example add a dependency on the latest SNAPSHOT build for <strong>mockserver-netty</strong>, as follows:</p>
 
 <pre><code class="code xml">&lt;<span class="element">dependency</span>&gt;
 	&lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;

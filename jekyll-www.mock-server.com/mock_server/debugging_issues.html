@@ -39,23 +39,25 @@ sitemap:
 
 <p>When MockServer is run from the command line, Maven plugin, Grunt plugin or npm module the log is written to a file called <strong>mockserver.log</strong> in the current working directory where the MockServer is running.</p>
 
-<a name="logging-with-api" class="anchor" href="#logging-with-api">&nbsp;</a>
+<a name="logging_with_api" class="anchor" href="#logging_with_api">&nbsp;</a>
 
 <h3>Logging with JUnit @Rule or API</h3>
 
-<p>If the MockSever is being launched using the <a href="/mock_server/running_mock_server.html#junit-rule"><strong>JUnit @Rule</strong></a> or <a href="/mock_server/running_mock_server.html#client-api"><strong>programmatically via an API</strong></a> then a custom <a href="http://logback.qos.ch">logback</a> configuration file to override the default MockServer or MockServer Proxy logging settings. An example <a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-netty/src/main/resources/example_logback.xml">logback configuration file</a> is available in github.</p>
+<p>If the MockSever is being launched using the <a href="/mock_server/running_mock_server.html#junit_rule"><strong>JUnit @Rule</strong></a> or <a href="/mock_server/running_mock_server.html#client_api"><strong>programmatically via an API</strong></a> then a custom
+	<a href="http://logback.qos.ch">logback</a> configuration file to override the default MockServer or MockServer Proxy logging settings. An example
+	<a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-netty/src/main/resources/example_logback.xml">logback configuration file</a> is available in github.</p>
 
 <p>A custom <a href="http://logback.qos.ch">logback</a> configuration file can be specified using the <span class="inline_code">logback.configurationFile</span> system property with an absolute or relative file path or a classpath, as follows: <code class="code inline">-Dlogback.configurationFile=example_logback.xml</code></p>
 
 <p>A custom <a href="http://logback.qos.ch">logback</a> configuration file will also be automatically picked up if it is called <strong>logback.xml</strong> and is in the root of the classpath, however, the jar-with-dependencies already contains a <strong>logback.xml</strong> file, so to override this, the overriding <strong>logback.xml</strong> file must be higher (i.e. earlier) in the classpath.</p>
 
-<a name="logging-with-command-line" class="anchor" href="#logging-with-command-line">&nbsp;</a>
+<a name="logging_with_command_line" class="anchor" href="#logging_with_command_line">&nbsp;</a>
 
 <h3>Logging with Command Line</h3>
 
-<p>When running MockServer directly from <a href="/mock_server/running_mock_server.html#running-from-command-line">the command line</a> the system property <span class="inline_code">mockserver.logLevel</span> can be used to set the log level, as follows:</p>
+<p>When running MockServer directly from <a href="/mock_server/running_mock_server.html#running_from_command_line">the command line</a> the system property <span class="inline_code">mockserver.logLevel</span> can be used to set the log level, as follows:</p>
 
-<pre><code class="code">java -Dmockserver.logLevel=DEBUG -jar ~/Downloads/mockserver-netty-3.9.17-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span> -proxyPort <span class="numeric_literal">1090</span></code></pre>
+<pre><code class="code">java -Dmockserver.logLevel=INFO -jar ~/Downloads/mockserver-netty-3.9.17-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span> -proxyPort <span class="numeric_literal">1090</span></code></pre>
 
 <p>It is also possible to specify a custom <a href="http://logback.qos.ch">logback</a> configuration file to override the default MockServer or MockServer Proxy logging settings. An example <a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-netty/src/main/resources/example_logback.xml">logback configuration file</a> is available in github.</p>
 
@@ -65,7 +67,7 @@ sitemap:
 
 <p>A custom <a href="http://logback.qos.ch">logback</a> configuration file will also be automatically picked up if it is called <strong>logback.xml</strong> and is in the root of the classpath, however, the jar-with-dependencies already contains a <strong>logback.xml</strong> file, so to override this, the overriding <strong>logback.xml</strong> file must be higher (i.e. earlier) in the classpath.</p>
 
-<a name="logging-with-maven-plugin" class="anchor" href="#logging-with-maven-plugin">&nbsp;</a>
+<a name="logging_with_maven_plugin" class="anchor" href="#logging_with_maven_plugin">&nbsp;</a>
 
 <h3>Logging with Maven Plugin</h3>
 
@@ -102,7 +104,8 @@ sitemap:
 
 <h3>Logging with Grunt plugin or npm module</h3>
 
-<p>When running MockServer using the <a href="/mock_server/running_mock_server.html#mockserver-grunt"><strong>mockserver-grunt</strong></a> Grunt plugin and Node.js (npm) module the <span class="inline_code">verbose</span> option can be used to enable <strong>INFO</strong> level logging and the <span class="inline_code">trace</span> option can be used to enable <strong>TRACE</strong> level logging. In addition the <span class="inline_code">--verbose</span> command line flag can be used for Grunt builds to enable the <strong>mockserver-grunt</strong> verbose option dynamically.</p>
+<p>When running MockServer using the <a href="/mock_server/running_mock_server.html#mockserver_grunt"><strong>mockserver-grunt</strong></a> Grunt plugin and Node.js (npm) module the <span class="inline_code">verbose</span> option can be used to enable <strong>INFO</strong> level logging and the
+	<span class="inline_code">trace</span> option can be used to enable <strong>TRACE</strong> level logging. In addition the <span class="inline_code">--verbose</span> command line flag can be used for Grunt builds to enable the <strong>mockserver-grunt</strong> verbose option dynamically.</p>
 
 <a name="disabling-logging" class="anchor" href="#disabling-logging">&nbsp;</a>
 

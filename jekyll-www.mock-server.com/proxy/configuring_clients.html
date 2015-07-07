@@ -43,52 +43,93 @@ sitemap:
 
 <h3>Port Forwarding</h3>
 
-<p>Port forwarding is very simple as it does not require any code changes.  The <a href="/proxy/running_mock_server_proxy.html">port forwarding proxy is configured</a> to send all received requests to remote port and host.</p>
+<h4>Client</h4>
 
-<p>Although the port forwarding proxy is the simplest proxy is can only proxy a single remote port and host, however, there is no reason why multiple port forwarding proxies can not be simultaneously started.</p>
+<p>Port forwarding is very simple as it does not require any code changes. The port forwarding proxy is configured to send all received requests to remote port and host.</p>
+
+<p>Although the port forwarding proxy is the simplest proxy is can only proxy a single remote port and host. To forward multiple ports, multiple port forwarding proxies, should be run as separate processes.</p>
 
 <p>There are two many approaches for routing requests via the port forwarding proxy.</p>
 
 <ol>
-    <li>Update the remote service host and port in a configuration file.  As long as it is possible to update the configuration file or code that specifies the host and port for the service you are proxying this is the simplest approach.</li>
-    <li>Add entry to the <strong>/etc/hosts</strong> file to map one or more remote domain names to the local machine.  This approach will not require any configuration file changes as the operating system will resolve the remote domain name to 127.0.0.1. However, this approach will only work if it is possible to start the MockServer Proxy locally on the same port the client is connecting to on the remote machine.</li>
+	<li>Update the remote service host and port used by the client, typically this is either hard coded or in a configuration file. Change the remote service host and port to the host and port where the proxy is running.</li>
+	<li>Add entry to the
+		<strong>/etc/hosts</strong> file to map one or more remote domain names to the machine where the proxy is running. This approach will not require any configuration file changes as the operating system will resolve the remote domain name to maching where the proxy is running. However, this approach will only work if it is possible to start the MockServer Proxy locally on the same port the client is connecting to on the remote machine.
+	</li>
 </ol>
+
+<h4>Proxy</h4>
+
+<p>To run the Port Forwarding Proxy the following values need to be provided to the MockServer Proxy:</p>
+
+<ul>
+	<li><strong>proxyPort</strong> - specifies the HTTP and HTTPS port for the MockServer.</li>
+	<li><strong>proxyRemotePort</strong> - specifies the port to forward all proxy requests to.</li>
+	<li><strong>proxyRemoteHost</strong> - specified the host to forward all proxy requests to as a domain name or ip address. If no value is provided when <strong>proxyRemotePort</strong> has been specified, the default <span class="string_literal">"localhost"</span> is used.</li>
+</ul>
+
+<p>For details of how to run MockServer Proxy with the above values configured see <a href="/proxy/running_mock_server_proxy.html">Running The Proxy</a></p>
 
 <a name="web-secure-web-proxy" class="anchor" href="#web-secure-web-proxy">&nbsp;</a>
 
 <h3>Web Proxy & Secure Web Proxy</h3>
 
+<h4>Client</h4>
+
 <p>To use the Web Proxy and Secure Web Proxy HTTP clients must be configured correctly.</p>
 
-<p>Example configuration showing how to configure each client is shown below for the following clients:</p>
+<p>Example code or screen-shots is shown below explaining how to configure the following clients:</p>
 
 <ul>
-    <li><a href="#apache-http-client">Apache HttpClient</a></li>
-    <li><a href="#spring-rest-template">Spring RestTemplate</a></li>
-    <li><a href="#jetty-http-client">Jetty HttpClient</a></li>
-    <li><a href="#jersey-client">Jersey Client</a></li>
-    <li><a href="#grizzly-async-http-client">Grizzly AsyncHttpClient</a></li>
-    <li><a href="#ajax-on-mac">AJAX on Apple Mac (i.e. Chrome, Safari, Firefox, etc)</a></li>
+	<li><a href="#java_jdk_http_url_connection">Java JDK HttpURLConnection</a></li>
+	<li><a href="#apache_http_client">Apache HttpClient</a></li>
+	<li><a href="#spring_rest_template">Spring RestTemplate</a></li>
+	<li><a href="#google_http_client">Google HTTP Client</a></li>
+	<li><a href="#jetty_http_client">Jetty HttpClient</a></li>
+	<li><a href="#jersey_client">Jersey Client</a></li>
+	<li><a href="#grizzly_async_http_client">Grizzly AsyncHttpClient</a></li>
+	<li><a href="#apple_mac_http_https">Apple Mac HTTP & HTTPS (i.e. Chrome, Safari, Firefox, etc)</a></li>
 </ul>
 
-<a name="apache-http-client" class="anchor" href="#apache-http-client">&nbsp;</a>
+<h4>Proxy</h4>
 
-<h4>Apache HttpClient</h4>
+<p>To run the Web Proxy or Secure Web Proxy the following values need to be provided to the MockServer Proxy:</p>
 
-<p>Configure the Web or Secure Web Proxy with an Apache HttpClient, as follows:</p>
+<ul>
+	<li><strong>proxyPort</strong> - specifies the HTTP and HTTPS port for the MockServer.</li>
+</ul>
+
+<p>For details of how to run MockServer Proxy with the above values configured see <a href="/proxy/running_mock_server_proxy.html">Running The Proxy</a></p>
+
+<a name="java_jdk_http_url_connection" class="anchor" href="#java_jdk_http_url_connection">&nbsp;</a>
+
+<h4>Java JDK HttpURLConnection (HTTP)</h4>
+
+<p>Configure the Web or Secure Web Proxy with an <a href="http://docs.oracle.com/javase/8/docs/api/java/net/HttpURLConnection.html">HttpURLConnection</a> from the Java JDK, as follows:</p>
+
+<pre><code class="code"><span class="keyword">private</span> HttpURLConnection sendRequestViaProxy(URL url) throws IOException {
+    Proxy proxy = <span class="keyword">new</span> Proxy(Proxy.Type.<span class="constant">HTTP</span>, <span class="keyword">new</span> InetSocketAddress(System.getProperty(<span class="string_literal">"http.proxyHost"</span>), Integer.parseInt(System.getProperty(<span class="string_literal">"http.proxyPort"</span>))));
+    <span class="keyword">return</span> (HttpURLConnection) url.openConnection(proxy);
+}</code></pre>
+
+<a name="apache_http_client" class="anchor" href="#apache_http_client">&nbsp;</a>
+
+<h4>Apache HttpClient (HTTP)</h4>
+
+<p>Configure the Web or Secure Web Proxy with an <a href="http://hc.apache.org/httpcomponents-client-ga/">Apache HttpClient</a>, as follows:</p>
 
 <pre><code class="code">HttpHost httpHost = <span class="keyword">new</span> HttpHost(System.getProperty(<span class="string_literal">"http.proxyHost"</span>), Integer.parseInt(System.getProperty(<span class="string_literal">"http.proxyPort"</span>)));
 DefaultProxyRoutePlanner defaultProxyRoutePlanner = <span class="keyword">new</span> DefaultProxyRoutePlanner(httpHost);
 HttpClient httpClient = HttpClients.custom().setRoutePlanner(defaultProxyRoutePlanner).build();</code></pre>
 
-<p>The <a href="https://github.com/jamesdbloom/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example of using the proxy with a Apache HttpClient called
+<p>The <a href="https://github.com/jamesdbloom/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example of using the Web Proxy (i.e. HTTP Proxy) with a Apache HttpClient called
     <a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-examples/src/main/java/org/mockserver/service/apacheclient/BookServiceApacheHttpClient.java">BookServiceApacheHttpClient</a> that demonstrates a fully working example.</p>
 
-<a name="spring-rest-template" class="anchor" href="#spring-rest-template">&nbsp;</a>
+<a name="spring_rest_template" class="anchor" href="#spring_rest_template">&nbsp;</a>
 
 <h4>Spring RestTemplate</h4>
 
-<p>Configure the Web or Secure Web Proxy with a Spring RestTemplate, as follows:</p>
+<p>Configure the Web or Secure Web Proxy with a <a href="http://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/client/RestTemplate.html">Spring RestTemplate</a>, as follows:</p>
 
 <pre><code class="code">RestTemplate restTemplate = <span class="keyword">new</span> RestTemplate();
 HttpHost httpHost = <span class="keyword">new</span> HttpHost(
@@ -99,14 +140,42 @@ DefaultProxyRoutePlanner defaultProxyRoutePlanner = <span class="keyword">new</s
 HttpClient httpClient = HttpClients.custom().setRoutePlanner(defaultProxyRoutePlanner).build();
 restTemplate.setRequestFactory(<span class="keyword">new</span> HttpComponentsClientHttpRequestFactory(httpClient));</code></pre>
 
-<p>The <a href="https://github.com/jamesdbloom/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example of using the proxy with a Spring RestTemplate called
+<p>The <a href="https://github.com/jamesdbloom/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example of using the Web Proxy (i.e. HTTP Proxy) with a Spring RestTemplate called
     <a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-examples/src/main/java/org/mockserver/service/springclient/BookServiceSpringRestTemplateClient.java">BookServiceSpringRestTemplateClient</a> that demonstrates a fully working example.</p>
 
-<a name="jetty-http-client" class="anchor" href="#jetty-http-client">&nbsp;</a>
+<a name="google_http_client" class="anchor" href="#google_http_client">&nbsp;</a>
+
+<h4>Google Client (HTTP)</h4>
+
+<p>Configure the Web or Secure Web Proxy with a <a href="https://github.com/google/google-http-java-client">Google HTTP Client</a>, as follows:</p>
+
+<pre><code class="code"><span class="keyword">private</span> HttpResponse sendRequestViaProxy(URL url, String method, <span class="annotation">@Nullable</span> HttpContent content) <span class="keyword">throws</span> IOException {
+    ProxySelector defaultProxySelector = ProxySelector.getDefault();
+    <span class="keyword">try</span> {
+        ProxySelector.setDefault(new ProxySelector() {
+            <span class="annotation">@Override</span>
+            <span class="keyword">public</span> List&lt;Proxy&gt; select(URI uri) {
+                <span class="keyword">return</span> Arrays.asList(new Proxy(Proxy.Type.<span class="constant">HTTP</span>, new InetSocketAddress(System.getProperty(<span class="string_literal">"http.proxyHost"</span>), Integer.parseInt(System.getProperty(<span class="string_literal">"http.proxyPort"</span>)))));
+            }
+
+            <span class="annotation">@Override</span>
+            <span class="keyword">public void</span> connectFailed(URI uri, SocketAddress sa, IOException ioe) {
+                System.out.println(<span class="string_literal">"Connection could not be established to proxy at socket ["</span> + sa + <span class="string_literal">"]"</span>);
+                ioe.printStackTrace();
+            }
+        });
+        HttpRequestFactory requestFactory = <span class="keyword">new</span> NetHttpTransport().createRequestFactory();
+        <span class="keyword">return</span> requestFactory.buildRequest(method, <span class="keyword">new</span> GenericUrl(url), content).execute();
+    } <span class="keyword">finally</span> {
+        ProxySelector.setDefault(defaultProxySelector);
+    }
+}</code></pre>
+
+<a name="jetty_http_client" class="anchor" href="#jetty_http_client">&nbsp;</a>
 
 <h4>Jetty HttpClient</h4>
 
-<p>Configure the Web or Secure Web Proxy with a Jetty HttpClient, as follows:</p>
+<p>Configure the Web or Secure Web Proxy with a <a href="http://www.eclipse.org/jetty/documentation/current/http-client.html">Jetty HttpClient</a>, as follows:</p>
 
 <p><strong>Jetty HttpClient 9.x</strong></p>
 
@@ -128,14 +197,14 @@ restTemplate.setRequestFactory(<span class="keyword">new</span> HttpComponentsCl
     <span class="keyword">throw new</span> RuntimeException(<span class="string_literal">"Exception creating HttpClient"</span>, e);
 }</code></pre>
 
-<p>The <a href="https://github.com/jamesdbloom/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example of using the proxy with a Jetty HttpClient called
+<p>The <a href="https://github.com/jamesdbloom/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example of using the Web Proxy (i.e. HTTP Proxy) with a Jetty HttpClient called
     <a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-examples/src/main/java/org/mockserver/service/jettyclient/BookServiceJettyHttpClient.java">BookServiceJettyHttpClient</a> that demonstrates a fully working example.</p>
 
-<a name="jersey-client" class="anchor" href="#jersey-client">&nbsp;</a>
+<a name="jersey_client" class="anchor" href="#jersey_client">&nbsp;</a>
 
 <h4>Jersey Client</h4>
 
-<p>Configure the Web or Secure Web Proxy with a Jersey Client, as follows:</p>
+<p>Configure the Web or Secure Web Proxy with a <a href="https://jersey.java.net/documentation/latest/client.html">Jersey Client</a>, as follows:</p>
 
 <pre><code class="code">ClientConfig clientConfig = <span class="keyword">new</span> ClientConfig().register(<span class="keyword">new</span> JacksonFeature())
                                               .connectorProvider(<span class="keyword">new</span> ApacheConnectorProvider());
@@ -143,28 +212,28 @@ clientConfig.property(ClientProperties.<span class="constant">PROXY_URI</span>, 
 Client client = ClientBuilder.newClient(clientConfig);</code></pre>
 
 
-<p>The <a href="https://github.com/jamesdbloom/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example of using the proxy with a Jersey Client called
+<p>The <a href="https://github.com/jamesdbloom/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example of using the Web Proxy (i.e. HTTP Proxy) with a Jersey Client called
     <a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-examples/src/main/java/org/mockserver/service/jerseyclient/BookServiceJerseyClient.java">BookServiceJerseyClient</a> that demonstrates a fully working example.</p>
 
-<a name="grizzly-async-http-client" class="anchor" href="#grizzly-async-http-client">&nbsp;</a>
+<a name="grizzly_async_http_client" class="anchor" href="#grizzly_async_http_client">&nbsp;</a>
 
 <h4>Grizzly AsyncHttpClient</h4>
 
-<p>Configure the Web or Secure Web Proxy with a Grizzly AsyncHttpClient, as follows:</p>
+<p>Configure the Web or Secure Web Proxy with a <a href="https://github.com/AsyncHttpClient/async-http-client">Grizzly AsyncHttpClient</a>, as follows:</p>
 
 <pre><code class="code">AsyncHttpClientConfig.Builder clientConfigBuilder = <span class="keyword">new</span> AsyncHttpClientConfig.Builder();
 clientConfigBuilder.setProxyServerSelector(ProxyUtils.createProxyServerSelector(HttpProxy.proxySelector()));
 AsyncHttpClient asyncHttpClient = <span class="keyword">new</span> AsyncHttpClient(clientConfigBuilder.build());</code></pre>
 
 
-<p>The <a href="https://github.com/jamesdbloom/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example of using the proxy with a Grizzly AsyncHttpClient called
-    <a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-examples/src/main/java/org/mockserver/service/grizzlyclient/BookServiceGrizzlyHttpClient.java">BookServiceGrizzlyHttpClient</a> that demonstrates a fully working example.</p>
+<p>The <a href="https://github.com/jamesdbloom/mockserver/tree/ec6e389cde20150429e22b8e9f8a60f57c8a24c3/mockserver-examples">mockserver-example</a> project contains an example of using the Web Proxy (i.e. HTTP Proxy) with a Grizzly AsyncHttpClient called
+	<a href="https://github.com/jamesdbloom/mockserver/blob/ec6e389cde20150429e22b8e9f8a60f57c8a24c3/mockserver-examples/src/main/java/org/mockserver/service/grizzlyclient/BookServiceGrizzlyHttpClient.java">BookServiceGrizzlyHttpClient</a> that demonstrates a fully working example.</p>
 
-<a name="ajax-on-mac" class="anchor" href="#ajax-on-mac">&nbsp;</a>
+<a name="apple_mac_http_https" class="anchor" href="#apple_mac_http_https">&nbsp;</a>
 
-<h4>AJAX on Apple Mac (i.e. Chrome, Safari, Firefox, etc)</h4>
+<h4>Apple Mac HTTP & HTTPS (i.e. Chrome, Safari, Firefox, etc)</h4>
 
-<p>The Apple Mac can be configure to send all HTTP and HTTPS request via the proxy settings in System Preferences > Network > Advanced > Proxies, as follows:</p>
+<p>The Apple Mac can be configure to send all HTTP or HTTPS request via a proxy. This is done in the proxy settings in System Preferences > Network > Advanced > Proxies, as follows:</p>
 
 <p><strong>1. System Preferences</strong></p>
 
@@ -174,11 +243,11 @@ AsyncHttpClient asyncHttpClient = <span class="keyword">new</span> AsyncHttpClie
 
 <p><a href="/images/mac_proxy_configuration/system_preferences_network.png" target="_blank"><img src="/images/mac_proxy_configuration/system_preferences_network.png" alt="Apple Mac Network Preferences" style="max-width:80%;"></a></p>
 
-<p><strong>3. Web Proxy Settings</strong></p>
+<p><strong>3. Web Proxy Settings (HTTP requests)</strong></p>
 
 <p><a href="/images/mac_proxy_configuration/network_web_proxy.png" target="_blank"><img src="/images/mac_proxy_configuration/network_web_proxy.png" alt="Web Proxy Configuration" style="max-width:80%;"></a></p>
 
-<p><strong>4. Secure Web Proxy Settings</strong></p>
+<p><strong>4. Secure Web Proxy Settings (HTTPS requests)</strong></p>
 
 <p><a href="/images/mac_proxy_configuration/network_secure_web_proxy.png" target="_blank"><img src="/images/mac_proxy_configuration/network_secure_web_proxy.png" alt="Secure Web Proxy Configuration" style="max-width:80%;"></a></p>
 
@@ -186,11 +255,35 @@ AsyncHttpClient asyncHttpClient = <span class="keyword">new</span> AsyncHttpClie
 
 <h3>SOCKS Proxy</h3>
 
-<p>As the SOCKS proxy operates at the socket level it is possible to configure this for an entire JVM or operating system.</p>
+<h4>Client</h4>
 
-<h4>Apache HttpClient</h4>
+<p>The SOCKS Proxy operates at the socket level, therefore, it is possible to configure a single client, an entire JVM or an entire operating system to send all network requests via the SOCKS Proxy.</p>
 
-<p>Configure the SOCKS Proxy with an Apache HttpClient, as follows:</p>
+<p>Example code or screen-shots is shown below explaining how to configure the following clients:</p>
+
+<ul>
+	<li><a href="#socks_apache_http_client">Apache HttpClient</a></li>
+	<li><a href="#socks_java_jdk_http_url_connection">Java JDK HttpURLConnection</a></li>
+	<li><a href="#socks_google_http_client">Google HTTP Client</a></li>
+	<li><a href="#socks_jvm_configuration">Java Virtual Machine Network Stack</a></li>
+	<li><a href="#socks_mac_os">Apple Mac Network Stack (i.e. SOCKS)</a></li>
+</ul>
+
+<h4>Proxy</h4>
+
+<p>To run the SOCKS Proxy the following values need to be provided to the MockServer Proxy:</p>
+
+<ul>
+	<li><strong>proxyPort</strong> - specifies the SOCKS port for the MockServer.</li>
+</ul>
+
+<p>For details of how to run MockServer Proxy with the above values configured see <a href="/proxy/running_mock_server_proxy.html">Running The Proxy</a></p>
+
+<a name="socks_apache_http_client" class="anchor" href="#socks_apache_http_client">&nbsp;</a>
+
+<h4>Apache HttpClient (SOCKS)</h4>
+
+<p>Configure the SOCKS Proxy with an <a href="http://hc.apache.org/httpcomponents-client-ga/">Apache HttpClient</a>, as follows:</p>
 
 <pre><code class="code">Registry&lt;ConnectionSocketFactory&gt; socketFactoryRegistry = RegistryBuilder.&lt;ConnectionSocketFactory&gt;create()
         .register(<span class="string_literal">"http"</span>, <span class="keyword">new</span> ConnectionSocketFactory() {
@@ -236,6 +329,53 @@ HttpClient httpClient = HttpClients.custom()
         .setConnectionManager(clientConnectionManager)
         .build();</code></pre>
 
+<a name="socks_java_jdk_http_url_connection" class="anchor" href="#socks_java_jdk_http_url_connection">&nbsp;</a>
+
+<h4>Java JDK HttpURLConnection (SOCKS)</h4>
+
+<p>Configure the SOCKS Proxy with an <a href="http://docs.oracle.com/javase/8/docs/api/java/net/HttpURLConnection.html">HttpURLConnection</a> from the Java JDK, as follows:</p>
+
+<pre><code class="code"><span class="keyword">private</span> HttpURLConnection sendRequestViaProxy(URL url) throws IOException {
+    Proxy proxy = <span class="keyword">new</span> Proxy(Proxy.Type.<span class="constant">SOCKS</span>, <span class="keyword">new</span> InetSocketAddress(System.getProperty(<span class="string_literal">"http.proxyHost"</span>), Integer.parseInt(System.getProperty(<span class="string_literal">"http.proxyPort"</span>))));
+    <span class="keyword">return</span> (HttpURLConnection) url.openConnection(proxy);
+}</code></pre>
+
+<p>The <a href="https://github.com/jamesdbloom/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example of using the SOCKS Proxy with a HttpURLConnection called
+	<a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-examples/src/main/java/org/mockserver/service/javaclient/BookServiceJavaHttpClient.java">BookServiceJavaHttpClient</a> that demonstrates a fully working example.</p>
+
+<a name="socks_google_http_client" class="anchor" href="#socks_google_http_client">&nbsp;</a>
+
+<h4>Google HTTP Client (SOCKS)</h4>
+
+<p>Configure the SOCKS Proxy with a <a href="https://github.com/google/google-http-java-client">Google HTTP Client</a>, as follows:</p>
+
+<pre><code class="code"><span class="keyword">private</span> HttpResponse sendRequestViaProxy(URL url, String method, <span class="annotation">@Nullable</span> HttpContent content) <span class="keyword">throws</span> IOException {
+    ProxySelector defaultProxySelector = ProxySelector.getDefault();
+    <span class="keyword">try</span> {
+        ProxySelector.setDefault(new ProxySelector() {
+            <span class="annotation">@Override</span>
+            <span class="keyword">public</span> List&lt;Proxy&gt; select(URI uri) {
+                <span class="keyword">return</span> Arrays.asList(new Proxy(Proxy.Type.<span class="constant">SOCKS</span>, new InetSocketAddress(System.getProperty(<span class="string_literal">"http.proxyHost"</span>), Integer.parseInt(System.getProperty(<span class="string_literal">"http.proxyPort"</span>)))));
+            }
+
+            <span class="annotation">@Override</span>
+            <span class="keyword">public void</span> connectFailed(URI uri, SocketAddress sa, IOException ioe) {
+                System.out.println(<span class="string_literal">"Connection could not be established to proxy at socket ["</span> + sa + <span class="string_literal">"]"</span>);
+                ioe.printStackTrace();
+            }
+        });
+        HttpRequestFactory requestFactory = <span class="keyword">new</span> NetHttpTransport().createRequestFactory();
+        <span class="keyword">return</span> requestFactory.buildRequest(method, <span class="keyword">new</span> GenericUrl(url), content).execute();
+    } <span class="keyword">finally</span> {
+        ProxySelector.setDefault(defaultProxySelector);
+    }
+}</code></pre>
+
+<p>The <a href="https://github.com/jamesdbloom/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example of using the SOCKS Proxy with a Google HTTP Client called
+	<a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-examples/src/main/java/org/mockserver/service/googleclient/BookServiceGoogleHttpClient.java">BookServiceGoogleHttpClient</a> that demonstrates a fully working example.</p>
+
+<a name="socks_jvm_configuration" class="anchor" href="#socks_jvm_configuration">&nbsp;</a>
+
 <h4>JVM Configuration</h4>
 
 <p>It is possible to enable the SOCK proxy for the entire JVM, as follows:</p>
@@ -260,8 +400,20 @@ HttpClient httpClient = HttpClients.custom()
     }
 });</code></pre>
 
-<h4>Operating System Configuration</h4>
+<a name="socks_mac_os" class="anchor" href="#socks_mac_os">&nbsp;</a>
 
-<p>As shown in the section above it is possible to configure the proxy settings for Apple Macs in System Preferences > Network > Advanced > Proxies, as follows:</p>
+<h4>Apple Mac Network Stack (SOCKS)</h4>
+
+<p>The Apple Mac can be configure to send all network requests via a SOCKS proxy. This is done in the proxy settings in System Preferences > Network > Advanced > Proxies, as follows:</p>
+
+<p><strong>1. System Preferences</strong></p>
+
+<p><a href="/images/mac_proxy_configuration/system_preferences.png" target="_blank"><img src="/images/mac_proxy_configuration/system_preferences.png" alt="Apple Mac System Preferences" style="max-width:80%;"></a></p>
+
+<p><strong>2. Network Preferences</strong></p>
+
+<p><a href="/images/mac_proxy_configuration/system_preferences_network.png" target="_blank"><img src="/images/mac_proxy_configuration/system_preferences_network.png" alt="Apple Mac Network Preferences" style="max-width:80%;"></a></p>
+
+<p><strong>3. SOCKS Proxy Settings</strong></p>
 
 <p><a href="/images/mac_proxy_configuration/network_socks_proxy.png" target="_blank"><img src="/images/mac_proxy_configuration/network_socks_proxy.png" alt="SOCKS Proxy Configuration" style="max-width:80%;"></a></p>

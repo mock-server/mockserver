@@ -1,24 +1,126 @@
-<p>First, you'll need to <a href="https://docs.docker.com/">install Docker</a>.</p>
+The typical sequence for running the MockServer docker image is as follows:
+
+<ol>
+	<li><a href="#install_docker">Install Docker</a></li>
+	<li><a href="#pull_docker_image">Pull (or Update) Image</a></li>
+	<li><a href="#run_docker_container">Run Container</a></li>
+</ol>
+
+In addition it is possible to <a href="#docker_container_customization">customise how the container is run</a>.
+
+<a name="install_docker" class="anchor" href="#install_docker">&nbsp;</a>
+
+<h3>Install Docker</h3>
+
+<p>To install Docker see the <a href="https://docs.docker.com/installation/">installation instructions</a>.</p>
+
+<a name="pull_docker_image" class="anchor" href="#pull_docker_image">&nbsp;</a>
+
+<h3>Pull MockServer Image</h3>
+
+<p>To pull the MockServer Docker image use the pull command, as follows:</p>
+
+<pre><code class="code">docker pull jamesdbloom/mockserver</code></pre>
+
+<p>This is not strictly necessary as the image will be automatically pulled if it does not exist when the run command is used. However, using the pull command will ensure the latest version of the image is downloaded.</p>
+
+<a name="run_docker_container" class="anchor" href="#run_docker_container">&nbsp;</a>
+
+<h3>Run MockServer Container</h3>
 
 <p>Then to run MockServer as a Docker container run the following command:</p>
 
 <pre><code class="code">docker run -d -P jamesdbloom/mockserver</code></pre>
 
-<p>This command will map the ports exposed by MockServer and Proxy to dynamic ports using the <strong>-P</strong> option. To specify which ports are used you can specify one or more port mappings using the <strong>-p
-    <span class="annotation">&lt;host port&gt;</span>:<span class="annotation">&lt;container port&gt;</span></strong> option. You only need to specify mapping for ports you need to use, for example, if you are not using the proxy there is no need to provide port mapping options for the proxy ports.</p>
+<p>The <strong>-P</strong> switch in this command tells Docker to map all ports exported by the MockServer container to dynamically allocated ports on the host machine.</p><p>To view information about the MockServer container, including which dynamic ports have been used run the following command:</p>
 
-<p>To run MockServer specifying as a Docker container run the following command (replacing each <strong><span class="annotation">&lt; ... &gt;</span></strong> section with the appropriate port value):</p>
+<pre><code class="code">docker ps</code></pre>
 
-<pre><code class="code">docker run -d -p <span class="annotation">&lt;serverPort&gt;</span>:<span class="numeric_literal">1080</span> -p <span class="annotation">&lt;proxyPort&gt;</span>:<span class="numeric_literal">1090</span> jamesdbloom/mockserver</code></pre>
+<a name="docker_container_customization" class="anchor" href="#docker_container_customization">&nbsp;</a>
 
-<p><strong>Note</strong>: you only need to specify mapping for ports you need to use, for example, if you are only using MockServer to mock HTTP endpoints then only specify <strong>-p <span class="annotation">&lt;serverPort&gt;</span>:<span class="numeric_literal">1080</span></strong> as follows (replacing each
-    <strong><span class="annotation">&lt; ... &gt;</span></strong> section with the appropriate port value):</p>
+<h3>Configure Port Mapping</h3>
 
-<pre><code class="code">docker run -d -p <span class="annotation">&lt;serverPort&gt;</span>:<span class="numeric_literal">1080</span> jamesdbloom/mockserver</code></pre>
-
-<p>This MockServer docker container exposes the following ports:</p>
+<p>This MockServer docker container exports the following ports:</p>
 
 <ul>
 	<li><strong>serverPort</strong> 1080</li>
-    <li><strong>proxyPort</strong> 9090</li>
+	<li><strong>proxyPort</strong> 9090</li>
 </ul>
+
+<p>To specify which ports (on the host machine) should be mapped to the MockServer docker container use the <strong>-p</strong> <span class="command_line_argument_placeholder">&lt;host port&gt;</span><strong>:</strong><span class="command_line_argument_placeholder">&lt;container port&gt;</span> option, as follows:</p>
+
+<pre><code class="code">docker run -d -p <span class="command_line_argument_placeholder">&lt;serverPort&gt;</span>:<span class="numeric_literal">1080</span> -p <span class="command_line_argument_placeholder">&lt;proxyPort&gt;</span>:<span class="numeric_literal">1090</span> jamesdbloom/mockserver</code></pre>
+
+<p>For example:</p>
+
+<pre><code class="code">docker run -d -p <span class="numeric_literal">1080</span>:<span class="numeric_literal">1080</span> -p <span class="numeric_literal">1090</span>:<span class="numeric_literal">1090</span> jamesdbloom/mockserver</code></pre>
+
+<p>Only specify the required ports, for example, if you are not using the proxy there is no need to provide port mapping options for the proxy ports, as follows:</p>
+
+<pre><code class="code">docker run -d -p <span class="numeric_literal">1080</span>:<span class="numeric_literal">1080</span> jamesdbloom/mockserver</code></pre>
+
+<h3>Modifying Default Command</h3>
+
+<p>By default when the MockServer container runs it executes a bash script passing three command line options, as follows</p>
+
+<pre><code class="code">/opt/mockserver/run_mockserver.sh -logLevel INFO -serverPort <span class="numeric_literal">1080</span> -proxyPort <span class="numeric_literal">1090</span></code></pre>
+
+<p>It is possible to pass an alternative command line to the container, by pre-pending the command to the end of the run command, as follows:</p>
+
+<pre><code class="code">docker run -d -p <span class="numeric_literal">1080</span>:<span class="numeric_literal">1080</span> -p <span class="numeric_literal">1090</span>:<span class="numeric_literal">1090</span> jamesdbloom/mockserver <em>/opt/mockserver/run_mockserver.sh -logLevel INFO -serverPort
+	<span class="numeric_literal">1080</span> -proxyPort <span class="numeric_literal">1090</span></em></code></pre>
+
+<p>For following command can be used to view the available command line switches:</p>
+
+<pre><code class="code"><strong>docker run jamesdbloom/mockserver /opt/mockserver/run_mockserver.sh</strong>
+
+   Error: At least 'serverPort' or 'proxyPort' must be provided
+
+   run_mockserver.sh [-logLevel <span class="command_line_argument_placeholder">&lt;level&gt;</span>] \
+                     [-serverPort <span class="command_line_argument_placeholder">&lt;port&gt;</span>] \
+                     [-proxyPort <span class="command_line_argument_placeholder">&lt;port&gt;</span>] \
+                     [-proxyRemotePort <span class="command_line_argument_placeholder">&lt;port&gt;</span>] \
+                     [-proxyRemoteHost <span class="command_line_argument_placeholder">&lt;hostname&gt;</span>]
+
+     valid options are:
+        -logLevel <span class="command_line_argument_placeholder">&lt;level&gt;</span>            OFF, ERROR, WARN, INFO, DEBUG, TRACE or ALL, as follows:
+                                     WARN - exceptions and errors
+                                     INFO - all interactions
+
+        -serverPort <span class="command_line_argument_placeholder">&lt;port&gt;</span>           Specifies the HTTP, HTTPS, SOCKS and HTTP
+                                     CONNECT port for proxy. Port unification
+                                     supports for all protocols on the same port
+
+        -proxyPort <span class="command_line_argument_placeholder">&lt;port&gt;</span>            Specifies the HTTP and HTTPS port for the
+                                     MockServer. Port unification is used to
+                                     support HTTP and HTTPS on the same port
+
+        -proxyRemotePort <span class="command_line_argument_placeholder">&lt;port&gt;</span>      Specifies the port to forward all proxy
+                                     requests to (i.e. all requests received on
+                                     portPort). This setting is used to enable
+                                     the port forwarding mode therefore this
+                                     option disables the HTTP, HTTPS, SOCKS and
+                                     HTTP CONNECT support
+
+        -proxyRemoteHost <span class="command_line_argument_placeholder">&lt;hostname&gt;</span>  Specified the host to forward all proxy
+                                     requests to (i.e. all requests received on
+                                     portPort). This setting is ignored unless
+                                     proxyRemotePort has been specified. If no
+                                     value is provided for proxyRemoteHost when
+                                     proxyRemotePort has been specified,
+                                     proxyRemoteHost will default to "localhost".
+
+   i.e. /opt/mockserver/run_mockserver.sh -logLevel INFO -serverPort 1080 -proxyPort 1090 -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com</code></pre>
+
+<p>Then the appropriate options can be specified, for example, to setup a direct proxy (from <strong>0.0.0.0:1090</strong> to <strong>www.mock-server.com:80</strong>) using the following command:</p>
+
+<pre><code class="code">docker run -d -p <span class="numeric_literal">1090</span>:<span class="numeric_literal">1090</span> jamesdbloom/mockserver /opt/mockserver/run_mockserver.sh -proxyPort <span class="numeric_literal">1090</span> -proxyRemotePort <span class="numeric_literal">80</span> -proxyRemoteHost www.mock-server.com</code></pre>
+
+<h3>Interactive Shell</h3>
+
+<p>It is possible to launch the container with an interactive bash shell as follows:</p>
+
+<pre><code class="code">docker run -it -p <span class="numeric_literal">1080</span>:<span class="numeric_literal">1080</span> -p <span class="numeric_literal">1090</span>:<span class="numeric_literal">1090</span> jamesdbloom/mockserver <em>/bin/bash</em></code></pre>
+
+<p><strong>Note:</strong> in this example above the <strong>-d</strong> flag (for daemon) has been replaced with <strong>-i</strong> (to stdin open) and <strong>-t</strong> (for pseudo-tty) to ensure docker creates the container in the foreground with an attached stdin, see the
+	<a href="https://docs.docker.com/reference/run/">docker documentation</a> for more details.</p>

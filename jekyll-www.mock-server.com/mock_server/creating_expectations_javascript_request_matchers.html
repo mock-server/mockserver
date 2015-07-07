@@ -110,7 +110,7 @@ subsection: false
     }
 }</code></pre>
 
-<p><strong>String Bodies</strong></p>
+<p><strong>String Body Matcher</strong></p>
 
 <p>When the <span class="string_literal">"type"</span> field has a value of <span class="string_literal">"STRING"</span> a short hand can be used where the <span class="string_literal">"body"</span> is only specified as a string literal for example:</p>
 
@@ -132,7 +132,7 @@ subsection: false
     <span class="string_literal">"body"</span>: <span class="string_literal">"a string body showing the short-hand way to specify a simple string body"</span>
 }</code></pre>
 
-<p><strong>JSON Bodies</strong></p>
+<p><strong>JSON <em>Object</em> Body Matchers</strong></p>
 
 <p>When the <span class="string_literal">"type"</span> field has a value of <span class="string_literal">"JSON"</span> an additional field can be provided to specify the match type called <span class="string_literal">"matchType"</span>.</p>
 
@@ -145,5 +145,36 @@ subsection: false
         <span class="string_literal">"type"</span>: <span class="string_literal">"JSON"</span>,
         <span class="string_literal">"value"</span>: <span class="string_literal">"{username: 'foo', password: 'bar'}"</span>,
         <span class="string_literal">"matchType"</span>: <span class="string_literal">"STRICT"</span>
+    }
+}</code></pre>
+
+<p><strong>JSON <em>Schema</em> Body Matcher</strong></p>
+
+<p>MockServer supports matching request bodies using JSON Schema, which is useful for matching or validating the format of a JSON object. The detailed syntax of JSON Schema is documented at <a href="http://json-schema.org">http://json-schema.org</a>.</p>
+
+<p>To use JSON Schema to match a request body the <span class="string_literal">"type"</span> field should have a value of <span class="string_literal">"JSON_SCHEMA"</span> and the <span class="string_literal">"value"</span> field should contain the JSON Schema as a string value, as follows:</p>
+
+<pre><code class="code"><span class="string_literal">"httpRequest"</span>: {
+    <span class="string_literal">"method"</span>: <span class="string_literal">"POST"</span>,
+    <span class="string_literal">"path"</span>: <span class="string_literal">"/login"</span>,
+    <span class="string_literal">"body"</span>: {
+        <span class="string_literal">"type"</span>: <span class="string_literal">"JSON_SCHEMA"</span>,
+        <span class="string_literal">"value"</span>: <span class="string_literal">"{
+            "type": "object",
+            "properties": {
+                "username": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9_-]{3,15}$"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 8
+                }
+            },
+            "required": [
+                "username",
+                "password"
+            ]
+        }"</span>
     }
 }</code></pre>

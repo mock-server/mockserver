@@ -1,8 +1,8 @@
-<a name="maven-plugin" class="anchor" href="#maven-plugin">&nbsp;</a>
+<a name="maven_plugin" class="anchor" href="#maven_plugin">&nbsp;</a>
 
 <h2>Maven Plugin</h2>
 
-<p>To run MockServer as part of your build add the following plugin to your pom.xml:</p>
+<p>To run MockServer as part of your build add the following plugin to your <strong>pom.xml</strong>:</p>
 
 <pre><code class="code xml">&lt;<span class="element">plugin</span>&gt;
     &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;
@@ -149,7 +149,7 @@
 	</li>
 </ul>
 
-<a name="client-api" class="anchor" href="#client-api">&nbsp;</a>
+<a name="client_api" class="anchor" href="#client_api">&nbsp;</a>
 
 <h2>Client API&nbsp;&nbsp;-&nbsp;&nbsp;starting and stopping</h2>
 
@@ -195,7 +195,7 @@
 <p>The <a href="https://github.com/jamesdbloom/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example test called
 	<a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-examples/src/test/java/org/mockserver/web/controller/BooksPageIntegrationTest.java">BookPageIntegrationTest</a> that demonstrates a fully working example.</p>
 
-<a name="junit-rule" class="anchor" href="#junit-rule">&nbsp;</a>
+<a name="junit_rule" class="anchor" href="#junit_rule">&nbsp;</a>
 
 <h2>Running MockServer via a JUnit @Rule</h2>
 
@@ -303,11 +303,91 @@
  */</span>
 <span class="keyword">public</span> ProxyRule(Integer port, Object target, <span class="keyword">boolean</span> per TestSuite);</code></pre>
 
-<a name="running-from-command-line" class="anchor" href="#running-from-command-line">&nbsp;</a>
+<a name="running_from_command_line" class="anchor" href="#running_from_command_line">&nbsp;</a>
 
 <h2>Running From Command Line</h2>
 
-<p>MockServer can be run directly from the command line and using Netty as follow:</p>
+<p>MockServer can be run from the command line in the following ways:</p>
+
+<ul>
+	<li><a href="#running_from_command_line_using_homebrew">using homebrew</a> i.e. <strong>brew install mockserver && mockserver</strong></li>
+	<li><a href="#running_from_command_line_using_java">using java directly</a> i.e. <strong>java -jar mockserver-netty-3.9.17-jar-with-dependencies.jar</strong></li>
+	<li><a href="#running_from_command_line_using_maven_plugin">using maven plugin</a> i.e. <strong>mvn org.mock-server:mockserver-maven-plugin:3.9.17:runForked</strong></li>
+	<li><a href="#docker_container">using docker</a> i.e. <strong>docker run -d -P jamesdbloom/mockserver</strong></li>
+</ul>
+
+<a name="running_from_command_line_using_homebrew" class="anchor" href="#running_from_command_line_using_homebrew">&nbsp;</a>
+
+<h3>Running From Command Line - Using Homebrew</h3>
+
+<p><a href="http://brew.sh/">Homebrew</a>, a packaging manager for OS X (i.e. Apple Mac), can be used to install MockServer, as follows:</p>
+
+<pre><code class="code">brew update && brew install mockserver</code></pre>
+
+<p>The MockServer formula in Homebrew performs the following actions:</p>
+
+<ol>
+	<li>installed the binaries and scripts</li>
+	<li>creates the log directory</li>
+	<li>add the scripts to the PATH variable</li>
+</ol>
+
+<p>Once the MockServer has been installed by Homebrew it is available from any command shell as the <strong>mockserver</strong> command</p>
+
+<p>The <strong>mockserver</strong> command supports the following options:</p>
+
+<pre><code class="code">mockserver [-logLevel <span class="command_line_argument_placeholder">&lt;level&gt;</span>]  [-serverPort <span class="command_line_argument_placeholder">&lt;port&gt;</span>]  [-proxyPort <span class="command_line_argument_placeholder">&lt;port&gt;</span>]  [-proxyRemotePort <span class="command_line_argument_placeholder">&lt;port&gt;</span>]  [-proxyRemoteHost <span class="command_line_argument_placeholder">&lt;hostname&gt;</span>]
+
+ valid options are:
+    -logLevel <span class="command_line_argument_placeholder">&lt;level&gt;</span>            OFF, ERROR, WARN, INFO, DEBUG, TRACE or ALL, as follows:
+                                 WARN - exceptions and errors
+                                 INFO - all interactions
+
+    -serverPort <span class="command_line_argument_placeholder">&lt;port&gt;</span>           Specifies the HTTP, HTTPS, SOCKS and HTTP
+                                 CONNECT port for proxy. Port unification
+                                 supports for all protocols on the same port.
+
+    -proxyPort <span class="command_line_argument_placeholder">&lt;port&gt;</span>            Specifies the HTTP and HTTPS port for the
+                                 MockServer. Port unification is used to
+                                 support HTTP and HTTPS on the same port.
+
+    -proxyRemotePort <span class="command_line_argument_placeholder">&lt;port&gt;</span>      Specifies the port to forward all proxy
+                                 requests to (i.e. all requests received on
+                                 portPort). This setting is used to enable
+                                 the port forwarding mode therefore this
+                                 option disables the HTTP, HTTPS, SOCKS and
+                                 HTTP CONNECT support.
+
+    -proxyRemoteHost <span class="command_line_argument_placeholder">&lt;hostname&gt;</span>  Specified the host to forward all proxy
+                                 requests to (i.e. all requests received on
+                                 portPort). This setting is ignored unless
+                                 proxyRemotePort has been specified. If no
+                                 value is provided for proxyRemoteHost when
+                                 proxyRemotePort has been specified,
+                                 proxyRemoteHost will default to "localhost".
+
+i.e. mockserver -logLevel INFO -serverPort <span class="numeric_literal">1080</span> -proxyPort <span class="numeric_literal">1090</span> -proxyRemotePort <span class="numeric_literal">80</span> -proxyRemoteHost www.mock-server.com</code></pre>
+
+<p>For example run the MockServer, as follows:</p>
+
+<pre><code class="code">mockserver -logLevel INFO -serverPort <span class="numeric_literal">1080</span></code></pre>
+
+<p>Or run the MockServer Proxy, as follows:</p>
+
+<pre><code class="code">mockserver -logLevel INFO -proxyPort <span class="numeric_literal">1090</span></code></pre>
+
+<h3>Logging</h3>
+
+<p>When MockServer is installed via Homebrew a log directory is created at <strong>/usr/local/var/log/mockserver</strong>. All logs are written into this directory, this includes normal application logs, which are are written in
+	<strong>/usr/local/var/log/mockserver/mockserver.log</strong>, and request logs, which are written into <strong>/usr/local/var/log/mockserver/mockserver_request.log</strong> (when a <strong>dumpToLog</strong> request is received).</p>
+
+<p>The amount of logs written into the application log <strong>/usr/local/var/log/mockserver/mockserver.log</strong> can be controlled using the <strong>-logLevel</strong> command as detailed above.</p>
+
+<a name="running_from_command_line_using_java" class="anchor" href="#running_from_command_line_using_java">&nbsp;</a>
+
+<h3>Running From Command Line - Using Java</h3>
+
+<p>MockServer can be run directly from the command line using java directly as follow:</p>
 
 <ol>
 	<li><p>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/3.9.17/mockserver-netty-3.9.17-jar-with-dependencies.jar">mockserver-netty-3.9.17-jar-with-dependencies.jar</a> from Maven Central</p></li>
@@ -324,32 +404,34 @@
                                                                [-proxyRemoteHost <span class="command_line_argument_placeholder">&lt;hostname&gt;</span>]
 
  valid options are:
-    -serverPort <span class="command_line_argument_placeholder">&lt;port&gt;</span>           specifies the HTTP, HTTPS, SOCKS and HTTP
-                                 CONNECT port for proxy, port unification
-                                 supports for all protocols on the same port
+    -serverPort <span class="command_line_argument_placeholder">&lt;port&gt;</span>           Specifies the HTTP, HTTPS, SOCKS and HTTP
+                                 CONNECT port for proxy. Port unification
+                                 supports for all protocols on the same port.
 
-    -proxyPort <span class="command_line_argument_placeholder">&lt;port&gt;</span>            specifies the HTTP and HTTPS port for the
-                                 MockServer port unification is used to
-                                 support HTTP and HTTPS on the same port
+    -proxyPort <span class="command_line_argument_placeholder">&lt;port&gt;</span>            Specifies the HTTP and HTTPS port for the
+                                 MockServer. Port unification is used to
+                                 support HTTP and HTTPS on the same port.
 
-    -proxyRemotePort <span class="command_line_argument_placeholder">&lt;port&gt;</span>      specifies the port to forward all proxy
+    -proxyRemotePort <span class="command_line_argument_placeholder">&lt;port&gt;</span>      Specifies the port to forward all proxy
                                  requests to (i.e. all requests received on
-                                 portPort), this setting is used to enable
+                                 portPort). This setting is used to enable
                                  the port forwarding mode therefore this
                                  option disables the HTTP, HTTPS, SOCKS and
-                                 HTTP CONNECT support
+                                 HTTP CONNECT support.
 
-    -proxyRemoteHost <span class="command_line_argument_placeholder">&lt;hostname&gt;</span>  specified the host to forward all proxy
+    -proxyRemoteHost <span class="command_line_argument_placeholder">&lt;hostname&gt;</span>  Specified the host to forward all proxy
                                  requests to (i.e. all requests received on
-                                 portPort), this setting is ignored unless
-                                 proxyRemotePort has been specified, if no
+                                 portPort). This setting is ignored unless
+                                 proxyRemotePort has been specified. If no
                                  value is provided for proxyRemoteHost when
                                  proxyRemotePort has been specified,
-                                 proxyRemoteHost will default to "localhost"</code></pre>
+                                 proxyRemoteHost will default to "localhost".
+
+i.e. java -jar ./mockserver-jetty-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span> -proxyPort <span class="numeric_literal">1090</span> -proxyRemotePort <span class="numeric_literal">80</span> -proxyRemoteHost www.mock-server.com</code></pre>
 
 <p>For example:</p>
 
-<pre><code class="code">java -Dmockserver.logLevel=DEBUG -jar ~/Downloads/mockserver-netty-3.9.17-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span> -proxyPort <span class="numeric_literal">1090</span></code></pre>
+<pre><code class="code">java -Dmockserver.logLevel=INFO -jar ~/Downloads/mockserver-netty-3.9.17-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span> -proxyPort <span class="numeric_literal">1090</span></code></pre>
 
 <p>All interactions with the MockServer are logged including setting up expectations, matching expectations, clearing expectations and verifying requests.  The when running from the command line, Maven plugin, Grunt plugin or npm module the log is written to a file called <strong>mockserver.log</strong> in the current working directory where the MockServer is running. This log can be particularly helpful when trying to debug why a test is failing or expectations are not being matched.</p>
 
@@ -374,7 +456,35 @@
 
 <p>If logging is disabled then no log file will be created.  This is because the log files are only created when the first item is written to the log file.</p>
 
-<a name="deployable-war" class="anchor" href="#deployable-war">&nbsp;</a>
+<a name="running_from_command_line_using_maven_plugin" class="anchor" href="#running_from_command_line_using_maven_plugin">&nbsp;</a>
+
+<h3>Running From Command Line - Using Maven Plugin</h3>
+
+<p>MockServer can be run directly from the command line and using the <strong>mockserver-maven-plugin</strong> as follow:</p>
+
+<pre><code class="code">mvn -Dmockserver.serverPort=<span class="numeric_literal">1080</span> -Dmockserver.proxyPort=<span class="numeric_literal">1090</span> -Dmockserver.logLevel=INFO org.mock-server:mockserver-maven-plugin:3.9.17:runForked</code></pre>
+
+<p>When run from the command line the Maven plugin can be configured with the following properties:</p>
+
+<ul>
+	<li>
+		<strong>mockserver.serverPort</strong> - The port the MockServer listens for incoming request. Port unification is used to support both HTTP and HTTPS on the same port (required: false - but at least one of the two ports (serverPort or proxyPort) must be specified)
+	</li>
+	<li>
+		<strong>mockserver.proxyPort</strong> - The port the proxy listens to incoming requests. Port unification is used to support all protocols on the same port (required: false - but at least one of the two ports (serverPort or proxyPort) must be specified)
+	</li>
+	<li>
+		<strong>mockserver.logLevel</strong> - The logging level (required: false, default: WARN)
+	</li>
+</ul>
+
+<p>The <span class="annotation">runForked</span> goal of the <strong>mockserver-maven-plugin</strong> will fork a JVM process containing the Netty based MockServer. To stop the forked JVM process use the <span class="annotation">stopForked</span> goal, as follows:</p>
+
+<pre><code class="code">mvn -Dmockserver.serverPort=<span class="numeric_literal">1080</span> -Dmockserver.proxyPort=<span class="numeric_literal">1090</span> org.mock-server:mockserver-maven-plugin:3.9.17:stopForked</code></pre>
+
+<p>For more information on the <strong>mockserver-maven-plugin</strong> see the section on <a href="#maven_plugin">MockServer Maven Plugin</a></p>
+
+<a name="deployable_war" class="anchor" href="#deployable_war">&nbsp;</a>
 
 <h2>Web Archive (WAR)</h2>
 
@@ -393,17 +503,15 @@
 
 <pre><code class="code"><span class="keyword">public</span> MockServerClient(String host, <span class="keyword">int</span> port, String contextPath)</code></pre>
 
-<a name="mockserver-grunt" class="anchor" href="#mockserver-grunt">&nbsp;</a>
+<a name="mockserver_grunt" class="anchor" href="#mockserver_grunt">&nbsp;</a>
 
 <h2>MockServer Grunt Plugin & NPM Module</h2>
 
 {% include_subpage ../mock_server/_includes/running_npm_module.html %}
 
-<a name="docker-container" class="anchor" href="#docker-container">&nbsp;</a>
+<a name="docker_container" class="anchor" href="#docker_container">&nbsp;</a>
 
 <h2>Docker Container</h2>
-
-<p>MockServer can be run as a <a href="https://registry.hub.docker.com/u/jamesdbloom/mockserver/">Docker container</a>.</p>
 
 {% include_subpage ../mock_server/_includes/running_docker_container.html %}
 
@@ -432,7 +540,7 @@ cd mockserver</code></pre>
 
 <pre><code class="code">mockserver-netty/target/mockserver-netty-3.9.17-jar-with-dependencies.jar</code></pre>
 
-<p>Run MockServer then using the executable jar as per the instruction above in <a href="#running-from-command-line">Running From The Command Line</a></p>
+<p>Run MockServer then using the executable jar as per the instruction above in <a href="#running_from_command_line">Running From The Command Line</a></p>
 
 <h2>Requirements</h2>
 
