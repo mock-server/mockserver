@@ -169,7 +169,7 @@ public class InstanceHolderTest {
         InstanceHolder.proxyClients.put(2, mockProxyClient);
 
         // when
-        instanceHolder.stop(1, 2);
+        instanceHolder.stop(1, 2, false);
 
         // then
         verify(mockMockServerClient).stop();
@@ -187,7 +187,7 @@ public class InstanceHolderTest {
         InstanceHolder.proxyClients.put(2, mockProxyClient);
 
         // when
-        instanceHolder.stop(1, -1);
+        instanceHolder.stop(1, -1, false);
 
         // then
         verify(mockMockServerClient).stop();
@@ -205,7 +205,7 @@ public class InstanceHolderTest {
         InstanceHolder.proxyClients.put(2, mockProxyClient);
 
         // when
-        instanceHolder.stop(-1, 2);
+        instanceHolder.stop(-1, 2, false);
 
         // then
         verify(mockMockServerClient, times(0)).stop();
@@ -223,7 +223,7 @@ public class InstanceHolderTest {
         InstanceHolder.proxyClients.put(2, mockProxyClient);
 
         // when
-        instanceHolder.stop(-1, -1);
+        instanceHolder.stop(-1, -1, false);
 
         // then
         verify(mockMockServerClient, times(0)).stop();
@@ -237,7 +237,7 @@ public class InstanceHolderTest {
     @Test
     public void shouldStopMockServerAndProxyWhenNoClientExist() {
         // when
-        instanceHolder.stop(1, 2);
+        instanceHolder.stop(1, 2, false);
 
         // then
         assertThat(InstanceHolder.mockServerClients.get(1), isA(MockServerClient.class));

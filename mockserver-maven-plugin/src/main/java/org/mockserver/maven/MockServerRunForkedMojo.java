@@ -68,7 +68,7 @@ public class MockServerRunForkedMojo extends MockServerAbstractMojo {
         if (skip) {
             getLog().info("Skipping plugin execution");
         } else {
-            getEmbeddedJettyHolder().stop(serverPort, proxyPort);
+            getEmbeddedJettyHolder().stop(serverPort, proxyPort, true);
             try {
                 TimeUnit.SECONDS.sleep(1);
             } catch (InterruptedException e) {
