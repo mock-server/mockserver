@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
+import static org.mockserver.model.ConnectionOptions.connectionOptions;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.XPathBody.xpath;
@@ -40,7 +41,7 @@ public class HttpResponseDTOSerializerTest {
                                         .withCookies(new Cookie("cookie_name", "cookie_value"))
                                         .withDelay(new Delay(TimeUnit.MICROSECONDS, 1))
                                         .withConnectionOptions(
-                                                new ConnectionOptions()
+                                                connectionOptions()
                                                         .withSuppressContentLengthHeader(true)
                                                         .withContentLengthHeaderOverride(50)
                                                         .withSuppressConnectionHeader(true)

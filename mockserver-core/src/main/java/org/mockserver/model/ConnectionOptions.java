@@ -11,6 +11,10 @@ public class ConnectionOptions extends ObjectWithJsonToString {
     private Boolean keepAliveOverride = null;
     private Boolean closeSocket = null;
 
+    public static ConnectionOptions connectionOptions() {
+        return new ConnectionOptions();
+    }
+
     public static boolean isFalseOrNull(Boolean aBoolean) {
         return aBoolean == null || !aBoolean;
     }

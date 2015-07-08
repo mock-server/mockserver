@@ -22,9 +22,6 @@ public class HttpResponse extends Action {
     private Delay delay;
     private ConnectionOptions connectionOptions;
 
-    public HttpResponse() {
-    }
-
     public static HttpResponse response() {
         return new HttpResponse();
     }
