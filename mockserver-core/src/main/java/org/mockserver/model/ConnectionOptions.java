@@ -75,8 +75,8 @@ public class ConnectionOptions extends ObjectWithJsonToString {
         return this;
     }
 
-    public Boolean getCloseSocket() {
-        return closeSocket;
+    public Boolean getKeepAliveOverride() {
+        return keepAliveOverride;
     }
 
     /**
@@ -92,7 +92,7 @@ public class ConnectionOptions extends ObjectWithJsonToString {
         return this;
     }
 
-    public Boolean getKeepAliveOverride() {
-        return keepAliveOverride;
+    public Boolean getCloseSocket() {
+        return closeSocket;
     }
 }
