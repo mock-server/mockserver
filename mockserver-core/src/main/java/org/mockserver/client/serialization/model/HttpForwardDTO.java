@@ -12,9 +12,11 @@ public class HttpForwardDTO extends ObjectWithReflectiveEqualsHashCodeToString {
     private HttpForward.Scheme scheme;
 
     public HttpForwardDTO(HttpForward httpForward) {
-        host = httpForward.getHost();
-        port = httpForward.getPort();
-        scheme = httpForward.getScheme();
+        if (httpForward != null) {
+            host = httpForward.getHost();
+            port = httpForward.getPort();
+            scheme = httpForward.getScheme();
+        }
     }
 
     public HttpForwardDTO() {

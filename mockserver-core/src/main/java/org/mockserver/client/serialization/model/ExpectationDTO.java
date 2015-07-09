@@ -13,6 +13,7 @@ public class ExpectationDTO extends ObjectWithJsonToString {
     private HttpRequestDTO httpRequest;
     private HttpResponseDTO httpResponse;
     private HttpForwardDTO httpForward;
+    private HttpErrorDTO httpError;
     private HttpCallbackDTO httpCallback;
     private TimesDTO times;
     private TimeToLiveDTO timeToLive;
@@ -30,6 +31,10 @@ public class ExpectationDTO extends ObjectWithJsonToString {
             HttpForward httpForward = expectation.getHttpForward();
             if (httpForward != null) {
                 this.httpForward = new HttpForwardDTO(httpForward);
+            }
+            HttpError httpError = expectation.getHttpError();
+            if (httpError != null) {
+                this.httpError = new HttpErrorDTO(httpError);
             }
             HttpCallback httpCallback = expectation.getHttpCallback();
             if (httpCallback != null) {
@@ -53,6 +58,7 @@ public class ExpectationDTO extends ObjectWithJsonToString {
         HttpRequest httpRequest = null;
         HttpResponse httpResponse = null;
         HttpForward httpForward = null;
+        HttpError httpError = null;
         HttpCallback httpCallback = null;
         Times times;
         TimeToLive timeToLive;
@@ -64,6 +70,9 @@ public class ExpectationDTO extends ObjectWithJsonToString {
         }
         if (this.httpForward != null) {
             httpForward = this.httpForward.buildObject();
+        }
+        if (this.httpError != null) {
+            httpError = this.httpError.buildObject();
         }
         if (this.httpCallback != null) {
             httpCallback = this.httpCallback.buildObject();
@@ -78,7 +87,7 @@ public class ExpectationDTO extends ObjectWithJsonToString {
         } else {
             timeToLive = TimeToLive.unlimited();
         }
-        return new Expectation(httpRequest, times, timeToLive).thenRespond(httpResponse).thenForward(httpForward).thenCallback(httpCallback);
+        return new Expectation(httpRequest, times, timeToLive).thenRespond(httpResponse).thenForward(httpForward).thenError(httpError).thenCallback(httpCallback);
     }
 
     public HttpRequestDTO getHttpRequest() {
@@ -105,6 +114,15 @@ public class ExpectationDTO extends ObjectWithJsonToString {
 
     public ExpectationDTO setHttpForward(HttpForwardDTO httpForward) {
         this.httpForward = httpForward;
+        return this;
+    }
+
+    public HttpErrorDTO getHttpError() {
+        return httpError;
+    }
+
+    public ExpectationDTO setHttpError(HttpErrorDTO httpError) {
+        this.httpError = httpError;
         return this;
     }
 

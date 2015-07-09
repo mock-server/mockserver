@@ -9,9 +9,6 @@ public class HttpCallback extends Action {
 
     private String callbackClass;
 
-    public HttpCallback() {
-    }
-
     public static HttpCallback callback() {
         return new HttpCallback();
     }

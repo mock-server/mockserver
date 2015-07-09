@@ -19,7 +19,7 @@ import static org.mockserver.model.OutboundHttpRequest.outboundRequest;
  */
 public abstract class AbstractClient {
 
-    protected static final Logger logger = LoggerFactory.getLogger(AbstractClient.class);
+    protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     protected final String host;
     protected final int port;
@@ -70,5 +70,13 @@ public abstract class AbstractClient {
 
     protected HttpResponse sendRequest(HttpRequest httpRequest) {
         return nettyHttpClient.sendRequest(outboundRequest(host, port, contextPath, httpRequest));
+    }
+
+    protected String formatErrorMessage(String message, Object... objects) {
+        Object[] indentedObjects = new String[objects.length];
+        for (int i = 0; i < objects.length; i++) {
+            indentedObjects[i] = System.getProperty("line.separator") + System.getProperty("line.separator") + String.valueOf(objects[i]).replaceAll("(?m)^", "\t") + System.getProperty("line.separator");
+        }
+        return String.format(System.getProperty("line.separator") + message + System.getProperty("line.separator"), indentedObjects);
     }
 }

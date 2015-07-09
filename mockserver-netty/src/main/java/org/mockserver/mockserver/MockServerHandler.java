@@ -2,12 +2,14 @@ package org.mockserver.mockserver;
 
 import com.google.common.base.Strings;
 import com.google.common.net.MediaType;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.HttpServerCodec;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.client.serialization.VerificationSequenceSerializer;
@@ -18,10 +20,7 @@ import org.mockserver.mappers.ContentTypeMapper;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.mock.action.ActionHandler;
-import org.mockserver.model.Body;
-import org.mockserver.model.ConnectionOptions;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
+import org.mockserver.model.*;
 import org.mockserver.socket.SSLFactory;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
@@ -72,7 +71,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
                 Expectation expectation = expectationSerializer.deserialize(request.getBodyAsString());
                 SSLFactory.addSubjectAlternativeName(expectation.getHttpRequest().getFirstHeader(HttpHeaders.Names.HOST));
-                mockServerMatcher.when(expectation.getHttpRequest(), expectation.getTimes(), expectation.getTimeToLive()).thenRespond(expectation.getHttpResponse(false)).thenForward(expectation.getHttpForward()).thenCallback(expectation.getHttpCallback());
+                mockServerMatcher.when(expectation.getHttpRequest(), expectation.getTimes(), expectation.getTimeToLive()).thenRespond(expectation.getHttpResponse(false)).thenForward(expectation.getHttpForward()).thenError(expectation.getHttpError()).thenCallback(expectation.getHttpCallback());
                 logFormatter.infoLog("creating expectation:{}", expectation);
                 writeResponse(ctx, request, HttpResponseStatus.CREATED);
 
@@ -132,9 +131,24 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
             } else {
 
-                HttpResponse response = actionHandler.processAction(mockServerMatcher.handle(request), request);
-                logFormatter.infoLog("returning response:{}" + System.getProperty("line.separator") + " for request:{}", response, request);
-                writeResponse(ctx, request, response);
+                Action handle = mockServerMatcher.handle(request);
+                if (handle instanceof HttpError) {
+                    HttpError httpError = ((HttpError) handle).applyDelay();
+                    if (httpError.getResponseBytes() != null) {
+                        // write byte directly by skipping over HTTP codec
+                        ChannelHandlerContext httpCodecContext = ctx.pipeline().context(HttpServerCodec.class);
+                        if (httpCodecContext != null) {
+                            httpCodecContext.writeAndFlush(Unpooled.wrappedBuffer(httpError.getResponseBytes())).awaitUninterruptibly();
+                        }
+                    }
+                    if (httpError.getDropConnection()) {
+                        ctx.close();
+                    }
+                } else {
+                    HttpResponse response = actionHandler.processAction(handle, request);
+                    logFormatter.infoLog("returning response:{}" + System.getProperty("line.separator") + " for request:{}", response, request);
+                    writeResponse(ctx, request, response);
+                }
 
             }
         } catch (Exception e) {
@@ -163,13 +177,11 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
             response = notFoundResponse();
         }
 
-        ConnectionOptions connectionOptions = response.getConnectionOptions();
-
-        addContentLengthHeader(response, connectionOptions);
-        addConnectionHeader(request, response, connectionOptions);
+        addContentLengthHeader(response);
+        addConnectionHeader(request, response);
         addContentTypeHeader(response);
 
-        writeAndCloseSocket(ctx, request, response, connectionOptions);
+        writeAndCloseSocket(ctx, request, response);
     }
 
     private void addContentTypeHeader(HttpResponse response) {
@@ -184,7 +196,8 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
         }
     }
 
-    private void addContentLengthHeader(HttpResponse response, ConnectionOptions connectionOptions) {
+    private void addContentLengthHeader(HttpResponse response) {
+        ConnectionOptions connectionOptions = response.getConnectionOptions();
         if (connectionOptions != null && connectionOptions.getContentLengthHeaderOverride() != null) {
             response.updateHeader(header(CONTENT_LENGTH, connectionOptions.getContentLengthHeaderOverride()));
         } else if (connectionOptions == null || isFalseOrNull(connectionOptions.getSuppressContentLengthHeader())) {
@@ -202,10 +215,13 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                 }
             }
             response.updateHeader(header(CONTENT_LENGTH, bodyBytes.length));
+        } else {
+            response.updateHeader(header(CONTENT_LENGTH, ""));
         }
     }
 
-    private void addConnectionHeader(HttpRequest request, HttpResponse response, ConnectionOptions connectionOptions) {
+    private void addConnectionHeader(HttpRequest request, HttpResponse response) {
+        ConnectionOptions connectionOptions = response.getConnectionOptions();
         if (connectionOptions != null && connectionOptions.getKeepAliveOverride() != null) {
             if (connectionOptions.getKeepAliveOverride()) {
                 response.updateHeader(header(CONNECTION, HttpHeaders.Values.KEEP_ALIVE));
@@ -213,7 +229,8 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                 response.updateHeader(header(CONNECTION, HttpHeaders.Values.CLOSE));
             }
         } else if (connectionOptions == null || isFalseOrNull(connectionOptions.getSuppressConnectionHeader())) {
-            if (request.isKeepAlive() != null && request.isKeepAlive()) {
+            if (request.isKeepAlive() != null && request.isKeepAlive()
+                    && (connectionOptions == null || isFalseOrNull(connectionOptions.getCloseSocket()))) {
                 response.updateHeader(header(CONNECTION, HttpHeaders.Values.KEEP_ALIVE));
             } else {
                 response.updateHeader(header(CONNECTION, HttpHeaders.Values.CLOSE));
@@ -221,10 +238,12 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
         }
     }
 
-    private void writeAndCloseSocket(ChannelHandlerContext ctx, HttpRequest request, HttpResponse response, ConnectionOptions connectionOptions) {
+    private void writeAndCloseSocket(ChannelHandlerContext ctx, HttpRequest request, HttpResponse response) {
+        ConnectionOptions connectionOptions = response.getConnectionOptions();
         if (connectionOptions != null && connectionOptions.getCloseSocket() != null) {
             if (connectionOptions.getCloseSocket()) {
-                ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+                ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE).awaitUninterruptibly();
+                ctx.close();
             } else {
                 ctx.write(response);
             }
@@ -232,7 +251,8 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
             if (request.isKeepAlive() != null && request.isKeepAlive()) {
                 ctx.write(response);
             } else {
-                ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+                ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE).awaitUninterruptibly();
+                ctx.close();
             }
         }
     }

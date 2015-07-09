@@ -13,7 +13,7 @@ public class CookieToJavaSerializerTest {
     @Test
     public void shouldSerializeCookie() throws IOException {
         assertEquals(System.getProperty("line.separator") +
-                        " new Cookie(\"requestCookieNameOne\", \"requestCookieValueOne\")",
+                        "        new Cookie(\"requestCookieNameOne\", \"requestCookieValueOne\")",
                 new CookieToJavaSerializer().serializeAsJava(1, new Cookie("requestCookieNameOne", "requestCookieValueOne"))
         );
     }
@@ -21,20 +21,20 @@ public class CookieToJavaSerializerTest {
     @Test
     public void shouldSerializeMultipleCookies() throws IOException {
         assertEquals(System.getProperty("line.separator") +
-                        "  new Cookie(\"requestCookieNameOne\", \"requestCookieValueOne\")," +
+                        "        new Cookie(\"requestCookieNameOne\", \"requestCookieValueOne\")," +
                         System.getProperty("line.separator") +
-                        "  new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")",
-                new CookieToJavaSerializer().serializeAsJava(2, new Cookie("requestCookieNameOne", "requestCookieValueOne"), new Cookie("requestCookieNameTwo", "requestCookieValueTwo"))
+                        "        new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")",
+                new CookieToJavaSerializer().serializeAsJava(1, new Cookie("requestCookieNameOne", "requestCookieValueOne"), new Cookie("requestCookieNameTwo", "requestCookieValueTwo"))
         );
     }
 
     @Test
     public void shouldSerializeListOfCookies() throws IOException {
         assertEquals(System.getProperty("line.separator") +
-                        "  new Cookie(\"requestCookieNameOne\", \"requestCookieValueOne\")," +
+                        "        new Cookie(\"requestCookieNameOne\", \"requestCookieValueOne\")," +
                         System.getProperty("line.separator") +
-                        "  new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")",
-                new CookieToJavaSerializer().serializeAsJava(2, Arrays.asList(
+                        "        new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")",
+                new CookieToJavaSerializer().serializeAsJava(1, Arrays.asList(
                         new Cookie("requestCookieNameOne", "requestCookieValueOne"),
                         new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
                 ))

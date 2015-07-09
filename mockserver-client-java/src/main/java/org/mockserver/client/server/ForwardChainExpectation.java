@@ -3,6 +3,7 @@ package org.mockserver.client.server;
 import com.google.common.annotations.VisibleForTesting;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpCallback;
+import org.mockserver.model.HttpError;
 import org.mockserver.model.HttpForward;
 import org.mockserver.model.HttpResponse;
 
@@ -26,6 +27,11 @@ public class ForwardChainExpectation {
 
     public void forward(HttpForward httpForward) {
         expectation.thenForward(httpForward);
+        mockServerClient.sendExpectation(expectation);
+    }
+
+    public void error(HttpError httpError) {
+        expectation.thenError(httpError);
         mockServerClient.sendExpectation(expectation);
     }
 

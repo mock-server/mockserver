@@ -14,12 +14,14 @@ public class Base64ConverterTest {
 
     @Test
     public void shouldConvertToBase64Value() {
-        assertThat(new Base64Converter().stringToBase64Bytes("some_value".getBytes()), is(DatatypeConverter.printBase64Binary("some_value".getBytes())));
+        assertThat(new Base64Converter().bytesToBase64String("some_value".getBytes()), is(DatatypeConverter.printBase64Binary("some_value".getBytes())));
+        assertThat(new Base64Converter().bytesToBase64String("some_value".getBytes()), is("c29tZV92YWx1ZQ=="));
     }
 
     @Test
     public void shouldConvertBase64ValueToString() {
         assertThat(new String(Base64Converter.base64StringToBytes(DatatypeConverter.printBase64Binary("some_value".getBytes()))), is("some_value"));
+        assertThat(Base64Converter.base64StringToBytes("c29tZV92YWx1ZQ=="), is("some_value".getBytes()));
     }
 
     @Test

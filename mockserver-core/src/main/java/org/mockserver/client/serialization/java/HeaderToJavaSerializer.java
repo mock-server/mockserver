@@ -7,6 +7,8 @@ import org.mockserver.model.NottableString;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.mockserver.client.serialization.java.ExpectationToJavaSerializer.INDENT_SIZE;
+
 /**
  * @author jamesdbloom
  */
@@ -14,7 +16,7 @@ public class HeaderToJavaSerializer implements MultiValueToJavaSerializer<Header
     @Override
     public String serializeAsJava(int numberOfSpacesToIndent, Header header) {
         StringBuilder output = new StringBuilder();
-        output.append(System.getProperty("line.separator")).append(Strings.padStart("", numberOfSpacesToIndent, ' '));
+        output.append(System.getProperty("line.separator")).append(Strings.padStart("", numberOfSpacesToIndent * INDENT_SIZE, ' '));
         output.append("new Header(").append(NottableStringToJavaSerializer.serializeNottableString(header.getName()));
         for (NottableString value : header.getValues()) {
             output.append(", ").append(NottableStringToJavaSerializer.serializeNottableString(value));

@@ -3,6 +3,8 @@ package org.mockserver.client.serialization.java;
 import com.google.common.base.Strings;
 import org.mockserver.model.HttpCallback;
 
+import static org.mockserver.client.serialization.java.ExpectationToJavaSerializer.INDENT_SIZE;
+
 /**
  * @author jamesdbloom
  */
@@ -12,9 +14,9 @@ public class HttpCallbackToJavaSerializer implements ToJavaSerializer<HttpCallba
     public String serializeAsJava(int numberOfSpacesToIndent, HttpCallback httpCallback) {
         StringBuffer output = new StringBuffer();
         if (httpCallback != null) {
-            appendNewLineAndIndent(numberOfSpacesToIndent, output).append("callback()");
+            appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append("callback()");
             if (httpCallback.getCallbackClass() != null) {
-                appendNewLineAndIndent(numberOfSpacesToIndent + 8, output).append(".withCallbackClass(\"").append(httpCallback.getCallbackClass()).append("\")");
+                appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(".withCallbackClass(\"").append(httpCallback.getCallbackClass()).append("\")");
             }
         }
 

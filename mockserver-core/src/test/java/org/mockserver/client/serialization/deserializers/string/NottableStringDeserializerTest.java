@@ -11,7 +11,6 @@ import java.io.IOException;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertThat;
 import static org.mockserver.model.NottableString.not;
 import static org.mockserver.model.NottableString.string;
 
@@ -139,7 +138,7 @@ public class NottableStringDeserializerTest {
 
 
     /*
-    	  "name" : {
+          "name" : {
 	        "not" : false,
 	        "value" : "!name"
 	      },

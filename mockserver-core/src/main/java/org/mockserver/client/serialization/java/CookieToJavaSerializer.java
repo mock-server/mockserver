@@ -2,10 +2,11 @@ package org.mockserver.client.serialization.java;
 
 import com.google.common.base.Strings;
 import org.mockserver.model.Cookie;
-import org.mockserver.model.NottableString;
 
 import java.util.Arrays;
 import java.util.List;
+
+import static org.mockserver.client.serialization.java.ExpectationToJavaSerializer.INDENT_SIZE;
 
 /**
  * @author jamesdbloom
@@ -13,7 +14,7 @@ import java.util.List;
 public class CookieToJavaSerializer implements MultiValueToJavaSerializer<Cookie> {
     @Override
     public String serializeAsJava(int numberOfSpacesToIndent, Cookie cookie) {
-        return System.getProperty("line.separator") + Strings.padStart("", numberOfSpacesToIndent, ' ') + "new Cookie(" +
+        return System.getProperty("line.separator") + Strings.padStart("", numberOfSpacesToIndent * INDENT_SIZE, ' ') + "new Cookie(" +
                 NottableStringToJavaSerializer.serializeNottableString(cookie.getName()) + ", " +
                 NottableStringToJavaSerializer.serializeNottableString(cookie.getValue()) + ")";
     }

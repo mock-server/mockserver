@@ -11,7 +11,9 @@ public class HttpCallbackDTO extends ObjectWithReflectiveEqualsHashCodeToString 
     private String callbackClass;
 
     public HttpCallbackDTO(HttpCallback httpCallback) {
-        callbackClass = httpCallback.getCallbackClass();
+        if (httpCallback != null) {
+            callbackClass = httpCallback.getCallbackClass();
+        }
     }
 
     public HttpCallbackDTO() {

@@ -1,13 +1,9 @@
 package org.mockserver.client.serialization.serializers.body;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import org.hamcrest.core.Is;
 import org.junit.Test;
 import org.mockserver.client.serialization.ObjectMapperFactory;
-import org.mockserver.client.serialization.model.BodyDTO;
 import org.mockserver.client.serialization.model.ParameterBodyDTO;
-import org.mockserver.client.serialization.model.ParameterBodyDTO;
-import org.mockserver.model.ParameterBody;
 
 import java.io.IOException;
 

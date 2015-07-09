@@ -11,8 +11,6 @@ import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.mockserver.verify.VerificationTimes;
 
-import java.util.concurrent.TimeUnit;
-
 import static org.mockserver.model.HttpRequest.request;
 
 /**
@@ -181,8 +179,11 @@ public class MockServerClient extends AbstractClient {
         return this;
     }
 
-    protected void sendExpectation(Expectation expectation) {
-        sendRequest(request().withMethod("PUT").withPath(calculatePath("expectation")).withBody(expectation != null ? expectationSerializer.serialize(expectation) : "", Charsets.UTF_8));
+    void sendExpectation(Expectation expectation) {
+        HttpResponse httpResponse = sendRequest(request().withMethod("PUT").withPath(calculatePath("expectation")).withBody(expectation != null ? expectationSerializer.serialize(expectation) : "", Charsets.UTF_8));
+        if (httpResponse != null && httpResponse.getStatusCode() != 201) {
+            throw new ClientException(formatErrorMessage(System.getProperty("line.separator") + "error: %swhile submitted expectation: %s", httpResponse.getBody() + System.getProperty("line.separator"), expectation));
+        }
     }
 
     /**

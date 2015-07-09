@@ -1,5 +1,6 @@
 package org.mockserver.server;
 
+import com.google.common.base.Strings;
 import com.google.common.net.MediaType;
 import io.netty.handler.codec.http.HttpHeaders;
 import org.mockserver.client.serialization.ExpectationSerializer;
@@ -12,9 +13,7 @@ import org.mockserver.mappers.MockServerResponseToHttpServletResponseEncoder;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.mock.action.ActionHandler;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
-import org.mockserver.model.HttpStatusCode;
+import org.mockserver.model.*;
 import org.mockserver.streams.IOStreamUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,12 +21,17 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.nio.charset.Charset;
+
+import static org.mockserver.model.Header.header;
+import static org.mockserver.model.HttpResponse.notFoundResponse;
 
 /**
  * @author jamesdbloom
  */
 public class MockServerServlet extends HttpServlet {
 
+    private static final String NOT_SUPPORTED_MESSAGE = " is not supported by MockServer deployable WAR due to limitations in the JEE specification; use mockserver-netty to enable these features";
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     // mockserver
     private MockServerMatcher mockServerMatcher = new MockServerMatcher();
@@ -84,8 +88,12 @@ public class MockServerServlet extends HttpServlet {
             } else if (requestPath.equals("/expectation")) {
 
                 Expectation expectation = expectationSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest));
-                mockServerMatcher.when(expectation.getHttpRequest(), expectation.getTimes(), expectation.getTimeToLive()).thenRespond(expectation.getHttpResponse(false)).thenForward(expectation.getHttpForward()).thenCallback(expectation.getHttpCallback());
-                httpServletResponse.setStatus(HttpStatusCode.CREATED_201.code());
+
+                Action action = expectation.getAction(false);
+                if (validateSupportedFeatures(action, httpServletResponse)) {
+                    mockServerMatcher.when(expectation.getHttpRequest(), expectation.getTimes(), expectation.getTimeToLive()).thenRespond(expectation.getHttpResponse(false)).thenForward(expectation.getHttpForward()).thenCallback(expectation.getHttpCallback());
+                    httpServletResponse.setStatus(HttpStatusCode.CREATED_201.code());
+                }
 
             } else if (requestPath.equals("/clear")) {
 
@@ -155,16 +163,49 @@ public class MockServerServlet extends HttpServlet {
 
     private void mockResponse(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
         HttpRequest httpRequest = httpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(httpServletRequest);
-        HttpResponse httpResponse = actionHandler.processAction(mockServerMatcher.handle(httpRequest), httpRequest);
-        mapResponse(httpResponse, httpServletResponse);
+
+        Action action = mockServerMatcher.handle(httpRequest);
+        if (validateSupportedFeatures(action, httpServletResponse)) {
+            mapResponse(actionHandler.processAction(action, httpRequest), httpServletResponse);
+        }
     }
 
+    private boolean validateSupportedFeatures(Action action, HttpServletResponse httpServletResponse) {
+        boolean valid = true;
+        if (action instanceof HttpResponse && ((HttpResponse) action).getConnectionOptions() != null) {
+            writeNotSupportedResponse(ConnectionOptions.class, httpServletResponse);
+            valid = false;
+        } else if (action instanceof HttpError) {
+            writeNotSupportedResponse(HttpError.class, httpServletResponse);
+            valid = false;
+        }
+        return valid;
+    }
+
+    private void writeNotSupportedResponse(Class<? extends ObjectWithJsonToString> notSupportedFeature, HttpServletResponse httpServletResponse) {
+        httpServletResponse.setStatus(HttpStatusCode.NOT_ACCEPTABLE_406.code());
+        IOStreamUtils.writeToOutputStream((notSupportedFeature.getSimpleName() + NOT_SUPPORTED_MESSAGE).getBytes(), httpServletResponse);
+    }
 
     private void mapResponse(HttpResponse httpResponse, HttpServletResponse httpServletResponse) {
-        if (httpResponse != null) {
-            mockServerResponseToHttpServletResponseEncoder.mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
-        } else {
-            httpServletResponse.setStatus(HttpStatusCode.NOT_FOUND_404.code());
+        if (httpResponse == null) {
+            httpResponse = notFoundResponse();
+        }
+
+        addContentTypeHeader(httpResponse);
+
+        mockServerResponseToHttpServletResponseEncoder.mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
+    }
+
+    private void addContentTypeHeader(HttpResponse response) {
+        if (response.getBody() != null && Strings.isNullOrEmpty(response.getFirstHeader(HttpHeaders.Names.CONTENT_TYPE))) {
+            Charset bodyCharset = response.getBody().getCharset(null);
+            String bodyContentType = response.getBody().getContentType();
+            if (bodyCharset != null) {
+                response.updateHeader(header(HttpHeaders.Names.CONTENT_TYPE, bodyContentType + "; charset=" + bodyCharset.name().toLowerCase()));
+            } else if (bodyContentType != null) {
+                response.updateHeader(header(HttpHeaders.Names.CONTENT_TYPE, bodyContentType));
+            }
         }
     }
 }

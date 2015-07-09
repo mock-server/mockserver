@@ -143,7 +143,7 @@ public class MockServerMatcherDumpTest {
                 "  }," + System.getProperty("line.separator") +
                 "  \"httpResponse\" : {" + System.getProperty("line.separator") +
                 "    \"statusCode\" : 200," + System.getProperty("line.separator") +
-                "    \"body\" : \"" + Base64Converter.stringToBase64Bytes("some_response_body".getBytes()) + "\"" + System.getProperty("line.separator") +
+                "    \"body\" : \"" + Base64Converter.bytesToBase64String("some_response_body".getBytes()) + "\"" + System.getProperty("line.separator") +
                 "  }," + System.getProperty("line.separator") +
                 "  \"times\" : {" + System.getProperty("line.separator") +
                 "    \"remainingTimes\" : 0," + System.getProperty("line.separator") +
@@ -175,7 +175,7 @@ public class MockServerMatcherDumpTest {
                 "        \"path\": \"somePath\"" + System.getProperty("line.separator") +
                 "    }," + System.getProperty("line.separator") +
                 "    \"httpResponse\": {" + System.getProperty("line.separator") +
-                "        \"body\": \"" + Base64Converter.stringToBase64Bytes("someBody".getBytes()) + "\"," + System.getProperty("line.separator") +
+                "        \"body\": \"" + Base64Converter.bytesToBase64String("someBody".getBytes()) + "\"," + System.getProperty("line.separator") +
                 "        \"delay\": {" + System.getProperty("line.separator") +
                 "            \"timeUnit\": null," + System.getProperty("line.separator") +
                 "            \"value\": null" + System.getProperty("line.separator") +
@@ -228,7 +228,7 @@ public class MockServerMatcherDumpTest {
                 "  }," + System.getProperty("line.separator") +
                 "  \"httpResponse\" : {" + System.getProperty("line.separator") +
                 "    \"statusCode\" : 304," + System.getProperty("line.separator") +
-                "    \"body\" : \"" + Base64Converter.stringToBase64Bytes("someBody".getBytes()) + "\"," + System.getProperty("line.separator") +
+                "    \"body\" : \"" + Base64Converter.bytesToBase64String("someBody".getBytes()) + "\"," + System.getProperty("line.separator") +
                 "    \"cookies\" : [ {" + System.getProperty("line.separator") +
                 "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
                 "      \"values\" : [ \"someCookieValue\" ]" + System.getProperty("line.separator") +

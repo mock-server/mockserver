@@ -2,14 +2,18 @@ package org.mockserver.client.serialization.java;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.junit.Test;
+import org.mockserver.client.serialization.Base64Converter;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockserver.model.ConnectionOptions.connectionOptions;
+import static org.mockserver.model.HttpError.error;
 
 /**
  * @author jamesdbloom
@@ -51,6 +55,15 @@ public class ExpectationToJavaSerializerTest {
                         "                                new Cookie(\"responseCookieNameTwo\", \"responseCookieValueTwo\")" + System.getProperty("line.separator") +
                         "                        )" + System.getProperty("line.separator") +
                         "                        .withBody(\"responseBody\")" + System.getProperty("line.separator") +
+                        "                        .withDelay(new Delay(TimeUnit.MINUTES, 1))" + System.getProperty("line.separator") +
+                        "                        .withConnectionOptions(" + System.getProperty("line.separator") +
+                        "                                connectionOptions()" + System.getProperty("line.separator") +
+                        "                                        .withSuppressContentLengthHeader(true)" + System.getProperty("line.separator") +
+                        "                                        .withContentLengthHeaderOverride(10)" + System.getProperty("line.separator") +
+                        "                                        .withSuppressConnectionHeader(true)" + System.getProperty("line.separator") +
+                        "                                        .withKeepAliveOverride(true)" + System.getProperty("line.separator") +
+                        "                                        .withCloseSocket(true)" + System.getProperty("line.separator") +
+                        "                        )" + System.getProperty("line.separator") +
                         "        );",
                 new ExpectationToJavaSerializer().serializeAsJava(1,
                         new Expectation(
@@ -83,6 +96,15 @@ public class ExpectationToJavaSerializerTest {
                                                 new Cookie("responseCookieNameTwo", "responseCookieValueTwo")
                                         )
                                         .withBody("responseBody")
+                                        .withDelay(new Delay(TimeUnit.MINUTES, 1))
+                                        .withConnectionOptions(
+                                                connectionOptions()
+                                                        .withSuppressContentLengthHeader(true)
+                                                        .withContentLengthHeaderOverride(10)
+                                                        .withSuppressConnectionHeader(true)
+                                                        .withKeepAliveOverride(true)
+                                                        .withCloseSocket(true)
+                                        )
                         )
                 )
         );
@@ -117,10 +139,11 @@ public class ExpectationToJavaSerializerTest {
                                                 )
                                         ),
                                 Times.once(),
-                                TimeToLive.unlimited()).thenRespond(
-                                new HttpResponse()
-                                        .withBody("responseBody")
-                        )
+                                TimeToLive.unlimited())
+                                .thenRespond(
+                                        new HttpResponse()
+                                                .withBody("responseBody")
+                                )
                 )
         );
     }
@@ -132,7 +155,7 @@ public class ExpectationToJavaSerializerTest {
                         "        new MockServerClient(\"localhost\", 1080)" + System.getProperty("line.separator") +
                         "        .when(" + System.getProperty("line.separator") +
                         "                request()" + System.getProperty("line.separator") +
-                        "                        .withBody(new byte[0]) /* note: not possible to generate code for binary data */," + System.getProperty("line.separator") +
+                        "                        .withBody(Base64Converter.base64StringToBytes(\"" + Base64Converter.bytesToBase64String("request body".getBytes()) + "\"))," + System.getProperty("line.separator") +
                         "                Times.once()" + System.getProperty("line.separator") +
                         "        )" + System.getProperty("line.separator") +
                         "        .respond(" + System.getProperty("line.separator") +
@@ -144,13 +167,14 @@ public class ExpectationToJavaSerializerTest {
                         new Expectation(
                                 new HttpRequest()
                                         .withBody(
-                                                new BinaryBody(new byte[0])
+                                                new BinaryBody("request body".getBytes())
                                         ),
                                 Times.once(),
-                                TimeToLive.unlimited()).thenRespond(
-                                new HttpResponse()
-                                        .withBody("responseBody")
-                        )
+                                TimeToLive.unlimited())
+                                .thenRespond(
+                                        new HttpResponse()
+                                                .withBody("responseBody")
+                                )
                 )
         );
     }
@@ -203,12 +227,73 @@ public class ExpectationToJavaSerializerTest {
                                         )
                                         .withBody(new StringBody("somebody")),
                                 Times.once(),
-                                TimeToLive.unlimited()).thenForward(
-                                new HttpForward()
-                                        .withHost("some_host")
-                                        .withPort(9090)
-                                        .withScheme(HttpForward.Scheme.HTTPS)
+                                TimeToLive.unlimited())
+                                .thenForward(
+                                        new HttpForward()
+                                                .withHost("some_host")
+                                                .withPort(9090)
+                                                .withScheme(HttpForward.Scheme.HTTPS)
+                                )
+                )
+        );
+    }
+
+    @Test
+    public void shouldSerializeFullObjectWithErrorAsJava() throws IOException {
+        assertEquals(System.getProperty("line.separator") +
+                        "        new MockServerClient(\"localhost\", 1080)" + System.getProperty("line.separator") +
+                        "        .when(" + System.getProperty("line.separator") +
+                        "                request()" + System.getProperty("line.separator") +
+                        "                        .withMethod(\"GET\")" + System.getProperty("line.separator") +
+                        "                        .withPath(\"somePath\")" + System.getProperty("line.separator") +
+                        "                        .withHeaders(" + System.getProperty("line.separator") +
+                        "                                new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\")," + System.getProperty("line.separator") +
+                        "                                new Header(\"requestHeaderNameTwo\", \"requestHeaderValueTwo\")" + System.getProperty("line.separator") +
+                        "                        )" + System.getProperty("line.separator") +
+                        "                        .withCookies(" + System.getProperty("line.separator") +
+                        "                                new Cookie(\"requestCookieNameOne\", \"requestCookieValueOne\")," + System.getProperty("line.separator") +
+                        "                                new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")" + System.getProperty("line.separator") +
+                        "                        )" + System.getProperty("line.separator") +
+                        "                        .withQueryStringParameters(" + System.getProperty("line.separator") +
+                        "                                new Parameter(\"requestQueryStringParameterNameOne\", \"requestQueryStringParameterValueOneOne\", \"requestQueryStringParameterValueOneTwo\")," + System.getProperty("line.separator") +
+                        "                                new Parameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")" + System.getProperty("line.separator") +
+                        "                        )" + System.getProperty("line.separator") +
+                        "                        .withBody(new StringBody(\"somebody\"))," + System.getProperty("line.separator") +
+                        "                Times.once()" + System.getProperty("line.separator") +
+                        "        )" + System.getProperty("line.separator") +
+                        "        .error(" + System.getProperty("line.separator") +
+                        "                error()" + System.getProperty("line.separator") +
+                        "                        .withDelay(new Delay(TimeUnit.MINUTES, 1))" + System.getProperty("line.separator") +
+                        "                        .withDropConnection(true)" + System.getProperty("line.separator") +
+                        "                        .withResponseBytes(Base64Converter.base64StringToBytes(\"" + Base64Converter.bytesToBase64String("some_bytes".getBytes()) + "\"))" + System.getProperty("line.separator") +
+                        "        );",
+                new ExpectationToJavaSerializer().serializeAsJava(1,
+                        new Expectation(
+                                new HttpRequest()
+                                        .withMethod("GET")
+                                        .withPath("somePath")
+                                        .withQueryStringParameters(
+                                                new Parameter("requestQueryStringParameterNameOne", "requestQueryStringParameterValueOneOne", "requestQueryStringParameterValueOneTwo"),
+                                                new Parameter("requestQueryStringParameterNameTwo", "requestQueryStringParameterValueTwo")
+                                        )
+                                        .withHeaders(
+                                                new Header("requestHeaderNameOne", "requestHeaderValueOneOne", "requestHeaderValueOneTwo"),
+                                                new Header("requestHeaderNameTwo", "requestHeaderValueTwo")
+                                        )
+                                        .withCookies(
+                                                new Cookie("requestCookieNameOne", "requestCookieValueOne"),
+                                                new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
+                                        )
+                                        .withBody(new StringBody("somebody")),
+                                Times.once(),
+                                TimeToLive.unlimited()
                         )
+                                .thenError(
+                                        error()
+                                                .withDelay(new Delay(TimeUnit.MINUTES, 1))
+                                                .withDropConnection(true)
+                                                .withResponseBytes("some_bytes".getBytes())
+                                )
                 )
         );
     }
@@ -259,10 +344,11 @@ public class ExpectationToJavaSerializerTest {
                                         )
                                         .withBody(new StringBody("somebody")),
                                 Times.once(),
-                                TimeToLive.unlimited()).thenCallback(
-                                new HttpCallback()
-                                        .withCallbackClass("some_class")
-                        )
+                                TimeToLive.unlimited())
+                                .thenCallback(
+                                        new HttpCallback()
+                                                .withCallbackClass("some_class")
+                                )
                 )
         );
     }

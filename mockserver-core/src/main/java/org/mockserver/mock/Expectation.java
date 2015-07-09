@@ -18,6 +18,7 @@ public class Expectation extends ObjectWithJsonToString {
     private final HttpRequestMatcher httpRequestMatcher;
     private HttpResponse httpResponse;
     private HttpForward httpForward;
+    private HttpError httpError;
     private HttpCallback httpCallback;
 
     public Expectation(HttpRequest httpRequest, Times times, TimeToLive timeToLive) {
@@ -51,6 +52,10 @@ public class Expectation extends ObjectWithJsonToString {
         return httpForward;
     }
 
+    public HttpError getHttpError() {
+        return httpError;
+    }
+
     public HttpCallback getHttpCallback() {
         return httpCallback;
     }
@@ -60,6 +65,8 @@ public class Expectation extends ObjectWithJsonToString {
             return getHttpResponse(applyDelay);
         } else if (httpForward != null) {
             return getHttpForward();
+        } else if (httpError != null) {
+            return getHttpError();
         } else {
             return getHttpCallback();
         }
@@ -78,6 +85,9 @@ public class Expectation extends ObjectWithJsonToString {
             if (httpForward != null) {
                 throw new IllegalArgumentException("It is not possible to set a response once a forward has been set");
             }
+            if (httpError != null) {
+                throw new IllegalArgumentException("It is not possible to set a response once an error has been set");
+            }
             if (httpCallback != null) {
                 throw new IllegalArgumentException("It is not possible to set a response once a callback has been set");
             }
@@ -91,6 +101,9 @@ public class Expectation extends ObjectWithJsonToString {
             if (httpResponse != null) {
                 throw new IllegalArgumentException("It is not possible to set a forward once a response has been set");
             }
+            if (httpError != null) {
+                throw new IllegalArgumentException("It is not possible to set a forward once an error has been set");
+            }
             if (httpCallback != null) {
                 throw new IllegalArgumentException("It is not possible to set a forward once a callback has been set");
             }
@@ -99,11 +112,29 @@ public class Expectation extends ObjectWithJsonToString {
         return this;
     }
 
+    public Expectation thenError(HttpError httpError) {
+        if (httpError != null) {
+            if (httpResponse != null) {
+                throw new IllegalArgumentException("It is not possible to set an error once a response has been set");
+            }
+            if (httpForward != null) {
+                throw new IllegalArgumentException("It is not possible to set an error once a forward has been set");
+            }
+            if (httpCallback != null) {
+                throw new IllegalArgumentException("It is not possible to set an error once a callback has been set");
+            }
+            this.httpError = httpError;
+        }
+        return this;
+    }
 
     public Expectation thenCallback(HttpCallback httpCallback) {
         if (httpCallback != null) {
             if (httpResponse != null) {
                 throw new IllegalArgumentException("It is not possible to set a callback once a response has been set");
+            }
+            if (httpError != null) {
+                throw new IllegalArgumentException("It is not possible to set a callback once an error has been set");
             }
             if (httpForward != null) {
                 throw new IllegalArgumentException("It is not possible to set a callback once a forward has been set");

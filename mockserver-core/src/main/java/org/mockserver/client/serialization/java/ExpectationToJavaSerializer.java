@@ -8,30 +8,36 @@ import org.mockserver.mock.Expectation;
  */
 public class ExpectationToJavaSerializer implements ToJavaSerializer<Expectation> {
 
+    public static final int INDENT_SIZE = 8;
+
     @Override
     public String serializeAsJava(int numberOfSpacesToIndent, Expectation expectation) {
         StringBuffer output = new StringBuffer();
         if (expectation != null) {
-            int indentSize = 8;
-            appendNewLineAndIndent(numberOfSpacesToIndent * indentSize, output).append("new MockServerClient(\"localhost\", 1080)");
-            appendNewLineAndIndent(numberOfSpacesToIndent * indentSize, output).append(".when(");
-            output.append(new HttpRequestToJavaSerializer().serializeAsJava((numberOfSpacesToIndent + 1) * indentSize, expectation.getHttpRequest())).append(",");
-            appendNewLineAndIndent((numberOfSpacesToIndent + 1) * indentSize, output).append("Times.once()");
-            appendNewLineAndIndent(numberOfSpacesToIndent * indentSize, output).append(")");
+            appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append("new MockServerClient(\"localhost\", 1080)");
+            appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(".when(");
+            output.append(new HttpRequestToJavaSerializer().serializeAsJava(numberOfSpacesToIndent + 1, expectation.getHttpRequest())).append(",");
+            appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append("Times.once()");
+            appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(")");
             if (expectation.getHttpResponse(false) != null) {
-                appendNewLineAndIndent(numberOfSpacesToIndent * indentSize, output).append(".respond(");
-                output.append(new HttpResponseToJavaSerializer().serializeAsJava((numberOfSpacesToIndent + 1) * indentSize, expectation.getHttpResponse(false)));
-                appendNewLineAndIndent(numberOfSpacesToIndent * indentSize, output).append(")");
+                appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(".respond(");
+                output.append(new HttpResponseToJavaSerializer().serializeAsJava(numberOfSpacesToIndent + 1, expectation.getHttpResponse(false)));
+                appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(")");
             }
             if (expectation.getHttpForward() != null) {
-                appendNewLineAndIndent(numberOfSpacesToIndent * indentSize, output).append(".forward(");
-                output.append(new HttpForwardToJavaSerializer().serializeAsJava((numberOfSpacesToIndent + 1) * indentSize, expectation.getHttpForward()));
-                appendNewLineAndIndent(numberOfSpacesToIndent * indentSize, output).append(")");
+                appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(".forward(");
+                output.append(new HttpForwardToJavaSerializer().serializeAsJava(numberOfSpacesToIndent + 1, expectation.getHttpForward()));
+                appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(")");
+            }
+            if (expectation.getHttpError() != null) {
+                appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(".error(");
+                output.append(new HttpErrorToJavaSerializer().serializeAsJava(numberOfSpacesToIndent + 1, expectation.getHttpError()));
+                appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(")");
             }
             if (expectation.getHttpCallback() != null) {
-                appendNewLineAndIndent(numberOfSpacesToIndent * indentSize, output).append(".callback(");
-                output.append(new HttpCallbackToJavaSerializer().serializeAsJava((numberOfSpacesToIndent + 1) * indentSize, expectation.getHttpCallback()));
-                appendNewLineAndIndent(numberOfSpacesToIndent * indentSize, output).append(")");
+                appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(".callback(");
+                output.append(new HttpCallbackToJavaSerializer().serializeAsJava(numberOfSpacesToIndent + 1, expectation.getHttpCallback()));
+                appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(")");
             }
             output.append(";");
         }

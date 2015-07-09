@@ -3,6 +3,8 @@ package org.mockserver.client.serialization.java;
 import com.google.common.base.Strings;
 import org.mockserver.model.HttpForward;
 
+import static org.mockserver.client.serialization.java.ExpectationToJavaSerializer.INDENT_SIZE;
+
 /**
  * @author jamesdbloom
  */
@@ -12,15 +14,15 @@ public class HttpForwardToJavaSerializer implements ToJavaSerializer<HttpForward
     public String serializeAsJava(int numberOfSpacesToIndent, HttpForward httpForward) {
         StringBuffer output = new StringBuffer();
         if (httpForward != null) {
-            appendNewLineAndIndent(numberOfSpacesToIndent, output).append("forward()");
+            appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append("forward()");
             if (httpForward.getHost() != null) {
-                appendNewLineAndIndent(numberOfSpacesToIndent + 8, output).append(".withHost(\"").append(httpForward.getHost()).append("\")");
+                appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(".withHost(\"").append(httpForward.getHost()).append("\")");
             }
             if (httpForward.getPort() != null) {
-                appendNewLineAndIndent(numberOfSpacesToIndent + 8, output).append(".withPort(").append(httpForward.getPort()).append(")");
+                appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(".withPort(").append(httpForward.getPort()).append(")");
             }
             if (httpForward.getScheme() != null) {
-                appendNewLineAndIndent(numberOfSpacesToIndent + 8, output).append(".withScheme(HttpForward.Scheme.").append(httpForward.getScheme()).append(")");
+                appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(".withScheme(HttpForward.Scheme.").append(httpForward.getScheme()).append(")");
             }
         }
         return output.toString();

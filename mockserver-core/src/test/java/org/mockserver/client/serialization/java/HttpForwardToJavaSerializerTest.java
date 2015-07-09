@@ -15,11 +15,11 @@ public class HttpForwardToJavaSerializerTest {
     @Test
     public void shouldSerializeFullObjectWithForwardAsJava() throws IOException {
         assertEquals(System.getProperty("line.separator") +
-                        "  forward()" + System.getProperty("line.separator") +
-                        "          .withHost(\"some_host\")" + System.getProperty("line.separator") +
-                        "          .withPort(9090)" + System.getProperty("line.separator") +
-                        "          .withScheme(HttpForward.Scheme.HTTPS)",
-                new HttpForwardToJavaSerializer().serializeAsJava(2,
+                        "        forward()" + System.getProperty("line.separator") +
+                        "                .withHost(\"some_host\")" + System.getProperty("line.separator") +
+                        "                .withPort(9090)" + System.getProperty("line.separator") +
+                        "                .withScheme(HttpForward.Scheme.HTTPS)",
+                new HttpForwardToJavaSerializer().serializeAsJava(1,
                         new HttpForward()
                                 .withHost("some_host")
                                 .withPort(9090)

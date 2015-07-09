@@ -17,7 +17,7 @@ import java.io.File;
 /**
  * @author jamesdbloom
  */
-public class ClientServerWarNoContextPathIntegrationTest extends AbstractClientServerSharedClassloadersAndTestClasspathIntegrationTest {
+public class ClientServerWarNoContextPathIntegrationTest extends DeployableWARAbstractClientServerIntegrationTest {
 
     private final static int SERVER_HTTP_PORT = PortFactory.findFreePort();
     private final static int SERVER_HTTPS_PORT = PortFactory.findFreePort();

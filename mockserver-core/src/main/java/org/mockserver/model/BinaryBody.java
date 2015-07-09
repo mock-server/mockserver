@@ -28,6 +28,6 @@ public class BinaryBody extends Body<byte[]> {
 
     @Override
     public String toString() {
-        return bytes != null ? Base64Converter.stringToBase64Bytes(bytes) : null;
+        return bytes != null ? Base64Converter.bytesToBase64String(bytes) : null;
     }
 }

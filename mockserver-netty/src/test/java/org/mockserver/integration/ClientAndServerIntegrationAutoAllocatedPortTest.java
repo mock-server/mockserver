@@ -3,7 +3,7 @@ package org.mockserver.integration;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.mockserver.echo.http.EchoServer;
-import org.mockserver.server.AbstractClientServerSharedClassloadersAndTestClasspathIntegrationTest;
+import org.mockserver.server.NettyAbstractClientServerIntegrationTest;
 import org.mockserver.socket.PortFactory;
 
 import java.util.concurrent.ExecutionException;
@@ -13,7 +13,7 @@ import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 /**
  * @author jamesdbloom
  */
-public class ClientAndServerIntegrationAutoAllocatedPortTest extends AbstractClientServerSharedClassloadersAndTestClasspathIntegrationTest {
+public class ClientAndServerIntegrationAutoAllocatedPortTest extends NettyAbstractClientServerIntegrationTest {
 
     private final static int TEST_SERVER_HTTP_PORT = PortFactory.findFreePort();
     private static int severHttpPort;

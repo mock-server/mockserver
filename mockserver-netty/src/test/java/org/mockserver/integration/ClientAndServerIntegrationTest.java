@@ -3,7 +3,7 @@ package org.mockserver.integration;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.mockserver.echo.http.EchoServer;
-import org.mockserver.server.AbstractClientServerSharedClassloadersAndTestClasspathIntegrationTest;
+import org.mockserver.server.NettyAbstractClientServerIntegrationTest;
 import org.mockserver.socket.PortFactory;
 
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
@@ -11,7 +11,7 @@ import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 /**
  * @author jamesdbloom
  */
-public class ClientAndServerIntegrationTest extends AbstractClientServerSharedClassloadersAndTestClasspathIntegrationTest {
+public class ClientAndServerIntegrationTest extends NettyAbstractClientServerIntegrationTest {
 
     private static final int SERVER_HTTP_PORT = PortFactory.findFreePort();
     private final static int TEST_SERVER_HTTP_PORT = PortFactory.findFreePort();

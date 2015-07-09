@@ -19,7 +19,7 @@ public class Base64Converter {
         return DatatypeConverter.parseBase64Binary(data);
     }
 
-    public static String stringToBase64Bytes(byte[] data) {
+    public static String bytesToBase64String(byte[] data) {
         return DatatypeConverter.printBase64Binary(data);
     }
 }

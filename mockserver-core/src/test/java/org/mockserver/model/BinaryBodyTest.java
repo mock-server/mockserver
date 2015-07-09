@@ -37,6 +37,6 @@ public class BinaryBodyTest {
 
     @Test
     public void shouldReturnFormattedRequestInToString() {
-        assertEquals(Base64Converter.stringToBase64Bytes("some_body".getBytes()), binary("some_body".getBytes()).toString());
+        assertEquals(Base64Converter.bytesToBase64String("some_body".getBytes()), binary("some_body".getBytes()).toString());
     }
 }

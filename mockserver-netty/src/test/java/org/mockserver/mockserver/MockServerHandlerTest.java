@@ -5,6 +5,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import org.hamcrest.collection.IsIterableContainingInOrder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -55,6 +56,8 @@ public class MockServerHandlerTest {
     @Mock
     private HttpForward mockHttpForward;
     @Mock
+    private HttpError mockHttpError;
+    @Mock
     private HttpCallback mockHttpCallback;
     @Mock
     private Verification mockVerification;
@@ -104,6 +107,7 @@ public class MockServerHandlerTest {
         when(mockMockServerMatcher.when(any(HttpRequest.class), any(Times.class), any(TimeToLive.class))).thenReturn(mockExpectation);
         when(mockExpectation.thenRespond(any(HttpResponse.class))).thenReturn(mockExpectation);
         when(mockExpectation.thenForward(any(HttpForward.class))).thenReturn(mockExpectation);
+        when(mockExpectation.thenError(any(HttpError.class))).thenReturn(mockExpectation);
         when(mockExpectation.thenCallback(any(HttpCallback.class))).thenReturn(mockExpectation);
 
         // given - an expectation that has been setup
@@ -111,6 +115,7 @@ public class MockServerHandlerTest {
         when(mockExpectation.getTimes()).thenReturn(Times.once());
         when(mockExpectation.getHttpResponse(anyBoolean())).thenReturn(mockHttpResponse);
         when(mockExpectation.getHttpForward()).thenReturn(mockHttpForward);
+        when(mockExpectation.getHttpError()).thenReturn(mockHttpError);
         when(mockExpectation.getHttpCallback()).thenReturn(mockHttpCallback);
     }
 
@@ -193,6 +198,7 @@ public class MockServerHandlerTest {
         verify(mockMockServerMatcher).when(any(HttpRequest.class), any(Times.class), any(TimeToLive.class));
         verify(mockExpectation).thenRespond(any(HttpResponse.class));
         verify(mockExpectation).thenForward(any(HttpForward.class));
+        verify(mockExpectation).thenError(any(HttpError.class));
         verify(mockExpectation).thenCallback(any(HttpCallback.class));
 
         // and - correct response written to ChannelHandlerContext
@@ -347,7 +353,7 @@ public class MockServerHandlerTest {
         assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.OK.code()));
         assertThat(httpResponse.getBodyAsString(), is("some_content"));
         assertThat(httpResponse.getHeader("Connection"), empty());
-        assertThat(httpResponse.getHeader("Content-Length"), empty());
+        assertThat(httpResponse.getHeader("Content-Length"), IsIterableContainingInOrder.contains(""));
         assertThat(httpResponse.getBodyAsString(), is("some_content"));
     }
 
@@ -554,7 +560,7 @@ public class MockServerHandlerTest {
         assertThat(embeddedChannel.isOpen(), is(false));
         assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.OK.code()));
         assertThat(httpResponse.getBodyAsString(), is("some_content"));
-        assertThat(httpResponse.getHeader("Connection"), containsInAnyOrder("keep-alive"));
+        assertThat(httpResponse.getHeader("Connection"), containsInAnyOrder("close"));
         assertThat(httpResponse.getHeader("Content-Length"), containsInAnyOrder(Integer.toString("some_content".getBytes(Charsets.UTF_8).length)));
         assertThat(httpResponse.getBodyAsString(), is("some_content"));
     }

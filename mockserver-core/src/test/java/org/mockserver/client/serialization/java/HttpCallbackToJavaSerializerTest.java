@@ -15,9 +15,9 @@ public class HttpCallbackToJavaSerializerTest {
     @Test
     public void shouldSerializeFullObjectWithCallbackAsJava() throws IOException {
         assertEquals(System.getProperty("line.separator") +
-                        "  callback()" + System.getProperty("line.separator") +
-                        "          .withCallbackClass(\"some_class\")",
-                new HttpCallbackToJavaSerializer().serializeAsJava(2,
+                        "        callback()" + System.getProperty("line.separator") +
+                        "                .withCallbackClass(\"some_class\")",
+                new HttpCallbackToJavaSerializer().serializeAsJava(1,
                         new HttpCallback()
                                 .withCallbackClass("some_class")
                 )

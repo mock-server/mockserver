@@ -31,7 +31,7 @@ public class HttpResponseDTOTest {
         Integer statusCode = 200;
         ConnectionOptionsDTO connectionOptions = new ConnectionOptionsDTO().setContentLengthHeaderOverride(50);
 
-        HttpResponse httpRequest = new HttpResponse()
+        HttpResponse httpResponse = new HttpResponse()
                 .withBody("body")
                 .withCookies(new Cookie("name", "value"))
                 .withHeaders(new Header("name", "value"))
@@ -39,14 +39,14 @@ public class HttpResponseDTOTest {
                 .withConnectionOptions(new ConnectionOptions().withContentLengthHeaderOverride(50));
 
         // when
-        HttpResponseDTO httpRequestDTO = new HttpResponseDTO(httpRequest);
+        HttpResponseDTO httpResponseDTO = new HttpResponseDTO(httpResponse);
 
         // then
-        assertThat(httpRequestDTO.getBody(), is(body));
-        assertThat(httpRequestDTO.getCookies(), is(cookies));
-        assertThat(httpRequestDTO.getHeaders(), is(headers));
-        assertThat(httpRequestDTO.getStatusCode(), is(statusCode));
-        assertThat(httpRequestDTO.getConnectionOptions(), is(connectionOptions));
+        assertThat(httpResponseDTO.getBody(), is(body));
+        assertThat(httpResponseDTO.getCookies(), is(cookies));
+        assertThat(httpResponseDTO.getHeaders(), is(headers));
+        assertThat(httpResponseDTO.getStatusCode(), is(statusCode));
+        assertThat(httpResponseDTO.getConnectionOptions(), is(connectionOptions));
     }
 
     @Test
@@ -58,7 +58,7 @@ public class HttpResponseDTOTest {
         Integer statusCode = 200;
         ConnectionOptions connectionOptions = new ConnectionOptions().withContentLengthHeaderOverride(50);
 
-        HttpResponse httpRequest = new HttpResponse()
+        HttpResponse httpResponse = new HttpResponse()
                 .withBody(body)
                 .withCookies(cookie)
                 .withHeaders(header)
@@ -66,7 +66,7 @@ public class HttpResponseDTOTest {
                 .withConnectionOptions(connectionOptions);
 
         // when
-        HttpResponse builtHttpResponse = new HttpResponseDTO(httpRequest).buildObject();
+        HttpResponse builtHttpResponse = new HttpResponseDTO(httpResponse).buildObject();
 
         // then
         assertThat(builtHttpResponse.getBody(), Is.<org.mockserver.model.Body>is(exact(body)));
@@ -85,48 +85,48 @@ public class HttpResponseDTOTest {
         Integer statusCode = 200;
         ConnectionOptionsDTO connectionOptions = new ConnectionOptionsDTO().setContentLengthHeaderOverride(50);
 
-        HttpResponse httpRequest = new HttpResponse();
+        HttpResponse httpResponse = new HttpResponse();
 
         // when
-        HttpResponseDTO httpRequestDTO = new HttpResponseDTO(httpRequest);
-        httpRequestDTO.setBody(body);
-        httpRequestDTO.setCookies(cookies);
-        httpRequestDTO.setHeaders(headers);
-        httpRequestDTO.setStatusCode(statusCode);
-        httpRequestDTO.setConnectionOptions(connectionOptions);
+        HttpResponseDTO httpResponseDTO = new HttpResponseDTO(httpResponse);
+        httpResponseDTO.setBody(body);
+        httpResponseDTO.setCookies(cookies);
+        httpResponseDTO.setHeaders(headers);
+        httpResponseDTO.setStatusCode(statusCode);
+        httpResponseDTO.setConnectionOptions(connectionOptions);
 
         // then
-        assertThat(httpRequestDTO.getBody(), is(body));
-        assertThat(httpRequestDTO.getCookies(), is(cookies));
-        assertThat(httpRequestDTO.getHeaders(), is(headers));
-        assertThat(httpRequestDTO.getStatusCode(), is(statusCode));
-        assertThat(httpRequestDTO.getConnectionOptions(), is(connectionOptions));
+        assertThat(httpResponseDTO.getBody(), is(body));
+        assertThat(httpResponseDTO.getCookies(), is(cookies));
+        assertThat(httpResponseDTO.getHeaders(), is(headers));
+        assertThat(httpResponseDTO.getStatusCode(), is(statusCode));
+        assertThat(httpResponseDTO.getConnectionOptions(), is(connectionOptions));
     }
 
 
     @Test
     public void shouldHandleNullObjectInput() {
         // when
-        HttpResponseDTO httpRequestDTO = new HttpResponseDTO(null);
+        HttpResponseDTO httpResponseDTO = new HttpResponseDTO(null);
 
         // then
-        assertThat(httpRequestDTO.getBody(), is(nullValue()));
-        assertThat(httpRequestDTO.getCookies(), is(empty()));
-        assertThat(httpRequestDTO.getHeaders(), is(empty()));
-        assertThat(httpRequestDTO.getStatusCode(), is(nullValue()));
-        assertThat(httpRequestDTO.getConnectionOptions(), is(nullValue()));
+        assertThat(httpResponseDTO.getBody(), is(nullValue()));
+        assertThat(httpResponseDTO.getCookies(), is(empty()));
+        assertThat(httpResponseDTO.getHeaders(), is(empty()));
+        assertThat(httpResponseDTO.getStatusCode(), is(nullValue()));
+        assertThat(httpResponseDTO.getConnectionOptions(), is(nullValue()));
     }
 
     @Test
     public void shouldHandleNullFieldInput() {
         // when
-        HttpResponseDTO httpRequestDTO = new HttpResponseDTO(new HttpResponse());
+        HttpResponseDTO httpResponseDTO = new HttpResponseDTO(new HttpResponse());
 
         // then
-        assertThat(httpRequestDTO.getBody(), is(BodyDTO.createDTO(exact(""))));
-        assertThat(httpRequestDTO.getCookies(), is(empty()));
-        assertThat(httpRequestDTO.getHeaders(), is(empty()));
-        assertThat(httpRequestDTO.getStatusCode(), is(200));
-        assertThat(httpRequestDTO.getConnectionOptions(), is(nullValue()));
+        assertThat(httpResponseDTO.getBody(), is(BodyDTO.createDTO(exact(""))));
+        assertThat(httpResponseDTO.getCookies(), is(empty()));
+        assertThat(httpResponseDTO.getHeaders(), is(empty()));
+        assertThat(httpResponseDTO.getStatusCode(), is(200));
+        assertThat(httpResponseDTO.getConnectionOptions(), is(nullValue()));
     }
 }
