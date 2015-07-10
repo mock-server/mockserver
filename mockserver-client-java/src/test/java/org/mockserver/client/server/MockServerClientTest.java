@@ -20,6 +20,7 @@ import org.mockserver.verify.VerificationSequence;
 import org.mockserver.verify.VerificationTimes;
 
 import java.io.UnsupportedEncodingException;
+import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.containsString;
@@ -130,6 +131,29 @@ public class MockServerClientTest {
     }
 
     @Test
+    public void shouldSetupExpectationWithError() {
+        // given
+        HttpRequest httpRequest =
+                new HttpRequest()
+                        .withPath("/some_path")
+                        .withBody(new StringBody("some_request_body"));
+        HttpError httpError =
+                new HttpError()
+                        .withDropConnection(true)
+                        .withResponseBytes("silly_bytes".getBytes());
+
+        // when
+        ForwardChainExpectation forwardChainExpectation = mockServerClient.when(httpRequest);
+        forwardChainExpectation.error(httpError);
+
+        // then
+        Expectation expectation = forwardChainExpectation.getExpectation();
+        assertTrue(expectation.matches(httpRequest));
+        assertSame(httpError, expectation.getHttpError());
+        assertEquals(Times.unlimited(), expectation.getTimes());
+    }
+
+    @Test
     public void shouldSetupExpectationWithCallback() {
         // given
         HttpRequest httpRequest =
@@ -210,6 +234,40 @@ public class MockServerClientTest {
                                                 .withHost("some_host")
                                                 .withPort(9090)
                                                 .withScheme(HttpForward.Scheme.HTTPS)
+                                )
+                        )
+                        .setTimes(new TimesDTO(Times.exactly(3)))
+                        .buildObject()
+        );
+    }
+
+    @Test
+    public void shouldSendExpectationWithError() throws Exception {
+        // when
+        mockServerClient
+                .when(
+                        new HttpRequest()
+                                .withPath("/some_path")
+                                .withBody(new StringBody("some_request_body")),
+                        Times.exactly(3)
+                )
+                .error(
+                        new HttpError()
+                                .withDelay(TimeUnit.MILLISECONDS, 100)
+                                .withResponseBytes("random_bytes".getBytes())
+                );
+
+        // then
+        verify(mockExpectationSerializer).serialize(
+                new ExpectationDTO()
+                        .setHttpRequest(new HttpRequestDTO(new HttpRequest()
+                                .withPath("/some_path")
+                                .withBody(new StringBody("some_request_body"))))
+                        .setHttpError(
+                                new HttpErrorDTO(
+                                        new HttpError()
+                                                .withDelay(TimeUnit.MILLISECONDS, 100)
+                                                .withResponseBytes("random_bytes".getBytes())
                                 )
                         )
                         .setTimes(new TimesDTO(Times.exactly(3)))

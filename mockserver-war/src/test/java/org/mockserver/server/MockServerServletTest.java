@@ -26,12 +26,14 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockserver.model.ConnectionOptions.connectionOptions;
 import static org.mockserver.model.HttpRequest.request;
 
 /**
@@ -91,6 +93,30 @@ public class MockServerServletTest {
     }
 
     @Test
+    public void shouldFailForExpectationWithConnectionOptions() throws UnsupportedEncodingException {
+        // given
+        HttpRequest request = new HttpRequest().withPath("somepath");
+        HttpResponse response = new HttpResponse().withConnectionOptions(connectionOptions());
+        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
+        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("GET", "somepath");
+
+        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class))).thenReturn(request);
+        when(mockMockServerMatcher.handle(any(HttpRequest.class))).thenReturn(response);
+        when(mockActionHandler.processAction(any(HttpResponse.class), any(HttpRequest.class))).thenReturn(response);
+
+        // when
+        mockServerServlet.doGet(httpServletRequest, httpServletResponse);
+
+        // then
+        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(httpServletRequest)).thenReturn(request);
+        verify(mockMockServerMatcher).handle(request);
+        when(mockActionHandler.processAction(response, request)).thenReturn(response);
+        verifyNoMoreInteractions(mockServerResponseToHttpServletResponseEncoder);
+        assertThat(httpServletResponse.getStatus(), is(406));
+        assertThat(httpServletResponse.getContentAsString(), is("ConnectionOptions is not supported by MockServer deployable WAR due to limitations in the JEE specification; use mockserver-netty to enable these features"));
+    }
+
+    @Test
     public void shouldForwardMatchedExpectation() throws IOException {
         // given
         HttpRequest request = new HttpRequest().withPath("somepath");
@@ -112,6 +138,31 @@ public class MockServerServletTest {
         when(mockActionHandler.processAction(forward, request)).thenReturn(response);
         verify(mockServerResponseToHttpServletResponseEncoder).mapMockServerResponseToHttpServletResponse(response, httpServletResponse);
         assertThat(httpServletResponse.getStatus(), is(200));
+    }
+
+    @Test
+    public void shouldFailForExpectationWithError() throws IOException {
+        // given
+        HttpRequest request = new HttpRequest().withPath("somepath");
+        HttpError error = new HttpError().withDropConnection(true);
+        HttpResponse response = new HttpResponse();
+        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
+        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("GET", "somepath");
+
+        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class))).thenReturn(request);
+        when(mockMockServerMatcher.handle(any(HttpRequest.class))).thenReturn(error);
+        when(mockActionHandler.processAction(any(HttpForward.class), any(HttpRequest.class))).thenReturn(response);
+
+        // when
+        mockServerServlet.doGet(httpServletRequest, httpServletResponse);
+
+        // then
+        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(httpServletRequest)).thenReturn(request);
+        verify(mockMockServerMatcher).handle(request);
+        when(mockActionHandler.processAction(error, request)).thenReturn(response);
+        verifyNoMoreInteractions(mockServerResponseToHttpServletResponseEncoder);
+        assertThat(httpServletResponse.getStatus(), is(406));
+        assertThat(httpServletResponse.getContentAsString(), is("HttpError is not supported by MockServer deployable WAR due to limitations in the JEE specification; use mockserver-netty to enable these features"));
     }
 
     @Test

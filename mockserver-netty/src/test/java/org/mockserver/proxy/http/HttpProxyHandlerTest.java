@@ -46,10 +46,6 @@ public class HttpProxyHandlerTest {
     @Mock
     private HttpResponse mockHttpResponse;
     @Mock
-    private HttpForward mockHttpForward;
-    @Mock
-    private HttpCallback mockHttpCallback;
-    @Mock
     private Verification mockVerification;
     @Mock
     private VerificationSequence mockVerificationSequence;
@@ -87,18 +83,6 @@ public class HttpProxyHandlerTest {
         when(mockHttpRequestSerializer.deserialize(anyString())).thenReturn(mockHttpRequest);
         when(mockVerificationSerializer.deserialize(anyString())).thenReturn(mockVerification);
         when(mockVerificationSequenceSerializer.deserialize(anyString())).thenReturn(mockVerificationSequence);
-
-        // given - an expectation that can be setup
-        when(mockExpectation.thenRespond(any(HttpResponse.class))).thenReturn(mockExpectation);
-        when(mockExpectation.thenForward(any(HttpForward.class))).thenReturn(mockExpectation);
-        when(mockExpectation.thenCallback(any(HttpCallback.class))).thenReturn(mockExpectation);
-
-        // given - an expectation that has been setup
-        when(mockExpectation.getHttpRequest()).thenReturn(mockHttpRequest);
-        when(mockExpectation.getTimes()).thenReturn(Times.once());
-        when(mockExpectation.getHttpResponse(anyBoolean())).thenReturn(mockHttpResponse);
-        when(mockExpectation.getHttpForward()).thenReturn(mockHttpForward);
-        when(mockExpectation.getHttpCallback()).thenReturn(mockHttpCallback);
     }
 
     @After
