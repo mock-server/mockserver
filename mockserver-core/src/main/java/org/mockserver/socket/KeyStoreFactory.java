@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.DatatypeConverter;
+
 import java.io.*;
 import java.math.BigInteger;
 import java.security.*;
@@ -71,9 +72,13 @@ public class KeyStoreFactory {
     private static final Date NOT_BEFORE = new Date(System.currentTimeMillis() - 86400000L * 365);
 
     /**
-     * The maximum possible value in X.509 specification: 9999-12-31 23:59:59
+     * The maximum possible value in X.509 specification: 9999-12-31 23:59:59,
+     * new Date(253402300799000L), but Apple iOS 8 fails with a certificate
+     * expiration date grater than Mon, 24 Jan 6084 02:07:59 GMT (issue #6).
+     * 
+     * Hundred years in the future from starting the proxy should be enough.
      */
-    private static final Date NOT_AFTER = new Date(253402300799000L);
+    private static final Date NOT_AFTER = new Date(System.currentTimeMillis() + 86400000L * 365 * 100);
 
     /**
      * Create a random 2048 bit RSA key pair with the given length
