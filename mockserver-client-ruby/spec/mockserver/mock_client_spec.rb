@@ -12,10 +12,10 @@ describe MockServer::MockServerClient do
     client.logger = LoggingFactory::DEFAULT_FACTORY.log('test', output: 'tmp.log', truncate: true)
 
     # Stub requests
-    stub_request(:put, /.+\/expectation/).with(body: register_expectation_json).to_return(status: 201)
-    stub_request(:put, /.+\/clear/).with(body: search_request_json).to_return(status: 202)
-    stub_request(:put, /.+\/reset/).to_return(status: 202)
-    stub_request(:put, /.+\/retrieve/).with(body: search_request_json).to_return(body: '', status: 200)
+    stub_request(:put, /.+\/expectation/).with(body: register_expectation_json, headers: { 'Content-Type' => 'application/json' }).to_return(status: 201)
+    stub_request(:put, /.+\/clear/).with(body: search_request_json, headers: { 'Content-Type' => 'application/json' }).to_return(status: 202)
+    stub_request(:put, /.+\/reset/).with(headers: { 'Content-Type' => 'application/json' }).to_return(status: 202)
+    stub_request(:put, /.+\/retrieve/).with(body: search_request_json, headers: { 'Content-Type' => 'application/json' }).to_return(body: '', status: 200)
   end
 
   it 'registers an expectation correctly' do
