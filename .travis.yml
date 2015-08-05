@@ -1,4 +1,5 @@
 language: java
+sudo: false
 
 before_install:
   - "./scripts/install_ca_certificate.sh"
