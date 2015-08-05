@@ -273,7 +273,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // - no response or forward
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -380,7 +379,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -421,7 +419,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in https
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -961,7 +958,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         headersToIgnore)
         );
         assertEquals(
-                notFoundResponse().withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
+                notFoundResponse(),
                 makeRequest(
                         request().withPath(calculatePath("not_found")),
                         headersToIgnore)
@@ -985,7 +982,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         headersToIgnore)
         );
         assertEquals(
-                notFoundResponse().withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
+                notFoundResponse(),
                 makeRequest(
                         request().withSecure(true)
                                 .withPath(calculatePath("not_found")),
@@ -1173,7 +1170,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -1183,7 +1179,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in https
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -1233,7 +1228,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -1243,7 +1237,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in https
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -3343,7 +3336,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -3353,7 +3345,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in https
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -3391,7 +3382,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -3409,7 +3399,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in https
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -3451,7 +3440,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -3469,7 +3457,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in https
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -3496,7 +3483,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -3530,7 +3516,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in https
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -3577,7 +3562,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -3594,7 +3578,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in https
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -3633,7 +3616,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -3651,7 +3633,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in https
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -3707,7 +3688,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -3724,7 +3704,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in https
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -3769,7 +3748,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -3787,7 +3765,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in https
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -3823,7 +3800,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -3833,7 +3809,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in https
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -3860,7 +3835,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -3870,7 +3844,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in https
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -3904,7 +3877,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // wrong query string parameter name
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -3921,7 +3893,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // wrong query string parameter name
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -3959,7 +3930,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // wrong query string parameter name
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -3976,7 +3946,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // wrong query string parameter name
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -4016,7 +3985,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // wrong body parameter value
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -4033,7 +4001,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // wrong body parameter value
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -4074,7 +4041,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // wrong query string parameter name
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -4119,7 +4085,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // wrong query string parameter value
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -4159,7 +4124,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // wrong query string parameter name
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -4174,7 +4138,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // wrong query string parameter name
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -4216,7 +4179,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -4234,7 +4196,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in https
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -4280,7 +4241,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -4298,7 +4258,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in https
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -4339,7 +4298,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // wrong query string parameter name
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -4354,7 +4312,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // wrong query string parameter name
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -4396,7 +4353,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -4414,7 +4370,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in https
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -4460,7 +4415,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -4478,7 +4432,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in https
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -4519,7 +4472,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // wrong query string parameter name
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -4534,7 +4486,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // wrong query string parameter name
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -4591,7 +4542,6 @@ public abstract class AbstractClientServerIntegrationTest {
         );
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -4612,7 +4562,6 @@ public abstract class AbstractClientServerIntegrationTest {
         );
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -4651,7 +4600,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -4660,7 +4608,6 @@ public abstract class AbstractClientServerIntegrationTest {
         );
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -4670,7 +4617,6 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in https
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()
@@ -4680,7 +4626,6 @@ public abstract class AbstractClientServerIntegrationTest {
         );
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
                 makeRequest(
                         request()

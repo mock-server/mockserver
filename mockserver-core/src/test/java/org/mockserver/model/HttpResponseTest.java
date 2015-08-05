@@ -36,7 +36,7 @@ public class HttpResponseTest {
         assertEquals(Base64Converter.bytesToBase64String("somebody".getBytes()), new HttpResponse().withBody("somebody".getBytes()).getBodyAsString());
         assertEquals("somebody", new HttpResponse().withBody("somebody").getBodyAsString());
         assertNull(new HttpResponse().withBody((byte[]) null).getBodyAsString());
-        assertEquals("", new HttpResponse().withBody((String) null).getBodyAsString());
+        assertEquals(null, new HttpResponse().withBody((String) null).getBodyAsString());
     }
 
     @Test

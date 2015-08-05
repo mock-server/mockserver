@@ -16,7 +16,7 @@ import static org.mockserver.model.NottableString.string;
  */
 public class HttpResponse extends Action {
     private Integer statusCode = 200;
-    private Body body = new StringBody("");
+    private Body body;
     private Map<NottableString, Header> headers = new LinkedHashMap<NottableString, Header>();
     private Map<NottableString, Cookie> cookies = new LinkedHashMap<NottableString, Cookie>();
     private Delay delay;

@@ -15,11 +15,17 @@ import java.util.Arrays;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.JsonBody.json;
+import static org.mockserver.model.JsonSchemaBody.jsonSchema;
+import static org.mockserver.model.Parameter.param;
+import static org.mockserver.model.ParameterBody.params;
+import static org.mockserver.model.RegexBody.regex;
 
 /**
  * @author jamesdbloom
  */
-public class MockServerResponseToHttpServletResponseEncoderTest {
+public class MockServerResponseToHttpServletResponseEncoderBasicMappingTest {
 
     @Test
     public void shouldMapHttpResponseToHttpServletResponse() throws UnsupportedEncodingException {

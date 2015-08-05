@@ -24,6 +24,7 @@ import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -217,7 +218,7 @@ public class HttpProxyHandlerTest {
         // and - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse)embeddedChannel.readOutbound();
         assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.NOT_FOUND.code()));
-        assertThat(httpResponse.getBodyAsString(), is(""));
+        assertThat(httpResponse.getBodyAsString(), nullValue());
     }
 
     @Test

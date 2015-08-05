@@ -1,5 +1,6 @@
 package org.mockserver.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Charsets;
 import org.apache.commons.io.IOUtils;
 
@@ -43,4 +44,8 @@ public class JsonSchemaBody extends Body {
         return jsonSchema;
     }
 
+    @JsonIgnore
+    public String getContentType() {
+        return "application/json";
+    }
 }

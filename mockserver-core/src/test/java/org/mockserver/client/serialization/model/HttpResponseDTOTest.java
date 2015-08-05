@@ -123,7 +123,7 @@ public class HttpResponseDTOTest {
         HttpResponseDTO httpResponseDTO = new HttpResponseDTO(new HttpResponse());
 
         // then
-        assertThat(httpResponseDTO.getBody(), is(BodyDTO.createDTO(exact(""))));
+        assertThat(httpResponseDTO.getBody(), is(nullValue()));
         assertThat(httpResponseDTO.getCookies(), is(empty()));
         assertThat(httpResponseDTO.getHeaders(), is(empty()));
         assertThat(httpResponseDTO.getStatusCode(), is(200));

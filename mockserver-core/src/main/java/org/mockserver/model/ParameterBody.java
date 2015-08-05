@@ -1,6 +1,8 @@
 package org.mockserver.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Charsets;
+import com.google.common.net.MediaType;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -65,5 +67,10 @@ public class ParameterBody extends Body<List<Parameter>> {
             }
         }
         return body.toString();
+    }
+
+    @JsonIgnore
+    public String getContentType() {
+        return MediaType.FORM_DATA.toString();
     }
 }
