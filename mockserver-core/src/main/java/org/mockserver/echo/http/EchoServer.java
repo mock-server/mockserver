@@ -51,7 +51,7 @@ public class EchoServer {
                             }
                         });
             }
-        }).start();
+        }, "MockServer EchoServer Thread").start();
 
         try {
             // wait for proxy to start all channels

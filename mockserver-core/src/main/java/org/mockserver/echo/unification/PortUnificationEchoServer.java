@@ -47,7 +47,7 @@ public class PortUnificationEchoServer {
                             }
                         });
             }
-        }).start();
+        }, "MockServer Port Unification EchoServer Thread").start();
 
         try {
             // wait for proxy to start all channels

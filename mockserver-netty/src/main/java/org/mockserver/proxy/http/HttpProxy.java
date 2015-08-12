@@ -84,7 +84,7 @@ public class HttpProxy implements Proxy {
                     workerGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
                 }
             }
-        }).start();
+        }, "MockServer HttpProxy Thread").start();
 
         try {
             hasStarted.get();

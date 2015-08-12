@@ -88,7 +88,7 @@ public class DirectProxy implements Proxy {
                     workerGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
                 }
             }
-        }).start();
+        }, "MockServer DirectProxy Thread").start();
 
         try {
             hasStarted.get();
