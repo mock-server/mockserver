@@ -1,8 +1,8 @@
 language: java
 sudo: false
 
+#  - "./scripts/install_ca_certificate.sh"
 before_install:
-  - "./scripts/install_ca_certificate.sh"
   - "travis_retry mvn test-compile -T2C"
 
 script:
