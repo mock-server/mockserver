@@ -79,7 +79,7 @@ public class MockServer {
                     workerGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
                 }
             }
-        }, "MockServer thread").start();
+        }, "MockServer Thread").start();
 
         try {
             hasStarted.get();
