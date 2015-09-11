@@ -240,20 +240,21 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
     private void writeAndCloseSocket(ChannelHandlerContext ctx, HttpRequest request, HttpResponse response) {
         ConnectionOptions connectionOptions = response.getConnectionOptions();
-        if (connectionOptions != null && connectionOptions.getCloseSocket() != null) {
-            if (connectionOptions.getCloseSocket()) {
-                ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE).awaitUninterruptibly();
-                ctx.close();
-            } else {
-                ctx.write(response);
-            }
+
+        boolean closeChannel;
+
+        if (connectionOptions != null && connectionOptions.getCloseSocket() != null && connectionOptions.getCloseSocket()) {
+            closeChannel = true;
+        } else if (request.isKeepAlive() == null || !request.isKeepAlive()) {
+            closeChannel = true;
         } else {
-            if (request.isKeepAlive() != null && request.isKeepAlive()) {
-                ctx.write(response);
-            } else {
-                ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE).awaitUninterruptibly();
-                ctx.close();
-            }
+            closeChannel = false;
+        }
+
+        if (closeChannel) {
+            ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+        } else {
+            ctx.write(response);
         }
     }
 

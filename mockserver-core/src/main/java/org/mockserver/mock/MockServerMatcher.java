@@ -25,8 +25,16 @@ import java.util.regex.Pattern;
  */
 public class MockServerMatcher extends ObjectWithReflectiveEqualsHashCodeToString {
 
-    protected final List<Expectation> expectations = Collections.synchronizedList(new ArrayList<Expectation>());
+    protected final List<Expectation> expectations;
     private Logger requestLogger = LoggerFactory.getLogger("REQUEST");
+
+    public MockServerMatcher() {
+        this(new ArrayList<Expectation>());
+    }
+
+    public MockServerMatcher(List<Expectation> expectations) {
+        this.expectations = Collections.synchronizedList(expectations);
+    }
 
     public Expectation when(HttpRequest httpRequest) {
         return when(httpRequest, Times.unlimited(), TimeToLive.unlimited());
@@ -120,4 +128,9 @@ public class MockServerMatcher extends ObjectWithReflectiveEqualsHashCodeToStrin
             return serializedExpectation;
         }
     }
+
+    public List<Expectation> getExpectations() {
+        return new ArrayList<Expectation>(this.expectations);
+    }
+
 }

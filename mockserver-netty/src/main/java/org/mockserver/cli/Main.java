@@ -16,6 +16,7 @@ import java.util.*;
  */
 public class Main {
     public static final String SERVER_PORT_KEY = "serverPort";
+    public static final String SERVER_DATABASE_FILE = "databaseFile";
     public static final String PROXY_PORT_KEY = "proxyPort";
     public static final String PROXY_REMOTE_PORT_KEY = "proxyRemotePort";
     public static final String PROXY_REMOTE_HOST_KEY = "proxyRemoteHost";
@@ -26,6 +27,12 @@ public class Main {
             "        -serverPort <port>           Specifies the HTTP, HTTPS, SOCKS and HTTP         " + System.getProperty("line.separator") +
             "                                     CONNECT port for proxy. Port unification          " + System.getProperty("line.separator") +
             "                                     supports for all protocols on the same port.      " + System.getProperty("line.separator") +
+            "                                                                                       " + System.getProperty("line.separator") +
+            "        -databaseFile <filename>     Specifies the database file name, where mock      " + System.getProperty("line.separator") +
+            "                                     server saves the expectations when exits.         " + System.getProperty("line.separator") +
+            "                                     If you start the server with a database file      " + System.getProperty("line.separator") +
+            "                                     you do not have to configure the expectations     " + System.getProperty("line.separator") +
+            "                                     every time.                                       " + System.getProperty("line.separator") +
             "                                                                                       " + System.getProperty("line.separator") +
             "        -proxyPort <port>            Specifies the HTTP and HTTPS port for the         " + System.getProperty("line.separator") +
             "                                     MockServer. Port unification is used to           " + System.getProperty("line.separator") +
@@ -80,7 +87,7 @@ public class Main {
 
         if (parsedArguments.size() > 0 && validateArguments(parsedArguments)) {
             if (parsedArguments.containsKey(SERVER_PORT_KEY)) {
-                mockServerBuilder.withHTTPPort(Integer.parseInt(parsedArguments.get(SERVER_PORT_KEY))).build();
+                mockServerBuilder.withHTTPPort(Integer.parseInt(parsedArguments.get(SERVER_PORT_KEY))).withDatabase(parsedArguments.get(SERVER_DATABASE_FILE)).build();
             }
             if (parsedArguments.containsKey(PROXY_PORT_KEY)) {
                 ProxyBuilder proxyBuilder = httpProxyBuilder.withLocalPort(Integer.parseInt(parsedArguments.get(PROXY_PORT_KEY)));
@@ -104,6 +111,7 @@ public class Main {
         validatePortArgument(parsedArguments, PROXY_PORT_KEY, errorMessages);
         validatePortArgument(parsedArguments, PROXY_REMOTE_PORT_KEY, errorMessages);
         validateHostnameArgument(parsedArguments, PROXY_REMOTE_HOST_KEY, errorMessages);
+        validateFileArgument(parsedArguments, SERVER_DATABASE_FILE, errorMessages);
 
         if (!errorMessages.isEmpty()) {
             int maxLengthMessage = 0;
@@ -120,6 +128,10 @@ public class Main {
             return false;
         }
         return true;
+    }
+
+    private static void validateFileArgument(Map<String, String> parsedArguments, String argumentKey, List<String> errorMessages) {
+        return;
     }
 
     private static void validatePortArgument(Map<String, String> parsedArguments, String argumentKey, List<String> errorMessages) {
@@ -143,10 +155,11 @@ public class Main {
             String argumentName = argumentsIterator.next();
             if (argumentsIterator.hasNext()) {
                 String argumentValue = argumentsIterator.next();
-                if (!parsePort(parsedArguments, SERVER_PORT_KEY, argumentName, argumentValue)
-                        && !parsePort(parsedArguments, PROXY_PORT_KEY, argumentName, argumentValue)
-                        && !parsePort(parsedArguments, PROXY_REMOTE_PORT_KEY, argumentName, argumentValue)
-                        && !("-" + PROXY_REMOTE_HOST_KEY).equalsIgnoreCase(argumentName)) {
+                if (!parseArgument(parsedArguments, SERVER_PORT_KEY, argumentName, argumentValue)
+                        && !parseArgument(parsedArguments, PROXY_PORT_KEY, argumentName, argumentValue)
+                        && !parseArgument(parsedArguments, PROXY_REMOTE_PORT_KEY, argumentName, argumentValue)
+                        && !("-" + PROXY_REMOTE_HOST_KEY).equalsIgnoreCase(argumentName)
+                        && !parseArgument(parsedArguments, SERVER_DATABASE_FILE, argumentName, argumentValue)) {
                     showUsage();
                     break;
                 }
@@ -161,7 +174,7 @@ public class Main {
         return parsedArguments;
     }
 
-    private static boolean parsePort(Map<String, String> parsedArguments, final String key, final String argumentName, final String argumentValue) {
+    private static boolean parseArgument(Map<String, String> parsedArguments, final String key, final String argumentName, final String argumentValue) {
         if (argumentName.equals("-" + key)) {
             parsedArguments.put(key, argumentValue);
             return true;

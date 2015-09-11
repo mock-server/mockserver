@@ -9,6 +9,8 @@ public class MockServerBuilder {
 
     private Integer port;
 
+    private String path;
+
     /**
      * Configure HTTP port for proxy, setting this value will ensure HTTP is supported
      *
@@ -24,10 +26,19 @@ public class MockServerBuilder {
         return this;
     }
 
+    public MockServerBuilder withDatabase(String path) {
+        if (path != null) {
+            this.path = path;
+        } else {
+            this.path = null;
+        }
+        return this;
+    }
+
     /**
      * Build an instance of the HttpProxy
      */
     public MockServer build() {
-        return new MockServer(port);
+        return new MockServer(port, path);
     }
 }
