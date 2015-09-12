@@ -4,6 +4,7 @@ require_relative './parameter'
 require_relative './body'
 require_relative './enum'
 require 'base64'
+require 'active_support/core_ext/module'
 #
 # A class to model a request in an expectation.
 # @author:: Nayyara Samuel (mailto: nayyara.samuel@opower.com)
@@ -18,15 +19,18 @@ module MockServer::Model
 
   # Request model
   class Request < Hashie::Trash
+    include Hashie::Extensions::Dash::PropertyTranslation
     include Hashie::Extensions::MethodAccess
     include Hashie::Extensions::IgnoreUndeclared
     include Hashie::Extensions::Coercion
 
     ALLOWED_METHODS = [:GET, :POST, :PUT, :DELETE]
 
+    alias_attribute :query_parameters, :query_string_parameters
+
     property :method, required: true, default: :GET
     property :path, required: true, default: ''
-    property :query_parameters, default: Parameters.new([])
+    property :query_string_parameters, default: Parameters.new([])
     property :cookies, default: Parameters.new([])
     property :headers, default: Parameters.new([])
     property :body, transform_with: (lambda do |body|
@@ -37,7 +41,7 @@ module MockServer::Model
 
     coerce_key :method, HTTPMethod
     coerce_key :path, String
-    coerce_key :query_parameters, Parameters
+    coerce_key :query_string_parameters, Parameters
     coerce_key :cookies, Parameters
     coerce_key :headers, Parameters
     coerce_key :body, Body

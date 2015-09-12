@@ -2,7 +2,7 @@
     "httpRequest": {
         "method": "POST",
         "path": "/login",
-        "queryParameters": [
+        "queryStringParameters": [
             {
                 "values": [
                     "/account"
