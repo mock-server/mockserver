@@ -11,27 +11,26 @@ if [ $JAVA_VER -eq 16 ]; then
     echo "------- JAVA 1.6 -------"
     echo "------------------------"
     echo
-    rm -rf $current_directory/target/travis
-    git clone -b travis `git config --get remote.origin.url` $current_directory/target/travis
-    mvn deploy --settings $current_directory/target/travis/settings.xml -Djava.security.egd=file:/dev/./urandom
-fi
-
-if [ $JAVA_VER -eq 17 ]; then
+elif [ $JAVA_VER -eq 17 ]; then
     echo
     echo "--------------------"
     echo "----- JAVA 1.7 -----"
     echo "--------------------"
     echo
+else
+    echo
+    echo "--------------------"
+    echo "-UNKOWN JAVA VERSION-"
+    echo "--------------------"
+    echo
+    exit 1
+fi
+
+if [ "${TRAVIS_PULL_REQUEST}" = "false" ] ; then
     rm -rf $current_directory/target/travis
     git clone -b travis `git config --get remote.origin.url` $current_directory/target/travis
     mvn deploy --settings $current_directory/target/travis/settings.xml -Djava.security.egd=file:/dev/./urandom
+else
+    mvn package -Dmaven-invoker-parallel-threads=2 -Djava.security.egd=file:/dev/./urandom
 fi
 
-#if [ $JAVA_VER -eq 18 ]; then
-#    echo
-#    echo "--------------------"
-#    echo "----- JAVA 1.8 -----"
-#    echo "--------------------"
-#    echo
-#    mvn -q install
-#fi
