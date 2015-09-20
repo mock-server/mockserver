@@ -12,6 +12,7 @@ import org.mockserver.verify.VerificationSequence;
 import org.mockserver.verify.VerificationTimes;
 
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.verify.VerificationTimes.exactly;
 
 /**
  * @author jamesdbloom
@@ -246,6 +247,21 @@ public class MockServerClient extends AbstractClient {
         }
 
         Verification verification = new Verification().withRequest(httpRequest).withTimes(times);
+        String result = sendRequest(request().withMethod("PUT").withPath(calculatePath("verify")).withBody(verificationSerializer.serialize(verification), Charsets.UTF_8)).getBodyAsString();
+
+        if (result != null && !result.isEmpty()) {
+            throw new AssertionError(result);
+        }
+        return this;
+    }
+
+    /**
+     * Verify no requests have been have been sent.
+     *
+     * @throws AssertionError if any request has been found
+     */
+    public MockServerClient verifyZeroInteractions() throws AssertionError {
+        Verification verification = new Verification().withRequest(request()).withTimes(exactly(0));
         String result = sendRequest(request().withMethod("PUT").withPath(calculatePath("verify")).withBody(verificationSerializer.serialize(verification), Charsets.UTF_8)).getBodyAsString();
 
         if (result != null && !result.isEmpty()) {

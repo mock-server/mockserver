@@ -6,6 +6,7 @@ import org.mockserver.verify.Verification;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.verify.VerificationTimes.atLeast;
 import static org.mockserver.verify.VerificationTimes.exactly;
 
@@ -306,5 +307,23 @@ public class LogFilterVerificationTest {
                         "}, {" + System.getProperty("line.separator") +
                         "  \"path\" : \"some_path\"" + System.getProperty("line.separator") +
                         "} ]>"));
+    }
+
+    @Test
+    public void shouldFailVerificationWithNoInteractions() {
+        // given
+        HttpRequest httpRequest = new HttpRequest();
+        LogFilter logFilter = new LogFilter();
+
+        // when
+        logFilter.onRequest(httpRequest);
+
+        // then
+        assertThat(logFilter.verify(
+                        new Verification()
+                                .withRequest(request())
+                                .withTimes(exactly(0))
+                ),
+                is("Request not found exactly 0 times, expected:<{ }> but was:<{ }>"));
     }
 }

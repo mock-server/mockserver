@@ -11,28 +11,19 @@ import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.netty.SocketConnectionException;
 import org.mockserver.client.server.MockServerClient;
 import org.mockserver.echo.http.EchoServer;
-import org.mockserver.integration.callback.StaticTestExpectationCallback;
 import org.mockserver.matchers.MatchType;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.model.*;
 import org.mockserver.socket.PortFactory;
-import org.mockserver.socket.SSLFactory;
-import org.mockserver.streams.IOStreamUtils;
 import org.mockserver.verify.VerificationTimes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.net.ssl.SSLSocket;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.net.Socket;
-import java.net.SocketException;
 import java.util.*;
 import java.util.concurrent.*;
 
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.lessThan;
-import static org.hamcrest.core.AnyOf.anyOf;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.StringStartsWith.startsWith;
 import static org.hamcrest.number.OrderingComparison.greaterThan;
@@ -40,7 +31,6 @@ import static org.junit.Assert.*;
 import static org.mockserver.matchers.Times.exactly;
 import static org.mockserver.matchers.Times.once;
 import static org.mockserver.model.BinaryBody.binary;
-import static org.mockserver.model.ConnectionOptions.connectionOptions;
 import static org.mockserver.model.Cookie.cookie;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpCallback.callback;
@@ -818,6 +808,41 @@ public abstract class AbstractClientServerIntegrationTest {
             assertThat(ae.getMessage(), startsWith("Request not found exactly 2 times, expected:<{" + System.getProperty("line.separator") +
                     "  \"path\" : \"" + calculatePath("some_other_path") + "\"" + System.getProperty("line.separator") +
                     "}> but was:<{" + System.getProperty("line.separator") +
+                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path") + "\"," + System.getProperty("line.separator")));
+        }
+    }
+
+    @Test
+    public void shouldVerifyNoRequestsReceived() {
+        // when
+        mockServerClient.reset();
+
+        // then
+        mockServerClient.verifyZeroInteractions();
+    }
+
+    @Test
+    public void shouldNotVerifyNoRequestsReceived() {
+        // when
+        mockServerClient.when(request().withPath(calculatePath("some_path")), exactly(2)).respond(response().withBody("some_body"));
+
+        // then
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("some_path")),
+                        headersToIgnore)
+        );
+        try {
+            mockServerClient.verifyZeroInteractions();
+            fail();
+        } catch (AssertionError ae) {
+            assertThat(ae.getMessage(), startsWith("Request not found exactly 0 times, expected:<{ }> but was:<{" + System.getProperty("line.separator") +
                     "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
                     "  \"path\" : \"" + calculatePath("some_path") + "\"," + System.getProperty("line.separator")));
         }
