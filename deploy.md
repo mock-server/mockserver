@@ -29,8 +29,6 @@ Add to maven settings.xml:
       ...
     </settings>
 
-2]^J3ha9KX;QU8~
-
 Run commands:
 
     gpg --gen-key
