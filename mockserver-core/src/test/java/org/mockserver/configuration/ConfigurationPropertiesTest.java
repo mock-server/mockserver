@@ -292,7 +292,7 @@ public class ConfigurationPropertiesTest {
     @Test
     public void shouldThrowIllegalArgumentExceptionForInvalidLogLevel() {
         exception.expect(IllegalArgumentException.class);
-        exception.expectMessage(containsString("log level \"WRONG\" is not legel it must be one of \"TRACE\", \"DEBUG\", \"INFO\", \"WARN\", \"ERROR\", \"OFF\""));
+        exception.expectMessage(containsString("log level \"WRONG\" is not legal it must be one of \"TRACE\", \"DEBUG\", \"INFO\", \"WARN\", \"ERROR\", \"OFF\""));
 
         ConfigurationProperties.overrideLogLevel("WRONG");
     }

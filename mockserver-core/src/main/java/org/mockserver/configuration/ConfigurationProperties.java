@@ -240,7 +240,7 @@ public class ConfigurationProperties {
     public static void overrideLogLevel(String level) {
         if (level != null) {
             if (!Arrays.asList("TRACE", "DEBUG", "INFO", "WARN", "ERROR", "OFF").contains(level)) {
-                throw new IllegalArgumentException("log level \"" + level + "\" is not legel it must be one of \"TRACE\", \"DEBUG\", \"INFO\", \"WARN\", \"ERROR\", \"OFF\"");
+                throw new IllegalArgumentException("log level \"" + level + "\" is not legal it must be one of \"TRACE\", \"DEBUG\", \"INFO\", \"WARN\", \"ERROR\", \"OFF\"");
             }
             System.setProperty("mockserver.logLevel", level);
             System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", level);
@@ -272,7 +272,7 @@ public class ConfigurationProperties {
                 setLevelMethod.invoke(logger, levelInstance);
             }
         } catch (Exception e) {
-            ConfigurationProperties.logger.warn("Exception updating logging level using reflection, likely cause is Logback is not on the classpath");
+            ConfigurationProperties.logger.info("Exception updating logging level using reflection, likely cause is Logback is not on the classpath", e);
         }
 
 
@@ -291,7 +291,7 @@ public class ConfigurationProperties {
                 currentLogLevelField.set(logger, logLevelInstance);
             }
         } catch (Exception e) {
-            ConfigurationProperties.logger.warn("Exception updating logging level using reflection, likely cause is Logback is not on the classpath");
+            ConfigurationProperties.logger.info("Exception updating logging level using reflection, likely cause is Logback is not on the classpath", e);
         }
     }
 
