@@ -7,14 +7,12 @@ import org.apache.commons.io.IOUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.mockserver.integration.server.AbstractClientServerIntegrationTest;
 import org.mockserver.integration.server.SameJVMAbstractClientServerIntegrationTest;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.socket.SSLFactory;
 import org.mockserver.streams.IOStreamUtils;
 
 import javax.net.ssl.SSLSocket;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.SocketException;
@@ -40,15 +38,16 @@ import static org.mockserver.model.HttpResponse.response;
 public abstract class NettyAbstractClientServerIntegrationTest extends SameJVMAbstractClientServerIntegrationTest {
 
     @Rule
-    public ExpectedException exception = ExpectedException.none();
+    public ExpectedException expectedException = ExpectedException.none();
 
     public abstract void startServerAgain();
 
     @Test
     public void shouldThrowExceptionIfFailToBindToSocket() {
         // given
-        exception.expect(RuntimeException.class);
-        exception.expectMessage(containsString("Exception while starting MockServer"));
+        System.out.println("--- IGNORE THE FOLLOWING java.net.BindException EXCEPTION ---");
+        expectedException.expect(RuntimeException.class);
+        expectedException.expectMessage(containsString("Exception while starting MockServer"));
 
         // when
         startServerAgain();
