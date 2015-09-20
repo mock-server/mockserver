@@ -240,7 +240,7 @@ public class ConfigurationProperties {
     public static void overrideLogLevel(String level) {
         if (level != null) {
             if (!Arrays.asList("TRACE", "DEBUG", "INFO", "WARN", "ERROR", "OFF").contains(level)) {
-                throw new IllegalArgumentException("log level \"" + level + "\" is not legel it must be one of \"TRACE\", \"DEBUG\", \"INFO\", \"WARN\", \"ERROR\", \"OFF\"");
+                throw new IllegalArgumentException("log level \"" + level + "\" is not legal it must be one of \"TRACE\", \"DEBUG\", \"INFO\", \"WARN\", \"ERROR\", \"OFF\"");
             }
             System.setProperty("mockserver.logLevel", level);
             System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", level);
@@ -256,30 +256,24 @@ public class ConfigurationProperties {
 
     private static void overrideLogLevelWithReflection(String level, String loggerName) {
         Logger logger = LoggerFactory.getLogger(loggerName);
-
-        try {
-            // check if logback-classic is being used
-            Class logbackLevelClass = ConfigurationProperties.class.getClassLoader().loadClass("ch.qos.logback.classic.Level");
-
-            // convert string to log level
-            Method toLevelMethod = logbackLevelClass.getDeclaredMethod("toLevel", String.class);
-            toLevelMethod.setAccessible(true);
-            Object levelInstance = toLevelMethod.invoke(logbackLevelClass, level);
-
-            // update log level
-            Method setLevelMethod = logger.getClass().getDeclaredMethod("setLevel", logbackLevelClass);
-            if (setLevelMethod != null) {
-                setLevelMethod.invoke(logger, levelInstance);
-            }
-        } catch (Exception e) {
-            ConfigurationProperties.logger.warn("Exception updating logging level using reflection, likely cause is Logback is not on the classpath");
-        }
-
-
+        Class loggerClass = logger.getClass();
         try {
             // check if SimpleLogger is used (i.e. in maven plugin)
-            Class loggerClass = logger.getClass();
-            if (logger.getClass().getName().equals("org.slf4j.impl.SimpleLogger")) {
+            if (!loggerClass.getName().equals("org.slf4j.impl.SimpleLogger")) {
+                // check if logback-classic is being used
+                Class logbackLevelClass = ConfigurationProperties.class.getClassLoader().loadClass("ch.qos.logback.classic.Level");
+
+                // convert string to log level
+                Method toLevelMethod = logbackLevelClass.getDeclaredMethod("toLevel", String.class);
+                toLevelMethod.setAccessible(true);
+                Object levelInstance = toLevelMethod.invoke(logbackLevelClass, level);
+
+                // update log level
+                Method setLevelMethod = logger.getClass().getDeclaredMethod("setLevel", logbackLevelClass);
+                if (setLevelMethod != null) {
+                    setLevelMethod.invoke(logger, levelInstance);
+                }
+            } else {
                 // convert string to log level
                 Method stringToLevelMethod = loggerClass.getDeclaredMethod("stringToLevel", String.class);
                 stringToLevelMethod.setAccessible(true);
@@ -291,7 +285,7 @@ public class ConfigurationProperties {
                 currentLogLevelField.set(logger, logLevelInstance);
             }
         } catch (Exception e) {
-            ConfigurationProperties.logger.warn("Exception updating logging level using reflection, likely cause is Logback is not on the classpath");
+            ConfigurationProperties.logger.warn("Exception updating logging level using reflection, likely cause is Logback is not on the classpath", e);
         }
     }
 
