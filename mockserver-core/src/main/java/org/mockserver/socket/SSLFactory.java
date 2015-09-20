@@ -1,6 +1,7 @@
 package org.mockserver.socket;
 
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.configuration.ConfigurationProperties;
@@ -8,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.*;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.net.InetAddress;
@@ -25,6 +27,24 @@ public class SSLFactory {
     public static final String CERTIFICATE_DOMAIN = "localhost";
     public static final String KEY_STORE_CERT_ALIAS = "mockserver-client-cert";
     public static final String KEY_STORE_CA_ALIAS = "mockserver-ca-cert";
+    /**
+     * Enforce TLS 1.2 if available, since it's not default up to Java 8.
+     * <p>
+     * Java 7 disables TLS 1.1 and 1.2 for clients. From <a href=
+     * "http://docs.oracle.com/javase/7/docs/technotes/guides/security/SunProviders.html"
+     * >Java Cryptography Architecture Oracle Providers Documentation:</a>
+     * Although SunJSSE in the Java SE 7 release supports TLS 1.1 and TLS 1.2,
+     * neither version is enabled by default for client connections. Some
+     * servers do not implement forward compatibility correctly and refuse to
+     * talk to TLS 1.1 or TLS 1.2 clients. For interoperability, SunJSSE does
+     * not enable TLS 1.1 or TLS 1.2 by default for client connections.
+     */
+    private static final String SSL_CONTEXT_PROTOCOL = "TLSv1.2";
+    /**
+     * {@link SSLContext}: Every implementation of the Java platform is required
+     * to support the following standard SSLContext protocol: TLSv1
+     */
+    private static final String SSL_CONTEXT_FALLBACK_PROTOCOL = "TLSv1";
     private static final Logger logger = LoggerFactory.getLogger(SSLFactory.class);
     private static final SSLFactory SSL_FACTORY = new SSLFactory();
     private static SSLContext sslContext;
@@ -100,7 +120,7 @@ public class SSLFactory {
                 keyManagerFactory.init(buildKeyStore(), ConfigurationProperties.javaKeyStorePassword().toCharArray());
 
                 // ssl context
-                sslContext = getSSLContextInstance("TLS");
+                sslContext = getSSLContextInstance();
                 sslContext.init(keyManagerFactory.getKeyManagers(), InsecureTrustManagerFactory.INSTANCE.getTrustManagers(), null);
             } catch (Exception e) {
                 throw new RuntimeException("Failed to initialize the SSLContext", e);
@@ -124,8 +144,14 @@ public class SSLFactory {
         return keystore;
     }
 
-    private SSLContext getSSLContextInstance(String protocol) throws NoSuchAlgorithmException {
-        return SSLContext.getInstance(protocol);
+    private SSLContext getSSLContextInstance() throws NoSuchAlgorithmException {
+        try {
+            logger.debug("Using protocol {}", SSL_CONTEXT_PROTOCOL);
+            return SSLContext.getInstance(SSL_CONTEXT_PROTOCOL);
+        } catch (NoSuchAlgorithmException e) {
+            logger.warn("Protocol {} not available, falling back to {}", SSL_CONTEXT_PROTOCOL, SSL_CONTEXT_FALLBACK_PROTOCOL);
+            return SSLContext.getInstance(SSL_CONTEXT_FALLBACK_PROTOCOL);
+        }
     }
 
     private KeyManagerFactory getKeyManagerFactoryInstance(String algorithm) throws NoSuchAlgorithmException {
