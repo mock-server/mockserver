@@ -146,9 +146,26 @@ public class MockServerRequestDecoderTest {
         // then
         List<Cookie> cookies = ((HttpRequest) output.get(0)).getCookies();
         assertThat(cookies, containsInAnyOrder(
-                cookie("cookieName1", "cookieValue1"),
+                cookie("cookieName1", "cookieValue1  "),
                 cookie("cookieName2", "cookieValue2"),
-                cookie("cookieName3", "cookieValue3")
+                cookie("cookieName3", "cookieValue3        ")
+        ));
+    }
+
+    @Test
+    public void shouldDecodeCookiesWithEmbeddedEquals() {
+        // given
+        fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/uri");
+        fullHttpRequest.headers().add("Cookie", "cookieName1=cookie=Value1  ; cookieName2=cookie==Value2;   ");
+
+        // when
+        mockServerRequestDecoder.decode(null, fullHttpRequest, output);
+
+        // then
+        List<Cookie> cookies = ((HttpRequest) output.get(0)).getCookies();
+        assertThat(cookies, containsInAnyOrder(
+                cookie("cookieName1", "cookie=Value1  "),
+                cookie("cookieName2", "cookie==Value2")
         ));
     }
 

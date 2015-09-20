@@ -6,9 +6,11 @@ import io.netty.handler.codec.MessageToMessageDecoder;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.QueryStringDecoder;
+import io.netty.handler.codec.http.cookie.*;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.mappers.ContentTypeMapper;
 import org.mockserver.model.*;
+import org.mockserver.model.Cookie;
 import org.mockserver.url.URLParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -94,9 +96,11 @@ public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
         for (String cookieHeader : fullHttpResponse.headers().getAll(COOKIE)) {
             for (String cookie : Splitter.on(";").split(cookieHeader)) {
                 if (!cookie.trim().isEmpty()) {
+                    io.netty.handler.codec.http.cookie.Cookie decodedCookie =
+                            ClientCookieDecoder.LAX.decode(cookie);
                     httpRequest.withCookie(new Cookie(
-                            StringUtils.substringBefore(cookie, "=").trim(),
-                            StringUtils.substringAfter(cookie, "=").trim()
+                            decodedCookie.name(),
+                            decodedCookie.value()
                     ));
                 }
             }

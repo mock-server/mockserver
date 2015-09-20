@@ -91,6 +91,23 @@ public class MockServerResponseDecoderTest {
     }
 
     @Test
+    public void shouldDecodeCookiesWithEmbeddedEquals() {
+        // given
+        fullHttpResponse = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
+        fullHttpResponse.headers().add("Cookie", "cookieName1=cookie=Value1  ; cookieName2=cookie==Value2;   ");
+
+        // when
+        mockServerResponseDecoder.decode(null, fullHttpResponse, output);
+
+        // then
+        List<Cookie> cookies = ((HttpResponse) output.get(0)).getCookies();
+        assertThat(cookies, containsInAnyOrder(
+                cookie("cookieName1", "cookie=Value1"),
+                cookie("cookieName2", "cookie==Value2")
+        ));
+    }
+
+    @Test
     public void shouldDecodeUTF8Body() {
         // given
         fullHttpResponse = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.wrappedBuffer("some_random_string".getBytes()));
