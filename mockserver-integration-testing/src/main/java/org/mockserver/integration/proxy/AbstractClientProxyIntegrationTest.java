@@ -1,6 +1,7 @@
 package org.mockserver.integration.proxy;
 
 import com.google.common.base.Charsets;
+import org.apache.http.Header;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -12,6 +13,7 @@ import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
+import org.apache.http.message.BasicHeader;
 import org.apache.http.util.EntityUtils;
 import org.junit.Test;
 import org.mockserver.client.proxy.ProxyClient;
@@ -22,6 +24,7 @@ import org.mockserver.streams.IOStreamUtils;
 import java.io.OutputStream;
 import java.net.Socket;
 
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.core.StringStartsWith.startsWith;
 import static org.junit.Assert.*;
 import static org.mockserver.model.HttpRequest.request;
@@ -146,6 +149,52 @@ public abstract class AbstractClientProxyIntegrationTest {
                 request()
                         .withMethod("POST")
                         .withPath("/test_headers_and_body")
+                        .withBody("an_example_body"),
+                exactly(1)
+        );
+    }
+
+    @Test
+    public void shouldForwardRequestsWithComplexCookies() throws Exception {
+        // given
+        HttpClient httpClient = createHttpClient();
+        Header setCookieOneHeader = new BasicHeader("Set-Cookie", "personalization_59996b985e24ce008d3df3bd07e27c1b=\"\"; Expires=Thu, 01-Jan-1970 00:00:10 GMT; Path=/");
+        Header setCookieTwoHeader = new BasicHeader("Set-Cookie", "anonymous_59996b985e24ce008d3df3bd07e27c1b=acgzEaAKOVR=mAY9yJhP7IrC9Am; Version=1; Comment=\"Anonymous cookie for site\"; Max-Age=15552000; Expires=Sat, 19-Mar-2016 18:43:26 GMT; Path=/");
+        Header cookieOneHeader = new BasicHeader("Cookie", "personalization_59996b985e24ce008d3df3bd07e27c1b=\"\"");
+        Header cookieTwoHeader = new BasicHeader("Cookie", "anonymous_59996b985e24ce008d3df3bd07e27c1b=\"acgzEaAKOVR=mAY9yJhP7IrC9Am\"");
+
+        // when
+        HttpPost request = new HttpPost(
+                new URIBuilder()
+                        .setScheme("http")
+                        .setHost("localhost")
+                        .setPort(getServerPort())
+                        .setPath(calculatePath("test_headers_and_body"))
+                        .build()
+        );
+        request.addHeader(setCookieOneHeader);
+        request.addHeader(setCookieTwoHeader);
+        request.addHeader(cookieOneHeader);
+        request.addHeader(cookieTwoHeader);
+        request.setEntity(new StringEntity("an_example_body"));
+        HttpResponse response = httpClient.execute(request);
+
+        // then
+        assertEquals(HttpStatusCode.OK_200.code(), response.getStatusLine().getStatusCode());
+        assertThat(response.getHeaders("Set-Cookie").length, is(2));
+        assertThat(response.getHeaders("Set-Cookie")[0].getValue(), is(setCookieOneHeader.getValue()));
+        assertThat(response.getHeaders("Set-Cookie")[1].getValue(), is(setCookieTwoHeader.getValue()));
+        assertEquals("an_example_body", new String(EntityUtils.toByteArray(response.getEntity()), com.google.common.base.Charsets.UTF_8));
+
+        // and
+        getProxyClient().verify(
+                request()
+                        .withMethod("POST")
+                        .withPath("/test_headers_and_body")
+                        .withHeader(setCookieOneHeader.getName(), setCookieOneHeader.getValue())
+                        .withHeader(setCookieTwoHeader.getName(), setCookieTwoHeader.getValue())
+                        .withCookie("personalization_59996b985e24ce008d3df3bd07e27c1b", "")
+                        .withCookie("anonymous_59996b985e24ce008d3df3bd07e27c1b", "acgzEaAKOVR=mAY9yJhP7IrC9Am")
                         .withBody("an_example_body"),
                 exactly(1)
         );

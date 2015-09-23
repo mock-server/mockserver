@@ -1,15 +1,17 @@
 package org.mockserver.mappers;
 
 import com.google.common.base.Strings;
+import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaders;
-import io.netty.handler.codec.http.cookie.DefaultCookie;
-import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
+import io.netty.handler.codec.http.cookie.*;
 import org.mockserver.client.serialization.Base64Converter;
 import org.mockserver.model.*;
+import org.mockserver.model.Cookie;
 import org.mockserver.streams.IOStreamUtils;
 
 import javax.servlet.http.HttpServletResponse;
 import java.nio.charset.Charset;
+import java.util.List;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.SET_COOKIE;
 
@@ -52,9 +54,24 @@ public class MockServerResponseToHttpServletResponseEncoder {
     private void setCookies(HttpResponse httpResponse, HttpServletResponse httpServletResponse) {
         if (httpResponse.getCookies() != null) {
             for (Cookie cookie : httpResponse.getCookies()) {
-                httpServletResponse.addHeader(SET_COOKIE, ServerCookieEncoder.LAX.encode(new DefaultCookie(cookie.getName().getValue(), cookie.getValue().getValue())));
+                if (!cookieHeaderAlreadyExists(httpResponse, cookie)) {
+                    httpServletResponse.addHeader(SET_COOKIE, ServerCookieEncoder.LAX.encode(new DefaultCookie(cookie.getName().getValue(), cookie.getValue().getValue())));
+                }
             }
         }
+    }
+
+    private boolean cookieHeaderAlreadyExists(HttpResponse response, Cookie cookieValue) {
+        List<String> setCookieHeaders = response.getHeader(SET_COOKIE);
+        setCookieHeaders.addAll(response.getHeader(SET_COOKIE.toLowerCase()));
+        for (String setCookieHeader : setCookieHeaders) {
+            String existingCookieName = ClientCookieDecoder.LAX.decode(setCookieHeader).name();
+            String existingCookieValue = ClientCookieDecoder.LAX.decode(setCookieHeader).value();
+            if (existingCookieName.equalsIgnoreCase(cookieValue.getName().getValue()) && existingCookieValue.equalsIgnoreCase(cookieValue.getValue().getValue())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void setBody(HttpResponse httpResponse, HttpServletResponse httpServletResponse) {

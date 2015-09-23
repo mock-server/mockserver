@@ -5,13 +5,18 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageEncoder;
-import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http.DefaultFullHttpResponse;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.HttpVersion;
+import io.netty.handler.codec.http.cookie.ClientCookieDecoder;
 import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.DefaultCookie;
 import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
 import org.mockserver.mappers.ContentTypeMapper;
-import org.mockserver.model.*;
+import org.mockserver.model.Body;
+import org.mockserver.model.Header;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.model.NottableString;
 
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -80,11 +85,26 @@ public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpRespo
         if (response.getCookies() != null) {
             List<Cookie> cookieValues = new ArrayList<Cookie>();
             for (org.mockserver.model.Cookie cookie : response.getCookies()) {
-                cookieValues.add(new DefaultCookie(cookie.getName().getValue(), cookie.getValue().getValue()));
+                if (!cookieHeaderAlreadyExists(response, cookie)) {
+                    cookieValues.add(new DefaultCookie(cookie.getName().getValue(), cookie.getValue().getValue()));
+                }
             }
-            if (!cookieValues.isEmpty()) {
-                httpServletResponse.headers().add(SET_COOKIE, ServerCookieEncoder.LAX.encode(cookieValues));
+            for (Cookie cookieValue : cookieValues) {
+                httpServletResponse.headers().add(SET_COOKIE, ServerCookieEncoder.LAX.encode(cookieValue));
             }
         }
+    }
+
+    private boolean cookieHeaderAlreadyExists(HttpResponse response, org.mockserver.model.Cookie cookieValue) {
+        List<String> setCookieHeaders = response.getHeader(SET_COOKIE);
+        setCookieHeaders.addAll(response.getHeader(SET_COOKIE.toLowerCase()));
+        for (String setCookieHeader : setCookieHeaders) {
+            String existingCookieName = ClientCookieDecoder.LAX.decode(setCookieHeader).name();
+            String existingCookieValue = ClientCookieDecoder.LAX.decode(setCookieHeader).value();
+            if (existingCookieName.equalsIgnoreCase(cookieValue.getName().getValue()) && existingCookieValue.equalsIgnoreCase(cookieValue.getValue().getValue())) {
+                return true;
+            }
+        }
+        return false;
     }
 }
