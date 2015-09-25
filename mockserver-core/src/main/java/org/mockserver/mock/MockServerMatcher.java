@@ -1,15 +1,15 @@
 package org.mockserver.mock;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
 import org.mockserver.client.serialization.Base64Converter;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
-import org.mockserver.model.*;
+import org.mockserver.model.Action;
+import org.mockserver.model.HttpRequest;
+import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +45,7 @@ public class MockServerMatcher extends ObjectWithReflectiveEqualsHashCodeToStrin
                 for (Expectation existingExpectation : existingExpectationsWithMatchingRequest) {
                     existingExpectation.setNotUnlimitedResponses();
                 }
-                 expectation = new Expectation(httpRequest, times, timeToLive);
+                expectation = new Expectation(httpRequest, times, timeToLive);
             } else {
                 expectation = new Expectation(httpRequest, Times.unlimited(), timeToLive);
             }
@@ -95,15 +95,14 @@ public class MockServerMatcher extends ObjectWithReflectiveEqualsHashCodeToStrin
     }
 
     public void dumpToLog(HttpRequest httpRequest) {
+        ExpectationSerializer expectationSerializer = new ExpectationSerializer();
         if (httpRequest != null) {
-            ExpectationSerializer expectationSerializer = new ExpectationSerializer();
             for (Expectation expectation : new ArrayList<Expectation>(this.expectations)) {
                 if (expectation.matches(httpRequest)) {
                     requestLogger.warn(cleanBase64Response(expectationSerializer.serialize(expectation)));
                 }
             }
         } else {
-            ExpectationSerializer expectationSerializer = new ExpectationSerializer();
             for (Expectation expectation : new ArrayList<Expectation>(this.expectations)) {
                 requestLogger.warn(cleanBase64Response(expectationSerializer.serialize(expectation)));
             }
@@ -119,5 +118,19 @@ public class MockServerMatcher extends ObjectWithReflectiveEqualsHashCodeToStrin
         } else {
             return serializedExpectation;
         }
+    }
+
+    public synchronized Expectation[] retrieve(HttpRequest httpRequest) {
+        List<Expectation> expectations = new ArrayList<Expectation>();
+        if (httpRequest != null) {
+            for (Expectation expectation : new ArrayList<Expectation>(this.expectations)) {
+                if (expectation.matches(httpRequest)) {
+                    expectations.add(expectation);
+                }
+            }
+        } else {
+            expectations.addAll(this.expectations);
+        }
+        return expectations.toArray(new Expectation[expectations.size()]);
     }
 }

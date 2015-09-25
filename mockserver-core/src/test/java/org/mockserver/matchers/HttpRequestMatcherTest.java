@@ -2,6 +2,7 @@ package org.mockserver.matchers;
 
 import com.google.common.base.Charsets;
 import org.junit.Test;
+import org.mockserver.client.serialization.model.*;
 import org.mockserver.model.*;
 
 import static junit.framework.TestCase.assertEquals;
@@ -284,6 +285,21 @@ public class HttpRequestMatcherTest {
     }
 
     @Test
+    public void bodyMatchesParameterBodyDTO() {
+        assertTrue(new HttpRequestMatcher(
+                new HttpRequest().withBody(params(
+                        new Parameter("nameOne", "valueOne"),
+                        new Parameter("nameTwo", "valueTwo")
+                ))
+        ).matches(
+                new HttpRequest().withBody(new ParameterBodyDTO(params(
+                        new Parameter("nameOne", "valueOne"),
+                        new Parameter("nameTwo", "valueTwo")
+                )).toString())
+        ));
+    }
+
+    @Test
     public void doesNotMatchIncorrectParameterName() {
         assertFalse(new HttpRequestMatcher(new HttpRequest().withBody(new ParameterBody(new Parameter("name", "value")))).matches(new HttpRequest().withBody(new ParameterBody(new Parameter("name1", "value")))));
     }
@@ -296,6 +312,20 @@ public class HttpRequestMatcherTest {
     @Test
     public void doesNotMatchIncorrectParameterValueRegex() {
         assertFalse(new HttpRequestMatcher(new HttpRequest().withBody(new ParameterBody(new Parameter("name", "va[0-9]{1}ue")))).matches(new HttpRequest().withBody(new ParameterBody(new Parameter("name", "value1")))));
+    }
+
+    @Test
+    public void doesNotMatchBodyMatchesParameterBodyDTOIncorrectParameters() {
+        assertFalse(new HttpRequestMatcher(
+                new HttpRequest().withBody(params(
+                        new Parameter("nameOne", "valueOne"),
+                        new Parameter("nameTwo", "valueTwo")
+                ))
+        ).matches(
+                new HttpRequest().withBody(new ParameterBodyDTO(params(
+                        new Parameter("nameOne", "valueOne")
+                )).toString())
+        ));
     }
 
     @Test
@@ -334,12 +364,36 @@ public class HttpRequestMatcherTest {
     }
 
     @Test
+    public void matchesMatchingBodyXPathBodyDTO() {
+        assertTrue(new HttpRequestMatcher(
+                        new HttpRequest().withBody(xpath("/element[key = 'some_key' and value = 'some_value']"))
+                ).matches(
+                        new HttpRequest().withBody(new XPathBodyDTO(xpath("/element[key = 'some_key' and value = 'some_value']")).toString())
+                )
+        );
+    }
+
+    @Test
     public void doesNotMatchIncorrectBodyXPath() {
         String matched = "" +
                 "<element>" +
                 "   <key>some_key</key>" +
                 "</element>";
         assertFalse(new HttpRequestMatcher(new HttpRequest().withBody(xpath("/element[key = 'some_key' and value = 'some_value']"))).matches(new HttpRequest().withBody(matched)));
+    }
+
+    @Test
+    public void doesNotMatchIncorrectBodyXPathBodyDTO() {
+        assertFalse(new HttpRequestMatcher(
+                        new HttpRequest().withBody(
+                                xpath("/element[key = 'some_key' and value = 'some_value']")
+                        )
+                ).matches(
+                        new HttpRequest().withBody(
+                                new XPathBodyDTO(xpath("/element[key = 'some_other_key' and value = 'some_value']")).toString()
+                        )
+                )
+        );
     }
 
     @Test
@@ -363,6 +417,19 @@ public class HttpRequestMatcherTest {
     }
 
     @Test
+    public void matchesMatchingJSONBodyDTO() {
+        assertTrue(new HttpRequestMatcher(
+                        new HttpRequest().withBody(
+                                json("{ \"some_field\": \"some_value\" }")
+                        )
+                ).matches(
+                        new HttpRequest().withBody(
+                                new JsonBodyDTO(json("{ \"some_field\": \"some_value\" }")).toString()
+                        ))
+        );
+    }
+
+    @Test
     public void doesNotMatchIncorrectJSONBody() {
         String matched = "" +
                 "{ " +
@@ -370,6 +437,19 @@ public class HttpRequestMatcherTest {
                 "   \"some_other_field\": \"some_other_value\" " +
                 "}";
         assertFalse(new HttpRequestMatcher(new HttpRequest().withBody(json("{ \"some_field\": \"some_value\" }"))).matches(new HttpRequest().withBody(matched)));
+    }
+
+    @Test
+    public void doesNotMatchIncorrectJSONBodyDTO() {
+        assertFalse(new HttpRequestMatcher(
+                        new HttpRequest().withBody(
+                                json("{ \"some_field\": \"some_value\" }")
+                        )
+                ).matches(
+                        new HttpRequest().withBody(
+                                new JsonBodyDTO(json("{ \"some_other_field\": \"some_value\" }")).toString()
+                        ))
+        );
     }
 
     @Test
@@ -414,6 +494,45 @@ public class HttpRequestMatcherTest {
     }
 
     @Test
+    public void matchesMatchingJSONSchemaBodyDTO() {
+        JsonSchemaBody jsonSchemaBody = jsonSchema("{" + System.getProperty("line.separator") +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + System.getProperty("line.separator") +
+                "    \"title\": \"Product\"," + System.getProperty("line.separator") +
+                "    \"description\": \"A product from Acme's catalog\"," + System.getProperty("line.separator") +
+                "    \"type\": \"object\"," + System.getProperty("line.separator") +
+                "    \"properties\": {" + System.getProperty("line.separator") +
+                "        \"id\": {" + System.getProperty("line.separator") +
+                "            \"description\": \"The unique identifier for a product\"," + System.getProperty("line.separator") +
+                "            \"type\": \"integer\"" + System.getProperty("line.separator") +
+                "        }," + System.getProperty("line.separator") +
+                "        \"name\": {" + System.getProperty("line.separator") +
+                "            \"description\": \"Name of the product\"," + System.getProperty("line.separator") +
+                "            \"type\": \"string\"" + System.getProperty("line.separator") +
+                "        }," + System.getProperty("line.separator") +
+                "        \"price\": {" + System.getProperty("line.separator") +
+                "            \"type\": \"number\"," + System.getProperty("line.separator") +
+                "            \"minimum\": 0," + System.getProperty("line.separator") +
+                "            \"exclusiveMinimum\": true" + System.getProperty("line.separator") +
+                "        }," + System.getProperty("line.separator") +
+                "        \"tags\": {" + System.getProperty("line.separator") +
+                "            \"type\": \"array\"," + System.getProperty("line.separator") +
+                "            \"items\": {" + System.getProperty("line.separator") +
+                "                \"type\": \"string\"" + System.getProperty("line.separator") +
+                "            }," + System.getProperty("line.separator") +
+                "            \"minItems\": 1," + System.getProperty("line.separator") +
+                "            \"uniqueItems\": true" + System.getProperty("line.separator") +
+                "        }" + System.getProperty("line.separator") +
+                "    }," + System.getProperty("line.separator") +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + System.getProperty("line.separator") +
+                "}");
+        assertTrue(new HttpRequestMatcher(
+                        new HttpRequest().withBody(jsonSchemaBody)
+                ).matches(new HttpRequest().withBody(
+                        new JsonSchemaBodyDTO(jsonSchemaBody).toString()))
+        );
+    }
+
+    @Test
     public void doesNotMatchIncorrectJSONSchemaBody() {
         String matched = "" +
                 "{" + System.getProperty("line.separator") +
@@ -454,7 +573,6 @@ public class HttpRequestMatcherTest {
                 "}"))).matches(new HttpRequest().withBody(matched)));
     }
 
-
     @Test
     public void matchesMatchingBinaryBody() {
         byte[] matched = "some binary value".getBytes();
@@ -462,9 +580,27 @@ public class HttpRequestMatcherTest {
     }
 
     @Test
+    public void matchesMatchingBinaryBodyDTO() {
+        assertTrue(new HttpRequestMatcher(
+                        new HttpRequest().withBody(binary("some binary value".getBytes()))
+                ).matches(
+                        new HttpRequest().withBody(new BinaryBodyDTO(binary("some binary value".getBytes())).toString()))
+        );
+    }
+
+    @Test
     public void doesNotMatchIncorrectBinaryBody() {
         byte[] matched = "some other binary value".getBytes();
         assertFalse(new HttpRequestMatcher(new HttpRequest().withBody(binary("some binary value".getBytes()))).matches(new HttpRequest().withBody(binary(matched))));
+    }
+
+    @Test
+    public void doesNotMatchIncorrectBinaryBodyDTO() {
+        assertFalse(new HttpRequestMatcher(
+                        new HttpRequest().withBody(binary("some binary value".getBytes()))
+                ).matches(
+                        new HttpRequest().withBody(new BinaryBodyDTO(binary("some other binary value".getBytes())).toString()))
+        );
     }
 
     @Test

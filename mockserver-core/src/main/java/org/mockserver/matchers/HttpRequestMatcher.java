@@ -1,10 +1,13 @@
 package org.mockserver.matchers;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import org.mockserver.client.serialization.ObjectMapperFactory;
+import org.mockserver.client.serialization.model.*;
 import org.mockserver.logging.LogFormatter;
 import org.mockserver.model.*;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,7 +27,9 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
     private MultiValueMapMatcher headerMatcher = null;
     private HashMapMatcher cookieMatcher = null;
     private BooleanMatcher keepAliveMatcher = null;
+    private BodyDTO bodyDTOMatcher = null;
     private BooleanMatcher sslMatcher = null;
+    private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
 
     public HttpRequestMatcher(HttpRequest httpRequest) {
         this.httpRequest = httpRequest;
@@ -38,7 +43,7 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
             withKeepAlive(httpRequest.isKeepAlive());
             withSsl(httpRequest.isSecure());
         }
-        addFieldsExcludedFromEqualsAndHashCode("logFormatter");
+        addFieldsExcludedFromEqualsAndHashCode("logFormatter", "objectMapper");
     }
 
     private HttpRequestMatcher withMethod(NottableString method) {
@@ -61,30 +66,37 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
             switch (body.getType()) {
                 case STRING:
                     StringBody stringBody = (StringBody) body;
+                    bodyDTOMatcher = new StringBodyDTO(stringBody);
                     this.bodyMatcher = new ExactStringMatcher(string(stringBody.getValue(), stringBody.getNot()));
                     break;
                 case REGEX:
                     RegexBody regexBody = (RegexBody) body;
+                    bodyDTOMatcher = new RegexBodyDTO(regexBody);
                     this.bodyMatcher = new RegexStringMatcher(string(regexBody.getValue(), regexBody.getNot()));
                     break;
                 case PARAMETERS:
                     ParameterBody parameterBody = (ParameterBody) body;
+                    bodyDTOMatcher = new ParameterBodyDTO(parameterBody);
                     this.bodyMatcher = new ParameterStringMatcher(parameterBody.getValue());
                     break;
                 case XPATH:
                     XPathBody xPathBody = (XPathBody) body;
+                    bodyDTOMatcher = new XPathBodyDTO(xPathBody);
                     this.bodyMatcher = new XPathStringMatcher(xPathBody.getValue());
                     break;
                 case JSON:
                     JsonBody jsonBody = (JsonBody) body;
+                    bodyDTOMatcher = new JsonBodyDTO(jsonBody);
                     this.bodyMatcher = new JsonStringMatcher(jsonBody.getValue(), jsonBody.getMatchType());
                     break;
                 case JSON_SCHEMA:
                     JsonSchemaBody jsonSchemaBody = (JsonSchemaBody) body;
+                    bodyDTOMatcher = new JsonSchemaBodyDTO(jsonSchemaBody);
                     this.bodyMatcher = new JsonSchemaMatcher(jsonSchemaBody.getValue());
                     break;
                 case BINARY:
                     BinaryBody binaryBody = (BinaryBody) body;
+                    bodyDTOMatcher = new BinaryBodyDTO(binaryBody);
                     this.bodyMatcher = new BinaryMatcher(binaryBody.getValue());
                     break;
             }
@@ -140,12 +152,25 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
                 boolean pathMatches = matches(pathMatcher, httpRequest.getPath());
                 boolean queryStringParametersMatches = matches(queryStringParameterMatcher, (httpRequest.getQueryStringParameters() != null ? new ArrayList<KeyToMultiValue>(httpRequest.getQueryStringParameters()) : null));
                 boolean bodyMatches;
-                if (bodyMatcher instanceof BinaryMatcher) {
-                    bodyMatches = matches(bodyMatcher, httpRequest.getBodyAsRawBytes());
-                } else if (bodyMatcher instanceof ExactStringMatcher || bodyMatcher instanceof RegexStringMatcher) {
-                    bodyMatches = matches(bodyMatcher, string(httpRequest.getBody() != null ? new String(httpRequest.getBody().getRawBytes(), httpRequest.getBody().getCharset(Charsets.UTF_8)) : ""));
+                String bodyAsString = httpRequest.getBody() != null ? new String(httpRequest.getBody().getRawBytes(), httpRequest.getBody().getCharset(Charsets.UTF_8)) : "";
+                BodyDTO bodyDTO = null;
+                try {
+                    bodyDTO = objectMapper.readValue(bodyAsString, BodyDTO.class);
+                } catch (IOException e) {
+                    // ignore this exception as this exception will always get thrown for "normal" HTTP requests (i.e. not clear or retrieve)
+                }
+                if (bodyDTO == null) {
+                    if (bodyMatcher instanceof BinaryMatcher) {
+                        bodyMatches = matches(bodyMatcher, httpRequest.getBodyAsRawBytes());
+                    } else {
+                        if (bodyMatcher instanceof ExactStringMatcher || bodyMatcher instanceof RegexStringMatcher) {
+                            bodyMatches = matches(bodyMatcher, string(bodyAsString));
+                        } else {
+                            bodyMatches = matches(bodyMatcher, bodyAsString);
+                        }
+                    }
                 } else {
-                    bodyMatches = matches(bodyMatcher, (httpRequest.getBody() != null ? new String(httpRequest.getBody().getRawBytes(), httpRequest.getBody().getCharset(Charsets.UTF_8)) : ""));
+                    bodyMatches = bodyDTOMatcher.equals(bodyDTO);
                 }
                 boolean headersMatch = matches(headerMatcher, (httpRequest.getHeaders() != null ? new ArrayList<KeyToMultiValue>(httpRequest.getHeaders()) : null));
                 boolean cookiesMatch = matches(cookieMatcher, (httpRequest.getCookies() != null ? new ArrayList<KeyAndValue>(httpRequest.getCookies()) : null));

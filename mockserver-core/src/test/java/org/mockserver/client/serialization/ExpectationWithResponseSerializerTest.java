@@ -16,8 +16,10 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -118,7 +120,7 @@ public class ExpectationWithResponseSerializerTest {
         Expectation expectation = expectationSerializer.deserialize("requestBytes");
 
         // then
-        assertEquals(fullExpectation, expectation);
+        assertThat(expectation, is(fullExpectation));
     }
 
     @Test
