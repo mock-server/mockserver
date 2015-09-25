@@ -97,7 +97,12 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
             } else if (request.matches("PUT", "/retrieve")) {
 
-                Expectation[] expectations = logFilter.retrieve(httpRequestSerializer.deserialize(request.getBodyAsString()));
+                Expectation[] expectations;
+                if (request.hasQueryStringParameter("type", "expectation")) {
+                    expectations = mockServerMatcher.retrieve(httpRequestSerializer.deserialize(request.getBodyAsString()));
+                } else {
+                    expectations = logFilter.retrieve(httpRequestSerializer.deserialize(request.getBodyAsString()));
+                }
                 writeResponse(ctx, request, HttpResponseStatus.OK, expectationSerializer.serialize(expectations), "application/json");
 
             } else if (request.matches("PUT", "/verify")) {
@@ -166,7 +171,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
         HttpResponse response = response()
                 .withStatusCode(responseStatus.code())
                 .withBody(body);
-        if (!body.isEmpty()) {
+        if (body != null && !body.isEmpty()) {
             response.updateHeader(header(HttpHeaders.Names.CONTENT_TYPE, contentType + "; charset=utf-8"));
         }
         writeResponse(ctx, request, response);

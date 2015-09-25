@@ -249,8 +249,31 @@ public class MockServerHandlerGeneralOperationsTest {
         // then - request deserialized
         verify(mockHttpRequestSerializer).deserialize("some_content");
 
-        // then - expectations dumped to log
+        // then - matching requests should be retrieved
         verify(mockLogFilter).retrieve(mockHttpRequest);
+
+        // and - correct response written to ChannelHandlerContext
+        HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
+        assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.OK.code()));
+        assertThat(httpResponse.getBodyAsString(), is("expectations"));
+    }
+
+    @Test
+    public void shouldReturnSetupExpectationsRequests() {
+        // given
+        Expectation[] expectations = {};
+        when(mockMockServerMatcher.retrieve(mockHttpRequest)).thenReturn(expectations);
+        when(mockExpectationSerializer.serialize(expectations)).thenReturn("expectations");
+        HttpRequest request = request("/retrieve").withQueryStringParameter("type","expectation").withMethod("PUT").withBody("some_content");
+
+        // when
+        embeddedChannel.writeInbound(request);
+
+        // then - request deserialized
+        verify(mockHttpRequestSerializer).deserialize("some_content");
+
+        // then - matching expectations should be retrieved
+        verify(mockMockServerMatcher).retrieve(mockHttpRequest);
 
         // and - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
