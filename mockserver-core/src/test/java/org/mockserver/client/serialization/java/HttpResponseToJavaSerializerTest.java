@@ -52,7 +52,6 @@ public class HttpResponseToJavaSerializerTest {
         // when
         assertEquals(System.getProperty("line.separator") +
                         "        response()" + System.getProperty("line.separator") +
-                        "                .withStatusCode(200)" + System.getProperty("line.separator") +
                         "                .withBody(Base64Converter.base64StringToBytes(\"" + Base64Converter.bytesToBase64String("responseBody".getBytes()) + "\"))",
                 new HttpResponseToJavaSerializer().serializeAsJava(1,
                         new HttpResponse()

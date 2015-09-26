@@ -15,7 +15,7 @@ import static org.mockserver.model.NottableString.string;
  * @author jamesdbloom
  */
 public class HttpResponse extends Action {
-    private Integer statusCode = 200;
+    private Integer statusCode;
     private Body body;
     private Map<NottableString, Header> headers = new LinkedHashMap<NottableString, Header>();
     private Map<NottableString, Cookie> cookies = new LinkedHashMap<NottableString, Cookie>();
@@ -27,7 +27,7 @@ public class HttpResponse extends Action {
     }
 
     public static HttpResponse response(String body) {
-        return new HttpResponse().withBody(body);
+        return new HttpResponse().withStatusCode(200).withBody(body);
     }
 
     public static HttpResponse notFoundResponse() {
@@ -336,6 +336,15 @@ public class HttpResponse extends Action {
     @JsonIgnore
     public Type getType() {
         return Type.RESPONSE;
+    }
+
+    public HttpResponse shallowClone() {
+        return response()
+                .withStatusCode(getStatusCode())
+                .withBody(getBody())
+                .withHeaders(getHeaders())
+                .withCookies(getCookies())
+                .withConnectionOptions(getConnectionOptions());
     }
 }
 

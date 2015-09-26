@@ -126,7 +126,7 @@ public class HttpResponseDTOTest {
         assertThat(httpResponseDTO.getBody(), is(nullValue()));
         assertThat(httpResponseDTO.getCookies(), is(empty()));
         assertThat(httpResponseDTO.getHeaders(), is(empty()));
-        assertThat(httpResponseDTO.getStatusCode(), is(200));
+        assertThat(httpResponseDTO.getStatusCode(), is(nullValue()));
         assertThat(httpResponseDTO.getConnectionOptions(), is(nullValue()));
     }
 }

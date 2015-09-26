@@ -126,7 +126,6 @@ public class ExpectationToJavaSerializerTest {
                         "        )" + System.getProperty("line.separator") +
                         "        .respond(" + System.getProperty("line.separator") +
                         "                response()" + System.getProperty("line.separator") +
-                        "                        .withStatusCode(200)" + System.getProperty("line.separator") +
                         "                        .withBody(\"responseBody\")" + System.getProperty("line.separator") +
                         "        );",
                 new ExpectationToJavaSerializer().serializeAsJava(1,
@@ -160,7 +159,6 @@ public class ExpectationToJavaSerializerTest {
                         "        )" + System.getProperty("line.separator") +
                         "        .respond(" + System.getProperty("line.separator") +
                         "                response()" + System.getProperty("line.separator") +
-                        "                        .withStatusCode(200)" + System.getProperty("line.separator") +
                         "                        .withBody(\"responseBody\")" + System.getProperty("line.separator") +
                         "        );",
                 new ExpectationToJavaSerializer().serializeAsJava(1,

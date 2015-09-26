@@ -9,12 +9,15 @@ import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.serialization.model.ExpectationDTO;
+import org.mockserver.client.serialization.model.HttpRequestDTO;
 import org.mockserver.mock.Expectation;
+import org.mockserver.model.HttpRequest;
 
 import java.io.IOException;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.*;
@@ -23,7 +26,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 /**
  * @author jamesdbloom
  */
-public class ExpectationSerializationErrorsTest {
+public class HttpRequestSerializationErrorsTest {
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
@@ -32,12 +35,12 @@ public class ExpectationSerializationErrorsTest {
     @Mock
     private ObjectWriter objectWriter;
     @InjectMocks
-    private ExpectationSerializer expectationSerializer;
+    private HttpRequestSerializer httpRequestSerializer;
 
 
     @Before
     public void setupTestFixture() {
-        expectationSerializer = spy(new ExpectationSerializer());
+        httpRequestSerializer = spy(new HttpRequestSerializer());
 
         initMocks(this);
     }
@@ -46,71 +49,68 @@ public class ExpectationSerializationErrorsTest {
     public void shouldHandleExceptionWhileSerializingObject() throws IOException {
         // given
         thrown.expect(RuntimeException.class);
-        thrown.expectMessage("Exception while serializing expectation to JSON with value { }");
+        thrown.expectMessage("Exception while serializing httpRequest to JSON with value { }");
         // and
         when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
-        when(objectWriter.writeValueAsString(any(ExpectationDTO.class))).thenThrow(new RuntimeException("TEST EXCEPTION"));
+        when(objectWriter.writeValueAsString(any(HttpRequestDTO.class))).thenThrow(new RuntimeException("TEST EXCEPTION"));
 
         // when
-        expectationSerializer.serialize(new Expectation(null, null, null));
+        httpRequestSerializer.serialize(new HttpRequest());
     }
 
     @Test
     public void shouldHandleExceptionWhileSerializingArray() throws IOException {
         // given
         thrown.expect(RuntimeException.class);
-        thrown.expectMessage("Exception while serializing expectation to JSON with value [{ }]");
+        thrown.expectMessage("Exception while serializing HttpRequest to JSON with value [{ }]");
         // and
         when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
-        when(objectWriter.writeValueAsString(any(ExpectationDTO[].class))).thenThrow(new RuntimeException("TEST EXCEPTION"));
+        when(objectWriter.writeValueAsString(any(HttpRequestDTO[].class))).thenThrow(new RuntimeException("TEST EXCEPTION"));
 
         // when
-        expectationSerializer.serialize(new Expectation[]{new Expectation(null, null, null)});
+        httpRequestSerializer.serialize(new HttpRequest[]{new HttpRequest()});
     }
 
     @Test
     public void shouldHandleNullAndEmptyWhileSerializingArray() throws IOException {
         // when
-        assertEquals("", expectationSerializer.serialize(new Expectation[]{}));
-        assertEquals("", expectationSerializer.serialize((Expectation[]) null));
+        assertEquals("", httpRequestSerializer.serialize(new HttpRequest[]{}));
+        assertEquals("", httpRequestSerializer.serialize((HttpRequest[]) null));
     }
 
     @Test
     public void shouldHandleExceptionWhileDeserializingObject() throws IOException {
         // given
         thrown.expect(RuntimeException.class);
-        thrown.expectMessage("Exception while parsing response [requestBytes] for Expectation");
+        thrown.expectMessage("Exception while parsing HttpRequest for [requestBytes]");
         // and
-        when(objectMapper.readValue(eq("requestBytes"), same(ExpectationDTO.class))).thenThrow(new IOException("TEST EXCEPTION"));
+        when(objectMapper.readValue(eq("requestBytes"), same(HttpRequestDTO.class))).thenThrow(new IOException("TEST EXCEPTION"));
 
         // when
-        expectationSerializer.deserialize("requestBytes");
+        httpRequestSerializer.deserialize("requestBytes");
     }
 
     @Test
     public void shouldHandleExceptionWhileDeserializingArray() throws IOException {
         // given
         thrown.expect(RuntimeException.class);
-        thrown.expectMessage("Exception while parsing response [requestBytes] for Expectation[]");
+        thrown.expectMessage("Exception while parsing response [requestBytes] for HttpRequest[]");
         // and
-        when(objectMapper.readValue(eq("requestBytes"), same(ExpectationDTO[].class))).thenThrow(new IOException("TEST EXCEPTION"));
+        when(objectMapper.readValue(eq("requestBytes"), same(HttpRequestDTO[].class))).thenThrow(new IOException("TEST EXCEPTION"));
 
         // when
-        expectationSerializer.deserializeArray("requestBytes");
+        httpRequestSerializer.deserializeArray("requestBytes");
     }
 
     @Test
-    public void shouldValidateInputForObject() throws IOException {
-        // given
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("Expected an JSON Expectation object but http body is empty");
-        // when
-        expectationSerializer.deserialize("");
+    public void shouldHandleEmptyStringOrNull() throws IOException {
+        assertNull(httpRequestSerializer.deserialize(""));
+        assertNull(httpRequestSerializer.deserialize(null));
     }
 
     @Test
     public void shouldValidateInputForArray() throws IOException {
         // when
-        assertArrayEquals(new Expectation[]{}, expectationSerializer.deserializeArray(""));
+        assertArrayEquals(new HttpRequest[]{}, httpRequestSerializer.deserializeArray(""));
     }
 }

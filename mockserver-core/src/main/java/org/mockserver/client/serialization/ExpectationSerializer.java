@@ -52,7 +52,7 @@ public class ExpectationSerializer {
 
     public Expectation deserialize(String jsonExpectation) {
         if (jsonExpectation == null || jsonExpectation.isEmpty()) {
-            throw new IllegalArgumentException("Expected an JSON expectation object but http body is empty");
+            throw new IllegalArgumentException("Expected an JSON Expectation object but http body is empty");
         }
         Expectation expectation = null;
         try {
@@ -61,8 +61,8 @@ public class ExpectationSerializer {
                 expectation = expectationDTO.buildObject();
             }
         } catch (Exception e) {
-            logger.error("Exception while parsing response [" + jsonExpectation + "] for http response expectation", e);
-            throw new RuntimeException("Exception while parsing response [" + jsonExpectation + "] for http response expectation", e);
+            logger.error("Exception while parsing response [" + jsonExpectation + "] for Expectation", e);
+            throw new RuntimeException("Exception while parsing response [" + jsonExpectation + "] for Expectation", e);
         }
         return expectation;
     }
@@ -79,8 +79,8 @@ public class ExpectationSerializer {
                     }
                 }
             } catch (Exception e) {
-                logger.error("Exception while parsing response [" + jsonExpectations + "] for http response expectation array", e);
-                throw new RuntimeException("Exception while parsing response [" + jsonExpectations + "] for http response expectation array", e);
+                logger.error("Exception while parsing response [" + jsonExpectations + "] for Expectation[]", e);
+                throw new RuntimeException("Exception while parsing response [" + jsonExpectations + "] for Expectation[]", e);
             }
         }
         return expectations;

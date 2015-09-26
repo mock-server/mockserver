@@ -19,7 +19,7 @@ public class HttpResponseSerializer extends StdSerializer<HttpResponse> {
     @Override
     public void serialize(HttpResponse httpResponse, JsonGenerator jgen, SerializerProvider provider) throws IOException {
         jgen.writeStartObject();
-        if (httpResponse.getStatusCode() != null && httpResponse.getStatusCode() != 200) {
+        if (httpResponse.getStatusCode() != null) {
             jgen.writeObjectField("statusCode", httpResponse.getStatusCode());
         }
         if (httpResponse.getHeaders() != null && !httpResponse.getHeaders().isEmpty()) {

@@ -11,8 +11,11 @@ import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.netty.SocketConnectionException;
 import org.mockserver.client.server.MockServerClient;
 import org.mockserver.echo.http.EchoServer;
+import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatchType;
 import org.mockserver.matchers.TimeToLive;
+import org.mockserver.matchers.Times;
+import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 import org.mockserver.socket.PortFactory;
 import org.mockserver.verify.VerificationTimes;
@@ -23,7 +26,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
-import static org.hamcrest.Matchers.lessThan;
+import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.StringStartsWith.startsWith;
 import static org.hamcrest.number.OrderingComparison.greaterThan;
@@ -69,6 +72,10 @@ public abstract class AbstractClientServerIntegrationTest {
             "transfer-encoding"
     );
     private NettyHttpClient httpClient = new NettyHttpClient();
+
+    public static Expectation expectation(HttpRequest httpRequest) {
+        return new Expectation(httpRequest, Times.unlimited(), TimeToLive.unlimited());
+    }
 
     public abstract int getMockServerPort();
 
@@ -1079,8 +1086,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // then
         // - in http
         assertEquals(
-                response()
-                        .withBody("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
+                response("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
                 makeRequest(
                         request()
                                 .withPath(calculatePath("some_path"))
@@ -1096,8 +1102,7 @@ public abstract class AbstractClientServerIntegrationTest {
         );
         // - in https
         assertEquals(
-                response()
-                        .withBody("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
+                response("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
                 makeRequest(
                         request()
                                 .withSecure(true)
@@ -4357,7 +4362,6 @@ public abstract class AbstractClientServerIntegrationTest {
         mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(6)).respond(response().withBody("some_body"));
 
         // then
-        // - in http
         assertEquals(
                 response("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
                 makeRequest(
@@ -4379,32 +4383,6 @@ public abstract class AbstractClientServerIntegrationTest {
         mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_three")));
         mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_two")));
         mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_two")), request(calculatePath("some_path_three")));
-
-        // - in https
-        assertEquals(
-                response("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
-                makeRequest(
-                        request().withSecure(true)
-                                .withPath(calculatePath("some_path_one")),
-                        headersToIgnore)
-        );
-        assertEquals(
-                response("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
-                makeRequest(
-                        request().withSecure(true)
-                                .withPath(calculatePath("some_path_two")),
-                        headersToIgnore)
-        );
-        assertEquals(
-                response("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
-                makeRequest(
-                        request().withSecure(true)
-                                .withPath(calculatePath("some_path_three")),
-                        headersToIgnore)
-        );
-        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_three")));
-        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_two")));
-        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_two")), request(calculatePath("some_path_three")));
     }
 
     @Test
@@ -4413,7 +4391,6 @@ public abstract class AbstractClientServerIntegrationTest {
         mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(4)).respond(response().withBody("some_body"));
 
         // then
-        // - in http
         assertEquals(
                 response("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
                 makeRequest(
@@ -4435,32 +4412,104 @@ public abstract class AbstractClientServerIntegrationTest {
         mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_three")));
         mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("not_found")));
         mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("not_found")), request(calculatePath("some_path_three")));
+        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("not_found")), request(calculatePath("some_path_three")));
+    }
 
-        // - in https
+    @Test
+    public void shouldRetrieveSequenceOfRequestsReceivedIncludingThoseNotMatchingAnException() {
+        // when
+        mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(4)).respond(response().withBody("some_body"));
         assertEquals(
                 response("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
                 makeRequest(
-                        request().withSecure(true)
-                                .withPath(calculatePath("some_path_one")),
+                        request().withPath(calculatePath("some_path_one")),
                         headersToIgnore)
         );
         assertEquals(
                 notFoundResponse(),
                 makeRequest(
-                        request().withSecure(true)
-                                .withPath(calculatePath("not_found")),
+                        request().withPath(calculatePath("not_found")),
                         headersToIgnore)
         );
         assertEquals(
                 response("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
                 makeRequest(
-                        request().withSecure(true)
-                                .withPath(calculatePath("some_path_three")),
+                        request().withPath(calculatePath("some_path_three")),
                         headersToIgnore)
         );
-        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_three")));
-        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("not_found")));
-        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("not_found")), request(calculatePath("some_path_three")));
+
+        // then
+        verifyRequestMatches(
+                mockServerClient.retrieveRecordedRequests(request().withPath(calculatePath("some_path.*"))),
+                request(calculatePath("some_path_one")),
+                request(calculatePath("some_path_three"))
+        );
+
+        verifyRequestMatches(
+                mockServerClient.retrieveRecordedRequests(request()),
+                request(calculatePath("some_path_one")),
+                request(calculatePath("not_found")),
+                request(calculatePath("some_path_three"))
+        );
+
+        verifyRequestMatches(
+                mockServerClient.retrieveRecordedRequests(null),
+                request(calculatePath("some_path_one")),
+                request(calculatePath("not_found")),
+                request(calculatePath("some_path_three"))
+        );
+    }
+
+    @Test
+    public void shouldRetrieveSequenceOfExpectationsSetup() {
+        // when
+        mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(4))
+                .respond(response().withBody("some_body"));
+        mockServerClient.when(request().withPath(calculatePath("some_path.*")))
+                .respond(response().withBody("some_body"));
+        mockServerClient.when(request().withPath(calculatePath("some_other_path")))
+                .respond(response().withBody("some_other_body"));
+        mockServerClient.when(request().withPath(calculatePath("some_forward_path")))
+                .forward(forward());
+
+        // then
+        assertThat(
+                mockServerClient.retrieveExistingExpectations(request().withPath(calculatePath("some_path.*"))),
+                arrayContaining(
+                        new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited())
+                                .thenRespond(response().withBody("some_body")),
+                        expectation(request().withPath(calculatePath("some_path.*")))
+                                .thenRespond(response().withBody("some_body"))
+                )
+        );
+
+        assertThat(
+                mockServerClient.retrieveExistingExpectations(null),
+                arrayContaining(
+                        new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited())
+                                .thenRespond(response().withBody("some_body")),
+                        expectation(request().withPath(calculatePath("some_path.*")))
+                                .thenRespond(response().withBody("some_body")),
+                        expectation(request().withPath(calculatePath("some_other_path")))
+                                .thenRespond(response().withBody("some_other_body")),
+                        expectation(request().withPath(calculatePath("some_forward_path")))
+                                .thenForward(forward())
+                )
+        );
+
+        assertThat(
+                mockServerClient.retrieveExistingExpectations(request()),
+                arrayContaining(
+                        new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited())
+                                .thenRespond(response().withBody("some_body")),
+                        expectation(request().withPath(calculatePath("some_path.*")))
+                                .thenRespond(response().withBody("some_body")),
+                        expectation(request().withPath(calculatePath("some_other_path")))
+                                .thenRespond(response().withBody("some_other_body")),
+                        expectation(request().withPath(calculatePath("some_forward_path")))
+                                .thenForward(forward())
+                )
+        );
     }
 
     @Test
@@ -4469,7 +4518,6 @@ public abstract class AbstractClientServerIntegrationTest {
         mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(6)).respond(response().withBody("some_body"));
 
         // then
-        // - in http
         assertEquals(
                 response("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
                 makeRequest(
@@ -4526,7 +4574,7 @@ public abstract class AbstractClientServerIntegrationTest {
 
     @Test
     public void shouldClearExpectations() {
-        // given
+        // given - some expectations
         mockServerClient
                 .when(
                         request()
@@ -4546,6 +4594,28 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withBody("some_body2")
                 );
 
+        // and - some matching requests
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body1"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("some_path1")),
+                        headersToIgnore)
+        );
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body2"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("some_path2")),
+                        headersToIgnore)
+        );
+
         // when
         mockServerClient
                 .clear(
@@ -4553,8 +4623,28 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withPath(calculatePath("some_path1"))
                 );
 
-        // then
-        // - in http
+        // then - expectations cleared
+        assertThat(
+                mockServerClient.retrieveExistingExpectations(null),
+                arrayContaining(
+                        expectation(
+                                request()
+                                        .withPath(calculatePath("some_path2"))
+                        )
+                                .thenRespond(
+                                        response()
+                                                .withBody("some_body2")
+                                )
+                )
+        );
+
+        // and then - request log cleared
+        verifyRequestMatches(
+                mockServerClient.retrieveRecordedRequests(null),
+                request(calculatePath("some_path2"))
+        );
+
+        // and then - remaining expectations not cleared
         assertEquals(
                 response()
                         .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
@@ -4571,6 +4661,178 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         request()
                                 .withPath(calculatePath("some_path1")),
+                        headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldClearAllExpectationsWithNull() {
+        // given
+        mockServerClient
+                .when(
+                        request()
+                                .withPath(calculatePath("some_path1"))
+                )
+                .respond(
+                        response()
+                                .withBody("some_body1")
+                );
+        mockServerClient
+                .when(
+                        request()
+                                .withPath(calculatePath("some_path2"))
+                )
+                .respond(
+                        response()
+                                .withBody("some_body2")
+                );
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body2"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("some_path2")),
+                        headersToIgnore)
+        );
+
+        // when
+        mockServerClient.clear(null);
+
+        // then
+        assertThat(mockServerClient.retrieveExistingExpectations(null), emptyArray());
+        assertThat(mockServerClient.retrieveRecordedRequests(null), emptyArray());
+    }
+
+    @Test
+    public void shouldClearAllExpectationsWithEmptyRequest() {
+        // given
+        mockServerClient
+                .when(
+                        request()
+                                .withPath(calculatePath("some_path1"))
+                )
+                .respond(
+                        response()
+                                .withBody("some_body1")
+                );
+        mockServerClient
+                .when(
+                        request()
+                                .withPath(calculatePath("some_path2"))
+                )
+                .respond(
+                        response()
+                                .withBody("some_body2")
+                );
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body2"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("some_path2")),
+                        headersToIgnore)
+        );
+
+        // when
+        mockServerClient.clear(request());
+
+        // then
+        assertThat(mockServerClient.retrieveExistingExpectations(null), emptyArray());
+        assertThat(mockServerClient.retrieveRecordedRequests(null), emptyArray());
+    }
+
+    @Test
+    public void shouldClearExpectationsWithXPathBody() {
+        // given
+        mockServerClient
+                .when(
+                        request()
+                                .withBody(xpath("/bookstore/book[year=2005]/price"))
+                )
+                .respond(
+                        response()
+                                .withBody("some_body1")
+                );
+        mockServerClient
+                .when(
+                        request()
+                                .withBody(xpath("/bookstore/book[year=2006]/price"))
+                )
+                .respond(
+                        response()
+                                .withBody("some_body2")
+                );
+
+        // and
+        StringBody xmlBody = new StringBody("" +
+                "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + System.getProperty("line.separator") +
+                "<bookstore>" + System.getProperty("line.separator") +
+                "  <book category=\"COOKING\">" + System.getProperty("line.separator") +
+                "    <title lang=\"en\">Everyday Italian</title>" + System.getProperty("line.separator") +
+                "    <author>Giada De Laurentiis</author>" + System.getProperty("line.separator") +
+                "    <year>2005</year>" + System.getProperty("line.separator") +
+                "    <price>30.00</price>" + System.getProperty("line.separator") +
+                "  </book>" + System.getProperty("line.separator") +
+                "  <book category=\"CHILDREN\">" + System.getProperty("line.separator") +
+                "    <title lang=\"en\">Harry Potter</title>" + System.getProperty("line.separator") +
+                "    <author>J K. Rowling</author>" + System.getProperty("line.separator") +
+                "    <year>2006</year>" + System.getProperty("line.separator") +
+                "    <price>29.99</price>" + System.getProperty("line.separator") +
+                "  </book>" + System.getProperty("line.separator") +
+                "  <book category=\"WEB\">" + System.getProperty("line.separator") +
+                "    <title lang=\"en\">Learning XML</title>" + System.getProperty("line.separator") +
+                "    <author>Erik T. Ray</author>" + System.getProperty("line.separator") +
+                "    <year>2003</year>" + System.getProperty("line.separator") +
+                "    <price>31.95</price>" + System.getProperty("line.separator") +
+                "  </book>" + System.getProperty("line.separator") +
+                "</bookstore>");
+
+        // then
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body1"),
+                makeRequest(
+                        request()
+                                .withBody(xmlBody),
+                        headersToIgnore)
+        );
+
+        // when
+        mockServerClient
+                .clear(
+                        request()
+                                .withBody(xpath("/bookstore/book[year=2005]/price"))
+                );
+
+        // then
+        assertThat(
+                mockServerClient.retrieveExistingExpectations(null),
+                arrayContaining(
+                        expectation(
+                                request()
+                                        .withBody(xpath("/bookstore/book[year=2006]/price"))
+                        )
+                                .thenRespond(
+                                        response()
+                                                .withBody("some_body2")
+                                )
+                )
+        );
+        // - in http
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body2"),
+                makeRequest(
+                        request()
+                                .withBody(xmlBody),
                         headersToIgnore)
         );
         // - in https
@@ -4582,16 +4844,242 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         request()
                                 .withSecure(true)
-                                .withPath(calculatePath("some_path2")),
+                                .withBody(xmlBody),
                         headersToIgnore)
         );
+    }
+
+    @Test
+    public void shouldClearExpectationsWithJsonSchemaBody() {
+        // given
+        JsonSchemaBody jsonSchemaBodyOne = jsonSchema("{" + System.getProperty("line.separator") +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + System.getProperty("line.separator") +
+                "    \"title\": \"Product\"," + System.getProperty("line.separator") +
+                "    \"description\": \"A product from Acme's catalog\"," + System.getProperty("line.separator") +
+                "    \"type\": \"object\"," + System.getProperty("line.separator") +
+                "    \"properties\": {" + System.getProperty("line.separator") +
+                "        \"id\": {" + System.getProperty("line.separator") +
+                "            \"description\": \"The unique identifier for a product\"," + System.getProperty("line.separator") +
+                "            \"type\": \"integer\"" + System.getProperty("line.separator") +
+                "        }," + System.getProperty("line.separator") +
+                "        \"name\": {" + System.getProperty("line.separator") +
+                "            \"description\": \"Name of the product\"," + System.getProperty("line.separator") +
+                "            \"type\": \"string\"" + System.getProperty("line.separator") +
+                "        }," + System.getProperty("line.separator") +
+                "        \"price\": {" + System.getProperty("line.separator") +
+                "            \"type\": \"number\"," + System.getProperty("line.separator") +
+                "            \"minimum\": 0," + System.getProperty("line.separator") +
+                "            \"exclusiveMinimum\": true" + System.getProperty("line.separator") +
+                "        }," + System.getProperty("line.separator") +
+                "        \"tags\": {" + System.getProperty("line.separator") +
+                "            \"type\": \"array\"," + System.getProperty("line.separator") +
+                "            \"items\": {" + System.getProperty("line.separator") +
+                "                \"type\": \"string\"" + System.getProperty("line.separator") +
+                "            }," + System.getProperty("line.separator") +
+                "            \"minItems\": 1," + System.getProperty("line.separator") +
+                "            \"uniqueItems\": true" + System.getProperty("line.separator") +
+                "        }" + System.getProperty("line.separator") +
+                "    }," + System.getProperty("line.separator") +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + System.getProperty("line.separator") +
+                "}");
+        JsonSchemaBody jsonSchemaBodyTwo = jsonSchema("{" + System.getProperty("line.separator") +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + System.getProperty("line.separator") +
+                "    \"title\": \"Product\"," + System.getProperty("line.separator") +
+                "    \"description\": \"A product from Acme's catalog\"," + System.getProperty("line.separator") +
+                "    \"type\": \"object\"," + System.getProperty("line.separator") +
+                "    \"properties\": {" + System.getProperty("line.separator") +
+                "        \"id\": {" + System.getProperty("line.separator") +
+                "            \"description\": \"The unique identifier for a product\"," + System.getProperty("line.separator") +
+                "            \"type\": \"integer\"" + System.getProperty("line.separator") +
+                "        }," + System.getProperty("line.separator") +
+                "        \"name\": {" + System.getProperty("line.separator") +
+                "            \"description\": \"Name of the product\"," + System.getProperty("line.separator") +
+                "            \"type\": \"string\"" + System.getProperty("line.separator") +
+                "        }," + System.getProperty("line.separator") +
+                "        \"price\": {" + System.getProperty("line.separator") +
+                "            \"type\": \"number\"," + System.getProperty("line.separator") +
+                "            \"minimum\": 10," + System.getProperty("line.separator") +
+                "            \"exclusiveMinimum\": true" + System.getProperty("line.separator") +
+                "        }," + System.getProperty("line.separator") +
+                "        \"tags\": {" + System.getProperty("line.separator") +
+                "            \"type\": \"array\"," + System.getProperty("line.separator") +
+                "            \"items\": {" + System.getProperty("line.separator") +
+                "                \"type\": \"string\"" + System.getProperty("line.separator") +
+                "            }," + System.getProperty("line.separator") +
+                "            \"minItems\": 1," + System.getProperty("line.separator") +
+                "            \"uniqueItems\": true" + System.getProperty("line.separator") +
+                "        }" + System.getProperty("line.separator") +
+                "    }," + System.getProperty("line.separator") +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + System.getProperty("line.separator") +
+                "}");
+        mockServerClient
+                .when(
+                        request()
+                                .withBody(jsonSchemaBodyOne)
+                )
+                .respond(
+                        response()
+                                .withBody("some_body1")
+                );
+        mockServerClient
+                .when(
+                        request()
+                                .withBody(jsonSchemaBodyTwo)
+                )
+                .respond(
+                        response()
+                                .withBody("some_body2")
+                );
+
+        // then
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body1"),
+                makeRequest(
+                        request()
+                                .withBody("{" + System.getProperty("line.separator") +
+                                        "    \"id\": 1," + System.getProperty("line.separator") +
+                                        "    \"name\": \"A green door\"," + System.getProperty("line.separator") +
+                                        "    \"price\": 12.50," + System.getProperty("line.separator") +
+                                        "    \"tags\": [\"home\", \"green\"]" + System.getProperty("line.separator") +
+                                        "}"),
+                        headersToIgnore)
+        );
+
+        // when
+        mockServerClient
+                .clear(
+                        request()
+                                .withBody(jsonSchemaBodyOne)
+                );
+
+        // then
+        assertThat(
+                mockServerClient.retrieveExistingExpectations(null),
+                arrayContaining(
+                        expectation(
+                                request()
+                                        .withBody(jsonSchemaBodyTwo)
+                        )
+                                .thenRespond(
+                                        response()
+                                                .withBody("some_body2")
+                                )
+                )
+        );
+        // - in http
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body2"),
+                makeRequest(
+                        request()
+                                .withBody("{" + System.getProperty("line.separator") +
+                                        "    \"id\": 1," + System.getProperty("line.separator") +
+                                        "    \"name\": \"A green door\"," + System.getProperty("line.separator") +
+                                        "    \"price\": 12.50," + System.getProperty("line.separator") +
+                                        "    \"tags\": [\"home\", \"green\"]" + System.getProperty("line.separator") +
+                                        "}"),
+                        headersToIgnore)
+        );
+        // - in https
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body2"),
                 makeRequest(
                         request()
                                 .withSecure(true)
-                                .withPath(calculatePath("some_path1")),
+                                .withBody("{" + System.getProperty("line.separator") +
+                                        "    \"id\": 1," + System.getProperty("line.separator") +
+                                        "    \"name\": \"A green door\"," + System.getProperty("line.separator") +
+                                        "    \"price\": 12.50," + System.getProperty("line.separator") +
+                                        "    \"tags\": [\"home\", \"green\"]" + System.getProperty("line.separator") +
+                                        "}"),
+                        headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldClearExpectationsWithParameterBody() {
+        // given
+        mockServerClient
+                .when(
+                        request()
+                                .withBody(params(param("bodyParameterNameOne", "bodyParameterValueOne")))
+                )
+                .respond(
+                        response()
+                                .withBody("some_body1")
+                );
+        mockServerClient
+                .when(
+                        request()
+                                .withBody(params(param("bodyParameterNameTwo", "bodyParameterValueTwo")))
+                )
+                .respond(
+                        response()
+                                .withBody("some_body2")
+                );
+
+        // then
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body1"),
+                makeRequest(
+                        request()
+                                .withBody(params(param("bodyParameterName.*", "bodyParameterValue.*"))),
+                        headersToIgnore)
+        );
+
+        // when
+        mockServerClient
+                .clear(
+                        request()
+                                .withBody(params(param("bodyParameterNameOne", "bodyParameterValueOne")))
+                );
+
+        // then
+        assertThat(
+                mockServerClient.retrieveExistingExpectations(null),
+                arrayContaining(
+                        expectation(
+                                request()
+                                        .withBody(params(param("bodyParameterNameTwo", "bodyParameterValueTwo")))
+                        )
+                                .thenRespond(
+                                        response()
+                                                .withBody("some_body2")
+                                )
+                )
+        );
+        // - in http
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body2"),
+                makeRequest(
+                        request()
+                                .withBody(params(param("bodyParameterName.*", "bodyParameterValue.*"))),
+                        headersToIgnore)
+        );
+        // - in https
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body2"),
+                makeRequest(
+                        request()
+                                .withSecure(true)
+                                .withBody(params(param("bodyParameterName.*", "bodyParameterValue.*"))),
                         headersToIgnore)
         );
     }
@@ -4707,6 +5195,18 @@ public abstract class AbstractClientServerIntegrationTest {
 
         assertThat("Slow request takes less than expected", slowRequestElapsedMillis, is(greaterThan(7 * 1000L)));
         assertThat("Fast request takes longer than expected", fastRequestElapsedMillis, is(lessThan(3 * 1000L)));
+    }
+
+    protected void verifyRequestMatches(HttpRequest[] httpRequests, HttpRequest... httpRequestMatchers) {
+        if (httpRequests.length != httpRequestMatchers.length) {
+            throw new AssertionError("Number of request matchers does not match number of requests, expected:<" + httpRequestMatchers.length + "> but was:<" + httpRequests.length + ">");
+        } else {
+            for (int i = 0; i < httpRequestMatchers.length; i++) {
+                if (!new HttpRequestMatcher(httpRequestMatchers[i]).matches(httpRequests[i])) {
+                    throw new AssertionError("Request does not match request matcher, expected:<" + httpRequestMatchers[i] + "> but was:<" + httpRequests[i] + ">");
+                }
+            }
+        }
     }
 
     protected HttpResponse makeRequest(HttpRequest httpRequest) {

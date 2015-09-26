@@ -100,6 +100,7 @@ public class HttpResponseSerializerTest {
                                 .withCookies(new Cookie("cookie_name", "cookie_value"))
                 ),
                 is("{" + System.getProperty("line.separator") +
+                        "  \"statusCode\" : 200," + System.getProperty("line.separator") +
                         "  \"headers\" : [ {" + System.getProperty("line.separator") +
                         "    \"name\" : \"header_name\"," + System.getProperty("line.separator") +
                         "    \"values\" : [ \"header_value\" ]" + System.getProperty("line.separator") +

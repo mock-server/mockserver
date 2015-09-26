@@ -100,7 +100,7 @@ public class HttpRequestSerializerTest {
     public void deserializeHandleException() throws IOException {
         // given
         thrown.expect(RuntimeException.class);
-        thrown.expectMessage("Exception while parsing response [requestBytes] for http response httpRequest");
+        thrown.expectMessage("Exception while parsing HttpRequest for [requestBytes]");
         // and
         when(objectMapper.readValue(eq("requestBytes"), same(HttpRequestDTO.class))).thenThrow(new RuntimeException("TEST EXCEPTION"));
 
@@ -154,7 +154,7 @@ public class HttpRequestSerializerTest {
     public void serializeArrayHandlesException() throws IOException {
         // given
         thrown.expect(RuntimeException.class);
-        thrown.expectMessage("Exception while serializing http request to JSON with value [{ }]");
+        thrown.expectMessage("Exception while serializing HttpRequest to JSON with value [{ }]");
         // and
         when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
         when(objectWriter.writeValueAsString(any(HttpRequestDTO.class))).thenThrow(new RuntimeException("TEST EXCEPTION"));

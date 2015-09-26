@@ -19,7 +19,7 @@ public class HttpResponseDTOSerializer extends StdSerializer<HttpResponseDTO> {
     @Override
     public void serialize(HttpResponseDTO httpResponseDTO, JsonGenerator jgen, SerializerProvider provider) throws IOException {
         jgen.writeStartObject();
-        if (httpResponseDTO.getStatusCode() != null && httpResponseDTO.getStatusCode() != 200) {
+        if (httpResponseDTO.getStatusCode() != null) {
             jgen.writeObjectField("statusCode", httpResponseDTO.getStatusCode());
         }
         if (httpResponseDTO.getHeaders() != null && !httpResponseDTO.getHeaders().isEmpty()) {

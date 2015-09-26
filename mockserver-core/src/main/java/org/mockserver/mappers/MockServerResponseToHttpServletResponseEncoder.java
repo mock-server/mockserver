@@ -30,6 +30,8 @@ public class MockServerResponseToHttpServletResponseEncoder {
     private void setStatusCode(HttpResponse httpResponse, HttpServletResponse httpServletResponse) {
         if (httpResponse.getStatusCode() != null) {
             httpServletResponse.setStatus(httpResponse.getStatusCode());
+        } else {
+            httpServletResponse.setStatus(200);
         }
     }
 

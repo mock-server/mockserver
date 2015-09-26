@@ -42,15 +42,18 @@ public class FiltersTest {
         // given
         Filters filters = new Filters();
         HttpResponse httpResponse = new HttpResponse();
-        // add first filter
-        HttpRequest httpRequest = new HttpRequest();
+
+        // and - requests
+        HttpRequest httpRequest = new HttpRequest().withPath("some_path");
+        HttpRequest someOtherRequest = new HttpRequest().withPath("some_other_path");
+
+        // and - add first filter
         ResponseFilter filter = mock(ResponseFilter.class);
         when(filter.onResponse(any(HttpRequest.class), any(HttpResponse.class))).thenReturn(new HttpResponse());
         filters.withFilter(httpRequest, filter);
-        // add first filter with other request
-        HttpRequest someOtherRequest = new HttpRequest().withPath("some_other_path");
+        // and - add first filter with other request
         filters.withFilter(someOtherRequest, filter);
-        // add second filter
+        // and - add second filter
         ResponseFilter someOtherFilter = mock(ResponseFilter.class);
         filters.withFilter(someOtherRequest, someOtherFilter);
 

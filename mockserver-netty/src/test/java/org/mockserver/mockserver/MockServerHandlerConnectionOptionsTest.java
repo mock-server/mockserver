@@ -154,7 +154,6 @@ public class MockServerHandlerConnectionOptionsTest {
         // and - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
         assertThat(embeddedChannel.isOpen(), is(true));
-        assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.OK.code()));
         assertThat(httpResponse.getBodyAsString(), is("some_content"));
         assertThat(httpResponse.getHeader("Connection"), empty());
         assertThat(httpResponse.getHeader("Content-Length"), IsIterableContainingInOrder.contains(""));
@@ -190,7 +189,6 @@ public class MockServerHandlerConnectionOptionsTest {
         // and - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
         assertThat(embeddedChannel.isOpen(), is(true));
-        assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.OK.code()));
         assertThat(httpResponse.getBodyAsString(), is("some_content"));
         assertThat(httpResponse.getHeader("Connection"), containsInAnyOrder("keep-alive"));
         assertThat(httpResponse.getHeader("Content-Length"), containsInAnyOrder(Integer.toString(50)));
@@ -226,7 +224,6 @@ public class MockServerHandlerConnectionOptionsTest {
         // and - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
         assertThat(embeddedChannel.isOpen(), is(false));
-        assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.OK.code()));
         assertThat(httpResponse.getBodyAsString(), is("some_content"));
         assertThat(httpResponse.getHeader("Connection"), containsInAnyOrder("keep-alive"));
         assertThat(httpResponse.getHeader("Content-Length"), containsInAnyOrder(Integer.toString("some_content".getBytes(Charsets.UTF_8).length)));
@@ -258,7 +255,6 @@ public class MockServerHandlerConnectionOptionsTest {
         // and - correct response written to ChannelHandlerContext
         assertThat(embeddedChannel.isOpen(), is(true));
         HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
-        assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.OK.code()));
         assertThat(httpResponse.getBodyAsString(), is("some_content"));
         assertThat(httpResponse.getHeader("Connection"), containsInAnyOrder("keep-alive"));
         assertThat(httpResponse.getHeader("Content-Length"), containsInAnyOrder(Integer.toString("some_content".getBytes(Charsets.UTF_8).length)));
@@ -294,7 +290,6 @@ public class MockServerHandlerConnectionOptionsTest {
         // and - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
         assertThat(embeddedChannel.isOpen(), is(true));
-        assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.OK.code()));
         assertThat(httpResponse.getBodyAsString(), is("some_content"));
         assertThat(httpResponse.getHeader("Connection"), containsInAnyOrder("close"));
         assertThat(httpResponse.getHeader("Content-Length"), containsInAnyOrder(Integer.toString("some_content".getBytes(Charsets.UTF_8).length)));
@@ -326,7 +321,6 @@ public class MockServerHandlerConnectionOptionsTest {
         // and - correct response written to ChannelHandlerContext
         assertThat(embeddedChannel.isOpen(), is(false));
         HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
-        assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.OK.code()));
         assertThat(httpResponse.getBodyAsString(), is("some_content"));
         assertThat(httpResponse.getHeader("Connection"), containsInAnyOrder("close"));
         assertThat(httpResponse.getHeader("Content-Length"), containsInAnyOrder(Integer.toString("some_content".getBytes(Charsets.UTF_8).length)));
@@ -362,7 +356,6 @@ public class MockServerHandlerConnectionOptionsTest {
         // and - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
         assertThat(embeddedChannel.isOpen(), is(false));
-        assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.OK.code()));
         assertThat(httpResponse.getBodyAsString(), is("some_content"));
         assertThat(httpResponse.getHeader("Connection"), containsInAnyOrder("close"));
         assertThat(httpResponse.getHeader("Content-Length"), containsInAnyOrder(Integer.toString("some_content".getBytes(Charsets.UTF_8).length)));
@@ -398,7 +391,6 @@ public class MockServerHandlerConnectionOptionsTest {
         // and - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
         assertThat(embeddedChannel.isOpen(), is(true));
-        assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.OK.code()));
         assertThat(httpResponse.getBodyAsString(), is("some_content"));
         assertThat(httpResponse.getHeader("Connection"), containsInAnyOrder("close"));
         assertThat(httpResponse.getHeader("Content-Length"), containsInAnyOrder(Integer.toString("some_content".getBytes(Charsets.UTF_8).length)));

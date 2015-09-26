@@ -2,6 +2,7 @@ package org.mockserver.matchers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
+import com.google.common.base.Strings;
 import org.mockserver.client.serialization.ObjectMapperFactory;
 import org.mockserver.client.serialization.model.*;
 import org.mockserver.logging.LogFormatter;
@@ -148,8 +149,8 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
             return true;
         } else {
             if (httpRequest != null) {
-                boolean methodMatches = matches(methodMatcher, httpRequest.getMethod());
-                boolean pathMatches = matches(pathMatcher, httpRequest.getPath());
+                boolean methodMatches = Strings.isNullOrEmpty(httpRequest.getMethod().getValue()) || matches(methodMatcher, httpRequest.getMethod());
+                boolean pathMatches = Strings.isNullOrEmpty(httpRequest.getPath().getValue()) || matches(pathMatcher, httpRequest.getPath());
                 boolean queryStringParametersMatches = matches(queryStringParameterMatcher, (httpRequest.getQueryStringParameters() != null ? new ArrayList<KeyToMultiValue>(httpRequest.getQueryStringParameters()) : null));
                 boolean bodyMatches;
                 String bodyAsString = httpRequest.getBody() != null ? new String(httpRequest.getBody().getRawBytes(), httpRequest.getBody().getCharset(Charsets.UTF_8)) : "";

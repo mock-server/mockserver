@@ -44,11 +44,30 @@ public class HttpRequestSerializer {
                     }
                 }
             } catch (Exception e) {
-                logger.info("Exception while parsing response [" + jsonHttpRequest + "] for http response httpRequest", e);
-                throw new RuntimeException("Exception while parsing response [" + jsonHttpRequest + "] for http response httpRequest", e);
+                logger.info("Exception while parsing HttpRequest for [" + jsonHttpRequest + "]", e);
+                throw new RuntimeException("Exception while parsing HttpRequest for [" + jsonHttpRequest + "]", e);
             }
         }
         return httpRequest;
+    }
+
+    public HttpRequest[] deserializeArray(String jsonHttpRequests) {
+        HttpRequest[] httpRequests = new HttpRequest[]{};
+        if (jsonHttpRequests != null && !jsonHttpRequests.isEmpty()) {
+            try {
+                HttpRequestDTO[] httpRequestDTOs = objectMapper.readValue(jsonHttpRequests, HttpRequestDTO[].class);
+                if (httpRequestDTOs != null && httpRequestDTOs.length > 0) {
+                    httpRequests = new HttpRequest[httpRequestDTOs.length];
+                    for (int i = 0; i < httpRequestDTOs.length; i++) {
+                        httpRequests[i] = httpRequestDTOs[i].buildObject();
+                    }
+                }
+            } catch (Exception e) {
+                logger.error("Exception while parsing response [" + jsonHttpRequests + "] for HttpRequest[]", e);
+                throw new RuntimeException("Exception while parsing response [" + jsonHttpRequests + "] for HttpRequest[]", e);
+            }
+        }
+        return httpRequests;
     }
 
     public String serialize(List<HttpRequest> httpRequests) {
@@ -68,8 +87,8 @@ public class HttpRequestSerializer {
             }
             return "";
         } catch (Exception e) {
-            logger.error("Exception while serializing http request to JSON with value " + Arrays.asList(httpRequest), e);
-            throw new RuntimeException("Exception while serializing http request to JSON with value " + Arrays.asList(httpRequest), e);
+            logger.error("Exception while serializing HttpRequest to JSON with value " + Arrays.asList(httpRequest), e);
+            throw new RuntimeException("Exception while serializing HttpRequest to JSON with value " + Arrays.asList(httpRequest), e);
         }
     }
 }

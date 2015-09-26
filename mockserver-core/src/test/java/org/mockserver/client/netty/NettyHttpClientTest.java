@@ -51,6 +51,7 @@ public class NettyHttpClientTest {
         // then
         assertThat(httpResponse, is(
                 response()
+                        .withStatusCode(200)
                         .withHeader(header(HOST, "0.0.0.0:" + freePort))
                         .withHeader(header(CONTENT_LENGTH, 0))
                         .withHeader(header(ACCEPT_ENCODING, HttpHeaders.Values.GZIP + "," + HttpHeaders.Values.DEFLATE))
@@ -76,6 +77,7 @@ public class NettyHttpClientTest {
         // then
         assertThat(httpResponse, is(
                 response()
+                        .withStatusCode(200)
                         .withHeader(header(HOST, "0.0.0.0:" + freePort))
                         .withHeader(header(CONTENT_LENGTH, "this is an example body".length()))
                         .withHeader(header(ACCEPT_ENCODING, HttpHeaders.Values.GZIP + "," + HttpHeaders.Values.DEFLATE))

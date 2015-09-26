@@ -109,9 +109,9 @@ public class ExpectationTest {
         assertTrue(new Expectation(request(), Times.unlimited(), TimeToLive.unlimited()).thenRespond(null).thenForward(null).matches(request()));
 
         // when un-matching request should return false
-        assertFalse(new Expectation(request().withPath("un-matching"), null, TimeToLive.unlimited()).thenRespond(null).thenForward(null).matches(request()));
-        assertFalse(new Expectation(request().withPath("un-matching"), Times.unlimited(), TimeToLive.unlimited()).thenRespond(null).thenForward(null).matches(request()));
-        assertFalse(new Expectation(request().withPath("un-matching"), Times.once(), TimeToLive.unlimited()).thenRespond(null).thenForward(null).matches(request()));
+        assertFalse(new Expectation(request().withPath("some_path"), null, TimeToLive.unlimited()).thenRespond(null).thenForward(null).matches(request().withPath("some_other_path")));
+        assertFalse(new Expectation(request().withPath("some_path"), Times.unlimited(), TimeToLive.unlimited()).thenRespond(null).thenForward(null).matches(request().withPath("some_other_path")));
+        assertFalse(new Expectation(request().withPath("some_path"), Times.once(), TimeToLive.unlimited()).thenRespond(null).thenForward(null).matches(request().withPath("some_other_path")));
 
         // when no times left should return false
         assertFalse(new Expectation(null, Times.exactly(0), TimeToLive.unlimited()).thenRespond(null).thenForward(null).matches(null));

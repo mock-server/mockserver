@@ -271,24 +271,24 @@ public class MockServerClient extends AbstractClient {
     }
 
     /**
-     * Retrieve the recorded requests that match the httpRequest parameter as expectations, use null for the parameter to retrieve all requests
+     * Retrieve the recorded requests that match the httpRequest parameter, use null for the parameter to retrieve all requests
      *
-     * @param httpRequest the http request that is matched against when deciding whether to return each expectation, use null for the parameter to retrieve for all requests
-     * @return an array of all expectations that have been recorded by the proxy
+     * @param httpRequest the http request that is matched against when deciding whether to return each request, use null for the parameter to retrieve for all requests
+     * @return an array of all expectations that have been recorded by the MockServer in the order they have been received and including duplicates where the same request has been received multiple times
      */
-    public Expectation[] retrieveAsExpectations(HttpRequest httpRequest) {
+    public HttpRequest[] retrieveRecordedRequests(HttpRequest httpRequest) {
         HttpResponse httpResponse = sendRequest(request().withMethod("PUT").withPath(calculatePath("retrieve")).withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", Charsets.UTF_8));
-        return expectationSerializer.deserializeArray(httpResponse.getBodyAsString());
+        return httpRequestSerializer.deserializeArray(httpResponse.getBodyAsString());
     }
 
     /**
-     * Retrieve the recorded requests that match the httpRequest parameter as a JSON array, use null for the parameter to retrieve all requests
+     * Retrieve the already setup expectations match the httpRequest parameter, use null for the parameter to retrieve all expectations
      *
      * @param httpRequest the http request that is matched against when deciding whether to return each expectation, use null for the parameter to retrieve for all requests
-     * @return a JSON array of all expectations that have been recorded by the proxy
+     * @return an array of all expectations that have been setup
      */
-    public String retrieveAsJSON(HttpRequest httpRequest) {
-        HttpResponse httpResponse = sendRequest(request().withMethod("PUT").withPath(calculatePath("retrieve")).withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", Charsets.UTF_8));
-        return httpResponse.getBodyAsString();
+    public Expectation[] retrieveExistingExpectations(HttpRequest httpRequest) {
+        HttpResponse httpResponse = sendRequest(request().withMethod("PUT").withPath(calculatePath("retrieve")).withQueryStringParameter("type", "expectation").withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", Charsets.UTF_8));
+        return expectationSerializer.deserializeArray(httpResponse.getBodyAsString());
     }
 }

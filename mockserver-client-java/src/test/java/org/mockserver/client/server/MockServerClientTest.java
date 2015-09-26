@@ -9,6 +9,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.serialization.ExpectationSerializer;
+import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.client.serialization.VerificationSequenceSerializer;
 import org.mockserver.client.serialization.VerificationSerializer;
 import org.mockserver.client.serialization.model.*;
@@ -47,6 +48,8 @@ public class MockServerClientTest {
     private NettyHttpClient mockHttpClient;
     @Mock
     private ExpectationSerializer mockExpectationSerializer;
+    @Mock
+    private HttpRequestSerializer mockHttpRequestSerializer;
     @Mock
     private VerificationSerializer mockVerificationSerializer;
     @Mock
@@ -366,20 +369,22 @@ public class MockServerClientTest {
 
     @Test
     public void shouldSendClearRequest() throws Exception {
+        // given
+        HttpRequest someRequestMatcher = new HttpRequest()
+                .withPath("/some_path")
+                .withBody(new StringBody("some_request_body"));
+        when(mockHttpRequestSerializer.serialize(someRequestMatcher)).thenReturn(someRequestMatcher.toString());
+
         // when
-        mockServerClient
-                .clear(
-                        new HttpRequest()
-                                .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body"))
-                );
+        mockServerClient.clear(someRequestMatcher);
 
         // then
-        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1080, "", request().withMethod("PUT").withPath("/clear").withBody("" +
-                "{" + System.getProperty("line.separator") +
-                "  \"path\" : \"/some_path\"," + System.getProperty("line.separator") +
-                "  \"body\" : \"some_request_body\"" + System.getProperty("line.separator") +
-                "}", Charsets.UTF_8)));
+        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1080, "",
+                request()
+                        .withMethod("PUT")
+                        .withPath("/clear")
+                        .withBody(someRequestMatcher.toString(), Charsets.UTF_8))
+        );
     }
 
     @Test
@@ -393,77 +398,89 @@ public class MockServerClientTest {
     }
 
     @Test
-    public void shouldReceiveExpectationsAsObjects() throws UnsupportedEncodingException {
+    public void shouldRetrieveRequests() throws UnsupportedEncodingException {
+        // given - a request
+        HttpRequest someRequestMatcher = new HttpRequest()
+                .withPath("/some_path")
+                .withBody(new StringBody("some_request_body"));
+        when(mockHttpRequestSerializer.serialize(someRequestMatcher)).thenReturn(someRequestMatcher.toString());
+
+        // and - a client
+        when(mockHttpClient.sendRequest(any(OutboundHttpRequest.class))).thenReturn(response().withBody("body"));
+
+        // and - a response
+        HttpRequest[] httpRequests = {};
+        when(mockHttpRequestSerializer.deserializeArray("body")).thenReturn(httpRequests);
+
+        // when
+        assertSame(httpRequests, mockServerClient.retrieveRecordedRequests(someRequestMatcher));
+
+        // then
+        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1080, "",
+                request()
+                        .withMethod("PUT")
+                        .withPath("/retrieve")
+                        .withBody(someRequestMatcher.toString(), Charsets.UTF_8)));
+        verify(mockHttpRequestSerializer).deserializeArray("body");
+    }
+
+    @Test
+    public void shouldRetrieveRequestsWithNullRequest() throws UnsupportedEncodingException {
+        // given
+        HttpRequest[] httpRequests = {};
+        when(mockHttpClient.sendRequest(any(OutboundHttpRequest.class))).thenReturn(response().withBody("body"));
+        when(mockHttpRequestSerializer.deserializeArray("body")).thenReturn(httpRequests);
+
+        // when
+        assertSame(httpRequests, mockServerClient.retrieveRecordedRequests(null));
+
+        // then
+        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1080, "", request().withMethod("PUT").withPath("/retrieve").withBody("", Charsets.UTF_8)));
+        verify(mockHttpRequestSerializer).deserializeArray("body");
+    }
+
+    @Test
+    public void shouldRetrieveSetupExpectations() throws UnsupportedEncodingException {
+        // given - a request
+        HttpRequest someRequestMatcher = new HttpRequest()
+                .withPath("/some_path")
+                .withBody(new StringBody("some_request_body"));
+        when(mockHttpRequestSerializer.serialize(someRequestMatcher)).thenReturn(someRequestMatcher.toString());
+
+        // and - a client
+        when(mockHttpClient.sendRequest(any(OutboundHttpRequest.class))).thenReturn(response().withBody("body"));
+
+        // and - an expectation
+        Expectation[] expectations = {};
+        when(mockExpectationSerializer.deserializeArray("body")).thenReturn(expectations);
+
+        // when
+        assertSame(expectations, mockServerClient.retrieveExistingExpectations(someRequestMatcher));
+
+        // then
+        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1080, "",
+                request()
+                        .withMethod("PUT")
+                        .withPath("/retrieve")
+                        .withQueryStringParameter("type", "expectation")
+                        .withBody(someRequestMatcher.toString(), Charsets.UTF_8)
+        ));
+        verify(mockExpectationSerializer).deserializeArray("body");
+    }
+
+    @Test
+    public void shouldRetrieveSetupExpectationsWithNullRequest() throws UnsupportedEncodingException {
         // given
         Expectation[] expectations = {};
         when(mockHttpClient.sendRequest(any(OutboundHttpRequest.class))).thenReturn(response().withBody("body"));
         when(mockExpectationSerializer.deserializeArray("body")).thenReturn(expectations);
 
         // when
-        assertSame(expectations, mockServerClient
-                .retrieveAsExpectations(
-                        new HttpRequest()
-                                .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body"))
-                ));
+        assertSame(expectations, mockServerClient.retrieveExistingExpectations(null));
 
         // then
-        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1080, "", request().withMethod("PUT").withPath("/retrieve").withBody("" +
-                "{" + System.getProperty("line.separator") +
-                "  \"path\" : \"/some_path\"," + System.getProperty("line.separator") +
-                "  \"body\" : \"some_request_body\"" + System.getProperty("line.separator") +
-                "}", Charsets.UTF_8)));
+        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1080, "", request().withMethod("PUT").withPath("/retrieve").withQueryStringParameter("type", "expectation").withBody("", Charsets.UTF_8)));
         verify(mockExpectationSerializer).deserializeArray("body");
-    }
-
-    @Test
-    public void shouldReceiveExpectationsAsObjectsWithNullRequest() throws UnsupportedEncodingException {
-        // given
-        Expectation[] expectations = {};
-        when(mockHttpClient.sendRequest(any(OutboundHttpRequest.class))).thenReturn(response().withBody("body"));
-        when(mockExpectationSerializer.deserializeArray("body")).thenReturn(expectations);
-
-        // when
-        assertSame(expectations, mockServerClient.retrieveAsExpectations(null));
-
-        // then
-        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1080, "", request().withMethod("PUT").withPath("/retrieve").withBody("", Charsets.UTF_8)));
-        verify(mockExpectationSerializer).deserializeArray("body");
-    }
-
-    @Test
-    public void shouldReceiveExpectationsAsJSON() throws UnsupportedEncodingException {
-        // given
-        String expectations = "body";
-        when(mockHttpClient.sendRequest(any(OutboundHttpRequest.class))).thenReturn(response().withBody("body"));
-
-        // when
-        assertEquals(expectations, mockServerClient
-                .retrieveAsJSON(
-                        new HttpRequest()
-                                .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body"))
-                ));
-
-        // then
-        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1080, "", request().withMethod("PUT").withPath("/retrieve").withBody("" +
-                "{" + System.getProperty("line.separator") +
-                "  \"path\" : \"/some_path\"," + System.getProperty("line.separator") +
-                "  \"body\" : \"some_request_body\"" + System.getProperty("line.separator") +
-                "}", Charsets.UTF_8)));
-    }
-
-    @Test
-    public void shouldReceiveExpectationsAsJSONWithNullRequest() throws UnsupportedEncodingException {
-        // given
-        String expectations = "body";
-        when(mockHttpClient.sendRequest(any(OutboundHttpRequest.class))).thenReturn(response().withBody("body"));
-
-        // when
-        assertEquals(expectations, mockServerClient.retrieveAsJSON(null));
-
-        // then
-        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1080, "", request().withMethod("PUT").withPath("/retrieve").withBody("", Charsets.UTF_8)));
     }
 
     @Test
