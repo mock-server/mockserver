@@ -101,31 +101,31 @@ public class LogFilterTest {
         LogFilter logFilter = new LogFilter();
 
         // when
-        logFilter.onResponse(request("some_path"), response("body_one"));
-        logFilter.onResponse(request("some_other_path"), response("body_two"));
-        logFilter.onResponse(request("some_path"), response("body_three"));
+        logFilter.onRequest(request("some_path"));
+        logFilter.onRequest(request("some_other_path"));
+        logFilter.onRequest(request("some_path"));
 
         // then
         assertArrayEquals(logFilter.retrieve(null),
-                new Expectation[]{
-                        new Expectation(request("some_path"), Times.once(), TimeToLive.unlimited()).thenRespond(response("body_one")),
-                        new Expectation(request("some_path"), Times.once(), TimeToLive.unlimited()).thenRespond(response("body_three")),
-                        new Expectation(request("some_other_path"), Times.once(), TimeToLive.unlimited()).thenRespond(response("body_two"))
+                new HttpRequest[]{
+                        request("some_path"),
+                        request("some_other_path"),
+                        request("some_path")
                 });
         assertArrayEquals(logFilter.retrieve(request()),
-                new Expectation[]{
-                        new Expectation(request("some_path"), Times.once(), TimeToLive.unlimited()).thenRespond(response("body_one")),
-                        new Expectation(request("some_path"), Times.once(), TimeToLive.unlimited()).thenRespond(response("body_three")),
-                        new Expectation(request("some_other_path"), Times.once(), TimeToLive.unlimited()).thenRespond(response("body_two"))
+                new HttpRequest[]{
+                        request("some_path"),
+                        request("some_other_path"),
+                        request("some_path")
                 });
         assertArrayEquals(logFilter.retrieve(request("some_path")),
-                new Expectation[]{
-                        new Expectation(request("some_path"), Times.once(), TimeToLive.unlimited()).thenRespond(response("body_one")),
-                        new Expectation(request("some_path"), Times.once(), TimeToLive.unlimited()).thenRespond(response("body_three"))
+                new HttpRequest[]{
+                        request("some_path"),
+                        request("some_path")
                 });
         assertArrayEquals(logFilter.retrieve(request("some_other_path")),
-                new Expectation[]{
-                        new Expectation(request("some_other_path"), Times.once(), TimeToLive.unlimited()).thenRespond(response("body_two"))
+                new HttpRequest[]{
+                        request("some_other_path")
                 });
     }
 

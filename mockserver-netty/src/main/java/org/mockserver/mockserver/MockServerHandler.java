@@ -97,13 +97,13 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
             } else if (request.matches("PUT", "/retrieve")) {
 
-                Expectation[] expectations;
                 if (request.hasQueryStringParameter("type", "expectation")) {
-                    expectations = mockServerMatcher.retrieve(httpRequestSerializer.deserialize(request.getBodyAsString()));
+                    Expectation[] expectations = mockServerMatcher.retrieve(httpRequestSerializer.deserialize(request.getBodyAsString()));
+                    writeResponse(ctx, request, HttpResponseStatus.OK, expectationSerializer.serialize(expectations), "application/json");
                 } else {
-                    expectations = logFilter.retrieve(httpRequestSerializer.deserialize(request.getBodyAsString()));
+                    HttpRequest[] requests = logFilter.retrieve(httpRequestSerializer.deserialize(request.getBodyAsString()));
+                    writeResponse(ctx, request, HttpResponseStatus.OK, httpRequestSerializer.serialize(requests), "application/json");
                 }
-                writeResponse(ctx, request, HttpResponseStatus.OK, expectationSerializer.serialize(expectations), "application/json");
 
             } else if (request.matches("PUT", "/verify")) {
 

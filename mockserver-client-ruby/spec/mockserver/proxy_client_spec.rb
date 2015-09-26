@@ -4,8 +4,8 @@ require_relative '../spec_helper'
 describe MockServer::ProxyClient do
 
   let(:client) { MockServer::ProxyClient.new('localhost', 8080) }
-  let(:register_expectation) { FIXTURES.read('register_expectation.json') }
-  let(:register_expectation_json) { register_expectation.to_json }
+  let(:retrieved_request) { FIXTURES.read('retrieved_request.json') }
+  let(:retrieved_request_json) { retrieved_request.to_json }
   let(:search_request_json) { FIXTURES.read('search_request.json').to_json }
 
   before do
@@ -14,7 +14,7 @@ describe MockServer::ProxyClient do
 
     # Stub requests
     stub_request(:put, /.+\/retrieve/).with(body: search_request_json).to_return(
-      body:   "[#{register_expectation_json}, #{register_expectation_json}]",
+      body:   "[#{retrieved_request_json}, #{retrieved_request_json}]",
       status: 200
     )
     stub_request(:put, /.+\/dumpToLog$/).to_return(status: 202).once
@@ -24,7 +24,7 @@ describe MockServer::ProxyClient do
   it 'verifies requests correctly' do
     response = client.verify(request(:POST, '/login'), exactly(2))
     response = response.map { |mock| to_camelized_hash(mock.to_hash) }
-    expect(response).to eq([register_expectation, register_expectation])
+    expect(response).to eq([retrieved_request, retrieved_request])
   end
 
   it 'raises an error when verification fails' do

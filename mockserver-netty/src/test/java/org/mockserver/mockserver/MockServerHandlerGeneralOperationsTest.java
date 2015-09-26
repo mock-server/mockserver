@@ -238,9 +238,9 @@ public class MockServerHandlerGeneralOperationsTest {
     @Test
     public void shouldReturnRecordedRequests() {
         // given
-        Expectation[] expectations = {};
-        when(mockLogFilter.retrieve(mockHttpRequest)).thenReturn(expectations);
-        when(mockExpectationSerializer.serialize(expectations)).thenReturn("expectations");
+        HttpRequest[] requests = {};
+        when(mockLogFilter.retrieve(mockHttpRequest)).thenReturn(requests);
+        when(mockHttpRequestSerializer.serialize(requests)).thenReturn("requests");
         HttpRequest request = request("/retrieve").withMethod("PUT").withBody("some_content");
 
         // when
@@ -255,7 +255,7 @@ public class MockServerHandlerGeneralOperationsTest {
         // and - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
         assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.OK.code()));
-        assertThat(httpResponse.getBodyAsString(), is("expectations"));
+        assertThat(httpResponse.getBodyAsString(), is("requests"));
     }
 
     @Test

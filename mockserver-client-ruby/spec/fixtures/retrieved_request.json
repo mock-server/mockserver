@@ -1,0 +1,24 @@
+{
+  "method": "POST",
+  "path": "/login",
+  "queryParameters": [
+    {
+      "values": [
+        "/account"
+      ],
+      "name": "returnUrl"
+    }
+  ],
+  "cookies": [
+    {
+      "values": [
+        "2By8LOhBmaW5nZXJwcmludCIlMDAzMW"
+      ],
+      "name": "sessionId"
+    }
+  ],
+  "body": {
+    "type": "STRING",
+    "value": "{\"username\":\"foo\",\"password\":\"bar\"}"
+  }
+}

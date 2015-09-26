@@ -68,11 +68,10 @@ module MockServer
 
       response = @base[RETRIEVE_ENDPOINT].put(request.to_json)
       logger.debug("Got retrieve response: #{response.code}")
-      expectations = Expectations.new([])
-      parse_string_to_json(response).map { |result| expectations << expectation_from_json(result) } unless response.empty?
-      # expectations = Expectations.new([]).insert(0, (parse_string_to_json(response).map { |result| expectation_from_json(result) } unless response.empty?))
-      expectations.code = response.code
-      expectations
+      requests = Requests.new([])
+      parse_string_to_json(response.body).map { |result| requests << request_from_json(result) } unless response.empty?
+      requests.code = response.code
+      requests
     end
 
     # Request to dump logs to file

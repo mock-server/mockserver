@@ -1,22 +1,22 @@
 {
-    "httpRequest": {
-        "method": "POST",
-        "path": "/login",
-        "queryParameters": [
-            {
-                "name": "returnUrl",
-                "values": ["/account"]
-            }
-        ],
-        "cookies": [
-            {
-                "name": "sessionId",
-                "values": ["2By8LOhBmaW5nZXJwcmludCIlMDAzMW"]
-            }
-        ],
-        "body": {
-            "type": "STRING",
-            "value": "{username:'foo', password:'bar'}"
-        }
+  "httpRequest": {
+    "method": "POST",
+    "path": "/login",
+    "queryParameters": [
+      {
+        "name": "returnUrl",
+        "values": ["/account"]
+      }
+    ],
+    "cookies": [
+      {
+        "name": "sessionId",
+        "values": ["2By8LOhBmaW5nZXJwcmludCIlMDAzMW"]
+      }
+    ],
+    "body": {
+      "type": "STRING",
+      "value": "{username:'foo', password:'bar'}"
     }
+  }
 }

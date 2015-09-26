@@ -41,6 +41,23 @@ module MockServer::Model
     coerce_key :cookies, Parameters
     coerce_key :headers, Parameters
     coerce_key :body, Body
+
+    # Creates a request from a hash
+    # @param payload [Hash] a hash representation of the request
+    def populate_from_payload(payload)
+      @request = payload[MockServer::HTTP_REQUEST]
+      @request = Request.new(symbolize_keys(@request)) if @request
+    end
+  end
+
+  # Class to store a list of mocks - useful for modeling retrieve endpoint result
+  class Requests < ArrayOf
+    # Code is used to store HTTP status code returned from retrieve endpoint
+    attr_accessor :code
+
+    def child_class
+      Request
+    end
   end
 
   # DSL methods related to requests
@@ -49,6 +66,12 @@ module MockServer::Model
       obj = Request.new(method: method, path: path)
       yield obj if block_given?
       obj
+    end
+
+    def request_from_json(payload)
+      request = Request.new(symbolize_keys(payload))
+      yield request if block_given?
+      request
     end
 
     alias_method :http_request, :request

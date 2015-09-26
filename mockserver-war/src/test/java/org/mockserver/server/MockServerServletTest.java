@@ -353,22 +353,54 @@ public class MockServerServletTest {
     }
 
     @Test
-    public void shouldRetrieveExpectationsMockServer() throws IOException {
+    public void shouldReturnRecordedRequests() throws IOException {
         // given
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
         MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/retrieve");
-        Expectation expectation = new Expectation(new HttpRequest(), Times.unlimited(), TimeToLive.unlimited()).thenRespond(new HttpResponse());
-
         httpServletRequest.setContent("requestBytes".getBytes());
-        when(mockHttpRequestSerializer.deserialize(anyString())).thenReturn(expectation.getHttpRequest());
-        when(mockLogFilter.retrieve(any(HttpRequest.class))).thenReturn(new Expectation[]{expectation});
-        when(mockExpectationSerializer.serialize(any(Expectation[].class))).thenReturn("expectations_response");
+
+        // and - a request matcher
+        HttpRequest request = new HttpRequest();
+        when(mockHttpRequestSerializer.deserialize(anyString())).thenReturn(request);
+
+        // and - a set of requests retrieved from the log
+        HttpRequest[] httpRequests = {request, request};
+        when(mockLogFilter.retrieve(any(HttpRequest.class))).thenReturn(httpRequests);
+        when(mockHttpRequestSerializer.serialize(httpRequests)).thenReturn("request_response");
 
         // when
         mockServerServlet.doPut(httpServletRequest, httpServletResponse);
 
         // then
-        verify(mockLogFilter).retrieve(expectation.getHttpRequest());
+        verify(mockLogFilter).retrieve(request);
+        assertThat(httpServletResponse.getContentAsByteArray(), is("request_response".getBytes()));
+        assertThat(httpServletResponse.getStatus(), is(HttpStatusCode.OK_200.code()));
+        verifyNoMoreInteractions(mockHttpServletRequestToMockServerRequestDecoder);
+    }
+
+    @Test
+    public void shouldReturnSetupExpectationsRequests() throws IOException {
+        // given
+        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
+        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/retrieve");
+        httpServletRequest.setContent("requestBytes".getBytes());
+        httpServletRequest.setParameter("type", "expectation");
+
+        // and - a request matcher
+        HttpRequest request = new HttpRequest();
+        when(mockHttpRequestSerializer.deserialize(anyString())).thenReturn(request);
+
+        // and - a set of expectations retrieved from the matcher
+        Expectation expectation = new Expectation(new HttpRequest(), Times.unlimited(), TimeToLive.unlimited()).thenRespond(new HttpResponse());
+        Expectation[] expectations = {expectation, expectation};
+        when(mockMockServerMatcher.retrieve(any(HttpRequest.class))).thenReturn(expectations);
+        when(mockExpectationSerializer.serialize(expectations)).thenReturn("expectations_response");
+
+        // when
+        mockServerServlet.doPut(httpServletRequest, httpServletResponse);
+
+        // then
+        verify(mockMockServerMatcher).retrieve(request);
         assertThat(httpServletResponse.getContentAsByteArray(), is("expectations_response".getBytes()));
         assertThat(httpServletResponse.getStatus(), is(HttpStatusCode.OK_200.code()));
         verifyNoMoreInteractions(mockHttpServletRequestToMockServerRequestDecoder);

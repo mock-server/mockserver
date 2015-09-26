@@ -1,7 +1,7 @@
 {
-    "httpForward": {
-        "host": "www.mock-server.com",
-        "port": 80,
-        "scheme": "HTTP"
-    }
+  "httpForward": {
+    "host": "www.mock-server.com",
+    "port": 80,
+    "scheme": "HTTP"
+  }
 }

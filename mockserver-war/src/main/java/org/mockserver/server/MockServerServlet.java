@@ -115,10 +115,17 @@ public class MockServerServlet extends HttpServlet {
 
             } else if (requestPath.equals("/retrieve")) {
 
-                Expectation[] expectations = logFilter.retrieve(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
-                httpServletResponse.setStatus(HttpStatusCode.OK_200.code());
-                httpServletResponse.setHeader(HttpHeaders.Names.CONTENT_TYPE, MediaType.JSON_UTF_8.toString());
-                IOStreamUtils.writeToOutputStream(expectationSerializer.serialize(expectations).getBytes(), httpServletResponse);
+                if ("expectation".equals(httpServletRequest.getParameter("type"))) {
+                    Expectation[] expectations = mockServerMatcher.retrieve(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
+                    httpServletResponse.setStatus(HttpStatusCode.OK_200.code());
+                    httpServletResponse.setHeader(HttpHeaders.Names.CONTENT_TYPE, MediaType.JSON_UTF_8.toString());
+                    IOStreamUtils.writeToOutputStream(expectationSerializer.serialize(expectations).getBytes(), httpServletResponse);
+                } else {
+                    HttpRequest[] requests = logFilter.retrieve(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
+                    httpServletResponse.setStatus(HttpStatusCode.OK_200.code());
+                    httpServletResponse.setHeader(HttpHeaders.Names.CONTENT_TYPE, MediaType.JSON_UTF_8.toString());
+                    IOStreamUtils.writeToOutputStream(httpRequestSerializer.serialize(requests).getBytes(), httpServletResponse);
+                }
 
             } else if (requestPath.equals("/verify")) {
 

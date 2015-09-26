@@ -261,22 +261,29 @@ public class ProxyServletTest {
     }
 
     @Test
-    public void shouldRetrieve() throws UnsupportedEncodingException {
+    public void shouldReturnRecordedRequests() throws IOException {
         // given
-        Expectation[] expectations = new Expectation[]{};
-        mockHttpServletRequest.setRequestURI("/retrieve");
-        mockHttpServletRequest.setContent("body".getBytes());
-        when(mockHttpRequestSerializer.deserialize("body")).thenReturn(outboundHttpRequest);
-        when(mockLogFilter.retrieve(outboundHttpRequest)).thenReturn(expectations);
-        when(mockExpectationSerializer.serialize(aryEq(new Expectation[]{}))).thenReturn("expectationsArray");
+        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
+        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/retrieve");
+        httpServletRequest.setContent("requestBytes".getBytes());
+
+        // and - a request matcher
+        HttpRequest request = new HttpRequest();
+        when(mockHttpRequestSerializer.deserialize(anyString())).thenReturn(request);
+
+        // and - a set of requests retrieved from the log
+        HttpRequest[] httpRequests = {request, request};
+        when(mockLogFilter.retrieve(any(HttpRequest.class))).thenReturn(httpRequests);
+        when(mockHttpRequestSerializer.serialize(httpRequests)).thenReturn("request_response");
 
         // when
-        proxyServlet.doPut(mockHttpServletRequest, mockHttpServletResponse);
+        proxyServlet.doPut(httpServletRequest, httpServletResponse);
 
         // then
-        verify(mockLogFilter).retrieve(outboundHttpRequest);
-        assertEquals(HttpStatusCode.OK_200.code(), mockHttpServletResponse.getStatus());
-        assertEquals("expectationsArray", mockHttpServletResponse.getContentAsString());
+        verify(mockLogFilter).retrieve(request);
+        assertThat(httpServletResponse.getContentAsByteArray(), is("request_response".getBytes()));
+        assertThat(httpServletResponse.getStatus(), is(HttpStatusCode.OK_200.code()));
+        verifyNoMoreInteractions(mockHttpServletRequestToMockServerRequestDecoder);
     }
 
     @Test

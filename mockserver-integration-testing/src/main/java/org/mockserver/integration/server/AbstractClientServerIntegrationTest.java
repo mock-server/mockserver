@@ -608,485 +608,6 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void shouldVerifyReceivedRequests() {
-        // when
-        mockServerClient
-                .when(
-                        request()
-                                .withPath(calculatePath("some_path")), exactly(2)
-                )
-                .respond(
-                        response()
-                                .withBody("some_body")
-                );
-
-        // then
-        // - in http
-        assertEquals(
-                response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
-                        .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withBody("some_body"),
-                makeRequest(
-                        request()
-                                .withPath(calculatePath("some_path")),
-                        headersToIgnore)
-        );
-        mockServerClient.verify(request()
-                .withPath(calculatePath("some_path")));
-        mockServerClient.verify(request()
-                .withPath(calculatePath("some_path")), VerificationTimes.exactly(1));
-
-        // - in https
-        assertEquals(
-                response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
-                        .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withBody("some_body"),
-                makeRequest(
-                        request()
-                                .withSecure(true)
-                                .withPath(calculatePath("some_path")),
-                        headersToIgnore)
-        );
-        mockServerClient.verify(request().withPath(calculatePath("some_path")), VerificationTimes.atLeast(1));
-        mockServerClient.verify(request().withPath(calculatePath("some_path")), VerificationTimes.exactly(2));
-    }
-
-    @Test
-    public void shouldVerifyReceivedRequestInSsl() {
-        // when
-        mockServerClient
-                .when(
-                        request()
-                                .withPath(calculatePath("some.*path")), exactly(2)
-                )
-                .respond(
-                        response()
-                                .withBody("some_body")
-                );
-
-        // then
-        // - in http
-        assertEquals(
-                response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
-                        .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withBody("some_body"),
-                makeRequest(
-                        request()
-                                .withPath(calculatePath("some_path")),
-                        headersToIgnore)
-        );
-        mockServerClient.verify(request()
-                .withPath(calculatePath("some_path"))
-                .withSecure(false));
-        mockServerClient.verify(request()
-                .withPath(calculatePath("some_path"))
-                .withSecure(false), VerificationTimes.exactly(1));
-
-        // - in https
-        assertEquals(
-                response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
-                        .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withBody("some_body"),
-                makeRequest(
-                        request()
-                                .withPath(calculatePath("some_secure_path"))
-                                .withSecure(true),
-                        headersToIgnore)
-        );
-        mockServerClient.verify(request()
-                .withPath(calculatePath("some_secure_path"))
-                .withSecure(true));
-        mockServerClient.verify(request()
-                .withPath(calculatePath("some_secure_path"))
-                .withSecure(true), VerificationTimes.exactly(1));
-    }
-
-    @Test
-    public void shouldVerifyReceivedRequestsWithNoBody() {
-        // when
-        mockServerClient.when(request().withPath(calculatePath("some_path")), exactly(2)).respond(response());
-
-        // then
-        // - in http
-        assertEquals(
-                response()
-                        .withStatusCode(HttpStatusCode.OK_200.code()),
-                makeRequest(
-                        request()
-                                .withPath(calculatePath("some_path")),
-                        headersToIgnore)
-        );
-        mockServerClient.verify(request()
-                .withPath(calculatePath("some_path")));
-        mockServerClient.verify(request()
-                .withPath(calculatePath("some_path")), VerificationTimes.exactly(1));
-    }
-
-    @Test
-    public void shouldVerifyNotEnoughRequestsReceived() {
-        // when
-        mockServerClient.when(request().withPath(calculatePath("some_path")), exactly(2)).respond(response().withBody("some_body"));
-
-        // then
-        assertEquals(
-                response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
-                        .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withBody("some_body"),
-                makeRequest(
-                        request()
-                                .withPath(calculatePath("some_path")),
-                        headersToIgnore)
-        );
-        try {
-            mockServerClient.verify(request()
-                    .withPath(calculatePath("some_path")), VerificationTimes.atLeast(2));
-            fail();
-        } catch (AssertionError ae) {
-            assertThat(ae.getMessage(), startsWith("Request not found at least 2 times, expected:<{" + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path") + "\"" + System.getProperty("line.separator") +
-                    "}> but was:<{" + System.getProperty("line.separator") +
-                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path") + "\"," + System.getProperty("line.separator")));
-        }
-    }
-
-    @Test
-    public void shouldVerifyTooManyRequestsReceived() {
-        // when
-        mockServerClient.when(request().withPath(calculatePath("some_path")), exactly(2)).respond(response().withBody("some_body"));
-
-        // then
-        assertEquals(
-                response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
-                        .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withBody("some_body"),
-                makeRequest(
-                        request()
-                                .withPath(calculatePath("some_path")),
-                        headersToIgnore)
-        );
-        try {
-            mockServerClient.verify(request()
-                    .withPath(calculatePath("some_path")), VerificationTimes.exactly(0));
-            fail();
-        } catch (AssertionError ae) {
-            assertThat(ae.getMessage(), startsWith("Request not found exactly 0 times, expected:<{" + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path") + "\"" + System.getProperty("line.separator") +
-                    "}> but was:<{" + System.getProperty("line.separator") +
-                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path") + "\"," + System.getProperty("line.separator")));
-        }
-    }
-
-    @Test
-    public void shouldVerifyNoMatchingRequestsReceived() {
-        // when
-        mockServerClient.when(request().withPath(calculatePath("some_path")), exactly(2)).respond(response().withBody("some_body"));
-
-        // then
-        assertEquals(
-                response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
-                        .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withBody("some_body"),
-                makeRequest(
-                        request()
-                                .withPath(calculatePath("some_path")),
-                        headersToIgnore)
-        );
-        try {
-            mockServerClient.verify(request()
-                    .withPath(calculatePath("some_other_path")), VerificationTimes.exactly(2));
-            fail();
-        } catch (AssertionError ae) {
-            assertThat(ae.getMessage(), startsWith("Request not found exactly 2 times, expected:<{" + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_other_path") + "\"" + System.getProperty("line.separator") +
-                    "}> but was:<{" + System.getProperty("line.separator") +
-                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path") + "\"," + System.getProperty("line.separator")));
-        }
-    }
-
-    @Test
-    public void shouldVerifyNoRequestsReceived() {
-        // when
-        mockServerClient.reset();
-
-        // then
-        mockServerClient.verifyZeroInteractions();
-    }
-
-    @Test
-    public void shouldNotVerifyNoRequestsReceived() {
-        // when
-        mockServerClient.when(request().withPath(calculatePath("some_path")), exactly(2)).respond(response().withBody("some_body"));
-
-        // then
-        assertEquals(
-                response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
-                        .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withBody("some_body"),
-                makeRequest(
-                        request()
-                                .withPath(calculatePath("some_path")),
-                        headersToIgnore)
-        );
-        try {
-            mockServerClient.verifyZeroInteractions();
-            fail();
-        } catch (AssertionError ae) {
-            assertThat(ae.getMessage(), startsWith("Request not found exactly 0 times, expected:<{ }> but was:<{" + System.getProperty("line.separator") +
-                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path") + "\"," + System.getProperty("line.separator")));
-        }
-    }
-
-    @Test
-    public void shouldVerifyNoMatchingRequestsReceivedInSsl() {
-        // when
-        mockServerClient.when(request().withPath(calculatePath("some.*path")), exactly(2)).respond(response().withBody("some_body"));
-
-        // then
-        // - in http
-        assertEquals(
-                response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
-                        .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withBody("some_body"),
-                makeRequest(
-                        request()
-                                .withPath(calculatePath("some_path")),
-                        headersToIgnore)
-        );
-        try {
-            mockServerClient.verify(
-                    request()
-                            .withPath(calculatePath("some_path"))
-                            .withSecure(true),
-                    VerificationTimes.atLeast(1)
-            );
-            fail();
-        } catch (AssertionError ae) {
-            assertThat(ae.getMessage(), startsWith("Request not found at least once, expected:<{" + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path") + "\"," + System.getProperty("line.separator") +
-                    "  \"secure\" : true" + System.getProperty("line.separator") +
-                    "}> but was:<{" + System.getProperty("line.separator") +
-                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path") + "\"," + System.getProperty("line.separator")));
-        }
-
-        // - in https
-        assertEquals(
-                response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
-                        .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withBody("some_body"),
-                makeRequest(
-                        request()
-                                .withPath(calculatePath("some_secure_path"))
-                                .withSecure(true),
-                        headersToIgnore)
-        );
-        try {
-            mockServerClient.verify(
-                    request()
-                            .withPath(calculatePath("some_secure_path"))
-                            .withSecure(false),
-                    VerificationTimes.atLeast(1)
-            );
-            fail();
-        } catch (AssertionError ae) {
-            assertThat(ae.getMessage(), startsWith("Request not found at least once, expected:<{" + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_secure_path") + "\"," + System.getProperty("line.separator") +
-                    "  \"secure\" : false" + System.getProperty("line.separator") +
-                    "}> but was:<[ {" + System.getProperty("line.separator") +
-                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path") + "\"," + System.getProperty("line.separator")));
-        }
-
-    }
-
-    @Test
-    public void shouldVerifySequenceOfRequestsReceived() {
-        // when
-        mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(6)).respond(response().withBody("some_body"));
-
-        // then
-        // - in http
-        assertEquals(
-                response("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
-                makeRequest(
-                        request().withPath(calculatePath("some_path_one")),
-                        headersToIgnore)
-        );
-        assertEquals(
-                response("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
-                makeRequest(
-                        request().withPath(calculatePath("some_path_two")),
-                        headersToIgnore)
-        );
-        assertEquals(
-                response("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
-                makeRequest(
-                        request().withPath(calculatePath("some_path_three")),
-                        headersToIgnore)
-        );
-        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_three")));
-        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_two")));
-        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_two")), request(calculatePath("some_path_three")));
-
-        // - in https
-        assertEquals(
-                response("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
-                makeRequest(
-                        request().withSecure(true)
-                                .withPath(calculatePath("some_path_one")),
-                        headersToIgnore)
-        );
-        assertEquals(
-                response("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
-                makeRequest(
-                        request().withSecure(true)
-                                .withPath(calculatePath("some_path_two")),
-                        headersToIgnore)
-        );
-        assertEquals(
-                response("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
-                makeRequest(
-                        request().withSecure(true)
-                                .withPath(calculatePath("some_path_three")),
-                        headersToIgnore)
-        );
-        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_three")));
-        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_two")));
-        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_two")), request(calculatePath("some_path_three")));
-    }
-
-    @Test
-    public void shouldVerifySequenceOfRequestsReceivedIncludingThoseNotMatchingAnException() {
-        // when
-        mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(4)).respond(response().withBody("some_body"));
-
-        // then
-        // - in http
-        assertEquals(
-                response("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
-                makeRequest(
-                        request().withPath(calculatePath("some_path_one")),
-                        headersToIgnore)
-        );
-        assertEquals(
-                notFoundResponse(),
-                makeRequest(
-                        request().withPath(calculatePath("not_found")),
-                        headersToIgnore)
-        );
-        assertEquals(
-                response("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
-                makeRequest(
-                        request().withPath(calculatePath("some_path_three")),
-                        headersToIgnore)
-        );
-        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_three")));
-        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("not_found")));
-        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("not_found")), request(calculatePath("some_path_three")));
-
-        // - in https
-        assertEquals(
-                response("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
-                makeRequest(
-                        request().withSecure(true)
-                                .withPath(calculatePath("some_path_one")),
-                        headersToIgnore)
-        );
-        assertEquals(
-                notFoundResponse(),
-                makeRequest(
-                        request().withSecure(true)
-                                .withPath(calculatePath("not_found")),
-                        headersToIgnore)
-        );
-        assertEquals(
-                response("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
-                makeRequest(
-                        request().withSecure(true)
-                                .withPath(calculatePath("some_path_three")),
-                        headersToIgnore)
-        );
-        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_three")));
-        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("not_found")));
-        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("not_found")), request(calculatePath("some_path_three")));
-    }
-
-    @Test
-    public void shouldVerifySequenceOfRequestsNotReceived() {
-        // when
-        mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(6)).respond(response().withBody("some_body"));
-
-        // then
-        // - in http
-        assertEquals(
-                response("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
-                makeRequest(
-                        request().withPath(calculatePath("some_path_one")),
-                        headersToIgnore)
-        );
-        assertEquals(
-                response("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
-                makeRequest(
-                        request().withPath(calculatePath("some_path_two")),
-                        headersToIgnore)
-        );
-        assertEquals(
-                response("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
-                makeRequest(
-                        request().withPath(calculatePath("some_path_three")),
-                        headersToIgnore)
-        );
-        try {
-            mockServerClient.verify(request(calculatePath("some_path_two")), request(calculatePath("some_path_one")));
-            fail();
-        } catch (AssertionError ae) {
-            assertThat(ae.getMessage(), startsWith("Request sequence not found, expected:<[ {" + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path_two") + "\"" + System.getProperty("line.separator") +
-                    "}, {" + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path_one") + "\"" + System.getProperty("line.separator") +
-                    "} ]> but was:<[ {" + System.getProperty("line.separator") +
-                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path_one") + "\"," + System.getProperty("line.separator")));
-        }
-        try {
-            mockServerClient.verify(request(calculatePath("some_path_three")), request(calculatePath("some_path_two")));
-            fail();
-        } catch (AssertionError ae) {
-            assertThat(ae.getMessage(), startsWith("Request sequence not found, expected:<[ {" + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path_three") + "\"" + System.getProperty("line.separator") +
-                    "}, {" + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path_two") + "\"" + System.getProperty("line.separator") +
-                    "} ]> but was:<[ {" + System.getProperty("line.separator") +
-                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path_one") + "\"," + System.getProperty("line.separator")));
-        }
-        try {
-            mockServerClient.verify(request(calculatePath("some_path_four")));
-            fail();
-        } catch (AssertionError ae) {
-            assertThat(ae.getMessage(), startsWith("Request sequence not found, expected:<[ {" + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path_four") + "\"" + System.getProperty("line.separator") +
-                    "} ]> but was:<[ {" + System.getProperty("line.separator") +
-                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path_one") + "\"," + System.getProperty("line.separator")));
-        }
-    }
-
-    @Test
     public void shouldReturnResponseByMatchingPath() {
         // when
         mockServerClient
@@ -4522,6 +4043,485 @@ public abstract class AbstractClientServerIntegrationTest {
                                 ),
                         headersToIgnore)
         );
+    }
+
+    @Test
+    public void shouldVerifyReceivedRequests() {
+        // when
+        mockServerClient
+                .when(
+                        request()
+                                .withPath(calculatePath("some_path")), exactly(2)
+                )
+                .respond(
+                        response()
+                                .withBody("some_body")
+                );
+
+        // then
+        // - in http
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("some_path")),
+                        headersToIgnore)
+        );
+        mockServerClient.verify(request()
+                .withPath(calculatePath("some_path")));
+        mockServerClient.verify(request()
+                .withPath(calculatePath("some_path")), VerificationTimes.exactly(1));
+
+        // - in https
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        request()
+                                .withSecure(true)
+                                .withPath(calculatePath("some_path")),
+                        headersToIgnore)
+        );
+        mockServerClient.verify(request().withPath(calculatePath("some_path")), VerificationTimes.atLeast(1));
+        mockServerClient.verify(request().withPath(calculatePath("some_path")), VerificationTimes.exactly(2));
+    }
+
+    @Test
+    public void shouldVerifyReceivedRequestInSsl() {
+        // when
+        mockServerClient
+                .when(
+                        request()
+                                .withPath(calculatePath("some.*path")), exactly(2)
+                )
+                .respond(
+                        response()
+                                .withBody("some_body")
+                );
+
+        // then
+        // - in http
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("some_path")),
+                        headersToIgnore)
+        );
+        mockServerClient.verify(request()
+                .withPath(calculatePath("some_path"))
+                .withSecure(false));
+        mockServerClient.verify(request()
+                .withPath(calculatePath("some_path"))
+                .withSecure(false), VerificationTimes.exactly(1));
+
+        // - in https
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("some_secure_path"))
+                                .withSecure(true),
+                        headersToIgnore)
+        );
+        mockServerClient.verify(request()
+                .withPath(calculatePath("some_secure_path"))
+                .withSecure(true));
+        mockServerClient.verify(request()
+                .withPath(calculatePath("some_secure_path"))
+                .withSecure(true), VerificationTimes.exactly(1));
+    }
+
+    @Test
+    public void shouldVerifyReceivedRequestsWithNoBody() {
+        // when
+        mockServerClient.when(request().withPath(calculatePath("some_path")), exactly(2)).respond(response());
+
+        // then
+        // - in http
+        assertEquals(
+                response()
+                        .withStatusCode(HttpStatusCode.OK_200.code()),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("some_path")),
+                        headersToIgnore)
+        );
+        mockServerClient.verify(request()
+                .withPath(calculatePath("some_path")));
+        mockServerClient.verify(request()
+                .withPath(calculatePath("some_path")), VerificationTimes.exactly(1));
+    }
+
+    @Test
+    public void shouldVerifyNotEnoughRequestsReceived() {
+        // when
+        mockServerClient.when(request().withPath(calculatePath("some_path")), exactly(2)).respond(response().withBody("some_body"));
+
+        // then
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("some_path")),
+                        headersToIgnore)
+        );
+        try {
+            mockServerClient.verify(request()
+                    .withPath(calculatePath("some_path")), VerificationTimes.atLeast(2));
+            fail();
+        } catch (AssertionError ae) {
+            assertThat(ae.getMessage(), startsWith("Request not found at least 2 times, expected:<{" + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path") + "\"" + System.getProperty("line.separator") +
+                    "}> but was:<{" + System.getProperty("line.separator") +
+                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path") + "\"," + System.getProperty("line.separator")));
+        }
+    }
+
+    @Test
+    public void shouldVerifyTooManyRequestsReceived() {
+        // when
+        mockServerClient.when(request().withPath(calculatePath("some_path")), exactly(2)).respond(response().withBody("some_body"));
+
+        // then
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("some_path")),
+                        headersToIgnore)
+        );
+        try {
+            mockServerClient.verify(request()
+                    .withPath(calculatePath("some_path")), VerificationTimes.exactly(0));
+            fail();
+        } catch (AssertionError ae) {
+            assertThat(ae.getMessage(), startsWith("Request not found exactly 0 times, expected:<{" + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path") + "\"" + System.getProperty("line.separator") +
+                    "}> but was:<{" + System.getProperty("line.separator") +
+                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path") + "\"," + System.getProperty("line.separator")));
+        }
+    }
+
+    @Test
+    public void shouldVerifyNoMatchingRequestsReceived() {
+        // when
+        mockServerClient.when(request().withPath(calculatePath("some_path")), exactly(2)).respond(response().withBody("some_body"));
+
+        // then
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("some_path")),
+                        headersToIgnore)
+        );
+        try {
+            mockServerClient.verify(request()
+                    .withPath(calculatePath("some_other_path")), VerificationTimes.exactly(2));
+            fail();
+        } catch (AssertionError ae) {
+            assertThat(ae.getMessage(), startsWith("Request not found exactly 2 times, expected:<{" + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_other_path") + "\"" + System.getProperty("line.separator") +
+                    "}> but was:<{" + System.getProperty("line.separator") +
+                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path") + "\"," + System.getProperty("line.separator")));
+        }
+    }
+
+    @Test
+    public void shouldVerifyNoRequestsReceived() {
+        // when
+        mockServerClient.reset();
+
+        // then
+        mockServerClient.verifyZeroInteractions();
+    }
+
+    @Test
+    public void shouldNotVerifyNoRequestsReceived() {
+        // when
+        mockServerClient.when(request().withPath(calculatePath("some_path")), exactly(2)).respond(response().withBody("some_body"));
+
+        // then
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("some_path")),
+                        headersToIgnore)
+        );
+        try {
+            mockServerClient.verifyZeroInteractions();
+            fail();
+        } catch (AssertionError ae) {
+            assertThat(ae.getMessage(), startsWith("Request not found exactly 0 times, expected:<{ }> but was:<{" + System.getProperty("line.separator") +
+                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path") + "\"," + System.getProperty("line.separator")));
+        }
+    }
+
+    @Test
+    public void shouldVerifyNoMatchingRequestsReceivedInSsl() {
+        // when
+        mockServerClient.when(request().withPath(calculatePath("some.*path")), exactly(2)).respond(response().withBody("some_body"));
+
+        // then
+        // - in http
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("some_path")),
+                        headersToIgnore)
+        );
+        try {
+            mockServerClient.verify(
+                    request()
+                            .withPath(calculatePath("some_path"))
+                            .withSecure(true),
+                    VerificationTimes.atLeast(1)
+            );
+            fail();
+        } catch (AssertionError ae) {
+            assertThat(ae.getMessage(), startsWith("Request not found at least once, expected:<{" + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path") + "\"," + System.getProperty("line.separator") +
+                    "  \"secure\" : true" + System.getProperty("line.separator") +
+                    "}> but was:<{" + System.getProperty("line.separator") +
+                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path") + "\"," + System.getProperty("line.separator")));
+        }
+
+        // - in https
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("some_secure_path"))
+                                .withSecure(true),
+                        headersToIgnore)
+        );
+        try {
+            mockServerClient.verify(
+                    request()
+                            .withPath(calculatePath("some_secure_path"))
+                            .withSecure(false),
+                    VerificationTimes.atLeast(1)
+            );
+            fail();
+        } catch (AssertionError ae) {
+            assertThat(ae.getMessage(), startsWith("Request not found at least once, expected:<{" + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_secure_path") + "\"," + System.getProperty("line.separator") +
+                    "  \"secure\" : false" + System.getProperty("line.separator") +
+                    "}> but was:<[ {" + System.getProperty("line.separator") +
+                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path") + "\"," + System.getProperty("line.separator")));
+        }
+
+    }
+
+    @Test
+    public void shouldVerifySequenceOfRequestsReceived() {
+        // when
+        mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(6)).respond(response().withBody("some_body"));
+
+        // then
+        // - in http
+        assertEquals(
+                response("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
+                makeRequest(
+                        request().withPath(calculatePath("some_path_one")),
+                        headersToIgnore)
+        );
+        assertEquals(
+                response("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
+                makeRequest(
+                        request().withPath(calculatePath("some_path_two")),
+                        headersToIgnore)
+        );
+        assertEquals(
+                response("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
+                makeRequest(
+                        request().withPath(calculatePath("some_path_three")),
+                        headersToIgnore)
+        );
+        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_three")));
+        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_two")));
+        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_two")), request(calculatePath("some_path_three")));
+
+        // - in https
+        assertEquals(
+                response("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
+                makeRequest(
+                        request().withSecure(true)
+                                .withPath(calculatePath("some_path_one")),
+                        headersToIgnore)
+        );
+        assertEquals(
+                response("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
+                makeRequest(
+                        request().withSecure(true)
+                                .withPath(calculatePath("some_path_two")),
+                        headersToIgnore)
+        );
+        assertEquals(
+                response("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
+                makeRequest(
+                        request().withSecure(true)
+                                .withPath(calculatePath("some_path_three")),
+                        headersToIgnore)
+        );
+        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_three")));
+        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_two")));
+        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_two")), request(calculatePath("some_path_three")));
+    }
+
+    @Test
+    public void shouldVerifySequenceOfRequestsReceivedIncludingThoseNotMatchingAnException() {
+        // when
+        mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(4)).respond(response().withBody("some_body"));
+
+        // then
+        // - in http
+        assertEquals(
+                response("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
+                makeRequest(
+                        request().withPath(calculatePath("some_path_one")),
+                        headersToIgnore)
+        );
+        assertEquals(
+                notFoundResponse(),
+                makeRequest(
+                        request().withPath(calculatePath("not_found")),
+                        headersToIgnore)
+        );
+        assertEquals(
+                response("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
+                makeRequest(
+                        request().withPath(calculatePath("some_path_three")),
+                        headersToIgnore)
+        );
+        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_three")));
+        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("not_found")));
+        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("not_found")), request(calculatePath("some_path_three")));
+
+        // - in https
+        assertEquals(
+                response("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
+                makeRequest(
+                        request().withSecure(true)
+                                .withPath(calculatePath("some_path_one")),
+                        headersToIgnore)
+        );
+        assertEquals(
+                notFoundResponse(),
+                makeRequest(
+                        request().withSecure(true)
+                                .withPath(calculatePath("not_found")),
+                        headersToIgnore)
+        );
+        assertEquals(
+                response("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
+                makeRequest(
+                        request().withSecure(true)
+                                .withPath(calculatePath("some_path_three")),
+                        headersToIgnore)
+        );
+        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_three")));
+        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("not_found")));
+        mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("not_found")), request(calculatePath("some_path_three")));
+    }
+
+    @Test
+    public void shouldVerifySequenceOfRequestsNotReceived() {
+        // when
+        mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(6)).respond(response().withBody("some_body"));
+
+        // then
+        // - in http
+        assertEquals(
+                response("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
+                makeRequest(
+                        request().withPath(calculatePath("some_path_one")),
+                        headersToIgnore)
+        );
+        assertEquals(
+                response("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
+                makeRequest(
+                        request().withPath(calculatePath("some_path_two")),
+                        headersToIgnore)
+        );
+        assertEquals(
+                response("some_body").withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN),
+                makeRequest(
+                        request().withPath(calculatePath("some_path_three")),
+                        headersToIgnore)
+        );
+        try {
+            mockServerClient.verify(request(calculatePath("some_path_two")), request(calculatePath("some_path_one")));
+            fail();
+        } catch (AssertionError ae) {
+            assertThat(ae.getMessage(), startsWith("Request sequence not found, expected:<[ {" + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path_two") + "\"" + System.getProperty("line.separator") +
+                    "}, {" + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path_one") + "\"" + System.getProperty("line.separator") +
+                    "} ]> but was:<[ {" + System.getProperty("line.separator") +
+                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path_one") + "\"," + System.getProperty("line.separator")));
+        }
+        try {
+            mockServerClient.verify(request(calculatePath("some_path_three")), request(calculatePath("some_path_two")));
+            fail();
+        } catch (AssertionError ae) {
+            assertThat(ae.getMessage(), startsWith("Request sequence not found, expected:<[ {" + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path_three") + "\"" + System.getProperty("line.separator") +
+                    "}, {" + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path_two") + "\"" + System.getProperty("line.separator") +
+                    "} ]> but was:<[ {" + System.getProperty("line.separator") +
+                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path_one") + "\"," + System.getProperty("line.separator")));
+        }
+        try {
+            mockServerClient.verify(request(calculatePath("some_path_four")));
+            fail();
+        } catch (AssertionError ae) {
+            assertThat(ae.getMessage(), startsWith("Request sequence not found, expected:<[ {" + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path_four") + "\"" + System.getProperty("line.separator") +
+                    "} ]> but was:<[ {" + System.getProperty("line.separator") +
+                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
+                    "  \"path\" : \"" + calculatePath("some_path_one") + "\"," + System.getProperty("line.separator")));
+        }
     }
 
     @Test

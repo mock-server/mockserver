@@ -126,25 +126,21 @@ public class LogFilter implements ResponseFilter, RequestFilter {
         }
     }
 
-    public synchronized Expectation[] retrieve(HttpRequest httpRequest) {
-        List<Expectation> expectations = new ArrayList<Expectation>();
-        if (httpRequest != null) {
-            HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
-            for (HttpRequest key : requestResponseLog.keySet()) {
-                for (HttpResponse value : requestResponseLog.getAll(key)) {
-                    if (httpRequestMatcher.matches(key, true)) {
-                        expectations.add(new Expectation(key, Times.once(), TimeToLive.unlimited()).thenRespond(value));
-                    }
+    public synchronized HttpRequest[] retrieve(HttpRequest httpRequestToMatch) {
+        List<HttpRequest> matchingRequests = new ArrayList<HttpRequest>();
+        if (httpRequestToMatch != null) {
+            HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequestToMatch);
+            for (HttpRequest httpRequest : requestLog) {
+                if (httpRequestMatcher.matches(httpRequest, true)) {
+                    matchingRequests.add(httpRequest);
                 }
             }
         } else {
-            for (HttpRequest key : requestResponseLog.keySet()) {
-                for (HttpResponse value : requestResponseLog.getAll(key)) {
-                    expectations.add(new Expectation(key, Times.once(), TimeToLive.unlimited()).thenRespond(value));
-                }
+            for (HttpRequest httpRequest : requestLog) {
+                matchingRequests.add(httpRequest);
             }
         }
-        return expectations.toArray(new Expectation[expectations.size()]);
+        return matchingRequests.toArray(new HttpRequest[matchingRequests.size()]);
     }
 
     public synchronized String verify(Verification verification) {

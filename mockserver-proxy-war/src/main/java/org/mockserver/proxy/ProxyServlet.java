@@ -11,7 +11,6 @@ import org.mockserver.client.serialization.VerificationSerializer;
 import org.mockserver.filters.*;
 import org.mockserver.mappers.HttpServletRequestToMockServerRequestDecoder;
 import org.mockserver.mappers.MockServerResponseToHttpServletResponseEncoder;
-import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpStatusCode;
@@ -114,10 +113,10 @@ public class ProxyServlet extends HttpServlet {
 
             } else if (requestPath.equals("/retrieve")) {
 
-                Expectation[] expectations = logFilter.retrieve(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
+                HttpRequest[] requests = logFilter.retrieve(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
                 httpServletResponse.setStatus(HttpStatusCode.OK_200.code());
                 httpServletResponse.setHeader(HttpHeaders.Names.CONTENT_TYPE, MediaType.JSON_UTF_8.toString());
-                IOStreamUtils.writeToOutputStream(expectationSerializer.serialize(expectations).getBytes(), httpServletResponse);
+                IOStreamUtils.writeToOutputStream(httpRequestSerializer.serialize(requests).getBytes(), httpServletResponse);
 
             } else if (requestPath.equals("/verify")) {
 

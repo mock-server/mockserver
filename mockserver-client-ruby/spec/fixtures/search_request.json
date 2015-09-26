@@ -1,6 +1,6 @@
 {
-    "httpRequest": {
-        "method": "POST",
-        "path": "/login"
-    }
+  "httpRequest": {
+    "method": "POST",
+    "path": "/login"
+  }
 }

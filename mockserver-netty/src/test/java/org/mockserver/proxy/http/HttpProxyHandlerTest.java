@@ -171,9 +171,9 @@ public class HttpProxyHandlerTest {
     @Test
     public void shouldReturnRecordedRequests() {
         // given
-        Expectation[] expectations = {};
-        when(mockLogFilter.retrieve(mockHttpRequest)).thenReturn(expectations);
-        when(mockExpectationSerializer.serialize(expectations)).thenReturn("expectations");
+        HttpRequest[] requests = {};
+        when(mockLogFilter.retrieve(mockHttpRequest)).thenReturn(requests);
+        when(mockHttpRequestSerializer.serialize(requests)).thenReturn("requests");
         HttpRequest request = request("/retrieve").withMethod("PUT").withBody("some_content");
 
         // when
@@ -182,13 +182,13 @@ public class HttpProxyHandlerTest {
         // then - request deserialized
         verify(mockHttpRequestSerializer).deserialize("some_content");
 
-        // then - expectations dumped to log
+        // then - matching requests should be retrieved
         verify(mockLogFilter).retrieve(mockHttpRequest);
 
         // and - correct response written to ChannelHandlerContext
-        HttpResponse httpResponse = (HttpResponse)embeddedChannel.readOutbound();
+        HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
         assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.OK.code()));
-        assertThat(httpResponse.getBodyAsString(), is("expectations"));
+        assertThat(httpResponse.getBodyAsString(), is("requests"));
     }
 
     @Test
