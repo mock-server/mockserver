@@ -26,7 +26,7 @@ describe MockServer::MockServerClient do
       expectation.request do |request|
         request.method = 'POST'
         request.path   = '/login'
-        request.query_parameters << parameter('returnUrl', '/account')
+        request.query_string_parameters << parameter('returnUrl', '/account')
         request.cookies << cookie('sessionId', '2By8LOhBmaW5nZXJwcmludCIlMDAzMW')
         request.body = exact({ username: 'foo', password: 'bar' }.to_json)
       end
