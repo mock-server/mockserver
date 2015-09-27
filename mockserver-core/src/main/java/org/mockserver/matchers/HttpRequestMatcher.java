@@ -160,7 +160,7 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
                 } catch (IOException e) {
                     // ignore this exception as this exception will always get thrown for "normal" HTTP requests (i.e. not clear or retrieve)
                 }
-                if (bodyDTO == null) {
+                if (bodyDTO == null || bodyDTOMatcher == null || bodyDTO.getType() == Body.Type.STRING) {
                     if (bodyMatcher instanceof BinaryMatcher) {
                         bodyMatches = matches(bodyMatcher, httpRequest.getBodyAsRawBytes());
                     } else {
@@ -189,8 +189,6 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
                         becauseBuilder.append("query string parameters match = ").append(queryStringParametersMatches).append(System.getProperty("line.separator"));
                         becauseBuilder.append("body matches = ").append(bodyMatches).append(System.getProperty("line.separator"));
                         becauseBuilder.append("headers match = ").append(headersMatch).append(System.getProperty("line.separator"));
-                        becauseBuilder.append("cookies match = ").append(cookiesMatch).append(System.getProperty("line.separator"));
-                        becauseBuilder.append("cookies match = ").append(cookiesMatch).append(System.getProperty("line.separator"));
                         becauseBuilder.append("cookies match = ").append(cookiesMatch).append(System.getProperty("line.separator"));
                         becauseBuilder.append("keep-alive matches = ").append(keepAliveMatches).append(System.getProperty("line.separator"));
                         becauseBuilder.append("ssl matches = ").append(sslMatches).append(System.getProperty("line.separator"));
