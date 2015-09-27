@@ -15,7 +15,7 @@ describe("mockServerClient client:", function () {
                     'method': 'POST',
                     'path': '/somePath',
                     'queryString': 'test=true',
-                    'parameters': [
+                    'queryStringParameters': [
                         {
                             'name': 'test',
                             'values': ['true']
@@ -69,7 +69,7 @@ describe("mockServerClient client:", function () {
                     'method': 'POST',
                     'path': '/somePath',
                     'queryString': 'test=true',
-                    'parameters': [
+                    'queryStringParameters': [
                         {
                             'name': 'test',
                             'values': ['true']
@@ -115,13 +115,211 @@ describe("mockServerClient client:", function () {
         expect(xmlhttp.status).toEqual(404);
     });
 
+    it("should match on method only", function () {
+        // when
+        var client = mockServerClient("localhost", 1080);
+        client.mockAnyResponse(
+            {
+                'httpRequest': {
+                    'method': 'GET'
+                },
+                'httpResponse': {
+                    'statusCode': 200,
+                    'body': JSON.stringify({name: 'first_body'}),
+                    'delay': {
+                        'timeUnit': 'MILLISECONDS',
+                        'value': 250
+                    }
+                },
+                'times': {
+                    'remainingTimes': 1,
+                    'unlimited': false
+                }
+            }
+        );
+        client.mockAnyResponse(
+            {
+                'httpRequest': {
+                    'method': 'POST'
+                },
+                'httpResponse': {
+                    'statusCode': 200,
+                    'body': JSON.stringify({name: 'second_body'}),
+                    'delay': {
+                        'timeUnit': 'MILLISECONDS',
+                        'value': 250
+                    }
+                },
+                'times': {
+                    'remainingTimes': 1,
+                    'unlimited': false
+                }
+            }
+        );
+
+        // then - matching no expectation
+        xmlhttp.open("PUT", "http://localhost:1080/somePath", false);
+        xmlhttp.send();
+
+        expect(xmlhttp.status).toEqual(404);
+
+        // then - matching first expectation
+        xmlhttp.open("GET", "http://localhost:1080/somePath", false);
+        xmlhttp.send();
+
+        expect(xmlhttp.status).toEqual(200);
+        expect(xmlhttp.responseText).toEqual('{"name":"first_body"}');
+
+        // then - matching second expectation
+        xmlhttp.open("POST", "http://localhost:1080/somePath", false);
+        xmlhttp.send();
+
+        expect(xmlhttp.status).toEqual(200);
+        expect(xmlhttp.responseText).toEqual('{"name":"second_body"}');
+    });
+
+    it("should match on path only", function () {
+        // when
+        var client = mockServerClient("localhost", 1080);
+        client.mockAnyResponse(
+            {
+                'httpRequest': {
+                    'path': '/firstPath'
+                },
+                'httpResponse': {
+                    'statusCode': 200,
+                    'body': JSON.stringify({name: 'first_body'}),
+                    'delay': {
+                        'timeUnit': 'MILLISECONDS',
+                        'value': 250
+                    }
+                },
+                'times': {
+                    'remainingTimes': 1,
+                    'unlimited': false
+                }
+            }
+        );
+        client.mockAnyResponse(
+            {
+                'httpRequest': {
+                    'path': '/secondPath'
+                },
+                'httpResponse': {
+                    'statusCode': 200,
+                    'body': JSON.stringify({name: 'second_body'}),
+                    'delay': {
+                        'timeUnit': 'MILLISECONDS',
+                        'value': 250
+                    }
+                },
+                'times': {
+                    'remainingTimes': 1,
+                    'unlimited': false
+                }
+            }
+        );
+
+        // then - matching no expectation
+        xmlhttp.open("GET", "http://localhost:1080/otherPath", false);
+        xmlhttp.send();
+
+        expect(xmlhttp.status).toEqual(404);
+
+        // then - matching first expectation
+        xmlhttp.open("GET", "http://localhost:1080/firstPath", false);
+        xmlhttp.send();
+
+        expect(xmlhttp.status).toEqual(200);
+        expect(xmlhttp.responseText).toEqual('{"name":"first_body"}');
+
+        // then - matching second expectation
+        xmlhttp.open("GET", "http://localhost:1080/secondPath", false);
+        xmlhttp.send();
+
+        expect(xmlhttp.status).toEqual(200);
+        expect(xmlhttp.responseText).toEqual('{"name":"second_body"}');
+    });
+
+    it("should match on query string parameters only", function () {
+        // when
+        var client = mockServerClient("localhost", 1080);
+        client.mockAnyResponse(
+            {
+                'httpRequest': {
+                    'queryStringParameters': [
+                        {
+                            'name': 'param',
+                            'values': ['first']
+                        }
+                    ]
+                },
+                'httpResponse': {
+                    'statusCode': 200,
+                    'body': JSON.stringify({name: 'first_body'}),
+                    'delay': {
+                        'timeUnit': 'MILLISECONDS',
+                        'value': 250
+                    }
+                },
+                'times': {
+                    'remainingTimes': 1,
+                    'unlimited': false
+                }
+            }
+        );
+        client.mockAnyResponse(
+            {
+                'httpRequest': {
+                    'queryStringParameters': [
+                        {
+                            'name': 'param',
+                            'values': ['second']
+                        }
+                    ]
+                },
+                'httpResponse': {
+                    'statusCode': 200,
+                    'body': JSON.stringify({name: 'second_body'}),
+                    'delay': {
+                        'timeUnit': 'MILLISECONDS',
+                        'value': 250
+                    }
+                },
+                'times': {
+                    'remainingTimes': 1,
+                    'unlimited': false
+                }
+            }
+        );
+
+        // then - matching no expectation
+        xmlhttp.open("GET", "http://localhost:1080/somePath?param=other", false);
+        xmlhttp.send();
+
+        expect(xmlhttp.status).toEqual(404);
+
+        // then - matching first expectation
+        xmlhttp.open("GET", "http://localhost:1080/somePath?param=first", false);
+        xmlhttp.send();
+
+        expect(xmlhttp.status).toEqual(200);
+        expect(xmlhttp.responseText).toEqual('{"name":"first_body"}');
+
+        // then - matching second expectation
+        xmlhttp.open("GET", "http://localhost:1080/somePath?param=second", false);
+        xmlhttp.send();
+
+        expect(xmlhttp.status).toEqual(200);
+        expect(xmlhttp.responseText).toEqual('{"name":"second_body"}');
+    });
+
     it("should match on body only", function () {
         // when
         var client = mockServerClient("localhost", 1080);
         client.mockAnyResponse(
             {
                 'httpRequest': {
-                    'path': '/somePath',
                     'body': {
                         'type': "STRING",
                         'value': 'someBody'
@@ -144,7 +342,6 @@ describe("mockServerClient client:", function () {
         client.mockAnyResponse(
             {
                 'httpRequest': {
-                    'path': '/somePath',
                     'body': {
                         'type': "REGEX",
                         'value': 'someOtherBody'
@@ -165,22 +362,174 @@ describe("mockServerClient client:", function () {
             }
         );
 
-        // then - non matching request
+        // then - matching no expectation
         xmlhttp.open("POST", "http://localhost:1080/somePath", false);
         xmlhttp.send("someIncorrectBody");
 
         expect(xmlhttp.status).toEqual(404);
 
-        // then - matching request
+        // then - matching first expectation
         xmlhttp.open("POST", "http://localhost:1080/somePath", false);
         xmlhttp.send("someBody");
 
         expect(xmlhttp.status).toEqual(200);
         expect(xmlhttp.responseText).toEqual('{"name":"first_body"}');
 
-        // then - matching request, but no times remaining
+        // then - matching second expectation
         xmlhttp.open("POST", "http://localhost:1080/somePath", false);
         xmlhttp.send("someOtherBody");
+
+        expect(xmlhttp.status).toEqual(200);
+        expect(xmlhttp.responseText).toEqual('{"name":"second_body"}');
+    });
+
+    it("should match on headers only", function () {
+        // when
+        var client = mockServerClient("localhost", 1080);
+        client.mockAnyResponse(
+            {
+                'httpRequest': {
+                    'headers': [
+                        {
+                            'name': 'header',
+                            'values': ['first']
+                        }
+                    ]
+                },
+                'httpResponse': {
+                    'statusCode': 200,
+                    'body': JSON.stringify({name: 'first_body'}),
+                    'delay': {
+                        'timeUnit': 'MILLISECONDS',
+                        'value': 250
+                    }
+                },
+                'times': {
+                    'remainingTimes': 1,
+                    'unlimited': false
+                }
+            }
+        );
+        client.mockAnyResponse(
+            {
+                'httpRequest': {
+                    'headers': [
+                        {
+                            'name': 'header',
+                            'values': ['second']
+                        }
+                    ]
+                },
+                'httpResponse': {
+                    'statusCode': 200,
+                    'body': JSON.stringify({name: 'second_body'}),
+                    'delay': {
+                        'timeUnit': 'MILLISECONDS',
+                        'value': 250
+                    }
+                },
+                'times': {
+                    'remainingTimes': 1,
+                    'unlimited': false
+                }
+            }
+        );
+
+        // then - matching no expectation
+        xmlhttp.open("GET", "http://localhost:1080/somePath", false);
+        xmlhttp.setRequestHeader('header', 'other');
+        xmlhttp.send();
+
+        expect(xmlhttp.status).toEqual(404);
+
+        // then - matching first expectation
+        xmlhttp.open("GET", "http://localhost:1080/somePath", false);
+        xmlhttp.setRequestHeader('header', 'first');
+        xmlhttp.send();
+
+        expect(xmlhttp.status).toEqual(200);
+        expect(xmlhttp.responseText).toEqual('{"name":"first_body"}');
+
+        // then - matching second expectation
+        xmlhttp.open("GET", "http://localhost:1080/somePath", false);
+        xmlhttp.setRequestHeader('header', 'second');
+        xmlhttp.send();
+
+        expect(xmlhttp.status).toEqual(200);
+        expect(xmlhttp.responseText).toEqual('{"name":"second_body"}');
+    });
+
+    it("should match on cookies only", function () {
+        // when
+        var client = mockServerClient("localhost", 1080);
+        client.mockAnyResponse(
+            {
+                'httpRequest': {
+                    'cookies': [
+                        {
+                            'name': 'cookie',
+                            'value': 'first'
+                        }
+                    ]
+                },
+                'httpResponse': {
+                    'statusCode': 200,
+                    'body': JSON.stringify({name: 'first_body'}),
+                    'delay': {
+                        'timeUnit': 'MILLISECONDS',
+                        'value': 250
+                    }
+                },
+                'times': {
+                    'remainingTimes': 1,
+                    'unlimited': false
+                }
+            }
+        );
+        client.mockAnyResponse(
+            {
+                'httpRequest': {
+                    'cookies': [
+                        {
+                            'name': 'cookie',
+                            'value': 'second'
+                        }
+                    ]
+                },
+                'httpResponse': {
+                    'statusCode': 200,
+                    'body': JSON.stringify({name: 'second_body'}),
+                    'delay': {
+                        'timeUnit': 'MILLISECONDS',
+                        'value': 250
+                    }
+                },
+                'times': {
+                    'remainingTimes': 1,
+                    'unlimited': false
+                }
+            }
+        );
+
+        // then - matching no expectation
+        document.cookie = "cookie=other";
+        xmlhttp.open("GET", "http://localhost:1080/somePath", false);
+        xmlhttp.send();
+
+        expect(xmlhttp.status).toEqual(404);
+
+        // then - matching first expectation
+        document.cookie = "cookie=first";
+        xmlhttp.open("GET", "http://localhost:1080/somePath", false);
+        xmlhttp.send();
+
+        expect(xmlhttp.status).toEqual(200);
+        expect(xmlhttp.responseText).toEqual('{"name":"first_body"}');
+
+        // then - matching second expectation
+        document.cookie = "cookie=second";
+        xmlhttp.open("GET", "http://localhost:1080/somePath", false);
+        xmlhttp.send();
 
         expect(xmlhttp.status).toEqual(200);
         expect(xmlhttp.responseText).toEqual('{"name":"second_body"}');

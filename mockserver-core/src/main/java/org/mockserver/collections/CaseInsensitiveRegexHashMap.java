@@ -135,6 +135,12 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
     }
 
     public synchronized NottableString put(NottableString key, NottableString value) {
+        if (key == null) {
+            throw new IllegalArgumentException("key must not be null");
+        }
+        if (value == null) {
+            throw new IllegalArgumentException("key must not be null");
+        }
         return super.put(key, value);
     }
 

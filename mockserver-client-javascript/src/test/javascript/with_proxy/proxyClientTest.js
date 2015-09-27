@@ -48,7 +48,6 @@ describe("proxyClient client:", function () {
             }, 1);
     });
 
-
     it("should fail when no requests have been sent", function () {
         // given
         var client = proxyClient("localhost", 1090);

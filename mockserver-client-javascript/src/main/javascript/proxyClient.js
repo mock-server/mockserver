@@ -19,7 +19,7 @@ var proxyClient = function (host, port) {
             body: "",
             headers: headers,
             cookies: [],
-            parameters: []
+            queryStringParameters: []
         }
     };
     /**

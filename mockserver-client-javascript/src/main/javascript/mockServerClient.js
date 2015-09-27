@@ -32,10 +32,10 @@ var mockServerClient = function (host, port) {
         return {
             method: "",
             path: path,
+            queryStringParameters: [],
             body: "",
             headers: headers,
-            cookies: [],
-            parameters: []
+            cookies: []
         }
     };
     var createExpectation = function (path, responseBody, statusCode) {
