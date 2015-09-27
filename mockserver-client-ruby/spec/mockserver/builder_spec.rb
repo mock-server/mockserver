@@ -5,7 +5,7 @@ describe MockServer::Model::DSL do
 
   it 'generates http requests correctly' do
     mock_request                  = http_request(:POST, '/login')
-    mock_request.query_parameters = [parameter('returnUrl', '/account')]
+    mock_request.query_string_parameters = [parameter('returnUrl', '/account')]
     mock_request.cookies          = [cookie('sessionId', '2By8LOhBmaW5nZXJwcmludCIlMDAzMW')]
     mock_request.body             = exact("{username:'foo', password:'bar'}")
 
@@ -13,7 +13,7 @@ describe MockServer::Model::DSL do
 
     # Block style
     mock_request = request(:POST, '/login') do |request|
-      request.query_parameters = [parameter('returnUrl', '/account')]
+      request.query_string_parameters = [parameter('returnUrl', '/account')]
       request.cookies          = [cookie('sessionId', '2By8LOhBmaW5nZXJwcmludCIlMDAzMW')]
       request.body             = exact("{username:'foo', password:'bar'}")
     end

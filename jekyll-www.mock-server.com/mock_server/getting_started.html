@@ -202,8 +202,8 @@ expectation = expectation <span class="keyword">do</span> |expectation|
      expectation.request <span class="keyword">do</span> |request|
         request.method = <span class="string_literal">'POST'</span>
         request.path = <span class="string_literal">'/login'</span>
-        request.query_parameters << parameter(<span class="string_literal">'returnUrl'</span>, <span class="string_literal">'/account'</span>)
-        request.query_parameters << parameter(<span class="string_literal">'_timestamp'</span>, <span class="string_literal">'1430199066291'</span>)
+        request.query_string_parameters << parameter(<span class="string_literal">'returnUrl'</span>, <span class="string_literal">'/account'</span>)
+        request.query_string_parameters << parameter(<span class="string_literal">'_timestamp'</span>, <span class="string_literal">'1430199066291'</span>)
         request.cookies = [cookie(<span class="string_literal">'sessionId'</span>, <span class="string_literal">'2By8LOhBmaW5nZXJwcmludCIlMDAzMW'</span>)]
         request.body = exact({ username: <span class="string_literal">'foo'</span>, password: <span class="string_literal">'bar'</span> }.to_json)
      end
