@@ -3,7 +3,7 @@ require 'hashie'
 require_relative './array_of'
 
 #
-# A class to model parameters in payloads.
+# A class to model headers in payloads.
 # @author:: Nayyara Samuel (mailto: nayyara.samuel@opower.com)
 #
 module MockServer::Model
@@ -14,8 +14,8 @@ module MockServer::Model
     end
   end
 
-  # Model for parameter
-  class Parameter < Hashie::Dash
+  # Model for header
+  class Header < Hashie::Dash
     include Hashie::Extensions::MethodAccess
     include Hashie::Extensions::IgnoreUndeclared
     include Hashie::Extensions::Coercion
@@ -27,17 +27,17 @@ module MockServer::Model
     coerce_key :values, Strings
   end
 
-  # A collection that only stores parameters
-  class Parameters < ArrayOf
+  # A collection that only stores headers
+  class Headers < ArrayOf
     def child_class
-      Parameter
+      Header
     end
   end
 
-  # DSL methods for parameter
+  # DSL methods for header
   module DSL
-    def parameter(key, *value)
-      Parameter.new(name: key, values: value)
+    def header(key, *value)
+      Header.new(name: key, values: value)
     end
   end
 end

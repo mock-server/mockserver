@@ -1,7 +1,8 @@
 # encoding: UTF-8
 require_relative './body'
 require_relative './delay'
-require_relative './parameter'
+require_relative './header'
+require_relative './cookie'
 require 'base64'
 
 #
@@ -16,13 +17,13 @@ module MockServer::Model
     include Hashie::Extensions::Coercion
 
     property :status_code, default: 200
-    property :cookies, default: Parameters.new([])
-    property :headers, default: Parameters.new([])
+    property :cookies, default: Cookies.new([])
+    property :headers, default: Headers.new([])
     property :delay
     property :body
 
-    coerce_key :cookies, Parameters
-    coerce_key :headers, Parameters
+    coerce_key :cookies, Cookies
+    coerce_key :headers, Headers
     coerce_key :delay, Delay
     coerce_key :body, String
   end

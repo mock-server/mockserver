@@ -1,6 +1,8 @@
 # encoding: UTF-8
 require 'hashie'
 require_relative './parameter'
+require_relative './header'
+require_relative './cookie'
 require_relative './body'
 require_relative './enum'
 require 'base64'
@@ -27,8 +29,8 @@ module MockServer::Model
     property :method, required: true, default: :GET
     property :path, required: true, default: ''
     property :query_string_parameters, default: Parameters.new([])
-    property :cookies, default: Parameters.new([])
-    property :headers, default: Parameters.new([])
+    property :cookies, default: Cookies.new([])
+    property :headers, default: Headers.new([])
     property :body, transform_with: (lambda do |body|
       is_base_64_body = body && body.type == :BINARY
       body_value = is_base_64_body ? Base64.decode64(body.value) : body.value
@@ -38,8 +40,8 @@ module MockServer::Model
     coerce_key :method, HTTPMethod
     coerce_key :path, String
     coerce_key :query_string_parameters, Parameters
-    coerce_key :cookies, Parameters
-    coerce_key :headers, Parameters
+    coerce_key :cookies, Cookies
+    coerce_key :headers, Headers
     coerce_key :body, Body
 
     # Creates a request from a hash

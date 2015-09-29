@@ -11,7 +11,7 @@
         "cookies": [
             {
                 "name": "sessionId",
-                "values": ["2By8LOhBmaW5nZXJwcmludCIlMDAzMW"]
+              "value": "2By8LOhBmaW5nZXJwcmludCIlMDAzMW"
             }
         ],
         "body": {

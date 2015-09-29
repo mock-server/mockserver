@@ -16,7 +16,7 @@ describe MockServer::MockServerClient do
     stub_request(:put, /.+\/clear/).with(body: search_request_json, headers: { 'Content-Type' => 'application/json' }).to_return(status: 202)
     stub_request(:put, /.+\/reset/).with(headers: { 'Content-Type' => 'application/json' }).to_return(status: 202)
     stub_request(:put, /.+\/retrieve/).with(body: search_request_json, headers: { 'Content-Type' => 'application/json' }).to_return(
-      body:   "[]",
+      body: '[]',
       status: 200
     )
   end

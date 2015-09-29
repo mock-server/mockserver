@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <groupId>org.mock-server</groupId>
         <artifactId>mockserver</artifactId>
@@ -19,6 +19,34 @@
 
     <build>
         <plugins>
+            <!-- run mock server for ruby client tests -->
+            <plugin>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>mockserver-maven-plugin</artifactId>
+                <version>${project.version}</version>
+                <configuration>
+                    <logLevel>WARN</logLevel>
+                    <serverPort>1080</serverPort>
+                    <proxyPort>1090</proxyPort>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>pre-test</id>
+                        <phase>generate-test-sources</phase>
+                        <goals>
+                            <goal>start</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>post-test</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>stop</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- run ruby bundle build and install -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
@@ -55,8 +83,6 @@
                             <arguments>
                                 <argument>exec</argument>
                                 <argument>rake</argument>
-                                <argument>build</argument>
-                                <argument>spec</argument>
                             </arguments>
                             <environmentVariables>
                                 <BUNDLE_GEMFILE>${basedir}/Gemfile</BUNDLE_GEMFILE>
