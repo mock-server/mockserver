@@ -14,7 +14,6 @@ describe("mockServerClient client:", function () {
                 'httpRequest': {
                     'method': 'POST',
                     'path': '/somePath',
-                    'queryString': 'test=true',
                     'queryStringParameters': [
                         {
                             'name': 'test',
@@ -68,7 +67,6 @@ describe("mockServerClient client:", function () {
                 'httpRequest': {
                     'method': 'POST',
                     'path': '/somePath',
-                    'queryString': 'test=true',
                     'queryStringParameters': [
                         {
                             'name': 'test',
