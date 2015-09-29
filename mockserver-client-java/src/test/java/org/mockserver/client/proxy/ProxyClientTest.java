@@ -7,11 +7,13 @@ import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.netty.NettyHttpClient;
+import org.mockserver.client.netty.SocketConnectionException;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.VerificationSequenceSerializer;
 import org.mockserver.client.serialization.VerificationSerializer;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpStatusCode;
 import org.mockserver.model.OutboundHttpRequest;
 import org.mockserver.model.StringBody;
 import org.mockserver.verify.Verification;
@@ -80,12 +82,38 @@ public class ProxyClientTest {
     }
 
     @Test
-    public void shouldSendResetRequest() throws Exception {
+    public void shouldSendDumpToLogAsJSONRequest() throws Exception {
         // when
-        proxyClient.reset();
+        proxyClient.dumpToLogAsJSON();
 
         // then
-        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1090, "", request().withMethod("PUT").withPath("/reset")));
+        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1090, "", request().withMethod("PUT").withPath("/dumpToLog").withBody("")));
+    }
+
+    @Test
+    public void shouldQueryRunningStatus() throws Exception {
+        // given
+        when(mockHttpClient.sendRequest(any(OutboundHttpRequest.class))).thenReturn(response().withStatusCode(HttpStatusCode.OK_200.code()));
+
+        // when
+        boolean running = proxyClient.isRunning();
+
+        // then
+        assertTrue(running);
+        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1090, "", request().withMethod("PUT").withPath("/status")));
+    }
+
+    @Test
+    public void shouldQueryRunningStatusWhenSocketConnectionException() throws Exception {
+        // given
+        when(mockHttpClient.sendRequest(any(OutboundHttpRequest.class))).thenThrow(SocketConnectionException.class);
+
+        // when
+        boolean running = proxyClient.isRunning();
+
+        // then
+        assertFalse(running);
+        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1090, "", request().withMethod("PUT").withPath("/status")));
     }
 
     @Test
@@ -98,21 +126,21 @@ public class ProxyClientTest {
     }
 
     @Test
-    public void shouldSendDumpToLogAsJSONRequest() throws Exception {
-        // when
-        proxyClient.dumpToLogAsJSON();
-
-        // then
-        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1090, "", request().withMethod("PUT").withPath("/dumpToLog").withBody("")));
-    }
-
-    @Test
     public void shouldSendDumpToLogAsJavaRequest() throws Exception {
         // when
         proxyClient.dumpToLogAsJava();
 
         // then
         verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1090, "", request().withMethod("PUT").withPath("/dumpToLog?type=java").withBody("")));
+    }
+
+    @Test
+    public void shouldSendResetRequest() throws Exception {
+        // when
+        proxyClient.reset();
+
+        // then
+        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1090, "", request().withMethod("PUT").withPath("/reset")));
     }
 
     @Test

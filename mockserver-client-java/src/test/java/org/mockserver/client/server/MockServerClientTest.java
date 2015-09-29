@@ -8,6 +8,7 @@ import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.netty.NettyHttpClient;
+import org.mockserver.client.netty.SocketConnectionException;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.client.serialization.VerificationSequenceSerializer;
@@ -278,7 +279,6 @@ public class MockServerClientTest {
         );
     }
 
-
     @Test
     public void shouldSendExpectationWithCallback() throws Exception {
         // when
@@ -341,12 +341,12 @@ public class MockServerClientTest {
     }
 
     @Test
-    public void shouldSendResetRequest() throws Exception {
+    public void shouldSendDumpToLogRequest() throws Exception {
         // when
-        mockServerClient.reset();
+        mockServerClient.dumpToLog();
 
         // then
-        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1080, "", request().withMethod("PUT").withPath("/reset")));
+        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1080, "", request().withMethod("PUT").withPath("/dumpToLog").withBody("", Charsets.UTF_8)));
     }
 
     @Test
@@ -359,12 +359,38 @@ public class MockServerClientTest {
     }
 
     @Test
-    public void shouldSendDumpToLogRequest() throws Exception {
+    public void shouldQueryRunningStatus() throws Exception {
+        // given
+        when(mockHttpClient.sendRequest(any(OutboundHttpRequest.class))).thenReturn(response().withStatusCode(HttpStatusCode.OK_200.code()));
+
         // when
-        mockServerClient.dumpToLog();
+        boolean running = mockServerClient.isRunning();
 
         // then
-        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1080, "", request().withMethod("PUT").withPath("/dumpToLog").withBody("", Charsets.UTF_8)));
+        assertTrue(running);
+        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1080, "", request().withMethod("PUT").withPath("/status")));
+    }
+
+    @Test
+    public void shouldQueryRunningStatusWhenSocketConnectionException() throws Exception {
+        // given
+        when(mockHttpClient.sendRequest(any(OutboundHttpRequest.class))).thenThrow(SocketConnectionException.class);
+
+        // when
+        boolean running = mockServerClient.isRunning();
+
+        // then
+        assertFalse(running);
+        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1080, "", request().withMethod("PUT").withPath("/status")));
+    }
+
+    @Test
+    public void shouldSendResetRequest() throws Exception {
+        // when
+        mockServerClient.reset();
+
+        // then
+        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1080, "", request().withMethod("PUT").withPath("/reset")));
     }
 
     @Test

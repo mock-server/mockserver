@@ -1,4 +1,4 @@
-package org.mockserver.proxy.http;
+package org.mockserver.integration.proxy.http;
 
 import org.junit.Test;
 import org.mockserver.client.proxy.ProxyClient;

@@ -1,11 +1,13 @@
 package org.mockserver.cli;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockserver.mockserver.MockServerBuilder;
 import org.mockserver.proxy.ProxyBuilder;
 import org.mockserver.socket.PortFactory;
+import org.mockserver.stop.StopEventQueue;
 
 import java.io.PrintStream;
 
@@ -22,10 +24,15 @@ public class MainTest {
     private final static Integer PROXY_PORT = PortFactory.findFreePort();
     private final static Integer PROXY_REMOTE_PORT = PortFactory.findFreePort();
 
-    @Mock
-    private ProxyBuilder mockProxyBuilder;
+    private MockServerBuilder previousMockServerBuilder;
+    private ProxyBuilder previousProxyBuilder;
+    private PrintStream previousPrintStream;
+    private Runtime previousRuntime;
+
     @Mock
     private MockServerBuilder mockMockServerBuilder;
+    @Mock
+    private ProxyBuilder mockProxyBuilder;
     @Mock
     private PrintStream mockPrintStream;
     @Mock
@@ -34,13 +41,30 @@ public class MainTest {
     @Before
     public void setupMocks() {
         initMocks(this);
+
+        previousMockServerBuilder = Main.mockServerBuilder;
+        previousProxyBuilder = Main.httpProxyBuilder;
+        previousPrintStream = Main.outputPrintStream;
+        previousRuntime = Main.runtime;
+
         Main.mockServerBuilder = mockMockServerBuilder;
         Main.httpProxyBuilder = mockProxyBuilder;
         Main.outputPrintStream = mockPrintStream;
         Main.runtime = mockRuntime;
 
+        when(mockMockServerBuilder.withStopEventQueue(any(StopEventQueue.class))).thenReturn(mockMockServerBuilder);
         when(mockMockServerBuilder.withHTTPPort(anyInt())).thenReturn(mockMockServerBuilder);
+
+        when(mockProxyBuilder.withStopEventQueue(any(StopEventQueue.class))).thenReturn(mockProxyBuilder);
         when(mockProxyBuilder.withLocalPort(anyInt())).thenReturn(mockProxyBuilder);
+    }
+
+    @After
+    public void cleanUpFixture() {
+        Main.mockServerBuilder = previousMockServerBuilder;
+        Main.httpProxyBuilder = previousProxyBuilder;
+        Main.outputPrintStream = previousPrintStream;
+        Main.runtime = previousRuntime;
     }
 
     @Test

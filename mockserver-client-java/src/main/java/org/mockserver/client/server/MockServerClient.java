@@ -2,11 +2,13 @@ package org.mockserver.client.server;
 
 import com.google.common.base.Charsets;
 import org.mockserver.client.AbstractClient;
+import org.mockserver.client.netty.SocketConnectionException;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.model.HttpStatusCode;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.mockserver.verify.VerificationTimes;
@@ -145,11 +147,15 @@ public class MockServerClient extends AbstractClient {
     }
 
     /**
-     * Reset MockServer by clearing all expectations
+     * Returns whether MockServer is running
      */
-    public MockServerClient reset() {
-        sendRequest(request().withMethod("PUT").withPath(calculatePath("reset")));
-        return this;
+    public boolean isRunning() {
+        try {
+            HttpResponse httpResponse = sendRequest(request().withMethod("PUT").withPath(calculatePath("status")));
+            return httpResponse.getStatusCode() == HttpStatusCode.OK_200.code();
+        } catch (SocketConnectionException sce) {
+            return false;
+        }
     }
 
     /**
@@ -167,6 +173,14 @@ public class MockServerClient extends AbstractClient {
                 logger.warn("Failed to send stop request to MockServer " + e.getMessage());
             }
         }
+        return this;
+    }
+
+    /**
+     * Reset MockServer by clearing all expectations
+     */
+    public MockServerClient reset() {
+        sendRequest(request().withMethod("PUT").withPath(calculatePath("reset")));
         return this;
     }
 

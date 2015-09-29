@@ -5,6 +5,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import org.mockserver.mockserver.MockServerBuilder;
 import org.mockserver.proxy.ProxyBuilder;
+import org.mockserver.stop.StopEventQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,6 +56,8 @@ public class Main {
     @VisibleForTesting
     static MockServerBuilder mockServerBuilder = new MockServerBuilder();
     @VisibleForTesting
+    static StopEventQueue stopEventQueue = new StopEventQueue();
+    @VisibleForTesting
     static PrintStream outputPrintStream = System.out;
     @VisibleForTesting
     static Runtime runtime = Runtime.getRuntime();
@@ -80,10 +83,10 @@ public class Main {
 
         if (parsedArguments.size() > 0 && validateArguments(parsedArguments)) {
             if (parsedArguments.containsKey(SERVER_PORT_KEY)) {
-                mockServerBuilder.withHTTPPort(Integer.parseInt(parsedArguments.get(SERVER_PORT_KEY))).build();
+                mockServerBuilder.withStopEventQueue(stopEventQueue).withHTTPPort(Integer.parseInt(parsedArguments.get(SERVER_PORT_KEY))).build();
             }
             if (parsedArguments.containsKey(PROXY_PORT_KEY)) {
-                ProxyBuilder proxyBuilder = httpProxyBuilder.withLocalPort(Integer.parseInt(parsedArguments.get(PROXY_PORT_KEY)));
+                ProxyBuilder proxyBuilder = httpProxyBuilder.withStopEventQueue(stopEventQueue).withLocalPort(Integer.parseInt(parsedArguments.get(PROXY_PORT_KEY)));
                 if (parsedArguments.containsKey(PROXY_REMOTE_PORT_KEY)) {
                     String remoteHost = parsedArguments.get(PROXY_REMOTE_HOST_KEY);
                     if (Strings.isNullOrEmpty(remoteHost)) {

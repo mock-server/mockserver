@@ -1,4 +1,4 @@
-package org.mockserver.proxy.socks;
+package org.mockserver.integration.proxy.socks;
 
 import com.google.common.base.Charsets;
 import org.apache.http.HttpHost;
@@ -32,7 +32,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.*;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 

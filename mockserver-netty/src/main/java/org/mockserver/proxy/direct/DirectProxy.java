@@ -10,6 +10,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.mockserver.filters.LogFilter;
 import org.mockserver.proxy.Proxy;
+import org.mockserver.stop.StopEventQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +33,7 @@ public class DirectProxy implements Proxy {
     // netty
     private final EventLoopGroup bossGroup = new NioEventLoopGroup();
     private final EventLoopGroup workerGroup = new NioEventLoopGroup();
+    private StopEventQueue stopEventQueue = new StopEventQueue();
     private Channel channel;
     // remote socket
     private InetSocketAddress remoteSocket;
@@ -101,12 +103,19 @@ public class DirectProxy implements Proxy {
         try {
             bossGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
             workerGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
+            stopEventQueue.stop();
             channel.close();
             // wait for socket to be released
             TimeUnit.MILLISECONDS.sleep(500);
         } catch (Exception ie) {
             logger.trace("Exception while stopping MockServer proxy", ie);
         }
+    }
+
+    public DirectProxy withStopEventQueue(StopEventQueue stopEventQueue) {
+        this.stopEventQueue = stopEventQueue;
+        this.stopEventQueue.register(this);
+        return this;
     }
 
     public boolean isRunning() {

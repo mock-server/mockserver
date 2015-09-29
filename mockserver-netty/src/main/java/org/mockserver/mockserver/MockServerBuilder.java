@@ -1,6 +1,7 @@
 package org.mockserver.mockserver;
 
 import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.stop.StopEventQueue;
 
 /**
  * @author jamesdbloom
@@ -8,6 +9,12 @@ import org.mockserver.configuration.ConfigurationProperties;
 public class MockServerBuilder {
 
     private Integer port;
+    private StopEventQueue stopEventQueue = new StopEventQueue();
+
+    public MockServerBuilder withStopEventQueue(StopEventQueue stopEventQueue) {
+        this.stopEventQueue = stopEventQueue;
+        return this;
+    }
 
     /**
      * Configure HTTP port for proxy, setting this value will ensure HTTP is supported
@@ -28,6 +35,6 @@ public class MockServerBuilder {
      * Build an instance of the HttpProxy
      */
     public MockServer build() {
-        return new MockServer(port);
+        return new MockServer(port).withStopEventQueue(stopEventQueue);
     }
 }

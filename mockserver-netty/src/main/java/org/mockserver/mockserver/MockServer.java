@@ -9,6 +9,8 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.util.AttributeKey;
 import org.mockserver.filters.LogFilter;
 import org.mockserver.mock.MockServerMatcher;
+import org.mockserver.stop.StopEventQueue;
+import org.mockserver.stop.Stoppable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,7 +21,7 @@ import java.util.concurrent.TimeUnit;
  * An HTTP server that sends back the content of the received HTTP request
  * in a pretty plaintext form.
  */
-public class MockServer {
+public class MockServer implements Stoppable {
 
     public static final AttributeKey<LogFilter> LOG_FILTER = AttributeKey.valueOf("SERVER_LOG_FILTER");
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -30,6 +32,7 @@ public class MockServer {
     // netty
     private final EventLoopGroup bossGroup = new NioEventLoopGroup();
     private final EventLoopGroup workerGroup = new NioEventLoopGroup();
+    private StopEventQueue stopEventQueue = new StopEventQueue();
     private Channel channel;
 
     /**
@@ -92,12 +95,19 @@ public class MockServer {
         try {
             bossGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
             workerGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
+            stopEventQueue.stop();
             channel.close();
             // wait for socket to be released
             TimeUnit.MILLISECONDS.sleep(500);
         } catch (Exception ie) {
             logger.trace("Exception while stopping MockServer", ie);
         }
+    }
+
+    public MockServer withStopEventQueue(StopEventQueue stopEventQueue) {
+        this.stopEventQueue = stopEventQueue;
+        this.stopEventQueue.register(this);
+        return this;
     }
 
     public boolean isRunning() {

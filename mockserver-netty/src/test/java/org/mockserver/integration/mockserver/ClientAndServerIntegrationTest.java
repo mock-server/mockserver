@@ -1,29 +1,27 @@
-package org.mockserver.integration;
+package org.mockserver.integration.mockserver;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.mockserver.echo.http.EchoServer;
+import org.mockserver.integration.ClientAndServer;
 import org.mockserver.server.NettyAbstractClientServerIntegrationTest;
 import org.mockserver.socket.PortFactory;
-
-import java.util.concurrent.ExecutionException;
 
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 
 /**
  * @author jamesdbloom
  */
-public class ClientAndServerIntegrationAutoAllocatedPortTest extends NettyAbstractClientServerIntegrationTest {
+public class ClientAndServerIntegrationTest extends NettyAbstractClientServerIntegrationTest {
 
+    private static final int SERVER_HTTP_PORT = PortFactory.findFreePort();
     private final static int TEST_SERVER_HTTP_PORT = PortFactory.findFreePort();
-    private static int severHttpPort;
     private static EchoServer echoServer;
 
     @BeforeClass
-    public static void startServer() throws InterruptedException, ExecutionException {
+    public static void startServer() {
         // start mock server and client
-        mockServerClient = startClientAndServer(0);
-        severHttpPort = ((ClientAndServer)mockServerClient).getPort();
+        mockServerClient = startClientAndServer(SERVER_HTTP_PORT);
 
         // start echo servers
         echoServer = new EchoServer(TEST_SERVER_HTTP_PORT, false);
@@ -42,17 +40,17 @@ public class ClientAndServerIntegrationAutoAllocatedPortTest extends NettyAbstra
 
     @Override
     public void startServerAgain() {
-        startClientAndServer(severHttpPort);
+        startClientAndServer(SERVER_HTTP_PORT);
     }
 
     @Override
     public int getMockServerPort() {
-        return severHttpPort;
+        return SERVER_HTTP_PORT;
     }
 
     @Override
     public int getMockServerSecurePort() {
-        return severHttpPort;
+        return SERVER_HTTP_PORT;
     }
 
     @Override

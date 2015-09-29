@@ -1,9 +1,11 @@
 package org.mockserver.client.proxy;
 
 import org.mockserver.client.AbstractClient;
+import org.mockserver.client.netty.SocketConnectionException;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.model.HttpStatusCode;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.mockserver.verify.VerificationTimes;
@@ -81,11 +83,15 @@ public class ProxyClient extends AbstractClient {
     }
 
     /**
-     * Reset the proxy by clearing recorded requests
+     * Returns whether the proxy is running
      */
-    public ProxyClient reset() {
-        sendRequest(request().withMethod("PUT").withPath(calculatePath("reset")));
-        return this;
+    public boolean isRunning() {
+        try {
+            HttpResponse httpResponse = sendRequest(request().withMethod("PUT").withPath(calculatePath("status")));
+            return httpResponse.getStatusCode() == HttpStatusCode.OK_200.code();
+        } catch (SocketConnectionException sce) {
+            return false;
+        }
     }
 
     /**
@@ -103,6 +109,14 @@ public class ProxyClient extends AbstractClient {
                 logger.warn("Failed to send stop request to proxy " + e.getMessage());
             }
         }
+        return this;
+    }
+
+    /**
+     * Reset the proxy by clearing recorded requests
+     */
+    public ProxyClient reset() {
+        sendRequest(request().withMethod("PUT").withPath(calculatePath("reset")));
         return this;
     }
 

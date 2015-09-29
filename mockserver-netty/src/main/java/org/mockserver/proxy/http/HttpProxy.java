@@ -11,6 +11,7 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.filters.LogFilter;
 import org.mockserver.proxy.Proxy;
+import org.mockserver.stop.StopEventQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,12 +34,14 @@ import java.util.concurrent.TimeUnit;
 public class HttpProxy implements Proxy {
 
     private static final Logger logger = LoggerFactory.getLogger(HttpProxy.class);
+    private static ProxySelector previousProxySelector;
     // proxy
     private final LogFilter logFilter = new LogFilter();
     private final SettableFuture<String> hasStarted;
     // netty
     private final EventLoopGroup bossGroup = new NioEventLoopGroup();
     private final EventLoopGroup workerGroup = new NioEventLoopGroup();
+    private StopEventQueue stopEventQueue = new StopEventQueue();
     private Channel channel;
 
     /**
@@ -68,7 +71,7 @@ public class HttpProxy implements Proxy {
                             .childAttr(HTTP_CONNECT_SOCKET, new InetSocketAddress(port))
                             .childAttr(LOG_FILTER, logFilter)
                             .bind(port)
-                            .sync()
+                            .syncUninterruptibly()
                             .channel();
 
                     logger.info("MockServer proxy started on port: {}", ((InetSocketAddress) channel.localAddress()).getPort());
@@ -76,9 +79,7 @@ public class HttpProxy implements Proxy {
                     proxyStarted(port);
                     hasStarted.set("STARTED");
 
-                    channel.closeFuture().sync();
-                } catch (InterruptedException ie) {
-                    logger.error("MockServer proxy receive InterruptedException", ie);
+                    channel.closeFuture().syncUninterruptibly();
                 } finally {
                     bossGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
                     workerGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
@@ -93,17 +94,40 @@ public class HttpProxy implements Proxy {
         }
     }
 
+    private static ProxySelector createProxySelector(final String host, final int port) {
+        return new ProxySelector() {
+            @Override
+            public List<java.net.Proxy> select(URI uri) {
+                return Arrays.asList(
+                        new java.net.Proxy(java.net.Proxy.Type.SOCKS, new InetSocketAddress(host, port))
+                );
+            }
+
+            @Override
+            public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {
+                logger.error("Connection could not be established to proxy at socket [" + sa + "]", ioe);
+            }
+        };
+    }
+
     public void stop() {
         try {
             proxyStopping();
             bossGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
             workerGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
+            stopEventQueue.stop();
             channel.close();
             // wait for socket to be released
             TimeUnit.MILLISECONDS.sleep(500);
         } catch (Exception ie) {
             logger.trace("Exception while stopping MockServer proxy", ie);
         }
+    }
+
+    public HttpProxy withStopEventQueue(StopEventQueue stopEventQueue) {
+        this.stopEventQueue = stopEventQueue;
+        this.stopEventQueue.register(this);
+        return this;
     }
 
     public boolean isRunning() {
@@ -121,24 +145,6 @@ public class HttpProxy implements Proxy {
 
     public Integer getPort() {
         return ((InetSocketAddress) channel.localAddress()).getPort();
-    }
-
-    private static ProxySelector previousProxySelector;
-
-    private static ProxySelector createProxySelector(final String host, final int port) {
-        return new ProxySelector() {
-            @Override
-            public List<java.net.Proxy> select(URI uri) {
-                return Arrays.asList(
-                        new java.net.Proxy(java.net.Proxy.Type.SOCKS, new InetSocketAddress(host, port))
-                );
-            }
-
-            @Override
-            public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {
-                logger.error("Connection could not be established to proxy at socket [" + sa + "]", ioe);
-            }
-        };
     }
 
     protected void proxyStarted(Integer port) {

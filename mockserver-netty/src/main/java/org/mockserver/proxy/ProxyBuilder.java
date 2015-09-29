@@ -2,6 +2,7 @@ package org.mockserver.proxy;
 
 import org.mockserver.proxy.direct.DirectProxy;
 import org.mockserver.proxy.http.HttpProxy;
+import org.mockserver.stop.StopEventQueue;
 
 /**
  * This class should be used to configure the HttpProxy, using this class is the simplest way to create an HttpProxy instance
@@ -13,6 +14,12 @@ public class ProxyBuilder {
     private Integer localPort;
     private String remoteHost;
     private Integer remotePort;
+    private StopEventQueue stopEventQueue = new StopEventQueue();
+
+    public ProxyBuilder withStopEventQueue(StopEventQueue stopEventQueue) {
+        this.stopEventQueue = stopEventQueue;
+        return this;
+    }
 
     /**
      * Configure the local port for the proxy, this will be the same port for all traffic including HTTP, SOCKS, CONNECT and SSL
@@ -42,9 +49,9 @@ public class ProxyBuilder {
     public Proxy build() {
         if (localPort != null) {
             if (remoteHost != null && remotePort != null) {
-                return new DirectProxy(localPort, remoteHost, remotePort);
+                return new DirectProxy(localPort, remoteHost, remotePort).withStopEventQueue(stopEventQueue);
             } else {
-                return new HttpProxy(localPort);
+                return new HttpProxy(localPort).withStopEventQueue(stopEventQueue);
             }
         } else {
             throw new IllegalArgumentException("LocalPort must be specified before the proxy is started");
