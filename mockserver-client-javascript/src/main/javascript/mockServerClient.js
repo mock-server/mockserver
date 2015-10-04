@@ -216,16 +216,17 @@ var mockServerClient = function (host, port) {
         return _this;
     };
     /**
-     * Pretty-print the json for all expectations for the specified path.
-     * This is particularly helpful when debugging expectations. The expectation
-     * are printed into a dedicated log called mockserver_request.log
+     * Retrieve the recorded requests that match the parameter, as follows:
+     * - use a string value to match on path,
+     * - use a request matcher object to match on a full request,
+     * - or use null to retrieve all requests
      *
-     * @param pathOrRequestMatcher  if a string is passed in the value will be treated as the path to
-     *                              decide which expectations to to dump to the log, however if an object
-     *                              is passed in the value will be treated as a full request matcher object
+     * @param pathOrRequestMatcher  if a string is passed in the value will be treated as the path, however
+     *                              if an object is passed in the value will be treated as a full request
+     *                              matcher object, if null is passed in it will be treated as match all
      */
-    var dumpToLogs = function (pathOrRequestMatcher) {
-        xmlhttp.open("PUT", mockServerUrl + "/dumpToLog", false);
+    var retrieveRequests = function (pathOrRequestMatcher) {
+        xmlhttp.open("PUT", mockServerUrl + "/retrieve", false);
         xmlhttp.setRequestHeader("Content-Type", "application/json; charset=utf-8");
         if (typeof pathOrRequestMatcher === "string") {
             xmlhttp.send(JSON.stringify(createResponseMatcher(pathOrRequestMatcher)));
@@ -234,7 +235,31 @@ var mockServerClient = function (host, port) {
         } else {
             xmlhttp.send(JSON.stringify(createResponseMatcher(".*")));
         }
-        return _this;
+        return JSON.parse(xmlhttp.responseText);
+    };
+    /**
+     * Retrieve the setup expectations that match the parameter,
+     * the expectation is retrieved by matching the parameter
+     * on the expectations own request matcher, as follows:
+     * - use a string value to match on path,
+     * - use a request matcher object to match on a full request,
+     * - or use null to retrieve all requests
+     *
+     * @param pathOrRequestMatcher  if a string is passed in the value will be treated as the path, however
+     *                              if an object is passed in the value will be treated as a full request
+     *                              matcher object, if null is passed in it will be treated as match all
+     */
+    var retrieveExpectations = function (pathOrRequestMatcher) {
+        xmlhttp.open("PUT", mockServerUrl + "/retrieve?type=expectation", false);
+        xmlhttp.setRequestHeader("Content-Type", "application/json; charset=utf-8");
+        if (typeof pathOrRequestMatcher === "string") {
+            xmlhttp.send(JSON.stringify(createResponseMatcher(pathOrRequestMatcher)));
+        } else if (pathOrRequestMatcher) {
+            xmlhttp.send(JSON.stringify(pathOrRequestMatcher));
+        } else {
+            xmlhttp.send(JSON.stringify(createResponseMatcher(".*")));
+        }
+        return JSON.parse(xmlhttp.responseText);
     };
 
     var _this = {
@@ -245,7 +270,8 @@ var mockServerClient = function (host, port) {
         verifySequence: verifySequence,
         reset: reset,
         clear: clear,
-        dumpToLogs: dumpToLogs
+        retrieveRequests: retrieveRequests,
+        retrieveExpectations: retrieveExpectations
     };
     return _this;
 };

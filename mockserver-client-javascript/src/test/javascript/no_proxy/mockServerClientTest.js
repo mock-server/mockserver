@@ -883,4 +883,261 @@ describe("mockServerClient client:", function () {
 
         expect(xmlhttp.status).toEqual(404);
     });
+
+    it("should retrieve some expectations using object matcher", function () {
+        // when
+        var client = mockServerClient("localhost", 1080);
+        client.mockSimpleResponse('/somePathOne', {name: 'one'}, 201);
+        client.mockSimpleResponse('/somePathOne', {name: 'one'}, 201);
+        client.mockSimpleResponse('/somePathTwo', {name: 'two'}, 303);
+
+        // when
+        var expectations = client.retrieveExpectations({
+            "httpRequest": {
+                "path": "/somePathOne"
+            }
+        });
+
+        // then
+        expect(expectations.length).toEqual(2);
+        // first expectation
+        expect(expectations[0].httpRequest.path).toEqual('/somePathOne');
+        expect(expectations[0].httpResponse.body).toEqual('{"name":"one"}');
+        expect(expectations[0].httpResponse.statusCode).toEqual(201);
+        // second expectation
+        expect(expectations[1].httpRequest.path).toEqual('/somePathOne');
+        expect(expectations[1].httpResponse.body).toEqual('{"name":"one"}');
+        expect(expectations[1].httpResponse.statusCode).toEqual(201);
+    });
+
+    it("should retrieve some expectations using path", function () {
+        // when
+        var client = mockServerClient("localhost", 1080);
+        client.mockSimpleResponse('/somePathOne', {name: 'one'}, 201);
+        client.mockSimpleResponse('/somePathOne', {name: 'one'}, 201);
+        client.mockSimpleResponse('/somePathTwo', {name: 'two'}, 202);
+
+        // when
+        var expectations = client.retrieveExpectations("/somePathOne");
+
+        // then
+        expect(expectations.length).toEqual(2);
+        // first expectation
+        expect(expectations[0].httpRequest.path).toEqual('/somePathOne');
+        expect(expectations[0].httpResponse.body).toEqual('{"name":"one"}');
+        expect(expectations[0].httpResponse.statusCode).toEqual(201);
+        // second expectation
+        expect(expectations[1].httpRequest.path).toEqual('/somePathOne');
+        expect(expectations[1].httpResponse.body).toEqual('{"name":"one"}');
+        expect(expectations[1].httpResponse.statusCode).toEqual(201);
+    });
+
+    it("should retrieve all expectations using object matcher", function () {
+        // when
+        var client = mockServerClient("localhost", 1080);
+        client.mockSimpleResponse('/somePathOne', {name: 'one'}, 201);
+        client.mockSimpleResponse('/somePathOne', {name: 'one'}, 201);
+        client.mockSimpleResponse('/somePathTwo', {name: 'two'}, 202);
+
+        // when
+        var expectations = client.retrieveExpectations({
+            "httpRequest": {
+                "path": "/somePath.*"
+            }
+        });
+
+        // then
+        expect(expectations.length).toEqual(3);
+        // first expectation
+        expect(expectations[0].httpRequest.path).toEqual('/somePathOne');
+        expect(expectations[0].httpResponse.body).toEqual('{"name":"one"}');
+        expect(expectations[0].httpResponse.statusCode).toEqual(201);
+        // second expectation
+        expect(expectations[1].httpRequest.path).toEqual('/somePathOne');
+        expect(expectations[1].httpResponse.body).toEqual('{"name":"one"}');
+        expect(expectations[1].httpResponse.statusCode).toEqual(201);
+        // third expectation
+        expect(expectations[2].httpRequest.path).toEqual('/somePathTwo');
+        expect(expectations[2].httpResponse.body).toEqual('{"name":"two"}');
+        expect(expectations[2].httpResponse.statusCode).toEqual(202);
+    });
+
+    it("should retrieve all expectations using null matcher", function () {
+        // when
+        var client = mockServerClient("localhost", 1080);
+        client.mockSimpleResponse('/somePathOne', {name: 'one'}, 201);
+        client.mockSimpleResponse('/somePathOne', {name: 'one'}, 201);
+        client.mockSimpleResponse('/somePathTwo', {name: 'two'}, 202);
+
+        // when
+        var expectations = client.retrieveExpectations();
+
+        // then
+        expect(expectations.length).toEqual(3);
+        // first expectation
+        expect(expectations[0].httpRequest.path).toEqual('/somePathOne');
+        expect(expectations[0].httpResponse.body).toEqual('{"name":"one"}');
+        expect(expectations[0].httpResponse.statusCode).toEqual(201);
+        // second expectation
+        expect(expectations[1].httpRequest.path).toEqual('/somePathOne');
+        expect(expectations[1].httpResponse.body).toEqual('{"name":"one"}');
+        expect(expectations[1].httpResponse.statusCode).toEqual(201);
+        // third expectation
+        expect(expectations[2].httpRequest.path).toEqual('/somePathTwo');
+        expect(expectations[2].httpResponse.body).toEqual('{"name":"two"}');
+        expect(expectations[2].httpResponse.statusCode).toEqual(202);
+    });
+
+    it("should retrieve some requests using object matcher", function () {
+        // given
+        var client = mockServerClient("localhost", 1080);
+        client.mockSimpleResponse('/somePathOne', {name: 'one'}, 201);
+        client.mockSimpleResponse('/somePathOne', {name: 'one'}, 201);
+        client.mockSimpleResponse('/somePathTwo', {name: 'two'}, 202);
+        xmlhttp.open("POST", "http://localhost:1080/somePathOne", false);
+        xmlhttp.send("someBody");
+        expect(xmlhttp.status).toEqual(201);
+        xmlhttp.open("GET", "http://localhost:1080/somePathOne", false);
+        xmlhttp.send();
+        expect(xmlhttp.status).toEqual(201);
+        xmlhttp.open("GET", "http://localhost:1080/notFound", false);
+        xmlhttp.send();
+        expect(xmlhttp.status).toEqual(404);
+        xmlhttp.open("GET", "http://localhost:1080/somePathTwo", false);
+        xmlhttp.send();
+        expect(xmlhttp.status).toEqual(202);
+
+        // when
+        var requests = client.retrieveRequests({
+            "httpRequest": {
+                "path": "/somePathOne"
+            }
+        });
+
+        // then
+        expect(requests.length).toEqual(2);
+        // first request
+        expect(requests[0].path).toEqual('/somePathOne');
+        expect(requests[0].method).toEqual('POST');
+        expect(requests[0].body.string).toEqual('someBody');
+        // second request
+        expect(requests[1].path).toEqual('/somePathOne');
+        expect(requests[1].method).toEqual('GET');
+    });
+
+    it("should retrieve some requests using path", function () {
+        // given
+        var client = mockServerClient("localhost", 1080);
+        client.mockSimpleResponse('/somePathOne', {name: 'one'}, 201);
+        client.mockSimpleResponse('/somePathOne', {name: 'one'}, 201);
+        client.mockSimpleResponse('/somePathTwo', {name: 'two'}, 202);
+        xmlhttp.open("POST", "http://localhost:1080/somePathOne", false);
+        xmlhttp.send("someBody");
+        expect(xmlhttp.status).toEqual(201);
+        xmlhttp.open("GET", "http://localhost:1080/somePathOne", false);
+        xmlhttp.send();
+        expect(xmlhttp.status).toEqual(201);
+        xmlhttp.open("GET", "http://localhost:1080/notFound", false);
+        xmlhttp.send();
+        expect(xmlhttp.status).toEqual(404);
+        xmlhttp.open("GET", "http://localhost:1080/somePathTwo", false);
+        xmlhttp.send();
+        expect(xmlhttp.status).toEqual(202);
+
+        // when
+        var requests = client.retrieveRequests("/somePathOne");
+
+        // then
+        expect(requests.length).toEqual(2);
+        // first request
+        expect(requests[0].path).toEqual('/somePathOne');
+        expect(requests[0].method).toEqual('POST');
+        expect(requests[0].body.string).toEqual('someBody');
+        // second request
+        expect(requests[1].path).toEqual('/somePathOne');
+        expect(requests[1].method).toEqual('GET');
+    });
+
+    it("should retrieve all requests using object matcher", function () {
+        // given
+        var client = mockServerClient("localhost", 1080);
+        client.mockSimpleResponse('/somePathOne', {name: 'one'}, 201);
+        client.mockSimpleResponse('/somePathOne', {name: 'one'}, 201);
+        client.mockSimpleResponse('/somePathTwo', {name: 'two'}, 202);
+        xmlhttp.open("POST", "http://localhost:1080/somePathOne", false);
+        xmlhttp.send("someBody");
+        expect(xmlhttp.status).toEqual(201);
+        xmlhttp.open("GET", "http://localhost:1080/somePathOne", false);
+        xmlhttp.send();
+        expect(xmlhttp.status).toEqual(201);
+        xmlhttp.open("GET", "http://localhost:1080/notFound", false);
+        xmlhttp.send();
+        expect(xmlhttp.status).toEqual(404);
+        xmlhttp.open("GET", "http://localhost:1080/somePathTwo", false);
+        xmlhttp.send();
+        expect(xmlhttp.status).toEqual(202);
+
+        // when
+        var requests = client.retrieveRequests({
+            "httpRequest": {
+                "path": "/.*"
+            }
+        });
+
+        // then
+        expect(requests.length).toEqual(4);
+        // first request
+        expect(requests[0].path).toEqual('/somePathOne');
+        expect(requests[0].method).toEqual('POST');
+        expect(requests[0].body.string).toEqual('someBody');
+        // second request
+        expect(requests[1].path).toEqual('/somePathOne');
+        expect(requests[1].method).toEqual('GET');
+        // third request
+        expect(requests[2].path).toEqual('/notFound');
+        expect(requests[2].method).toEqual('GET');
+        // fourth request
+        expect(requests[3].path).toEqual('/somePathTwo');
+        expect(requests[3].method).toEqual('GET');
+
+    });
+
+    it("should retrieve all requests using null matcher", function () {
+        // given
+        var client = mockServerClient("localhost", 1080);
+        client.mockSimpleResponse('/somePathOne', {name: 'one'}, 201);
+        client.mockSimpleResponse('/somePathOne', {name: 'one'}, 201);
+        client.mockSimpleResponse('/somePathTwo', {name: 'two'}, 202);
+        xmlhttp.open("POST", "http://localhost:1080/somePathOne", false);
+        xmlhttp.send("someBody");
+        expect(xmlhttp.status).toEqual(201);
+        xmlhttp.open("GET", "http://localhost:1080/somePathOne", false);
+        xmlhttp.send();
+        expect(xmlhttp.status).toEqual(201);
+        xmlhttp.open("GET", "http://localhost:1080/notFound", false);
+        xmlhttp.send();
+        expect(xmlhttp.status).toEqual(404);
+        xmlhttp.open("GET", "http://localhost:1080/somePathTwo", false);
+        xmlhttp.send();
+        expect(xmlhttp.status).toEqual(202);
+
+        // when
+        var requests = client.retrieveRequests();
+
+        // then
+        expect(requests.length).toEqual(4);
+        // first request
+        expect(requests[0].path).toEqual('/somePathOne');
+        expect(requests[0].method).toEqual('POST');
+        expect(requests[0].body.string).toEqual('someBody');
+        // second request
+        expect(requests[1].path).toEqual('/somePathOne');
+        expect(requests[1].method).toEqual('GET');
+        // third request
+        expect(requests[2].path).toEqual('/notFound');
+        expect(requests[2].method).toEqual('GET');
+        // fourth request
+        expect(requests[3].path).toEqual('/somePathTwo');
+        expect(requests[3].method).toEqual('GET');
+    });
 });
