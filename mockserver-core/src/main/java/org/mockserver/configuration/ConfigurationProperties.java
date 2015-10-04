@@ -272,7 +272,7 @@ public class ConfigurationProperties {
                 setLevelMethod.invoke(logger, levelInstance);
             }
         } catch (Exception e) {
-            ConfigurationProperties.logger.info("Exception updating logging level using reflection, likely cause is Logback is not on the classpath");
+            ConfigurationProperties.logger.debug("Exception updating logging level using reflection, likely cause is Logback is not on the classpath");
         }
 
 
@@ -291,7 +291,7 @@ public class ConfigurationProperties {
                 currentLogLevelField.set(logger, logLevelInstance);
             }
         } catch (Exception e) {
-            ConfigurationProperties.logger.info("Exception updating logging level using reflection, likely cause is Logback is not on the classpath");
+            ConfigurationProperties.logger.debug("Exception updating logging level using reflection, likely cause is Logback is not on the classpath");
         }
     }
 
