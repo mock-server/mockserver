@@ -1019,7 +1019,7 @@ describe("mockServerClient client:", function () {
         // first request
         expect(requests[0].path).toEqual('/somePathOne');
         expect(requests[0].method).toEqual('POST');
-        expect(requests[0].body.string).toEqual('someBody');
+        expect(requests[0].body).toEqual('someBody');
         // second request
         expect(requests[1].path).toEqual('/somePathOne');
         expect(requests[1].method).toEqual('GET');
@@ -1052,7 +1052,7 @@ describe("mockServerClient client:", function () {
         // first request
         expect(requests[0].path).toEqual('/somePathOne');
         expect(requests[0].method).toEqual('POST');
-        expect(requests[0].body.string).toEqual('someBody');
+        expect(requests[0].body).toEqual('someBody');
         // second request
         expect(requests[1].path).toEqual('/somePathOne');
         expect(requests[1].method).toEqual('GET');
@@ -1089,7 +1089,7 @@ describe("mockServerClient client:", function () {
         // first request
         expect(requests[0].path).toEqual('/somePathOne');
         expect(requests[0].method).toEqual('POST');
-        expect(requests[0].body.string).toEqual('someBody');
+        expect(requests[0].body).toEqual('someBody');
         // second request
         expect(requests[1].path).toEqual('/somePathOne');
         expect(requests[1].method).toEqual('GET');
@@ -1129,7 +1129,7 @@ describe("mockServerClient client:", function () {
         // first request
         expect(requests[0].path).toEqual('/somePathOne');
         expect(requests[0].method).toEqual('POST');
-        expect(requests[0].body.string).toEqual('someBody');
+        expect(requests[0].body).toEqual('someBody');
         // second request
         expect(requests[1].path).toEqual('/somePathOne');
         expect(requests[1].method).toEqual('GET');

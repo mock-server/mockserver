@@ -47,6 +47,8 @@ public class ContentTypeMapper {
                     || contentType.contains("csv")
                     || contentType.contains("html")
                     || contentType.contains("xhtml")
+                    || contentType.contains("form")
+                    || contentType.contains("urlencoded")
                     || contentType.contains("xml");
             if (!utf8Body) {
                 binary = contentType.contains("ogg")

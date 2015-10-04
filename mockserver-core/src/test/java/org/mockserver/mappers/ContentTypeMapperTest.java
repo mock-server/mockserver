@@ -34,6 +34,7 @@ public class ContentTypeMapperTest {
             "application/xop+xml",
             "application/xslt+xml",
             "application/xspf+xml",
+            "application/x-www-form-urlencoded",
             "image/svg+xml",
             "text/css",
             "text/csv",
