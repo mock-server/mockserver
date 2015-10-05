@@ -7,59 +7,6 @@ describe("mockServerClient client:", function () {
         proxyClient("localhost", 1090).reset();
     });
 
-    it("should create full expectation with Base64 encoded body", function () {
-        // when
-        mockServerClient("localhost", 1080).mockAnyResponse(
-            {
-                'httpRequest': {
-                    'method': 'POST',
-                    'path': '/somePath',
-                    'queryStringParameters': [
-                        {
-                            'name': 'test',
-                            'values': ['true']
-                        }
-                    ],
-                    'body': {
-                        'type': "STRING",
-                        'value': 'someBody'
-                    }
-                },
-                'httpResponse': {
-                    'statusCode': 200,
-                    'body': JSON.stringify({name: 'value'}),
-                    'delay': {
-                        'timeUnit': 'MILLISECONDS',
-                        'value': 250
-                    }
-                },
-                'times': {
-                    'remainingTimes': 1,
-                    'unlimited': false
-                }
-            }
-        );
-
-        // then - non matching request
-        xmlhttp.open("GET", "http://localhost:1080/otherPath", false);
-        xmlhttp.send();
-
-        expect(xmlhttp.status).toEqual(404);
-
-        // then - matching request
-        xmlhttp.open("POST", "http://localhost:1080/somePath?test=true", false);
-        xmlhttp.send("someBody");
-
-        expect(xmlhttp.status).toEqual(200);
-        expect(xmlhttp.responseText).toEqual('{"name":"value"}');
-
-        // then - matching request, but no times remaining
-        xmlhttp.open("POST", "http://localhost:1080/somePath?test=true", false);
-        xmlhttp.send("someBody");
-
-        expect(xmlhttp.status).toEqual(404);
-    });
-
     it("should create full expectation with string body", function () {
         // when
         mockServerClient("localhost", 1080).mockAnyResponse(
@@ -671,23 +618,23 @@ describe("mockServerClient client:", function () {
     it("should pass when correct sequence of requests have been sent", function () {
         // given
         var client = mockServerClient("localhost", 1080);
-        client.mockSimpleResponse('/one', {name: 'value'}, 203);
-        client.mockSimpleResponse('/two', {name: 'value'}, 203);
-        xmlhttp.open("POST", "http://localhost:1080/one", false);
+        client.mockSimpleResponse('/somePathOne', {name: 'one'}, 201);
+        client.mockSimpleResponse('/somePathTwo', {name: 'two'}, 202);
+        xmlhttp.open("POST", "http://localhost:1080/somePathOne", false);
         xmlhttp.send("someBody");
-        expect(xmlhttp.status).toEqual(203);
+        expect(xmlhttp.status).toEqual(201);
         xmlhttp.open("GET", "http://localhost:1080/notFound", false);
         xmlhttp.send();
         expect(xmlhttp.status).toEqual(404);
-        xmlhttp.open("GET", "http://localhost:1080/two", false);
+        xmlhttp.open("GET", "http://localhost:1080/somePathTwo", false);
         xmlhttp.send();
-        expect(xmlhttp.status).toEqual(203);
+        expect(xmlhttp.status).toEqual(202);
 
         // when
         client.verifySequence(
             {
                 'method': 'POST',
-                'path': '/one',
+                'path': '/somePathOne',
                 'body': 'someBody'
             },
             {
@@ -696,37 +643,37 @@ describe("mockServerClient client:", function () {
             },
             {
                 'method': 'GET',
-                'path': '/two'
+                'path': '/somePathTwo'
             }
         );
     });
 
-    it("should fail when incorrect sequence of requests have been sent", function () {
+    it("should fail when incorrect sequence (wrong order) of requests have been sent", function () {
         // given
         var client = mockServerClient("localhost", 1080);
-        client.mockSimpleResponse('/one', {name: 'value'}, 203);
-        client.mockSimpleResponse('/two', {name: 'value'}, 203);
-        xmlhttp.open("POST", "http://localhost:1080/one", false);
+        client.mockSimpleResponse('/somePathOne', {name: 'one'}, 201);
+        client.mockSimpleResponse('/somePathTwo', {name: 'two'}, 202);
+        xmlhttp.open("POST", "http://localhost:1080/somePathOne", false);
         xmlhttp.send("someBody");
-        expect(xmlhttp.status).toEqual(203);
+        expect(xmlhttp.status).toEqual(201);
         xmlhttp.open("GET", "http://localhost:1080/notFound", false);
         xmlhttp.send();
         expect(xmlhttp.status).toEqual(404);
-        xmlhttp.open("GET", "http://localhost:1080/two", false);
+        xmlhttp.open("GET", "http://localhost:1080/somePathTwo", false);
         xmlhttp.send();
-        expect(xmlhttp.status).toEqual(203);
+        expect(xmlhttp.status).toEqual(202);
 
         // when - wrong order
         expect(function () {
             client.verifySequence(
                 {
                     'method': 'POST',
-                    'path': '/one',
+                    'path': '/somePathOne',
                     'body': 'someBody'
                 },
                 {
                     'method': 'GET',
-                    'path': '/two'
+                    'path': '/somePathTwo'
                 },
                 {
                     'method': 'GET',
@@ -735,12 +682,29 @@ describe("mockServerClient client:", function () {
             );
         }).toThrow();
 
+    });
+
+    it("should fail when incorrect sequence (first request incorrect body) of requests have been sent", function () {
+        // given
+        var client = mockServerClient("localhost", 1080);
+        client.mockSimpleResponse('/somePathOne', {name: 'one'}, 201);
+        client.mockSimpleResponse('/somePathTwo', {name: 'two'}, 202);
+        xmlhttp.open("POST", "http://localhost:1080/somePathOne", false);
+        xmlhttp.send("someBody");
+        expect(xmlhttp.status).toEqual(201);
+        xmlhttp.open("GET", "http://localhost:1080/notFound", false);
+        xmlhttp.send();
+        expect(xmlhttp.status).toEqual(404);
+        xmlhttp.open("GET", "http://localhost:1080/somePathTwo", false);
+        xmlhttp.send();
+        expect(xmlhttp.status).toEqual(202);
+
         // when - first request incorrect body
         expect(function () {
             client.verifySequence(
                 {
                     'method': 'POST',
-                    'path': '/one',
+                    'path': '/somePathOne',
                     'body': 'some_incorrect_body'
                 },
                 {
@@ -749,7 +713,7 @@ describe("mockServerClient client:", function () {
                 },
                 {
                     'method': 'GET',
-                    'path': '/two'
+                    'path': '/somePathTwo'
                 }
             );
         }).toThrow();
