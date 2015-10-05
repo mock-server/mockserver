@@ -14,7 +14,7 @@ MAINTAINER James Bloom "jamesdbloom@gmail.com"
 # download MockServer
 RUN  \
   mkdir -p /opt/mockserver && \
-  wget -O /opt/mockserver/mockserver-netty-jar-with-dependencies.jar https://oss.sonatype.org/content/repositories/releases/org/mock-server/mockserver-netty/3.9.17/mockserver-netty-3.9.17-jar-with-dependencies.jar && \
+  wget -O /opt/mockserver/mockserver-netty-jar-with-dependencies.jar https://oss.sonatype.org/content/repositories/releases/org/mock-server/mockserver-netty/3.10.1/mockserver-netty-3.10.1-jar-with-dependencies.jar && \
   wget -O /opt/mockserver/run_mockserver.sh https://raw.github.com/jamesdbloom/mockserver/master/docker/run_mockserver.sh && \
   chmod +x /opt/mockserver/run_mockserver.sh
 
