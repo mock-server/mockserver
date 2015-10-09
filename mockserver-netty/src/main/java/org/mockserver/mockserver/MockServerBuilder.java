@@ -17,7 +17,7 @@ public class MockServerBuilder {
     }
 
     /**
-     * Configure HTTP port for proxy, setting this value will ensure HTTP is supported
+     * Configure HTTP and HTTPS port
      *
      * @param port the HTTP port to use
      */
@@ -32,7 +32,7 @@ public class MockServerBuilder {
     }
 
     /**
-     * Build an instance of the HttpProxy
+     * Build an instance of the MockServer
      */
     public MockServer build() {
         return new MockServer(port).withStopEventQueue(stopEventQueue);
