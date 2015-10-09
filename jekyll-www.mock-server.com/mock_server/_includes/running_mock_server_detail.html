@@ -145,7 +145,10 @@
 		<strong>skip</strong> - Prevent the plugin from running (required: false, default: false)
 	</li>
 	<li>
-		<strong>initializationClass</strong> - To enable the creation of default expectations a class can be specified to initialize expectations in MockServer, this class must implement <span class="inline_code">org.mockserver.initialize.ExpectationInitializer</span> interface.  The <span class="inline_code">initializeExpectations(MockServerClient mockServerClient)</span> method will be called once MockServer has been started (but ONLY if <strong>serverPort</strong> has been set). Note: that the plugin must be started during the <strong>process-test-classes</strong> to ensure that the initialization class has been compiled from either <strong>src/main/java</strong> or <strong>src/test/java</strong> locations. (required: false, default: false)
+		<strong>initializationClass</strong> - To enable the creation of default expectations a class can be specified to initialize expectations in MockServer, this class must implement <span class="inline_code">org.mockserver.initialize.ExpectationInitializer</span> interface. The
+		<span class="inline_code">initializeExpectations(MockServerClient mockServerClient)</span> method will be called once MockServer has been started (but ONLY if <strong>serverPort</strong> has been set). Note: that the plugin must be started during the
+		<strong>process-test-classes</strong> to ensure that the initialization class has been compiled from either <strong>src/main/java</strong> or <strong>src/test/java</strong> locations. In addition the initializer can only be used with <strong>start</strong> and
+		<strong>run</strong> goals, it will not work with the <strong>runForked</strong> goal as a JVM is forked with a separate classpath. (required: false, default: false)
 	</li>
 </ul>
 
