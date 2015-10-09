@@ -6,6 +6,8 @@ import org.mockserver.client.proxy.ProxyClient;
 import org.mockserver.client.server.MockServerClient;
 import org.mockserver.socket.PortFactory;
 
+import java.util.concurrent.TimeUnit;
+
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -18,7 +20,7 @@ public class MockServerAndProxyStopTest {
     private final static Integer PROXY_HTTP_PORT = PortFactory.findFreePort();
 
     @Test
-    public void shouldStopMockServerAndProxyByMockServerClient() {
+    public void shouldStopMockServerAndProxyByMockServerClient() throws InterruptedException {
         // given
         Main.main("-serverPort", "" + SERVER_HTTP_PORT, "-proxyPort", "" + PROXY_HTTP_PORT);
         MockServerClient mockServerClient = new MockServerClient("localhost", SERVER_HTTP_PORT);
@@ -30,11 +32,12 @@ public class MockServerAndProxyStopTest {
         mockServerClient.stop();
 
         // then
+        TimeUnit.SECONDS.sleep(1);
         assertFalse(mockServerClient.isRunning());
     }
 
     @Test
-    public void shouldStopMockServerAndProxyByProxyClient() {
+    public void shouldStopMockServerAndProxyByProxyClient() throws InterruptedException {
         // given
         Main.main("-serverPort", "" + SERVER_HTTP_PORT, "-proxyPort", "" + PROXY_HTTP_PORT);
         ProxyClient proxyClient = new ProxyClient("localhost", PROXY_HTTP_PORT);
@@ -46,11 +49,12 @@ public class MockServerAndProxyStopTest {
         proxyClient.stop();
 
         // then
+        TimeUnit.SECONDS.sleep(1);
         assertFalse(proxyClient.isRunning());
     }
 
     @Test
-    public void shouldStopMockServerOnly() {
+    public void shouldStopMockServerOnly() throws InterruptedException {
         // given
         Main.main("-serverPort", "" + SERVER_HTTP_PORT);
         MockServerClient mockServerClient = new MockServerClient("localhost", SERVER_HTTP_PORT);
@@ -62,11 +66,12 @@ public class MockServerAndProxyStopTest {
         mockServerClient.stop();
 
         // then
+        TimeUnit.SECONDS.sleep(1);
         assertFalse(mockServerClient.isRunning());
     }
 
     @Test
-    public void shouldStopProxyOnly() {
+    public void shouldStopProxyOnly() throws InterruptedException {
         // given
         Main.main("-proxyPort", "" + PROXY_HTTP_PORT);
         ProxyClient proxyClient = new ProxyClient("localhost", PROXY_HTTP_PORT);
@@ -78,6 +83,7 @@ public class MockServerAndProxyStopTest {
         proxyClient.stop();
 
         // then
+        TimeUnit.SECONDS.sleep(1);
         assertFalse(proxyClient.isRunning());
     }
 }
