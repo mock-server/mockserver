@@ -36,7 +36,7 @@ public class MockServer implements Stoppable {
     private Channel channel;
 
     /**
-     * Start the instance using the ports provided
+     * Start the instance using the port provided
      *
      * @param port the http port to use
      */
