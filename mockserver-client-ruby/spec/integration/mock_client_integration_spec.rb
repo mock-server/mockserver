@@ -18,7 +18,7 @@ end
 
 describe MockServer::MockServerClient do
 
-  let(:client) { MockServer::MockServerClient.new('localhost', 1080) }
+  let(:client) { MockServer::MockServerClient.new('localhost', 8098) }
 
   before do
     # To suppress logging output to standard output, write to a temporary file
@@ -64,7 +64,7 @@ describe MockServer::MockServerClient do
     expect(client.register(mock_expectation).code).to eq(201)
 
     # when
-    uri           = URI('http://localhost:1080/somePath')
+    uri           = URI('http://localhost:8098/somePath')
     http          = Net::HTTP.new(uri.host, uri.port)
     req           = Net::HTTP::Post.new('/somePath?param=someQueryStringValue')
     req['Header'] = 'someHeaderValue'

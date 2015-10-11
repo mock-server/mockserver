@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
-NODE_PORT=1080
-MOCK_SERVER_PORT=1081
+NODE_PORT=8097
+MOCK_SERVER_PORT=8098
+PROXY_PORT=9101
 
 ################
 ## START NODE ##
@@ -13,7 +14,7 @@ NODE_PID=$!
 ######################
 ## START MOCKSERVER ##
 ######################
-mvn -Dmockserver.serverPort=$MOCK_SERVER_PORT -Dmockserver.proxyPort=1090 -Dmockserver.logLevel=INFO org.mock-server:mockserver-maven-plugin:LATEST:runForked
+mvn -Dmockserver.serverPort=$MOCK_SERVER_PORT -Dmockserver.proxyPort=$PROXY_PORT -Dmockserver.logLevel=INFO org.mock-server:mockserver-maven-plugin:LATEST:runForked -U
 
 ##################
 ## START CHROME ##
@@ -45,6 +46,6 @@ CHROME_PID=$!
 ## ADD TRAPS ##
 ###############
 trap "kill $CHROME_PID" exit INT TERM
-trap "sleep 1 && rm -rf google && mvn -Dmockserver.serverPort=$MOCK_SERVER_PORT -Dmockserver.proxyPort=1090 org.mock-server:mockserver-maven-plugin:LATEST:stopForked" EXIT
+trap "sleep 1 && rm -rf google && mvn -Dmockserver.serverPort=$MOCK_SERVER_PORT -Dmockserver.proxyPort=$PROXY_PORT org.mock-server:mockserver-maven-plugin:LATEST:stopForked" EXIT
 
 wait $CHROME_PID

@@ -26,8 +26,8 @@
                 <version>${project.version}</version>
                 <configuration>
                     <logLevel>WARN</logLevel>
-                    <serverPort>1080</serverPort>
-                    <proxyPort>1090</proxyPort>
+                    <serverPort>8097</serverPort>
+                    <proxyPort>9101</proxyPort>
                 </configuration>
                 <executions>
                     <execution>
@@ -78,7 +78,7 @@
                                 <capability>
                                     <name>proxy</name>
                                     <map>
-                                        <httpProxy>localhost:1090</httpProxy>
+                                        <httpProxy>localhost:9101</httpProxy>
                                     </map>
                                 </capability>
                             </webDriverCapabilities>

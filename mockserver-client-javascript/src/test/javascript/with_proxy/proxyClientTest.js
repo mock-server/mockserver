@@ -3,20 +3,20 @@ describe("proxyClient client:", function () {
 
     beforeEach(function () {
         xmlhttp = new XMLHttpRequest();
-        mockServerClient("localhost", 1080).reset();
-        proxyClient("localhost", 1090).reset();
+        mockServerClient("localhost", 8097).reset();
+        proxyClient("localhost", 9101).reset();
     });
 
     it("should verify exact number of requests have been sent", function () {
         // given
-        var client = proxyClient("localhost", 1090);
-        mockServerClient("localhost", 1080).
+        var client = proxyClient("localhost", 9101);
+        mockServerClient("localhost", 8097).
             mockSimpleResponse('/somePath', { name: 'value' }, 203).
             mockSimpleResponse('/somePath', { name: 'value' }, 203);
-        xmlhttp.open("POST", "http://localhost:1080/somePath", false);
+        xmlhttp.open("POST", "http://localhost:8097/somePath", false);
         xmlhttp.send("someBody");
         expect(xmlhttp.status).toEqual(203);
-        xmlhttp.open("POST", "http://localhost:1080/somePath", false);
+        xmlhttp.open("POST", "http://localhost:8097/somePath", false);
         xmlhttp.send("someBody");
         expect(xmlhttp.status).toEqual(203);
 
@@ -31,11 +31,11 @@ describe("proxyClient client:", function () {
 
     it("should verify at least a number of requests have been sent", function () {
         // given
-        var client = proxyClient("localhost", 1090);
-        xmlhttp.open("POST", "http://localhost:1080/somePath", false);
+        var client = proxyClient("localhost", 9101);
+        xmlhttp.open("POST", "http://localhost:8097/somePath", false);
         xmlhttp.send("someBody");
         expect(xmlhttp.status).toEqual(404);
-        xmlhttp.open("POST", "http://localhost:1080/somePath", false);
+        xmlhttp.open("POST", "http://localhost:8097/somePath", false);
         xmlhttp.send("someBody");
         expect(xmlhttp.status).toEqual(404);
 
@@ -50,8 +50,8 @@ describe("proxyClient client:", function () {
 
     it("should fail when no requests have been sent", function () {
         // given
-        var client = proxyClient("localhost", 1090);
-        xmlhttp.open("POST", "http://localhost:1080/somePath", false);
+        var client = proxyClient("localhost", 9101);
+        xmlhttp.open("POST", "http://localhost:8097/somePath", false);
         xmlhttp.send("someBody");
         expect(xmlhttp.status).toEqual(404);
 
@@ -66,8 +66,8 @@ describe("proxyClient client:", function () {
 
     it("should fail when not enough exact requests have been sent", function () {
         // given
-        var client = proxyClient("localhost", 1090);
-        xmlhttp.open("POST", "http://localhost:1080/somePath", false);
+        var client = proxyClient("localhost", 9101);
+        xmlhttp.open("POST", "http://localhost:8097/somePath", false);
         xmlhttp.send("someBody");
         expect(xmlhttp.status).toEqual(404);
 
@@ -84,8 +84,8 @@ describe("proxyClient client:", function () {
 
     it("should fail when not enough at least requests have been sent", function () {
         // given
-        var client = proxyClient("localhost", 1090);
-        xmlhttp.open("POST", "http://localhost:1080/somePath", false);
+        var client = proxyClient("localhost", 9101);
+        xmlhttp.open("POST", "http://localhost:8097/somePath", false);
         xmlhttp.send("someBody");
         expect(xmlhttp.status).toEqual(404);
 
@@ -102,14 +102,14 @@ describe("proxyClient client:", function () {
 
     it("should pass when correct sequence of requests have been sent", function () {
         // given
-        var client = proxyClient("localhost", 1080);
-        xmlhttp.open("POST", "http://localhost:1080/one", false);
+        var client = proxyClient("localhost", 8097);
+        xmlhttp.open("POST", "http://localhost:8097/one", false);
         xmlhttp.send("someBody");
         expect(xmlhttp.status).toEqual(404);
-        xmlhttp.open("GET", "http://localhost:1080/two", false);
+        xmlhttp.open("GET", "http://localhost:8097/two", false);
         xmlhttp.send();
         expect(xmlhttp.status).toEqual(404);
-        xmlhttp.open("GET", "http://localhost:1080/three", false);
+        xmlhttp.open("GET", "http://localhost:8097/three", false);
         xmlhttp.send();
         expect(xmlhttp.status).toEqual(404);
 
@@ -133,14 +133,14 @@ describe("proxyClient client:", function () {
 
     it("should fail when incorrect sequence of requests have been sent", function () {
         // given
-        var client = proxyClient("localhost", 1080);
-        xmlhttp.open("POST", "http://localhost:1080/one", false);
+        var client = proxyClient("localhost", 8097);
+        xmlhttp.open("POST", "http://localhost:8097/one", false);
         xmlhttp.send("someBody");
         expect(xmlhttp.status).toEqual(404);
-        xmlhttp.open("GET", "http://localhost:1080/two", false);
+        xmlhttp.open("GET", "http://localhost:8097/two", false);
         xmlhttp.send();
         expect(xmlhttp.status).toEqual(404);
-        xmlhttp.open("GET", "http://localhost:1080/three", false);
+        xmlhttp.open("GET", "http://localhost:8097/three", false);
         xmlhttp.send();
         expect(xmlhttp.status).toEqual(404);
 
@@ -185,11 +185,11 @@ describe("proxyClient client:", function () {
 
     it("should clear proxy by path", function () {
         // given
-        var client = proxyClient("localhost", 1090);
-        xmlhttp.open("POST", "http://localhost:1080/somePath", false);
+        var client = proxyClient("localhost", 9101);
+        xmlhttp.open("POST", "http://localhost:8097/somePath", false);
         xmlhttp.send("someBody");
         expect(xmlhttp.status).toEqual(404);
-        xmlhttp.open("POST", "http://localhost:1080/somePath", false);
+        xmlhttp.open("POST", "http://localhost:8097/somePath", false);
         xmlhttp.send("someBody");
         expect(xmlhttp.status).toEqual(404);
 
@@ -217,11 +217,11 @@ describe("proxyClient client:", function () {
 
     it("should clear expectations by request matcher", function () {
         // given
-        var client = proxyClient("localhost", 1090);
-        xmlhttp.open("POST", "http://localhost:1080/somePath", false);
+        var client = proxyClient("localhost", 9101);
+        xmlhttp.open("POST", "http://localhost:8097/somePath", false);
         xmlhttp.send("someBody");
         expect(xmlhttp.status).toEqual(404);
-        xmlhttp.open("POST", "http://localhost:1080/somePath", false);
+        xmlhttp.open("POST", "http://localhost:8097/somePath", false);
         xmlhttp.send("someBody");
         expect(xmlhttp.status).toEqual(404);
 
@@ -251,11 +251,11 @@ describe("proxyClient client:", function () {
 
     it("should clear expectations by expectation matcher", function () {
         // given
-        var client = proxyClient("localhost", 1090);
-        xmlhttp.open("POST", "http://localhost:1080/somePath", false);
+        var client = proxyClient("localhost", 9101);
+        xmlhttp.open("POST", "http://localhost:8097/somePath", false);
         xmlhttp.send("someBody");
         expect(xmlhttp.status).toEqual(404);
-        xmlhttp.open("POST", "http://localhost:1080/somePath", false);
+        xmlhttp.open("POST", "http://localhost:8097/somePath", false);
         xmlhttp.send("someBody");
         expect(xmlhttp.status).toEqual(404);
 
@@ -287,11 +287,11 @@ describe("proxyClient client:", function () {
 
     it("should reset proxy", function () {
         // given
-        var client = proxyClient("localhost", 1090);
-        xmlhttp.open("POST", "http://localhost:1080/somePath", false);
+        var client = proxyClient("localhost", 9101);
+        xmlhttp.open("POST", "http://localhost:8097/somePath", false);
         xmlhttp.send("someBody");
         expect(xmlhttp.status).toEqual(404);
-        xmlhttp.open("POST", "http://localhost:1080/somePath", false);
+        xmlhttp.open("POST", "http://localhost:8097/somePath", false);
         xmlhttp.send("someBody");
         expect(xmlhttp.status).toEqual(404);
 

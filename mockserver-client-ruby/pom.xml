@@ -26,8 +26,8 @@
                 <version>${project.version}</version>
                 <configuration>
                     <logLevel>WARN</logLevel>
-                    <serverPort>1080</serverPort>
-                    <proxyPort>1090</proxyPort>
+                    <serverPort>8098</serverPort>
+                    <proxyPort>9102</proxyPort>
                 </configuration>
                 <executions>
                     <execution>

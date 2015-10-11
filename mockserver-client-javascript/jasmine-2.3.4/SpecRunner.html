@@ -9,8 +9,8 @@
 		<script type="text/javascript" src="jasmine-html.js"></script>
 		<script type="text/javascript" src="boot.js"></script>
 
-		<script type="text/javascript" src="http://localhost:1080/main/javascript/mockServerClient.js"></script>
-		<script type="text/javascript" src="http://localhost:1080/main/javascript/proxyClient.js"></script>
+		<script type="text/javascript" src="/main/javascript/mockServerClient.js"></script>
+		<script type="text/javascript" src="/main/javascript/proxyClient.js"></script>
 
 		<script type="text/javascript">
 			var startJasmine = function () {
@@ -48,9 +48,9 @@
 					startJasmine();
 				};
 				if (window.location.href.match(/proxy\=true/g)) {
-					script.src = 'http://localhost:1080/test/javascript/with_proxy/proxyClientTest.js';
+					script.src = '/test/javascript/with_proxy/proxyClientTest.js';
 				} else {
-					script.src = 'http://localhost:1080/test/javascript/no_proxy/mockServerClientTest.js';
+					script.src = '/test/javascript/no_proxy/mockServerClientTest.js';
 				}
 				document.getElementsByTagName('head')[0].appendChild(script);
 			}(document));

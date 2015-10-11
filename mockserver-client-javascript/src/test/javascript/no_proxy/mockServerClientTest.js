@@ -3,13 +3,13 @@ describe("mockServerClient client:", function () {
 
     beforeEach(function () {
         xmlhttp = new XMLHttpRequest();
-        mockServerClient("localhost", 1080).reset();
-        proxyClient("localhost", 1090).reset();
+        mockServerClient("localhost", 8097).reset();
+        proxyClient("localhost", 9101).reset();
     });
 
     it("should create full expectation with string body", function () {
         // when
-        mockServerClient("localhost", 1080).mockAnyResponse(
+        mockServerClient("localhost", 8097).mockAnyResponse(
             {
                 'httpRequest': {
                     'method': 'POST',
@@ -41,20 +41,20 @@ describe("mockServerClient client:", function () {
         );
 
         // then - non matching request
-        xmlhttp.open("GET", "http://localhost:1080/otherPath", false);
+        xmlhttp.open("GET", "http://localhost:8097/otherPath", false);
         xmlhttp.send();
 
         expect(xmlhttp.status).toEqual(404);
 
         // then - matching request
-        xmlhttp.open("POST", "http://localhost:1080/somePath?test=true", false);
+        xmlhttp.open("POST", "http://localhost:8097/somePath?test=true", false);
         xmlhttp.send("someBody");
 
         expect(xmlhttp.status).toEqual(200);
         expect(xmlhttp.responseText).toEqual('{"name":"value"}');
 
         // then - matching request, but no times remaining
-        xmlhttp.open("POST", "http://localhost:1080/somePath?test=true", false);
+        xmlhttp.open("POST", "http://localhost:8097/somePath?test=true", false);
         xmlhttp.send("someBody");
 
         expect(xmlhttp.status).toEqual(404);
@@ -62,7 +62,7 @@ describe("mockServerClient client:", function () {
 
     it("should match on method only", function () {
         // when
-        var client = mockServerClient("localhost", 1080);
+        var client = mockServerClient("localhost", 8097);
         client.mockAnyResponse(
             {
                 'httpRequest': {
@@ -103,20 +103,20 @@ describe("mockServerClient client:", function () {
         );
 
         // then - matching no expectation
-        xmlhttp.open("PUT", "http://localhost:1080/somePath", false);
+        xmlhttp.open("PUT", "http://localhost:8097/somePath", false);
         xmlhttp.send();
 
         expect(xmlhttp.status).toEqual(404);
 
         // then - matching first expectation
-        xmlhttp.open("GET", "http://localhost:1080/somePath", false);
+        xmlhttp.open("GET", "http://localhost:8097/somePath", false);
         xmlhttp.send();
 
         expect(xmlhttp.status).toEqual(200);
         expect(xmlhttp.responseText).toEqual('{"name":"first_body"}');
 
         // then - matching second expectation
-        xmlhttp.open("POST", "http://localhost:1080/somePath", false);
+        xmlhttp.open("POST", "http://localhost:8097/somePath", false);
         xmlhttp.send();
 
         expect(xmlhttp.status).toEqual(200);
@@ -125,7 +125,7 @@ describe("mockServerClient client:", function () {
 
     it("should match on path only", function () {
         // when
-        var client = mockServerClient("localhost", 1080);
+        var client = mockServerClient("localhost", 8097);
         client.mockAnyResponse(
             {
                 'httpRequest': {
@@ -166,20 +166,20 @@ describe("mockServerClient client:", function () {
         );
 
         // then - matching no expectation
-        xmlhttp.open("GET", "http://localhost:1080/otherPath", false);
+        xmlhttp.open("GET", "http://localhost:8097/otherPath", false);
         xmlhttp.send();
 
         expect(xmlhttp.status).toEqual(404);
 
         // then - matching first expectation
-        xmlhttp.open("GET", "http://localhost:1080/firstPath", false);
+        xmlhttp.open("GET", "http://localhost:8097/firstPath", false);
         xmlhttp.send();
 
         expect(xmlhttp.status).toEqual(200);
         expect(xmlhttp.responseText).toEqual('{"name":"first_body"}');
 
         // then - matching second expectation
-        xmlhttp.open("GET", "http://localhost:1080/secondPath", false);
+        xmlhttp.open("GET", "http://localhost:8097/secondPath", false);
         xmlhttp.send();
 
         expect(xmlhttp.status).toEqual(200);
@@ -188,7 +188,7 @@ describe("mockServerClient client:", function () {
 
     it("should match on query string parameters only", function () {
         // when
-        var client = mockServerClient("localhost", 1080);
+        var client = mockServerClient("localhost", 8097);
         client.mockAnyResponse(
             {
                 'httpRequest': {
@@ -239,20 +239,20 @@ describe("mockServerClient client:", function () {
         );
 
         // then - matching no expectation
-        xmlhttp.open("GET", "http://localhost:1080/somePath?param=other", false);
+        xmlhttp.open("GET", "http://localhost:8097/somePath?param=other", false);
         xmlhttp.send();
 
         expect(xmlhttp.status).toEqual(404);
 
         // then - matching first expectation
-        xmlhttp.open("GET", "http://localhost:1080/somePath?param=first", false);
+        xmlhttp.open("GET", "http://localhost:8097/somePath?param=first", false);
         xmlhttp.send();
 
         expect(xmlhttp.status).toEqual(200);
         expect(xmlhttp.responseText).toEqual('{"name":"first_body"}');
 
         // then - matching second expectation
-        xmlhttp.open("GET", "http://localhost:1080/somePath?param=second", false);
+        xmlhttp.open("GET", "http://localhost:8097/somePath?param=second", false);
         xmlhttp.send();
 
         expect(xmlhttp.status).toEqual(200);
@@ -261,7 +261,7 @@ describe("mockServerClient client:", function () {
 
     it("should match on body only", function () {
         // when
-        var client = mockServerClient("localhost", 1080);
+        var client = mockServerClient("localhost", 8097);
         client.mockAnyResponse(
             {
                 'httpRequest': {
@@ -308,20 +308,20 @@ describe("mockServerClient client:", function () {
         );
 
         // then - matching no expectation
-        xmlhttp.open("POST", "http://localhost:1080/somePath", false);
+        xmlhttp.open("POST", "http://localhost:8097/somePath", false);
         xmlhttp.send("someIncorrectBody");
 
         expect(xmlhttp.status).toEqual(404);
 
         // then - matching first expectation
-        xmlhttp.open("POST", "http://localhost:1080/somePath", false);
+        xmlhttp.open("POST", "http://localhost:8097/somePath", false);
         xmlhttp.send("someBody");
 
         expect(xmlhttp.status).toEqual(200);
         expect(xmlhttp.responseText).toEqual('{"name":"first_body"}');
 
         // then - matching second expectation
-        xmlhttp.open("POST", "http://localhost:1080/somePath", false);
+        xmlhttp.open("POST", "http://localhost:8097/somePath", false);
         xmlhttp.send("someOtherBody");
 
         expect(xmlhttp.status).toEqual(200);
@@ -330,7 +330,7 @@ describe("mockServerClient client:", function () {
 
     it("should match on headers only", function () {
         // when
-        var client = mockServerClient("localhost", 1080);
+        var client = mockServerClient("localhost", 8097);
         client.mockAnyResponse(
             {
                 'httpRequest': {
@@ -381,14 +381,14 @@ describe("mockServerClient client:", function () {
         );
 
         // then - matching no expectation
-        xmlhttp.open("GET", "http://localhost:1080/somePath", false);
+        xmlhttp.open("GET", "http://localhost:8097/somePath", false);
         xmlhttp.setRequestHeader('header', 'other');
         xmlhttp.send();
 
         expect(xmlhttp.status).toEqual(404);
 
         // then - matching first expectation
-        xmlhttp.open("GET", "http://localhost:1080/somePath", false);
+        xmlhttp.open("GET", "http://localhost:8097/somePath", false);
         xmlhttp.setRequestHeader('header', 'first');
         xmlhttp.send();
 
@@ -396,7 +396,7 @@ describe("mockServerClient client:", function () {
         expect(xmlhttp.responseText).toEqual('{"name":"first_body"}');
 
         // then - matching second expectation
-        xmlhttp.open("GET", "http://localhost:1080/somePath", false);
+        xmlhttp.open("GET", "http://localhost:8097/somePath", false);
         xmlhttp.setRequestHeader('header', 'second');
         xmlhttp.send();
 
@@ -406,7 +406,7 @@ describe("mockServerClient client:", function () {
 
     it("should match on cookies only", function () {
         // when
-        var client = mockServerClient("localhost", 1080);
+        var client = mockServerClient("localhost", 8097);
         client.mockAnyResponse(
             {
                 'httpRequest': {
@@ -458,14 +458,14 @@ describe("mockServerClient client:", function () {
 
         // then - matching no expectation
         document.cookie = "cookie=other";
-        xmlhttp.open("GET", "http://localhost:1080/somePath", false);
+        xmlhttp.open("GET", "http://localhost:8097/somePath", false);
         xmlhttp.send();
 
         expect(xmlhttp.status).toEqual(404);
 
         // then - matching first expectation
         document.cookie = "cookie=first";
-        xmlhttp.open("GET", "http://localhost:1080/somePath", false);
+        xmlhttp.open("GET", "http://localhost:8097/somePath", false);
         xmlhttp.send();
 
         expect(xmlhttp.status).toEqual(200);
@@ -473,7 +473,7 @@ describe("mockServerClient client:", function () {
 
         // then - matching second expectation
         document.cookie = "cookie=second";
-        xmlhttp.open("GET", "http://localhost:1080/somePath", false);
+        xmlhttp.open("GET", "http://localhost:8097/somePath", false);
         xmlhttp.send();
 
         expect(xmlhttp.status).toEqual(200);
@@ -482,23 +482,23 @@ describe("mockServerClient client:", function () {
 
     it("should create simple response expectation", function () {
         // when
-        mockServerClient("localhost", 1080).mockSimpleResponse('/somePath', {name: 'value'}, 203);
+        mockServerClient("localhost", 8097).mockSimpleResponse('/somePath', {name: 'value'}, 203);
 
         // then - non matching request
-        xmlhttp.open("GET", "http://localhost:1080/otherPath", false);
+        xmlhttp.open("GET", "http://localhost:8097/otherPath", false);
         xmlhttp.send();
 
         expect(xmlhttp.status).toEqual(404);
 
         // then - matching request
-        xmlhttp.open("POST", "http://localhost:1080/somePath?test=true", false);
+        xmlhttp.open("POST", "http://localhost:8097/somePath?test=true", false);
         xmlhttp.send("someBody");
 
         expect(xmlhttp.status).toEqual(203);
         expect(xmlhttp.responseText).toEqual('{"name":"value"}');
 
         // then - matching request, but no times remaining
-        xmlhttp.open("POST", "http://localhost:1080/somePath?test=true", false);
+        xmlhttp.open("POST", "http://localhost:8097/somePath?test=true", false);
         xmlhttp.send("someBody");
 
         expect(xmlhttp.status).toEqual(404);
@@ -506,7 +506,7 @@ describe("mockServerClient client:", function () {
 
     it("should update default headers for simple response expectation", function () {
         // when
-        var client = mockServerClient("localhost", 1080);
+        var client = mockServerClient("localhost", 8097);
         client.setDefaultHeaders([
             {"name": "Content-Type", "values": ["application/json; charset=utf-8"]},
             {"name": "X-Test", "values": ["test-value"]}
@@ -514,7 +514,7 @@ describe("mockServerClient client:", function () {
         client.mockSimpleResponse('/somePath', {name: 'value'}, 203);
 
         // then - matching request
-        xmlhttp.open("POST", "http://localhost:1080/somePath?test=true", false);
+        xmlhttp.open("POST", "http://localhost:8097/somePath?test=true", false);
         xmlhttp.send("someBody");
 
         expect(xmlhttp.status).toEqual(203);
@@ -524,9 +524,9 @@ describe("mockServerClient client:", function () {
 
     it("should verify exact number of requests have been sent", function () {
         // given
-        var client = mockServerClient("localhost", 1080);
+        var client = mockServerClient("localhost", 8097);
         client.mockSimpleResponse('/somePath', {name: 'value'}, 203);
-        xmlhttp.open("POST", "http://localhost:1080/somePath", false);
+        xmlhttp.open("POST", "http://localhost:8097/somePath", false);
         xmlhttp.send("someBody");
         expect(xmlhttp.status).toEqual(203);
 
@@ -541,13 +541,13 @@ describe("mockServerClient client:", function () {
 
     it("should verify at least a number of requests have been sent", function () {
         // given
-        var client = mockServerClient("localhost", 1080);
+        var client = mockServerClient("localhost", 8097);
         client.mockSimpleResponse('/somePath', {name: 'value'}, 203);
         client.mockSimpleResponse('/somePath', {name: 'value'}, 203);
-        xmlhttp.open("POST", "http://localhost:1080/somePath", false);
+        xmlhttp.open("POST", "http://localhost:8097/somePath", false);
         xmlhttp.send("someBody");
         expect(xmlhttp.status).toEqual(203);
-        xmlhttp.open("POST", "http://localhost:1080/somePath", false);
+        xmlhttp.open("POST", "http://localhost:8097/somePath", false);
         xmlhttp.send("someBody");
         expect(xmlhttp.status).toEqual(203);
 
@@ -562,9 +562,9 @@ describe("mockServerClient client:", function () {
 
     it("should fail when no requests have been sent", function () {
         // given
-        var client = mockServerClient("localhost", 1080);
+        var client = mockServerClient("localhost", 8097);
         client.mockSimpleResponse('/somePath', {name: 'value'}, 203);
-        xmlhttp.open("POST", "http://localhost:1080/somePath", false);
+        xmlhttp.open("POST", "http://localhost:8097/somePath", false);
         xmlhttp.send("someBody");
         expect(xmlhttp.status).toEqual(203);
 
@@ -579,9 +579,9 @@ describe("mockServerClient client:", function () {
 
     it("should fail when not enough exact requests have been sent", function () {
         // given
-        var client = mockServerClient("localhost", 1080);
+        var client = mockServerClient("localhost", 8097);
         client.mockSimpleResponse('/somePath', {name: 'value'}, 203);
-        xmlhttp.open("POST", "http://localhost:1080/somePath", false);
+        xmlhttp.open("POST", "http://localhost:8097/somePath", false);
         xmlhttp.send("someBody");
         expect(xmlhttp.status).toEqual(203);
 
@@ -598,9 +598,9 @@ describe("mockServerClient client:", function () {
 
     it("should fail when not enough at least requests have been sent", function () {
         // given
-        var client = mockServerClient("localhost", 1080);
+        var client = mockServerClient("localhost", 8097);
         client.mockSimpleResponse('/somePath', {name: 'value'}, 203);
-        xmlhttp.open("POST", "http://localhost:1080/somePath", false);
+        xmlhttp.open("POST", "http://localhost:8097/somePath", false);
         xmlhttp.send("someBody");
         expect(xmlhttp.status).toEqual(203);
 
@@ -617,16 +617,16 @@ describe("mockServerClient client:", function () {
 
     it("should pass when correct sequence of requests have been sent", function () {
         // given
-        var client = mockServerClient("localhost", 1080);
+        var client = mockServerClient("localhost", 8097);
         client.mockSimpleResponse('/somePathOne', {name: 'one'}, 201);
         client.mockSimpleResponse('/somePathTwo', {name: 'two'}, 202);
-        xmlhttp.open("POST", "http://localhost:1080/somePathOne", false);
+        xmlhttp.open("POST", "http://localhost:8097/somePathOne", false);
         xmlhttp.send("someBody");
         expect(xmlhttp.status).toEqual(201);
-        xmlhttp.open("GET", "http://localhost:1080/notFound", false);
+        xmlhttp.open("GET", "http://localhost:8097/notFound", false);
         xmlhttp.send();
         expect(xmlhttp.status).toEqual(404);
-        xmlhttp.open("GET", "http://localhost:1080/somePathTwo", false);
+        xmlhttp.open("GET", "http://localhost:8097/somePathTwo", false);
         xmlhttp.send();
         expect(xmlhttp.status).toEqual(202);
 
@@ -650,16 +650,16 @@ describe("mockServerClient client:", function () {
 
     it("should fail when incorrect sequence (wrong order) of requests have been sent", function () {
         // given
-        var client = mockServerClient("localhost", 1080);
+        var client = mockServerClient("localhost", 8097);
         client.mockSimpleResponse('/somePathOne', {name: 'one'}, 201);
         client.mockSimpleResponse('/somePathTwo', {name: 'two'}, 202);
-        xmlhttp.open("POST", "http://localhost:1080/somePathOne", false);
+        xmlhttp.open("POST", "http://localhost:8097/somePathOne", false);
         xmlhttp.send("someBody");
         expect(xmlhttp.status).toEqual(201);
-        xmlhttp.open("GET", "http://localhost:1080/notFound", false);
+        xmlhttp.open("GET", "http://localhost:8097/notFound", false);
         xmlhttp.send();
         expect(xmlhttp.status).toEqual(404);
-        xmlhttp.open("GET", "http://localhost:1080/somePathTwo", false);
+        xmlhttp.open("GET", "http://localhost:8097/somePathTwo", false);
         xmlhttp.send();
         expect(xmlhttp.status).toEqual(202);
 
@@ -686,16 +686,16 @@ describe("mockServerClient client:", function () {
 
     it("should fail when incorrect sequence (first request incorrect body) of requests have been sent", function () {
         // given
-        var client = mockServerClient("localhost", 1080);
+        var client = mockServerClient("localhost", 8097);
         client.mockSimpleResponse('/somePathOne', {name: 'one'}, 201);
         client.mockSimpleResponse('/somePathTwo', {name: 'two'}, 202);
-        xmlhttp.open("POST", "http://localhost:1080/somePathOne", false);
+        xmlhttp.open("POST", "http://localhost:8097/somePathOne", false);
         xmlhttp.send("someBody");
         expect(xmlhttp.status).toEqual(201);
-        xmlhttp.open("GET", "http://localhost:1080/notFound", false);
+        xmlhttp.open("GET", "http://localhost:8097/notFound", false);
         xmlhttp.send();
         expect(xmlhttp.status).toEqual(404);
-        xmlhttp.open("GET", "http://localhost:1080/somePathTwo", false);
+        xmlhttp.open("GET", "http://localhost:8097/somePathTwo", false);
         xmlhttp.send();
         expect(xmlhttp.status).toEqual(202);
 
@@ -721,13 +721,13 @@ describe("mockServerClient client:", function () {
 
     it("should clear expectations by path", function () {
         // when
-        var client = mockServerClient("localhost", 1080);
+        var client = mockServerClient("localhost", 8097);
         client.mockSimpleResponse('/somePathOne', {name: 'value'}, 200);
         client.mockSimpleResponse('/somePathOne', {name: 'value'}, 200);
         client.mockSimpleResponse('/somePathTwo', {name: 'value'}, 200);
 
         // then - matching request
-        xmlhttp.open("GET", "http://localhost:1080/somePathOne", false);
+        xmlhttp.open("GET", "http://localhost:8097/somePathOne", false);
         xmlhttp.send();
 
         expect(xmlhttp.status).toEqual(200);
@@ -737,13 +737,13 @@ describe("mockServerClient client:", function () {
         client.clear('/somePathOne');
 
         // then - matching request but cleared
-        xmlhttp.open("GET", "http://localhost:1080/somePathOne", false);
+        xmlhttp.open("GET", "http://localhost:8097/somePathOne", false);
         xmlhttp.send();
 
         expect(xmlhttp.status).toEqual(404);
 
         // then - matching request and not cleared
-        xmlhttp.open("GET", "http://localhost:1080/somePathTwo", false);
+        xmlhttp.open("GET", "http://localhost:8097/somePathTwo", false);
         xmlhttp.send();
 
         expect(xmlhttp.status).toEqual(200);
@@ -752,13 +752,13 @@ describe("mockServerClient client:", function () {
 
     it("should clear expectations by request matcher", function () {
         // when
-        var client = mockServerClient("localhost", 1080);
+        var client = mockServerClient("localhost", 8097);
         client.mockSimpleResponse('/somePathOne', {name: 'value'}, 200);
         client.mockSimpleResponse('/somePathOne', {name: 'value'}, 200);
         client.mockSimpleResponse('/somePathTwo', {name: 'value'}, 200);
 
         // then - matching request
-        xmlhttp.open("GET", "http://localhost:1080/somePathOne", false);
+        xmlhttp.open("GET", "http://localhost:8097/somePathOne", false);
         xmlhttp.send();
 
         expect(xmlhttp.status).toEqual(200);
@@ -770,13 +770,13 @@ describe("mockServerClient client:", function () {
         });
 
         // then - matching request but cleared
-        xmlhttp.open("GET", "http://localhost:1080/somePathOne", false);
+        xmlhttp.open("GET", "http://localhost:8097/somePathOne", false);
         xmlhttp.send();
 
         expect(xmlhttp.status).toEqual(404);
 
         // then - matching request and not cleared
-        xmlhttp.open("GET", "http://localhost:1080/somePathTwo", false);
+        xmlhttp.open("GET", "http://localhost:8097/somePathTwo", false);
         xmlhttp.send();
 
         expect(xmlhttp.status).toEqual(200);
@@ -785,13 +785,13 @@ describe("mockServerClient client:", function () {
 
     it("should clear expectations by expectation matcher", function () {
         // when
-        var client = mockServerClient("localhost", 1080);
+        var client = mockServerClient("localhost", 8097);
         client.mockSimpleResponse('/somePathOne', {name: 'value'}, 200);
         client.mockSimpleResponse('/somePathOne', {name: 'value'}, 200);
         client.mockSimpleResponse('/somePathTwo', {name: 'value'}, 200);
 
         // then - matching request
-        xmlhttp.open("GET", "http://localhost:1080/somePathOne", false);
+        xmlhttp.open("GET", "http://localhost:8097/somePathOne", false);
         xmlhttp.send();
 
         expect(xmlhttp.status).toEqual(200);
@@ -805,13 +805,13 @@ describe("mockServerClient client:", function () {
         });
 
         // then - matching request but cleared
-        xmlhttp.open("GET", "http://localhost:1080/somePathOne", false);
+        xmlhttp.open("GET", "http://localhost:8097/somePathOne", false);
         xmlhttp.send();
 
         expect(xmlhttp.status).toEqual(404);
 
         // then - matching request and not cleared
-        xmlhttp.open("GET", "http://localhost:1080/somePathTwo", false);
+        xmlhttp.open("GET", "http://localhost:8097/somePathTwo", false);
         xmlhttp.send();
 
         expect(xmlhttp.status).toEqual(200);
@@ -820,13 +820,13 @@ describe("mockServerClient client:", function () {
 
     it("should reset expectations", function () {
         // when
-        var client = mockServerClient("localhost", 1080);
+        var client = mockServerClient("localhost", 8097);
         client.mockSimpleResponse('/somePathOne', {name: 'value'}, 200);
         client.mockSimpleResponse('/somePathOne', {name: 'value'}, 200);
         client.mockSimpleResponse('/somePathTwo', {name: 'value'}, 200);
 
         // then - matching request
-        xmlhttp.open("GET", "http://localhost:1080/somePathOne", false);
+        xmlhttp.open("GET", "http://localhost:8097/somePathOne", false);
         xmlhttp.send();
 
         expect(xmlhttp.status).toEqual(200);
@@ -836,13 +836,13 @@ describe("mockServerClient client:", function () {
         client.reset();
 
         // then - matching request but cleared
-        xmlhttp.open("GET", "http://localhost:1080/somePathOne", false);
+        xmlhttp.open("GET", "http://localhost:8097/somePathOne", false);
         xmlhttp.send();
 
         expect(xmlhttp.status).toEqual(404);
 
         // then - matching request but also cleared
-        xmlhttp.open("GET", "http://localhost:1080/somePathTwo", false);
+        xmlhttp.open("GET", "http://localhost:8097/somePathTwo", false);
         xmlhttp.send();
 
         expect(xmlhttp.status).toEqual(404);
@@ -850,7 +850,7 @@ describe("mockServerClient client:", function () {
 
     it("should retrieve some expectations using object matcher", function () {
         // when
-        var client = mockServerClient("localhost", 1080);
+        var client = mockServerClient("localhost", 8097);
         client.mockSimpleResponse('/somePathOne', {name: 'one'}, 201);
         client.mockSimpleResponse('/somePathOne', {name: 'one'}, 201);
         client.mockSimpleResponse('/somePathTwo', {name: 'two'}, 303);
@@ -876,7 +876,7 @@ describe("mockServerClient client:", function () {
 
     it("should retrieve some expectations using path", function () {
         // when
-        var client = mockServerClient("localhost", 1080);
+        var client = mockServerClient("localhost", 8097);
         client.mockSimpleResponse('/somePathOne', {name: 'one'}, 201);
         client.mockSimpleResponse('/somePathOne', {name: 'one'}, 201);
         client.mockSimpleResponse('/somePathTwo', {name: 'two'}, 202);
@@ -898,7 +898,7 @@ describe("mockServerClient client:", function () {
 
     it("should retrieve all expectations using object matcher", function () {
         // when
-        var client = mockServerClient("localhost", 1080);
+        var client = mockServerClient("localhost", 8097);
         client.mockSimpleResponse('/somePathOne', {name: 'one'}, 201);
         client.mockSimpleResponse('/somePathOne', {name: 'one'}, 201);
         client.mockSimpleResponse('/somePathTwo', {name: 'two'}, 202);
@@ -928,7 +928,7 @@ describe("mockServerClient client:", function () {
 
     it("should retrieve all expectations using null matcher", function () {
         // when
-        var client = mockServerClient("localhost", 1080);
+        var client = mockServerClient("localhost", 8097);
         client.mockSimpleResponse('/somePathOne', {name: 'one'}, 201);
         client.mockSimpleResponse('/somePathOne', {name: 'one'}, 201);
         client.mockSimpleResponse('/somePathTwo', {name: 'two'}, 202);
@@ -954,20 +954,20 @@ describe("mockServerClient client:", function () {
 
     it("should retrieve some requests using object matcher", function () {
         // given
-        var client = mockServerClient("localhost", 1080);
+        var client = mockServerClient("localhost", 8097);
         client.mockSimpleResponse('/somePathOne', {name: 'one'}, 201);
         client.mockSimpleResponse('/somePathOne', {name: 'one'}, 201);
         client.mockSimpleResponse('/somePathTwo', {name: 'two'}, 202);
-        xmlhttp.open("POST", "http://localhost:1080/somePathOne", false);
+        xmlhttp.open("POST", "http://localhost:8097/somePathOne", false);
         xmlhttp.send("someBody");
         expect(xmlhttp.status).toEqual(201);
-        xmlhttp.open("GET", "http://localhost:1080/somePathOne", false);
+        xmlhttp.open("GET", "http://localhost:8097/somePathOne", false);
         xmlhttp.send();
         expect(xmlhttp.status).toEqual(201);
-        xmlhttp.open("GET", "http://localhost:1080/notFound", false);
+        xmlhttp.open("GET", "http://localhost:8097/notFound", false);
         xmlhttp.send();
         expect(xmlhttp.status).toEqual(404);
-        xmlhttp.open("GET", "http://localhost:1080/somePathTwo", false);
+        xmlhttp.open("GET", "http://localhost:8097/somePathTwo", false);
         xmlhttp.send();
         expect(xmlhttp.status).toEqual(202);
 
@@ -991,20 +991,20 @@ describe("mockServerClient client:", function () {
 
     it("should retrieve some requests using path", function () {
         // given
-        var client = mockServerClient("localhost", 1080);
+        var client = mockServerClient("localhost", 8097);
         client.mockSimpleResponse('/somePathOne', {name: 'one'}, 201);
         client.mockSimpleResponse('/somePathOne', {name: 'one'}, 201);
         client.mockSimpleResponse('/somePathTwo', {name: 'two'}, 202);
-        xmlhttp.open("POST", "http://localhost:1080/somePathOne", false);
+        xmlhttp.open("POST", "http://localhost:8097/somePathOne", false);
         xmlhttp.send("someBody");
         expect(xmlhttp.status).toEqual(201);
-        xmlhttp.open("GET", "http://localhost:1080/somePathOne", false);
+        xmlhttp.open("GET", "http://localhost:8097/somePathOne", false);
         xmlhttp.send();
         expect(xmlhttp.status).toEqual(201);
-        xmlhttp.open("GET", "http://localhost:1080/notFound", false);
+        xmlhttp.open("GET", "http://localhost:8097/notFound", false);
         xmlhttp.send();
         expect(xmlhttp.status).toEqual(404);
-        xmlhttp.open("GET", "http://localhost:1080/somePathTwo", false);
+        xmlhttp.open("GET", "http://localhost:8097/somePathTwo", false);
         xmlhttp.send();
         expect(xmlhttp.status).toEqual(202);
 
@@ -1024,20 +1024,20 @@ describe("mockServerClient client:", function () {
 
     it("should retrieve all requests using object matcher", function () {
         // given
-        var client = mockServerClient("localhost", 1080);
+        var client = mockServerClient("localhost", 8097);
         client.mockSimpleResponse('/somePathOne', {name: 'one'}, 201);
         client.mockSimpleResponse('/somePathOne', {name: 'one'}, 201);
         client.mockSimpleResponse('/somePathTwo', {name: 'two'}, 202);
-        xmlhttp.open("POST", "http://localhost:1080/somePathOne", false);
+        xmlhttp.open("POST", "http://localhost:8097/somePathOne", false);
         xmlhttp.send("someBody");
         expect(xmlhttp.status).toEqual(201);
-        xmlhttp.open("GET", "http://localhost:1080/somePathOne", false);
+        xmlhttp.open("GET", "http://localhost:8097/somePathOne", false);
         xmlhttp.send();
         expect(xmlhttp.status).toEqual(201);
-        xmlhttp.open("GET", "http://localhost:1080/notFound", false);
+        xmlhttp.open("GET", "http://localhost:8097/notFound", false);
         xmlhttp.send();
         expect(xmlhttp.status).toEqual(404);
-        xmlhttp.open("GET", "http://localhost:1080/somePathTwo", false);
+        xmlhttp.open("GET", "http://localhost:8097/somePathTwo", false);
         xmlhttp.send();
         expect(xmlhttp.status).toEqual(202);
 
@@ -1068,20 +1068,20 @@ describe("mockServerClient client:", function () {
 
     it("should retrieve all requests using null matcher", function () {
         // given
-        var client = mockServerClient("localhost", 1080);
+        var client = mockServerClient("localhost", 8097);
         client.mockSimpleResponse('/somePathOne', {name: 'one'}, 201);
         client.mockSimpleResponse('/somePathOne', {name: 'one'}, 201);
         client.mockSimpleResponse('/somePathTwo', {name: 'two'}, 202);
-        xmlhttp.open("POST", "http://localhost:1080/somePathOne", false);
+        xmlhttp.open("POST", "http://localhost:8097/somePathOne", false);
         xmlhttp.send("someBody");
         expect(xmlhttp.status).toEqual(201);
-        xmlhttp.open("GET", "http://localhost:1080/somePathOne", false);
+        xmlhttp.open("GET", "http://localhost:8097/somePathOne", false);
         xmlhttp.send();
         expect(xmlhttp.status).toEqual(201);
-        xmlhttp.open("GET", "http://localhost:1080/notFound", false);
+        xmlhttp.open("GET", "http://localhost:8097/notFound", false);
         xmlhttp.send();
         expect(xmlhttp.status).toEqual(404);
-        xmlhttp.open("GET", "http://localhost:1080/somePathTwo", false);
+        xmlhttp.open("GET", "http://localhost:8097/somePathTwo", false);
         xmlhttp.send();
         expect(xmlhttp.status).toEqual(202);
 
