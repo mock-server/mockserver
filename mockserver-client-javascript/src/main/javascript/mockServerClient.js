@@ -1,5 +1,5 @@
 /**
- * Start the client communicating to a MockServer at the specified host and port
+ * Start the client communicating to the MockServer at the specified host and port
  * for example:
  *
  *   var client = mockServerClient("localhost", 1080);
@@ -124,7 +124,7 @@ var mockServerClient = function (host, port) {
     /**
      * Verify a request has been sent for example:
      *
-     *   client.verify({
+     *   mockServerClient("localhost", 1080).verify({
      *      'method': 'POST',
      *      'path': '/somePath'
      *   });
@@ -155,7 +155,7 @@ var mockServerClient = function (host, port) {
     /**
      * Verify a sequence of requests has been sent for example:
      *
-     *   client.verifySequence(
+     *   mockServerClient("localhost", 1080).verifySequence(
      *       {
      *          'method': 'POST',
      *          'path': '/first_request'

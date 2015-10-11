@@ -1,3 +1,12 @@
+/**
+ * Start the client communicating to the proxy at the specified host and port
+ * for example:
+ *
+ *   var client = proxyClient("localhost", 1080);
+ *
+ * @param host the host for the proxy to communicate with
+ * @param port the port for the proxy to communicate with
+ */
 var proxyClient = function (host, port) {
     "use strict";
 
@@ -37,7 +46,7 @@ var proxyClient = function (host, port) {
     /**
      * Verify a request has been sent for example:
      *
-     *   client.verify({
+     *   proxyClient("localhost", 1080).verify({
      *      'method': 'POST',
      *      'path': '/somePath'
      *   });
@@ -68,7 +77,7 @@ var proxyClient = function (host, port) {
     /**
      * Verify a sequence of requests has been sent for example:
      *
-     *   client.verifySequence(
+     *   proxyClient("localhost", 1080).verifySequence(
      *       {
      *          'method': 'POST',
      *          'path': '/first_request'
