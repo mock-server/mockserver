@@ -337,6 +337,37 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
+    public void shouldReturnResponseOnSecondPort() {
+        // when
+        mockServerClient.when(request()).respond(response().withBody("some_body"));
+
+        // then
+        // - in http
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("")),
+                        headersToIgnore)
+        );
+        // - in https
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        request()
+                                .withSecure(true)
+                                .withPath(calculatePath("")),
+                        headersToIgnore)
+        );
+    }
+
+    @Test
     public void shouldReturnResponseWithOnlyBody() {
         // when
         mockServerClient.when(request()).respond(response().withBody("some_body"));

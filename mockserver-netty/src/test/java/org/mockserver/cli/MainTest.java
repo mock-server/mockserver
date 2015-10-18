@@ -21,6 +21,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class MainTest {
 
     private final static Integer SERVER_PORT = PortFactory.findFreePort();
+    private final static Integer SECOND_SERVER_PORT = PortFactory.findFreePort();
     private final static Integer PROXY_PORT = PortFactory.findFreePort();
     private final static Integer PROXY_REMOTE_PORT = PortFactory.findFreePort();
 
@@ -54,6 +55,7 @@ public class MainTest {
 
         when(mockMockServerBuilder.withStopEventQueue(any(StopEventQueue.class))).thenReturn(mockMockServerBuilder);
         when(mockMockServerBuilder.withHTTPPort(anyInt())).thenReturn(mockMockServerBuilder);
+        when(mockMockServerBuilder.withHTTPPort(anyInt(), anyInt())).thenReturn(mockMockServerBuilder);
 
         when(mockProxyBuilder.withStopEventQueue(any(StopEventQueue.class))).thenReturn(mockProxyBuilder);
         when(mockProxyBuilder.withLocalPort(anyInt())).thenReturn(mockProxyBuilder);
@@ -129,6 +131,15 @@ public class MainTest {
     }
 
     @Test
+    public void shouldParseMultiplePortArgumentsForServerOnly() {
+        Main.main("-serverPort", SERVER_PORT.toString() + "," + SECOND_SERVER_PORT.toString());
+
+        verify(mockMockServerBuilder).withHTTPPort(SERVER_PORT, SECOND_SERVER_PORT);
+        verify(mockMockServerBuilder).build();
+        verifyZeroInteractions(mockProxyBuilder);
+    }
+
+    @Test
     public void shouldParseArgumentsForProxyOnly() {
         Main.main("-proxyPort", PROXY_PORT.toString());
 
@@ -199,9 +210,9 @@ public class MainTest {
         Main.main("-serverPort", "A", "-proxyPort", "1");
 
         verify(mockPrintStream, times(1)).print(Main.USAGE);
-        verify(mockPrintStream, times(1)).println(System.getProperty("line.separator") + "   ==================================================================");
-        verify(mockPrintStream, times(1)).println("   serverPort value \"A\" is invalid, please specify a port i.e. \"1080\"");
-        verify(mockPrintStream, times(1)).println("   ==================================================================" + System.getProperty("line.separator"));
+        verify(mockPrintStream, times(1)).println(System.getProperty("line.separator") + "   =====================================================================================================");
+        verify(mockPrintStream, times(1)).println("   serverPort value \"A\" is invalid, please specify a comma separated list of ports i.e. \"1080,1081,1082\"");
+        verify(mockPrintStream, times(1)).println("   =====================================================================================================" + System.getProperty("line.separator"));
         verify(mockRuntime, times(1)).exit(1);
         verifyZeroInteractions(mockProxyBuilder);
     }
@@ -248,7 +259,7 @@ public class MainTest {
 
         verify(mockPrintStream, times(1)).print(Main.USAGE);
         verify(mockPrintStream, times(1)).println(System.getProperty("line.separator") + "   ===============================================================================================================");
-        verify(mockPrintStream, times(1)).println("   serverPort value \"A\" is invalid, please specify a port i.e. \"1080\"");
+        verify(mockPrintStream, times(1)).println("   serverPort value \"A\" is invalid, please specify a comma separated list of ports i.e. \"1080,1081,1082\"");
         verify(mockPrintStream, times(1)).println("   proxyPort value \"B\" is invalid, please specify a port i.e. \"1080\"");
         verify(mockPrintStream, times(1)).println("   proxyRemotePort value \"C\" is invalid, please specify a port i.e. \"1080\"");
         verify(mockPrintStream, times(1)).println("   proxyRemoteHost value \"http://localhost\" is invalid, please specify a host name i.e. \"localhost\" or \"127.0.0.1\"");

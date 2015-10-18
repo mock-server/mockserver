@@ -1,4 +1,4 @@
-package org.mockserver.server;
+package org.mockserver.integration.mockserver;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -12,7 +12,7 @@ import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 /**
  * @author jamesdbloom
  */
-public class ClientServerNettyIntegrationTest extends NettyAbstractClientServerIntegrationTest {
+public class MockServerIntegrationTest extends AbstractMockServerNettyIntegrationTest {
 
     private final static int TEST_SERVER_HTTP_PORT = PortFactory.findFreePort();
     private final static int SERVER_HTTP_PORT = PortFactory.findFreePort();

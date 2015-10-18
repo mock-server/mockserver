@@ -10,10 +10,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpServerCodec;
-import org.mockserver.client.serialization.ExpectationSerializer;
-import org.mockserver.client.serialization.HttpRequestSerializer;
-import org.mockserver.client.serialization.VerificationSequenceSerializer;
-import org.mockserver.client.serialization.VerificationSerializer;
+import org.mockserver.client.serialization.*;
 import org.mockserver.filters.LogFilter;
 import org.mockserver.logging.LogFormatter;
 import org.mockserver.mappers.ContentTypeMapper;
@@ -28,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.charset.Charset;
+import java.util.List;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONNECTION;
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH;
@@ -35,6 +33,7 @@ import static org.mockserver.model.ConnectionOptions.isFalseOrNull;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.PortBinding.portBinding;
 
 @ChannelHandler.Sharable
 public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> {
@@ -49,6 +48,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
     // serializers
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
+    private PortBindingSerializer portBindingSerializer = new PortBindingSerializer();
     private VerificationSerializer verificationSerializer = new VerificationSerializer();
     private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer();
 
@@ -65,7 +65,14 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
         try {
             if (request.matches("PUT", "/status")) {
 
-                writeResponse(ctx, request, HttpResponseStatus.OK);
+                List<Integer> actualPortBindings = server.getPorts();
+                writeResponse(ctx, request, HttpResponseStatus.OK, portBindingSerializer.serialize(portBinding(actualPortBindings)), "application/json");
+
+            } else if (request.matches("PUT", "/bind")) {
+
+                PortBinding requestedPortBindings = portBindingSerializer.deserialize(request.getBodyAsString());
+                List<Integer> actualPortBindings = server.bindToPorts(requestedPortBindings.getPorts());
+                writeResponse(ctx, request, HttpResponseStatus.ACCEPTED, portBindingSerializer.serialize(portBinding(actualPortBindings)), "application/json");
 
             } else if (request.matches("PUT", "/expectation")) {
 

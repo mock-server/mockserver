@@ -3,12 +3,14 @@ package org.mockserver.mockserver;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.stop.StopEventQueue;
 
+import java.util.List;
+
 /**
  * @author jamesdbloom
  */
 public class MockServerBuilder {
 
-    private Integer port;
+    private Integer[] port;
     private StopEventQueue stopEventQueue = new StopEventQueue();
 
     public MockServerBuilder withStopEventQueue(StopEventQueue stopEventQueue) {
@@ -17,14 +19,14 @@ public class MockServerBuilder {
     }
 
     /**
-     * Configure HTTP and HTTPS port
+     * Configure HTTP and HTTPS ports
      *
-     * @param port the HTTP port to use
+     * @param ports the HTTP ports to use
      */
-    public MockServerBuilder withHTTPPort(Integer port) {
-        if (port != null && port != -1) {
-            ConfigurationProperties.mockServerPort(port);
-            this.port = port;
+    public MockServerBuilder withHTTPPort(Integer... ports) {
+        if (ports != null && ports.length >= 1) {
+            ConfigurationProperties.mockServerPort(ports);
+            this.port = ports;
         } else {
             this.port = null;
         }

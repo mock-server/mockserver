@@ -251,11 +251,26 @@ public class ConfigurationPropertiesTest {
         System.clearProperty("mockserver.mockServerPort");
 
         // when
-        assertEquals(-1, ConfigurationProperties.mockServerPort());
+        assertEquals(Arrays.asList(-1), ConfigurationProperties.mockServerPort());
         ConfigurationProperties.mockServerPort(10);
 
         // then
-        assertEquals(10, ConfigurationProperties.mockServerPort());
+        assertEquals("10", System.getProperty("mockserver.mockServerPort"));
+        assertEquals(Arrays.asList(10), ConfigurationProperties.mockServerPort());
+    }
+
+    @Test
+    public void shouldSetAndReadServerPortAsList() {
+        // given
+        System.clearProperty("mockserver.mockServerPort");
+
+        // when
+        assertEquals(Arrays.asList(-1), ConfigurationProperties.mockServerPort());
+        ConfigurationProperties.mockServerPort(10, 20, 30);
+
+        // then
+        assertEquals("10,20,30", System.getProperty("mockserver.mockServerPort"));
+        assertEquals(Arrays.asList(10, 20, 30), ConfigurationProperties.mockServerPort());
     }
 
     @Test
@@ -264,7 +279,7 @@ public class ConfigurationPropertiesTest {
         System.setProperty("mockserver.mockServerPort", "invalid");
 
         // then
-        assertEquals(-1, ConfigurationProperties.mockServerPort());
+        assertEquals(Arrays.asList(), ConfigurationProperties.mockServerPort());
     }
 
     @Test
@@ -273,11 +288,12 @@ public class ConfigurationPropertiesTest {
         System.clearProperty("mockserver.proxyPort");
 
         // when
-        assertEquals(-1, ConfigurationProperties.proxyPort());
+        assertEquals(new Integer(-1), ConfigurationProperties.proxyPort());
         ConfigurationProperties.proxyPort(10);
 
         // then
-        assertEquals(10, ConfigurationProperties.proxyPort());
+        assertEquals("10", System.getProperty("mockserver.proxyPort"));
+        assertEquals(new Integer(10), ConfigurationProperties.proxyPort());
     }
 
     @Test
@@ -286,7 +302,7 @@ public class ConfigurationPropertiesTest {
         System.setProperty("mockserver.proxyPort", "invalid");
 
         // then
-        assertEquals(-1, ConfigurationProperties.proxyPort());
+        assertEquals(new Integer(-1), ConfigurationProperties.proxyPort());
     }
 
     @Test

@@ -3,10 +3,7 @@ package org.mockserver.server;
 import com.google.common.base.Strings;
 import com.google.common.net.MediaType;
 import io.netty.handler.codec.http.HttpHeaders;
-import org.mockserver.client.serialization.ExpectationSerializer;
-import org.mockserver.client.serialization.HttpRequestSerializer;
-import org.mockserver.client.serialization.VerificationSequenceSerializer;
-import org.mockserver.client.serialization.VerificationSerializer;
+import org.mockserver.client.serialization.*;
 import org.mockserver.filters.LogFilter;
 import org.mockserver.mappers.HttpServletRequestToMockServerRequestDecoder;
 import org.mockserver.mappers.MockServerResponseToHttpServletResponseEncoder;
@@ -25,6 +22,7 @@ import java.nio.charset.Charset;
 
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
+import static org.mockserver.model.PortBinding.portBinding;
 
 /**
  * @author jamesdbloom
@@ -43,6 +41,7 @@ public class MockServerServlet extends HttpServlet {
     // serializers
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
+    private PortBindingSerializer portBindingSerializer = new PortBindingSerializer();
     private VerificationSerializer verificationSerializer = new VerificationSerializer();
     private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer();
 
@@ -84,6 +83,12 @@ public class MockServerServlet extends HttpServlet {
             if (requestPath.equals("/status")) {
 
                 httpServletResponse.setStatus(HttpStatusCode.OK_200.code());
+                httpServletResponse.setHeader(HttpHeaders.Names.CONTENT_TYPE, MediaType.JSON_UTF_8.toString());
+                IOStreamUtils.writeToOutputStream(portBindingSerializer.serialize(portBinding(httpServletRequest.getLocalPort())).getBytes(), httpServletResponse);
+
+            } else if (requestPath.equals("/bind")) {
+
+                httpServletResponse.setStatus(HttpStatusCode.NOT_IMPLEMENTED_501.code());
 
             } else if (requestPath.equals("/expectation")) {
 
@@ -134,7 +139,7 @@ public class MockServerServlet extends HttpServlet {
                     httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
                 } else {
                     httpServletResponse.setStatus(HttpStatusCode.NOT_ACCEPTABLE_406.code());
-                    httpServletResponse.setHeader(HttpHeaders.Names.CONTENT_TYPE, MediaType.JSON_UTF_8.toString());
+                    httpServletResponse.setHeader(HttpHeaders.Names.CONTENT_TYPE, MediaType.PLAIN_TEXT_UTF_8.toString());
                     IOStreamUtils.writeToOutputStream(result.getBytes(), httpServletResponse);
                 }
 
@@ -145,7 +150,7 @@ public class MockServerServlet extends HttpServlet {
                     httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
                 } else {
                     httpServletResponse.setStatus(HttpStatusCode.NOT_ACCEPTABLE_406.code());
-                    httpServletResponse.setHeader(HttpHeaders.Names.CONTENT_TYPE, MediaType.JSON_UTF_8.toString());
+                    httpServletResponse.setHeader(HttpHeaders.Names.CONTENT_TYPE, MediaType.PLAIN_TEXT_UTF_8.toString());
                     IOStreamUtils.writeToOutputStream(result.getBytes(), httpServletResponse);
                 }
 

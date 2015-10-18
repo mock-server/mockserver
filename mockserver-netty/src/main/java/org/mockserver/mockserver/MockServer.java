@@ -15,6 +15,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -28,75 +32,89 @@ public class MockServer implements Stoppable {
     // mockserver
     private final MockServerMatcher mockServerMatcher = new MockServerMatcher();
     private final LogFilter logFilter = new LogFilter();
-    private final SettableFuture<Integer> hasStarted;
+    private final List<Future<Channel>> channelOpenedFutures = new ArrayList<Future<Channel>>();
     // netty
     private final EventLoopGroup bossGroup = new NioEventLoopGroup();
     private final EventLoopGroup workerGroup = new NioEventLoopGroup();
+    private final ServerBootstrap serverBootstrap;
     private StopEventQueue stopEventQueue = new StopEventQueue();
-    private Channel channel;
 
     /**
      * Start the instance using the port provided
      *
-     * @param port the http port to use
+     * @param requestedPortBindings the http port to use
      */
-    public MockServer(final Integer port) {
-        if (port == null) {
-            throw new IllegalArgumentException("You must specify a port");
+    public MockServer(final Integer... requestedPortBindings) {
+        if (requestedPortBindings == null || requestedPortBindings.length == 0) {
+            throw new IllegalArgumentException("You must specify at least one port");
         }
 
-        hasStarted = SettableFuture.create();
+        serverBootstrap = new ServerBootstrap()
+                .group(bossGroup, workerGroup)
+                .option(ChannelOption.SO_BACKLOG, 1024)
+                .channel(NioServerSocketChannel.class)
+                .childOption(ChannelOption.AUTO_READ, true)
+                .childHandler(new MockServerInitializer(mockServerMatcher, MockServer.this))
+                .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+                .childAttr(LOG_FILTER, logFilter);
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    channel = new ServerBootstrap()
-                            .group(bossGroup, workerGroup)
-                            .option(ChannelOption.SO_BACKLOG, 1024)
-                            .channel(NioServerSocketChannel.class)
-                            .childOption(ChannelOption.AUTO_READ, true)
-                            .childHandler(new MockServerInitializer(mockServerMatcher, MockServer.this))
-                            .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-                            .childAttr(LOG_FILTER, logFilter)
-                            .bind(port)
-                            .addListener(new ChannelFutureListener() {
-                                @Override
-                                public void operationComplete(ChannelFuture future) throws Exception {
-                                    if (future.isSuccess()) {
-                                        hasStarted.set(((InetSocketAddress) future.channel().localAddress()).getPort());
-                                    } else {
-                                        hasStarted.setException(future.cause());
-                                    }
-                                }
-                            })
-                            .channel();
+        bindToPorts(Arrays.asList(requestedPortBindings));
+    }
 
-                    logger.info("MockServer started on port: {}", hasStarted.get());
+    public List<Integer> bindToPorts(final List<Integer> requestedPortBindings) {
+        List<Integer> actualPortBindings = new ArrayList<Integer>();
+        for (final Integer port : requestedPortBindings) {
+            try {
+                final SettableFuture<Channel> channelOpened = SettableFuture.create();
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        channelOpenedFutures.add(channelOpened);
+                        try {
 
-                    channel.closeFuture().syncUninterruptibly();
-                } catch (Exception e) {
-                    throw new RuntimeException("Exception while starting MockServer", e.getCause());
-                } finally {
-                    bossGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
-                    workerGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
-                }
+                            Channel channel =
+                                    serverBootstrap
+                                            .bind(port)
+                                            .addListener(new ChannelFutureListener() {
+                                                @Override
+                                                public void operationComplete(ChannelFuture future) throws Exception {
+                                                    if (future.isSuccess()) {
+                                                        channelOpened.set(future.channel());
+                                                    } else {
+                                                        channelOpened.setException(future.cause());
+                                                    }
+                                                }
+                                            })
+                                            .channel();
+
+                            logger.info("MockServer started on port: {}", ((InetSocketAddress) channelOpened.get().localAddress()).getPort());
+
+                            channel.closeFuture().syncUninterruptibly();
+                        } catch (Exception e) {
+                            throw new RuntimeException("Exception while starting MockServer on port " + port, e.getCause());
+                        } finally {
+                            bossGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
+                            workerGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
+                        }
+                    }
+                }, "MockServer thread for port: " + port).start();
+
+                actualPortBindings.add(((InetSocketAddress) channelOpened.get().localAddress()).getPort());
+            } catch (Exception e) {
+                throw new RuntimeException("Exception while starting MockServer on port " + port, e.getCause());
             }
-        }, "MockServer Thread").start();
-
-        try {
-            hasStarted.get();
-        } catch (Exception e) {
-            logger.error("Exception while waiting for MockServer to complete starting up", e);
         }
+        return actualPortBindings;
     }
 
     public void stop() {
         try {
+            for (Future<Channel> channelOpened : channelOpenedFutures) {
+                channelOpened.get(2, TimeUnit.SECONDS).close();
+            }
             bossGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
             workerGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
             stopEventQueue.stop();
-            channel.close();
             // wait for socket to be released
             TimeUnit.MILLISECONDS.sleep(500);
         } catch (Exception ie) {
@@ -111,23 +129,34 @@ public class MockServer implements Stoppable {
     }
 
     public boolean isRunning() {
-        if (hasStarted.isDone()) {
-            try {
-                TimeUnit.MILLISECONDS.sleep(500);
-            } catch (InterruptedException e) {
-                logger.trace("Exception while waiting for the proxy to confirm running status", e);
-            }
-            return !bossGroup.isShuttingDown() && !workerGroup.isShuttingDown();
-        } else {
-            return false;
+        try {
+            TimeUnit.MILLISECONDS.sleep(500);
+        } catch (InterruptedException e) {
+            logger.trace("Exception while waiting for the proxy to confirm running status", e);
         }
+        return !bossGroup.isShuttingDown() && !workerGroup.isShuttingDown();
     }
 
-    public Integer getPort() {
-        try {
-            return hasStarted.get();
-        } catch (Exception e) {
-            throw new RuntimeException("Exception while starting MockServer", e);
+    public List<Integer> getPorts() {
+        List<Integer> ports = new ArrayList<Integer>();
+        for (Future<Channel> channelOpened : channelOpenedFutures) {
+            try {
+                ports.add(((InetSocketAddress) channelOpened.get(2, TimeUnit.SECONDS).localAddress()).getPort());
+            } catch (Exception e) {
+                logger.trace("Exception while retrieving port from channel future, ignoring port for this channel", e);
+            }
         }
+        return ports;
+    }
+
+    public int getPort() {
+        for (Future<Channel> channelOpened : channelOpenedFutures) {
+            try {
+                return ((InetSocketAddress) channelOpened.get(2, TimeUnit.SECONDS).localAddress()).getPort();
+            } catch (Exception e) {
+                logger.trace("Exception while retrieving port from channel future, ignoring port for this channel", e);
+            }
+        }
+        return -1;
     }
 }

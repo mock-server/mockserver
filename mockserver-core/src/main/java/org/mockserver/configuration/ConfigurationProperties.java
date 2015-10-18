@@ -24,12 +24,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class ConfigurationProperties {
 
     static final long DEFAULT_MAX_TIMEOUT = 120;
-    static final Logger logger = LoggerFactory.getLogger(ConfigurationProperties.class);
+    static final Logger LOGGER = LoggerFactory.getLogger(ConfigurationProperties.class);
     static final Properties PROPERTIES = readPropertyFile();
 
-    static final Set<String> allSubjectAlternativeDomains = Sets.newConcurrentHashSet();
-    static final Set<String> allSubjectAlternativeIps = Sets.newConcurrentHashSet();
-    static final AtomicBoolean rebuildKeyStore = new AtomicBoolean(false);
+    static final Set<String> ALL_SUBJECT_ALTERNATIVE_DOMAINS = Sets.newConcurrentHashSet();
+    static final Set<String> ALL_SUBJECT_ALTERNATIVE_IPS = Sets.newConcurrentHashSet();
+    static final AtomicBoolean REBUILD_KEY_STORE = new AtomicBoolean(false);
+
+    static final IntegerStringListParser INTEGER_STRING_LIST_PARSER = new IntegerStringListParser();
 
     static {
         addSslSubjectAlternativeNameDomains(readPropertyHierarchically("mockserver.sslSubjectAlternativeNameDomains", "localhost").split(","));
@@ -97,85 +99,90 @@ public class ConfigurationProperties {
     }
 
     public static String[] sslSubjectAlternativeNameDomains() {
-        return allSubjectAlternativeDomains.toArray(new String[allSubjectAlternativeDomains.size()]);
+        return ALL_SUBJECT_ALTERNATIVE_DOMAINS.toArray(new String[ALL_SUBJECT_ALTERNATIVE_DOMAINS.size()]);
     }
 
     public static void addSslSubjectAlternativeNameDomains(String... newSubjectAlternativeNameDomains) {
         boolean subjectAlternativeDomainsModified = false;
         for (String subjectAlternativeDomain : newSubjectAlternativeNameDomains) {
-            if (allSubjectAlternativeDomains.add(subjectAlternativeDomain.trim())) {
+            if (ALL_SUBJECT_ALTERNATIVE_DOMAINS.add(subjectAlternativeDomain.trim())) {
                 subjectAlternativeDomainsModified = true;
             }
         }
         if (subjectAlternativeDomainsModified) {
-            System.setProperty("mockserver.sslSubjectAlternativeNameDomains", Joiner.on(",").join(new TreeSet(allSubjectAlternativeDomains)));
+            System.setProperty("mockserver.sslSubjectAlternativeNameDomains", Joiner.on(",").join(new TreeSet(ALL_SUBJECT_ALTERNATIVE_DOMAINS)));
             rebuildKeyStore(true);
         }
     }
 
     public static void clearSslSubjectAlternativeNameDomains() {
-        allSubjectAlternativeDomains.clear();
+        ALL_SUBJECT_ALTERNATIVE_DOMAINS.clear();
         addSslSubjectAlternativeNameDomains(readPropertyHierarchically("mockserver.sslSubjectAlternativeNameDomains", "localhost").split(","));
     }
 
     public static boolean containsSslSubjectAlternativeName(String domainOrIp) {
-        return allSubjectAlternativeDomains.contains(domainOrIp) || allSubjectAlternativeIps.contains(domainOrIp);
+        return ALL_SUBJECT_ALTERNATIVE_DOMAINS.contains(domainOrIp) || ALL_SUBJECT_ALTERNATIVE_IPS.contains(domainOrIp);
     }
 
     public static String[] sslSubjectAlternativeNameIps() {
-        return allSubjectAlternativeIps.toArray(new String[allSubjectAlternativeIps.size()]);
+        return ALL_SUBJECT_ALTERNATIVE_IPS.toArray(new String[ALL_SUBJECT_ALTERNATIVE_IPS.size()]);
     }
 
     public static void addSslSubjectAlternativeNameIps(String... newSubjectAlternativeNameIps) {
         boolean subjectAlternativeIpsModified = false;
         for (String subjectAlternativeDomain : newSubjectAlternativeNameIps) {
-            if (allSubjectAlternativeIps.add(subjectAlternativeDomain.trim())) {
+            if (ALL_SUBJECT_ALTERNATIVE_IPS.add(subjectAlternativeDomain.trim())) {
                 subjectAlternativeIpsModified = true;
             }
         }
         if (subjectAlternativeIpsModified) {
-            System.setProperty("mockserver.sslSubjectAlternativeNameIps", Joiner.on(",").join(new TreeSet(allSubjectAlternativeIps)));
+            System.setProperty("mockserver.sslSubjectAlternativeNameIps", Joiner.on(",").join(new TreeSet(ALL_SUBJECT_ALTERNATIVE_IPS)));
             rebuildKeyStore(true);
         }
     }
 
     public static void clearSslSubjectAlternativeNameIps() {
-        allSubjectAlternativeIps.clear();
+        ALL_SUBJECT_ALTERNATIVE_IPS.clear();
         addSslSubjectAlternativeNameIps(readPropertyHierarchically("mockserver.sslSubjectAlternativeNameIps", "127.0.0.1,0.0.0.0").split(","));
     }
 
     public static boolean rebuildKeyStore() {
-        return rebuildKeyStore.get();
+        return REBUILD_KEY_STORE.get();
     }
 
     public static void rebuildKeyStore(boolean rebuildKeyStore) {
-        ConfigurationProperties.rebuildKeyStore.set(rebuildKeyStore);
+        ConfigurationProperties.REBUILD_KEY_STORE.set(rebuildKeyStore);
     }
 
     // mockserver config
-    public static int mockServerPort() {
+    public static List<Integer> mockServerPort() {
         return readIntegerProperty("mockserver.mockServerPort", -1);
     }
 
-    public static void mockServerPort(int port) {
-        System.setProperty("mockserver.mockServerPort", "" + port);
+    public static void mockServerPort(Integer... port) {
+        System.setProperty("mockserver.mockServerPort", INTEGER_STRING_LIST_PARSER.toString(port));
     }
 
     // proxy config
-    public static int proxyPort() {
-        return readIntegerProperty("mockserver.proxyPort", -1);
+    public static Integer proxyPort() {
+        List<Integer> ports = readIntegerProperty("mockserver.proxyPort", -1);
+        if (!ports.isEmpty()) {
+            return ports.get(0);
+        } else {
+            return -1;
+        }
     }
 
-    public static void proxyPort(int port) {
-        System.setProperty("mockserver.proxyPort", "" + port);
+    public static void proxyPort(Integer... port) {
+        System.setProperty("mockserver.proxyPort", INTEGER_STRING_LIST_PARSER.toString(port));
     }
 
-    private static Integer readIntegerProperty(String key, int defaultValue) {
+    private static List<Integer> readIntegerProperty(String key, Integer defaultValue) {
         try {
-            return Integer.parseInt(readPropertyHierarchically(key, "" + defaultValue));
+            return INTEGER_STRING_LIST_PARSER.toList(readPropertyHierarchically(key, "" + defaultValue));
         } catch (NumberFormatException nfe) {
-            logger.error("NumberFormatException converting " + key + " with value [" + readPropertyHierarchically(key, "" + defaultValue) + "]", nfe);
-            return defaultValue;
+            LOGGER.error("NumberFormatException converting " + key + " with value [" + readPropertyHierarchically(key, "" + defaultValue) + "]", nfe);
+            return Arrays.asList();
         }
     }
 
@@ -183,7 +190,7 @@ public class ConfigurationProperties {
         try {
             return Long.parseLong(readPropertyHierarchically(key, "" + defaultValue));
         } catch (NumberFormatException nfe) {
-            logger.error("NumberFormatException converting " + key + " with value [" + readPropertyHierarchically(key, "" + defaultValue) + "]", nfe);
+            LOGGER.error("NumberFormatException converting " + key + " with value [" + readPropertyHierarchically(key, "" + defaultValue) + "]", nfe);
             return defaultValue;
         }
     }
@@ -198,17 +205,17 @@ public class ConfigurationProperties {
                 properties.load(inputStream);
             } catch (IOException e) {
                 e.printStackTrace();
-                logger.error("Exception loading property file [" + propertyFile() + "]", e);
+                LOGGER.error("Exception loading property file [" + propertyFile() + "]", e);
             }
         } else {
-            logger.debug("Property file not found on classpath using path [" + propertyFile() + "]");
+            LOGGER.debug("Property file not found on classpath using path [" + propertyFile() + "]");
             try {
                 properties.load(new FileInputStream(propertyFile()));
             } catch (FileNotFoundException e) {
-                logger.debug("Property file not found using path [" + propertyFile() + "]");
+                LOGGER.debug("Property file not found using path [" + propertyFile() + "]");
             } catch (IOException e) {
                 e.printStackTrace();
-                logger.error("Exception loading property file [" + propertyFile() + "]", e);
+                LOGGER.error("Exception loading property file [" + propertyFile() + "]", e);
             }
         }
 
@@ -222,7 +229,7 @@ public class ConfigurationProperties {
                 String propertyName = String.valueOf(propertyNames.nextElement());
                 propertiesLogDump.append("\t").append(propertyName).append(" = ").append(properties.getProperty(propertyName)).append("\n");
             }
-            logger.info(propertiesLogDump.toString());
+            LOGGER.info(propertiesLogDump.toString());
         }
 
         return properties;
@@ -272,7 +279,7 @@ public class ConfigurationProperties {
                 setLevelMethod.invoke(logger, levelInstance);
             }
         } catch (Exception e) {
-            ConfigurationProperties.logger.debug("Exception updating logging level using reflection, likely cause is Logback is not on the classpath");
+            ConfigurationProperties.LOGGER.debug("Exception updating logging level using reflection, likely cause is Logback is not on the classpath");
         }
 
 
@@ -291,7 +298,7 @@ public class ConfigurationProperties {
                 currentLogLevelField.set(logger, logLevelInstance);
             }
         } catch (Exception e) {
-            ConfigurationProperties.logger.debug("Exception updating logging level using reflection, likely cause is Logback is not on the classpath");
+            ConfigurationProperties.LOGGER.debug("Exception updating logging level using reflection, likely cause is Logback is not on the classpath");
         }
     }
 

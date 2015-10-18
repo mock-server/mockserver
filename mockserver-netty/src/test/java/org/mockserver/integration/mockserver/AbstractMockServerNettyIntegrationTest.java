@@ -1,4 +1,4 @@
-package org.mockserver.server;
+package org.mockserver.integration.mockserver;
 
 import com.google.common.base.Charsets;
 import com.google.common.net.HttpHeaders;
@@ -9,6 +9,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockserver.integration.server.SameJVMAbstractClientServerIntegrationTest;
 import org.mockserver.model.HttpStatusCode;
+import org.mockserver.server.TestClasspathTestExpectationCallback;
 import org.mockserver.socket.SSLFactory;
 import org.mockserver.streams.IOStreamUtils;
 
@@ -35,7 +36,7 @@ import static org.mockserver.model.HttpResponse.response;
 /**
  * @author jamesdbloom
  */
-public abstract class NettyAbstractClientServerIntegrationTest extends SameJVMAbstractClientServerIntegrationTest {
+public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbstractClientServerIntegrationTest {
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();

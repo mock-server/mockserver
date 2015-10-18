@@ -4,9 +4,10 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.integration.ClientAndServer;
-import org.mockserver.server.NettyAbstractClientServerIntegrationTest;
 import org.mockserver.socket.PortFactory;
 
+import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ExecutionException;
 
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
@@ -14,17 +15,19 @@ import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 /**
  * @author jamesdbloom
  */
-public class ClientAndServerIntegrationAutoAllocatedPortTest extends NettyAbstractClientServerIntegrationTest {
+public class MockServerMultiplePortIntegrationTest extends AbstractMockServerNettyIntegrationTest {
 
     private final static int TEST_SERVER_HTTP_PORT = PortFactory.findFreePort();
-    private static int severHttpPort;
+    private static Integer[] severHttpPort;
     private static EchoServer echoServer;
+    private final Random random = new Random();
 
     @BeforeClass
     public static void startServer() throws InterruptedException, ExecutionException {
         // start mock server and client
-        mockServerClient = startClientAndServer(0);
-        severHttpPort = ((ClientAndServer)mockServerClient).getPort();
+        mockServerClient = startClientAndServer(0, PortFactory.findFreePort(), 0, PortFactory.findFreePort());
+        List<Integer> boundPorts = ((ClientAndServer) mockServerClient).getPorts();
+        severHttpPort = boundPorts.toArray(new Integer[boundPorts.size()]);
 
         // start echo servers
         echoServer = new EchoServer(TEST_SERVER_HTTP_PORT, false);
@@ -48,12 +51,12 @@ public class ClientAndServerIntegrationAutoAllocatedPortTest extends NettyAbstra
 
     @Override
     public int getMockServerPort() {
-        return severHttpPort;
+        return severHttpPort[random.nextInt(severHttpPort.length)];
     }
 
     @Override
     public int getMockServerSecurePort() {
-        return severHttpPort;
+        return severHttpPort[random.nextInt(severHttpPort.length)];
     }
 
     @Override

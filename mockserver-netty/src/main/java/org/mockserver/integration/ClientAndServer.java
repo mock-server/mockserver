@@ -3,6 +3,8 @@ package org.mockserver.integration;
 import org.mockserver.client.server.MockServerClient;
 import org.mockserver.mockserver.MockServer;
 
+import java.util.List;
+
 /**
  * @author jamesdbloom
  */
@@ -14,7 +16,7 @@ public class ClientAndServer extends MockServerClient {
         this(0);
     }
 
-    public ClientAndServer(Integer port) {
+    public ClientAndServer(Integer... port) {
         this(new MockServer(port));
     }
 
@@ -23,7 +25,7 @@ public class ClientAndServer extends MockServerClient {
         this.mockServer = server;
     }
 
-    public static ClientAndServer startClientAndServer(Integer port) {
+    public static ClientAndServer startClientAndServer(Integer... port) {
         return new ClientAndServer(port);
     }
 
@@ -33,6 +35,10 @@ public class ClientAndServer extends MockServerClient {
 
     public Integer getPort() {
         return mockServer.getPort();
+    }
+
+    public List<Integer> getPorts() {
+        return mockServer.getPorts();
     }
 
 }

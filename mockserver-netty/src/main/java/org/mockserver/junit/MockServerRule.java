@@ -14,7 +14,7 @@ public class MockServerRule implements TestRule {
 
     private static ClientAndServer perTestSuiteClientAndServer;
     private final Object target;
-    private final Integer port;
+    private final Integer[] port;
     private final boolean perTestSuite;
     private ClientAndServerFactory clientAndServerFactory;
 
@@ -25,7 +25,7 @@ public class MockServerRule implements TestRule {
      * @param target        an instance of the test being executed
      */
     public MockServerRule(Object target) {
-        this(PortFactory.findFreePort(), target);
+        this(target, PortFactory.findFreePort());
     }
 
     /**
@@ -38,37 +38,44 @@ public class MockServerRule implements TestRule {
      *                      if false one instance per test class is created
      */
     public MockServerRule(Object target, boolean perTestSuite) {
-        this(PortFactory.findFreePort(), target, perTestSuite);
+        this(target, perTestSuite, PortFactory.findFreePort());
     }
 
     /**
      * Start the proxy prior to test execution and stop the proxy after the tests have completed.
      * This constructor dynamically create a proxy that accepts HTTP(s) requests on the specified port
      *
-     * @param port          the HTTP(S) port for the proxy
      * @param target        an instance of the test being executed
+     * @param port          the HTTP(S) port for the proxy
      */
-    public MockServerRule(Integer port, Object target) {
-        this(port, target, false);
+    public MockServerRule(Object target, Integer... port) {
+        this(target, false, port);
     }
 
     /**
      * Start the proxy prior to test execution and stop the proxy after the tests have completed.
      * This constructor dynamically create a proxy that accepts HTTP(s) requests on the specified port
      *
-     * @param port          the HTTP(S) port for the proxy
      * @param target        an instance of the test being executed
      * @param perTestSuite  indicates how many instances of MockServer are created
-     *                      if true a single MockServer is created per JVM
+     * @param port          the HTTP(S) port for the proxy
      */
-    public MockServerRule(Integer port, Object target, boolean perTestSuite) {
+    public MockServerRule(Object target, boolean perTestSuite, Integer... port) {
         this.port = port;
         this.target = target;
         this.perTestSuite = perTestSuite;
         this.clientAndServerFactory = new ClientAndServerFactory(port);
     }
 
-    public Integer getHttpPort() {
+    public Integer getPort() {
+        if (port.length > 0) {
+            return port[0];
+        } else {
+            return null;
+        }
+    }
+
+    public Integer[] getPorts() {
         return port;
     }
 
@@ -122,9 +129,9 @@ public class MockServerRule implements TestRule {
 
     @VisibleForTesting
     class ClientAndServerFactory {
-        private final Integer port;
+        private final Integer[] port;
 
-        public ClientAndServerFactory(Integer port) {
+        public ClientAndServerFactory(Integer... port) {
             this.port = port;
         }
 

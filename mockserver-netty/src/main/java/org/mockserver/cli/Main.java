@@ -3,6 +3,7 @@ package org.mockserver.cli;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
+import org.mockserver.configuration.IntegerStringListParser;
 import org.mockserver.mockserver.MockServerBuilder;
 import org.mockserver.proxy.ProxyBuilder;
 import org.mockserver.stop.StopEventQueue;
@@ -50,7 +51,8 @@ public class Main {
             "   i.e. java -jar ./mockserver-jetty-jar-with-dependencies.jar -serverPort 1080 -proxyPort 1090 -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com" + System.getProperty("line.separator") +
             "                                                                                       " + System.getProperty("line.separator");
 
-    private static final Logger logger = LoggerFactory.getLogger(Main.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
+    private static final IntegerStringListParser INTEGER_STRING_LIST_PARSER = new IntegerStringListParser();
     @VisibleForTesting
     static ProxyBuilder httpProxyBuilder = new ProxyBuilder();
     @VisibleForTesting
@@ -68,22 +70,24 @@ public class Main {
      * Run the MockServer directly providing the parseArguments for the server and httpProxyBuilder as the only input parameters (if not provided the server port defaults to 8080 and the httpProxyBuilder is not started).
      *
      * @param arguments the entries are in pairs:
-     *                  - the first  pair is "-serverPort" followed by the server port if not provided the MockServer is not started,
-     *                  - the second pair is "-proxyPort"  followed by the httpProxyBuilder  port if not provided the httpProxyBuilder      is not started
+     *                  - "-serverPort"       followed by the server          port if not provided the MockServer is not started,
+     *                  - "-proxyPort"        followed by the proxy           port if not provided the Proxy is not started,
+     *                  - "-proxyRemotePort"  followed by the proxyRemotePort port,
+     *                  - "-proxyRemoteHost"  followed by the proxyRemoteHost port
      */
     public static void main(String... arguments) {
         usagePrinted = false;
 
         Map<String, String> parsedArguments = parseArguments(arguments);
 
-        if (logger.isDebugEnabled()) {
-            logger.debug(System.getProperty("line.separator") + System.getProperty("line.separator") + "Using command line options: " +
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(System.getProperty("line.separator") + System.getProperty("line.separator") + "Using command line options: " +
                     Joiner.on(", ").withKeyValueSeparator("=").join(parsedArguments) + System.getProperty("line.separator"));
         }
 
         if (parsedArguments.size() > 0 && validateArguments(parsedArguments)) {
             if (parsedArguments.containsKey(SERVER_PORT_KEY)) {
-                mockServerBuilder.withStopEventQueue(stopEventQueue).withHTTPPort(Integer.parseInt(parsedArguments.get(SERVER_PORT_KEY))).build();
+                mockServerBuilder.withStopEventQueue(stopEventQueue).withHTTPPort(INTEGER_STRING_LIST_PARSER.toArray(parsedArguments.get(SERVER_PORT_KEY))).build();
             }
             if (parsedArguments.containsKey(PROXY_PORT_KEY)) {
                 ProxyBuilder proxyBuilder = httpProxyBuilder.withStopEventQueue(stopEventQueue).withLocalPort(Integer.parseInt(parsedArguments.get(PROXY_PORT_KEY)));
@@ -103,7 +107,7 @@ public class Main {
 
     private static boolean validateArguments(Map<String, String> parsedArguments) {
         List<String> errorMessages = new ArrayList<String>();
-        validatePortArgument(parsedArguments, SERVER_PORT_KEY, errorMessages);
+        validatePortListArgument(parsedArguments, SERVER_PORT_KEY, errorMessages);
         validatePortArgument(parsedArguments, PROXY_PORT_KEY, errorMessages);
         validatePortArgument(parsedArguments, PROXY_REMOTE_PORT_KEY, errorMessages);
         validateHostnameArgument(parsedArguments, PROXY_REMOTE_HOST_KEY, errorMessages);
@@ -128,6 +132,12 @@ public class Main {
     private static void validatePortArgument(Map<String, String> parsedArguments, String argumentKey, List<String> errorMessages) {
         if (parsedArguments.containsKey(argumentKey) && !parsedArguments.get(argumentKey).matches("^\\d+$")) {
             errorMessages.add(argumentKey + " value \"" + parsedArguments.get(argumentKey) + "\" is invalid, please specify a port i.e. \"1080\"");
+        }
+    }
+
+    private static void validatePortListArgument(Map<String, String> parsedArguments, String argumentKey, List<String> errorMessages) {
+        if (parsedArguments.containsKey(argumentKey) && !parsedArguments.get(argumentKey).matches("^\\d+(,\\d+)*$")) {
+            errorMessages.add(argumentKey + " value \"" + parsedArguments.get(argumentKey) + "\" is invalid, please specify a comma separated list of ports i.e. \"1080,1081,1082\"");
         }
     }
 
