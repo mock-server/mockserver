@@ -65,9 +65,9 @@ public class StopMockServerTestListener extends RunListener {
 
     @Override
     public void testRunFinished(Result result) throws Exception {
-        if (ConfigurationProperties.mockServerPort() != -1) {
+        if (!ConfigurationProperties.mockServerPort().isEmpty()) {
             logger.info("Stopping the MockServer");
-            new MockServerClient("127.0.0.1", ConfigurationProperties.mockServerPort()).stop();
+            new MockServerClient("127.0.0.1", ConfigurationProperties.mockServerPort().get(0)).stop();
         } else {
             logger.info("Failed to stop MockServer as HTTP port is unknown");
         }
