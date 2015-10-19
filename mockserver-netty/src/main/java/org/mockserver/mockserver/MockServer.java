@@ -59,6 +59,13 @@ public class MockServer implements Stoppable {
                 .childAttr(LOG_FILTER, logFilter);
 
         bindToPorts(Arrays.asList(requestedPortBindings));
+
+        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable(){
+            public void run() {
+                bossGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
+                workerGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
+            }
+        }));
     }
 
     public List<Integer> bindToPorts(final List<Integer> requestedPortBindings) {
@@ -91,17 +98,14 @@ public class MockServer implements Stoppable {
 
                             channel.closeFuture().syncUninterruptibly();
                         } catch (Exception e) {
-                            throw new RuntimeException("Exception while starting MockServer on port " + port, e.getCause());
-                        } finally {
-                            bossGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
-                            workerGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
+                            throw new RuntimeException("Exception while binding MockServer to port " + port, e.getCause());
                         }
                     }
                 }, "MockServer thread for port: " + port).start();
 
                 actualPortBindings.add(((InetSocketAddress) channelOpened.get().localAddress()).getPort());
             } catch (Exception e) {
-                throw new RuntimeException("Exception while starting MockServer on port " + port, e.getCause());
+                throw new RuntimeException("Exception while binding MockServer to port " + port, e.getCause());
             }
         }
         return actualPortBindings;

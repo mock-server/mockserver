@@ -10,11 +10,14 @@ import org.junit.rules.ExpectedException;
 import org.mockserver.integration.server.SameJVMAbstractClientServerIntegrationTest;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.server.TestClasspathTestExpectationCallback;
+import org.mockserver.socket.PortFactory;
 import org.mockserver.socket.SSLFactory;
 import org.mockserver.streams.IOStreamUtils;
 
 import javax.net.ssl.SSLSocket;
+import java.io.IOException;
 import java.io.OutputStream;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
@@ -48,12 +51,132 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
         // given
         System.out.println("--- IGNORE THE FOLLOWING java.net.BindException EXCEPTION ---");
         expectedException.expect(RuntimeException.class);
-        expectedException.expectMessage(containsString("Exception while starting MockServer"));
+        expectedException.expectMessage(containsString("Exception while binding MockServer to port "));
 
         // when
         startServerAgain();
     }
 
+    @Test
+    public void shouldBindToNewSocket() {
+        // given
+        int firstNewPort = PortFactory.findFreePort();
+        int secondNewPort = PortFactory.findFreePort();
+        assertEquals(
+                response()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withHeader("Content-Type", "application/json; charset=utf-8")
+                        .withBody("{" + System.getProperty("line.separator") +
+                                "  \"ports\" : [ " + getMockServerPort() + " ]" + System.getProperty("line.separator") +
+                                "}"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("status"))
+                                .withMethod("PUT"),
+                        headersToIgnore)
+        );
+
+        // then
+        // - in http
+        assertEquals(
+                response()
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withHeader("Content-Type", "application/json; charset=utf-8")
+                        .withBody("{" + System.getProperty("line.separator") +
+                                "  \"ports\" : [ " + firstNewPort + " ]" + System.getProperty("line.separator") +
+                                "}"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("bind"))
+                                .withMethod("PUT")
+                                .withBody("{" + System.getProperty("line.separator") +
+                                        "  \"ports\" : [ " + firstNewPort + " ]" + System.getProperty("line.separator") +
+                                        "}"),
+                        headersToIgnore)
+        );
+        assertEquals(
+                response()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withHeader("Content-Type", "application/json; charset=utf-8")
+                        .withBody("{" + System.getProperty("line.separator") +
+                                "  \"ports\" : [ " + getMockServerPort() + ", " + firstNewPort + " ]" + System.getProperty("line.separator") +
+                                "}"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("status"))
+                                .withMethod("PUT"),
+                        headersToIgnore)
+        );
+        // - in https
+        assertEquals(
+                response()
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withHeader("Content-Type", "application/json; charset=utf-8")
+                        .withBody("{" + System.getProperty("line.separator") +
+                                "  \"ports\" : [ " + secondNewPort + " ]" + System.getProperty("line.separator") +
+                                "}"),
+                makeRequest(
+                        request()
+                                .withSecure(true)
+                                .withPath(calculatePath("bind"))
+                                .withMethod("PUT")
+                                .withBody("{" + System.getProperty("line.separator") +
+                                        "  \"ports\" : [ " + secondNewPort + " ]" + System.getProperty("line.separator") +
+                                        "}"),
+                        headersToIgnore)
+        );
+        assertEquals(
+                response()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withHeader("Content-Type", "application/json; charset=utf-8")
+                        .withBody("{" + System.getProperty("line.separator") +
+                                "  \"ports\" : [ " + getMockServerSecurePort() + ", " + firstNewPort + ", " + secondNewPort + " ]" + System.getProperty("line.separator") +
+                                "}"),
+                makeRequest(
+                        request()
+                                .withSecure(true)
+                                .withPath(calculatePath("status"))
+                                .withMethod("PUT")
+                                .withBody("{" + System.getProperty("line.separator") +
+                                        "  \"ports\" : [ " + firstNewPort + " ]" + System.getProperty("line.separator") +
+                                        "}"),
+                        headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldErrorWhenBindingToUnavailableSocket() throws InterruptedException, IOException {
+        ServerSocket server = null;
+        try {
+            // given
+            server = new ServerSocket(0);
+            int newPort = server.getLocalPort();
+
+            // then
+            // - in http
+            assertEquals(
+                    response()
+                            .withStatusCode(HttpStatusCode.NOT_ACCEPTABLE_406.code())
+                            .withHeader("Content-Type", "text/plain; charset=utf-8")
+                            .withBody("Exception while binding MockServer to port " + newPort + " port already in use"),
+                    makeRequest(
+                            request()
+                                    .withPath(calculatePath("bind"))
+                                    .withMethod("PUT")
+                                    .withBody("{" + System.getProperty("line.separator") +
+                                            "  \"ports\" : [ " + newPort + " ]" + System.getProperty("line.separator") +
+                                            "}"),
+                            headersToIgnore)
+            );
+
+        } finally {
+            if (server != null) {
+                server.close();
+                // allow time for the socket to be released
+                TimeUnit.MILLISECONDS.sleep(350);
+            }
+        }
+    }
 
     @Test
     public void shouldReturnResponseWithConnectionOptionsAndKeepAliveFalseAndContentLengthOverride() {

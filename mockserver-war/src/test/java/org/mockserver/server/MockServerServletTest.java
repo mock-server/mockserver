@@ -493,4 +493,35 @@ public class MockServerServletTest {
         assertThat(httpServletResponse.getStatus(), is(HttpStatusCode.ACCEPTED_202.code()));
         verifyNoMoreInteractions(mockHttpServletRequestToMockServerRequestDecoder);
     }
+
+    @Test
+    public void shouldGetStatus() throws IOException {
+        // given
+        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
+        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/status");
+        httpServletRequest.setLocalPort(1080);
+
+        // when
+        mockServerServlet.doPut(httpServletRequest, httpServletResponse);
+
+        // then
+        assertThat(httpServletResponse.getContentAsString(), is("" +
+                "{" + System.getProperty("line.separator") +
+                "  \"ports\" : [ 1080 ]" + System.getProperty("line.separator") +
+                "}"));
+        assertThat(httpServletResponse.getStatus(), is(HttpStatusCode.OK_200.code()));
+    }
+
+    @Test
+    public void shouldPreventBindingToAdditionalPort() throws IOException {
+        // given
+        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
+        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/bind");
+
+        // when
+        mockServerServlet.doPut(httpServletRequest, httpServletResponse);
+
+        // then
+        assertThat(httpServletResponse.getStatus(), is(HttpStatusCode.NOT_IMPLEMENTED_501.code()));
+    }
 }

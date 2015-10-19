@@ -1,5 +1,6 @@
 package org.mockserver.model;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -8,10 +9,10 @@ import java.util.List;
  */
 public class PortBinding extends ObjectWithJsonToString {
 
-    private List<Integer> ports;
+    private List<Integer> ports = new ArrayList<Integer>();
 
     public static PortBinding portBinding(Integer... ports) {
-       return portBinding(Arrays.asList(ports));
+        return portBinding(Arrays.asList(ports));
     }
 
     public static PortBinding portBinding(List<Integer> ports) {

@@ -1,16 +1,25 @@
 package org.mockserver.integration.mockserver;
 
+import com.google.common.base.Joiner;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Test;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.integration.ClientAndServer;
+import org.mockserver.model.HttpStatusCode;
 import org.mockserver.socket.PortFactory;
 
+import java.io.IOException;
+import java.net.ServerSocket;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
+import static org.junit.Assert.assertEquals;
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
+import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.HttpResponse.response;
 
 /**
  * @author jamesdbloom
@@ -62,5 +71,147 @@ public class MockServerMultiplePortIntegrationTest extends AbstractMockServerNet
     @Override
     public int getTestServerPort() {
         return TEST_SERVER_HTTP_PORT;
+    }
+
+    @Test
+    public void shouldReturnStatus() {
+        // then
+        // - in http
+        assertEquals(
+                response()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withHeader("Content-Type", "application/json; charset=utf-8")
+                        .withBody("{" + System.getProperty("line.separator") +
+                                "  \"ports\" : [ " + Joiner.on(", ").join(severHttpPort) + " ]" + System.getProperty("line.separator") +
+                                "}"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("status"))
+                                .withMethod("PUT"),
+                        headersToIgnore)
+        );
+        // - in https
+        assertEquals(
+                response()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withHeader("Content-Type", "application/json; charset=utf-8")
+                        .withBody("{" + System.getProperty("line.separator") +
+                                "  \"ports\" : [ " + Joiner.on(", ").join(severHttpPort) + " ]" + System.getProperty("line.separator") +
+                                "}"),
+                makeRequest(
+                        request()
+                                .withSecure(true)
+                                .withPath(calculatePath("status"))
+                                .withMethod("PUT"),
+                        headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldBindToNewSocket() {
+        // given
+        int firstNewPort = PortFactory.findFreePort();
+        int secondNewPort = PortFactory.findFreePort();
+
+        // then
+        // - in http
+        assertEquals(
+                response()
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withHeader("Content-Type", "application/json; charset=utf-8")
+                        .withBody("{" + System.getProperty("line.separator") +
+                                "  \"ports\" : [ " + firstNewPort + " ]" + System.getProperty("line.separator") +
+                                "}"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("bind"))
+                                .withMethod("PUT")
+                                .withBody("{" + System.getProperty("line.separator") +
+                                        "  \"ports\" : [ " + firstNewPort + " ]" + System.getProperty("line.separator") +
+                                        "}"),
+                        headersToIgnore)
+        );
+        assertEquals(
+                response()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withHeader("Content-Type", "application/json; charset=utf-8")
+                        .withBody("{" + System.getProperty("line.separator") +
+                                "  \"ports\" : [ " + Joiner.on(", ").join(severHttpPort) + ", " + firstNewPort + " ]" + System.getProperty("line.separator") +
+                                "}"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("status"))
+                                .withMethod("PUT"),
+                        headersToIgnore)
+        );
+        // - in https
+        assertEquals(
+                response()
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withHeader("Content-Type", "application/json; charset=utf-8")
+                        .withBody("{" + System.getProperty("line.separator") +
+                                "  \"ports\" : [ " + secondNewPort + " ]" + System.getProperty("line.separator") +
+                                "}"),
+                makeRequest(
+                        request()
+                                .withSecure(true)
+                                .withPath(calculatePath("bind"))
+                                .withMethod("PUT")
+                                .withBody("{" + System.getProperty("line.separator") +
+                                        "  \"ports\" : [ " + secondNewPort + " ]" + System.getProperty("line.separator") +
+                                        "}"),
+                        headersToIgnore)
+        );
+        assertEquals(
+                response()
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withHeader("Content-Type", "application/json; charset=utf-8")
+                        .withBody("{" + System.getProperty("line.separator") +
+                                "  \"ports\" : [ " + Joiner.on(", ").join(severHttpPort) + ", " + firstNewPort + ", " + secondNewPort + " ]" + System.getProperty("line.separator") +
+                                "}"),
+                makeRequest(
+                        request()
+                                .withSecure(true)
+                                .withPath(calculatePath("status"))
+                                .withMethod("PUT")
+                                .withBody("{" + System.getProperty("line.separator") +
+                                        "  \"ports\" : [ " + firstNewPort + " ]" + System.getProperty("line.separator") +
+                                        "}"),
+                        headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldErrorWhenBindingToUnavailableSocket() throws InterruptedException, IOException {
+        ServerSocket server = null;
+        try {
+            // given
+            server = new ServerSocket(0);
+            int newPort = server.getLocalPort();
+
+            // then
+            // - in http
+            assertEquals(
+                    response()
+                            .withStatusCode(HttpStatusCode.NOT_ACCEPTABLE_406.code())
+                            .withHeader("Content-Type", "text/plain; charset=utf-8")
+                            .withBody("Exception while binding MockServer to port " + newPort + " port already in use"),
+                    makeRequest(
+                            request()
+                                    .withPath(calculatePath("bind"))
+                                    .withMethod("PUT")
+                                    .withBody("{" + System.getProperty("line.separator") +
+                                            "  \"ports\" : [ " + newPort + " ]" + System.getProperty("line.separator") +
+                                            "}"),
+                            headersToIgnore)
+            );
+
+        } finally {
+            if (server != null) {
+                server.close();
+                // allow time for the socket to be released
+                TimeUnit.MILLISECONDS.sleep(350);
+            }
+        }
     }
 }

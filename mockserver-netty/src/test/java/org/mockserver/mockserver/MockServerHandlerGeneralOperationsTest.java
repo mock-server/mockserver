@@ -5,7 +5,6 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import org.hamcrest.collection.IsIterableContainingInOrder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,7 +31,6 @@ import java.util.Arrays;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.nullValue;
-import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Matchers.any;
@@ -264,7 +262,7 @@ public class MockServerHandlerGeneralOperationsTest {
         Expectation[] expectations = {};
         when(mockMockServerMatcher.retrieve(mockHttpRequest)).thenReturn(expectations);
         when(mockExpectationSerializer.serialize(expectations)).thenReturn("expectations");
-        HttpRequest request = request("/retrieve").withQueryStringParameter("type","expectation").withMethod("PUT").withBody("some_content");
+        HttpRequest request = request("/retrieve").withQueryStringParameter("type", "expectation").withMethod("PUT").withBody("some_content");
 
         // when
         embeddedChannel.writeInbound(request);
@@ -451,5 +449,50 @@ public class MockServerHandlerGeneralOperationsTest {
         HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
         assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.ACCEPTED.code()));
         assertThat(httpResponse.getBodyAsString(), is(""));
+    }
+
+    @Test
+    public void shouldGetStatus() {
+        // given
+        HttpRequest request = request("/status").withMethod("PUT");
+        when(mockMockServer.getPorts()).thenReturn(Arrays.asList(1, 2, 3, 4, 5));
+
+        // when
+        embeddedChannel.writeInbound(request);
+
+        // then - mock server is stopped
+        verify(mockMockServer).getPorts();
+
+        // and - correct response written to ChannelHandlerContext
+        HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
+        assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.OK.code()));
+        assertThat(httpResponse.getBodyAsString(), is("" +
+                "{" + System.getProperty("line.separator") +
+                "  \"ports\" : [ 1, 2, 3, 4, 5 ]" + System.getProperty("line.separator") +
+                "}"));
+    }
+
+    @Test
+    public void shouldBindAdditionalPort() {
+        // given
+        HttpRequest request = request("/bind").withMethod("PUT").withBody("" +
+                "{" + System.getProperty("line.separator") +
+                "  \"ports\" : [ 1, 2, 3, 4, 5 ]" + System.getProperty("line.separator") +
+                "}");
+        when(mockMockServer.bindToPorts(anyList())).thenReturn(Arrays.asList(1, 2, 3, 4, 5));
+
+        // when
+        embeddedChannel.writeInbound(request);
+
+        // then - mock server is stopped
+        verify(mockMockServer).bindToPorts(Arrays.asList(1, 2, 3, 4, 5));
+
+        // and - correct response written to ChannelHandlerContext
+        HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
+        assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.ACCEPTED.code()));
+        assertThat(httpResponse.getBodyAsString(), is("" +
+                "{" + System.getProperty("line.separator") +
+                "  \"ports\" : [ 1, 2, 3, 4, 5 ]" + System.getProperty("line.separator") +
+                "}"));
     }
 }

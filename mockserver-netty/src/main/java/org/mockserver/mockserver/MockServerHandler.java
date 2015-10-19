@@ -24,6 +24,7 @@ import org.mockserver.verify.VerificationSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.BindException;
 import java.nio.charset.Charset;
 import java.util.List;
 
@@ -71,8 +72,16 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
             } else if (request.matches("PUT", "/bind")) {
 
                 PortBinding requestedPortBindings = portBindingSerializer.deserialize(request.getBodyAsString());
-                List<Integer> actualPortBindings = server.bindToPorts(requestedPortBindings.getPorts());
-                writeResponse(ctx, request, HttpResponseStatus.ACCEPTED, portBindingSerializer.serialize(portBinding(actualPortBindings)), "application/json");
+                try {
+                    List<Integer> actualPortBindings = server.bindToPorts(requestedPortBindings.getPorts());
+                    writeResponse(ctx, request, HttpResponseStatus.ACCEPTED, portBindingSerializer.serialize(portBinding(actualPortBindings)), "application/json");
+                } catch (RuntimeException e) {
+                    if (e.getCause() instanceof BindException) {
+                        writeResponse(ctx, request, HttpResponseStatus.NOT_ACCEPTABLE, e.getMessage() + " port already in use", MediaType.create("text", "plain").toString());
+                    } else {
+                        throw e;
+                    }
+                }
 
             } else if (request.matches("PUT", "/expectation")) {
 

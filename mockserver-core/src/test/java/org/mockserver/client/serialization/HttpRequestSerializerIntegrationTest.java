@@ -31,12 +31,12 @@ public class HttpRequestSerializerIntegrationTest {
                 "}";
 
         // when
-        HttpRequest expectation = new HttpRequestSerializer().deserialize(requestBytes);
+        HttpRequest httpRequest = new HttpRequestSerializer().deserialize(requestBytes);
 
         // then
         assertEquals(new HttpRequestDTO()
                 .setPath(string("somePath"))
-                .buildObject(), expectation);
+                .buildObject(), httpRequest);
     }
 
     @Test
@@ -66,7 +66,7 @@ public class HttpRequestSerializerIntegrationTest {
                 "}";
 
         // when
-        HttpRequest expectation = new HttpRequestSerializer().deserialize(requestBytes);
+        HttpRequest httpRequest = new HttpRequestSerializer().deserialize(requestBytes);
 
         // then
         assertEquals(new HttpRequestDTO()
@@ -78,7 +78,7 @@ public class HttpRequestSerializerIntegrationTest {
                 .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
                 .setSecure(true)
                 .setKeepAlive(false)
-                .buildObject(), expectation);
+                .buildObject(), httpRequest);
     }
 
     @Test
@@ -89,12 +89,12 @@ public class HttpRequestSerializerIntegrationTest {
                 "}";
 
         // when
-        HttpRequest expectation = new HttpRequestSerializer().deserialize(requestBytes);
+        HttpRequest httpRequest = new HttpRequestSerializer().deserialize(requestBytes);
 
         // then
         assertEquals(new HttpRequestDTO()
                 .setBody(BodyDTO.createDTO(exact("somebody")))
-                .buildObject(), expectation);
+                .buildObject(), httpRequest);
     }
 
     @Test
@@ -108,12 +108,12 @@ public class HttpRequestSerializerIntegrationTest {
                 "}";
 
         // when
-        HttpRequest expectation = new HttpRequestSerializer().deserialize(requestBytes);
+        HttpRequest httpRequest = new HttpRequestSerializer().deserialize(requestBytes);
 
         // then
         assertEquals(new HttpRequestDTO()
                 .setBody(BodyDTO.createDTO(exact("somebody")))
-                .buildObject(), expectation);
+                .buildObject(), httpRequest);
     }
 
     @Test
@@ -127,12 +127,12 @@ public class HttpRequestSerializerIntegrationTest {
                 "}";
 
         // when
-        HttpRequest expectation = new HttpRequestSerializer().deserialize(requestBytes);
+        HttpRequest httpRequest = new HttpRequestSerializer().deserialize(requestBytes);
 
         // then
         assertEquals(new HttpRequestDTO()
                 .setBody(BodyDTO.createDTO(json("{ \"key\": \"value\" }")))
-                .buildObject(), expectation);
+                .buildObject(), httpRequest);
     }
 
     @Test
@@ -146,12 +146,12 @@ public class HttpRequestSerializerIntegrationTest {
                 "}";
 
         // when
-        HttpRequest expectation = new HttpRequestSerializer().deserialize(requestBytes);
+        HttpRequest httpRequest = new HttpRequestSerializer().deserialize(requestBytes);
 
         // then
         assertEquals(new HttpRequestDTO()
                 .setBody(BodyDTO.createDTO(jsonSchema("{ \"key\": \"value\" }")))
-                .buildObject(), expectation);
+                .buildObject(), httpRequest);
     }
 
     @Test
@@ -165,12 +165,12 @@ public class HttpRequestSerializerIntegrationTest {
                 "}";
 
         // when
-        HttpRequest expectation = new HttpRequestSerializer().deserialize(requestBytes);
+        HttpRequest httpRequest = new HttpRequestSerializer().deserialize(requestBytes);
 
         // then
         assertEquals(new HttpRequestDTO()
                 .setBody(BodyDTO.createDTO(regex("some[a-z]{3}")))
-                .buildObject(), expectation);
+                .buildObject(), httpRequest);
     }
 
     @Test
@@ -184,12 +184,12 @@ public class HttpRequestSerializerIntegrationTest {
                 "}";
 
         // when
-        HttpRequest expectation = new HttpRequestSerializer().deserialize(requestBytes);
+        HttpRequest httpRequest = new HttpRequestSerializer().deserialize(requestBytes);
 
         // then
         assertEquals(new HttpRequestDTO()
                 .setBody(BodyDTO.createDTO(xpath("/element[key = 'some_key' and value = 'some_value']")))
-                .buildObject(), expectation);
+                .buildObject(), httpRequest);
     }
 
     @Test
@@ -209,7 +209,7 @@ public class HttpRequestSerializerIntegrationTest {
                 "}";
 
         // when
-        HttpRequest expectation = new HttpRequestSerializer().deserialize(requestBytes);
+        HttpRequest httpRequest = new HttpRequestSerializer().deserialize(requestBytes);
 
         // then
         assertEquals(new HttpRequestDTO()
@@ -217,7 +217,7 @@ public class HttpRequestSerializerIntegrationTest {
                         new Parameter("nameOne", "valueOne"),
                         new Parameter("nameTwo", "valueTwo_One", "valueTwo_Two")
                 )))
-                .buildObject(), expectation);
+                .buildObject(), httpRequest);
     }
 
     @Test
@@ -228,12 +228,12 @@ public class HttpRequestSerializerIntegrationTest {
                 "}";
 
         // when
-        HttpRequest expectation = new HttpRequestSerializer().deserialize(requestBytes);
+        HttpRequest httpRequest = new HttpRequestSerializer().deserialize(requestBytes);
 
         // then
         assertEquals(new HttpRequestDTO()
                 .setPath(string("somePath"))
-                .buildObject(), expectation);
+                .buildObject(), httpRequest);
     }
 
     @Test
@@ -250,19 +250,19 @@ public class HttpRequestSerializerIntegrationTest {
                 "}";
 
         // when
-        HttpRequest expectation = new HttpRequestSerializer().deserialize(requestBytes);
+        HttpRequest httpRequest = new HttpRequestSerializer().deserialize(requestBytes);
 
         // then
         assertEquals(new HttpRequestDTO()
                 .setPath(string("somePath"))
                 .setQueryStringParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")))))
-                .buildObject(), expectation);
+                .buildObject(), httpRequest);
     }
 
     @Test
     public void shouldSerializeCompleteObject() throws IOException {
         // when
-        String jsonExpectation = new HttpRequestSerializer().serialize(
+        String jsonHttpRequest = new HttpRequestSerializer().serialize(
                 new HttpRequestDTO()
                         .setMethod(string("someMethod"))
                         .setPath(string("somePath"))
@@ -290,13 +290,13 @@ public class HttpRequestSerializerIntegrationTest {
                 "    \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
                 "  } ]," + System.getProperty("line.separator") +
                 "  \"body\" : \"somebody\"" + System.getProperty("line.separator") +
-                "}", jsonExpectation);
+                "}", jsonHttpRequest);
     }
 
     @Test
     public void shouldSerializeArray() throws IOException {
         // when
-        String jsonExpectation = new HttpRequestSerializer().serialize(
+        String jsonHttpRequest = new HttpRequestSerializer().serialize(
                 new HttpRequest[]{
                         new HttpRequestDTO()
                                 .setMethod(string("some_method_one"))
@@ -330,13 +330,13 @@ public class HttpRequestSerializerIntegrationTest {
                 "    \"values\" : [ \"some_header_value_two\" ]" + System.getProperty("line.separator") +
                 "  } ]," + System.getProperty("line.separator") +
                 "  \"body\" : \"some_body_two\"" + System.getProperty("line.separator") +
-                "} ]", jsonExpectation);
+                "} ]", jsonHttpRequest);
     }
 
     @Test
     public void shouldSerializeList() throws IOException {
         // when
-        String jsonExpectation = new HttpRequestSerializer().serialize(
+        String jsonHttpRequest = new HttpRequestSerializer().serialize(
                 Arrays.asList(
                         new HttpRequestDTO()
                                 .setMethod(string("some_method_one"))
@@ -370,13 +370,13 @@ public class HttpRequestSerializerIntegrationTest {
                 "    \"values\" : [ \"some_header_value_two\" ]" + System.getProperty("line.separator") +
                 "  } ]," + System.getProperty("line.separator") +
                 "  \"body\" : \"some_body_two\"" + System.getProperty("line.separator") +
-                "} ]", jsonExpectation);
+                "} ]", jsonHttpRequest);
     }
 
     @Test
     public void shouldSerializeStringBody() throws IOException {
         // when
-        String jsonExpectation = new HttpRequestSerializer().serialize(
+        String jsonHttpRequest = new HttpRequestSerializer().serialize(
                 new HttpRequestDTO()
                         .setBody(BodyDTO.createDTO(exact("somebody")))
                         .buildObject()
@@ -385,13 +385,13 @@ public class HttpRequestSerializerIntegrationTest {
         // then
         assertEquals("{" + System.getProperty("line.separator") +
                 "  \"body\" : \"somebody\"" + System.getProperty("line.separator") +
-                "}", jsonExpectation);
+                "}", jsonHttpRequest);
     }
 
     @Test
     public void shouldSerializeJsonBody() throws IOException {
         // when
-        String jsonExpectation = new HttpRequestSerializer().serialize(
+        String jsonHttpRequest = new HttpRequestSerializer().serialize(
                 new HttpRequestDTO()
                         .setBody(BodyDTO.createDTO(json("{ \"key\": \"value\" }")))
                         .buildObject()
@@ -403,13 +403,13 @@ public class HttpRequestSerializerIntegrationTest {
                 "    \"type\" : \"JSON\"," + System.getProperty("line.separator") +
                 "    \"json\" : \"{ \\\"key\\\": \\\"value\\\" }\"" + System.getProperty("line.separator") +
                 "  }" + System.getProperty("line.separator") +
-                "}", jsonExpectation);
+                "}", jsonHttpRequest);
     }
 
     @Test
     public void shouldSerializeRegexBody() throws IOException {
         // when
-        String jsonExpectation = new HttpRequestSerializer().serialize(
+        String jsonHttpRequest = new HttpRequestSerializer().serialize(
                 new HttpRequestDTO()
                         .setBody(BodyDTO.createDTO(regex("some[a-z]{3}")))
                         .buildObject()
@@ -421,13 +421,13 @@ public class HttpRequestSerializerIntegrationTest {
                 "    \"type\" : \"REGEX\"," + System.getProperty("line.separator") +
                 "    \"regex\" : \"some[a-z]{3}\"" + System.getProperty("line.separator") +
                 "  }" + System.getProperty("line.separator") +
-                "}", jsonExpectation);
+                "}", jsonHttpRequest);
     }
 
     @Test
     public void shouldSerializeXpathBody() throws IOException {
         // when
-        String jsonExpectation = new HttpRequestSerializer().serialize(
+        String jsonHttpRequest = new HttpRequestSerializer().serialize(
                 new HttpRequestDTO()
                         .setBody(BodyDTO.createDTO(xpath("/element[key = 'some_key' and value = 'some_value']")))
                         .buildObject()
@@ -439,13 +439,13 @@ public class HttpRequestSerializerIntegrationTest {
                 "    \"type\" : \"XPATH\"," + System.getProperty("line.separator") +
                 "    \"xpath\" : \"/element[key = 'some_key' and value = 'some_value']\"" + System.getProperty("line.separator") +
                 "  }" + System.getProperty("line.separator") +
-                "}", jsonExpectation);
+                "}", jsonHttpRequest);
     }
 
     @Test
     public void shouldSerializeParameterBody() throws IOException {
         // when
-        String jsonExpectation = new HttpRequestSerializer().serialize(
+        String jsonHttpRequest = new HttpRequestSerializer().serialize(
                 new HttpRequestDTO()
                         .setBody(BodyDTO.createDTO(params(
                                 new Parameter("nameOne", "valueOne"),
@@ -466,13 +466,13 @@ public class HttpRequestSerializerIntegrationTest {
                 "      \"values\" : [ \"valueTwo_One\", \"valueTwo_Two\" ]" + System.getProperty("line.separator") +
                 "    } ]" + System.getProperty("line.separator") +
                 "  }" + System.getProperty("line.separator") +
-                "}", jsonExpectation);
+                "}", jsonHttpRequest);
     }
 
     @Test
     public void shouldSerializePartialRequestAndResponse() throws IOException {
         // when
-        String jsonExpectation = new HttpRequestSerializer().serialize(new HttpRequestDTO()
+        String jsonHttpRequest = new HttpRequestSerializer().serialize(new HttpRequestDTO()
                         .setPath(string("somePath"))
                         .buildObject()
         );
@@ -480,13 +480,13 @@ public class HttpRequestSerializerIntegrationTest {
         // then
         assertEquals("{" + System.getProperty("line.separator") +
                 "  \"path\" : \"somePath\"" + System.getProperty("line.separator") +
-                "}", jsonExpectation);
+                "}", jsonHttpRequest);
     }
 
     @Test
-    public void shouldSerializePartialExpectation() throws IOException {
+    public void shouldSerializePartialHttpRequest() throws IOException {
         // when
-        String jsonExpectation = new HttpRequestSerializer().serialize(new HttpRequestDTO()
+        String jsonHttpRequest = new HttpRequestSerializer().serialize(new HttpRequestDTO()
                         .setPath(string("somePath"))
                         .buildObject()
         );
@@ -494,6 +494,6 @@ public class HttpRequestSerializerIntegrationTest {
         // then
         assertEquals("{" + System.getProperty("line.separator") +
                 "  \"path\" : \"somePath\"" + System.getProperty("line.separator") +
-                "}", jsonExpectation);
+                "}", jsonHttpRequest);
     }
 }
