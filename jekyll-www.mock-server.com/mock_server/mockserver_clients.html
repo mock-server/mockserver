@@ -152,18 +152,6 @@ sitemap:
     <span class="keyword">public</span> ForwardChainExpectation when(HttpRequest httpRequest, Times times, TimeToLive timeToLive);
 
     <span class="comment">/**
-     * Pretty-print the json for all expectations to the log.  They are printed into a dedicated log called mockserver_request.log
-     */</span>
-    <span class="keyword">public</span> MockServerClient dumpToLog();
-
-    <span class="comment">/**
-     * Pretty-print the json for all expectations that match the request to the log.  They are printed into a dedicated log called mockserver_request.log
-     *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpRequest</span> the http request that is matched against when deciding what to log if null all requests are logged
-     */</span>
-    <span class="keyword">public</span> MockServerClient dumpToLog(HttpRequest httpRequest);
-
-    <span class="comment">/**
      * Reset MockServer by clearing all expectations
      */</span>
     <span class="keyword">public</span> MockServerClient reset();
@@ -219,20 +207,20 @@ sitemap:
     <span class="keyword">public</span> MockServerClient verify(HttpRequest httpRequest, org.mockserver.verify.VerificationTimes times); <span class="keyword">throws</span> AssertionError
 
     <span class="comment">/**
-     * Retrieve the recorded requests that match the httpRequest parameter as expectations, use null for the parameter to retrieve all requests
+     * Retrieve the recorded requests that match the httpRequest parameter, use null for the parameter to retrieve all requests
      *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpRequest</span> the http request that is matched against when deciding whether to return each expectation, use null to retrieve for all requests
-     * <span class="javadoc_param_annotation">@return</span> an array of all expectations that have been recorded by the proxy
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpRequest</span> the http request that is matched against when deciding whether to return each request, use null for the parameter to retrieve for all requests
+     * <span class="javadoc_param_annotation">@return</span> an array of all expectations that have been recorded by the MockServer in the order they have been received and including duplicates where the same request has been received multiple times
      */</span>
-    <span class="keyword">public</span> Expectation[] retrieveAsExpectations(HttpRequest httpRequest);
+    <span class="keyword">public</span> HttpRequest[] retrieveRecordedRequests(HttpRequest httpRequest);
 
     <span class="comment">/**
-     * Retrieve the recorded requests that match the httpRequest parameter as a JSON array, use null for the parameter to retrieve all requests
+     * Retrieve the already setup expectations match the httpRequest parameter, use null for the parameter to retrieve all expectations
      *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpRequest</span> the http request that is matched against when deciding whether to return each expectation, use null to retrieve for all requests
-     * <span class="javadoc_param_annotation">@return</span> a JSON array of all expectations that have been recorded by the proxy
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpRequest</span> the http request that is matched against when deciding whether to return each expectation, use null for the parameter to retrieve for all requests
+     * <span class="javadoc_param_annotation">@return</span> an array of all expectations that have been setup
      */</span>
-    <span class="keyword">public</span> String retrieveAsJSON(HttpRequest httpRequest);
+    <span class="keyword">public</span> Expectation[] retrieveExistingExpectations(HttpRequest httpRequest);
 }</code></pre>
 
 <a name="javascript-mockserver-client" class="anchor" href="#javascript-mockserver-client">&nbsp;</a>
@@ -244,7 +232,7 @@ sitemap:
 <p>To interact with MockServer from JavaScript it is possible to use either:</p>
 
 <ul>
-    <li>a browser based API file <a href="https://rawgit.com/jamesdbloom/mockserver/master/mockserver-javascript-client/src/main/javascript/mockServerClient.js"><strong>mockServerClient.js</strong></a></li>
+	<li>a browser based API file <a href="https://rawgit.com/jamesdbloom/mockserver/master/mockserver-client-javascript/src/main/javascript/mockServerClient.js"><strong>mockServerClient.js</strong></a></li>
     <li>a Node.js npm module <a href="https://www.npmjs.org/package/mockserver-client"><strong>mockserver-client</strong></a><br/><a href="https://www.npmjs.org/package/mockserver-client"><img src="https://nodei.co/npm/mockserver-client.png?downloads=true&downloadRank=true&stars=true" alt="mockserver-client-node"/></a></li>
 </ul>
 
@@ -387,13 +375,30 @@ sitemap:
     clear = function (path),
 
     <span class="comment">/**
-     * Pretty-print the json for all expectations for the specified path.
-     * This is particularly helpful when debugging expectations. The expectation
-     * are printed into a dedicated log called mockserver_request.log
+     * Retrieve the recorded requests that match the parameter, as follows:
+     * - use a string value to match on path,
+     * - use a request matcher object to match on a full request,
+     * - or use null to retrieve all requests
      *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">path</span> the path to decide which expectations to dump to the log
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">pathOrRequestMatcher</span>  if a string is passed in the value will be treated as the path, however
+     *                              if an object is passed in the value will be treated as a full request
+     *                              matcher object, if null is passed in it will be treated as match all
      */</span>
-    dumpToLogs = function (path);
+    retrieveRequests = function (pathOrRequestMatcher),
+
+    <span class="comment">/**
+     * Retrieve the setup expectations that match the parameter,
+     * the expectation is retrieved by matching the parameter
+     * on the expectations own request matcher, as follows:
+     * - use a string value to match on path,
+     * - use a request matcher object to match on a full request,
+     * - or use null to retrieve all requests
+     *
+     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">pathOrRequestMatcher</span>  if a string is passed in the value will be treated as the path, however
+     *                              if an object is passed in the value will be treated as a full request
+     *                              matcher object, if null is passed in it will be treated as match all
+     */</span>
+    retrieveExpectations = function (pathOrRequestMatcher);
 
     <span class="keyword">return</span> {
         mockAnyResponse: mockAnyResponse,
@@ -402,7 +407,8 @@ sitemap:
         verify: verify,
         reset: reset,
         clear: clear,
-        dumpToLogs: dumpToLogs
+        retrieveRequests: retrieveRequests,
+        retrieveExpectations: retrieveExpectations
     };
 };</code></pre>
 
