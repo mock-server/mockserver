@@ -157,17 +157,7 @@ public class LogFilter implements ResponseFilter, RequestFilter {
                 }
             }
 
-            boolean verified = true;
-
-            if (verification.getTimes().getCount() != 0 && matchingRequests.isEmpty()) {
-                verified = false;
-            } else if (verification.getTimes().isExact() && matchingRequests.size() != verification.getTimes().getCount()) {
-                verified = false;
-            } else if (matchingRequests.size() < verification.getTimes().getCount()) {
-                verified = false;
-            }
-
-            if (!verified) {
+            if (!verification.getTimes().matchesActualCount(matchingRequests.size())) {
                 HttpRequest[] allRequestsArray = requestLog.toArray(new HttpRequest[requestLog.size()]);
                 String serializedRequestToBeVerified = httpRequestSerializer.serialize(verification.getHttpRequest());
                 String serializedAllRequestInLog = allRequestsArray.length == 1 ? httpRequestSerializer.serialize(allRequestsArray[0]) : httpRequestSerializer.serialize(allRequestsArray);

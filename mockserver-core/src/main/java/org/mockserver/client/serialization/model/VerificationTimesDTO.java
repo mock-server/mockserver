@@ -8,32 +8,40 @@ import org.mockserver.verify.VerificationTimes;
  */
 public class VerificationTimesDTO extends ObjectWithReflectiveEqualsHashCodeToString {
 
-    private int count;
-    private boolean exact;
+    private int lowerBound;
+    private int upperBound;
 
     public VerificationTimesDTO(VerificationTimes times) {
-        count = times.getCount();
-        exact = times.isExact();
+        lowerBound = times.getLowerBound().or(-1);
+        upperBound = times.getUpperBound().or(-1);
     }
 
+    @SuppressWarnings("unused")
     public VerificationTimesDTO() {
     }
 
     public VerificationTimes buildObject() {
-        if (!exact) {
-            return VerificationTimes.atLeast(count);
-        } else if (count == 1) {
-            return VerificationTimes.once();
+        if (lowerBound >= 0) {
+            if (upperBound >= 0) {
+                return VerificationTimes.between(lowerBound, upperBound);
+            } else {
+                return VerificationTimes.atLeast(lowerBound);
+            }
         } else {
-            return VerificationTimes.exactly(count);
+            if (upperBound >= 0) {
+                return VerificationTimes.atMost(upperBound);
+            } else {
+                // Should never happen, VerificationTimes doesn't allow this invariant.
+                throw new IllegalStateException("Neither lower nor upper bound is defined");
+            }
         }
     }
 
-    public int getCount() {
-        return count;
+    public int getLowerBound() {
+        return lowerBound;
     }
 
-    public boolean isExact() {
-        return exact;
+    public int getUpperBound() {
+        return upperBound;
     }
 }

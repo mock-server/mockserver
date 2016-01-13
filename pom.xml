@@ -50,6 +50,7 @@
         <!-- tomcat version &gt; 7.0.56 causes SSL to fail -->
         <tomcat.version>7.0.56</tomcat.version>
         <jackson.version>2.5.3</jackson.version>
+        <jackson.datatype.guava.version>2.4.0</jackson.datatype.guava.version>
         <netty.version>4.0.31.Final</netty.version>
         <boucycastle.verion>1.52</boucycastle.verion>
         <spring.version>4.1.6.RELEASE</spring.version>
@@ -268,6 +269,11 @@
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-databind</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.datatype</groupId>
+                <artifactId>jackson-datatype-guava</artifactId>
                 <version>${jackson.version}</version>
             </dependency>
             <dependency>
