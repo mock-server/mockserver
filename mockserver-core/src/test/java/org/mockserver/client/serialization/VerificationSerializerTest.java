@@ -102,12 +102,12 @@ public class VerificationSerializerTest {
     public void serializeHandlesException() throws IOException {
         // given
         thrown.expect(RuntimeException.class);
-        thrown.expectMessage("Exception while serializing verification to JSON with value {" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : { }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"count\" : 1," + System.getProperty("line.separator") +
-                "    \"exact\" : false" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
+        String ln = System.getProperty("line.separator");
+        thrown.expectMessage("Exception while serializing verification to JSON with value {" + ln +
+                "  \"httpRequest\" : { }," + ln +
+                "  \"times\" : {" + ln +
+                "    \"lowerBound\" : 1" + ln +
+                "  }" + ln +
                 "}");
         // and
         when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
