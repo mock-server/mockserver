@@ -49,10 +49,11 @@ public class MockServerMatcher extends ObjectWithReflectiveEqualsHashCodeToStrin
             } else {
                 expectation = new Expectation(httpRequest, Times.unlimited(), timeToLive);
             }
+            this.expectations.add(expectation);
         } else {
             expectation = new Expectation(httpRequest, times, timeToLive);
+            this.expectations.add(0, expectation);
         }
-        this.expectations.add(0, expectation);
         return expectation;
     }
 

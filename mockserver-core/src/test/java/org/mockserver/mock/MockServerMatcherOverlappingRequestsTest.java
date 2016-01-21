@@ -40,15 +40,15 @@ public class MockServerMatcherOverlappingRequestsTest {
         assertEquals(httpResponse[1], mockServerMatcher.handle(new HttpRequest().withPath("somepath")));
     }
 
-    //@Test todo check later
+    @Test
     public void respondWhenPathMatchesReturnFirstMatchingWithRemainingTimes() {
         // when
         mockServerMatcher.when(new HttpRequest().withPath("somepath").withCookies(new Cookie("name", "value")), Times.once(), TimeToLive.unlimited()).thenRespond(httpResponse[0].withBody("somebody1"));
         mockServerMatcher.when(new HttpRequest().withPath("somepath")).thenRespond(httpResponse[1].withBody("somebody2"));
 
         // then
-        assertEquals(httpResponse[1], mockServerMatcher.handle(new HttpRequest().withPath("somepath").withCookies(new Cookie("name", "value"))));
         assertEquals(httpResponse[0], mockServerMatcher.handle(new HttpRequest().withPath("somepath").withCookies(new Cookie("name", "value"))));
+        assertEquals(httpResponse[1], mockServerMatcher.handle(new HttpRequest().withPath("somepath").withCookies(new Cookie("name", "value"))));
     }
 
 }
