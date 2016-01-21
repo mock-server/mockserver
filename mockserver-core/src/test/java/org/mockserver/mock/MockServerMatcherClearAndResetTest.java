@@ -1,5 +1,6 @@
 package org.mockserver.mock;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.matchers.TimeToLive;
@@ -136,6 +137,7 @@ public class MockServerMatcherClearAndResetTest {
         // when
         mockServerMatcher.clear(new HttpRequest().withPath("foobar"));
 
+        ArrayUtils.reverse(expectations);
         // then
         assertArrayEquals(expectations, mockServerMatcher.expectations.toArray());
     }

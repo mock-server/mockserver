@@ -53,7 +53,7 @@
         <netty.version>4.0.31.Final</netty.version>
         <boucycastle.verion>1.52</boucycastle.verion>
         <spring.version>4.1.6.RELEASE</spring.version>
-        <skipTests>true</skipTests>
+        <skipTests>false</skipTests>
         <nonReleaseBuild>true</nonReleaseBuild>
         <release.arguments />
         <javadoc.additional.parameters />
