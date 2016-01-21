@@ -34,6 +34,8 @@ public class MockServerMatcher extends ObjectWithReflectiveEqualsHashCodeToStrin
 
     public Expectation when(final HttpRequest httpRequest, Times times, TimeToLive timeToLive) {
         Expectation expectation;
+
+        httpRequest.getPath();
         if (times.isUnlimited()) {
             Collection<Expectation> existingExpectationsWithMatchingRequest = new ArrayList<Expectation>();
             for (Expectation potentialExpectation : new ArrayList<Expectation>(this.expectations)) {
@@ -52,7 +54,7 @@ public class MockServerMatcher extends ObjectWithReflectiveEqualsHashCodeToStrin
         } else {
             expectation = new Expectation(httpRequest, times, timeToLive);
         }
-        this.expectations.add(expectation);
+        this.expectations.add(0, expectation);
         return expectation;
     }
 
