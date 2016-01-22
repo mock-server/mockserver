@@ -10,6 +10,7 @@ import org.junit.rules.ExpectedException;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.model.OutboundHttpRequest;
 import org.mockserver.socket.PortFactory;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.*;
@@ -92,13 +93,16 @@ public class NettyHttpClientErrorHandlingTest {
 
         try {
             // when
-            HttpResponse httpResponse = new NettyHttpClient().sendRequest(outboundRequest("127.0.0.1", freePort, "", request().withBody(exact("this is an example body"))).withSsl(true));
+            OutboundHttpRequest request = outboundRequest("127.0.0.1", freePort, "", request().withBody(exact("this is an example body"))).withSsl(true);
+
+            String hostName = request.getDestination().getHostName();
+            HttpResponse httpResponse = new NettyHttpClient().sendRequest(request);
 
             // then
             assertThat(httpResponse, is(
                     response()
                             .withStatusCode(200)
-                            .withHeader(header(HOST, "localhost:" + freePort))
+                            .withHeader(header(HOST, hostName + ":" + freePort))
                             .withHeader(header(CONTENT_LENGTH, "this is an example body".length() / 2))
                             .withHeader(header(ACCEPT_ENCODING, HttpHeaders.Values.GZIP + "," + HttpHeaders.Values.DEFLATE))
                             .withHeader(header(CONNECTION, HttpHeaders.Values.KEEP_ALIVE))
