@@ -13,6 +13,7 @@ import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -90,6 +91,22 @@ public class MockServerMatcher extends ObjectWithReflectiveEqualsHashCodeToStrin
             reset();
         }
     }
+
+    public void resetPath(HttpServletRequest httpRequest) {
+        String path = httpRequest.getQueryString();
+        if (path == null || path.isEmpty()) {
+            return;
+        }
+
+        if (httpRequest != null) {
+            for (Expectation expectation : new ArrayList<Expectation>(this.expectations)) {
+                if (expectation.getHttpRequest().getPath().getValue().contains(path)) {
+                    expectations.remove(expectation);
+                }
+            }
+        }
+    }
+
 
     public void reset() {
         this.expectations.clear();

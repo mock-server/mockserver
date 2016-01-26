@@ -113,6 +113,11 @@ public class MockServerServlet extends HttpServlet {
                 mockServerMatcher.reset();
                 httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
 
+            } else if (requestPath.equals("/reset_path")) {
+
+                mockServerMatcher.resetPath(httpServletRequest);
+                httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
+
             } else if (requestPath.equals("/dumpToLog")) {
 
                 mockServerMatcher.dumpToLog(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
