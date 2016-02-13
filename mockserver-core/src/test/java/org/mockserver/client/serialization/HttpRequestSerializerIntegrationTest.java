@@ -15,6 +15,7 @@ import static org.mockserver.model.ParameterBody.params;
 import static org.mockserver.model.RegexBody.regex;
 import static org.mockserver.model.StringBody.exact;
 import static org.mockserver.model.XPathBody.xpath;
+import static org.mockserver.model.XmlBody.xml;
 
 /**
  * @author jamesdbloom
@@ -438,6 +439,24 @@ public class HttpRequestSerializerIntegrationTest {
                 "  \"body\" : {" + System.getProperty("line.separator") +
                 "    \"type\" : \"XPATH\"," + System.getProperty("line.separator") +
                 "    \"xpath\" : \"/element[key = 'some_key' and value = 'some_value']\"" + System.getProperty("line.separator") +
+                "  }" + System.getProperty("line.separator") +
+                "}", jsonHttpRequest);
+    }
+
+    @Test
+    public void shouldSerializeXmlBody() throws IOException {
+        // when
+        String jsonHttpRequest = new HttpRequestSerializer().serialize(
+                new HttpRequestDTO()
+                        .setBody(BodyDTO.createDTO(xml("<some><xml></xml></some>")))
+                        .buildObject()
+        );
+
+        // then
+        assertEquals("{" + System.getProperty("line.separator") +
+                "  \"body\" : {" + System.getProperty("line.separator") +
+                "    \"type\" : \"XML\"," + System.getProperty("line.separator") +
+                "    \"xml\" : \"<some><xml></xml></some>\"" + System.getProperty("line.separator") +
                 "  }" + System.getProperty("line.separator") +
                 "}", jsonHttpRequest);
     }

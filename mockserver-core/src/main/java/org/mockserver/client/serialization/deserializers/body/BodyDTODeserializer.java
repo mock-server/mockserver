@@ -37,6 +37,7 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
         fieldNameToType.put("json".toLowerCase(), Body.Type.JSON);
         fieldNameToType.put("jsonSchema".toLowerCase(), Body.Type.JSON_SCHEMA);
         fieldNameToType.put("xpath".toLowerCase(), Body.Type.XPATH);
+        fieldNameToType.put("xml".toLowerCase(), Body.Type.XML);
         fieldNameToType.put("bytes".toLowerCase(), Body.Type.BINARY);
         fieldNameToType.put("parameters".toLowerCase(), Body.Type.PARAMETERS);
     }
@@ -65,7 +66,7 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         logger.warn("Ignoring invalid value for \"type\" field of \"" + jsonParser.getText() + "\"");
                     }
                 }
-                if (jsonParser.getCurrentToken() == JsonToken.FIELD_NAME && containsIgnoreCase(jsonParser.getText(), "string", "regex", "json", "jsonSchema", "xpath", "bytes", "value") && type != Body.Type.PARAMETERS) {
+                if (jsonParser.getCurrentToken() == JsonToken.FIELD_NAME && containsIgnoreCase(jsonParser.getText(), "string", "regex", "json", "jsonSchema", "xpath", "xml", "bytes", "value") && type != Body.Type.PARAMETERS) {
                     String fieldName = jsonParser.getText().toLowerCase();
                     if (fieldNameToType.containsKey(fieldName)) {
                         type = fieldNameToType.get(fieldName);
@@ -153,6 +154,8 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         return new JsonSchemaBodyDTO(new JsonSchemaBody(valueJsonValue), not);
                     case XPATH:
                         return new XPathBodyDTO(new XPathBody(valueJsonValue), not);
+                    case XML:
+                        return new XmlBodyDTO(new XmlBody(valueJsonValue), not);
                     case BINARY:
                         return new BinaryBodyDTO(new BinaryBody(Base64Converter.base64StringToBytes(valueJsonValue)), not);
                     case PARAMETERS:

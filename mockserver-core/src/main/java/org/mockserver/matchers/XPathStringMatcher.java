@@ -3,18 +3,11 @@ package org.mockserver.matchers;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xml.sax.ErrorHandler;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
-import java.io.StringReader;
 
 /**
  * @author jamesdbloom
@@ -22,6 +15,7 @@ import java.io.StringReader;
 public class XPathStringMatcher extends BodyMatcher<String> {
     private static Logger logger = LoggerFactory.getLogger(XPathStringMatcher.class);
     private final String matcher;
+    private final StringToXmlDocumentParser stringToXmlDocumentParser = new StringToXmlDocumentParser();
     private XPathExpression xpathExpression = null;
 
     public XPathStringMatcher(String matcher) {
@@ -45,25 +39,12 @@ public class XPathStringMatcher extends BodyMatcher<String> {
         } else if (matched != null) {
             // match as xpath - matcher -> matched
             try {
-                DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
-                DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
-                documentBuilder.setErrorHandler(new ErrorHandler() {
+                result = (Boolean) xpathExpression.evaluate(stringToXmlDocumentParser.buildDocument(matched, new StringToXmlDocumentParser.ErrorLogger() {
                     @Override
-                    public void warning(SAXParseException exception) throws SAXException {
+                    public void logError(final String matched, final Exception exception) {
                         logger.debug("SAXParseException while performing match between [" + matcher + "] and [" + matched + "]", exception);
                     }
-
-                    @Override
-                    public void error(SAXParseException exception) throws SAXException {
-                        logger.debug("SAXParseException while performing match between [" + matcher + "] and [" + matched + "]", exception);
-                    }
-
-                    @Override
-                    public void fatalError(SAXParseException exception) throws SAXException {
-                        logger.debug("SAXParseException while performing match between [" + matcher + "] and [" + matched + "]", exception);
-                    }
-                });
-                result = (Boolean) xpathExpression.evaluate(documentBuilder.parse(new InputSource(new StringReader(matched))), XPathConstants.BOOLEAN);
+                }), XPathConstants.BOOLEAN);
             } catch (Exception e) {
                 logger.trace("Error while matching xpath [" + matcher + "] against string [" + matched + "] assuming no match - " + e.getMessage());
             }

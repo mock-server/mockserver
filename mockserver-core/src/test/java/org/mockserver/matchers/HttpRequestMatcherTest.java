@@ -18,6 +18,7 @@ import static org.mockserver.model.ParameterBody.params;
 import static org.mockserver.model.RegexBody.regex;
 import static org.mockserver.model.StringBody.exact;
 import static org.mockserver.model.XPathBody.xpath;
+import static org.mockserver.model.XmlBody.xml;
 
 /**
  * @author jamesdbloom
@@ -392,6 +393,68 @@ public class HttpRequestMatcherTest {
                         new HttpRequest().withBody(
                                 new XPathBodyDTO(xpath("/element[key = 'some_other_key' and value = 'some_value']")).toString()
                         )
+                )
+        );
+    }
+
+    @Test
+    public void matchesMatchingBodyXml() {
+        String matched = "" +
+                "<element attributeOne=\"one\" attributeTwo=\"two\">" +
+                "   <key>some_key</key>" +
+                "   <value>some_value</value>" +
+                "</element>";
+        assertTrue(new HttpRequestMatcher(new HttpRequest().withBody(xml("" +
+                "<element attributeTwo=\"two\" attributeOne=\"one\">" +
+                "   <key>some_key</key>" +
+                "   <value>some_value</value>" +
+                "</element>"))).matches(new HttpRequest().withBody(matched)));
+    }
+
+    @Test
+    public void matchesMatchingBodyXmlBodyDTO() {
+        assertTrue(new HttpRequestMatcher(
+                        new HttpRequest().withBody(xml("" +
+                                "<element attributeOne=\"one\" attributeTwo=\"two\">" +
+                                "   <key>some_key</key>" +
+                                "   <value>some_value</value>" +
+                                "</element>"))
+                ).matches(
+                        new HttpRequest().withBody(new XmlBodyDTO(xml("" +
+                                "<element attributeOne=\"one\" attributeTwo=\"two\">" +
+                                "   <key>some_key</key>" +
+                                "   <value>some_value</value>" +
+                                "</element>")).toString())
+                )
+        );
+    }
+
+    @Test
+    public void doesNotMatchIncorrectBodyXml() {
+        String matched = "" +
+                "<element>" +
+                "   <key>some_key</key>" +
+                "</element>";
+        assertFalse(new HttpRequestMatcher(new HttpRequest().withBody(xml("" +
+                "<element>" +
+                "   <key>some_key</key>" +
+                "   <value>some_value</value>" +
+                "</element>"))).matches(new HttpRequest().withBody(matched)));
+    }
+
+    @Test
+    public void doesNotMatchIncorrectBodyXmlBodyDTO() {
+        assertFalse(new HttpRequestMatcher(
+                        new HttpRequest().withBody(xml("" +
+                                "<element>" +
+                                "   <key>some_key</key>" +
+                                "</element>"))
+                ).matches(
+                        new HttpRequest().withBody(new XmlBodyDTO(xml("" +
+                                "<element>" +
+                                "   <value>some_value</value>" +
+                                "   <key>some_key</key>" +
+                                "</element>")).toString())
                 )
         );
     }

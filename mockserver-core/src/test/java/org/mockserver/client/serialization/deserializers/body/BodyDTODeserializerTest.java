@@ -887,6 +887,97 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
+    public void shouldParseJSONWithXmlBodyWithoutType() throws IOException {
+        // given
+        String json = ("{" + System.getProperty("line.separator") +
+                "    \"httpRequest\": {" + System.getProperty("line.separator") +
+                "        \"body\" : {" + System.getProperty("line.separator") +
+                "            \"xml\" : \"<some><xml></xml></some>\"" + System.getProperty("line.separator") +
+                "        }" + System.getProperty("line.separator") +
+                "    }" + System.getProperty("line.separator") +
+                "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+                .setHttpRequest(
+                        new HttpRequestDTO()
+                                .setBody(new XmlBodyDTO(new XmlBody("<some><xml></xml></some>")))
+                ), expectationDTO);
+    }
+
+    @Test
+    public void shouldParseJSONWithXmlBodyWithNot() throws IOException {
+        // given
+        String json = ("{" + System.getProperty("line.separator") +
+                "    \"httpRequest\": {" + System.getProperty("line.separator") +
+                "        \"body\" : {" + System.getProperty("line.separator") +
+                "            \"not\" : true," + System.getProperty("line.separator") +
+                "            \"xml\" : \"<some><xml></xml></some>\"" + System.getProperty("line.separator") +
+                "        }" + System.getProperty("line.separator") +
+                "    }" + System.getProperty("line.separator") +
+                "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+                .setHttpRequest(
+                        new HttpRequestDTO()
+                                .setBody(new XmlBodyDTO(new XmlBody("<some><xml></xml></some>"), true))
+                ), expectationDTO);
+    }
+
+    @Test
+    public void shouldParseJSONWithXmlBodyUsingXpathProperty() throws IOException {
+        // given
+        String json = ("{" + System.getProperty("line.separator") +
+                "    \"httpRequest\": {" + System.getProperty("line.separator") +
+                "        \"body\" : {" + System.getProperty("line.separator") +
+                "            \"type\" : \"XPATH\"," + System.getProperty("line.separator") +
+                "            \"xml\" : \"<some><xml></xml></some>\"" + System.getProperty("line.separator") +
+                "        }" + System.getProperty("line.separator") +
+                "    }" + System.getProperty("line.separator") +
+                "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+                .setHttpRequest(
+                        new HttpRequestDTO()
+                                .setBody(new XmlBodyDTO(new XmlBody("<some><xml></xml></some>")))
+                ), expectationDTO);
+    }
+
+    @Test
+    public void shouldParseJSONWithXmlBodyUsingValueProperty() throws IOException {
+        // given
+        String json = ("{" + System.getProperty("line.separator") +
+                "    \"httpRequest\": {" + System.getProperty("line.separator") +
+                "        \"body\" : {" + System.getProperty("line.separator") +
+                "            \"type\" : \"XML\"," + System.getProperty("line.separator") +
+                "            \"value\" : \"<some><xml></xml></some>\"" + System.getProperty("line.separator") +
+                "        }" + System.getProperty("line.separator") +
+                "    }" + System.getProperty("line.separator") +
+                "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+                .setHttpRequest(
+                        new HttpRequestDTO()
+                                .setBody(new XmlBodyDTO(new XmlBody("<some><xml></xml></some>")))
+                ), expectationDTO);
+    }
+
+    @Test
     public void shouldParseJSONWithBinaryBodyWithoutType() throws IOException {
         // given
         String json = ("{" + System.getProperty("line.separator") +

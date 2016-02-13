@@ -25,6 +25,7 @@ public class ExactStringMatcherTest {
     @Test
     public void shouldMatchNullExpectation() {
         assertTrue(new ExactStringMatcher(string(null)).matches("some_value"));
+        assertTrue(new ExactStringMatcher((String) null).matches("some_value"));
     }
 
     @Test
@@ -55,11 +56,13 @@ public class ExactStringMatcherTest {
     @Test
     public void shouldNotMatchNullTest() {
         assertFalse(new ExactStringMatcher("some_value").matches(string(null)));
+        assertFalse(new ExactStringMatcher("some_value").matches((String) null));
     }
 
     @Test
     public void shouldMatchNullTest() {
         assertTrue(not(new ExactStringMatcher("some_value")).matches(string(null)));
+        assertTrue(not(new ExactStringMatcher("some_value")).matches((String) null));
     }
 
     @Test

@@ -39,6 +39,7 @@ public abstract class Body<T> extends Not {
     public enum Type {
         PARAMETERS,
         XPATH,
+        XML,
         JSON,
         JSON_SCHEMA,
         REGEX,

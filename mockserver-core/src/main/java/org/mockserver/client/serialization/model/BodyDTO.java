@@ -35,6 +35,9 @@ public abstract class BodyDTO extends NotDTO {
         } else if (body instanceof XPathBody) {
             XPathBody xPathBody = (XPathBody) body;
             result = new XPathBodyDTO(xPathBody, xPathBody.getNot());
+        } else if (body instanceof XmlBody) {
+            XmlBody xmlBody = (XmlBody) body;
+            result = new XmlBodyDTO(xmlBody, xmlBody.getNot());
         } else if (body instanceof ParameterBody) {
             ParameterBody parameterBody = (ParameterBody) body;
             result = new ParameterBodyDTO(parameterBody, parameterBody.getNot());

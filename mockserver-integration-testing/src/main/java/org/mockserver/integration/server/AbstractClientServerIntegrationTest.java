@@ -50,6 +50,7 @@ import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.ParameterBody.params;
 import static org.mockserver.model.StringBody.exact;
 import static org.mockserver.model.XPathBody.xpath;
+import static org.mockserver.model.XmlBody.xml;
 
 /**
  * @author jamesdbloom
@@ -870,6 +871,62 @@ public abstract class AbstractClientServerIntegrationTest {
                                         "    <author>Erik T. Ray</author>" + System.getProperty("line.separator") +
                                         "    <year>2003</year>" + System.getProperty("line.separator") +
                                         "    <price>31.95</price>" + System.getProperty("line.separator") +
+                                        "  </book>" + System.getProperty("line.separator") +
+                                        "</bookstore>")),
+                        headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingBodyWithXml() {
+        // when
+        mockServerClient.when(request().withBody(xml("" +
+                "<bookstore>" + System.getProperty("line.separator") +
+                "  <book nationality=\"ITALIAN\" category=\"COOKING\"><title lang=\"en\">Everyday Italian</title><author>Giada De Laurentiis</author><year>2005</year><price>30.00</price></book>" + System.getProperty("line.separator") +
+                "</bookstore>")), exactly(2)).respond(response().withBody("some_body"));
+
+        // then
+        // - in http
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("some_path"))
+                                .withMethod("POST")
+                                .withBody(new StringBody("" +
+                                        "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + System.getProperty("line.separator") +
+                                        "<bookstore>" + System.getProperty("line.separator") +
+                                        "  <book category=\"COOKING\" nationality=\"ITALIAN\">" + System.getProperty("line.separator") +
+                                        "    <title lang=\"en\">Everyday Italian</title>" + System.getProperty("line.separator") +
+                                        "    <author>Giada De Laurentiis</author>" + System.getProperty("line.separator") +
+                                        "    <year>2005</year>" + System.getProperty("line.separator") +
+                                        "    <price>30.00</price>" + System.getProperty("line.separator") +
+                                        "  </book>" + System.getProperty("line.separator") +
+                                        "</bookstore>")),
+                        headersToIgnore)
+        );
+        // - in https
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        request()
+                                .withSecure(true)
+                                .withPath(calculatePath("some_path"))
+                                .withMethod("POST")
+                                .withBody(new StringBody("" +
+                                        "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + System.getProperty("line.separator") +
+                                        "<bookstore>" + System.getProperty("line.separator") +
+                                        "  <book category=\"COOKING\" nationality=\"ITALIAN\">" + System.getProperty("line.separator") +
+                                        "    <title lang=\"en\">Everyday Italian</title>" + System.getProperty("line.separator") +
+                                        "    <author>Giada De Laurentiis</author>" + System.getProperty("line.separator") +
+                                        "    <year>2005</year>" + System.getProperty("line.separator") +
+                                        "    <price>30.00</price>" + System.getProperty("line.separator") +
                                         "  </book>" + System.getProperty("line.separator") +
                                         "</bookstore>")),
                         headersToIgnore)
@@ -3093,6 +3150,65 @@ public abstract class AbstractClientServerIntegrationTest {
                                         "    <author>Erik T. Ray</author>" + System.getProperty("line.separator") +
                                         "    <year>2003</year>" + System.getProperty("line.separator") +
                                         "    <price>31.95</price>" + System.getProperty("line.separator") +
+                                        "  </book>" + System.getProperty("line.separator") +
+                                        "</bookstore>")),
+                        headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldNotReturnResponseForNonMatchingXmlBody() {
+        // when
+        mockServerClient.when(request().withBody(xml("" +
+                "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + System.getProperty("line.separator") +
+                "<bookstore>" + System.getProperty("line.separator") +
+                "  <book category=\"COOKING\" nationality=\"ITALIAN\">" + System.getProperty("line.separator") +
+                "    <title lang=\"en\">Everyday Italian</title>" + System.getProperty("line.separator") +
+                "    <author>Giada De Laurentiis</author>" + System.getProperty("line.separator") +
+                "    <year>2005</year>" + System.getProperty("line.separator") +
+                "    <price>30.00</price>" + System.getProperty("line.separator") +
+                "  </book>" + System.getProperty("line.separator") +
+                "</bookstore>")), exactly(2)).respond(response().withBody("some_body"));
+
+        // then
+        // - in http
+        assertEquals(
+                response()
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
+                makeRequest(
+                        request()
+                                .withSecure(true)
+                                .withPath(calculatePath("some_path"))
+                                .withMethod("POST")
+                                .withBody(new StringBody("" +
+                                        "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + System.getProperty("line.separator") +
+                                        "<bookstore>" + System.getProperty("line.separator") +
+                                        "  <book category=\"COOKING\">" + System.getProperty("line.separator") +
+                                        "    <title lang=\"en\">Everyday Italian</title>" + System.getProperty("line.separator") +
+                                        "    <author>Giada De Laurentiis</author>" + System.getProperty("line.separator") +
+                                        "    <year>2005</year>" + System.getProperty("line.separator") +
+                                        "    <price>30.00</price>" + System.getProperty("line.separator") +
+                                        "  </book>" + System.getProperty("line.separator") +
+                                        "</bookstore>")),
+                        headersToIgnore)
+        );
+        // - in https
+        assertEquals(
+                response()
+                        .withStatusCode(HttpStatusCode.NOT_FOUND_404.code()),
+                makeRequest(
+                        request()
+                                .withSecure(true)
+                                .withPath(calculatePath("some_path"))
+                                .withMethod("POST")
+                                .withBody(new StringBody("" +
+                                        "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + System.getProperty("line.separator") +
+                                        "<bookstore>" + System.getProperty("line.separator") +
+                                        "  <book category=\"COOKING\">" + System.getProperty("line.separator") +
+                                        "    <title lang=\"en\">Everyday Italian</title>" + System.getProperty("line.separator") +
+                                        "    <author>Giada De Laurentiis</author>" + System.getProperty("line.separator") +
+                                        "    <year>2005</year>" + System.getProperty("line.separator") +
+                                        "    <price>30.00</price>" + System.getProperty("line.separator") +
                                         "  </book>" + System.getProperty("line.separator") +
                                         "</bookstore>")),
                         headersToIgnore)

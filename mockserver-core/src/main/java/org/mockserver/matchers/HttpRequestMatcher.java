@@ -85,6 +85,11 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
                     bodyDTOMatcher = new XPathBodyDTO(xPathBody);
                     this.bodyMatcher = new XPathStringMatcher(xPathBody.getValue());
                     break;
+                case XML:
+                    XmlBody xmlBody = (XmlBody) body;
+                    bodyDTOMatcher = new XmlBodyDTO(xmlBody);
+                    this.bodyMatcher = new XmlStringMatcher(xmlBody.getValue());
+                    break;
                 case JSON:
                     JsonBody jsonBody = (JsonBody) body;
                     bodyDTOMatcher = new JsonBodyDTO(jsonBody);
@@ -164,7 +169,7 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
                     if (bodyMatcher instanceof BinaryMatcher) {
                         bodyMatches = matches(bodyMatcher, httpRequest.getBodyAsRawBytes());
                     } else {
-                        if (bodyMatcher instanceof ExactStringMatcher || bodyMatcher instanceof RegexStringMatcher) {
+                        if (bodyMatcher instanceof ExactStringMatcher || bodyMatcher instanceof RegexStringMatcher || bodyMatcher instanceof XmlStringMatcher) {
                             bodyMatches = matches(bodyMatcher, string(bodyAsString));
                         } else {
                             bodyMatches = matches(bodyMatcher, bodyAsString);
