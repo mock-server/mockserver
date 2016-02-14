@@ -124,7 +124,7 @@ public class KeyStoreFactory {
         //
         // serial
         //
-        BigInteger serial = BigInteger.valueOf(new Random().nextInt());
+        BigInteger serial = BigInteger.valueOf(new Random().nextInt(Integer.MAX_VALUE));
 
         //
         // create the certificate - version 3
@@ -167,7 +167,7 @@ public class KeyStoreFactory {
         //
         // serial
         //
-        BigInteger serial = BigInteger.valueOf(new Random().nextInt());
+        BigInteger serial = BigInteger.valueOf(new Random().nextInt(Integer.MAX_VALUE));
 
         //
         // create the certificate - version 3
