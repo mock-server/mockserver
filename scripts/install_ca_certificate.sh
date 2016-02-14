@@ -1,5 +1,17 @@
 #!/usr/bin/env bash
 
+###########################################################################################
+#                                                                                         #
+#  if `Permission denied` error is returned use sudo providing JAVA_HOME as follows:      #
+#                                                                                         #
+#         sudo JAVA_HOME=<JAVA_HOME> ./scripts/install_ca_certificate.sh                  #
+#                                                                                         #
+#  on a mac /usr/libexec/java_home tool can be used to provide the JAVA_HOME as follows:  #
+#                                                                                         #
+#         sudo JAVA_HOME=`/usr/libexec/java_home` ./scripts/install_ca_certificate.sh     #
+#                                                                                         #
+###########################################################################################
+
 function runCommand {
     echo
     printf -v str "%-$((${#1} + 19))s" ' '; echo "${str// /=}"
