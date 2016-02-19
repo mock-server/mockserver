@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import org.mockserver.client.serialization.deserializers.body.BodyDTODeserializer;
 import org.mockserver.client.serialization.deserializers.string.NottableStringDeserializer;
 import org.mockserver.client.serialization.model.*;
@@ -51,6 +52,7 @@ public class ObjectMapperFactory {
         Module gameServerModule = new Module();
         objectMapper.registerModule(gameServerModule);
 
+        objectMapper.registerModule(new GuavaModule());
         return objectMapper;
     }
 

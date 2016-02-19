@@ -5,6 +5,7 @@ import org.mockserver.model.HttpRequest;
 
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.verify.VerificationTimes.atLeast;
 
@@ -27,4 +28,18 @@ public class VerificationTest {
         assertThat(verification.getTimes(), sameInstance(times));
     }
 
+    @Test
+    public void shouldSerializeToJsonString() throws Exception {
+        String nl = System.getProperty("line.separator");
+        assertEquals(
+            "{" + nl +
+            "  \"httpRequest\" : { }," + nl +
+            "  \"times\" : {" + nl +
+            "    \"lowerBound\" : 1" + nl +
+            "  }" + nl +
+            "}",
+            new Verification().toString()
+        );
+
+    }
 }
