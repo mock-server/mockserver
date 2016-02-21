@@ -32,9 +32,12 @@ module MockServer::Model
     property :cookies, default: Cookies.new([])
     property :headers, default: Headers.new([])
     property :body, transform_with: (lambda do |body|
-      is_base_64_body = body && body.type == :BINARY
-      body_value = is_base_64_body ? Base64.decode64(body.value) : body.value
-      Body.new(type: :STRING, value: body_value)
+      if body && body.type.to_s == 'BINARY'
+        body.type = :STRING
+        body.value = Base64.decode64(body.value)
+      end
+
+      body
     end)
 
     coerce_key :method, HTTPMethod
