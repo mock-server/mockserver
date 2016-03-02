@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <groupId>org.sonatype.oss</groupId>
         <artifactId>oss-parent</artifactId>
@@ -50,7 +50,7 @@
         <!-- tomcat version &gt; 7.0.56 causes SSL to fail -->
         <tomcat.version>7.0.56</tomcat.version>
         <jackson.version>2.5.3</jackson.version>
-        <netty.version>4.0.31.Final</netty.version>
+        <netty.version>4.0.34.Final</netty.version>
         <boucycastle.verion>1.52</boucycastle.verion>
         <spring.version>4.1.6.RELEASE</spring.version>
         <skipTests>false</skipTests>
@@ -228,6 +228,13 @@
                 <groupId>io.netty</groupId>
                 <artifactId>netty-transport</artifactId>
                 <version>${netty.version}</version>
+            </dependency>
+
+            <!-- native SSL -->
+            <dependency>
+                <groupId>com.twitter</groupId>
+                <artifactId>finagle-native_2.11</artifactId>
+                <version>6.33.0</version>
             </dependency>
 
             <!-- gzip HTTP deflater & inflater -->
