@@ -25,13 +25,13 @@ public class Main {
             "   java -jar <path to mockserver-jetty-jar-with-dependencies.jar> [-serverPort <port>] [-proxyPort <port>] [-proxyRemotePort <port>] [-proxyRemoteHost <hostname>]" + System.getProperty("line.separator") +
             "                                                                                       " + System.getProperty("line.separator") +
             "     valid options are:                                                                " + System.getProperty("line.separator") +
-            "        -serverPort <port>           Specifies the HTTP, HTTPS, SOCKS and HTTP         " + System.getProperty("line.separator") +
-            "                                     CONNECT port for proxy. Port unification          " + System.getProperty("line.separator") +
-            "                                     supports for all protocols on the same port.      " + System.getProperty("line.separator") +
-            "                                                                                       " + System.getProperty("line.separator") +
-            "        -proxyPort <port>            Specifies the HTTP and HTTPS port for the         " + System.getProperty("line.separator") +
+            "        -serverPort <port>           Specifies the HTTP and HTTPS port for the         " + System.getProperty("line.separator") +
             "                                     MockServer. Port unification is used to           " + System.getProperty("line.separator") +
             "                                     support HTTP and HTTPS on the same port.          " + System.getProperty("line.separator") +
+            "                                                                                       " + System.getProperty("line.separator") +
+            "        -proxyPort <port>            Specifies the HTTP, HTTPS, SOCKS and HTTP         " + System.getProperty("line.separator") +
+            "                                     CONNECT port for proxy. Port unification          " + System.getProperty("line.separator") +
+            "                                     supports for all protocols on the same port.      " + System.getProperty("line.separator") +
             "                                                                                       " + System.getProperty("line.separator") +
             "        -proxyRemotePort <port>      Specifies the port to forward all proxy           " + System.getProperty("line.separator") +
             "                                     requests to (i.e. all requests received on        " + System.getProperty("line.separator") +
