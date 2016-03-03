@@ -13,22 +13,22 @@ import static org.mockserver.verify.VerificationTimes.exactly;
 /**
  * @author jamesdbloom
  */
-public class LogFilterVerificationTest {
+public class RequestLogFilterVerificationTest {
 
     @Test
     public void shouldPassVerificationWithNullRequest() {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        LogFilter logFilter = new LogFilter();
+        RequestLogFilter requestLogFilter = new RequestLogFilter();
 
         // when
-        logFilter.onRequest(httpRequest);
-        logFilter.onRequest(otherHttpRequest);
-        logFilter.onRequest(httpRequest);
+        requestLogFilter.onRequest(httpRequest);
+        requestLogFilter.onRequest(otherHttpRequest);
+        requestLogFilter.onRequest(httpRequest);
 
         // then
-        assertThat(logFilter.verify((Verification) null), is(""));
+        assertThat(requestLogFilter.verify((Verification) null), is(""));
     }
 
     @Test
@@ -36,15 +36,15 @@ public class LogFilterVerificationTest {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        LogFilter logFilter = new LogFilter();
+        RequestLogFilter requestLogFilter = new RequestLogFilter();
 
         // when
-        logFilter.onRequest(httpRequest);
-        logFilter.onRequest(otherHttpRequest);
-        logFilter.onRequest(httpRequest);
+        requestLogFilter.onRequest(httpRequest);
+        requestLogFilter.onRequest(otherHttpRequest);
+        requestLogFilter.onRequest(httpRequest);
 
         // then
-        assertThat(logFilter.verify(
+        assertThat(requestLogFilter.verify(
                         new Verification()
                                 .withRequest(
                                         new HttpRequest()
@@ -52,7 +52,7 @@ public class LogFilterVerificationTest {
                                 )
                 ),
                 is(""));
-        assertThat(logFilter.verify(
+        assertThat(requestLogFilter.verify(
                         new Verification()
                                 .withRequest(
                                         new HttpRequest()
@@ -67,15 +67,15 @@ public class LogFilterVerificationTest {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        LogFilter logFilter = new LogFilter();
+        RequestLogFilter requestLogFilter = new RequestLogFilter();
 
         // when
-        logFilter.onRequest(httpRequest);
-        logFilter.onRequest(otherHttpRequest);
-        logFilter.onRequest(httpRequest);
+        requestLogFilter.onRequest(httpRequest);
+        requestLogFilter.onRequest(otherHttpRequest);
+        requestLogFilter.onRequest(httpRequest);
 
         // then
-        assertThat(logFilter.verify(
+        assertThat(requestLogFilter.verify(
                         new Verification()
                                 .withRequest(
                                         new HttpRequest().withPath("some_path")
@@ -90,15 +90,15 @@ public class LogFilterVerificationTest {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        LogFilter logFilter = new LogFilter();
+        RequestLogFilter requestLogFilter = new RequestLogFilter();
 
         // when
-        logFilter.onRequest(httpRequest);
-        logFilter.onRequest(otherHttpRequest);
-        logFilter.onRequest(httpRequest);
+        requestLogFilter.onRequest(httpRequest);
+        requestLogFilter.onRequest(otherHttpRequest);
+        requestLogFilter.onRequest(httpRequest);
 
         // then
-        assertThat(logFilter.verify(
+        assertThat(requestLogFilter.verify(
                         new Verification()
                                 .withRequest(
                                         new HttpRequest().withPath("some_non_matching_path")
@@ -113,15 +113,15 @@ public class LogFilterVerificationTest {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        LogFilter logFilter = new LogFilter();
+        RequestLogFilter requestLogFilter = new RequestLogFilter();
 
         // when
-        logFilter.onRequest(httpRequest);
-        logFilter.onRequest(otherHttpRequest);
-        logFilter.onRequest(httpRequest);
+        requestLogFilter.onRequest(httpRequest);
+        requestLogFilter.onRequest(otherHttpRequest);
+        requestLogFilter.onRequest(httpRequest);
 
         // then
-        assertThat(logFilter.verify(
+        assertThat(requestLogFilter.verify(
                         new Verification()
                                 .withRequest(
                                         new HttpRequest()
@@ -137,15 +137,15 @@ public class LogFilterVerificationTest {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        LogFilter logFilter = new LogFilter();
+        RequestLogFilter requestLogFilter = new RequestLogFilter();
 
         // when
-        logFilter.onRequest(httpRequest);
-        logFilter.onRequest(otherHttpRequest);
-        logFilter.onRequest(httpRequest);
+        requestLogFilter.onRequest(httpRequest);
+        requestLogFilter.onRequest(otherHttpRequest);
+        requestLogFilter.onRequest(httpRequest);
 
         // then
-        assertThat(logFilter.verify(
+        assertThat(requestLogFilter.verify(
                         new Verification()
                                 .withRequest(
                                         new HttpRequest()
@@ -159,10 +159,10 @@ public class LogFilterVerificationTest {
     @Test
     public void shouldFailVerificationWithNullRequest() {
         // given
-        LogFilter logFilter = new LogFilter();
+        RequestLogFilter requestLogFilter = new RequestLogFilter();
 
         // then
-        assertThat(logFilter.verify((Verification) null), is(""));
+        assertThat(requestLogFilter.verify((Verification) null), is(""));
     }
 
     @Test
@@ -170,15 +170,15 @@ public class LogFilterVerificationTest {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        LogFilter logFilter = new LogFilter();
+        RequestLogFilter requestLogFilter = new RequestLogFilter();
 
         // when
-        logFilter.onRequest(httpRequest);
-        logFilter.onRequest(otherHttpRequest);
-        logFilter.onRequest(httpRequest);
+        requestLogFilter.onRequest(httpRequest);
+        requestLogFilter.onRequest(otherHttpRequest);
+        requestLogFilter.onRequest(httpRequest);
 
         // then
-        assertThat(logFilter.verify(
+        assertThat(requestLogFilter.verify(
                         new Verification()
                                 .withRequest(
                                         new HttpRequest().withPath("some_non_matching_path")
@@ -200,15 +200,15 @@ public class LogFilterVerificationTest {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        LogFilter logFilter = new LogFilter();
+        RequestLogFilter requestLogFilter = new RequestLogFilter();
 
         // when
-        logFilter.onRequest(httpRequest);
-        logFilter.onRequest(otherHttpRequest);
-        logFilter.onRequest(httpRequest);
+        requestLogFilter.onRequest(httpRequest);
+        requestLogFilter.onRequest(otherHttpRequest);
+        requestLogFilter.onRequest(httpRequest);
 
         // then
-        assertThat(logFilter.verify(
+        assertThat(requestLogFilter.verify(
                         new Verification()
                                 .withRequest(
                                         new HttpRequest().withPath("some_other_path")
@@ -231,15 +231,15 @@ public class LogFilterVerificationTest {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        LogFilter logFilter = new LogFilter();
+        RequestLogFilter requestLogFilter = new RequestLogFilter();
 
         // when
-        logFilter.onRequest(httpRequest);
-        logFilter.onRequest(otherHttpRequest);
-        logFilter.onRequest(httpRequest);
+        requestLogFilter.onRequest(httpRequest);
+        requestLogFilter.onRequest(otherHttpRequest);
+        requestLogFilter.onRequest(httpRequest);
 
         // then
-        assertThat(logFilter.verify(
+        assertThat(requestLogFilter.verify(
                         new Verification()
                                 .withRequest(
                                         new HttpRequest()
@@ -261,10 +261,10 @@ public class LogFilterVerificationTest {
     @Test
     public void shouldFailVerificationWithExactOneTime() {
         // given
-        LogFilter logFilter = new LogFilter();
+        RequestLogFilter requestLogFilter = new RequestLogFilter();
 
         // then
-        assertThat(logFilter.verify(
+        assertThat(requestLogFilter.verify(
                         new Verification()
                                 .withRequest(
                                         new HttpRequest()
@@ -282,15 +282,15 @@ public class LogFilterVerificationTest {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        LogFilter logFilter = new LogFilter();
+        RequestLogFilter requestLogFilter = new RequestLogFilter();
 
         // when
-        logFilter.onRequest(httpRequest);
-        logFilter.onRequest(otherHttpRequest);
-        logFilter.onRequest(httpRequest);
+        requestLogFilter.onRequest(httpRequest);
+        requestLogFilter.onRequest(otherHttpRequest);
+        requestLogFilter.onRequest(httpRequest);
 
         // then
-        assertThat(logFilter.verify(
+        assertThat(requestLogFilter.verify(
                         new Verification()
                                 .withRequest(
                                         new HttpRequest()
@@ -313,13 +313,13 @@ public class LogFilterVerificationTest {
     public void shouldFailVerificationWithNoInteractions() {
         // given
         HttpRequest httpRequest = new HttpRequest();
-        LogFilter logFilter = new LogFilter();
+        RequestLogFilter requestLogFilter = new RequestLogFilter();
 
         // when
-        logFilter.onRequest(httpRequest);
+        requestLogFilter.onRequest(httpRequest);
 
         // then
-        assertThat(logFilter.verify(
+        assertThat(requestLogFilter.verify(
                         new Verification()
                                 .withRequest(request())
                                 .withTimes(exactly(0))

@@ -1,5 +1,7 @@
 package org.mockserver.filters;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.client.serialization.java.ExpectationToJavaSerializer;
@@ -28,9 +30,14 @@ import static org.mockserver.model.HttpResponse.notFoundResponse;
 /**
  * @author jamesdbloom
  */
-public class LogFilter implements ResponseFilter, RequestFilter {
+public class RequestResponseLogFilter implements ResponseFilter, RequestFilter {
 
-    private static final Logger logger = LoggerFactory.getLogger(LogFilter.class);
+    static {
+        Cache<Object, Object> cache = CacheBuilder.newBuilder().maximumSize(1000).build();
+        // cache.put();
+    }
+
+    private static final Logger logger = LoggerFactory.getLogger(RequestResponseLogFilter.class);
     // request / response persistence
     private final CircularMultiMap<HttpRequest, HttpResponse> requestResponseLog = new CircularMultiMap<HttpRequest, HttpResponse>(100, 50);
     private final CircularLinkedList<HttpRequest> requestLog = new CircularLinkedList<HttpRequest>(100);
@@ -41,7 +48,7 @@ public class LogFilter implements ResponseFilter, RequestFilter {
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
 
     @Override
-    public synchronized HttpResponse onResponse(HttpRequest httpRequest, HttpResponse httpResponse) {
+    public /* synchronized */ HttpResponse onResponse(HttpRequest httpRequest, HttpResponse httpResponse) {
         if (httpRequest != null && httpResponse != null) {
             requestResponseLog.put(httpRequest, httpResponse);
         } else if (httpRequest != null) {
@@ -51,15 +58,15 @@ public class LogFilter implements ResponseFilter, RequestFilter {
     }
 
     @Override
-    public synchronized HttpRequest onRequest(HttpRequest httpRequest) {
+    public /* synchronized */ HttpRequest onRequest(HttpRequest httpRequest) {
         requestLog.add(httpRequest);
         return httpRequest;
     }
 
-    public synchronized List<HttpResponse> httpResponses(HttpRequest httpRequest) {
+    public /* synchronized */ List<HttpResponse> httpResponses(HttpRequest httpRequest) {
         List<HttpResponse> httpResponses = new ArrayList<HttpResponse>();
         HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
-        for (HttpRequest loggedHttpRequest : requestResponseLog.keySet()) {
+        for (HttpRequest loggedHttpRequest : new LinkedList<HttpRequest>(requestResponseLog.keySet())) {
             if (httpRequestMatcher.matches(loggedHttpRequest)) {
                 httpResponses.addAll(requestResponseLog.getAll(loggedHttpRequest));
             }
@@ -67,7 +74,9 @@ public class LogFilter implements ResponseFilter, RequestFilter {
         return httpResponses;
     }
 
-    public synchronized List<HttpRequest> httpRequests(HttpRequest httpRequest) {
+    public /* synchronized */ List<HttpRequest> httpRequests(HttpRequest httpRequest) {
+        LinkedList<HttpRequest> requestLog = new LinkedList<HttpRequest>(this.requestLog);
+
         List<HttpRequest> httpRequests = new ArrayList<HttpRequest>();
         HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
         for (HttpRequest loggedHttpRequest : requestLog) {
@@ -78,12 +87,12 @@ public class LogFilter implements ResponseFilter, RequestFilter {
         return httpRequests;
     }
 
-    public synchronized void reset() {
+    public /* synchronized */ void reset() {
         requestResponseLog.clear();
         requestLog.clear();
     }
 
-    public synchronized void clear(HttpRequest httpRequest) {
+    public /* synchronized */ void clear(HttpRequest httpRequest) {
         if (httpRequest != null) {
             HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
             for (HttpRequest key : new LinkedList<HttpRequest>(requestResponseLog.keySet())) {
@@ -101,7 +110,7 @@ public class LogFilter implements ResponseFilter, RequestFilter {
         }
     }
 
-    public synchronized void dumpToLog(HttpRequest httpRequest, boolean asJava) {
+    public /* synchronized */ void dumpToLog(HttpRequest httpRequest, boolean asJava) {
         ExpectationSerializer expectationSerializer = new ExpectationSerializer();
         ExpectationToJavaSerializer expectationToJavaSerializer = new ExpectationToJavaSerializer();
         if (httpRequest != null) {
@@ -126,7 +135,9 @@ public class LogFilter implements ResponseFilter, RequestFilter {
         }
     }
 
-    public synchronized HttpRequest[] retrieve(HttpRequest httpRequestToMatch) {
+    public /* synchronized */ HttpRequest[] retrieve(HttpRequest httpRequestToMatch) {
+        LinkedList<HttpRequest> requestLog = new LinkedList<HttpRequest>(this.requestLog);
+
         List<HttpRequest> matchingRequests = new ArrayList<HttpRequest>();
         if (httpRequestToMatch != null) {
             HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequestToMatch);
@@ -143,7 +154,9 @@ public class LogFilter implements ResponseFilter, RequestFilter {
         return matchingRequests.toArray(new HttpRequest[matchingRequests.size()]);
     }
 
-    public synchronized String verify(Verification verification) {
+    public /* synchronized */ String verify(Verification verification) {
+        LinkedList<HttpRequest> requestLog = new LinkedList<HttpRequest>(this.requestLog);
+
         String failureMessage = "";
 
         if (verification != null) {
@@ -180,6 +193,8 @@ public class LogFilter implements ResponseFilter, RequestFilter {
     }
 
     public String verify(VerificationSequence verificationSequence) {
+        LinkedList<HttpRequest> requestLog = new LinkedList<HttpRequest>(this.requestLog);
+
         String failureMessage = "";
 
         if (verificationSequence != null) {

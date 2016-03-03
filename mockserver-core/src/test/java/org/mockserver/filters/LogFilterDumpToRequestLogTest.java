@@ -20,7 +20,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 /**
  * @author jamesdbloom
  */
-public class LogFilterDumpToLogTest {
+public class LogFilterDumpToRequestLogTest {
 
     private final HttpResponse httpResponseOne = new HttpResponse().withBody("body_one");
     private final HttpResponse httpResponseTwo = new HttpResponse().withBody("body_two");
@@ -30,23 +30,23 @@ public class LogFilterDumpToLogTest {
     @Mock
     private Logger requestLogger;
     @InjectMocks
-    private LogFilter logFilter;
+    private RequestLogFilter requestLogFilter;
 
     @Before
     public void prepareTestFixture() {
-        logFilter = new LogFilter();
+        requestLogFilter = new RequestLogFilter();
         initMocks(this);
 
         // given
-        logFilter.onResponse(httpRequest, httpResponseOne);
-        logFilter.onResponse(otherHttpRequest, httpResponseTwo);
-        logFilter.onResponse(httpRequest, httpResponseThree);
+        requestLogFilter.onResponse(httpRequest, httpResponseOne);
+        requestLogFilter.onResponse(otherHttpRequest, httpResponseTwo);
+        requestLogFilter.onResponse(httpRequest, httpResponseThree);
     }
 
     @Test
     public void shouldDumpAllToLogAsJSONForNull() {
         // when
-        logFilter.dumpToLog(null, false);
+        requestLogFilter.dumpToLog(null, false);
 
         // then
         verify(requestLogger).warn(new ExpectationSerializer().serialize(new Expectation(httpRequest, Times.once(), TimeToLive.unlimited()).thenRespond(httpResponseOne)));
@@ -59,7 +59,7 @@ public class LogFilterDumpToLogTest {
     @Test
     public void shouldDumpAllToLogAsJavaForNull() {
         // when
-        logFilter.dumpToLog(null, true);
+        requestLogFilter.dumpToLog(null, true);
 
         // then
         verify(requestLogger).warn(new ExpectationToJavaSerializer().serializeAsJava(0, new Expectation(httpRequest, Times.once(), TimeToLive.unlimited()).thenRespond(httpResponseOne)));
@@ -71,7 +71,7 @@ public class LogFilterDumpToLogTest {
     @Test
     public void shouldDumpAllToLogAsJSONIfMatchAll() {
         // when
-        logFilter.dumpToLog(new HttpRequest(), false);
+        requestLogFilter.dumpToLog(new HttpRequest(), false);
 
         // then
         verify(requestLogger).warn(new ExpectationSerializer().serialize(new Expectation(httpRequest, Times.once(), TimeToLive.unlimited()).thenRespond(httpResponseOne)));
@@ -83,7 +83,7 @@ public class LogFilterDumpToLogTest {
     @Test
     public void shouldDumpAllToLogAsJavaIfMatchAll() {
         // when
-        logFilter.dumpToLog(new HttpRequest(), true);
+        requestLogFilter.dumpToLog(new HttpRequest(), true);
 
         // then
         verify(requestLogger).warn(new ExpectationToJavaSerializer().serializeAsJava(0, new Expectation(httpRequest, Times.once(), TimeToLive.unlimited()).thenRespond(httpResponseOne)));
@@ -95,7 +95,7 @@ public class LogFilterDumpToLogTest {
     @Test
     public void shouldDumpOnlyMatchingToLogAsJSON() {
         // when
-        logFilter.dumpToLog(new HttpRequest().withPath("some_path"), false);
+        requestLogFilter.dumpToLog(new HttpRequest().withPath("some_path"), false);
 
         // then
         verify(requestLogger).warn(new ExpectationSerializer().serialize(new Expectation(httpRequest, Times.once(), TimeToLive.unlimited()).thenRespond(httpResponseOne)));
@@ -103,7 +103,7 @@ public class LogFilterDumpToLogTest {
         verifyNoMoreInteractions(requestLogger);
 
         // when
-        logFilter.dumpToLog(new HttpRequest().withPath("some_other_path"), false);
+        requestLogFilter.dumpToLog(new HttpRequest().withPath("some_other_path"), false);
 
         // then
         verify(requestLogger).warn(new ExpectationSerializer().serialize(new Expectation(otherHttpRequest, Times.once(), TimeToLive.unlimited()).thenRespond(httpResponseTwo)));
@@ -113,7 +113,7 @@ public class LogFilterDumpToLogTest {
     @Test
     public void shouldDumpOnlyMatchingToLogAsJava() {
         // when
-        logFilter.dumpToLog(new HttpRequest().withPath("some_path"), true);
+        requestLogFilter.dumpToLog(new HttpRequest().withPath("some_path"), true);
 
         // then
         verify(requestLogger).warn(new ExpectationToJavaSerializer().serializeAsJava(0, new Expectation(httpRequest, Times.once(), TimeToLive.unlimited()).thenRespond(httpResponseOne)));
@@ -121,7 +121,7 @@ public class LogFilterDumpToLogTest {
         verifyNoMoreInteractions(requestLogger);
 
         // when
-        logFilter.dumpToLog(new HttpRequest().withPath("some_other_path"), true);
+        requestLogFilter.dumpToLog(new HttpRequest().withPath("some_other_path"), true);
 
         // then
         verify(requestLogger).warn(new ExpectationToJavaSerializer().serializeAsJava(0, new Expectation(otherHttpRequest, Times.once(), TimeToLive.unlimited()).thenRespond(httpResponseTwo)));
