@@ -218,8 +218,8 @@ public class KeyStoreFactory {
         // personal keys
         //
         KeyPair keyPair = generateKeyPair(FAKE_KEYSIZE);
-        PrivateKey privateKey = keyPair.getPrivate();
-        PublicKey publicKey = keyPair.getPublic();
+        PrivateKey clientPrivateKey = keyPair.getPrivate();
+        PublicKey clientPublicKey = keyPair.getPublic();
 
         //
         // ca keys
@@ -243,27 +243,30 @@ public class KeyStoreFactory {
                     false,
                     "CertificateAuthorityKeyStore.jks",
                     certificateAuthorityAlias,
-                    privateKey,
+                    clientPrivateKey,
                     keyStorePassword,
                     new X509Certificate[]{caCert},
                     caCert
             );
-            saveCertificateAsPEMFile(caCert, "CertificateAuthorityCertificate.pem");
-            saveCertificateAsPEMFile(caPublicKey, "CertificateAuthorityPublicKey.pem");
-            saveCertificateAsPEMFile(caPrivateKey, "CertificateAuthorityPrivateKey.pem");
+            saveCertificateAsPEMFile(caCert, "CertificateAuthorityCertificate.pem", false);
+            saveCertificateAsPEMFile(caPublicKey, "CertificateAuthorityPublicKey.pem", false);
+            saveCertificateAsPEMFile(caPrivateKey, "CertificateAuthorityPrivateKey.pem", false);
         }
 
         //
         // generate client certificate
         //
-        X509Certificate clientCert = createClientCert(publicKey, caCert, caPrivateKey, caCert.getPublicKey(), domain, subjectAlternativeNameDomains, subjectAlternativeNameIps);
+        X509Certificate clientCert = createClientCert(clientPublicKey, caCert, caPrivateKey, caCert.getPublicKey(), domain, subjectAlternativeNameDomains, subjectAlternativeNameIps);
+        saveCertificateAsPEMFile(clientCert, "ClientCertificate.pem", true);
+        saveCertificateAsPEMFile(clientPublicKey, "ClientPublicKey.pem", true);
+        saveCertificateAsPEMFile(clientPrivateKey, "ClientPrivateKey.pem", true);
 
         return saveCertificateAsKeyStore(
                 keyStore,
                 ConfigurationProperties.deleteGeneratedKeyStoreOnExit(),
                 ConfigurationProperties.javaKeyStoreFilePath(),
                 certificationAlias,
-                privateKey,
+                clientPrivateKey,
                 keyStorePassword,
                 new X509Certificate[]{clientCert, caCert},
                 caCert
@@ -273,15 +276,19 @@ public class KeyStoreFactory {
     /**
      * Saves X509Certificate as Base-64 encoded PEM file.
      */
-    public void saveCertificateAsPEMFile(Object x509Certificate, String filename) throws IOException {
-        FileWriter fileWriter = new FileWriter(filename);
+    public void saveCertificateAsPEMFile(Object x509Certificate, String filename, boolean deleteOnExit) throws IOException {
+        File pemFile = new File(filename);
+        FileWriter pemfileWriter = new FileWriter(pemFile);
         JcaPEMWriter jcaPEMWriter = null;
         try {
-            jcaPEMWriter = new JcaPEMWriter(fileWriter);
+            jcaPEMWriter = new JcaPEMWriter(pemfileWriter);
             jcaPEMWriter.writeObject(x509Certificate);
         } finally {
             IOUtils.closeQuietly(jcaPEMWriter);
-            IOUtils.closeQuietly(fileWriter);
+            IOUtils.closeQuietly(pemfileWriter);
+        }
+        if (deleteOnExit) {
+            pemFile.deleteOnExit();
         }
     }
 

@@ -1,26 +1,23 @@
 package org.mockserver.server.unification;
 
-import com.google.common.net.HttpHeaders;
+import com.twitter.finagle.ssl.Ssl;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.handler.codec.MessageToMessageDecoder;
-import io.netty.handler.codec.MessageToMessageEncoder;
-import io.netty.handler.codec.http.DefaultHttpMessage;
 import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.logging.LoggingHandler;
+import io.netty.handler.ssl.OpenSsl;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.util.AttributeKey;
-import io.netty.util.ReferenceCountUtil;
 import org.mockserver.socket.SSLFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
+import javax.net.ssl.SSLEngine;
 
 /**
  * @author jamesdbloom
@@ -85,7 +82,16 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
 
     private void enableSsl(ChannelHandlerContext ctx, ByteBuf msg) {
         ChannelPipeline pipeline = ctx.pipeline();
-        pipeline.addFirst(new SslHandler(SSLFactory.createServerSSLEngine()));
+        if (OpenSsl.isAvailable()) {
+            SSLEngine engine = Ssl.server(
+                    "ClientCertificate.pem",
+                    "ClientPrivateKey.pem",
+                    "CertificateAuthorityCertificate.pem",
+                    null, null).self();
+            pipeline.addFirst(new SslHandler(engine));
+        } else {
+            pipeline.addFirst(new SslHandler(SSLFactory.createServerSSLEngine()));
+        }
         ctx.channel().attr(PortUnificationHandler.SSL_ENABLED).set(Boolean.TRUE);
 
         // re-unify (with SSL enabled)

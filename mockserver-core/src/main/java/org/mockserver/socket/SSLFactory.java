@@ -30,9 +30,7 @@ public class SSLFactory {
     /**
      * Enforce TLS 1.2 if available, since it's not default up to Java 8.
      * <p>
-     * Java 7 disables TLS 1.1 and 1.2 for clients. From <a href=
-     * "http://docs.oracle.com/javase/7/docs/technotes/guides/security/SunProviders.html"
-     * >Java Cryptography Architecture Oracle Providers Documentation:</a>
+     * Java 7 disables TLS 1.1 and 1.2 for clients. From <a href="http://docs.oracle.com/javase/7/docs/technotes/guides/security/SunProviders.html">Java Cryptography Architecture Oracle Providers Documentation:</a>
      * Although SunJSSE in the Java SE 7 release supports TLS 1.1 and TLS 1.2,
      * neither version is enabled by default for client connections. Some
      * servers do not implement forward compatibility correctly and refuse to

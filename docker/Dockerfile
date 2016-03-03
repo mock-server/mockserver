@@ -18,6 +18,7 @@ RUN  \
   wget -O /opt/mockserver/run_mockserver.sh https://raw.github.com/jamesdbloom/mockserver/master/docker/run_mockserver.sh && \
   wget -O /opt/mockserver/libtcnative-1.so.0.1.27 https://raw.github.com/jamesdbloom/mockserver/master/docker/libtcnative-1.so.0.1.27 && \
   wget -O /opt/mockserver/tomcat-native-1.1.27.jar https://raw.github.com/jamesdbloom/mockserver/master/docker/tomcat-native-1.1.27.jar && \
+  wget -O /opt/mockserver/CertificateAuthorityCertificate.pem https://raw.github.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/socket/CertificateAuthorityCertificate.pem && \
   chmod +x /opt/mockserver/run_mockserver.sh
 
 # set working directory
