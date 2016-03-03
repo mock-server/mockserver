@@ -12,10 +12,10 @@ import org.mockserver.client.serialization.VerificationSerializer;
 import org.mockserver.client.serialization.curl.OutboundRequestToCurlSerializer;
 import org.mockserver.filters.Filters;
 import org.mockserver.filters.HopByHopHeaderFilter;
-import org.mockserver.filters.LogFilter;
+import org.mockserver.filters.RequestLogFilter;
+import org.mockserver.filters.RequestResponseLogFilter;
 import org.mockserver.logging.LogFormatter;
 import org.mockserver.mappers.ContentTypeMapper;
-import org.mockserver.mock.Expectation;
 import org.mockserver.model.Body;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -45,7 +45,8 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     // mockserver
     private final Proxy server;
-    private final LogFilter logFilter;
+    private final RequestLogFilter requestLogFilter;
+    private final RequestResponseLogFilter requestResponseLogFilter;
     private final boolean onwardSslStatusUnknown;
     private final Filters filters = new Filters();
     private LogFormatter logFormatter = new LogFormatter(logger);
@@ -58,13 +59,15 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
     private VerificationSerializer verificationSerializer = new VerificationSerializer();
     private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer();
 
-    public HttpProxyHandler(Proxy server, LogFilter logFilter, Boolean onwardSslStatusUnknown) {
+    public HttpProxyHandler(Proxy server, RequestLogFilter requestLogFilter, RequestResponseLogFilter requestResponseLogFilter, Boolean onwardSslStatusUnknown) {
         super(false);
         this.server = server;
-        this.logFilter = logFilter;
+        this.requestLogFilter = requestLogFilter;
+        this.requestResponseLogFilter = requestResponseLogFilter;
         this.onwardSslStatusUnknown = (onwardSslStatusUnknown != null ? onwardSslStatusUnknown : false);
         filters.withFilter(new org.mockserver.model.HttpRequest(), new HopByHopHeaderFilter());
-        filters.withFilter(new org.mockserver.model.HttpRequest(), logFilter);
+        filters.withFilter(new org.mockserver.model.HttpRequest(), requestLogFilter);
+        filters.withFilter(new org.mockserver.model.HttpRequest(), requestResponseLogFilter);
     }
 
     @Override
@@ -91,31 +94,31 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
             } else if (request.matches("PUT", "/clear")) {
 
                 org.mockserver.model.HttpRequest httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
-                logFilter.clear(httpRequest);
+                requestLogFilter.clear(httpRequest);
                 logFormatter.infoLog("clearing expectations and request logs that match:{}", httpRequest);
                 writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
 
             } else if (request.matches("PUT", "/reset")) {
 
-                logFilter.reset();
+                requestLogFilter.reset();
                 logFormatter.infoLog("resetting all expectations and request logs");
                 writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
 
             } else if (request.matches("PUT", "/dumpToLog")) {
 
-                logFilter.dumpToLog(httpRequestSerializer.deserialize(request.getBodyAsString()), request.hasQueryStringParameter("type", "java"));
+                requestResponseLogFilter.dumpToLog(httpRequestSerializer.deserialize(request.getBodyAsString()), request.hasQueryStringParameter("type", "java"));
                 writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
 
             } else if (request.matches("PUT", "/retrieve")) {
 
-                HttpRequest[] requests = logFilter.retrieve(httpRequestSerializer.deserialize(request.getBodyAsString()));
+                HttpRequest[] requests = requestLogFilter.retrieve(httpRequestSerializer.deserialize(request.getBodyAsString()));
                 writeResponse(ctx, request, HttpResponseStatus.OK, httpRequestSerializer.serialize(requests), "application/json");
 
             } else if (request.matches("PUT", "/verify")) {
 
                 Verification verification = verificationSerializer.deserialize(request.getBodyAsString());
                 logFormatter.infoLog("verifying:{}", verification);
-                String result = logFilter.verify(verification);
+                String result = requestLogFilter.verify(verification);
                 if (result.isEmpty()) {
                     writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
                 } else {
@@ -125,7 +128,7 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
             } else if (request.matches("PUT", "/verifySequence")) {
 
                 VerificationSequence verificationSequence = verificationSequenceSerializer.deserialize(request.getBodyAsString());
-                String result = logFilter.verify(verificationSequence);
+                String result = requestLogFilter.verify(verificationSequence);
                 logFormatter.infoLog("verifying sequence:{}", verificationSequence);
                 if (result.isEmpty()) {
                     writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);

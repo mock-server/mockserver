@@ -1,5 +1,6 @@
 package org.mockserver.mockserver;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.net.MediaType;
 import io.netty.buffer.Unpooled;
@@ -11,7 +12,7 @@ import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpServerCodec;
 import org.mockserver.client.serialization.*;
-import org.mockserver.filters.LogFilter;
+import org.mockserver.filters.RequestLogFilter;
 import org.mockserver.logging.LogFormatter;
 import org.mockserver.mappers.ContentTypeMapper;
 import org.mockserver.mock.Expectation;
@@ -19,6 +20,7 @@ import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.model.*;
 import org.mockserver.socket.SSLFactory;
+import org.mockserver.validator.ExpectationValidator;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.slf4j.Logger;
@@ -43,7 +45,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
     private LogFormatter logFormatter = new LogFormatter(logger);
     // mockserver
     private MockServer server;
-    private LogFilter logFilter;
+    private RequestLogFilter requestLogFilter;
     private MockServerMatcher mockServerMatcher;
     private ActionHandler actionHandler;
     // serializers
@@ -52,12 +54,14 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
     private PortBindingSerializer portBindingSerializer = new PortBindingSerializer();
     private VerificationSerializer verificationSerializer = new VerificationSerializer();
     private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer();
+    // validators
+    private ExpectationValidator expectationValidator = new ExpectationValidator();
 
-    public MockServerHandler(MockServer server, MockServerMatcher mockServerMatcher, LogFilter logFilter) {
+    public MockServerHandler(MockServer server, MockServerMatcher mockServerMatcher, RequestLogFilter requestLogFilter) {
         this.mockServerMatcher = mockServerMatcher;
         this.server = server;
-        this.logFilter = logFilter;
-        actionHandler = new ActionHandler(logFilter);
+        this.requestLogFilter = requestLogFilter;
+        actionHandler = new ActionHandler(requestLogFilter);
     }
 
     @Override
@@ -86,22 +90,28 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
             } else if (request.matches("PUT", "/expectation")) {
 
                 Expectation expectation = expectationSerializer.deserialize(request.getBodyAsString());
-                SSLFactory.addSubjectAlternativeName(expectation.getHttpRequest().getFirstHeader(HttpHeaders.Names.HOST));
-                mockServerMatcher.when(expectation.getHttpRequest(), expectation.getTimes(), expectation.getTimeToLive()).thenRespond(expectation.getHttpResponse(false)).thenForward(expectation.getHttpForward()).thenError(expectation.getHttpError()).thenCallback(expectation.getHttpCallback());
-                logFormatter.infoLog("creating expectation:{}", expectation);
-                writeResponse(ctx, request, HttpResponseStatus.CREATED);
+                List<String> validationErrors = expectationValidator.isValid(expectation);
+                if (validationErrors.isEmpty()) {
+                    SSLFactory.addSubjectAlternativeName(expectation.getHttpRequest().getFirstHeader(HttpHeaders.Names.HOST));
+                    mockServerMatcher.when(expectation.getHttpRequest(), expectation.getTimes(), expectation.getTimeToLive()).thenRespond(expectation.getHttpResponse(false)).thenForward(expectation.getHttpForward()).thenError(expectation.getHttpError()).thenCallback(expectation.getHttpCallback());
+                    logFormatter.infoLog("creating expectation:{}", expectation);
+                    writeResponse(ctx, request, HttpResponseStatus.CREATED);
+                } else {
+                    String errorMessage = validationErrors.size() + " errors:\n - " + Joiner.on("\n - ").join(validationErrors) + "\n";
+                    writeResponse(ctx, request, HttpResponseStatus.NOT_ACCEPTABLE, errorMessage, MediaType.create("text", "plain").toString());
+                }
 
             } else if (request.matches("PUT", "/clear")) {
 
                 org.mockserver.model.HttpRequest httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
-                logFilter.clear(httpRequest);
+                requestLogFilter.clear(httpRequest);
                 mockServerMatcher.clear(httpRequest);
                 logFormatter.infoLog("clearing expectations and request logs that match:{}", httpRequest);
                 writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
 
             } else if (request.matches("PUT", "/reset")) {
 
-                logFilter.reset();
+                requestLogFilter.reset();
                 mockServerMatcher.reset();
                 logFormatter.infoLog("resetting all expectations and request logs");
                 writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
@@ -117,7 +127,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                     Expectation[] expectations = mockServerMatcher.retrieve(httpRequestSerializer.deserialize(request.getBodyAsString()));
                     writeResponse(ctx, request, HttpResponseStatus.OK, expectationSerializer.serialize(expectations), "application/json");
                 } else {
-                    HttpRequest[] requests = logFilter.retrieve(httpRequestSerializer.deserialize(request.getBodyAsString()));
+                    HttpRequest[] requests = requestLogFilter.retrieve(httpRequestSerializer.deserialize(request.getBodyAsString()));
                     writeResponse(ctx, request, HttpResponseStatus.OK, httpRequestSerializer.serialize(requests), "application/json");
                 }
 
@@ -125,7 +135,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
                 Verification verification = verificationSerializer.deserialize(request.getBodyAsString());
                 logFormatter.infoLog("verifying:{}", verification);
-                String result = logFilter.verify(verification);
+                String result = requestLogFilter.verify(verification);
                 if (result.isEmpty()) {
                     writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
                 } else {
@@ -135,7 +145,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
             } else if (request.matches("PUT", "/verifySequence")) {
 
                 VerificationSequence verificationSequence = verificationSequenceSerializer.deserialize(request.getBodyAsString());
-                String result = logFilter.verify(verificationSequence);
+                String result = requestLogFilter.verify(verificationSequence);
                 logFormatter.infoLog("verifying sequence:{}", verificationSequence);
                 if (result.isEmpty()) {
                     writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);

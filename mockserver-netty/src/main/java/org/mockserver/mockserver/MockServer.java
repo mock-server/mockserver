@@ -7,7 +7,7 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.util.AttributeKey;
-import org.mockserver.filters.LogFilter;
+import org.mockserver.filters.RequestLogFilter;
 import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.stop.StopEventQueue;
 import org.mockserver.stop.Stoppable;
@@ -27,11 +27,11 @@ import java.util.concurrent.TimeUnit;
  */
 public class MockServer implements Stoppable {
 
-    public static final AttributeKey<LogFilter> LOG_FILTER = AttributeKey.valueOf("SERVER_LOG_FILTER");
+    public static final AttributeKey<RequestLogFilter> LOG_FILTER = AttributeKey.valueOf("SERVER_LOG_FILTER");
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     // mockserver
     private final MockServerMatcher mockServerMatcher = new MockServerMatcher();
-    private final LogFilter logFilter = new LogFilter();
+    private final RequestLogFilter requestLogFilter = new RequestLogFilter();
     private final List<Future<Channel>> channelOpenedFutures = new ArrayList<Future<Channel>>();
     // netty
     private final EventLoopGroup bossGroup = new NioEventLoopGroup();
@@ -54,9 +54,11 @@ public class MockServer implements Stoppable {
                 .option(ChannelOption.SO_BACKLOG, 1024)
                 .channel(NioServerSocketChannel.class)
                 .childOption(ChannelOption.AUTO_READ, true)
-                .childHandler(new MockServerInitializer(mockServerMatcher, MockServer.this))
                 .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-                .childAttr(LOG_FILTER, logFilter);
+                .childOption(ChannelOption.WRITE_BUFFER_HIGH_WATER_MARK, 32 * 1024)
+                .childOption(ChannelOption.WRITE_BUFFER_LOW_WATER_MARK, 8 * 1024)
+                .childHandler(new MockServerInitializer(mockServerMatcher, MockServer.this))
+                .childAttr(LOG_FILTER, requestLogFilter);
 
         bindToPorts(Arrays.asList(requestedPortBindings));
 

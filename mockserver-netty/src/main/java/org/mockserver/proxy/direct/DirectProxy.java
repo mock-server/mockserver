@@ -8,7 +8,8 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import org.mockserver.filters.LogFilter;
+import org.mockserver.filters.RequestLogFilter;
+import org.mockserver.filters.RequestResponseLogFilter;
 import org.mockserver.proxy.Proxy;
 import org.mockserver.stop.StopEventQueue;
 import org.slf4j.Logger;
@@ -28,7 +29,8 @@ public class DirectProxy implements Proxy {
 
     private static final Logger logger = LoggerFactory.getLogger(DirectProxy.class);
     // proxy
-    private final LogFilter logFilter = new LogFilter();
+    private final RequestLogFilter requestLogFilter = new RequestLogFilter();
+    private final RequestResponseLogFilter requestResponseLogFilter = new RequestResponseLogFilter();
     private final SettableFuture<String> hasStarted;
     // netty
     private final EventLoopGroup bossGroup = new NioEventLoopGroup();
@@ -69,11 +71,14 @@ public class DirectProxy implements Proxy {
                             .option(ChannelOption.SO_BACKLOG, 1024)
                             .channel(NioServerSocketChannel.class)
                             .childOption(ChannelOption.AUTO_READ, true)
-                            .childHandler(new DirectProxyUnificationHandler())
                             .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+                            .childOption(ChannelOption.WRITE_BUFFER_HIGH_WATER_MARK, 32 * 1024)
+                            .childOption(ChannelOption.WRITE_BUFFER_LOW_WATER_MARK, 8 * 1024)
+                            .childHandler(new DirectProxyUnificationHandler())
                             .childAttr(HTTP_PROXY, DirectProxy.this)
                             .childAttr(REMOTE_SOCKET, remoteSocket)
-                            .childAttr(LOG_FILTER, logFilter)
+                            .childAttr(REQUEST_LOG_FILTER, requestLogFilter)
+                            .childAttr(REQUEST_RESPONSE_LOG_FILTER, requestResponseLogFilter)
                             .bind(localPort)
                             .sync()
                             .channel();

@@ -2,7 +2,7 @@ package org.mockserver.mock.action;
 
 import org.mockserver.filters.Filters;
 import org.mockserver.filters.HopByHopHeaderFilter;
-import org.mockserver.filters.LogFilter;
+import org.mockserver.filters.RequestLogFilter;
 import org.mockserver.model.*;
 
 import static org.mockserver.model.HttpResponse.notFoundResponse;
@@ -17,9 +17,9 @@ public class ActionHandler {
     private HttpResponseActionHandler httpResponseActionHandler = new HttpResponseActionHandler();
     private Filters filters = new Filters();
 
-    public ActionHandler(LogFilter logFilter) {
+    public ActionHandler(RequestLogFilter requestLogFilter) {
         filters.withFilter(new org.mockserver.model.HttpRequest(), new HopByHopHeaderFilter());
-        filters.withFilter(new org.mockserver.model.HttpRequest(), logFilter);
+        filters.withFilter(new org.mockserver.model.HttpRequest(), requestLogFilter);
     }
 
     public HttpResponse processAction(Action action, HttpRequest httpRequest) {

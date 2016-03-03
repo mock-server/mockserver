@@ -4,7 +4,7 @@ import com.google.common.base.Strings;
 import com.google.common.net.MediaType;
 import io.netty.handler.codec.http.HttpHeaders;
 import org.mockserver.client.serialization.*;
-import org.mockserver.filters.LogFilter;
+import org.mockserver.filters.RequestLogFilter;
 import org.mockserver.mappers.HttpServletRequestToMockServerRequestDecoder;
 import org.mockserver.mappers.MockServerResponseToHttpServletResponseEncoder;
 import org.mockserver.mock.Expectation;
@@ -33,8 +33,8 @@ public class MockServerServlet extends HttpServlet {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     // mockserver
     private MockServerMatcher mockServerMatcher = new MockServerMatcher();
-    private LogFilter logFilter = new LogFilter();
-    private ActionHandler actionHandler = new ActionHandler(logFilter);
+    private RequestLogFilter requestLogFilter = new RequestLogFilter();
+    private ActionHandler actionHandler = new ActionHandler(requestLogFilter);
     // mappers
     private HttpServletRequestToMockServerRequestDecoder httpServletRequestToMockServerRequestDecoder = new HttpServletRequestToMockServerRequestDecoder();
     private MockServerResponseToHttpServletResponseEncoder mockServerResponseToHttpServletResponseEncoder = new MockServerResponseToHttpServletResponseEncoder();
@@ -103,13 +103,13 @@ public class MockServerServlet extends HttpServlet {
             } else if (requestPath.equals("/clear")) {
 
                 HttpRequest httpRequest = httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest));
-                logFilter.clear(httpRequest);
+                requestLogFilter.clear(httpRequest);
                 mockServerMatcher.clear(httpRequest);
                 httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
 
             } else if (requestPath.equals("/reset")) {
 
-                logFilter.reset();
+                requestLogFilter.reset();
                 mockServerMatcher.reset();
                 httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
 
@@ -126,7 +126,7 @@ public class MockServerServlet extends HttpServlet {
                     httpServletResponse.setHeader(HttpHeaders.Names.CONTENT_TYPE, MediaType.JSON_UTF_8.toString());
                     IOStreamUtils.writeToOutputStream(expectationSerializer.serialize(expectations).getBytes(), httpServletResponse);
                 } else {
-                    HttpRequest[] requests = logFilter.retrieve(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
+                    HttpRequest[] requests = requestLogFilter.retrieve(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
                     httpServletResponse.setStatus(HttpStatusCode.OK_200.code());
                     httpServletResponse.setHeader(HttpHeaders.Names.CONTENT_TYPE, MediaType.JSON_UTF_8.toString());
                     IOStreamUtils.writeToOutputStream(httpRequestSerializer.serialize(requests).getBytes(), httpServletResponse);
@@ -134,7 +134,7 @@ public class MockServerServlet extends HttpServlet {
 
             } else if (requestPath.equals("/verify")) {
 
-                String result = logFilter.verify(verificationSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
+                String result = requestLogFilter.verify(verificationSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
                 if (result.isEmpty()) {
                     httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
                 } else {
@@ -145,7 +145,7 @@ public class MockServerServlet extends HttpServlet {
 
             } else if (requestPath.equals("/verifySequence")) {
 
-                String result = logFilter.verify(verificationSequenceSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
+                String result = requestLogFilter.verify(verificationSequenceSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
                 if (result.isEmpty()) {
                     httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
                 } else {

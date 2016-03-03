@@ -31,7 +31,8 @@ import static org.mockserver.model.OutboundHttpRequest.outboundRequest;
 public class ProxyServlet extends HttpServlet {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    public LogFilter logFilter = new LogFilter();
+    public RequestLogFilter requestLogFilter = new RequestLogFilter();
+    public RequestResponseLogFilter requestResponseLogFilter = new RequestResponseLogFilter();
     // mockserver
     private Filters filters = new Filters();
     // http client
@@ -41,13 +42,13 @@ public class ProxyServlet extends HttpServlet {
     private MockServerResponseToHttpServletResponseEncoder mockServerResponseToHttpServletResponseEncoder = new MockServerResponseToHttpServletResponseEncoder();
     // serializers
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
-    private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
     private VerificationSerializer verificationSerializer = new VerificationSerializer();
     private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer();
 
     public ProxyServlet() {
         filters.withFilter(new HttpRequest(), new HopByHopHeaderFilter());
-        filters.withFilter(new HttpRequest(), logFilter);
+        filters.withFilter(new HttpRequest(), requestLogFilter);
+        filters.withFilter(new HttpRequest(), requestResponseLogFilter);
     }
 
     /**
@@ -98,29 +99,29 @@ public class ProxyServlet extends HttpServlet {
 
             } else if (requestPath.equals("/clear")) {
 
-                logFilter.clear(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
+                requestLogFilter.clear(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
                 httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
 
             } else if (requestPath.equals("/reset")) {
 
-                logFilter.reset();
+                requestLogFilter.reset();
                 httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
 
             } else if (requestPath.equals("/dumpToLog")) {
 
-                logFilter.dumpToLog(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)), "java".equals(httpServletRequest.getParameter("type")));
+                requestResponseLogFilter.dumpToLog(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)), "java".equals(httpServletRequest.getParameter("type")));
                 httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
 
             } else if (requestPath.equals("/retrieve")) {
 
-                HttpRequest[] requests = logFilter.retrieve(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
+                HttpRequest[] requests = requestLogFilter.retrieve(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
                 httpServletResponse.setStatus(HttpStatusCode.OK_200.code());
                 httpServletResponse.setHeader(HttpHeaders.Names.CONTENT_TYPE, MediaType.JSON_UTF_8.toString());
                 IOStreamUtils.writeToOutputStream(httpRequestSerializer.serialize(requests).getBytes(), httpServletResponse);
 
             } else if (requestPath.equals("/verify")) {
 
-                String result = logFilter.verify(verificationSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
+                String result = requestLogFilter.verify(verificationSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
                 if (result.isEmpty()) {
                     httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
                 } else {
@@ -131,7 +132,7 @@ public class ProxyServlet extends HttpServlet {
 
             } else if (requestPath.equals("/verifySequence")) {
 
-                String result = logFilter.verify(verificationSequenceSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
+                String result = requestLogFilter.verify(verificationSequenceSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
                 if (result.isEmpty()) {
                     httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
                 } else {

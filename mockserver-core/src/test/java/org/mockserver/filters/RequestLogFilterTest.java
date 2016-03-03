@@ -21,7 +21,6 @@ import static org.mockserver.model.HttpResponse.response;
 public class RequestLogFilterTest {
 
     public static final List<HttpRequest> EMPTY_REQUEST_LIST = Arrays.<HttpRequest>asList();
-    public static final List<HttpResponse> EMPTY_RESPONSE_LIST = Arrays.<HttpResponse>asList();
 
     @Test
     public void shouldPassThroughRequestsUnchanged() {
@@ -72,24 +71,6 @@ public class RequestLogFilterTest {
         assertEquals(requestLogFilter.httpRequests(request()), Arrays.asList(request("some_path"), request("some_other_path"), request("some_path")));
         assertEquals(requestLogFilter.httpRequests(request("some_path")), Arrays.asList(request("some_path"), request("some_path")));
         assertEquals(requestLogFilter.httpRequests(request("some_other_path")), Arrays.asList(request("some_other_path")));
-    }
-
-    @Test
-    public void shouldRecordResponses() {
-        // given
-        RequestLogFilter requestLogFilter = new RequestLogFilter();
-
-        // and - called for responses
-        requestLogFilter.onResponse(request("some_path"), response("some_body"));
-        requestLogFilter.onResponse(request("some_other_path"), response("some_other_body"));
-        requestLogFilter.onResponse(request("some_path"), response("some_body"));
-        requestLogFilter.onResponse(request("some_path"), null);
-        requestLogFilter.onResponse(request("some_path"), notFoundResponse());
-
-        // then - request-response log
-        assertEquals(requestLogFilter.httpResponses(request()), Arrays.asList(response("some_body"), response("some_body"), notFoundResponse(), notFoundResponse(), response("some_other_body")));
-        assertEquals(requestLogFilter.httpResponses(request("some_path")), Arrays.asList(response("some_body"), response("some_body"), notFoundResponse(), notFoundResponse()));
-        assertEquals(requestLogFilter.httpResponses(request("some_other_path")), Arrays.asList(response("some_other_body")));
     }
 
     @Test
@@ -146,10 +127,6 @@ public class RequestLogFilterTest {
         assertEquals(requestLogFilter.httpRequests(request()), EMPTY_REQUEST_LIST);
         assertEquals(requestLogFilter.httpRequests(request("some_path")), EMPTY_REQUEST_LIST);
         assertEquals(requestLogFilter.httpRequests(request("some_other_path")), EMPTY_REQUEST_LIST);
-        // then - request-response log cleared
-        assertEquals(requestLogFilter.httpResponses(request()), EMPTY_RESPONSE_LIST);
-        assertEquals(requestLogFilter.httpResponses(request("some_path")), EMPTY_RESPONSE_LIST);
-        assertEquals(requestLogFilter.httpResponses(request("some_other_path")), EMPTY_RESPONSE_LIST);
     }
 
     @Test
@@ -172,10 +149,6 @@ public class RequestLogFilterTest {
         assertEquals(requestLogFilter.httpRequests(request()), EMPTY_REQUEST_LIST);
         assertEquals(requestLogFilter.httpRequests(request("some_path")), EMPTY_REQUEST_LIST);
         assertEquals(requestLogFilter.httpRequests(request("some_other_path")), EMPTY_REQUEST_LIST);
-        // then - request-response log cleared
-        assertEquals(requestLogFilter.httpResponses(request()), EMPTY_RESPONSE_LIST);
-        assertEquals(requestLogFilter.httpResponses(request("some_path")), EMPTY_RESPONSE_LIST);
-        assertEquals(requestLogFilter.httpResponses(request("some_other_path")), EMPTY_RESPONSE_LIST);
     }
 
     @Test
@@ -198,10 +171,6 @@ public class RequestLogFilterTest {
         assertEquals(requestLogFilter.httpRequests(request()), EMPTY_REQUEST_LIST);
         assertEquals(requestLogFilter.httpRequests(request("some_path")), EMPTY_REQUEST_LIST);
         assertEquals(requestLogFilter.httpRequests(request("some_other_path")), EMPTY_REQUEST_LIST);
-        // then - request-response log cleared
-        assertEquals(requestLogFilter.httpResponses(request()), EMPTY_RESPONSE_LIST);
-        assertEquals(requestLogFilter.httpResponses(request("some_path")), EMPTY_RESPONSE_LIST);
-        assertEquals(requestLogFilter.httpResponses(request("some_other_path")), EMPTY_RESPONSE_LIST);
     }
 
     @Test
@@ -224,9 +193,5 @@ public class RequestLogFilterTest {
         assertEquals(requestLogFilter.httpRequests(request()), Arrays.asList(request("some_other_path")));
         assertEquals(requestLogFilter.httpRequests(request("some_path")), EMPTY_REQUEST_LIST);
         assertEquals(requestLogFilter.httpRequests(request("some_other_path")), Arrays.asList(request("some_other_path")));
-        // then - request-response log cleared
-        assertEquals(requestLogFilter.httpResponses(request()), Arrays.asList(response("some_other_body")));
-        assertEquals(requestLogFilter.httpResponses(request("some_path")), EMPTY_RESPONSE_LIST);
-        assertEquals(requestLogFilter.httpResponses(request("some_other_path")), Arrays.asList(response("some_other_body")));
     }
 }

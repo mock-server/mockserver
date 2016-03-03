@@ -11,12 +11,10 @@ import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.client.serialization.VerificationSequenceSerializer;
 import org.mockserver.client.serialization.VerificationSerializer;
-import org.mockserver.filters.LogFilter;
-import org.mockserver.matchers.Times;
+import org.mockserver.filters.RequestLogFilter;
+import org.mockserver.filters.RequestResponseLogFilter;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.action.ActionHandler;
-import org.mockserver.model.HttpCallback;
-import org.mockserver.model.HttpForward;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.proxy.Proxy;
@@ -51,7 +49,8 @@ public class HttpProxyHandlerTest {
     @Mock
     private VerificationSequence mockVerificationSequence;
     // mockserver
-    private LogFilter mockLogFilter;
+    private RequestLogFilter mockRequestLogFilter;
+    private RequestResponseLogFilter mockRequestResponseLogFilter;
     private Proxy mockHttpProxy;
     @Mock
     private ActionHandler mockActionHandler;
@@ -72,9 +71,10 @@ public class HttpProxyHandlerTest {
     @Before
     public void setupFixture() {
         // given - a mock server handler
-        mockLogFilter = mock(LogFilter.class);
+        mockRequestLogFilter = mock(RequestLogFilter.class);
+        mockRequestResponseLogFilter = mock(RequestResponseLogFilter.class);
         mockHttpProxy = mock(Proxy.class);
-        httpProxyHandler = new HttpProxyHandler(mockHttpProxy, mockLogFilter, false);
+        httpProxyHandler = new HttpProxyHandler(mockHttpProxy, mockRequestLogFilter, mockRequestResponseLogFilter, false);
         embeddedChannel = new EmbeddedChannel(httpProxyHandler);
 
         initMocks(this);
@@ -100,7 +100,7 @@ public class HttpProxyHandlerTest {
         embeddedChannel.writeInbound(request);
 
         // then - filter and matcher is reset
-        verify(mockLogFilter).reset();
+        verify(mockRequestLogFilter).reset();
 
         // and - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse)embeddedChannel.readOutbound();
@@ -120,7 +120,7 @@ public class HttpProxyHandlerTest {
         verify(mockHttpRequestSerializer).deserialize("some_content");
 
         // then - filter and matcher is cleared
-        verify(mockLogFilter).clear(mockHttpRequest);
+        verify(mockRequestLogFilter).clear(mockHttpRequest);
 
         // and - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse)embeddedChannel.readOutbound();
@@ -140,7 +140,7 @@ public class HttpProxyHandlerTest {
         verify(mockHttpRequestSerializer).deserialize("some_content");
 
         // then - expectations dumped to log
-        verify(mockLogFilter).dumpToLog(mockHttpRequest, false);
+        verify(mockRequestResponseLogFilter).dumpToLog(mockHttpRequest, false);
 
         // and - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse)embeddedChannel.readOutbound();
@@ -160,7 +160,7 @@ public class HttpProxyHandlerTest {
         verify(mockHttpRequestSerializer).deserialize("some_content");
 
         // then - expectations dumped to log
-        verify(mockLogFilter).dumpToLog(mockHttpRequest, true);
+        verify(mockRequestResponseLogFilter).dumpToLog(mockHttpRequest, true);
 
         // and - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse)embeddedChannel.readOutbound();
@@ -172,7 +172,7 @@ public class HttpProxyHandlerTest {
     public void shouldReturnRecordedRequests() {
         // given
         HttpRequest[] requests = {};
-        when(mockLogFilter.retrieve(mockHttpRequest)).thenReturn(requests);
+        when(mockRequestLogFilter.retrieve(mockHttpRequest)).thenReturn(requests);
         when(mockHttpRequestSerializer.serialize(requests)).thenReturn("requests");
         HttpRequest request = request("/retrieve").withMethod("PUT").withBody("some_content");
 
@@ -183,7 +183,7 @@ public class HttpProxyHandlerTest {
         verify(mockHttpRequestSerializer).deserialize("some_content");
 
         // then - matching requests should be retrieved
-        verify(mockLogFilter).retrieve(mockHttpRequest);
+        verify(mockRequestLogFilter).retrieve(mockHttpRequest);
 
         // and - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
@@ -195,7 +195,7 @@ public class HttpProxyHandlerTest {
     public void shouldReturnBadRequestAfterException() {
         // given
         HttpRequest request = request("/randomPath").withMethod("GET").withBody("some_content");
-        when(mockLogFilter.onRequest(request)).thenThrow(new RuntimeException("TEST EXCEPTION"));
+        when(mockRequestLogFilter.onRequest(request)).thenThrow(new RuntimeException("TEST EXCEPTION"));
 
         // when
         embeddedChannel.writeInbound(request);
@@ -210,7 +210,7 @@ public class HttpProxyHandlerTest {
     public void shouldReturnNotFoundAfterNoMatch() {
         // given
         HttpRequest request = request("/randomPath").withMethod("GET").withBody("some_content");
-        when(mockLogFilter.onRequest(request)).thenReturn(null);
+        when(mockRequestLogFilter.onRequest(request)).thenReturn(null);
 
         // when
         embeddedChannel.writeInbound(request);
@@ -224,7 +224,7 @@ public class HttpProxyHandlerTest {
     @Test
     public void shouldVerifyPassingRequest() {
         // given
-        when(mockLogFilter.verify(any(Verification.class))).thenReturn("");
+        when(mockRequestLogFilter.verify(any(Verification.class))).thenReturn("");
 
         // and - a request
         HttpRequest request = request("/verify").withMethod("PUT").withBody("some_content");
@@ -236,7 +236,7 @@ public class HttpProxyHandlerTest {
         verify(mockVerificationSerializer).deserialize("some_content");
 
         // and - log filter called
-        verify(mockLogFilter).verify(mockVerification);
+        verify(mockRequestLogFilter).verify(mockVerification);
 
         // and - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse)embeddedChannel.readOutbound();
@@ -247,7 +247,7 @@ public class HttpProxyHandlerTest {
     @Test
     public void shouldVerifyFailingRequest() {
         // given
-        when(mockLogFilter.verify(any(Verification.class))).thenReturn("failure response");
+        when(mockRequestLogFilter.verify(any(Verification.class))).thenReturn("failure response");
 
         // and - a request
         HttpRequest request = request("/verify").withMethod("PUT").withBody("some_content");
@@ -259,7 +259,7 @@ public class HttpProxyHandlerTest {
         verify(mockVerificationSerializer).deserialize("some_content");
 
         // and - log filter called
-        verify(mockLogFilter).verify(mockVerification);
+        verify(mockRequestLogFilter).verify(mockVerification);
 
         // and - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse)embeddedChannel.readOutbound();
@@ -270,7 +270,7 @@ public class HttpProxyHandlerTest {
     @Test
     public void shouldVerifySequencePassingRequest() {
         // given
-        when(mockLogFilter.verify(any(VerificationSequence.class))).thenReturn("");
+        when(mockRequestLogFilter.verify(any(VerificationSequence.class))).thenReturn("");
 
         // and - a request
         HttpRequest request = request("/verifySequence").withMethod("PUT").withBody("some_content");
@@ -282,7 +282,7 @@ public class HttpProxyHandlerTest {
         verify(mockVerificationSequenceSerializer).deserialize("some_content");
 
         // and - log filter called
-        verify(mockLogFilter).verify(mockVerificationSequence);
+        verify(mockRequestLogFilter).verify(mockVerificationSequence);
 
         // and - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse)embeddedChannel.readOutbound();
@@ -293,7 +293,7 @@ public class HttpProxyHandlerTest {
     @Test
     public void shouldVerifySequenceFailingRequest() {
         // given
-        when(mockLogFilter.verify(any(VerificationSequence.class))).thenReturn("failure response");
+        when(mockRequestLogFilter.verify(any(VerificationSequence.class))).thenReturn("failure response");
 
         // and - a request
         HttpRequest request = request("/verifySequence").withMethod("PUT").withBody("some_content");
@@ -305,7 +305,7 @@ public class HttpProxyHandlerTest {
         verify(mockVerificationSequenceSerializer).deserialize("some_content");
 
         // and - log filter called
-        verify(mockLogFilter).verify(mockVerificationSequence);
+        verify(mockRequestLogFilter).verify(mockVerificationSequence);
 
         // and - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse)embeddedChannel.readOutbound();

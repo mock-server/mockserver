@@ -9,7 +9,8 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.mockserver.configuration.ConfigurationProperties;
-import org.mockserver.filters.LogFilter;
+import org.mockserver.filters.RequestLogFilter;
+import org.mockserver.filters.RequestResponseLogFilter;
 import org.mockserver.proxy.Proxy;
 import org.mockserver.stop.StopEventQueue;
 import org.slf4j.Logger;
@@ -36,7 +37,8 @@ public class HttpProxy implements Proxy {
     private static final Logger logger = LoggerFactory.getLogger(HttpProxy.class);
     private static ProxySelector previousProxySelector;
     // proxy
-    private final LogFilter logFilter = new LogFilter();
+    private final RequestLogFilter requestLogFilter = new RequestLogFilter();
+    private final RequestResponseLogFilter requestResponseLogFilter = new RequestResponseLogFilter();
     private final SettableFuture<String> hasStarted;
     // netty
     private final EventLoopGroup bossGroup = new NioEventLoopGroup();
@@ -65,11 +67,14 @@ public class HttpProxy implements Proxy {
                             .option(ChannelOption.SO_BACKLOG, 1024)
                             .channel(NioServerSocketChannel.class)
                             .childOption(ChannelOption.AUTO_READ, true)
-                            .childHandler(new HttpProxyUnificationHandler())
                             .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+                            .childOption(ChannelOption.WRITE_BUFFER_HIGH_WATER_MARK, 32 * 1024)
+                            .childOption(ChannelOption.WRITE_BUFFER_LOW_WATER_MARK, 8 * 1024)
+                            .childHandler(new HttpProxyUnificationHandler())
                             .childAttr(HTTP_PROXY, HttpProxy.this)
                             .childAttr(HTTP_CONNECT_SOCKET, new InetSocketAddress(port))
-                            .childAttr(LOG_FILTER, logFilter)
+                            .childAttr(REQUEST_LOG_FILTER, requestLogFilter)
+                            .childAttr(REQUEST_RESPONSE_LOG_FILTER, requestResponseLogFilter)
                             .bind(port)
                             .syncUninterruptibly()
                             .channel();

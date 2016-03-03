@@ -20,7 +20,6 @@ import static org.mockserver.model.HttpResponse.response;
  */
 public class RequestResponseLogFilterTest {
 
-    public static final List<HttpRequest> EMPTY_REQUEST_LIST = Arrays.<HttpRequest>asList();
     public static final List<HttpResponse> EMPTY_RESPONSE_LIST = Arrays.<HttpResponse>asList();
 
     @Test
@@ -37,7 +36,7 @@ public class RequestResponseLogFilterTest {
                         );
 
         // then
-        assertEquals(httpRequest, new RequestLogFilter().onRequest(httpRequest));
+        assertEquals(httpRequest, new RequestResponseLogFilter().onRequest(httpRequest));
     }
 
     @Test
@@ -55,178 +54,112 @@ public class RequestResponseLogFilterTest {
                         .withStatusCode(304);
 
         // then
-        assertEquals(httpResponse, new RequestLogFilter().onResponse(request(), httpResponse));
-    }
-
-    @Test
-    public void shouldRecordRequests() {
-        // given
-        RequestLogFilter requestLogFilter = new RequestLogFilter();
-
-        // when - called for requests
-        requestLogFilter.onRequest(request("some_path"));
-        requestLogFilter.onRequest(request("some_other_path"));
-        requestLogFilter.onRequest(request("some_path"));
-
-        // then - request log
-        assertEquals(requestLogFilter.httpRequests(request()), Arrays.asList(request("some_path"), request("some_other_path"), request("some_path")));
-        assertEquals(requestLogFilter.httpRequests(request("some_path")), Arrays.asList(request("some_path"), request("some_path")));
-        assertEquals(requestLogFilter.httpRequests(request("some_other_path")), Arrays.asList(request("some_other_path")));
+        assertEquals(httpResponse, new RequestResponseLogFilter().onResponse(request(), httpResponse));
     }
 
     @Test
     public void shouldRecordResponses() {
         // given
-        RequestLogFilter requestLogFilter = new RequestLogFilter();
+        RequestResponseLogFilter requestResponseLogFilter = new RequestResponseLogFilter();
 
         // and - called for responses
-        requestLogFilter.onResponse(request("some_path"), response("some_body"));
-        requestLogFilter.onResponse(request("some_other_path"), response("some_other_body"));
-        requestLogFilter.onResponse(request("some_path"), response("some_body"));
-        requestLogFilter.onResponse(request("some_path"), null);
-        requestLogFilter.onResponse(request("some_path"), notFoundResponse());
+        requestResponseLogFilter.onResponse(request("some_path"), response("some_body"));
+        requestResponseLogFilter.onResponse(request("some_other_path"), response("some_other_body"));
+        requestResponseLogFilter.onResponse(request("some_path"), response("some_body"));
+        requestResponseLogFilter.onResponse(request("some_path"), null);
+        requestResponseLogFilter.onResponse(request("some_path"), notFoundResponse());
 
         // then - request-response log
-        assertEquals(requestLogFilter.httpResponses(request()), Arrays.asList(response("some_body"), response("some_body"), notFoundResponse(), notFoundResponse(), response("some_other_body")));
-        assertEquals(requestLogFilter.httpResponses(request("some_path")), Arrays.asList(response("some_body"), response("some_body"), notFoundResponse(), notFoundResponse()));
-        assertEquals(requestLogFilter.httpResponses(request("some_other_path")), Arrays.asList(response("some_other_body")));
-    }
-
-    @Test
-    public void shouldRetrieve() {
-        // given
-        RequestLogFilter requestLogFilter = new RequestLogFilter();
-
-        // when
-        requestLogFilter.onRequest(request("some_path"));
-        requestLogFilter.onRequest(request("some_other_path"));
-        requestLogFilter.onRequest(request("some_path"));
-
-        // then
-        assertArrayEquals(requestLogFilter.retrieve(null),
-                new HttpRequest[]{
-                        request("some_path"),
-                        request("some_other_path"),
-                        request("some_path")
-                });
-        assertArrayEquals(requestLogFilter.retrieve(request()),
-                new HttpRequest[]{
-                        request("some_path"),
-                        request("some_other_path"),
-                        request("some_path")
-                });
-        assertArrayEquals(requestLogFilter.retrieve(request("some_path")),
-                new HttpRequest[]{
-                        request("some_path"),
-                        request("some_path")
-                });
-        assertArrayEquals(requestLogFilter.retrieve(request("some_other_path")),
-                new HttpRequest[]{
-                        request("some_other_path")
-                });
+        assertEquals(requestResponseLogFilter.httpResponses(request()), Arrays.asList(response("some_body"), response("some_body"), notFoundResponse(), notFoundResponse(), response("some_other_body")));
+        assertEquals(requestResponseLogFilter.httpResponses(request("some_path")), Arrays.asList(response("some_body"), response("some_body"), notFoundResponse(), notFoundResponse()));
+        assertEquals(requestResponseLogFilter.httpResponses(request("some_other_path")), Arrays.asList(response("some_other_body")));
     }
 
     @Test
     public void shouldReset() {
         // given
-        RequestLogFilter requestLogFilter = new RequestLogFilter();
+        RequestResponseLogFilter requestResponseLogFilter = new RequestResponseLogFilter();
         // and - called for requests
-        requestLogFilter.onRequest(request("some_path"));
-        requestLogFilter.onRequest(request("some_other_path"));
-        requestLogFilter.onRequest(request("some_path"));
+        requestResponseLogFilter.onRequest(request("some_path"));
+        requestResponseLogFilter.onRequest(request("some_other_path"));
+        requestResponseLogFilter.onRequest(request("some_path"));
         // and - called for responses
-        requestLogFilter.onResponse(request("some_path"), response("some_body"));
-        requestLogFilter.onResponse(request("some_other_path"), response("some_other_body"));
-        requestLogFilter.onResponse(request("some_path"), response("some_body"));
+        requestResponseLogFilter.onResponse(request("some_path"), response("some_body"));
+        requestResponseLogFilter.onResponse(request("some_other_path"), response("some_other_body"));
+        requestResponseLogFilter.onResponse(request("some_path"), response("some_body"));
 
         // when
-        requestLogFilter.reset();
+        requestResponseLogFilter.reset();
 
-        // then - request log cleared
-        assertEquals(requestLogFilter.httpRequests(request()), EMPTY_REQUEST_LIST);
-        assertEquals(requestLogFilter.httpRequests(request("some_path")), EMPTY_REQUEST_LIST);
-        assertEquals(requestLogFilter.httpRequests(request("some_other_path")), EMPTY_REQUEST_LIST);
         // then - request-response log cleared
-        assertEquals(requestLogFilter.httpResponses(request()), EMPTY_RESPONSE_LIST);
-        assertEquals(requestLogFilter.httpResponses(request("some_path")), EMPTY_RESPONSE_LIST);
-        assertEquals(requestLogFilter.httpResponses(request("some_other_path")), EMPTY_RESPONSE_LIST);
+        assertEquals(requestResponseLogFilter.httpResponses(request()), EMPTY_RESPONSE_LIST);
+        assertEquals(requestResponseLogFilter.httpResponses(request("some_path")), EMPTY_RESPONSE_LIST);
+        assertEquals(requestResponseLogFilter.httpResponses(request("some_other_path")), EMPTY_RESPONSE_LIST);
     }
 
     @Test
     public void shouldClearAllIfNull() {
         // given
-        RequestLogFilter requestLogFilter = new RequestLogFilter();
+        RequestResponseLogFilter requestResponseLogFilter = new RequestResponseLogFilter();
         // and - called for requests
-        requestLogFilter.onRequest(request("some_path"));
-        requestLogFilter.onRequest(request("some_other_path"));
-        requestLogFilter.onRequest(request("some_path"));
+        requestResponseLogFilter.onRequest(request("some_path"));
+        requestResponseLogFilter.onRequest(request("some_other_path"));
+        requestResponseLogFilter.onRequest(request("some_path"));
         // and - called for responses
-        requestLogFilter.onResponse(request("some_path"), response("some_body"));
-        requestLogFilter.onResponse(request("some_other_path"), response("some_other_body"));
-        requestLogFilter.onResponse(request("some_path"), response("some_body"));
+        requestResponseLogFilter.onResponse(request("some_path"), response("some_body"));
+        requestResponseLogFilter.onResponse(request("some_other_path"), response("some_other_body"));
+        requestResponseLogFilter.onResponse(request("some_path"), response("some_body"));
 
         // when
-        requestLogFilter.clear(null);
+        requestResponseLogFilter.clear(null);
 
-        // then - request log cleared
-        assertEquals(requestLogFilter.httpRequests(request()), EMPTY_REQUEST_LIST);
-        assertEquals(requestLogFilter.httpRequests(request("some_path")), EMPTY_REQUEST_LIST);
-        assertEquals(requestLogFilter.httpRequests(request("some_other_path")), EMPTY_REQUEST_LIST);
         // then - request-response log cleared
-        assertEquals(requestLogFilter.httpResponses(request()), EMPTY_RESPONSE_LIST);
-        assertEquals(requestLogFilter.httpResponses(request("some_path")), EMPTY_RESPONSE_LIST);
-        assertEquals(requestLogFilter.httpResponses(request("some_other_path")), EMPTY_RESPONSE_LIST);
+        assertEquals(requestResponseLogFilter.httpResponses(request()), EMPTY_RESPONSE_LIST);
+        assertEquals(requestResponseLogFilter.httpResponses(request("some_path")), EMPTY_RESPONSE_LIST);
+        assertEquals(requestResponseLogFilter.httpResponses(request("some_other_path")), EMPTY_RESPONSE_LIST);
     }
 
     @Test
     public void shouldClearAllIfMatchesAll() {
         // given
-        RequestLogFilter requestLogFilter = new RequestLogFilter();
+        RequestResponseLogFilter requestResponseLogFilter = new RequestResponseLogFilter();
         // and - called for requests
-        requestLogFilter.onRequest(request("some_path"));
-        requestLogFilter.onRequest(request("some_other_path"));
-        requestLogFilter.onRequest(request("some_path"));
+        requestResponseLogFilter.onRequest(request("some_path"));
+        requestResponseLogFilter.onRequest(request("some_other_path"));
+        requestResponseLogFilter.onRequest(request("some_path"));
         // and - called for responses
-        requestLogFilter.onResponse(request("some_path"), response("some_body"));
-        requestLogFilter.onResponse(request("some_other_path"), response("some_other_body"));
-        requestLogFilter.onResponse(request("some_path"), response("some_body"));
+        requestResponseLogFilter.onResponse(request("some_path"), response("some_body"));
+        requestResponseLogFilter.onResponse(request("some_other_path"), response("some_other_body"));
+        requestResponseLogFilter.onResponse(request("some_path"), response("some_body"));
 
         // when
-        requestLogFilter.clear(request());
+        requestResponseLogFilter.clear(request());
 
-        // then - request log cleared
-        assertEquals(requestLogFilter.httpRequests(request()), EMPTY_REQUEST_LIST);
-        assertEquals(requestLogFilter.httpRequests(request("some_path")), EMPTY_REQUEST_LIST);
-        assertEquals(requestLogFilter.httpRequests(request("some_other_path")), EMPTY_REQUEST_LIST);
         // then - request-response log cleared
-        assertEquals(requestLogFilter.httpResponses(request()), EMPTY_RESPONSE_LIST);
-        assertEquals(requestLogFilter.httpResponses(request("some_path")), EMPTY_RESPONSE_LIST);
-        assertEquals(requestLogFilter.httpResponses(request("some_other_path")), EMPTY_RESPONSE_LIST);
+        assertEquals(requestResponseLogFilter.httpResponses(request()), EMPTY_RESPONSE_LIST);
+        assertEquals(requestResponseLogFilter.httpResponses(request("some_path")), EMPTY_RESPONSE_LIST);
+        assertEquals(requestResponseLogFilter.httpResponses(request("some_other_path")), EMPTY_RESPONSE_LIST);
     }
 
     @Test
     public void shouldClearMatching() {
         // given
-        RequestLogFilter requestLogFilter = new RequestLogFilter();
+        RequestResponseLogFilter requestResponseLogFilter = new RequestResponseLogFilter();
         // and - called for requests
-        requestLogFilter.onRequest(request("some_path"));
-        requestLogFilter.onRequest(request("some_other_path"));
-        requestLogFilter.onRequest(request("some_path"));
+        requestResponseLogFilter.onRequest(request("some_path"));
+        requestResponseLogFilter.onRequest(request("some_other_path"));
+        requestResponseLogFilter.onRequest(request("some_path"));
         // and - called for responses
-        requestLogFilter.onResponse(request("some_path"), response("some_body"));
-        requestLogFilter.onResponse(request("some_other_path"), response("some_other_body"));
-        requestLogFilter.onResponse(request("some_path"), response("some_body"));
+        requestResponseLogFilter.onResponse(request("some_path"), response("some_body"));
+        requestResponseLogFilter.onResponse(request("some_other_path"), response("some_other_body"));
+        requestResponseLogFilter.onResponse(request("some_path"), response("some_body"));
 
         // when
-        requestLogFilter.clear(request("some_path"));
+        requestResponseLogFilter.clear(request("some_path"));
 
-        // then - request log cleared
-        assertEquals(requestLogFilter.httpRequests(request()), Arrays.asList(request("some_other_path")));
-        assertEquals(requestLogFilter.httpRequests(request("some_path")), EMPTY_REQUEST_LIST);
-        assertEquals(requestLogFilter.httpRequests(request("some_other_path")), Arrays.asList(request("some_other_path")));
         // then - request-response log cleared
-        assertEquals(requestLogFilter.httpResponses(request()), Arrays.asList(response("some_other_body")));
-        assertEquals(requestLogFilter.httpResponses(request("some_path")), EMPTY_RESPONSE_LIST);
-        assertEquals(requestLogFilter.httpResponses(request("some_other_path")), Arrays.asList(response("some_other_body")));
+        assertEquals(requestResponseLogFilter.httpResponses(request()), Arrays.asList(response("some_other_body")));
+        assertEquals(requestResponseLogFilter.httpResponses(request("some_path")), EMPTY_RESPONSE_LIST);
+        assertEquals(requestResponseLogFilter.httpResponses(request("some_other_path")), Arrays.asList(response("some_other_body")));
     }
 }

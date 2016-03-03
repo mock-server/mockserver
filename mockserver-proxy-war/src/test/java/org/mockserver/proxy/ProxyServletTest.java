@@ -11,12 +11,12 @@ import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.client.serialization.VerificationSequenceSerializer;
 import org.mockserver.client.serialization.VerificationSerializer;
 import org.mockserver.filters.RequestFilter;
+import org.mockserver.filters.RequestResponseLogFilter;
 import org.mockserver.filters.ResponseFilter;
 import org.mockserver.mappers.HttpServletRequestToMockServerRequestDecoder;
 import org.mockserver.mappers.MockServerResponseToHttpServletResponseEncoder;
-import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
-import org.mockserver.filters.LogFilter;
+import org.mockserver.filters.RequestLogFilter;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.mockserver.verify.VerificationTimes;
@@ -24,7 +24,6 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -47,7 +46,9 @@ public class ProxyServletTest {
     @Mock
     private NettyHttpClient mockNettyHttpClient;
     @Mock
-    private LogFilter mockLogFilter;
+    private RequestLogFilter mockRequestLogFilter;
+    @Mock
+    private RequestResponseLogFilter mockRequestResponseLogFilter;
     @Mock
     private HttpRequestSerializer mockHttpRequestSerializer;
     @Mock
@@ -240,7 +241,7 @@ public class ProxyServletTest {
         proxyServlet.doPut(mockHttpServletRequest, mockHttpServletResponse);
 
         // then
-        verify(mockLogFilter).dumpToLog(outboundHttpRequest, false);
+        verify(mockRequestResponseLogFilter).dumpToLog(outboundHttpRequest, false);
         assertEquals(HttpStatusCode.ACCEPTED_202.code(), mockHttpServletResponse.getStatus());
     }
 
@@ -256,7 +257,7 @@ public class ProxyServletTest {
         proxyServlet.doPut(mockHttpServletRequest, mockHttpServletResponse);
 
         // then
-        verify(mockLogFilter).dumpToLog(outboundHttpRequest, true);
+        verify(mockRequestResponseLogFilter).dumpToLog(outboundHttpRequest, true);
         assertEquals(HttpStatusCode.ACCEPTED_202.code(), mockHttpServletResponse.getStatus());
     }
 
@@ -273,14 +274,14 @@ public class ProxyServletTest {
 
         // and - a set of requests retrieved from the log
         HttpRequest[] httpRequests = {request, request};
-        when(mockLogFilter.retrieve(any(HttpRequest.class))).thenReturn(httpRequests);
+        when(mockRequestLogFilter.retrieve(any(HttpRequest.class))).thenReturn(httpRequests);
         when(mockHttpRequestSerializer.serialize(httpRequests)).thenReturn("request_response");
 
         // when
         proxyServlet.doPut(httpServletRequest, httpServletResponse);
 
         // then
-        verify(mockLogFilter).retrieve(request);
+        verify(mockRequestLogFilter).retrieve(request);
         assertThat(httpServletResponse.getContentAsByteArray(), is("request_response".getBytes()));
         assertThat(httpServletResponse.getStatus(), is(HttpStatusCode.OK_200.code()));
         verifyNoMoreInteractions(mockHttpServletRequestToMockServerRequestDecoder);
@@ -296,13 +297,13 @@ public class ProxyServletTest {
         String requestBytes = "requestBytes";
         httpServletRequest.setContent(requestBytes.getBytes());
         when(mockVerificationSerializer.deserialize(requestBytes)).thenReturn(verification);
-        when(mockLogFilter.verify(verification)).thenReturn("verification_error");
+        when(mockRequestLogFilter.verify(verification)).thenReturn("verification_error");
 
         // when
         proxyServlet.doPut(httpServletRequest, httpServletResponse);
 
         // then
-        verify(mockLogFilter).verify(verification);
+        verify(mockRequestLogFilter).verify(verification);
         assertThat(httpServletResponse.getContentAsString(), is("verification_error"));
         assertThat(httpServletResponse.getStatus(), is(HttpStatusCode.NOT_ACCEPTABLE_406.code()));
         verifyNoMoreInteractions(mockHttpServletRequestToMockServerRequestDecoder);
@@ -318,13 +319,13 @@ public class ProxyServletTest {
         String requestBytes = "requestBytes";
         httpServletRequest.setContent(requestBytes.getBytes());
         when(mockVerificationSerializer.deserialize(requestBytes)).thenReturn(verification);
-        when(mockLogFilter.verify(verification)).thenReturn("");
+        when(mockRequestLogFilter.verify(verification)).thenReturn("");
 
         // when
         proxyServlet.doPut(httpServletRequest, httpServletResponse);
 
         // then
-        verify(mockLogFilter).verify(verification);
+        verify(mockRequestLogFilter).verify(verification);
         assertThat(httpServletResponse.getContentAsString(), is(""));
         assertThat(httpServletResponse.getStatus(), is(HttpStatusCode.ACCEPTED_202.code()));
         verifyNoMoreInteractions(mockHttpServletRequestToMockServerRequestDecoder);
@@ -340,13 +341,13 @@ public class ProxyServletTest {
         String requestBytes = "requestBytes";
         httpServletRequest.setContent(requestBytes.getBytes());
         when(mockVerificationSequenceSerializer.deserialize(requestBytes)).thenReturn(verification);
-        when(mockLogFilter.verify(verification)).thenReturn("verification_error");
+        when(mockRequestLogFilter.verify(verification)).thenReturn("verification_error");
 
         // when
         proxyServlet.doPut(httpServletRequest, httpServletResponse);
 
         // then
-        verify(mockLogFilter).verify(verification);
+        verify(mockRequestLogFilter).verify(verification);
         assertThat(httpServletResponse.getContentAsString(), is("verification_error"));
         assertThat(httpServletResponse.getStatus(), is(HttpStatusCode.NOT_ACCEPTABLE_406.code()));
         verifyNoMoreInteractions(mockHttpServletRequestToMockServerRequestDecoder);
@@ -362,13 +363,13 @@ public class ProxyServletTest {
         String requestBytes = "requestBytes";
         httpServletRequest.setContent(requestBytes.getBytes());
         when(mockVerificationSequenceSerializer.deserialize(requestBytes)).thenReturn(verification);
-        when(mockLogFilter.verify(verification)).thenReturn("");
+        when(mockRequestLogFilter.verify(verification)).thenReturn("");
 
         // when
         proxyServlet.doPut(httpServletRequest, httpServletResponse);
 
         // then
-        verify(mockLogFilter).verify(verification);
+        verify(mockRequestLogFilter).verify(verification);
         assertThat(httpServletResponse.getContentAsString(), is(""));
         assertThat(httpServletResponse.getStatus(), is(HttpStatusCode.ACCEPTED_202.code()));
         verifyNoMoreInteractions(mockHttpServletRequestToMockServerRequestDecoder);
@@ -383,7 +384,7 @@ public class ProxyServletTest {
         proxyServlet.doPut(mockHttpServletRequest, mockHttpServletResponse);
 
         // then
-        verify(mockLogFilter).reset();
+        verify(mockRequestLogFilter).reset();
         assertEquals(HttpStatusCode.ACCEPTED_202.code(), mockHttpServletResponse.getStatus());
     }
 
@@ -398,7 +399,7 @@ public class ProxyServletTest {
         proxyServlet.doPut(mockHttpServletRequest, mockHttpServletResponse);
 
         // then
-        verify(mockLogFilter).clear(outboundHttpRequest);
+        verify(mockRequestLogFilter).clear(outboundHttpRequest);
         assertEquals(HttpStatusCode.ACCEPTED_202.code(), mockHttpServletResponse.getStatus());
     }
 
@@ -415,7 +416,7 @@ public class ProxyServletTest {
         proxyServlet.doPut(mockHttpServletRequest, mockHttpServletResponse);
 
         // then
-        verify(mockLogFilter).clear(outboundHttpRequest);
+        verify(mockRequestLogFilter).clear(outboundHttpRequest);
         assertEquals(HttpStatusCode.ACCEPTED_202.code(), mockHttpServletResponse.getStatus());
     }
 
@@ -432,7 +433,7 @@ public class ProxyServletTest {
         proxyServlet.doPut(mockHttpServletRequest, mockHttpServletResponse);
 
         // then
-        verify(mockLogFilter).clear(outboundHttpRequest);
+        verify(mockRequestLogFilter).clear(outboundHttpRequest);
         assertEquals(HttpStatusCode.ACCEPTED_202.code(), mockHttpServletResponse.getStatus());
     }
 }

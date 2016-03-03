@@ -3,8 +3,6 @@ package org.mockserver.mockserver;
 import com.google.common.base.Charsets;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.embedded.EmbeddedChannel;
-import io.netty.handler.codec.http.HttpHeaders;
-import io.netty.handler.codec.http.HttpResponseStatus;
 import org.hamcrest.collection.IsIterableContainingInOrder;
 import org.junit.After;
 import org.junit.Before;
@@ -15,8 +13,7 @@ import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.client.serialization.VerificationSequenceSerializer;
 import org.mockserver.client.serialization.VerificationSerializer;
-import org.mockserver.configuration.ConfigurationProperties;
-import org.mockserver.filters.LogFilter;
+import org.mockserver.filters.RequestLogFilter;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
@@ -25,10 +22,6 @@ import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.model.*;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
-
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.Arrays;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
@@ -64,7 +57,7 @@ public class MockServerHandlerConnectionOptionsTest {
     @Mock
     private VerificationSequence mockVerificationSequence;
     // mockserver
-    private LogFilter mockLogFilter;
+    private RequestLogFilter mockRequestLogFilter;
     private MockServerMatcher mockMockServerMatcher;
     private MockServer mockMockServer;
     @Mock
@@ -89,10 +82,10 @@ public class MockServerHandlerConnectionOptionsTest {
     @Before
     public void setupFixture() {
         // given - a mock server handler
-        mockLogFilter = mock(LogFilter.class);
+        mockRequestLogFilter = mock(RequestLogFilter.class);
         mockMockServerMatcher = mock(MockServerMatcher.class);
         mockMockServer = mock(MockServer.class);
-        mockServerHandler = new MockServerHandler(mockMockServer, mockMockServerMatcher, mockLogFilter);
+        mockServerHandler = new MockServerHandler(mockMockServer, mockMockServerMatcher, mockRequestLogFilter);
         embeddedChannel = new EmbeddedChannel(mockServerHandler);
 
         initMocks(this);
