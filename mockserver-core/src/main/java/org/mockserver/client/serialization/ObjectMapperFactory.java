@@ -21,7 +21,13 @@ import org.mockserver.model.*;
  */
 public class ObjectMapperFactory {
 
+    private static final ObjectMapper OBJECT_MAPPER = buildObjectMapper();
+
     public static ObjectMapper createObjectMapper() {
+        return OBJECT_MAPPER;
+    }
+
+    private static ObjectMapper buildObjectMapper() {
         ObjectMapper objectMapper = new ObjectMapper();
 
         // ignore failures
@@ -50,7 +56,6 @@ public class ObjectMapperFactory {
         // register our own module with our serializers and deserializers
         Module gameServerModule = new Module();
         objectMapper.registerModule(gameServerModule);
-
         return objectMapper;
     }
 
