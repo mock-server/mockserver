@@ -1,7 +1,6 @@
 language: java
 sudo: false
 
-#  - "./scripts/install_ca_certificate.sh"
 #before_install:
 #  - "travis_retry mvn test-compile -DnonReleaseBuild=false -Dmaven.test.skip=true -DskipTests=true"
 
