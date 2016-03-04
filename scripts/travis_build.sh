@@ -26,11 +26,24 @@ else
     exit 1
 fi
 
-if [ "${TRAVIS_PULL_REQUEST}" = "false" ] ; then
-    rm -rf $current_directory/target/travis
-    git clone -b travis `git config --get remote.origin.url` $current_directory/target/travis
-    mvn deploy --settings $current_directory/target/travis/settings.xml -Djava.security.egd=file:/dev/./urandom
-else
-    mvn package -Dmaven-invoker-parallel-threads=2 -Djava.security.egd=file:/dev/./urandom
-fi
+rm -rf $current_directory/target/travis
+git clone -b travis `git config --get remote.origin.url` $current_directory/target/travis
+
+function runSubModule {
+    echo "Running Module: $1"
+    cd $1
+    if [ "${TRAVIS_PULL_REQUEST}" = "false" ] ; then
+        mvn deploy --settings $current_directory/../target/travis/settings.xml -Djava.security.egd=file:/dev/./urandom
+    else
+        mvn package -Dmaven-invoker-parallel-threads=2 -Djava.security.egd=file:/dev/./urandom
+    fi
+}
+
+MODULE_LIST="mockserver-logging mockserver-core mockserver-client-java mockserver-integration-testing mockserver-netty mockserver-maven-plugin mockserver-client-ruby mockserver-war mockserver-proxy-war mockserver-maven-plugin-integration-tests mockserver-client-javascript mockserver-examples"
+
+for module in $MODULE_LIST; do
+    (runSubModule $module);
+done
+
+
 
