@@ -33,7 +33,7 @@ function runSubModule {
     echo "Running Module: $1"
     cd $1
     if [ "${TRAVIS_PULL_REQUEST}" = "false" ] ; then
-        mvn deploy --settings $current_directory/../target/travis/settings.xml -Djava.security.egd=file:/dev/./urandom
+        mvn deploy --settings $current_directory/target/travis/settings.xml -Djava.security.egd=file:/dev/./urandom
     else
         mvn package -Dmaven-invoker-parallel-threads=2 -Djava.security.egd=file:/dev/./urandom
     fi
