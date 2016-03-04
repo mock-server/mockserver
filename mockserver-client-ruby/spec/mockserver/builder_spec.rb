@@ -87,4 +87,50 @@ describe MockServer::Model::DSL do
     expect(to_camelized_hash(at_least(2))).to eq('unlimited' => 'true', 'remainingTimes' => 2)
   end
 
+
+  describe 'transforming request body' do
+    let(:expectation) { MockServer::Model::Expectation.new }
+    let(:request) { MockServer::Model::Request.new }
+
+    [{type: :XPATH, value: '/mock/instance'},
+     {type: :REGEX, value: '\d+.\d+'},
+     {type: :STRING, value: 'Mockserver is great'}].each do |request_hash|
+
+      it "generates a request body of type #{request_hash[:type]}" do
+        request.body = MockServer::Model::Body.new(request_hash)
+        expectation.request = request
+
+        expect(to_camelized_hash(expectation)).to eq({
+          "httpRequest" => {
+          "method" => "GET",
+            "body" => {
+              "type"  => request_hash[:type].to_s,
+              "value" => request_hash[:value].to_s
+            }
+          }
+        })
+      end
+    end
+
+    context 'when request body type binary' do
+      let(:body) do
+        MockServer::Model::Body.new(type: :BINARY, value: 'TW9ja3NlcnZlciBpcyBncmVhdAo=')
+      end
+
+      it 'correctly transforms to a string and updates the object' do
+        request.body = body
+        expectation.request = request
+
+        expect(to_camelized_hash(expectation)).to eq({
+          "httpRequest" => {
+            "method" => "GET",
+            "body" => {
+              "type" => "STRING",
+              "value" => "Mockserver is great\n"
+            }
+          }
+        })
+      end
+    end
+  end
 end
