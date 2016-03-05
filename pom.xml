@@ -62,7 +62,7 @@
     <modules>
         <module>mockserver-logging</module>
         <module>mockserver-client-java</module>
-        <module>mockserver-client-ruby</module>
+<!--        <module>mockserver-client-ruby</module>-->
         <module>mockserver-core</module>
         <module>mockserver-integration-testing</module>
         <module>mockserver-netty</module>
@@ -70,8 +70,8 @@
         <module>mockserver-proxy-war</module>
         <module>mockserver-maven-plugin</module>
         <module>mockserver-maven-plugin-integration-tests</module>
-        <module>mockserver-client-javascript</module>
-        <module>mockserver-examples</module>
+        <!--<module>mockserver-client-javascript</module>-->
+        <!--<module>mockserver-examples</module>-->
     </modules>
 
     <dependencyManagement>

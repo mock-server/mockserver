@@ -65,9 +65,9 @@ public class MockServerMatcherSequentialResponsesTest {
         mockServerMatcher.when(new HttpRequest().withPath("somepath")).thenRespond(httpResponse[2].withBody("somebody3"));
 
         // then
-        assertEquals(httpResponse[0], mockServerMatcher.handle(new HttpRequest().withPath("somepath")));
-        assertEquals(httpResponse[0], mockServerMatcher.handle(new HttpRequest().withPath("somepath")));
         assertEquals(httpResponse[1], mockServerMatcher.handle(new HttpRequest().withPath("somepath")));
+        assertEquals(httpResponse[0], mockServerMatcher.handle(new HttpRequest().withPath("somepath")));
+        assertEquals(httpResponse[0], mockServerMatcher.handle(new HttpRequest().withPath("somepath")));
         assertEquals(httpResponse[2], mockServerMatcher.handle(new HttpRequest().withPath("somepath")));
     }
 
