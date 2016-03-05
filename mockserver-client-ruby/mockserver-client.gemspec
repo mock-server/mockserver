@@ -29,6 +29,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency 'hashie', '~> 3.0'
   spec.add_dependency 'json', '~> 1.8'
+  spec.add_dependency 'json_pure', '~> 1.8'
   spec.add_dependency 'activesupport', '~> 4.1'
   spec.add_dependency 'rest-client', '~> 1.7'
   spec.add_dependency 'logging_factory', '~> 0.0.2'
