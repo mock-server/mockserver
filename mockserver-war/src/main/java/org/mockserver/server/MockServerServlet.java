@@ -46,53 +46,25 @@ public class MockServerServlet extends HttpServlet {
     private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer();
 
     @Override
-    public void doGet(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
-        mockResponse(httpServletRequest, httpServletResponse);
-    }
+    public void service(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
 
-    @Override
-    public void doPost(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
-        mockResponse(httpServletRequest, httpServletResponse);
-    }
-
-    @Override
-    protected void doHead(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
-        mockResponse(httpServletRequest, httpServletResponse);
-    }
-
-    @Override
-    protected void doDelete(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
-        mockResponse(httpServletRequest, httpServletResponse);
-    }
-
-    @Override
-    protected void doOptions(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
-        mockResponse(httpServletRequest, httpServletResponse);
-    }
-
-    @Override
-    protected void doTrace(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
-        mockResponse(httpServletRequest, httpServletResponse);
-    }
-
-    @Override
-    public void doPut(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
-
+        HttpRequest request = null;
         try {
-            String requestPath = retrieveRequestPath(httpServletRequest);
-            if (requestPath.equals("/status")) {
+            request = httpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(httpServletRequest);
+
+            if (request.matches("PUT", "/status")) {
 
                 httpServletResponse.setStatus(HttpStatusCode.OK_200.code());
                 httpServletResponse.setHeader(HttpHeaders.Names.CONTENT_TYPE, MediaType.JSON_UTF_8.toString());
                 IOStreamUtils.writeToOutputStream(portBindingSerializer.serialize(portBinding(httpServletRequest.getLocalPort())).getBytes(), httpServletResponse);
 
-            } else if (requestPath.equals("/bind")) {
+            } else if (request.matches("PUT", "/bind")) {
 
                 httpServletResponse.setStatus(HttpStatusCode.NOT_IMPLEMENTED_501.code());
 
-            } else if (requestPath.equals("/expectation")) {
+            } else if (request.matches("PUT", "/expectation")) {
 
-                Expectation expectation = expectationSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest));
+                Expectation expectation = expectationSerializer.deserialize(request.getBodyAsString());
 
                 Action action = expectation.getAction(false);
                 if (validateSupportedFeatures(action, httpServletResponse)) {
@@ -100,41 +72,41 @@ public class MockServerServlet extends HttpServlet {
                     httpServletResponse.setStatus(HttpStatusCode.CREATED_201.code());
                 }
 
-            } else if (requestPath.equals("/clear")) {
+            } else if (request.matches("PUT", "/clear")) {
 
-                HttpRequest httpRequest = httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest));
+                HttpRequest httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
                 requestLogFilter.clear(httpRequest);
                 mockServerMatcher.clear(httpRequest);
                 httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
 
-            } else if (requestPath.equals("/reset")) {
+            } else if (request.matches("PUT", "/reset")) {
 
                 requestLogFilter.reset();
                 mockServerMatcher.reset();
                 httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
 
-            } else if (requestPath.equals("/dumpToLog")) {
+            } else if (request.matches("PUT", "/dumpToLog")) {
 
-                mockServerMatcher.dumpToLog(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
+                mockServerMatcher.dumpToLog(httpRequestSerializer.deserialize(request.getBodyAsString()));
                 httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
 
-            } else if (requestPath.equals("/retrieve")) {
+            } else if (request.matches("PUT", "/retrieve")) {
 
-                if ("expectation".equals(httpServletRequest.getParameter("type"))) {
-                    Expectation[] expectations = mockServerMatcher.retrieve(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
+                if (request.hasQueryStringParameter("type", "expectation")) {
+                    Expectation[] expectations = mockServerMatcher.retrieve(httpRequestSerializer.deserialize(request.getBodyAsString()));
                     httpServletResponse.setStatus(HttpStatusCode.OK_200.code());
                     httpServletResponse.setHeader(HttpHeaders.Names.CONTENT_TYPE, MediaType.JSON_UTF_8.toString());
                     IOStreamUtils.writeToOutputStream(expectationSerializer.serialize(expectations).getBytes(), httpServletResponse);
                 } else {
-                    HttpRequest[] requests = requestLogFilter.retrieve(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
+                    HttpRequest[] requests = requestLogFilter.retrieve(httpRequestSerializer.deserialize(request.getBodyAsString()));
                     httpServletResponse.setStatus(HttpStatusCode.OK_200.code());
                     httpServletResponse.setHeader(HttpHeaders.Names.CONTENT_TYPE, MediaType.JSON_UTF_8.toString());
                     IOStreamUtils.writeToOutputStream(httpRequestSerializer.serialize(requests).getBytes(), httpServletResponse);
                 }
 
-            } else if (requestPath.equals("/verify")) {
+            } else if (request.matches("PUT", "/verify")) {
 
-                String result = requestLogFilter.verify(verificationSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
+                String result = requestLogFilter.verify(verificationSerializer.deserialize(request.getBodyAsString()));
                 if (result.isEmpty()) {
                     httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
                 } else {
@@ -143,9 +115,9 @@ public class MockServerServlet extends HttpServlet {
                     IOStreamUtils.writeToOutputStream(result.getBytes(), httpServletResponse);
                 }
 
-            } else if (requestPath.equals("/verifySequence")) {
+            } else if (request.matches("PUT", "/verifySequence")) {
 
-                String result = requestLogFilter.verify(verificationSequenceSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
+                String result = requestLogFilter.verify(verificationSequenceSerializer.deserialize(request.getBodyAsString()));
                 if (result.isEmpty()) {
                     httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
                 } else {
@@ -154,31 +126,21 @@ public class MockServerServlet extends HttpServlet {
                     IOStreamUtils.writeToOutputStream(result.getBytes(), httpServletResponse);
                 }
 
-            } else if (requestPath.equals("/stop")) {
+            } else if (request.matches("PUT", "/stop")) {
 
                 httpServletResponse.setStatus(HttpStatusCode.NOT_IMPLEMENTED_501.code());
 
             } else {
 
-                mockResponse(httpServletRequest, httpServletResponse);
+                Action action = mockServerMatcher.handle(request);
+                if (validateSupportedFeatures(action, httpServletResponse)) {
+                    mapResponse(actionHandler.processAction(action, request), httpServletResponse);
+                }
 
             }
         } catch (Exception e) {
-            logger.error("Exception processing " + httpServletRequest, e);
+            logger.error("Exception processing " + (request != null ? request : httpServletRequest), e);
             httpServletResponse.setStatus(HttpStatusCode.BAD_REQUEST_400.code());
-        }
-    }
-
-    private String retrieveRequestPath(HttpServletRequest httpServletRequest) {
-        return httpServletRequest.getPathInfo() != null && httpServletRequest.getContextPath() != null ? httpServletRequest.getPathInfo() : httpServletRequest.getRequestURI();
-    }
-
-    private void mockResponse(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
-        HttpRequest httpRequest = httpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(httpServletRequest);
-
-        Action action = mockServerMatcher.handle(httpRequest);
-        if (validateSupportedFeatures(action, httpServletResponse)) {
-            mapResponse(actionHandler.processAction(action, httpRequest), httpServletResponse);
         }
     }
 

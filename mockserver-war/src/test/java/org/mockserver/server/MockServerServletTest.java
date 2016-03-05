@@ -82,7 +82,7 @@ public class MockServerServletTest {
         when(mockActionHandler.processAction(any(HttpResponse.class), any(HttpRequest.class))).thenReturn(response);
 
         // when
-        mockServerServlet.doGet(httpServletRequest, httpServletResponse);
+        mockServerServlet.service(httpServletRequest, httpServletResponse);
 
         // then
         when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(httpServletRequest)).thenReturn(request);
@@ -105,7 +105,7 @@ public class MockServerServletTest {
         when(mockActionHandler.processAction(any(HttpResponse.class), any(HttpRequest.class))).thenReturn(response);
 
         // when
-        mockServerServlet.doGet(httpServletRequest, httpServletResponse);
+        mockServerServlet.service(httpServletRequest, httpServletResponse);
 
         // then
         when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(httpServletRequest)).thenReturn(request);
@@ -130,7 +130,7 @@ public class MockServerServletTest {
         when(mockActionHandler.processAction(any(HttpForward.class), any(HttpRequest.class))).thenReturn(response);
 
         // when
-        mockServerServlet.doGet(httpServletRequest, httpServletResponse);
+        mockServerServlet.service(httpServletRequest, httpServletResponse);
 
         // then
         when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(httpServletRequest)).thenReturn(request);
@@ -154,7 +154,7 @@ public class MockServerServletTest {
         when(mockActionHandler.processAction(any(HttpForward.class), any(HttpRequest.class))).thenReturn(response);
 
         // when
-        mockServerServlet.doGet(httpServletRequest, httpServletResponse);
+        mockServerServlet.service(httpServletRequest, httpServletResponse);
 
         // then
         when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(httpServletRequest)).thenReturn(request);
@@ -179,7 +179,7 @@ public class MockServerServletTest {
         when(mockActionHandler.processAction(any(HttpCallback.class), any(HttpRequest.class))).thenReturn(response);
 
         // when
-        mockServerServlet.doGet(httpServletRequest, httpServletResponse);
+        mockServerServlet.service(httpServletRequest, httpServletResponse);
 
         // then
         when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(httpServletRequest)).thenReturn(request);
@@ -192,20 +192,24 @@ public class MockServerServletTest {
     @Test
     public void setupExpectation() throws IOException {
         // given
-        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/expectation");
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
         HttpRequest httpRequest = mock(HttpRequest.class);
         Times times = mock(Times.class);
         TimeToLive timeToLive = mock(TimeToLive.class);
         Expectation expectation = new Expectation(httpRequest, times, timeToLive).thenRespond(new HttpResponse());
 
-        String requestBytes = "requestBytes";
-        httpServletRequest.setContent(requestBytes.getBytes());
-        when(mockExpectationSerializer.deserialize(requestBytes)).thenReturn(expectation);
+        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class)))
+                .thenReturn(
+                        request()
+                                .withMethod("PUT")
+                                .withPath("/expectation")
+                                .withBody("requestBytes")
+                );
+        when(mockExpectationSerializer.deserialize("requestBytes")).thenReturn(expectation);
         when(mockMockServerMatcher.when(same(httpRequest), same(times), same(timeToLive))).thenReturn(expectation);
 
         // when
-        mockServerServlet.doPut(httpServletRequest, httpServletResponse);
+        mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
 
         // then
         verify(mockMockServerMatcher).when(same(httpRequest), same(times), same(timeToLive));
@@ -243,7 +247,7 @@ public class MockServerServletTest {
         httpServletRequest.setContent(jsonExpectation.getBytes());
 
         // when
-        new MockServerServlet().doPut(httpServletRequest, httpServletResponse);
+        new MockServerServlet().service(httpServletRequest, httpServletResponse);
 
         // then
         assertEquals(httpServletResponse.getStatus(), HttpServletResponse.SC_CREATED);
@@ -262,7 +266,7 @@ public class MockServerServletTest {
         httpServletRequest.setContent(jsonExpectation.getBytes());
 
         // when
-        new MockServerServlet().doPut(httpServletRequest, httpServletResponse);
+        new MockServerServlet().service(httpServletRequest, httpServletResponse);
 
         // then
         assertEquals(httpServletResponse.getStatus(), HttpServletResponse.SC_CREATED);
@@ -288,7 +292,7 @@ public class MockServerServletTest {
         httpServletRequest.setContent(jsonExpectation.getBytes());
 
         // when
-        new MockServerServlet().doPut(httpServletRequest, httpServletResponse);
+        new MockServerServlet().service(httpServletRequest, httpServletResponse);
 
         // then
         assertEquals(httpServletResponse.getStatus(), HttpServletResponse.SC_CREATED);
@@ -298,66 +302,80 @@ public class MockServerServletTest {
     public void shouldClearExpectations() throws IOException {
         // given
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/clear");
         HttpRequest httpRequest = new HttpRequest();
 
-        String requestBytes = "requestBytes";
-        httpServletRequest.setContent(requestBytes.getBytes());
-        when(mockHttpRequestSerializer.deserialize(requestBytes)).thenReturn(httpRequest);
+        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class)))
+                .thenReturn(
+                        request()
+                                .withMethod("PUT")
+                                .withPath("/clear")
+                                .withBody("requestBytes")
+                );
+        when(mockHttpRequestSerializer.deserialize("requestBytes")).thenReturn(httpRequest);
 
         // when
-        mockServerServlet.doPut(httpServletRequest, httpServletResponse);
+        mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
 
         // then
         verify(mockMockServerMatcher).clear(httpRequest);
-        verifyNoMoreInteractions(mockHttpServletRequestToMockServerRequestDecoder);
     }
 
     @Test
     public void shouldResetMockServer() throws IOException {
         // given
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/reset");
         Expectation expectation = new Expectation(new HttpRequest(), Times.unlimited(), TimeToLive.unlimited()).thenRespond(new HttpResponse());
 
-        String requestBytes = "requestBytes";
-        httpServletRequest.setContent(requestBytes.getBytes());
-        when(mockExpectationSerializer.deserialize(requestBytes)).thenReturn(expectation);
+        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class)))
+                .thenReturn(
+                        request()
+                                .withMethod("PUT")
+                                .withPath("/reset")
+                                .withBody("requestBytes")
+                );
+        when(mockExpectationSerializer.deserialize("requestBytes")).thenReturn(expectation);
 
         // when
-        mockServerServlet.doPut(httpServletRequest, httpServletResponse);
+        mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
 
         // then
         verify(mockMockServerMatcher).reset();
-        verifyNoMoreInteractions(mockHttpServletRequestToMockServerRequestDecoder);
     }
 
     @Test
     public void shouldDumpAllExpectationsToLog() throws IOException {
         // given
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/dumpToLog");
         HttpRequest httpRequest = new HttpRequest();
 
-        String requestBytes = "requestBytes";
-        httpServletRequest.setContent(requestBytes.getBytes());
-        when(mockHttpRequestSerializer.deserialize(requestBytes)).thenReturn(httpRequest);
+        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class)))
+                .thenReturn(
+                        request()
+                                .withMethod("PUT")
+                                .withPath("/dumpToLog")
+                                .withBody("requestBytes")
+                );
+        when(mockHttpRequestSerializer.deserialize("requestBytes")).thenReturn(httpRequest);
 
         // when
-        mockServerServlet.doPut(httpServletRequest, httpServletResponse);
+        mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
 
         // then
-        verify(mockHttpRequestSerializer).deserialize(requestBytes);
+        verify(mockHttpRequestSerializer).deserialize("requestBytes");
         verify(mockMockServerMatcher).dumpToLog(httpRequest);
-        verifyNoMoreInteractions(mockHttpServletRequestToMockServerRequestDecoder);
     }
 
     @Test
     public void shouldReturnRecordedRequests() throws IOException {
         // given
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/retrieve");
-        httpServletRequest.setContent("requestBytes".getBytes());
+        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class)))
+                .thenReturn(
+                        request()
+                                .withMethod("PUT")
+                                .withPath("/retrieve")
+                                .withBody("requestBytes")
+                );
 
         // and - a request matcher
         HttpRequest request = new HttpRequest();
@@ -369,22 +387,26 @@ public class MockServerServletTest {
         when(mockHttpRequestSerializer.serialize(httpRequests)).thenReturn("request_response");
 
         // when
-        mockServerServlet.doPut(httpServletRequest, httpServletResponse);
+        mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
 
         // then
         verify(mockRequestLogFilter).retrieve(request);
         assertThat(httpServletResponse.getContentAsByteArray(), is("request_response".getBytes()));
         assertThat(httpServletResponse.getStatus(), is(HttpStatusCode.OK_200.code()));
-        verifyNoMoreInteractions(mockHttpServletRequestToMockServerRequestDecoder);
     }
 
     @Test
     public void shouldReturnSetupExpectationsRequests() throws IOException {
         // given
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/retrieve");
-        httpServletRequest.setContent("requestBytes".getBytes());
-        httpServletRequest.setParameter("type", "expectation");
+        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class)))
+                .thenReturn(
+                        request()
+                                .withMethod("PUT")
+                                .withPath("/retrieve")
+                                .withQueryStringParameter("type", "expectation")
+                                .withBody("requestBytes")
+                );
 
         // and - a request matcher
         HttpRequest request = new HttpRequest();
@@ -397,101 +419,112 @@ public class MockServerServletTest {
         when(mockExpectationSerializer.serialize(expectations)).thenReturn("expectations_response");
 
         // when
-        mockServerServlet.doPut(httpServletRequest, httpServletResponse);
+        mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
 
         // then
         verify(mockMockServerMatcher).retrieve(request);
         assertThat(httpServletResponse.getContentAsByteArray(), is("expectations_response".getBytes()));
         assertThat(httpServletResponse.getStatus(), is(HttpStatusCode.OK_200.code()));
-        verifyNoMoreInteractions(mockHttpServletRequestToMockServerRequestDecoder);
     }
 
     @Test
     public void shouldVerifyRequestNotMatching() throws IOException {
         // given
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/verify");
         Verification verification = new Verification().withRequest(new HttpRequest()).withTimes(VerificationTimes.once());
 
-        String requestBytes = "requestBytes";
-        httpServletRequest.setContent(requestBytes.getBytes());
-        when(mockVerificationSerializer.deserialize(requestBytes)).thenReturn(verification);
+        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class)))
+                .thenReturn(
+                        request()
+                                .withMethod("PUT")
+                                .withPath("/verify")
+                                .withBody("requestBytes")
+                );
+        when(mockVerificationSerializer.deserialize("requestBytes")).thenReturn(verification);
         when(mockRequestLogFilter.verify(verification)).thenReturn("verification_error");
 
         // when
-        mockServerServlet.doPut(httpServletRequest, httpServletResponse);
+        mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
 
         // then
         verify(mockRequestLogFilter).verify(verification);
         assertThat(httpServletResponse.getContentAsString(), is("verification_error"));
         assertThat(httpServletResponse.getStatus(), is(HttpStatusCode.NOT_ACCEPTABLE_406.code()));
-        verifyNoMoreInteractions(mockHttpServletRequestToMockServerRequestDecoder);
     }
 
     @Test
     public void shouldVerifyRequestMatching() throws IOException {
         // given
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/verify");
         Verification verification = new Verification().withRequest(new HttpRequest()).withTimes(VerificationTimes.once());
 
-        String requestBytes = "requestBytes";
-        httpServletRequest.setContent(requestBytes.getBytes());
-        when(mockVerificationSerializer.deserialize(requestBytes)).thenReturn(verification);
+        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class)))
+                .thenReturn(
+                        request()
+                                .withMethod("PUT")
+                                .withPath("/verify")
+                                .withBody("requestBytes")
+                );
+        when(mockVerificationSerializer.deserialize("requestBytes")).thenReturn(verification);
         when(mockRequestLogFilter.verify(verification)).thenReturn("");
 
         // when
-        mockServerServlet.doPut(httpServletRequest, httpServletResponse);
+        mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
 
         // then
         verify(mockRequestLogFilter).verify(verification);
         assertThat(httpServletResponse.getContentAsString(), is(""));
         assertThat(httpServletResponse.getStatus(), is(HttpStatusCode.ACCEPTED_202.code()));
-        verifyNoMoreInteractions(mockHttpServletRequestToMockServerRequestDecoder);
     }
 
     @Test
     public void shouldVerifySequenceRequestNotMatching() throws IOException {
         // given
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/verifySequence");
         VerificationSequence verification = new VerificationSequence().withRequests(request("one"), request("two"));
 
-        String requestBytes = "requestBytes";
-        httpServletRequest.setContent(requestBytes.getBytes());
-        when(mockVerificationSequenceSerializer.deserialize(requestBytes)).thenReturn(verification);
+        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class)))
+                .thenReturn(
+                        request()
+                                .withMethod("PUT")
+                                .withPath("/verifySequence")
+                                .withBody("requestBytes")
+                );
+        when(mockVerificationSequenceSerializer.deserialize("requestBytes")).thenReturn(verification);
         when(mockRequestLogFilter.verify(verification)).thenReturn("verification_error");
 
         // when
-        mockServerServlet.doPut(httpServletRequest, httpServletResponse);
+        mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
 
         // then
         verify(mockRequestLogFilter).verify(verification);
         assertThat(httpServletResponse.getContentAsString(), is("verification_error"));
         assertThat(httpServletResponse.getStatus(), is(HttpStatusCode.NOT_ACCEPTABLE_406.code()));
-        verifyNoMoreInteractions(mockHttpServletRequestToMockServerRequestDecoder);
     }
 
     @Test
     public void shouldVerifySequenceRequestMatching() throws IOException {
         // given
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/verifySequence");
         VerificationSequence verification = new VerificationSequence().withRequests(request("one"), request("two"));
 
-        String requestBytes = "requestBytes";
-        httpServletRequest.setContent(requestBytes.getBytes());
-        when(mockVerificationSequenceSerializer.deserialize(requestBytes)).thenReturn(verification);
+        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class)))
+                .thenReturn(
+                        request()
+                                .withMethod("PUT")
+                                .withPath("/verifySequence")
+                                .withBody("requestBytes")
+                );
+        when(mockVerificationSequenceSerializer.deserialize("requestBytes")).thenReturn(verification);
         when(mockRequestLogFilter.verify(verification)).thenReturn("");
 
         // when
-        mockServerServlet.doPut(httpServletRequest, httpServletResponse);
+        mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
 
         // then
         verify(mockRequestLogFilter).verify(verification);
         assertThat(httpServletResponse.getContentAsString(), is(""));
         assertThat(httpServletResponse.getStatus(), is(HttpStatusCode.ACCEPTED_202.code()));
-        verifyNoMoreInteractions(mockHttpServletRequestToMockServerRequestDecoder);
     }
 
     @Test
@@ -500,9 +533,15 @@ public class MockServerServletTest {
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
         MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/status");
         httpServletRequest.setLocalPort(1080);
+        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(httpServletRequest))
+                .thenReturn(
+                        request()
+                                .withMethod("PUT")
+                                .withPath("/status")
+                );
 
         // when
-        mockServerServlet.doPut(httpServletRequest, httpServletResponse);
+        mockServerServlet.service(httpServletRequest, httpServletResponse);
 
         // then
         assertThat(httpServletResponse.getContentAsString(), is("" +
@@ -516,10 +555,15 @@ public class MockServerServletTest {
     public void shouldPreventBindingToAdditionalPort() throws IOException {
         // given
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/bind");
+        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class)))
+                .thenReturn(
+                        request()
+                                .withMethod("PUT")
+                                .withPath("/bind")
+                );
 
         // when
-        mockServerServlet.doPut(httpServletRequest, httpServletResponse);
+        mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
 
         // then
         assertThat(httpServletResponse.getStatus(), is(HttpStatusCode.NOT_IMPLEMENTED_501.code()));
