@@ -28,7 +28,7 @@
 1. brew style mockserver
 1. brew bottle --rb mockserver
 1. brew uninstall --force mockserver
-1. brew install ./mockserver-3.10.1.yosemite.bottle.tar.gz
+1. brew install ./mockserver-3.10.3.yosemite.bottle.tar.gz
 1. brew test --verbose mockserver
 1. brew uninstall --force mockserver
 1. brew cleanup --prune=30
