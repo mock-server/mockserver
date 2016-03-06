@@ -1,11 +1,10 @@
 # create branch
 
 1. git remote -v
-1. git remote add upstream https://github.com/ORIGINAL_OWNER/ORIGINAL_REPOSITORY.git
+1. git remote add upstream https://github.com/ORIGINAL_OWNER/ORIGINAL_REPOSITORY.git (i.e. git remote add upstream https://github.com/Homebrew/homebrew.git)
 1. git remote -v
 1. git fetch upstream
 1. git checkout master
-1. git merge upstream/master
 1. git merge upstream/master
 1. git branch -D mockserver
 1. git push origin --delete mockserver
@@ -14,9 +13,9 @@
 
 # run build (following build steps are typically run on Jenkins when a Homebrew pull-request is tested)
 
+1. brew update
 1. mv /usr/local/Library/Formula/mockserver.rb /usr/local/Library/Formula/mockserver.rb_old
 1. ln -s ~/git/homebrew/Library/Formula/mockserver.rb /usr/local/Library/Formula/mockserver.rb
-1. brew update
 1. brew doctor
 1. brew --env
 1. brew config

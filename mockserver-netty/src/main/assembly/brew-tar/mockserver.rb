@@ -3,14 +3,9 @@ class Mockserver < Formula
   homepage "http://www.mock-server.com/"
   url "https://oss.sonatype.org/content/repositories/releases/org/mock-server/mockserver-netty/3.10.3/mockserver-netty-3.10.3-brew-tar.tar"
   version "3.10.3"
-  sha256 "7d7166b752aabeb65a13a66e0f70653d8fd880a72f1c8d80192d771dc63a9eb9"
+  sha256 "d6b1f54787bfe3f5780a3298dd461c70232c787c9d99cacd83fc720d4cf222e3"
 
-  bottle do
-    cellar :any
-    sha256 "06500732332e945ded83457a81d68545f8434c7b9a3648e86c0f2219f9737f06" => :yosemite
-    sha256 "be8520628c465c397c0f87f9373573a98cd4e176c66e8ef4319106464341230f" => :mavericks
-    sha256 "1575d2991726bb2685b07dc7f1484b6a991644c68117c4ebeea060752e5c62ce" => :mountain_lion
-  end
+  bottle :unneeded
 
   depends_on :java => "1.6+"
 
