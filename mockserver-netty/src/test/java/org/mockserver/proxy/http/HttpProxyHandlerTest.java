@@ -121,6 +121,7 @@ public class HttpProxyHandlerTest {
 
         // then - filter and matcher is cleared
         verify(mockRequestLogFilter).clear(mockHttpRequest);
+        verify(mockRequestResponseLogFilter).clear(mockHttpRequest);
 
         // and - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse)embeddedChannel.readOutbound();
@@ -184,6 +185,33 @@ public class HttpProxyHandlerTest {
 
         // then - matching requests should be retrieved
         verify(mockRequestLogFilter).retrieve(mockHttpRequest);
+
+        // and - correct response written to ChannelHandlerContext
+        HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
+        assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.OK.code()));
+        assertThat(httpResponse.getBodyAsString(), is("requests"));
+    }
+
+    @Test
+    public void shouldReturnRecordedExpectations() {
+        // given
+        HttpRequest[] requests = {};
+        Expectation[] expectations={mockExpectation};
+        when(mockRequestLogFilter.retrieve(mockHttpRequest)).thenReturn(requests);
+        when(mockRequestResponseLogFilter.getExpectations(mockHttpRequest)).thenReturn(expectations);
+        when(mockExpectationSerializer.serialize(expectations)).thenReturn("requests");
+        HttpRequest request = request("/retrieve").withMethod("PUT").withQueryStringParameter("type","expectation").withBody("some_content");
+
+        // when
+        embeddedChannel.writeInbound(request);
+
+        // then - request deserialized
+        verify(mockHttpRequestSerializer).deserialize("some_content");
+
+        // then - matching requests should be retrieved
+        verify(mockRequestResponseLogFilter).getExpectations(mockHttpRequest);
+
+        verify(mockExpectationSerializer).serialize(expectations);
 
         // and - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
