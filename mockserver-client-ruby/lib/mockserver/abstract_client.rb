@@ -26,7 +26,8 @@ module MockServer
     def initialize(host, port)
       fail 'Cannot instantiate AbstractClient class. You must subclass it.' if self.class == AbstractClient
       fail 'Host/port must not be nil' unless host && port
-      @base   = RestClient::Resource.new("http://#{host}:#{port}", headers: { 'Content-Type' => 'application/json' })
+      protocol = ('https' if port == 443) || 'http'
+      @base   = RestClient::Resource.new("#{protocol}://#{host}:#{port}", headers: { 'Content-Type' => 'application/json' })
       @logger = ::LoggingFactory::DEFAULT_FACTORY.log(self.class)
     end
 
