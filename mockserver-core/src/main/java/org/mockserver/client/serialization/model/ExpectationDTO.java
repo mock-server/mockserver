@@ -15,6 +15,7 @@ public class ExpectationDTO extends ObjectWithJsonToString {
     private HttpForwardDTO httpForward;
     private HttpErrorDTO httpError;
     private HttpCallbackDTO httpCallback;
+    private HttpWebHookDTO httpWebHook;
     private TimesDTO times;
     private TimeToLiveDTO timeToLive;
 
@@ -40,6 +41,10 @@ public class ExpectationDTO extends ObjectWithJsonToString {
             if (httpCallback != null) {
                 this.httpCallback = new HttpCallbackDTO(httpCallback);
             }
+            HttpWebHook httpWebHook = expectation.getHttpWebHook();
+            if (httpWebHook != null) {
+                this.httpWebHook = new HttpWebHookDTO(httpWebHook);
+            }
             Times times = expectation.getTimes();
             if (times != null) {
                 this.times = new TimesDTO(times);
@@ -60,6 +65,7 @@ public class ExpectationDTO extends ObjectWithJsonToString {
         HttpForward httpForward = null;
         HttpError httpError = null;
         HttpCallback httpCallback = null;
+        HttpWebHook httpWebHook = null;
         Times times;
         TimeToLive timeToLive;
         if (this.httpRequest != null) {
@@ -77,6 +83,9 @@ public class ExpectationDTO extends ObjectWithJsonToString {
         if (this.httpCallback != null) {
             httpCallback = this.httpCallback.buildObject();
         }
+        if (this.httpWebHook != null) {
+            httpWebHook = this.httpWebHook.buildObject(httpResponse);
+        }
         if (this.times != null) {
             times = this.times.buildObject();
         } else {
@@ -87,7 +96,8 @@ public class ExpectationDTO extends ObjectWithJsonToString {
         } else {
             timeToLive = TimeToLive.unlimited();
         }
-        return new Expectation(httpRequest, times, timeToLive).thenRespond(httpResponse).thenForward(httpForward).thenError(httpError).thenCallback(httpCallback);
+        return new Expectation(httpRequest, times, timeToLive).thenRespond(httpResponse).thenForward(httpForward)
+                .thenError(httpError).thenCallback(httpCallback).thenHttpWebHook(httpWebHook);
     }
 
     public HttpRequestDTO getHttpRequest() {
@@ -133,6 +143,15 @@ public class ExpectationDTO extends ObjectWithJsonToString {
     public ExpectationDTO setHttpCallback(HttpCallbackDTO httpCallback) {
         this.httpCallback = httpCallback;
         return this;
+    }
+
+    public ExpectationDTO setHttpWebHook(HttpWebHookDTO httpWebHook) {
+        this.httpWebHook = httpWebHook;
+        return this;
+    }
+
+    public HttpWebHookDTO getHttpWebHook() {
+        return httpWebHook;
     }
 
     public TimesDTO getTimes() {

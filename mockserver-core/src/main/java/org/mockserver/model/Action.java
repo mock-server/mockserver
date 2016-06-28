@@ -14,6 +14,7 @@ public abstract class Action extends ObjectWithJsonToString {
         FORWARD,
         RESPONSE,
         CALLBACK,
+        RESPONSE_AND_WEBHOOKS,
         ERROR
     }
 }
