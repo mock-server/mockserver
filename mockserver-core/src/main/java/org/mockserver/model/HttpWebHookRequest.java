@@ -13,10 +13,9 @@ import org.slf4j.LoggerFactory;
  * author Valeriy Mironichev
  */
 public class HttpWebHookRequest extends ObjectWithReflectiveEqualsHashCodeToString {
-    
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private LogFormatter logFormatter = new LogFormatter(logger);
 
+    private final Logger logger = LoggerFactory.getLogger(HttpWebHookRequest.class);
+    private LogFormatter logFormatter = new LogFormatter(logger);
     private static NettyHttpClient httpClient = new NettyHttpClient();
     private static ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
     private String host;
@@ -33,53 +32,63 @@ public class HttpWebHookRequest extends ObjectWithReflectiveEqualsHashCodeToStri
         return host;
     }
 
-    public void setHost(String host) {
+    public HttpWebHookRequest setHost(String host) {
         this.host = host;
+        return this;
     }
 
     public int getPort() {
         return port;
     }
 
-    public void setPort(int port) {
+    public HttpWebHookRequest setPort(int port) {
         this.port = port;
+        return this;
     }
 
     public String getPath() {
         return path;
     }
 
-    public void setPath(String path) {
+    public HttpWebHookRequest setPath(String path) {
         this.path = path;
+        return this;
     }
 
     public String getPayload() {
         return payload;
     }
 
-    public void setPayload(String payload) {
+    public HttpWebHookRequest setPayload(String payload) {
         this.payload = payload;
+        return this;
     }
 
     public long getExecutionDelay() {
         return executionDelay;
     }
 
-    public void setExecutionDelay(long executionDelay) {
+    public HttpWebHookRequest setExecutionDelay(long executionDelay) {
         this.executionDelay = executionDelay;
+        return this;
     }
 
     public TimeUnit getExecutionDelayTimeUnit() {
-        return executionDelayTimeUnit;
+        return executionDelayTimeUnit == null ? TimeUnit.MILLISECONDS : executionDelayTimeUnit;
     }
 
-    public void setExecutionDelayTimeUnit(TimeUnit executionDelayTimeUnit) {
+    public HttpWebHookRequest setExecutionDelayTimeUnit(TimeUnit executionDelayTimeUnit) {
         this.executionDelayTimeUnit = executionDelayTimeUnit;
+        return this;
     }
 
     public void submit() {
         logFormatter.infoLog("Scheduling web hook for execution {}", this);
-        executorService.schedule(new Runnable() {
+        executorService.schedule(webHookRequest(), getExecutionDelay(), getExecutionDelayTimeUnit());
+    }
+
+    private Runnable webHookRequest() {
+        return new Runnable() {
             @Override
             public void run() {
                 HttpRequest httpRequest = new HttpRequest()
@@ -92,6 +101,6 @@ public class HttpWebHookRequest extends ObjectWithReflectiveEqualsHashCodeToStri
                 logFormatter.infoLog("Web hook executed, response recevied: {}" + System.getProperty("line.separator") + " for request:{}", response, httpRequest);
                 System.out.println("received response: " + response.getBodyAsString());
             }
-        }, executionDelay, executionDelayTimeUnit);
+        };
     }
 }

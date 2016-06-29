@@ -18,7 +18,7 @@ import static org.mockserver.model.HttpResponse.notFoundResponse;
  */
 public class HttpCallbackActionHandler {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private final Map<String, ExpectationCallback> httpCallBackRegistry = new ConcurrentHashMap<String, ExpectationCallback>();
+    private final ConcurrentHashMap<String, ExpectationCallback> httpCallBackRegistry = new ConcurrentHashMap<String, ExpectationCallback>();
 
     public HttpResponse handle(HttpCallback httpCallback, HttpRequest httpRequest) {
         return sendRequest(httpCallback, httpRequest);
