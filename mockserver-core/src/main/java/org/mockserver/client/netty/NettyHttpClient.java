@@ -1,3 +1,4 @@
+
 package org.mockserver.client.netty;
 
 import io.netty.bootstrap.Bootstrap;
@@ -36,7 +37,16 @@ public class NettyHttpClient {
         // configure the client
         EventLoopGroup group = new NioEventLoopGroup();
 
-        boolean isSsl = httpRequest.isSecure() != null && httpRequest.isSecure();
+        boolean isSsl;
+        switch (httpRequest.getProtocol()) {
+            case HTTPS:
+                isSsl = true;
+                break;
+            default:
+                isSsl = false;
+                break;
+        }
+        isSsl = isSsl || httpRequest.isSecure() != null && httpRequest.isSecure();
         try {
             final HttpClientInitializer channelInitializer = new HttpClientInitializer(isSsl);
 
