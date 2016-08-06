@@ -10,4 +10,4 @@ echo "-------------------------"
 echo "------- JAVA 1.6  -------"
 echo "-------------------------"
 echo
-/usr/local/Cellar/maven/3.2.3/bin/mvn clean install $1 -Dmaven-invoker-parallel-threads=4 -Djava.security.egd=file:/dev/./urandom
+/usr/local/Cellar/maven32/3.2.5/bin/mvn clean install $1 -Dmaven-invoker-parallel-threads=4 -Djava.security.egd=file:/dev/./urandom
