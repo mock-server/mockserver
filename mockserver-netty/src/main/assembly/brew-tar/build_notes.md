@@ -21,6 +21,7 @@
 1. brew config
 1. brew tests
 1. brew readall --syntax
+1. brew uninstall --force mockserver
 1. brew uses mockserver
 1. brew install --verbose --build-bottle mockserver
 1. brew audit mockserver --strict
