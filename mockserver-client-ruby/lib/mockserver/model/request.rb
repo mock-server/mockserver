@@ -74,6 +74,12 @@ module MockServer::Model
     end
 
     def request_from_json(payload)
+      body = payload['body']
+
+      if body && body.is_a?(String)
+        payload.merge!('body' => { 'type' => :STRING, 'value' => body })
+      end
+
       request = Request.new(symbolize_keys(payload))
       yield request if block_given?
       request
