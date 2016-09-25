@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <groupId>org.sonatype.oss</groupId>
         <artifactId>oss-parent</artifactId>
@@ -62,7 +63,8 @@
     <modules>
         <module>mockserver-logging</module>
         <module>mockserver-client-java</module>
-        <module>mockserver-client-ruby</module>
+        <!--<module>mockserver-client-ruby</module>--> // disabling ruby build to fix issue in drone.io, trying to
+        switch CI environment to fix permanently
         <module>mockserver-core</module>
         <module>mockserver-integration-testing</module>
         <module>mockserver-netty</module>
