@@ -1,5 +1,6 @@
 package org.mockserver.client.netty;
 
+import com.google.common.net.InetAddresses;
 import com.google.common.net.MediaType;
 import io.netty.handler.codec.http.HttpHeaders;
 import org.junit.Before;
@@ -11,6 +12,8 @@ import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.socket.PortFactory;
+
+import java.net.InetSocketAddress;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.*;
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
@@ -92,13 +95,14 @@ public class NettyHttpClientErrorHandlingTest {
 
         try {
             // when
-            HttpResponse httpResponse = new NettyHttpClient().sendRequest(outboundRequest("127.0.0.1", freePort, "", request().withBody(exact("this is an example body"))).withSsl(true));
+            InetSocketAddress socket = new InetSocketAddress("127.0.0.1", freePort);
+            HttpResponse httpResponse = new NettyHttpClient().sendRequest(outboundRequest(socket, "", request().withBody(exact("this is an example body"))).withSsl(true));
 
             // then
             assertThat(httpResponse, is(
                     response()
                             .withStatusCode(200)
-                            .withHeader(header(HOST, "localhost:" + freePort))
+                            .withHeader(header(HOST, socket.getHostName() + ":" + freePort))
                             .withHeader(header(CONTENT_LENGTH, "this is an example body".length() / 2))
                             .withHeader(header(ACCEPT_ENCODING, HttpHeaders.Values.GZIP + "," + HttpHeaders.Values.DEFLATE))
                             .withHeader(header(CONNECTION, HttpHeaders.Values.KEEP_ALIVE))
