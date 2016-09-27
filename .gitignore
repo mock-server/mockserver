@@ -62,6 +62,10 @@ release.properties
 google
 .extract
 
+# rbenv config #
+################
+.ruby-version
+
 # Gradle build artifacts files #
 ################################
 .gradle
