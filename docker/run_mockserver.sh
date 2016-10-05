@@ -3,7 +3,7 @@
 set -e
 
 function showUsage {
-    echo >&2 "   run_mockserver.sh [-logLevel <level>] [-serverPort <port>] [-proxyPort <port>] [-proxyRemotePort <port>] [-proxyRemoteHost <hostname>]"
+    echo >&2 "   run_mockserver.sh [-logLevel <level>] [-serverPort <port>] [-proxyPort <port>] [-proxyRemotePort <port>] [-proxyRemoteHost <hostname>] [-sslAltDomains <domains>]"
     echo >&2 "                                                                                   "
     echo >&2 "     valid options are:                                                            "
     echo >&2 "        -logLevel <level>            OFF, ERROR, WARN, INFO, DEBUG, TRACE or ALL, as follows: "
@@ -32,8 +32,14 @@ function showUsage {
     echo >&2 "                                     value is provided for proxyRemoteHost when    "
     echo >&2 "                                     proxyRemotePort has been specified,           "
     echo >&2 "                                     proxyRemoteHost will default to \"localhost\"."
+    echo >&2 "        -sslAltDomains <domains>     Comma-delimited list of domains for which the "
+    echo >&2 "                                     MockServer must stand in.  Needed so the      "
+    echo >&2 "                                     SSL certificate includes the appropriate      "
+    echo >&2 "                                     domain, e.g. if your requests are hitting     "
+    echo >&2 "                                     'foo.bar.com', the cert needs that as a       "
+    echo >&2 "                                     'subject alternative name'.                   "
     echo >&2 "                                                                                   "
-    echo >&2 "   i.e. /opt/mockserver/run_mockserver.sh -logLevel INFO -serverPort 1080 -proxyPort 1090 -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com"
+    echo >&2 "   i.e. /opt/mockserver/run_mockserver.sh -logLevel INFO -serverPort 1080 -proxyPort 1090 -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com -sslAltDomains foo.bar.com,bar.baz.com"    
     echo >&2 "                                                                                   "
     exit 1
 }
@@ -73,6 +79,7 @@ do
         -proxyPort) proxyPort="$2"; shift;;
         -proxyRemotePort) proxyRemotePort="$2"; shift;;
         -proxyRemoteHost) proxyRemoteHost="$2"; shift;;
+        -sslAltDomains) sslAltDomains="$2"; shift;;
         -*) notset="true"; break;;
         *) break;;
     esac
@@ -94,9 +101,18 @@ then
     LOG_LEVEL="$logLevel"
 fi
 
+
+SSL_ALT_DOMAINS=""
+
+if [ -n "$sslAltDomains" ]
+then
+    SSL_ALT_DOMAINS="$sslAltDomains"
+fi
+
 validateArgument $LOG_LEVEL "OFF ERROR WARN INFO DEBUG TRACE ALL." "Invalid value '$LOG_LEVEL' for 'logLevel'"
 
 COMMAND_LINE_OPTS=""
+
 
 if [ -n "$serverPort" ]
 then
@@ -120,4 +136,4 @@ then
     MOCKSERVER_HOME="/opt/mockserver"
 fi
 
-runCommand "java -Dfile.encoding=UTF-8 -Dmockserver.logLevel=$LOG_LEVEL -Djava.library.path=$MOCKSERVER_HOME/libtcnative-1.so.0.1.27 -cp $MOCKSERVER_HOME/mockserver-netty-jar-with-dependencies.jar:$MOCKSERVER_HOME/tomcat-native-1.1.27.jar org.mockserver.cli.Main$COMMAND_LINE_OPTS"
+runCommand "java -Dfile.encoding=UTF-8 -Dmockserver.sslSubjectAlternativeNameDomains=$SSL_ALT_DOMAINS -Dmockserver.logLevel=$LOG_LEVEL -Djava.library.path=$MOCKSERVER_HOME/libtcnative-1.so.0.1.27 -cp $MOCKSERVER_HOME/mockserver-netty-jar-with-dependencies.jar:$MOCKSERVER_HOME/tomcat-native-1.1.27.jar org.mockserver.cli.Main$COMMAND_LINE_OPTS"
