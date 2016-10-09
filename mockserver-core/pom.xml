@@ -95,6 +95,12 @@
             <artifactId>json-schema-validator</artifactId>
         </dependency>
 
+        <!-- xml -->
+        <dependency>
+            <groupId>xerces</groupId>
+            <artifactId>xerces</artifactId>
+        </dependency>
+
         <!-- commons & guava -->
         <dependency>
             <groupId>org.apache.commons</groupId>

@@ -1,15 +1,33 @@
 package org.mockserver.server;
 
+import com.google.common.base.Charsets;
 import com.google.common.net.HttpHeaders;
+import com.google.common.net.MediaType;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockserver.client.server.ClientException;
+import org.mockserver.integration.server.AbstractClientServerIntegrationTest;
 import org.mockserver.integration.server.SameJVMAbstractClientServerIntegrationTest;
 import org.mockserver.model.HttpStatusCode;
+import org.mockserver.socket.SSLFactory;
+import org.mockserver.streams.IOStreamUtils;
+
+import javax.net.ssl.SSLSocket;
+import java.io.OutputStream;
+import java.net.Socket;
+import java.net.SocketException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.core.AnyOf.anyOf;
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
+import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.ConnectionOptions.connectionOptions;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpCallback.callback;
@@ -141,8 +159,8 @@ public abstract class DeployableWARAbstractClientServerIntegrationTest extends S
                 response()
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withHeader("Content-Type", "application/json; charset=utf-8")
-                        .withBody("{" + NL +
-                                "  \"ports\" : [ " + getMockServerPort() + " ]" + NL +
+                        .withBody("{" + System.getProperty("line.separator") +
+                                "  \"ports\" : [ " + getMockServerPort() + " ]" + System.getProperty("line.separator") +
                                 "}"),
                 makeRequest(
                         request()
@@ -155,8 +173,8 @@ public abstract class DeployableWARAbstractClientServerIntegrationTest extends S
                 response()
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withHeader("Content-Type", "application/json; charset=utf-8")
-                        .withBody("{" + NL +
-                                "  \"ports\" : [ " + getMockServerSecurePort() + " ]" + NL +
+                        .withBody("{" + System.getProperty("line.separator") +
+                                "  \"ports\" : [ " + getMockServerSecurePort() + " ]" + System.getProperty("line.separator") +
                                 "}"),
                 makeRequest(
                         request()

@@ -1,5 +1,9 @@
 package org.mockserver.matchers;
 
+import com.google.common.base.Charsets;
+import org.apache.xml.serialize.Method;
+import org.apache.xml.serialize.OutputFormat;
+import org.apache.xml.serialize.XMLSerializer;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 import org.w3c.dom.Document;
 import org.xml.sax.ErrorHandler;
@@ -10,12 +14,9 @@ import org.xml.sax.SAXParseException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.*;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringReader;
-import java.io.StringWriter;
 
 /**
  * @author jamesdbloom
@@ -27,19 +28,9 @@ public class StringToXmlDocumentParser extends ObjectWithReflectiveEqualsHashCod
     }
 
     private String prettyPrintXmlDocument(Document doc) throws IOException {
-        try {
-            Transformer transformer = TransformerFactory.newInstance().newTransformer();
-            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-            transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "3");
-            StreamResult result = new StreamResult(new StringWriter());
-            DOMSource source = new DOMSource(doc);
-            transformer.transform(source, result);
-            return result.getWriter().toString();
-        } catch (TransformerConfigurationException e) {
-            throw new IOException(e);
-        } catch (TransformerException e) {
-            throw new IOException(e);
-        }
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        new XMLSerializer(byteArrayOutputStream, new OutputFormat(Method.XML, Charsets.UTF_8.name(), true)).serialize(doc);
+        return byteArrayOutputStream.toString(Charsets.UTF_8.name());
     }
 
     public Document buildDocument(final String matched, final ErrorLogger errorLogger) throws ParserConfigurationException, IOException, SAXException {

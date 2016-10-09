@@ -11,49 +11,47 @@ import static org.mockserver.model.NottableString.string;
  */
 public class XmlStringMatcherTest {
 
-    private static final String NL = System.getProperty("line.separator");
-
     @Test
     public void shouldMatchMatchingXML() {
         String matched = "" +
-                "<element>" + NL +
-                "   <key>some_key</key>" + NL +
-                "   <value>some_value</value>" + NL +
+                "<element>" +
+                "   <key>some_key</key>" +
+                "   <value>some_value</value>" +
                 "</element>";
         assertTrue(new XmlStringMatcher("<element><key>some_key</key><value>some_value</value></element>").matches(matched));
         assertTrue(new XmlStringMatcher("" +
-                "<element>" + NL +
-                "   <key>some_key</key>" + NL +
-                "   <value>some_value</value>" + NL +
+                "<element>" +
+                "   <key>some_key</key>" +
+                "   <value>some_value</value>" +
                 "</element>").matches(matched));
     }
 
     @Test
     public void shouldNotMatchMatchingXMLWithNot() {
         String matched = "" +
-                "<element>" + NL +
-                "   <key>some_key</key>" + NL +
-                "   <value>some_value</value>" + NL +
+                "<element>" +
+                "   <key>some_key</key>" +
+                "   <value>some_value</value>" +
                 "</element>";
         assertFalse(not(new XmlStringMatcher("<element><key>some_key</key><value>some_value</value></element>")).matches(matched));
         assertFalse(not(new XmlStringMatcher("" +
-                "<element>" + NL +
-                "   <key>some_key</key>" + NL +
-                "   <value>some_value</value>" + NL +
+                "<element>" +
+                "   <key>some_key</key>" +
+                "   <value>some_value</value>" +
                 "</element>")).matches(matched));
     }
 
     @Test
     public void shouldMatchMatchingXMLWithDifferentAttributeOrder() {
         String matched = "" +
-                "<element attributeOne=\"one\" attributeTwo=\"two\">" + NL +
-                "   <key attributeOne=\"one\" attributeTwo=\"two\">some_key</key>" + NL +
-                "   <value>some_value</value>" + NL +
+                "<element attributeOne=\"one\" attributeTwo=\"two\">" +
+                "   <key attributeOne=\"one\" attributeTwo=\"two\">some_key</key>" +
+                "   <value>some_value</value>" +
                 "</element>";
         assertTrue(new XmlStringMatcher("<element attributeTwo=\"two\" attributeOne=\"one\"><key attributeTwo=\"two\" attributeOne=\"one\">some_key</key><value>some_value</value></element>").matches(matched));
-        assertTrue(new XmlStringMatcher("<element attributeTwo=\"two\" attributeOne=\"one\">" + NL +
-                "   <key attributeTwo=\"two\" attributeOne=\"one\">some_key</key>" + NL +
-                "   <value>some_value</value>" + NL +
+        assertTrue(new XmlStringMatcher("<element attributeTwo=\"two\" attributeOne=\"one\">" +
+                "   <key attributeTwo=\"two\" attributeOne=\"one\">some_key</key>" +
+                "   <value>some_value</value>" +
                 "</element>").matches(matched));
     }
 
