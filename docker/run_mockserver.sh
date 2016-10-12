@@ -120,4 +120,4 @@ then
     MOCKSERVER_HOME="/opt/mockserver"
 fi
 
-runCommand "java -Dfile.encoding=UTF-8 -Dmockserver.logLevel=$LOG_LEVEL -Djava.library.path=$MOCKSERVER_HOME/libtcnative-1.so.0.1.27 -cp $MOCKSERVER_HOME/mockserver-netty-jar-with-dependencies.jar:$MOCKSERVER_HOME/tomcat-native-1.1.27.jar org.mockserver.cli.Main$COMMAND_LINE_OPTS"
+runCommand "java -Dfile.encoding=UTF-8 -Dmockserver.logLevel=$LOG_LEVEL -jar $MOCKSERVER_HOME/mockserver-netty-jar-with-dependencies.jar$COMMAND_LINE_OPTS"
