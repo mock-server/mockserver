@@ -3,43 +3,42 @@ package org.mockserver.client.serialization.model;
 import org.junit.Test;
 import org.mockserver.verify.VerificationTimes;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertEquals;
+import static org.mockserver.verify.VerificationTimes.*;
 
 public class VerificationTimesDTOTest {
 
     @Test
-    public void shouldReturnValuesSetInConstructor() {
-        // when
-        VerificationTimesDTO times = new VerificationTimesDTO(VerificationTimes.exactly(5));
-
-        // then
-        assertThat(times.getCount(), is(5));
-        assertThat(times.isExact(), is(true));
+    public void shouldBuildObject_once() {
+        assertValidVerificationTimesBuilt(once());
     }
 
     @Test
-    public void shouldBuildCorrectObject() {
-        // when
-        VerificationTimes times = new VerificationTimesDTO(VerificationTimes.once()).buildObject();
-
-        // then
-        assertThat(times.getCount(), is(1));
-        assertThat(times.isExact(), is(true));
-
-        // when
-        times = new VerificationTimesDTO(VerificationTimes.exactly(3)).buildObject();
-
-        // then
-        assertThat(times.getCount(), is(3));
-        assertThat(times.isExact(), is(true));
-
-        // when
-        times = new VerificationTimesDTO(VerificationTimes.atLeast(3)).buildObject();
-
-        // then
-        assertThat(times.getCount(), is(3));
-        assertThat(times.isExact(), is(false));
+    public void shouldBuildObject_never() {
+        assertValidVerificationTimesBuilt(never());
     }
 
+    @Test
+    public void shouldBuildObject_exactly() {
+        assertValidVerificationTimesBuilt(exactly(42));
+    }
+
+    @Test
+    public void shouldBuildObject_atLeast() {
+        assertValidVerificationTimesBuilt(atLeast(42));
+    }
+
+    @Test
+    public void shouldBuildObject_atMost() {
+        assertValidVerificationTimesBuilt(atMost(42));
+    }
+
+    @Test
+    public void shouldBuildObject_between() {
+        assertValidVerificationTimesBuilt(between(41, 42));
+    }
+
+    private void assertValidVerificationTimesBuilt(VerificationTimes originalTimes) {
+        assertEquals(new VerificationTimesDTO(originalTimes).buildObject(), originalTimes);
+    }
 }

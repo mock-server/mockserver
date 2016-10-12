@@ -86,29 +86,6 @@ public class RequestLogFilterVerificationTest {
     }
 
     @Test
-    public void shouldPassVerificationWithAtLeastZeroTimes() {
-        // given
-        HttpRequest httpRequest = new HttpRequest().withPath("some_path");
-        HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        RequestLogFilter requestLogFilter = new RequestLogFilter();
-
-        // when
-        requestLogFilter.onRequest(httpRequest);
-        requestLogFilter.onRequest(otherHttpRequest);
-        requestLogFilter.onRequest(httpRequest);
-
-        // then
-        assertThat(requestLogFilter.verify(
-                        new Verification()
-                                .withRequest(
-                                        new HttpRequest().withPath("some_non_matching_path")
-                                )
-                                .withTimes(atLeast(0))
-                ),
-                is(""));
-    }
-
-    @Test
     public void shouldPassVerificationWithExactlyTwoTimes() {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
@@ -298,7 +275,7 @@ public class RequestLogFilterVerificationTest {
                                 )
                                 .withTimes(exactly(0))
                 ),
-                is("Request not found exactly 0 times, expected:<{" + System.getProperty("line.separator") +
+                is("Request not found never, expected:<{" + System.getProperty("line.separator") +
                         "  \"path\" : \"some_other_path\"" + System.getProperty("line.separator") +
                         "}> but was:<[ {" + System.getProperty("line.separator") +
                         "  \"path\" : \"some_path\"" + System.getProperty("line.separator") +
@@ -324,6 +301,6 @@ public class RequestLogFilterVerificationTest {
                                 .withRequest(request())
                                 .withTimes(exactly(0))
                 ),
-                is("Request not found exactly 0 times, expected:<{ }> but was:<{ }>"));
+                is("Request not found never, expected:<{ }> but was:<{ }>"));
     }
 }
