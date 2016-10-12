@@ -185,7 +185,7 @@ public class MockServerClient extends AbstractClient {
     }
 
     /**
-     * Clear all expectations that match the http
+     * Clear all expectations and logs that match the http
      *
      * @param httpRequest the http request that is matched against when deciding whether to clear each expectation if null all expectations are cleared
      */
@@ -194,11 +194,28 @@ public class MockServerClient extends AbstractClient {
         return this;
     }
 
+
+    /**
+     * Clear expectations, logs or both that match the http
+     *
+     * @param httpRequest the http request that is matched against when deciding whether to clear each expectation if null all expectations are cleared
+     */
+    public MockServerClient clear(HttpRequest httpRequest, TYPE type) {
+        sendRequest(request().withMethod("PUT").withPath(calculatePath("clear")).withQueryStringParameter("type", type.name().toLowerCase()).withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", Charsets.UTF_8));
+        return this;
+    }
+
     void sendExpectation(Expectation expectation) {
         HttpResponse httpResponse = sendRequest(request().withMethod("PUT").withPath(calculatePath("expectation")).withBody(expectation != null ? expectationSerializer.serialize(expectation) : "", Charsets.UTF_8));
         if (httpResponse != null && httpResponse.getStatusCode() != 201) {
             throw new ClientException(formatErrorMessage(System.getProperty("line.separator") + "error: %swhile submitted expectation: %s", httpResponse.getBody() + System.getProperty("line.separator"), expectation));
         }
+    }
+
+    public enum TYPE {
+        LOGS,
+        EXPECTATIONS,
+        BOTH;
     }
 
     /**

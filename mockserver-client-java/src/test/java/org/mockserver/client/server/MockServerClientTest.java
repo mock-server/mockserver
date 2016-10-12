@@ -414,6 +414,27 @@ public class MockServerClientTest {
     }
 
     @Test
+    public void shouldSendClearRequestWithType() throws Exception {
+        // given
+        HttpRequest someRequestMatcher = new HttpRequest()
+                .withPath("/some_path")
+                .withBody(new StringBody("some_request_body"));
+        when(mockHttpRequestSerializer.serialize(someRequestMatcher)).thenReturn(someRequestMatcher.toString());
+
+        // when
+        mockServerClient.clear(someRequestMatcher, MockServerClient.TYPE.LOGS);
+
+        // then
+        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1080, "",
+                request()
+                        .withMethod("PUT")
+                        .withPath("/clear")
+                        .withQueryStringParameter("type", "logs")
+                        .withBody(someRequestMatcher.toString(), Charsets.UTF_8))
+        );
+    }
+
+    @Test
     public void shouldSendClearRequestForNullRequest() throws Exception {
         // when
         mockServerClient

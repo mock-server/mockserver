@@ -104,8 +104,14 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
             } else if (request.matches("PUT", "/clear")) {
 
                 org.mockserver.model.HttpRequest httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
-                requestLogFilter.clear(httpRequest);
-                mockServerMatcher.clear(httpRequest);
+                if (request.hasQueryStringParameter("type", "expectation")) {
+                    mockServerMatcher.clear(httpRequest);
+                } else if (request.hasQueryStringParameter("type", "log")) {
+                    requestLogFilter.clear(httpRequest);
+                } else {
+                    requestLogFilter.clear(httpRequest);
+                    mockServerMatcher.clear(httpRequest);
+                }
                 logFormatter.infoLog("clearing expectations and request logs that match:{}", httpRequest);
                 writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
 
