@@ -10,7 +10,7 @@ sitemap:
   lastmod: 2015-04-18T22:40:27+01:00
 ---
 
-<p>To clear <strong>all expectations</strong> (without restarting) use <strong>reset</strong> as follows:</p>
+<p>To clear <strong>all</strong> expectations and <strong>all</strong> request logs (without restarting) use <strong>reset</strong> as follows:</p>
 
 <p><strong>Java</strong></p>
 
@@ -25,9 +25,11 @@ sitemap:
 <pre><code class="code">client = MockServerClient.new(<span class="string_literal">'localhost'</span>, <span class="numeric_literal">1080</span>)
 client.reset()</code></pre>
 
-<p>To clear <strong>only specific</strong> expectations use <strong>clear</strong> as follows:</p>
+<p>To clear <strong>only specific</strong> expectations or <strong>only specific</strong> request logs use <strong>clear</strong> as follows:</p>
 
 <p><strong>Java</strong></p>
+
+<p>The following code clears both exceptions and request logs, however as shown below it is also possible to only clear exceptions or request logs.</p>
 
 <pre><code class="code"><span class="keyword">new</span> MockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1080</span>).clear(
         request()
@@ -35,9 +37,24 @@ client.reset()</code></pre>
                 .withPath(<span class="string_literal">"/somePath"</span>)
 );</code></pre>
 
+<p>To specify whether to clear <strong>exceptions</strong>, <strong>request logs</strong> or <strong>both</strong> use the type parameter.  If no type parameter is specified both expectations and request logs are cleared.  The following example shows how to only clear request logs.</p>
+
+<pre><code class="code"><span class="keyword">new</span> MockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1080</span>).clear(
+        request()
+                .withMethod(<span class="string_literal">"GET"</span>)
+                .withPath(<span class="string_literal">"/somePath"</span>),
+        MockServerClient.TYPE.<span class="constant">LOG</span>
+);</code></pre>
+
 <p><strong>JavaScript</strong></p>
 
+<p>The following code clears both exceptions and request logs, however as shown below it is also possible to only clear exceptions or request logs.</p>
+
 <pre><code class="code">mockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1080</span>).clear(<span class="string_literal">'/somePath'</span>);</code></pre>
+
+<p>To specify whether to clear <strong>exceptions</strong>, <strong>request logs</strong> or <strong>both</strong> use the type parameter.  If no type parameter is specified both expectations and request logs are cleared.  The following example shows how to only clear request logs.</p>
+
+<pre><code class="code">mockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1080</span>).clear(<span class="string_literal">'/somePath'</span>, <span class="string_literal">'log'</span>);</code></pre>
 
 <p><strong>Ruby</strong></p>
 
