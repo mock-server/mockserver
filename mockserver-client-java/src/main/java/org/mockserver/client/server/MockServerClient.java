@@ -199,6 +199,7 @@ public class MockServerClient extends AbstractClient {
      * Clear expectations, logs or both that match the http
      *
      * @param httpRequest the http request that is matched against when deciding whether to clear each expectation if null all expectations are cleared
+     * @param type the type to clear, EXPECTATION, LOG or BOTH
      */
     public MockServerClient clear(HttpRequest httpRequest, TYPE type) {
         sendRequest(request().withMethod("PUT").withPath(calculatePath("clear")).withQueryStringParameter("type", type.name().toLowerCase()).withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", Charsets.UTF_8));
@@ -213,8 +214,8 @@ public class MockServerClient extends AbstractClient {
     }
 
     public enum TYPE {
-        LOGS,
-        EXPECTATIONS,
+        LOG,
+        EXPECTATION,
         BOTH;
     }
 

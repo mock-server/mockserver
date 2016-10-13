@@ -422,14 +422,14 @@ public class MockServerClientTest {
         when(mockHttpRequestSerializer.serialize(someRequestMatcher)).thenReturn(someRequestMatcher.toString());
 
         // when
-        mockServerClient.clear(someRequestMatcher, MockServerClient.TYPE.LOGS);
+        mockServerClient.clear(someRequestMatcher, MockServerClient.TYPE.LOG);
 
         // then
         verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1080, "",
                 request()
                         .withMethod("PUT")
                         .withPath("/clear")
-                        .withQueryStringParameter("type", "logs")
+                        .withQueryStringParameter("type", "log")
                         .withBody(someRequestMatcher.toString(), Charsets.UTF_8))
         );
     }

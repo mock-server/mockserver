@@ -4689,7 +4689,7 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void shouldClearExpectations() {
+    public void shouldClearExpectationsAndLogs() {
         // given - some expectations
         mockServerClient
                 .when(
@@ -4778,6 +4778,163 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withPath(calculatePath("some_path1")),
                         headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldClearExpectationsOnly() {
+        // given - some expectations
+        mockServerClient
+                .when(
+                        request()
+                                .withPath(calculatePath("some_path1"))
+                )
+                .respond(
+                        response()
+                                .withBody("some_body1")
+                );
+        mockServerClient
+                .when(
+                        request()
+                                .withPath(calculatePath("some_path2"))
+                )
+                .respond(
+                        response()
+                                .withBody("some_body2")
+                );
+
+        // and - some matching requests
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body1"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("some_path1")),
+                        headersToIgnore)
+        );
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body2"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("some_path2")),
+                        headersToIgnore)
+        );
+
+        // when
+        mockServerClient
+                .clear(
+                        request()
+                                .withPath(calculatePath("some_path1")),
+                        MockServerClient.TYPE.EXPECTATION
+                );
+
+        // then - expectations cleared
+        assertThat(
+                mockServerClient.retrieveExistingExpectations(null),
+                arrayContaining(
+                        expectation(
+                                request()
+                                        .withPath(calculatePath("some_path2"))
+                        )
+                                .thenRespond(
+                                        response()
+                                                .withBody("some_body2")
+                                )
+                )
+        );
+
+        // and then - request log not cleared
+        verifyRequestMatches(
+                mockServerClient.retrieveRecordedRequests(null),
+                request(calculatePath("some_path1")),
+                request(calculatePath("some_path2"))
+        );
+    }
+
+    @Test
+    public void shouldClearLogsOnly() {
+        // given - some expectations
+        mockServerClient
+                .when(
+                        request()
+                                .withPath(calculatePath("some_path1"))
+                )
+                .respond(
+                        response()
+                                .withBody("some_body1")
+                );
+        mockServerClient
+                .when(
+                        request()
+                                .withPath(calculatePath("some_path2"))
+                )
+                .respond(
+                        response()
+                                .withBody("some_body2")
+                );
+
+        // and - some matching requests
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body1"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("some_path1")),
+                        headersToIgnore)
+        );
+        assertEquals(
+                response()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withBody("some_body2"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("some_path2")),
+                        headersToIgnore)
+        );
+
+        // when
+        mockServerClient
+                .clear(
+                        request()
+                                .withPath(calculatePath("some_path1")),
+                        MockServerClient.TYPE.LOG
+                );
+
+        // then - expectations cleared
+        assertThat(
+                mockServerClient.retrieveExistingExpectations(null),
+                arrayContaining(
+                        expectation(
+                                request()
+                                        .withPath(calculatePath("some_path1"))
+                        )
+                                .thenRespond(
+                                        response()
+                                                .withBody("some_body1")
+                                ),
+                        expectation(
+                                request()
+                                        .withPath(calculatePath("some_path2"))
+                        )
+                                .thenRespond(
+                                        response()
+                                                .withBody("some_body2")
+                                )
+                )
+        );
+
+        // and then - request log cleared
+        verifyRequestMatches(
+                mockServerClient.retrieveRecordedRequests(null),
+                request(calculatePath("some_path2"))
         );
     }
 

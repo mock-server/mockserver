@@ -202,9 +202,11 @@ var mockServerClient = function (host, port) {
      * @param pathOrRequestMatcher  if a string is passed in the value will be treated as the path to
      *                              decide which expectations to cleared, however if an object is passed
      *                              in the value will be treated as a full request matcher object
+     * @param type                  if a string is passed in the value will be treated as the type to clear
+     *                              either expectations, logs or both.
      */
-    var clear = function (pathOrRequestMatcher) {
-        xmlhttp.open("PUT", mockServerUrl + "/clear", false);
+    var clear = function (pathOrRequestMatcher, type) {
+        xmlhttp.open("PUT", mockServerUrl + "/clear" + (type ? "?type=" + type : ""), false);
         xmlhttp.setRequestHeader("Content-Type", "application/json; charset=utf-8");
         if (typeof pathOrRequestMatcher === "string") {
             xmlhttp.send(JSON.stringify(createResponseMatcher(pathOrRequestMatcher)));
@@ -235,7 +237,7 @@ var mockServerClient = function (host, port) {
         } else {
             xmlhttp.send(JSON.stringify(createResponseMatcher(".*")));
         }
-        return JSON.parse(xmlhttp.responseText);
+        return xmlhttp.responseText && JSON.parse(xmlhttp.responseText);
     };
     /**
      * Retrieve the setup expectations that match the parameter,

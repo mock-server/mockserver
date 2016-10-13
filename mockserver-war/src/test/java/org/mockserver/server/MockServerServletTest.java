@@ -299,7 +299,7 @@ public class MockServerServletTest {
     }
 
     @Test
-    public void shouldClearExpectations() throws IOException {
+    public void shouldClearExpectationsAndLogs() throws IOException {
         // given
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
         HttpRequest httpRequest = new HttpRequest();
@@ -318,6 +318,55 @@ public class MockServerServletTest {
 
         // then
         verify(mockMockServerMatcher).clear(httpRequest);
+        verify(mockRequestLogFilter).clear(httpRequest);
+    }
+
+    @Test
+    public void shouldClearExpectationsOnly() throws IOException {
+        // given
+        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
+        HttpRequest httpRequest = new HttpRequest();
+
+        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class)))
+                .thenReturn(
+                        request()
+                                .withMethod("PUT")
+                                .withPath("/clear")
+                                .withQueryStringParameter("type", "expectation")
+                                .withBody("requestBytes")
+                );
+        when(mockHttpRequestSerializer.deserialize("requestBytes")).thenReturn(httpRequest);
+
+        // when
+        mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
+
+        // then
+        verify(mockMockServerMatcher).clear(httpRequest);
+        verifyNoMoreInteractions(mockRequestLogFilter);
+    }
+
+    @Test
+    public void shouldClearLogsOnly() throws IOException {
+        // given
+        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
+        HttpRequest httpRequest = new HttpRequest();
+
+        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class)))
+                .thenReturn(
+                        request()
+                                .withMethod("PUT")
+                                .withPath("/clear")
+                                .withQueryStringParameter("type", "log")
+                                .withBody("requestBytes")
+                );
+        when(mockHttpRequestSerializer.deserialize("requestBytes")).thenReturn(httpRequest);
+
+        // when
+        mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
+
+        // then
+        verifyNoMoreInteractions(mockMockServerMatcher);
+        verify(mockRequestLogFilter).clear(httpRequest);
     }
 
     @Test

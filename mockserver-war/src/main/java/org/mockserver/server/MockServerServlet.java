@@ -75,8 +75,14 @@ public class MockServerServlet extends HttpServlet {
             } else if (request.matches("PUT", "/clear")) {
 
                 HttpRequest httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
-                requestLogFilter.clear(httpRequest);
-                mockServerMatcher.clear(httpRequest);
+                if (request.hasQueryStringParameter("type", "expectation")) {
+                    mockServerMatcher.clear(httpRequest);
+                } else if (request.hasQueryStringParameter("type", "log")) {
+                    requestLogFilter.clear(httpRequest);
+                } else {
+                    requestLogFilter.clear(httpRequest);
+                    mockServerMatcher.clear(httpRequest);
+                }
                 httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
 
             } else if (request.matches("PUT", "/reset")) {
