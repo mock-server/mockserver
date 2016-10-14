@@ -17,7 +17,7 @@
     <!-- The definition of the Root Spring Container shared by all Servlets and Filters -->
     <context-param>
         <param-name>contextConfigLocation</param-name>
-        <param-value>org.mockserver.configuration.RootConfiguration</param-value>
+        <param-value>org.mockserver.examples.configuration.RootConfiguration</param-value>
     </context-param>
 
     <!-- create root application context -->
@@ -40,7 +40,7 @@
         </init-param>
         <init-param>
             <param-name>contextConfigLocation</param-name>
-            <param-value>org.mockserver.web.configuration.WebMvcConfiguration</param-value>
+            <param-value>org.mockserver.examples.web.configuration.WebMvcConfiguration</param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>

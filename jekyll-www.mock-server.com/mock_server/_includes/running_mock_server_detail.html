@@ -196,7 +196,7 @@
 }</code></pre>
 
 <p>The <a href="https://github.com/jamesdbloom/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example test called
-	<a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-examples/src/test/java/org/mockserver/web/controller/BooksPageIntegrationTest.java">BookPageIntegrationTest</a> that demonstrates a fully working example.</p>
+	<a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-examples/src/test/java/org/mockserver/examples/web/controller/BooksPageIntegrationTest.java">BookPageIntegrationTest</a> that demonstrates a fully working example.</p>
 
 <a name="junit_rule" class="anchor" href="#junit_rule">&nbsp;</a>
 
@@ -209,7 +209,7 @@
 
 <span class="keyword">private</span> MockServerClient mockServerClient;</code></pre>
 
-<p>Any test method can now use the <strong>mockServerClient</strong> field to <a href="/mock_server/create_expectations.html">create expectation</a> or <a href="/mock_server/verification.html">verify</a> requests.</p>
+<p>Any test method can now use the <strong>mockServerClient</strong> field to <a href="/mock_server/creating_expectations.html">create expectation</a> or <a href="/mock_server/verification.html">verify</a> requests.</p>
 
 <p>The MockServerRule has the following constructors:</p>
 
@@ -260,7 +260,7 @@
 
 <span class="keyword">private</span> ProxyClient proxyClient;</code></pre>
 
-<p>Any test method can now use the <strong>proxyClient</strong> field to <a href="/mock_server/verification.html">verify</a> requests or <a href="/proxy/analysing_behavior.html">anaylse a system's behaviour</a>.</p>
+<p>Any test method can now use the <strong>proxyClient</strong> field to <a href="/mock_server/verification.html">verify</a> requests or <a href="/proxy/record_and_replay.html">anaylse a system's behaviour</a>.</p>
 
 <p>The ProxyRule has the following constructors:</p>
 

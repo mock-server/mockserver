@@ -228,6 +228,16 @@
                     </filesets>
                 </configuration>
             </plugin>
+            <!-- skip javadoc -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.10.3</version>
+                <configuration>
+                    <excludePackageNames>org.mockserver.examples:org.mockserver.examples.*</excludePackageNames>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
