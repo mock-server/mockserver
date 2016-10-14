@@ -1,7 +1,5 @@
 package org.mockserver.examples.servicebackend;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.Unpooled;
@@ -11,12 +9,12 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.ssl.SslHandler;
+import org.mockserver.examples.json.ObjectMapperFactory;
 import org.mockserver.examples.model.Book;
 import org.mockserver.socket.SSLFactory;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.net.ssl.SSLEngine;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,7 +33,7 @@ public class BookServer {
 
     private static ServerBootstrap serverBootstrap;
     private final Map<String, Book> booksDB = createBookData();
-    private final ObjectMapper objectMapper = createObjectMapper();
+    private final ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
     private final int httpPort;
     private final boolean secure;
 
@@ -76,24 +74,6 @@ public class BookServer {
         serverBootstrap.bind(httpPort);
         System.gc();
         TimeUnit.SECONDS.sleep(3);
-    }
-
-    private ObjectMapper createObjectMapper() {
-        ObjectMapper objectMapper = new ObjectMapper();
-        // ignore failures
-        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        objectMapper.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false);
-        objectMapper.configure(DeserializationFeature.FAIL_ON_NUMBERS_FOR_ENUMS, false);
-        // relax parsing
-        objectMapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
-        objectMapper.configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
-        // use arrays
-        objectMapper.configure(DeserializationFeature.USE_JAVA_ARRAY_FOR_JSON_ARRAY, true);
-        // remove empty values from JSON
-        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT);
-        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-        return objectMapper;
     }
 
     private Map<String, Book> createBookData() {

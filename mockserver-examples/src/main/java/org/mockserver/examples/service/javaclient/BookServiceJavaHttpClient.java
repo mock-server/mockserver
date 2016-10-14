@@ -1,7 +1,5 @@
 package org.mockserver.examples.service.javaclient;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.mockserver.examples.model.Book;
 import org.mockserver.examples.service.BookService;
@@ -15,6 +13,8 @@ import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.URL;
+
+import static org.mockserver.examples.json.ObjectMapperFactory.createObjectMapper;
 
 /**
  * @author jamesdbloom
@@ -33,24 +33,6 @@ public class BookServiceJavaHttpClient implements BookService {
         port = environment.getProperty("bookService.port", Integer.class);
         host = environment.getProperty("bookService.host", "localhost");
         objectMapper = createObjectMapper();
-    }
-
-    private ObjectMapper createObjectMapper() {
-        ObjectMapper objectMapper = new ObjectMapper();
-        // ignore failures
-        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        objectMapper.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false);
-        objectMapper.configure(DeserializationFeature.FAIL_ON_NUMBERS_FOR_ENUMS, false);
-        // relax parsing
-        objectMapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
-        objectMapper.configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
-        // use arrays
-        objectMapper.configure(DeserializationFeature.USE_JAVA_ARRAY_FOR_JSON_ARRAY, true);
-        // remove empty values from JSON
-        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT);
-        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-        return objectMapper;
     }
 
     private HttpURLConnection sendRequestViaProxy(URL url) throws IOException {

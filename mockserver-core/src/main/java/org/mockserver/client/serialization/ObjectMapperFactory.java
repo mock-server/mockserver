@@ -54,14 +54,13 @@ public class ObjectMapperFactory {
         objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
 
         // register our own module with our serializers and deserializers
-        Module gameServerModule = new Module();
-        objectMapper.registerModule(gameServerModule);
+        objectMapper.registerModule(new Module());
         return objectMapper;
     }
 
     private static class Module extends SimpleModule {
 
-        public Module() {
+        Module() {
             // request
             addSerializer(HttpRequest.class, new org.mockserver.client.serialization.serializers.request.HttpRequestSerializer());
             addSerializer(HttpRequestDTO.class, new HttpRequestDTOSerializer());
