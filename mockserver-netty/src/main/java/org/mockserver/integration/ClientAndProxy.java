@@ -25,6 +25,10 @@ public class ClientAndProxy extends ProxyClient {
         return new ClientAndProxy(port);
     }
 
+    public static ClientAndProxy startClientAndDirectProxy(Integer port, String remoteHost, Integer remotePort) {
+        return new ClientAndProxy(port, remoteHost, remotePort);
+    }
+
     public boolean isRunning() {
         return httpProxy.isRunning();
     }
