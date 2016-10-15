@@ -11,6 +11,9 @@ public class HttpForward extends Action {
     private Integer port = 80;
     private Scheme scheme = Scheme.HTTP;
 
+    /**
+     * Static builder to create a callback.
+     */
     public static HttpForward forward() {
         return new HttpForward();
     }

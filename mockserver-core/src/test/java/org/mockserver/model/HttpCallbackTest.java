@@ -19,8 +19,10 @@ public class HttpCallbackTest {
     }
 
     @Test
-    public void returnsHost() {
+    public void returnsCallbackClass() {
         assertEquals("some_class", new HttpCallback().withCallbackClass("some_class").getCallbackClass());
+        assertEquals("some_class", callback().withCallbackClass("some_class").getCallbackClass());
+        assertEquals("some_class", callback("some_class").getCallbackClass());
     }
 
     @Test

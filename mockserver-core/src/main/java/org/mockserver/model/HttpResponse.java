@@ -22,14 +22,25 @@ public class HttpResponse extends Action {
     private Delay delay;
     private ConnectionOptions connectionOptions;
 
+    /**
+     * Static builder to create a response.
+     */
     public static HttpResponse response() {
         return new HttpResponse();
     }
 
+    /**
+     * Static builder to create a response with a 200 status code and the string response body.
+     *
+     * @param body a string
+     */
     public static HttpResponse response(String body) {
         return new HttpResponse().withStatusCode(200).withBody(body);
     }
 
+    /**
+     * Static builder to create a not found response.
+     */
     public static HttpResponse notFoundResponse() {
         return new HttpResponse().withStatusCode(404);
     }

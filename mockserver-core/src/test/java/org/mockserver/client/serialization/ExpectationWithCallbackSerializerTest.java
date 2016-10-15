@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockserver.model.HttpCallback.callback;
 import static org.mockserver.model.NottableString.string;
 
 /**
@@ -39,8 +40,7 @@ public class ExpectationWithCallbackSerializerTest {
             Times.once(),
             TimeToLive.exactly(TimeUnit.HOURS, 2l))
             .thenCallback(
-                    new HttpCallback()
-                            .withCallbackClass("some_random_class")
+                    callback("some_random_class")
             );
     private final ExpectationDTO fullExpectationDTO = new ExpectationDTO()
             .setHttpRequest(
