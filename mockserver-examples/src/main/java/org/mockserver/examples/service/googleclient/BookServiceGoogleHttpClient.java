@@ -14,6 +14,7 @@ import javax.annotation.Resource;
 import java.io.IOException;
 import java.net.*;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.mockserver.examples.json.ObjectMapperFactory.createObjectMapper;
@@ -43,7 +44,7 @@ public class BookServiceGoogleHttpClient implements BookService {
             ProxySelector.setDefault(new ProxySelector() {
                 @Override
                 public List<Proxy> select(URI uri) {
-                    return Arrays.asList(new Proxy(Proxy.Type.SOCKS, new InetSocketAddress(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort")))));
+                    return Collections.singletonList(new Proxy(Proxy.Type.SOCKS, new InetSocketAddress(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort")))));
                 }
 
                 @Override
