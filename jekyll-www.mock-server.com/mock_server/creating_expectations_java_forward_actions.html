@@ -6,7 +6,16 @@ section: 'Mock Server'
 subsection: false
 ---
 
-<p>To setup a forward in Java use the <strong>org.mockserver.model.HttpForward</strong> class which specifies the details of each HTTP(S) forward with a fluent API:</p>
+<p>When mocking a forward in Java use the <strong>org.mockserver.model.HttpForward</strong> class which specifies the details of each HTTP(S) forward with a fluent API, for example:</p>
+
+<pre><code class="code">HttpForward httpForward =
+        forward()
+                .withHost(<span class="string_literal">"www.mock-server.com"</span>)
+                .withPort(<span class="numeric_literal">80</span>)
+                .withScheme(HttpForward.Scheme.<span class="constant">HTTP</span>);
+</code></pre>
+
+<p>The full specification of <strong>org.mockserver.model.HttpForward</strong> is as follows:</p>
 
 <pre><code class="code"><span class="keyword">public class</span> HttpForward {
 
@@ -31,12 +40,3 @@ subsection: false
      */</span>
     <span class="keyword">public</span> HttpForward withScheme(Scheme scheme);
 }</code></pre>
-
-<p>For example:</p>
-
-<pre><code class="code">HttpForward httpForward =
-        forward()
-                .withHost(<span class="string_literal">"www.mock-server.com"</span>)
-                .withPort(<span class="numeric_literal">80</span>)
-                .withScheme(HttpForward.Scheme.<span class="constant">HTTP</span>);
-</code></pre>
