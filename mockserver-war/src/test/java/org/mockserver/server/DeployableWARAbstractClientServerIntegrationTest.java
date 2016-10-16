@@ -83,6 +83,7 @@ public abstract class DeployableWARAbstractClientServerIntegrationTest extends S
     }
 
     @Test
+    @SuppressWarnings("Duplicates")
     public void shouldCallbackToSpecifiedClassInTestClasspath() {
         // given
         TestClasspathTestExpectationCallback.httpRequests.clear();

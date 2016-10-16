@@ -181,7 +181,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
     @Test
     public void shouldReturnResponseWithConnectionOptionsAndKeepAliveFalseAndContentLengthOverride() {
         // given
-        List headersToIgnore = new ArrayList(this.headersToIgnore);
+        List<String> headersToIgnore = new ArrayList<String>(this.headersToIgnore);
         headersToIgnore.remove("connection");
         headersToIgnore.remove("content-length");
 
@@ -233,7 +233,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
     @Test
     public void shouldReturnResponseWithConnectionOptionsAndKeepAliveTrueAndContentLengthOverride() {
         // given
-        List headersToIgnore = new ArrayList(this.headersToIgnore);
+        List<String> headersToIgnore = new ArrayList<String>(this.headersToIgnore);
         headersToIgnore.remove("connection");
         headersToIgnore.remove("content-length");
 
@@ -437,6 +437,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
     }
 
     @Test
+    @SuppressWarnings("Duplicates")
     public void shouldCallbackToSpecifiedClassInTestClasspath() {
         // given
         TestClasspathTestExpectationCallback.httpRequests.clear();
@@ -479,7 +480,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
                         headersToIgnore)
         );
         assertEquals(TestClasspathTestExpectationCallback.httpRequests.get(0).getBody().getValue(), "an_example_body_http");
-        assertEquals(TestClasspathTestExpectationCallback.httpRequests.get(0).getPath(), calculatePath("callback"));
+        assertEquals(TestClasspathTestExpectationCallback.httpRequests.get(0).getPath().getValue(), calculatePath("callback"));
 
         // - in https
         assertEquals(
@@ -502,7 +503,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
                         headersToIgnore)
         );
         assertEquals(TestClasspathTestExpectationCallback.httpRequests.get(1).getBody().getValue(), "an_example_body_https");
-        assertEquals(TestClasspathTestExpectationCallback.httpRequests.get(1).getPath(), calculatePath("callback"));
+        assertEquals(TestClasspathTestExpectationCallback.httpRequests.get(1).getPath().getValue(), calculatePath("callback"));
     }
 
 }

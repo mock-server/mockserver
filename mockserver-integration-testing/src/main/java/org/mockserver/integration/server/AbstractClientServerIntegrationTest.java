@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.StringStartsWith.startsWith;
@@ -57,7 +58,7 @@ import static org.mockserver.model.XmlBody.xml;
  */
 public abstract class AbstractClientServerIntegrationTest {
 
-    public static final String TEXT_PLAIN = MediaType.create("text", "plain").toString();
+    protected static final String TEXT_PLAIN = MediaType.create("text", "plain").toString();
     protected static MockServerClient mockServerClient;
     protected static String servletContext = "";
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -70,7 +71,10 @@ public abstract class AbstractClientServerIntegrationTest {
             "user-agent",
             "content-length",
             "accept-encoding",
-            "transfer-encoding"
+            "transfer-encoding",
+            "access-control-allow-origin",
+            "access-control-allow-methods",
+            "x-cors"
     );
     private NettyHttpClient httpClient = new NettyHttpClient();
 

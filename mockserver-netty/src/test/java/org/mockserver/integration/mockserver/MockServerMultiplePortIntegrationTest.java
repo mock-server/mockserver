@@ -180,38 +180,4 @@ public class MockServerMultiplePortIntegrationTest extends AbstractMockServerNet
                         headersToIgnore)
         );
     }
-
-    @Test
-    public void shouldErrorWhenBindingToUnavailableSocket() throws InterruptedException, IOException {
-        ServerSocket server = null;
-        try {
-            // given
-            server = new ServerSocket(0);
-            int newPort = server.getLocalPort();
-
-            // then
-            // - in http
-            assertEquals(
-                    response()
-                            .withStatusCode(HttpStatusCode.NOT_ACCEPTABLE_406.code())
-                            .withHeader("Content-Type", "text/plain; charset=utf-8")
-                            .withBody("Exception while binding MockServer to port " + newPort + " port already in use"),
-                    makeRequest(
-                            request()
-                                    .withPath(calculatePath("bind"))
-                                    .withMethod("PUT")
-                                    .withBody("{" + System.getProperty("line.separator") +
-                                            "  \"ports\" : [ " + newPort + " ]" + System.getProperty("line.separator") +
-                                            "}"),
-                            headersToIgnore)
-            );
-
-        } finally {
-            if (server != null) {
-                server.close();
-                // allow time for the socket to be released
-                TimeUnit.MILLISECONDS.sleep(350);
-            }
-        }
-    }
 }

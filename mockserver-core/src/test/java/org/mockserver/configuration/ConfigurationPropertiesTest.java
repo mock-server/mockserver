@@ -44,12 +44,26 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
+    public void shouldSetAndReadEnableCORSSetting() {
+        // given
+        System.clearProperty("mockserver.enableCORS");
+
+        // when
+        assertEquals(true, ConfigurationProperties.enableCORS());
+        ConfigurationProperties.enableCORS(false);
+
+        // then
+        assertEquals(false, ConfigurationProperties.enableCORS());
+        assertEquals("false", System.getProperty("mockserver.enableCORS"));
+    }
+    
+    @Test
     public void shouldSetAndReadMaxSocketTimeout() {
         // given
         System.clearProperty("mockserver.maxTimeout");
 
         // when
-        assertEquals(TimeUnit.SECONDS.toMillis(ConfigurationProperties.DEFAULT_MAX_TIMEOUT), new ConfigurationProperties().maxSocketTimeout());
+        assertEquals(TimeUnit.SECONDS.toMillis(ConfigurationProperties.DEFAULT_MAX_TIMEOUT), ConfigurationProperties.maxSocketTimeout());
         ConfigurationProperties.maxSocketTimeout(100);
 
         // then
@@ -71,11 +85,12 @@ public class ConfigurationPropertiesTest {
         System.clearProperty("mockserver.javaKeyStoreFilePath");
 
         // when
-        assertEquals(SSLFactory.defaultKeyStoreFileName(), new ConfigurationProperties().javaKeyStoreFilePath());
+        assertEquals(SSLFactory.defaultKeyStoreFileName(), ConfigurationProperties.javaKeyStoreFilePath());
         ConfigurationProperties.javaKeyStoreFilePath("newKeyStoreFile.jks");
 
         // then
         assertEquals("newKeyStoreFile.jks", ConfigurationProperties.javaKeyStoreFilePath());
+        assertEquals("newKeyStoreFile.jks", System.getProperty("mockserver.javaKeyStoreFilePath"));
         assertEquals(true, ConfigurationProperties.rebuildKeyStore());
     }
 
@@ -85,11 +100,12 @@ public class ConfigurationPropertiesTest {
         System.clearProperty("mockserver.javaKeyStorePassword");
 
         // when
-        assertEquals(SSLFactory.KEY_STORE_PASSWORD, new ConfigurationProperties().javaKeyStorePassword());
+        assertEquals(SSLFactory.KEY_STORE_PASSWORD, ConfigurationProperties.javaKeyStorePassword());
         ConfigurationProperties.javaKeyStorePassword("newPassword");
 
         // then
         assertEquals("newPassword", ConfigurationProperties.javaKeyStorePassword());
+        assertEquals("newPassword", System.getProperty("mockserver.javaKeyStorePassword"));
         assertEquals(true, ConfigurationProperties.rebuildKeyStore());
     }
 
@@ -99,11 +115,12 @@ public class ConfigurationPropertiesTest {
         System.clearProperty("mockserver.javaKeyStoreType");
 
         // when
-        assertEquals(KeyStore.getDefaultType(), new ConfigurationProperties().javaKeyStoreType());
+        assertEquals(KeyStore.getDefaultType(), ConfigurationProperties.javaKeyStoreType());
         ConfigurationProperties.javaKeyStoreType("PKCS11");
 
         // then
         assertEquals("PKCS11", ConfigurationProperties.javaKeyStoreType());
+        assertEquals("PKCS11", System.getProperty("mockserver.javaKeyStoreType"));
         assertEquals(true, ConfigurationProperties.rebuildKeyStore());
     }
 
@@ -113,11 +130,12 @@ public class ConfigurationPropertiesTest {
         System.clearProperty("mockserver.deleteGeneratedKeyStoreOnExit");
 
         // when
-        assertEquals(true, new ConfigurationProperties().deleteGeneratedKeyStoreOnExit());
+        assertEquals(true, ConfigurationProperties.deleteGeneratedKeyStoreOnExit());
         ConfigurationProperties.deleteGeneratedKeyStoreOnExit(false);
 
         // then
         assertEquals(false, ConfigurationProperties.deleteGeneratedKeyStoreOnExit());
+        assertEquals("false", System.getProperty("mockserver.deleteGeneratedKeyStoreOnExit"));
     }
 
     @Test
@@ -126,11 +144,12 @@ public class ConfigurationPropertiesTest {
         System.clearProperty("mockserver.sslCertificateDomainName");
 
         // when
-        assertEquals(SSLFactory.CERTIFICATE_DOMAIN, new ConfigurationProperties().sslCertificateDomainName());
+        assertEquals(SSLFactory.CERTIFICATE_DOMAIN, ConfigurationProperties.sslCertificateDomainName());
         ConfigurationProperties.sslCertificateDomainName("newDomain");
 
         // then
         assertEquals("newDomain", ConfigurationProperties.sslCertificateDomainName());
+        assertEquals("newDomain", System.getProperty("mockserver.sslCertificateDomainName"));
         assertEquals(true, ConfigurationProperties.rebuildKeyStore());
     }
 
@@ -140,7 +159,7 @@ public class ConfigurationPropertiesTest {
         ConfigurationProperties.clearSslSubjectAlternativeNameDomains();
 
         // when
-        assertThat(Arrays.asList(new ConfigurationProperties().sslSubjectAlternativeNameDomains()), containsInAnyOrder("localhost"));
+        assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()), containsInAnyOrder("localhost"));
         ConfigurationProperties.addSslSubjectAlternativeNameDomains("a", "b", "c", "d");
 
         // then
@@ -156,7 +175,7 @@ public class ConfigurationPropertiesTest {
         ConfigurationProperties.rebuildKeyStore(false);
 
         // when
-        assertThat(Arrays.asList(new ConfigurationProperties().sslSubjectAlternativeNameDomains()), containsInAnyOrder("localhost"));
+        assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()), containsInAnyOrder("localhost"));
         ConfigurationProperties.addSslSubjectAlternativeNameDomains("a", "b", "c", "d");
 
         // then
@@ -189,7 +208,7 @@ public class ConfigurationPropertiesTest {
         ConfigurationProperties.clearSslSubjectAlternativeNameIps();
 
         // when
-        assertThat(Arrays.asList(new ConfigurationProperties().sslSubjectAlternativeNameIps()), containsInAnyOrder("127.0.0.1", "0.0.0.0"));
+        assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameIps()), containsInAnyOrder("127.0.0.1", "0.0.0.0"));
         ConfigurationProperties.addSslSubjectAlternativeNameIps("1", "2", "3", "4");
 
         // then
@@ -205,7 +224,7 @@ public class ConfigurationPropertiesTest {
         ConfigurationProperties.rebuildKeyStore(false);
 
         // when
-        assertThat(Arrays.asList(new ConfigurationProperties().sslSubjectAlternativeNameIps()), containsInAnyOrder("127.0.0.1", "0.0.0.0"));
+        assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameIps()), containsInAnyOrder("127.0.0.1", "0.0.0.0"));
         ConfigurationProperties.addSslSubjectAlternativeNameIps("1", "2", "3", "4");
 
         // then
@@ -238,7 +257,7 @@ public class ConfigurationPropertiesTest {
         ConfigurationProperties.rebuildKeyStore(false);
 
         // when
-        assertEquals(false, new ConfigurationProperties().rebuildKeyStore());
+        assertEquals(false, ConfigurationProperties.rebuildKeyStore());
         ConfigurationProperties.rebuildKeyStore(true);
 
         // then

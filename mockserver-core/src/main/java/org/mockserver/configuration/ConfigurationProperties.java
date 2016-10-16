@@ -24,14 +24,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class ConfigurationProperties {
 
     static final long DEFAULT_MAX_TIMEOUT = 120;
-    static final Logger LOGGER = LoggerFactory.getLogger(ConfigurationProperties.class);
-    static final Properties PROPERTIES = readPropertyFile();
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConfigurationProperties.class);
+    private static final Properties PROPERTIES = readPropertyFile();
 
-    static final Set<String> ALL_SUBJECT_ALTERNATIVE_DOMAINS = Sets.newConcurrentHashSet();
-    static final Set<String> ALL_SUBJECT_ALTERNATIVE_IPS = Sets.newConcurrentHashSet();
-    static final AtomicBoolean REBUILD_KEY_STORE = new AtomicBoolean(false);
+    private static final Set<String> ALL_SUBJECT_ALTERNATIVE_DOMAINS = Sets.newConcurrentHashSet();
+    private static final Set<String> ALL_SUBJECT_ALTERNATIVE_IPS = Sets.newConcurrentHashSet();
+    private static final AtomicBoolean REBUILD_KEY_STORE = new AtomicBoolean(false);
 
-    static final IntegerStringListParser INTEGER_STRING_LIST_PARSER = new IntegerStringListParser();
+    private static final IntegerStringListParser INTEGER_STRING_LIST_PARSER = new IntegerStringListParser();
 
     static {
         addSslSubjectAlternativeNameDomains(readPropertyHierarchically("mockserver.sslSubjectAlternativeNameDomains", "localhost").split(","));
@@ -41,6 +41,15 @@ public class ConfigurationProperties {
     // property file config
     public static String propertyFile() {
         return System.getProperty("mockserver.propertyFile", "mockserver.properties");
+    }
+
+    // cors config
+    public static boolean enableCORS() {
+        return Boolean.parseBoolean(readPropertyHierarchically("mockserver.enableCORS", "" + true));
+    }
+
+    public static void enableCORS(boolean enableCORS) {
+        System.setProperty("mockserver.enableCORS", "" + enableCORS);
     }
 
     // socket config

@@ -32,6 +32,7 @@ import java.util.List;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONNECTION;
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH;
+import static org.mockserver.configuration.ConfigurationProperties.enableCORS;
 import static org.mockserver.model.ConnectionOptions.isFalseOrNull;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
@@ -68,7 +69,11 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
     protected void channelRead0(ChannelHandlerContext ctx, HttpRequest request) {
 
         try {
-            if (request.matches("PUT", "/status")) {
+            if (enableCORS() && request.getMethod().getValue().equals("OPTIONS") && !request.getFirstHeader("Origin").isEmpty()) {
+
+                writeResponse(ctx, request, HttpResponseStatus.OK);
+
+            } else if (request.matches("PUT", "/status")) {
 
                 List<Integer> actualPortBindings = server.getPorts();
                 writeResponse(ctx, request, HttpResponseStatus.OK, portBindingSerializer.serialize(portBinding(actualPortBindings)), "application/json");
@@ -205,6 +210,11 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                 .withBody(body);
         if (body != null && !body.isEmpty()) {
             response.updateHeader(header(HttpHeaders.Names.CONTENT_TYPE, contentType + "; charset=utf-8"));
+        }
+        if (enableCORS()) {
+            response.withHeader("Access-Control-Allow-Origin", "*");
+            response.withHeader("Access-Control-Allow-Methods", "PUT");
+            response.withHeader("X-CORS", "MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORS(false) or -Dmockserver.disableCORS=false");
         }
         writeResponse(ctx, request, response);
     }
