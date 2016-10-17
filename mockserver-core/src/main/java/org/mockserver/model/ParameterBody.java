@@ -1,6 +1,5 @@
 package org.mockserver.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Charsets;
 import com.google.common.net.MediaType;
 
@@ -14,6 +13,7 @@ import java.util.List;
  */
 public class ParameterBody extends Body<List<Parameter>> {
 
+    public static final MediaType DEFAULT_CONTENT_TYPE = MediaType.FORM_DATA;
     private final List<Parameter> parameters;
 
     public ParameterBody(Parameter... parameters) {
@@ -21,7 +21,7 @@ public class ParameterBody extends Body<List<Parameter>> {
     }
 
     public ParameterBody(List<Parameter> parameters) {
-        super(Type.PARAMETERS);
+        super(Type.PARAMETERS, DEFAULT_CONTENT_TYPE);
         this.parameters = parameters;
     }
 
@@ -67,10 +67,5 @@ public class ParameterBody extends Body<List<Parameter>> {
             }
         }
         return body.toString();
-    }
-
-    @JsonIgnore
-    public String getContentType() {
-        return MediaType.FORM_DATA.toString();
     }
 }

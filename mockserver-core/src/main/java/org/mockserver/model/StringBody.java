@@ -14,19 +14,21 @@ public class StringBody extends Body<String> {
 
     private final String value;
     private final byte[] rawBinaryData;
-    private final Charset charset;
 
     public StringBody(String value) {
-        this(value, null);
+        this(value, (MediaType) null);
     }
 
     public StringBody(String value, Charset charset) {
-        super(Type.STRING);
+        this(value, (charset != null ? MediaType.create("text", "plain").withCharset(charset) : null));
+    }
+
+    public StringBody(String value, MediaType contentType) {
+        super(Type.STRING, contentType);
         this.value = value;
-        this.charset = charset;
 
         if (value != null) {
-            this.rawBinaryData = value.getBytes(charset != null ? charset : DEFAULT_HTTP_CHARACTER_SET);
+            this.rawBinaryData = value.getBytes(determineCharacterSet(contentType, DEFAULT_HTTP_CHARACTER_SET));
         } else {
             this.rawBinaryData = new byte[0];
         }
@@ -40,26 +42,16 @@ public class StringBody extends Body<String> {
         return new StringBody(body, charset);
     }
 
+    public static StringBody exact(String body, MediaType contentType) {
+        return new StringBody(body, contentType);
+    }
+
     public String getValue() {
         return value;
     }
 
     public byte[] getRawBytes() {
         return rawBinaryData;
-    }
-
-    public Charset getCharset() {
-        return charset;
-    }
-
-    @JsonIgnore
-    public Charset getCharset(Charset defaultIfNotSet) {
-        return charset != null ? charset : defaultIfNotSet;
-    }
-
-    @JsonIgnore
-    public String getContentType() {
-        return MediaType.create("text", "plain").toString();
     }
 
     @Override

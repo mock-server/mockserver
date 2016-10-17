@@ -62,12 +62,12 @@ public class MockServerResponseEncoderCookieHeaderTest {
 
         // then
         HttpHeaders headers = ((FullHttpResponse) output.get(0)).headers();
+        assertThat(headers.names(), containsInAnyOrder("Set-Cookie", "Content-Length"));
         assertThat(headers.getAll("Set-Cookie"), containsInAnyOrder(
                 cookieOne,
                 cookieTwo,
                 "cookieName3=cookie==Value3"
         ));
-        assertThat(headers.names(), contains("Set-Cookie"));
     }
 
 }

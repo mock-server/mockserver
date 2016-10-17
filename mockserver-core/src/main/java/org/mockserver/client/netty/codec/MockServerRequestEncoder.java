@@ -127,14 +127,9 @@ public class MockServerRequestEncoder extends MessageToMessageEncoder<OutboundHt
         }
 
         if (!request.headers().contains(CONTENT_TYPE)) {
-            if (httpRequest.getBody() != null) {
-                Charset bodyCharset = httpRequest.getBody().getCharset(null);
-                String bodyContentType = httpRequest.getBody().getContentType();
-                if (bodyCharset != null) {
-                    request.headers().set(CONTENT_TYPE, bodyContentType + "; charset=" + bodyCharset.name().toLowerCase());
-                } else if (bodyContentType != null) {
-                    request.headers().set(CONTENT_TYPE, bodyContentType);
-                }
+            if (httpRequest.getBody() != null
+                    && httpRequest.getBody().getContentType() != null) {
+                request.headers().set(CONTENT_TYPE, httpRequest.getBody().getContentType());
             }
         }
     }

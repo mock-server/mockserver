@@ -2,6 +2,7 @@ package org.mockserver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Charsets;
+import com.google.common.net.MediaType;
 import org.apache.commons.io.IOUtils;
 
 import java.io.FileInputStream;
@@ -13,10 +14,11 @@ import java.io.InputStream;
  */
 public class JsonSchemaBody extends Body {
 
+    public static final MediaType DEFAULT_CONTENT_TYPE = MediaType.create("application", "json");
     private final String jsonSchema;
 
     public JsonSchemaBody(String jsonSchema) {
-        super(Type.JSON_SCHEMA);
+        super(Type.JSON_SCHEMA, DEFAULT_CONTENT_TYPE);
         this.jsonSchema = jsonSchema;
     }
 
@@ -42,10 +44,5 @@ public class JsonSchemaBody extends Body {
 
     public String getValue() {
         return jsonSchema;
-    }
-
-    @JsonIgnore
-    public String getContentType() {
-        return "application/json";
     }
 }

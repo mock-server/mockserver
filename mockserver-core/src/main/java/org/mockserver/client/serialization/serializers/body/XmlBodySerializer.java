@@ -22,6 +22,9 @@ public class XmlBodySerializer extends StdSerializer<XmlBody> {
         if (xmlBody.getNot() != null && xmlBody.getNot()) {
             jgen.writeBooleanField("not", xmlBody.getNot());
         }
+        if (xmlBody.getContentType() != null && !xmlBody.getContentType().equals(XmlBody.DEFAULT_CONTENT_TYPE.toString())) {
+            jgen.writeStringField("contentType", xmlBody.getContentType());
+        }
         jgen.writeStringField("type", xmlBody.getType().name());
         jgen.writeStringField("xml", xmlBody.getValue());
         jgen.writeEndObject();

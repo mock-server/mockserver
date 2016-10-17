@@ -1,5 +1,7 @@
 package org.mockserver.mappers;
 
+import com.google.common.base.Charsets;
+import com.google.common.net.MediaType;
 import org.junit.Test;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
@@ -10,9 +12,13 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockserver.model.HttpResponse.response;
@@ -21,6 +27,7 @@ import static org.mockserver.model.JsonSchemaBody.jsonSchema;
 import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.ParameterBody.params;
 import static org.mockserver.model.RegexBody.regex;
+import static org.mockserver.model.StringBody.exact;
 
 /**
  * @author jamesdbloom
@@ -41,7 +48,33 @@ public class MockServerResponseToHttpServletResponseEncoderContentTypeTest {
     }
 
     @Test
-    public void shouldReturnContentTypeForStringBody() {
+    public void shouldReturnContentTypeForStringBodyWithCharset() {
+        // given
+        HttpResponse httpResponse = response().withBody(exact("somebody", Charsets.US_ASCII));
+        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
+
+        // when
+        new MockServerResponseToHttpServletResponseEncoder().mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
+
+        // then
+        assertEquals("text/plain; charset=us-ascii", httpServletResponse.getHeader("Content-Type"));
+    }
+
+    @Test
+    public void shouldReturnContentTypeForStringBodyWithMediaType() {
+        // given
+        HttpResponse httpResponse = response().withBody(exact("somebody", MediaType.ATOM_UTF_8));
+        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
+
+        // when
+        new MockServerResponseToHttpServletResponseEncoder().mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
+
+        // then
+        assertEquals("application/atom+xml; charset=utf-8", httpServletResponse.getHeader("Content-Type"));
+    }
+
+    @Test
+    public void shouldReturnContentTypeForStringBodyWithoutMediaTypeOrCharset() {
         // given
         HttpResponse httpResponse = response().withBody("somebody");
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
@@ -50,7 +83,7 @@ public class MockServerResponseToHttpServletResponseEncoderContentTypeTest {
         new MockServerResponseToHttpServletResponseEncoder().mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
 
         // then
-        assertEquals("text/plain", httpServletResponse.getHeader("Content-Type"));
+        assertThat(httpServletResponse.getHeader("Content-Type"), nullValue());
     }
 
     @Test
@@ -63,7 +96,7 @@ public class MockServerResponseToHttpServletResponseEncoderContentTypeTest {
         new MockServerResponseToHttpServletResponseEncoder().mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
 
         // then
-        assertEquals("application/json", httpServletResponse.getHeader("Content-Type"));
+        assertThat(httpServletResponse.getHeader("Content-Type"), is("application/json"));
     }
 
     @Test

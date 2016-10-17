@@ -3,7 +3,6 @@ package org.mockserver.client.netty.codec;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
 import io.netty.handler.codec.http.FullHttpResponse;
-import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.cookie.ClientCookieDecoder;
 import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 import org.mockserver.mappers.ContentTypeMapper;
@@ -14,6 +13,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
 
 /**
  * @author jamesdbloom
@@ -74,7 +75,7 @@ public class MockServerResponseDecoder extends MessageToMessageDecoder<FullHttpR
             byte[] bodyBytes = new byte[fullHttpResponse.content().readableBytes()];
             fullHttpResponse.content().readBytes(bodyBytes);
             if (bodyBytes.length > 0) {
-                if (ContentTypeMapper.isBinary(fullHttpResponse.headers().get(HttpHeaders.Names.CONTENT_TYPE))) {
+                if (ContentTypeMapper.isBinary(fullHttpResponse.headers().get(CONTENT_TYPE))) {
                     httpResponse.withBody(new BinaryBody(bodyBytes));
                 } else {
                     Charset requestCharset = ContentTypeMapper.determineCharsetForMessage(fullHttpResponse);

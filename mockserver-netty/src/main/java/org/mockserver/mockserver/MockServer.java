@@ -22,8 +22,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 /**
- * An HTTP server that sends back the content of the received HTTP request
- * in a pretty plaintext form.
+ * @author jamesdbloom
  */
 public class MockServer implements Stoppable {
 

@@ -1,5 +1,6 @@
 package org.mockserver.client.serialization.model;
 
+import com.google.common.net.MediaType;
 import org.mockserver.matchers.MatchType;
 import org.mockserver.model.Body;
 import org.mockserver.model.JsonBody;
@@ -13,17 +14,15 @@ public class JsonBodyDTO extends BodyDTO {
 
     private String json;
     private MatchType matchType;
-    private Charset charset;
 
     public JsonBodyDTO(JsonBody jsonBody) {
         this(jsonBody, false);
     }
 
     public JsonBodyDTO(JsonBody jsonBody, Boolean not) {
-        super(Body.Type.JSON, not);
+        super(Body.Type.JSON, not, jsonBody.getContentType());
         this.json = jsonBody.getValue();
         this.matchType = jsonBody.getMatchType();
-        this.charset = jsonBody.getCharset();
     }
 
     protected JsonBodyDTO() {
@@ -37,11 +36,7 @@ public class JsonBodyDTO extends BodyDTO {
         return matchType;
     }
 
-    public Charset getCharset() {
-        return charset;
-    }
-
     public JsonBody buildObject() {
-        return new JsonBody(getJson(), charset, matchType);
+        return new JsonBody(getJson(), (contentType != null ? MediaType.parse(contentType) : null), matchType);
     }
 }

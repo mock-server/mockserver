@@ -15,7 +15,7 @@ public class XPathBodyDTO extends BodyDTO {
     }
 
     public XPathBodyDTO(XPathBody xPathBody, Boolean not) {
-        super(Body.Type.XPATH, not);
+        super(Body.Type.XPATH, not, xPathBody.getContentType());
         this.xpath = xPathBody.getValue();
     }
 

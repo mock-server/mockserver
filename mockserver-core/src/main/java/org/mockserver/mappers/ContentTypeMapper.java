@@ -16,6 +16,8 @@ import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
 
+import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
+
 /**
  * @author jamesdbloom
  */
@@ -72,19 +74,19 @@ public class ContentTypeMapper {
     }
 
     public static Charset determineCharsetForMessage(HttpMessage httpMessage) {
-        return getCharsetFromContentTypeHeader(httpMessage.headers().get(HttpHeaders.Names.CONTENT_TYPE));
+        return getCharsetFromContentTypeHeader(httpMessage.headers().get(CONTENT_TYPE));
     }
 
     public static Charset determineCharsetForMessage(HttpServletRequest servletRequest) {
-        return getCharsetFromContentTypeHeader(servletRequest.getHeader(HttpHeaders.Names.CONTENT_TYPE));
+        return getCharsetFromContentTypeHeader(servletRequest.getHeader(CONTENT_TYPE));
     }
 
     public static Charset determineCharsetForMessage(HttpResponse httpResponse) {
-        return getCharsetFromContentTypeHeader(httpResponse.getFirstHeader(HttpHeaders.Names.CONTENT_TYPE));
+        return getCharsetFromContentTypeHeader(httpResponse.getFirstHeader(CONTENT_TYPE));
     }
 
     public static Charset determineCharsetForMessage(HttpRequest httpRequest) {
-        return getCharsetFromContentTypeHeader(httpRequest.getFirstHeader(HttpHeaders.Names.CONTENT_TYPE));
+        return getCharsetFromContentTypeHeader(httpRequest.getFirstHeader(CONTENT_TYPE));
     }
 
     private static Charset getCharsetFromContentTypeHeader(String contentType) {

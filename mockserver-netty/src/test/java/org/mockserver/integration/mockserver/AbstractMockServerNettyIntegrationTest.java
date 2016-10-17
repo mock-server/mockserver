@@ -204,7 +204,6 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
         // - in http
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withHeader(HttpHeaders.CONNECTION, "close")
                         .withHeader(header(HttpHeaders.CONTENT_LENGTH, "some_long_body".length() / 2))
                         .withStatusCode(HttpStatusCode.OK_200.code())
@@ -217,7 +216,6 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
         // - in https
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
                         .withHeader(HttpHeaders.CONNECTION, "close")
                         .withHeader(header(HttpHeaders.CONTENT_LENGTH, "some_long_body".length() / 2))
                         .withStatusCode(HttpStatusCode.OK_200.code())
@@ -465,8 +463,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
                 response()
                         .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
                         .withHeaders(
-                                header("x-callback", "test_callback_header"),
-                                header(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                                header("x-callback", "test_callback_header")
                         )
                         .withBody("a_callback_response"),
                 makeRequest(
@@ -487,8 +484,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
                 response()
                         .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
                         .withHeaders(
-                                header("x-callback", "test_callback_header"),
-                                header(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                                header("x-callback", "test_callback_header")
                         )
                         .withBody("a_callback_response"),
                 makeRequest(

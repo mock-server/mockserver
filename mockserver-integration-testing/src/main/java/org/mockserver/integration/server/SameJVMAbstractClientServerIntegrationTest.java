@@ -44,8 +44,7 @@ public abstract class SameJVMAbstractClientServerIntegrationTest extends Abstrac
                 response()
                         .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
                         .withHeaders(
-                                header("x-callback", "test_callback_header"),
-                                header(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                                header("x-callback", "test_callback_header")
                         )
                         .withBody("a_callback_response"),
                 makeRequest(
@@ -66,8 +65,7 @@ public abstract class SameJVMAbstractClientServerIntegrationTest extends Abstrac
                 response()
                         .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
                         .withHeaders(
-                                header("x-callback", "test_callback_header"),
-                                header(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                                header("x-callback", "test_callback_header")
                         )
                         .withBody("a_callback_response"),
                 makeRequest(

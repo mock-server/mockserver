@@ -13,17 +13,16 @@ import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.DefaultCookie;
 import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
 import org.mockserver.mappers.ContentTypeMapper;
-import org.mockserver.model.Body;
-import org.mockserver.model.Header;
-import org.mockserver.model.HttpResponse;
-import org.mockserver.model.NottableString;
+import org.mockserver.model.*;
 
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
+import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH;
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaders.Names.SET_COOKIE;
+import static org.mockserver.model.ConnectionOptions.isFalseOrNull;
 
 /**
  * @author jamesdbloom
@@ -59,24 +58,45 @@ public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpRespo
         return content;
     }
 
-    private void setHeaders(HttpResponse response, DefaultFullHttpResponse httpServletResponse) {
+    private void setHeaders(HttpResponse response, DefaultFullHttpResponse defaultFullHttpResponse) {
         if (response.getHeaders() != null) {
             for (Header header : response.getHeaders()) {
                 for (NottableString value : header.getValues()) {
-                    httpServletResponse.headers().add(header.getName().getValue(), value.getValue());
+                    defaultFullHttpResponse.headers().add(header.getName().getValue(), value.getValue());
                 }
             }
         }
 
+        // Content-Type
         if (Strings.isNullOrEmpty(response.getFirstHeader(CONTENT_TYPE))) {
-            if (response.getBody() != null && !Strings.isNullOrEmpty(response.getBody().toString())) {
-                Charset bodyCharset = response.getBody().getCharset(null);
-                String bodyContentType = response.getBody().getContentType();
-                if (bodyCharset != null) {
-                    httpServletResponse.headers().set(CONTENT_TYPE, bodyContentType + "; charset=" + bodyCharset.name().toLowerCase());
-                } else if (bodyContentType != null) {
-                    httpServletResponse.headers().set(CONTENT_TYPE, bodyContentType);
+            if (response.getBody() != null
+                    && response.getBody().getContentType() != null) {
+                defaultFullHttpResponse.headers().set(CONTENT_TYPE, response.getBody().getContentType());
+            }
+        }
+
+        // Content-Length
+        if (Strings.isNullOrEmpty(response.getFirstHeader(CONTENT_LENGTH))) {
+            ConnectionOptions connectionOptions = response.getConnectionOptions();
+            boolean overrideContentLength = connectionOptions != null && connectionOptions.getContentLengthHeaderOverride() != null;
+            boolean addContentLength = connectionOptions == null || isFalseOrNull(connectionOptions.getSuppressContentLengthHeader());
+            if (overrideContentLength) {
+                defaultFullHttpResponse.headers().set(CONTENT_LENGTH, connectionOptions.getContentLengthHeaderOverride());
+            } else if (addContentLength) {
+                Body body = response.getBody();
+                byte[] bodyBytes = new byte[0];
+                if (body != null) {
+                    Object bodyContents = body.getValue();
+                    Charset bodyCharset = body.getCharset(ContentTypeMapper.determineCharsetForMessage(response));
+                    if (bodyContents instanceof byte[]) {
+                        bodyBytes = (byte[]) bodyContents;
+                    } else if (bodyContents instanceof String) {
+                        bodyBytes = ((String) bodyContents).getBytes(bodyCharset);
+                    } else if (body.toString() != null) {
+                        bodyBytes = body.toString().getBytes(bodyCharset);
+                    }
                 }
+                defaultFullHttpResponse.headers().set(CONTENT_LENGTH, bodyBytes.length);
             }
         }
     }

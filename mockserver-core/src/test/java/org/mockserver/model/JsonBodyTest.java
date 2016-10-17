@@ -1,6 +1,7 @@
 package org.mockserver.model;
 
 import com.google.common.base.Charsets;
+import com.google.common.net.MediaType;
 import org.junit.Test;
 import org.mockserver.matchers.MatchType;
 
@@ -26,7 +27,6 @@ public class JsonBodyTest {
         assertThat(jsonBody.getType(), is(Body.Type.JSON));
         assertThat(jsonBody.getMatchType(), is(MatchType.ONLY_MATCHING_FIELDS));
         assertThat(jsonBody.getContentType(), is("application/json"));
-        assertThat(jsonBody.getCharset(), nullValue());
     }
 
     @Test
@@ -39,7 +39,6 @@ public class JsonBodyTest {
         assertThat(jsonBody.getType(), is(Body.Type.JSON));
         assertThat(jsonBody.getMatchType(), is(MatchType.STRICT));
         assertThat(jsonBody.getContentType(), is("application/json"));
-        assertThat(jsonBody.getCharset(), nullValue());
     }
 
     @Test
@@ -51,8 +50,19 @@ public class JsonBodyTest {
         assertThat(jsonBody.getValue(), is("some_body"));
         assertThat(jsonBody.getType(), is(Body.Type.JSON));
         assertThat(jsonBody.getMatchType(), is(MatchType.STRICT));
-        assertThat(jsonBody.getContentType(), is("application/json"));
-        assertThat(jsonBody.getCharset(), is(Charsets.UTF_16));
+        assertThat(jsonBody.getContentType(), is("application/json; charset=utf-16"));
+    }
+
+    @Test
+    public void shouldReturnValuesSetInConstructorWithMatchTypeAndMediaType() {
+        // when
+        JsonBody jsonBody = new JsonBody("some_body", MediaType.JSON_UTF_8, MatchType.STRICT);
+
+        // then
+        assertThat(jsonBody.getValue(), is("some_body"));
+        assertThat(jsonBody.getType(), is(Body.Type.JSON));
+        assertThat(jsonBody.getMatchType(), is(MatchType.STRICT));
+        assertThat(jsonBody.getContentType(), is("application/json; charset=utf-8"));
     }
 
 
@@ -66,7 +76,6 @@ public class JsonBodyTest {
         assertThat(jsonBody.getType(), is(Body.Type.JSON));
         assertThat(jsonBody.getMatchType(), is(ONLY_MATCHING_FIELDS));
         assertThat(jsonBody.getContentType(), is("application/json"));
-        assertThat(jsonBody.getCharset(), nullValue());
     }
 
     @Test
@@ -79,20 +88,30 @@ public class JsonBodyTest {
         assertThat(jsonBody.getType(), is(Body.Type.JSON));
         assertThat(jsonBody.getMatchType(), is(STRICT));
         assertThat(jsonBody.getContentType(), is("application/json"));
-        assertThat(jsonBody.getCharset(), nullValue());
     }
 
     @Test
-    public void shouldReturnValuesFromStaticBuilderWithCharset() {
+    public void shouldReturnValuesFromStaticBuilderWithCharsetAndMatchType() {
         // when
-        JsonBody jsonBody = json("some_body", Charsets.UTF_16);
+        JsonBody jsonBody = json("some_body", Charsets.UTF_16, STRICT);
 
         // then
         assertThat(jsonBody.getValue(), is("some_body"));
         assertThat(jsonBody.getType(), is(Body.Type.JSON));
-        assertThat(jsonBody.getMatchType(), is(ONLY_MATCHING_FIELDS));
-        assertThat(jsonBody.getContentType(), is("application/json"));
-        assertThat(jsonBody.getCharset(), is(Charsets.UTF_16));
+        assertThat(jsonBody.getMatchType(), is(STRICT));
+        assertThat(jsonBody.getContentType(), is("application/json; charset=utf-16"));
+    }
+
+    @Test
+    public void shouldReturnValuesFromStaticBuilderWithMediaTypeAndMatchType() {
+        // when
+        JsonBody jsonBody = json("some_body", MediaType.JSON_UTF_8, STRICT);
+
+        // then
+        assertThat(jsonBody.getValue(), is("some_body"));
+        assertThat(jsonBody.getType(), is(Body.Type.JSON));
+        assertThat(jsonBody.getMatchType(), is(STRICT));
+        assertThat(jsonBody.getContentType(), is("application/json; charset=utf-8"));
     }
 
     @Test
@@ -104,8 +123,7 @@ public class JsonBodyTest {
         assertThat(jsonBody.getValue(), is("some_body"));
         assertThat(jsonBody.getType(), is(Body.Type.JSON));
         assertThat(jsonBody.getMatchType(), is(STRICT));
-        assertThat(jsonBody.getContentType(), is("application/json"));
-        assertThat(jsonBody.getCharset(), is(Charsets.UTF_16));
+        assertThat(jsonBody.getContentType(), is("application/json; charset=utf-16"));
     }
 
 }

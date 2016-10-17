@@ -33,6 +33,7 @@ import java.nio.charset.Charset;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONNECTION;
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH;
+import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
@@ -187,12 +188,11 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
                 response()
                         .withStatusCode(responseStatus.code())
                         .withBody(body)
-                        .updateHeader(header(HttpHeaders.Names.CONTENT_TYPE, contentType + "; charset=utf-8"))
+                        .updateHeader(header(CONTENT_TYPE, contentType + "; charset=utf-8"))
         );
     }
 
     private void writeResponse(ChannelHandlerContext ctx, HttpRequest request, HttpResponse response) {
-        addContentLengthHeader(response);
         if (request.isKeepAlive() != null && request.isKeepAlive()) {
             response.updateHeader(header(CONNECTION, HttpHeaders.Values.KEEP_ALIVE));
             ctx.write(response);
@@ -200,23 +200,6 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
             response.updateHeader(header(CONNECTION, HttpHeaders.Values.CLOSE));
             ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
         }
-    }
-
-    private void addContentLengthHeader(HttpResponse response) {
-        Body body = response.getBody();
-        byte[] bodyBytes = new byte[0];
-        if (body != null) {
-            Object bodyContents = body.getValue();
-            Charset bodyCharset = body.getCharset(ContentTypeMapper.determineCharsetForMessage(response));
-            if (bodyContents instanceof byte[]) {
-                bodyBytes = (byte[]) bodyContents;
-            } else if (bodyContents instanceof String) {
-                bodyBytes = ((String) bodyContents).getBytes(bodyCharset);
-            } else if (body.toString() != null) {
-                bodyBytes = body.toString().getBytes(bodyCharset);
-            }
-        }
-        response.updateHeader(header(CONTENT_LENGTH, bodyBytes.length));
     }
 
     @Override

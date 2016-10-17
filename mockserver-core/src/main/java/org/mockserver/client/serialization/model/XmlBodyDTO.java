@@ -15,7 +15,7 @@ public class XmlBodyDTO extends BodyDTO {
     }
 
     public XmlBodyDTO(XmlBody xmlBody, Boolean not) {
-        super(Body.Type.XML, not);
+        super(Body.Type.XML, not, xmlBody.getContentType());
         this.xml = xmlBody.getValue();
     }
 

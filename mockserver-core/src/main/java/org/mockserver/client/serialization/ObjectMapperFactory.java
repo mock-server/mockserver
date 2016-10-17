@@ -68,6 +68,8 @@ public class ObjectMapperFactory {
             addDeserializer(BodyDTO.class, new BodyDTODeserializer());
             addSerializer(StringBodyDTO.class, new StringBodyDTOSerializer());
             addSerializer(StringBody.class, new StringBodySerializer());
+            addSerializer(BinaryBodyDTO.class, new BinaryBodyDTOSerializer());
+            addSerializer(BinaryBody.class, new BinaryBodySerializer());
             addSerializer(RegexBodyDTO.class, new RegexBodyDTOSerializer());
             addSerializer(RegexBody.class, new RegexBodySerializer());
             addSerializer(JsonBodyDTO.class, new JsonBodyDTOSerializer());

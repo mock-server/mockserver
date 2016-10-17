@@ -1,18 +1,18 @@
 package org.mockserver.mappers;
 
-import com.google.common.base.Strings;
-import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaders;
-import io.netty.handler.codec.http.cookie.*;
+import io.netty.handler.codec.http.cookie.ClientCookieDecoder;
+import io.netty.handler.codec.http.cookie.DefaultCookie;
+import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
 import org.mockserver.client.serialization.Base64Converter;
 import org.mockserver.model.*;
-import org.mockserver.model.Cookie;
 import org.mockserver.streams.IOStreamUtils;
 
 import javax.servlet.http.HttpServletResponse;
 import java.nio.charset.Charset;
 import java.util.List;
 
+import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaders.Names.SET_COOKIE;
 
 /**
@@ -88,14 +88,10 @@ public class MockServerResponseToHttpServletResponseEncoder {
     }
 
     private void addContentTypeHeader(HttpResponse httpResponse, HttpServletResponse httpServletResponse) {
-        if (httpServletResponse.getContentType() == null && httpResponse.getBody() != null) {
-            Charset bodyCharset = httpResponse.getBody().getCharset(null);
-            String bodyContentType = httpResponse.getBody().getContentType();
-            if (bodyCharset != null) {
-                httpServletResponse.addHeader(HttpHeaders.Names.CONTENT_TYPE, bodyContentType + "; charset=" + bodyCharset.name().toLowerCase());
-            } else if (bodyContentType != null) {
-                httpServletResponse.addHeader(HttpHeaders.Names.CONTENT_TYPE, bodyContentType);
-            }
+        if (httpServletResponse.getContentType() == null
+                && httpResponse.getBody() != null
+                && httpResponse.getBody().getContentType() != null) {
+            httpServletResponse.addHeader(CONTENT_TYPE, httpResponse.getBody().getContentType());
         }
     }
 }

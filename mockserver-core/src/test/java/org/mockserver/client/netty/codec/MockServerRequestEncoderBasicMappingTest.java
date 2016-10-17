@@ -26,6 +26,7 @@ import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.OutboundHttpRequest.outboundRequest;
 import static org.mockserver.model.Parameter.param;
 import static io.netty.handler.codec.http.HttpHeaders.Names.*;
+import static org.mockserver.model.StringBody.exact;
 
 /**
  * @author jamesdbloom
@@ -238,7 +239,21 @@ public class MockServerRequestEncoderBasicMappingTest {
         // then
         FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
         assertThat(fullHttpRequest.content().toString(Charsets.UTF_8), is("somebody"));
-        assertThat(fullHttpRequest.headers().get(CONTENT_TYPE), is(MediaType.create("text", "plain").toString()));
+        assertThat(fullHttpRequest.headers().get(CONTENT_TYPE), nullValue());
+    }
+
+    @Test
+    public void shouldEncodeStringBodyWithContentType() {
+        // given
+        httpRequest.withBody(exact("somebody", MediaType.HTML_UTF_8));
+
+        // when
+        new MockServerRequestEncoder().encode(null, httpRequest, output);
+
+        // then
+        FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
+        assertThat(fullHttpRequest.content().toString(Charsets.UTF_8), is("somebody"));
+        assertThat(fullHttpRequest.headers().get(CONTENT_TYPE), is(MediaType.HTML_UTF_8.toString()));
     }
 
     @Test
@@ -253,6 +268,20 @@ public class MockServerRequestEncoderBasicMappingTest {
         FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
         assertThat(fullHttpRequest.content().array(), is("somebody".getBytes()));
         assertThat(fullHttpRequest.headers().get(CONTENT_TYPE), nullValue());
+    }
+
+    @Test
+    public void shouldEncodeBinaryBodyWithContentType() {
+        // given
+        httpRequest.withBody(binary("somebody".getBytes(), MediaType.QUICKTIME));
+
+        // when
+        new MockServerRequestEncoder().encode(null, httpRequest, output);
+
+        // then
+        FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
+        assertThat(fullHttpRequest.content().array(), is("somebody".getBytes()));
+        assertThat(fullHttpRequest.headers().get(CONTENT_TYPE), is(MediaType.QUICKTIME.toString()));
     }
 
     @Test
