@@ -22,6 +22,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.OutboundHttpRequest.outboundRequest;
 
@@ -116,7 +117,7 @@ public class ProxyServlet extends HttpServlet {
 
                 HttpRequest[] requests = requestLogFilter.retrieve(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
                 httpServletResponse.setStatus(HttpStatusCode.OK_200.code());
-                httpServletResponse.setHeader(HttpHeaders.Names.CONTENT_TYPE, MediaType.JSON_UTF_8.toString());
+                httpServletResponse.setHeader(CONTENT_TYPE, MediaType.JSON_UTF_8.toString());
                 IOStreamUtils.writeToOutputStream(httpRequestSerializer.serialize(requests).getBytes(), httpServletResponse);
 
             } else if (requestPath.equals("/verify")) {
@@ -126,7 +127,7 @@ public class ProxyServlet extends HttpServlet {
                     httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
                 } else {
                     httpServletResponse.setStatus(HttpStatusCode.NOT_ACCEPTABLE_406.code());
-                    httpServletResponse.setHeader(HttpHeaders.Names.CONTENT_TYPE, MediaType.JSON_UTF_8.toString());
+                    httpServletResponse.setHeader(CONTENT_TYPE, MediaType.JSON_UTF_8.toString());
                     IOStreamUtils.writeToOutputStream(result.getBytes(), httpServletResponse);
                 }
 
@@ -137,7 +138,7 @@ public class ProxyServlet extends HttpServlet {
                     httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
                 } else {
                     httpServletResponse.setStatus(HttpStatusCode.NOT_ACCEPTABLE_406.code());
-                    httpServletResponse.setHeader(HttpHeaders.Names.CONTENT_TYPE, MediaType.JSON_UTF_8.toString());
+                    httpServletResponse.setHeader(CONTENT_TYPE, MediaType.JSON_UTF_8.toString());
                     IOStreamUtils.writeToOutputStream(result.getBytes(), httpServletResponse);
                 }
 

@@ -106,7 +106,6 @@ public class NettyHttpClientErrorHandlingTest {
                             .withHeader(header(CONTENT_LENGTH, "this is an example body".length() / 2))
                             .withHeader(header(ACCEPT_ENCODING, HttpHeaders.Values.GZIP + "," + HttpHeaders.Values.DEFLATE))
                             .withHeader(header(CONNECTION, HttpHeaders.Values.KEEP_ALIVE))
-                            .withHeader(header(CONTENT_TYPE, MediaType.create("text", "plain").toString()))
                             .withBody(exact("this is an "))
             ));
         } finally {

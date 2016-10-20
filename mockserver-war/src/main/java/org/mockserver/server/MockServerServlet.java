@@ -20,6 +20,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.nio.charset.Charset;
 
+import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORS;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
@@ -61,7 +62,7 @@ public class MockServerServlet extends HttpServlet {
             } else if (request.matches("PUT", "/status")) {
 
                 httpServletResponse.setStatus(HttpStatusCode.OK_200.code());
-                httpServletResponse.setHeader(HttpHeaders.Names.CONTENT_TYPE, MediaType.JSON_UTF_8.toString());
+                httpServletResponse.setHeader(CONTENT_TYPE, MediaType.JSON_UTF_8.toString());
                 IOStreamUtils.writeToOutputStream(portBindingSerializer.serialize(portBinding(httpServletRequest.getLocalPort())).getBytes(), httpServletResponse);
                 addCORSHeaders(httpServletResponse);
 
@@ -114,12 +115,12 @@ public class MockServerServlet extends HttpServlet {
                 if (request.hasQueryStringParameter("type", "expectation")) {
                     Expectation[] expectations = mockServerMatcher.retrieve(httpRequestSerializer.deserialize(request.getBodyAsString()));
                     httpServletResponse.setStatus(HttpStatusCode.OK_200.code());
-                    httpServletResponse.setHeader(HttpHeaders.Names.CONTENT_TYPE, MediaType.JSON_UTF_8.toString());
+                    httpServletResponse.setHeader(CONTENT_TYPE, MediaType.JSON_UTF_8.toString());
                     IOStreamUtils.writeToOutputStream(expectationSerializer.serialize(expectations).getBytes(), httpServletResponse);
                 } else {
                     HttpRequest[] requests = requestLogFilter.retrieve(httpRequestSerializer.deserialize(request.getBodyAsString()));
                     httpServletResponse.setStatus(HttpStatusCode.OK_200.code());
-                    httpServletResponse.setHeader(HttpHeaders.Names.CONTENT_TYPE, MediaType.JSON_UTF_8.toString());
+                    httpServletResponse.setHeader(CONTENT_TYPE, MediaType.JSON_UTF_8.toString());
                     IOStreamUtils.writeToOutputStream(httpRequestSerializer.serialize(requests).getBytes(), httpServletResponse);
                 }
 
@@ -159,7 +160,7 @@ public class MockServerServlet extends HttpServlet {
             httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
         } else {
             httpServletResponse.setStatus(HttpStatusCode.NOT_ACCEPTABLE_406.code());
-            httpServletResponse.setHeader(HttpHeaders.Names.CONTENT_TYPE, MediaType.PLAIN_TEXT_UTF_8.toString());
+            httpServletResponse.setHeader(CONTENT_TYPE, MediaType.PLAIN_TEXT_UTF_8.toString());
             IOStreamUtils.writeToOutputStream(result.getBytes(), httpServletResponse);
         }
     }
@@ -200,13 +201,13 @@ public class MockServerServlet extends HttpServlet {
     }
 
     private void addContentTypeHeader(HttpResponse response) {
-        if (response.getBody() != null && Strings.isNullOrEmpty(response.getFirstHeader(HttpHeaders.Names.CONTENT_TYPE))) {
+        if (response.getBody() != null && Strings.isNullOrEmpty(response.getFirstHeader(CONTENT_TYPE))) {
             Charset bodyCharset = response.getBody().getCharset(null);
             String bodyContentType = response.getBody().getContentType();
             if (bodyCharset != null) {
-                response.updateHeader(header(HttpHeaders.Names.CONTENT_TYPE, bodyContentType + "; charset=" + bodyCharset.name().toLowerCase()));
+                response.updateHeader(header(CONTENT_TYPE, bodyContentType + "; charset=" + bodyCharset.name().toLowerCase()));
             } else if (bodyContentType != null) {
-                response.updateHeader(header(HttpHeaders.Names.CONTENT_TYPE, bodyContentType));
+                response.updateHeader(header(CONTENT_TYPE, bodyContentType));
             }
         }
     }

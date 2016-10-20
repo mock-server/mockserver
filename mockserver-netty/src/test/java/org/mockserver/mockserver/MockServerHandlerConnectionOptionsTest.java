@@ -71,7 +71,6 @@ public class MockServerHandlerConnectionOptionsTest extends MockServerHandlerTes
         assertThat(embeddedChannel.isOpen(), is(true));
         assertThat(httpResponse.getBodyAsString(), is("some_content"));
         assertThat(httpResponse.getHeader("Connection"), empty());
-        assertThat(httpResponse.getHeader("Content-Length"), IsIterableContainingInOrder.contains(""));
         assertThat(httpResponse.getBodyAsString(), is("some_content"));
     }
 
@@ -106,7 +105,6 @@ public class MockServerHandlerConnectionOptionsTest extends MockServerHandlerTes
         assertThat(embeddedChannel.isOpen(), is(true));
         assertThat(httpResponse.getBodyAsString(), is("some_content"));
         assertThat(httpResponse.getHeader("Connection"), containsInAnyOrder("keep-alive"));
-        assertThat(httpResponse.getHeader("Content-Length"), containsInAnyOrder(Integer.toString(50)));
         assertThat(httpResponse.getBodyAsString(), is("some_content"));
     }
 
@@ -141,7 +139,6 @@ public class MockServerHandlerConnectionOptionsTest extends MockServerHandlerTes
         assertThat(embeddedChannel.isOpen(), is(false));
         assertThat(httpResponse.getBodyAsString(), is("some_content"));
         assertThat(httpResponse.getHeader("Connection"), containsInAnyOrder("keep-alive"));
-        assertThat(httpResponse.getHeader("Content-Length"), containsInAnyOrder(Integer.toString("some_content".getBytes(Charsets.UTF_8).length)));
         assertThat(httpResponse.getBodyAsString(), is("some_content"));
     }
 
@@ -172,7 +169,6 @@ public class MockServerHandlerConnectionOptionsTest extends MockServerHandlerTes
         HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
         assertThat(httpResponse.getBodyAsString(), is("some_content"));
         assertThat(httpResponse.getHeader("Connection"), containsInAnyOrder("keep-alive"));
-        assertThat(httpResponse.getHeader("Content-Length"), containsInAnyOrder(Integer.toString("some_content".getBytes(Charsets.UTF_8).length)));
         assertThat(httpResponse.getBodyAsString(), is("some_content"));
     }
 
@@ -207,7 +203,6 @@ public class MockServerHandlerConnectionOptionsTest extends MockServerHandlerTes
         assertThat(embeddedChannel.isOpen(), is(true));
         assertThat(httpResponse.getBodyAsString(), is("some_content"));
         assertThat(httpResponse.getHeader("Connection"), containsInAnyOrder("close"));
-        assertThat(httpResponse.getHeader("Content-Length"), containsInAnyOrder(Integer.toString("some_content".getBytes(Charsets.UTF_8).length)));
         assertThat(httpResponse.getBodyAsString(), is("some_content"));
     }
 
@@ -238,7 +233,6 @@ public class MockServerHandlerConnectionOptionsTest extends MockServerHandlerTes
         HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
         assertThat(httpResponse.getBodyAsString(), is("some_content"));
         assertThat(httpResponse.getHeader("Connection"), containsInAnyOrder("close"));
-        assertThat(httpResponse.getHeader("Content-Length"), containsInAnyOrder(Integer.toString("some_content".getBytes(Charsets.UTF_8).length)));
         assertThat(httpResponse.getBodyAsString(), is("some_content"));
     }
 
@@ -273,7 +267,6 @@ public class MockServerHandlerConnectionOptionsTest extends MockServerHandlerTes
         assertThat(embeddedChannel.isOpen(), is(false));
         assertThat(httpResponse.getBodyAsString(), is("some_content"));
         assertThat(httpResponse.getHeader("Connection"), containsInAnyOrder("close"));
-        assertThat(httpResponse.getHeader("Content-Length"), containsInAnyOrder(Integer.toString("some_content".getBytes(Charsets.UTF_8).length)));
         assertThat(httpResponse.getBodyAsString(), is("some_content"));
     }
 
@@ -308,7 +301,6 @@ public class MockServerHandlerConnectionOptionsTest extends MockServerHandlerTes
         assertThat(embeddedChannel.isOpen(), is(true));
         assertThat(httpResponse.getBodyAsString(), is("some_content"));
         assertThat(httpResponse.getHeader("Connection"), containsInAnyOrder("close"));
-        assertThat(httpResponse.getHeader("Content-Length"), containsInAnyOrder(Integer.toString("some_content".getBytes(Charsets.UTF_8).length)));
         assertThat(httpResponse.getBodyAsString(), is("some_content"));
     }
 

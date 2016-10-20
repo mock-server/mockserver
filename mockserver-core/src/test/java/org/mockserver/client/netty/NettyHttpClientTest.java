@@ -82,7 +82,6 @@ public class NettyHttpClientTest {
                         .withHeader(header(CONTENT_LENGTH, "this is an example body".length()))
                         .withHeader(header(ACCEPT_ENCODING, HttpHeaders.Values.GZIP + "," + HttpHeaders.Values.DEFLATE))
                         .withHeader(header(CONNECTION, HttpHeaders.Values.KEEP_ALIVE))
-                        .withHeader(header(CONTENT_TYPE, MediaType.create("text", "plain").toString()))
                         .withHeader(header(COOKIE, "some_cookie_name=some_cookie_value; another_cookie_name=another_cookie_value"))
                         .withHeader(header("some_header_name", "some_header_value"))
                         .withHeader(header("another_header_name", "first_header_value", "second_header_value"))

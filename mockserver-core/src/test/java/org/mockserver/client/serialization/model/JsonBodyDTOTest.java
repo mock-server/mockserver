@@ -1,6 +1,7 @@
 package org.mockserver.client.serialization.model;
 
 import com.google.common.base.Charsets;
+import com.google.common.net.MediaType;
 import org.junit.Test;
 import org.mockserver.model.Body;
 import org.mockserver.model.JsonBody;
@@ -26,7 +27,7 @@ public class JsonBodyDTOTest {
         assertThat(jsonBody.getJson(), is("some_body"));
         assertThat(jsonBody.getType(), is(Body.Type.JSON));
         assertThat(jsonBody.getMatchType(), is(ONLY_MATCHING_FIELDS));
-        assertThat(jsonBody.getCharset(), nullValue());
+        assertThat(jsonBody.getContentType(), is("application/json"));
     }
 
     @Test
@@ -38,7 +39,7 @@ public class JsonBodyDTOTest {
         assertThat(jsonBody.getJson(), is("some_body"));
         assertThat(jsonBody.getType(), is(Body.Type.JSON));
         assertThat(jsonBody.getMatchType(), is(STRICT));
-        assertThat(jsonBody.getCharset(), nullValue());
+        assertThat(jsonBody.getContentType(), is("application/json"));
     }
 
     @Test
@@ -50,7 +51,19 @@ public class JsonBodyDTOTest {
         assertThat(jsonBody.getJson(), is("some_body"));
         assertThat(jsonBody.getType(), is(Body.Type.JSON));
         assertThat(jsonBody.getMatchType(), is(STRICT));
-        assertThat(jsonBody.getCharset(), is(Charsets.UTF_16));
+        assertThat(jsonBody.getContentType(), is("application/json; charset=utf-16"));
+    }
+
+    @Test
+    public void shouldReturnValuesSetInConstructorWithMatchTypeAndMediaType() {
+        // when
+        JsonBodyDTO jsonBody = new JsonBodyDTO(new JsonBody("some_body", MediaType.JSON_UTF_8, STRICT));
+
+        // then
+        assertThat(jsonBody.getJson(), is("some_body"));
+        assertThat(jsonBody.getType(), is(Body.Type.JSON));
+        assertThat(jsonBody.getMatchType(), is(STRICT));
+        assertThat(jsonBody.getContentType(), is("application/json; charset=utf-8"));
     }
 
     @Test
@@ -62,7 +75,7 @@ public class JsonBodyDTOTest {
         assertThat(jsonBody.getValue(), is("some_body"));
         assertThat(jsonBody.getType(), is(Body.Type.JSON));
         assertThat(jsonBody.getMatchType(), is(ONLY_MATCHING_FIELDS));
-        assertThat(jsonBody.getCharset(), nullValue());
+        assertThat(jsonBody.getContentType(), is("application/json"));
     }
 
     @Test
@@ -74,7 +87,7 @@ public class JsonBodyDTOTest {
         assertThat(jsonBody.getValue(), is("some_body"));
         assertThat(jsonBody.getType(), is(Body.Type.JSON));
         assertThat(jsonBody.getMatchType(), is(STRICT));
-        assertThat(jsonBody.getCharset(), nullValue());
+        assertThat(jsonBody.getContentType(), is("application/json"));
     }
 
     @Test
@@ -86,7 +99,7 @@ public class JsonBodyDTOTest {
         assertThat(jsonBody.getValue(), is("some_body"));
         assertThat(jsonBody.getType(), is(Body.Type.JSON));
         assertThat(jsonBody.getMatchType(), is(STRICT));
-        assertThat(jsonBody.getCharset(), is(Charsets.UTF_16));
+        assertThat(jsonBody.getContentType(), is("application/json; charset=utf-16"));
     }
 
     @Test

@@ -1,5 +1,6 @@
 package org.mockserver.client.serialization.model;
 
+import com.google.common.net.MediaType;
 import org.mockserver.model.StringBody;
 
 import java.nio.charset.Charset;
@@ -10,16 +11,14 @@ import java.nio.charset.Charset;
 public class StringBodyDTO extends BodyDTO {
 
     private String string;
-    private Charset charset;
 
     public StringBodyDTO(StringBody stringBody) {
         this(stringBody, stringBody.getNot());
     }
 
     public StringBodyDTO(StringBody stringBody, Boolean not) {
-        super(stringBody.getType(), not);
+        super(stringBody.getType(), not, stringBody.getContentType());
         string = stringBody.getValue();
-        charset = stringBody.getCharset();
     }
 
     protected StringBodyDTO() {
@@ -29,11 +28,7 @@ public class StringBodyDTO extends BodyDTO {
         return string;
     }
 
-    public Charset getCharset() {
-        return charset;
-    }
-
     public StringBody buildObject() {
-        return new StringBody(string, charset);
+        return new StringBody(string, (contentType != null ? MediaType.parse(contentType) : null));
     }
 }

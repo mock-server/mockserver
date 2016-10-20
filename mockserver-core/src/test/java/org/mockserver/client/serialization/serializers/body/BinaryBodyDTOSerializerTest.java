@@ -10,7 +10,7 @@ import org.mockserver.model.XmlBody;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
-public class XmlBodyDTOSerializerTest {
+public class BinaryBodyDTOSerializerTest {
 
     @Test
     public void shouldSerializeXmlBodyDTO() throws JsonProcessingException {

@@ -2,21 +2,25 @@ package org.mockserver.codec;
 
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaders;
+import org.hamcrest.collection.IsIterableContainingInAnyOrder;
+import org.hamcrest.collection.IsIterableContainingInOrder;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.mappers.ContentTypeMapper;
-import org.mockserver.model.Cookie;
-import org.mockserver.model.Header;
-import org.mockserver.model.HttpResponse;
+import org.mockserver.model.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.collection.IsEmptyIterable.emptyIterable;
 import static org.hamcrest.core.Is.is;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.mockserver.model.BinaryBody.binary;
+import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
 /**
@@ -62,7 +66,8 @@ public class MockServerResponseEncoderBasicMappingTest {
 
         // then
         HttpHeaders headers = ((FullHttpResponse) output.get(0)).headers();
-        assertThat(headers, emptyIterable());
+        assertThat(headers.names(), containsInAnyOrder("Content-Length"));
+        assertThat(headers.get("Content-Length"), is("0"));
     }
 
     @Test
@@ -91,7 +96,8 @@ public class MockServerResponseEncoderBasicMappingTest {
 
         // then
         HttpHeaders headers = ((FullHttpResponse) output.get(0)).headers();
-        assertThat(headers, emptyIterable());
+        assertThat(headers.names(), containsInAnyOrder("Content-Length"));
+        assertThat(headers.get("Content-Length"), is("0"));
     }
 
     @Test

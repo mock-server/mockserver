@@ -27,11 +27,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.BindException;
-import java.nio.charset.Charset;
 import java.util.List;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONNECTION;
-import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH;
+import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORS;
 import static org.mockserver.model.ConnectionOptions.isFalseOrNull;
 import static org.mockserver.model.Header.header;
@@ -209,7 +208,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                 .withStatusCode(responseStatus.code())
                 .withBody(body);
         if (body != null && !body.isEmpty()) {
-            response.updateHeader(header(HttpHeaders.Names.CONTENT_TYPE, contentType + "; charset=utf-8"));
+            response.updateHeader(header(CONTENT_TYPE, contentType + "; charset=utf-8"));
         }
         if (enableCORS()) {
             response.withHeader("Access-Control-Allow-Origin", "*");
@@ -224,47 +223,9 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
             response = notFoundResponse();
         }
 
-        addContentLengthHeader(response);
         addConnectionHeader(request, response);
-        addContentTypeHeader(response);
 
         writeAndCloseSocket(ctx, request, response);
-    }
-
-    private void addContentTypeHeader(HttpResponse response) {
-        if (response.getBody() != null && Strings.isNullOrEmpty(response.getFirstHeader(HttpHeaders.Names.CONTENT_TYPE))) {
-            Charset bodyCharset = response.getBody().getCharset(null);
-            String bodyContentType = response.getBody().getContentType();
-            if (bodyCharset != null) {
-                response.updateHeader(header(HttpHeaders.Names.CONTENT_TYPE, bodyContentType + "; charset=" + bodyCharset.name().toLowerCase()));
-            } else if (bodyContentType != null) {
-                response.updateHeader(header(HttpHeaders.Names.CONTENT_TYPE, bodyContentType));
-            }
-        }
-    }
-
-    private void addContentLengthHeader(HttpResponse response) {
-        ConnectionOptions connectionOptions = response.getConnectionOptions();
-        if (connectionOptions != null && connectionOptions.getContentLengthHeaderOverride() != null) {
-            response.updateHeader(header(CONTENT_LENGTH, connectionOptions.getContentLengthHeaderOverride()));
-        } else if (connectionOptions == null || isFalseOrNull(connectionOptions.getSuppressContentLengthHeader())) {
-            Body body = response.getBody();
-            byte[] bodyBytes = new byte[0];
-            if (body != null) {
-                Object bodyContents = body.getValue();
-                Charset bodyCharset = body.getCharset(ContentTypeMapper.determineCharsetForMessage(response));
-                if (bodyContents instanceof byte[]) {
-                    bodyBytes = (byte[]) bodyContents;
-                } else if (bodyContents instanceof String) {
-                    bodyBytes = ((String) bodyContents).getBytes(bodyCharset);
-                } else if (body.toString() != null) {
-                    bodyBytes = body.toString().getBytes(bodyCharset);
-                }
-            }
-            response.updateHeader(header(CONTENT_LENGTH, bodyBytes.length));
-        } else {
-            response.updateHeader(header(CONTENT_LENGTH, ""));
-        }
     }
 
     private void addConnectionHeader(HttpRequest request, HttpResponse response) {

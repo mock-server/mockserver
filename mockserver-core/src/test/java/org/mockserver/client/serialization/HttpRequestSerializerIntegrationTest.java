@@ -131,9 +131,10 @@ public class HttpRequestSerializerIntegrationTest {
         HttpRequest httpRequest = new HttpRequestSerializer().deserialize(requestBytes);
 
         // then
-        assertEquals(new HttpRequestDTO()
+        HttpRequest expected = new HttpRequestDTO()
                 .setBody(BodyDTO.createDTO(json("{ \"key\": \"value\" }")))
-                .buildObject(), httpRequest);
+                .buildObject();
+        assertEquals(expected, httpRequest);
     }
 
     @Test

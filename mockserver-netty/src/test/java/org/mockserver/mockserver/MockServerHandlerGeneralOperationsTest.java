@@ -302,7 +302,6 @@ public class MockServerHandlerGeneralOperationsTest extends MockServerHandlerTes
         assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.PAYMENT_REQUIRED.code()));
         assertThat(httpResponse.getBodyAsString(), is("some_content"));
         assertThat(httpResponse.getHeader("Connection"), containsInAnyOrder("close"));
-        assertThat(httpResponse.getHeader("Content-Length"), containsInAnyOrder(Integer.toString("some_content".getBytes(Charsets.UTF_8).length)));
         assertThat(httpResponse.getBodyAsString(), is("some_content"));
     }
 

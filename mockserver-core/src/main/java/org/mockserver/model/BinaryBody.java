@@ -1,5 +1,6 @@
 package org.mockserver.model;
 
+import com.google.common.net.MediaType;
 import org.mockserver.client.serialization.Base64Converter;
 
 /**
@@ -10,12 +11,20 @@ public class BinaryBody extends Body<byte[]> {
     private final byte[] bytes;
 
     public BinaryBody(byte[] bytes) {
-        super(Type.BINARY);
+        this(bytes, null);
+    }
+
+    public BinaryBody(byte[] bytes, MediaType contentType) {
+        super(Type.BINARY, contentType);
         this.bytes = bytes;
     }
 
     public static BinaryBody binary(byte[] body) {
         return new BinaryBody(body);
+    }
+
+    public static BinaryBody binary(byte[] body, MediaType contentType) {
+        return new BinaryBody(body, contentType);
     }
 
     public byte[] getValue() {

@@ -16,6 +16,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.concurrent.TimeUnit;
 
+import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
@@ -58,7 +59,7 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object> 
             ByteBuf content = getContent(getWebSocketLocation(req));
             FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, OK, content);
 
-            res.headers().set(HttpHeaders.Names.CONTENT_TYPE, "text/html; charset=UTF-8");
+            res.headers().set(CONTENT_TYPE, "text/html; charset=UTF-8");
             HttpHeaders.setContentLength(res, content.readableBytes());
 
             ChannelFuture f = ctx.channel().writeAndFlush(res);

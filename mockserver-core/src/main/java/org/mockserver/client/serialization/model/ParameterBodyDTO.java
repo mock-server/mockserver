@@ -19,7 +19,7 @@ public class ParameterBodyDTO extends BodyDTO {
     }
 
     public ParameterBodyDTO(ParameterBody parameterBody, Boolean not) {
-        super(parameterBody.getType(), not);
+        super(parameterBody.getType(), not, parameterBody.getContentType());
         parameters = Lists.transform(parameterBody.getValue(), new Function<Parameter, ParameterDTO>() {
             public ParameterDTO apply(Parameter parameter) {
                 return new ParameterDTO(parameter);
