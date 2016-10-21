@@ -16,7 +16,6 @@ import io.netty.handler.codec.http.websocketx.WebSocketFrame;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -54,7 +53,7 @@ public class WebSocketClient {
             ch = b.connect(uri.getHost(), uri.getPort()).sync().channel();
             handler.handshakeFuture().sync();
 
-            sendWebSocketFrame(new TextWebSocketFrame("connect" + UUID.randomUUID().toString()));
+            sendWebSocketFrame(new TextWebSocketFrame(MessageType.REGISTER.name()));
         } catch (InterruptedException e) {
             throw new WebSocketClientException(e);
         } catch (URISyntaxException e) {
@@ -65,7 +64,7 @@ public class WebSocketClient {
     public static void main(String[] args) throws IOException, InterruptedException {
         WebSocketClient webSocketClient = new WebSocketClient();
 
-        TimeUnit.SECONDS.sleep(20);
+        TimeUnit.MINUTES.sleep(5);
 
         webSocketClient.stopClient();
     }

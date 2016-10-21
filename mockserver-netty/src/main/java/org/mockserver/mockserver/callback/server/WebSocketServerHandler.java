@@ -1,20 +1,22 @@
 package org.mockserver.mockserver.callback.server;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.*;
+import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.websocketx.*;
 import io.netty.util.CharsetUtil;
-import org.apache.commons.lang3.StringUtils;
+import org.mockserver.client.serialization.ObjectMapperFactory;
+import org.mockserver.collections.CircularHashMap;
+import org.mockserver.mockserver.callback.client.MessageType;
 
-import java.util.concurrent.TimeUnit;
+import java.util.UUID;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
@@ -27,6 +29,11 @@ import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object> {
 
     private WebSocketServerHandshaker handshaker;
+    private WebSocketServer webSocketServer;
+
+    public WebSocketServerHandler(WebSocketServer webSocketServer) {
+        this.webSocketServer = webSocketServer;
+    }
 
     private static String getWebSocketLocation(FullHttpRequest req) {
         return "ws://" + req.headers().get(HttpHeaders.Names.HOST) + "/websocket";
@@ -78,25 +85,23 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object> 
         if (frame instanceof CloseWebSocketFrame) {
             handshaker.close(ctx.channel(), (CloseWebSocketFrame) frame.retain());
         } else if (frame instanceof TextWebSocketFrame) {
-            String request = ((TextWebSocketFrame) frame).text();
-            if (request.startsWith("connect")) {
-                final String id = StringUtils.substringAfter(request, "connect");
-                System.out.println("Received connection from: " + id);
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        for (int i = 1; i <= 10; i++) {
-                            ctx.channel().writeAndFlush(new TextWebSocketFrame("sending message " + i + " to " + id));
-                            try {
-                                TimeUnit.SECONDS.sleep(1);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
+
+            final String frameText = ((TextWebSocketFrame) frame).text();
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    MessageType messageType = MessageType.valueOf(frameText);
+                    switch (messageType) {
+                        case REGISTER: {
+                            webSocketServer.registerClient(UUID.randomUUID().toString(), ctx);
+                            break;
                         }
-                        ctx.channel().writeAndFlush(new CloseWebSocketFrame());
+                        default: {
+                            throw new UnsupportedOperationException("Unsupported message type or format: \"" + frameText + "\"");
+                        }
                     }
-                }).start();
-            }
+                }
+            }).start();
         } else {
             throw new UnsupportedOperationException(String.format("%s frame types not supported", frame.getClass().getName()));
         }

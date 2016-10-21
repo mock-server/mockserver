@@ -6,7 +6,7 @@ import java.util.Map;
 /**
  * @author jamesdbloom
  */
-class CircularHashMap<K, V> extends LinkedHashMap<K, V> {
+public class CircularHashMap<K, V> extends LinkedHashMap<K, V> {
     static final long serialVersionUID = 1530623482381786485L;
     private final int maxSize;
 

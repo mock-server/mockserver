@@ -1,10 +1,13 @@
 package org.mockserver.mockserver.callback.client;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.netty.channel.*;
 import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.websocketx.*;
 import io.netty.util.CharsetUtil;
+import org.mockserver.client.serialization.ObjectMapperFactory;
+import org.mockserver.mockserver.callback.server.WebSocketClientRegistrationResponse;
 
 import java.net.URI;
 
@@ -12,6 +15,7 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
 
     private final WebSocketClientHandshaker handshaker;
     private ChannelPromise handshakeFuture;
+    private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
 
     public WebSocketClientHandler(URI uri) {
         this.handshaker = WebSocketClientHandshakerFactory.newHandshaker(uri, WebSocketVersion.V13, null, false, new DefaultHttpHeaders());
@@ -53,8 +57,8 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
 
         WebSocketFrame frame = (WebSocketFrame) msg;
         if (frame instanceof TextWebSocketFrame) {
-            TextWebSocketFrame textFrame = (TextWebSocketFrame) frame;
-            System.out.println("WebSocket Client received message: " + textFrame.text());
+            WebSocketClientRegistrationResponse webSocketClientRegistrationResponse = objectMapper.readValue(((TextWebSocketFrame) frame).text(), WebSocketClientRegistrationResponse.class);
+            System.out.println("WebSocket Client received message: " + webSocketClientRegistrationResponse);
         } else if (frame instanceof CloseWebSocketFrame) {
             System.out.println("WebSocket Client received closing");
             ch.close();
