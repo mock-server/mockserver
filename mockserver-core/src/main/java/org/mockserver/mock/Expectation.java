@@ -20,6 +20,7 @@ public class Expectation extends ObjectWithJsonToString {
     private HttpForward httpForward;
     private HttpError httpError;
     private HttpCallback httpCallback;
+    private HttpWebHook httpWebHook;
 
     public Expectation(HttpRequest httpRequest, Times times, TimeToLive timeToLive) {
         this.httpRequest = httpRequest;
@@ -60,8 +61,28 @@ public class Expectation extends ObjectWithJsonToString {
         return httpCallback;
     }
 
+    public HttpWebHook getHttpWebHook() {
+        return httpWebHook;
+    }
+
+    public HttpWebHook getHttpWebHook(boolean applyDelay) {
+        if (httpWebHook != null && httpWebHook.getHttpResponse() != null) {
+            if (applyDelay) {
+                return httpWebHook.applyHttpResponseDelay();
+            } else {
+                return httpWebHook;
+            }
+        } else {
+            return null;
+        }
+    }
+
+
     public Action getAction(boolean applyDelay) {
         if (httpResponse != null) {
+            if (httpWebHook != null) {
+                return getHttpWebHook(applyDelay);
+            }
             return getHttpResponse(applyDelay);
         } else if (httpForward != null) {
             return getHttpForward();
@@ -144,6 +165,22 @@ public class Expectation extends ObjectWithJsonToString {
         return this;
     }
 
+    public Expectation thenHttpWebHook(HttpWebHook httpWebHook) {
+        if (httpWebHook != null) {
+            if (httpResponse == null) {
+                throw new IllegalArgumentException("It is not possible to configure webhook if http response is not set");
+            }
+            if (httpError != null) {
+                throw new IllegalArgumentException("It is not possible to set a webhook once an error has been set");
+            }
+            if (httpForward != null) {
+                throw new IllegalArgumentException("It is not possible to set a webhook once a forward has been set");
+            }
+            this.httpWebHook = httpWebHook;
+        }
+        return this;
+    }
+
     public boolean matches(HttpRequest httpRequest) {
         return hasRemainingMatches() && isStillAlive() && httpRequestMatcher.matches(httpRequest, true);
     }
@@ -172,4 +209,5 @@ public class Expectation extends ObjectWithJsonToString {
     public boolean contains(HttpRequest httpRequest) {
         return httpRequest != null && this.httpRequest.equals(httpRequest);
     }
+
 }

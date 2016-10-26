@@ -39,6 +39,11 @@ public class ExpectationToJavaSerializer implements ToJavaSerializer<Expectation
                 output.append(new HttpCallbackToJavaSerializer().serializeAsJava(numberOfSpacesToIndent + 1, expectation.getHttpCallback()));
                 appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(")");
             }
+            if (expectation.getHttpWebHook() != null) {
+                appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(".webHook(");
+                output.append(new HttpWebHookToJavaSerializer().serializeAsJava(numberOfSpacesToIndent + 1, expectation.getHttpWebHook()));
+                appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(")");
+            }
             output.append(";");
         }
         return output.toString();
