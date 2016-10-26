@@ -169,6 +169,27 @@ public class MockServerRequestDecoderTest {
         ));
     }
 
+    /* 
+     * Test is significant because popular Java REST library Jersey adds $Version=1 to all cookies
+     * in line with RFC2965's recommendation (even though RFC2965 is now marked "Obsolete" by 
+     * RFC6265, this is still common and not hard to handle). 
+     */
+    @Test
+    public void shouldDecodeCookiesWithRFC2965StyleAttributes() {
+        // given
+        fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/uri");
+        fullHttpRequest.headers().add("Cookie", "$Version=1; Customer=WILE_E_COYOTE; $Path=/acme");
+
+        // when
+        mockServerRequestDecoder.decode(null, fullHttpRequest, output);
+
+        // then
+        List<Cookie> cookies = ((HttpRequest) output.get(0)).getCookies();
+        assertThat(cookies, containsInAnyOrder(
+                cookie("Customer", "WILE_E_COYOTE")
+        ));
+    }
+    
     @Test
     public void shouldDecodeBodyWithContentTypeAndNoCharset() {
         // given
