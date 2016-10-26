@@ -1,13 +1,11 @@
 package org.mockserver.codec;
 
-import com.google.common.base.Splitter;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.handler.codec.http.cookie.*;
-import org.apache.commons.lang3.StringUtils;
 import org.mockserver.mappers.ContentTypeMapper;
 import org.mockserver.model.*;
 import org.mockserver.model.Cookie;
@@ -17,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.charset.Charset;
 import java.util.List;
+import java.util.Set;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.COOKIE;
 import static io.netty.handler.codec.http.HttpHeaders.isKeepAlive;
@@ -91,19 +90,19 @@ public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
             httpRequest.withHeader(new Header(headerName, headers.getAll(headerName)));
         }
     }
-
+    
     private void setCookies(HttpRequest httpRequest, FullHttpRequest fullHttpResponse) {
         for (String cookieHeader : fullHttpResponse.headers().getAll(COOKIE)) {
-            for (String cookie : Splitter.on(";").split(cookieHeader)) {
-                if (!cookie.trim().isEmpty()) {
-                    io.netty.handler.codec.http.cookie.Cookie decodedCookie =
-                            ClientCookieDecoder.LAX.decode(cookie);
-                    httpRequest.withCookie(new Cookie(
-                            decodedCookie.name(),
-                            decodedCookie.value()
-                    ));
-                }
+            Set<io.netty.handler.codec.http.cookie.Cookie> decodedCookies =
+                    ServerCookieDecoder.LAX.decode(cookieHeader);
+            for (io.netty.handler.codec.http.cookie.Cookie decodedCookie: decodedCookies) {
+                httpRequest.withCookie(new Cookie(
+                        decodedCookie.name(),
+                        decodedCookie.value()
+                ));
             }
+   
         }
     }
+
 }
