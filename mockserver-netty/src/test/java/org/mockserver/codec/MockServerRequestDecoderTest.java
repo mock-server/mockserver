@@ -1,4 +1,5 @@
 package org.mockserver.codec;
+
 import com.google.common.base.Charsets;
 import com.google.common.net.MediaType;
 import io.netty.buffer.Unpooled;
@@ -23,7 +24,6 @@ import static org.mockserver.model.Header.header;
 import static org.mockserver.model.NottableString.string;
 import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.StringBody.exact;
-
 
 /**
  * @author jamesdbloom
