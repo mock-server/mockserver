@@ -101,8 +101,6 @@ public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
                         decodedCookie.value()
                 ));
             }
-   
         }
     }
-
 }
