@@ -1,9 +1,9 @@
-package org.mockserver.collections;
+package org.mockserver.model;
 
-import org.hamcrest.core.IsNot;
 import org.junit.Test;
-import org.mockserver.model.NottableString;
 
+import static junit.framework.TestCase.assertFalse;
+import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
@@ -53,6 +53,13 @@ public class NottableStringTest {
     }
 
     @Test
+    public void shouldEqualIgnoreCase() {
+        assertTrue(string("value").equalsIgnoreCase(string("VALUE")));
+        assertTrue(NottableString.not("value").equalsIgnoreCase(NottableString.not("vaLUe")));
+        assertTrue(string("value").equalsIgnoreCase("VaLue"));
+    }
+
+    @Test
     public void shouldEqualWhenNull() {
         assertThat(string(null), is(string(null)));
         assertThat(string("value"), not(string(null)));
@@ -68,6 +75,17 @@ public class NottableStringTest {
         assertThat(NottableString.string("value"), not((Object) "other_value"));
 
         assertThat(string("value"), not(NottableString.not("value")));
+    }
+
+    @Test
+    public void shouldEqualForDoubleNegativeIgnoreCase() {
+        assertFalse(NottableString.not("value").equalsIgnoreCase(string("VAlue")));
+        assertFalse(NottableString.not("value").equalsIgnoreCase("vaLUe"));
+
+        assertFalse(string("value").equalsIgnoreCase(string("other_value")));
+        assertFalse(NottableString.string("value").equalsIgnoreCase("OTHER_value"));
+
+        assertFalse(string("value").equalsIgnoreCase(NottableString.not("VALUE")));
     }
 
 }

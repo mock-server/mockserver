@@ -16,6 +16,7 @@ import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.mock.action.ActionHandler;
+import org.mockserver.mockserver.callback.WebSocketClientRegistry;
 import org.mockserver.model.*;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
@@ -46,15 +47,16 @@ public class MockServerHandlerTest {
     @Mock
     HttpError mockHttpError;
     @Mock
-    HttpCallback mockHttpCallback;
+    HttpClassCallback mockHttpClassCallback;
     @Mock
     Verification mockVerification;
     @Mock
     VerificationSequence mockVerificationSequence;
     // mockserver
-    RequestLogFilter mockRequestLogFilter;
-    MockServerMatcher mockMockServerMatcher;
     MockServer mockMockServer;
+    MockServerMatcher mockMockServerMatcher;
+    WebSocketClientRegistry webSocketClientRegistry;
+    RequestLogFilter mockRequestLogFilter;
     @Mock
     ActionHandler mockActionHandler;
     // serializers
@@ -77,10 +79,11 @@ public class MockServerHandlerTest {
     @Before
     public void setupFixture() {
         // given - a mock server handler
-        mockRequestLogFilter = mock(RequestLogFilter.class);
-        mockMockServerMatcher = mock(MockServerMatcher.class);
         mockMockServer = mock(MockServer.class);
-        mockServerHandler = new MockServerHandler(mockMockServer, mockMockServerMatcher, mockRequestLogFilter);
+        mockMockServerMatcher = mock(MockServerMatcher.class);
+        webSocketClientRegistry = mock(WebSocketClientRegistry.class);
+        mockRequestLogFilter = mock(RequestLogFilter.class);
+        mockServerHandler = new MockServerHandler(mockMockServer, mockMockServerMatcher, webSocketClientRegistry, mockRequestLogFilter);
         embeddedChannel = new EmbeddedChannel(mockServerHandler);
 
         initMocks(this);
@@ -96,7 +99,7 @@ public class MockServerHandlerTest {
         when(mockExpectation.thenRespond(any(HttpResponse.class))).thenReturn(mockExpectation);
         when(mockExpectation.thenForward(any(HttpForward.class))).thenReturn(mockExpectation);
         when(mockExpectation.thenError(any(HttpError.class))).thenReturn(mockExpectation);
-        when(mockExpectation.thenCallback(any(HttpCallback.class))).thenReturn(mockExpectation);
+        when(mockExpectation.thenCallback(any(HttpClassCallback.class))).thenReturn(mockExpectation);
 
         // given - an expectation that has been setup
         when(mockExpectation.getHttpRequest()).thenReturn(mockHttpRequest);
@@ -104,7 +107,7 @@ public class MockServerHandlerTest {
         when(mockExpectation.getHttpResponse(anyBoolean())).thenReturn(mockHttpResponse);
         when(mockExpectation.getHttpForward()).thenReturn(mockHttpForward);
         when(mockExpectation.getHttpError()).thenReturn(mockHttpError);
-        when(mockExpectation.getHttpCallback()).thenReturn(mockHttpCallback);
+        when(mockExpectation.getHttpClassCallback()).thenReturn(mockHttpClassCallback);
     }
 
     @After

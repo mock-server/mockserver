@@ -5,22 +5,22 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
-import static org.mockserver.model.HttpCallback.callback;
+import static org.mockserver.model.HttpClassCallback.callback;
 
 /**
  * @author jamesdbloom
  */
-public class HttpCallbackTest {
+public class HttpClassCallbackTest {
 
     @Test
     public void shouldAlwaysCreateNewObject() {
-        assertEquals(new HttpCallback().callback(), callback());
+        assertEquals(new HttpClassCallback().callback(), callback());
         assertNotSame(callback(), callback());
     }
 
     @Test
     public void returnsCallbackClass() {
-        assertEquals("some_class", new HttpCallback().withCallbackClass("some_class").getCallbackClass());
+        assertEquals("some_class", new HttpClassCallback().withCallbackClass("some_class").getCallbackClass());
         assertEquals("some_class", callback().withCallbackClass("some_class").getCallbackClass());
         assertEquals("some_class", callback("some_class").getCallbackClass());
     }

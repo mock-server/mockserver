@@ -1,23 +1,20 @@
 package org.mockserver.mockserver;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Strings;
 import com.google.common.net.MediaType;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.*;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpServerCodec;
 import org.mockserver.client.serialization.*;
 import org.mockserver.filters.RequestLogFilter;
 import org.mockserver.logging.LogFormatter;
-import org.mockserver.mappers.ContentTypeMapper;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.mock.action.ActionHandler;
+import org.mockserver.mockserver.callback.ExpectationCallbackResponse;
+import org.mockserver.mockserver.callback.WebSocketClientRegistry;
 import org.mockserver.model.*;
 import org.mockserver.socket.SSLFactory;
 import org.mockserver.validator.ExpectationValidator;
@@ -32,10 +29,12 @@ import java.util.List;
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONNECTION;
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORS;
+import static org.mockserver.model.ConnectionOptions.connectionOptions;
 import static org.mockserver.model.ConnectionOptions.isFalseOrNull;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.OutboundHttpRequest.outboundRequest;
 import static org.mockserver.model.PortBinding.portBinding;
 
 @ChannelHandler.Sharable
@@ -47,6 +46,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
     private MockServer server;
     private RequestLogFilter requestLogFilter;
     private MockServerMatcher mockServerMatcher;
+    private WebSocketClientRegistry webSocketClientRegistry;
     private ActionHandler actionHandler;
     // serializers
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
@@ -57,15 +57,16 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
     // validators
     private ExpectationValidator expectationValidator = new ExpectationValidator();
 
-    public MockServerHandler(MockServer server, MockServerMatcher mockServerMatcher, RequestLogFilter requestLogFilter) {
-        this.mockServerMatcher = mockServerMatcher;
+    public MockServerHandler(MockServer server, MockServerMatcher mockServerMatcher, WebSocketClientRegistry webSocketClientRegistry, RequestLogFilter requestLogFilter) {
         this.server = server;
         this.requestLogFilter = requestLogFilter;
+        this.mockServerMatcher = mockServerMatcher;
+        this.webSocketClientRegistry = webSocketClientRegistry;
         actionHandler = new ActionHandler(requestLogFilter);
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, HttpRequest request) {
+    protected void channelRead0(final ChannelHandlerContext ctx, final HttpRequest request) {
 
         try {
             if (enableCORS() && request.getMethod().getValue().equals("OPTIONS") && !request.getFirstHeader("Origin").isEmpty()) {
@@ -97,7 +98,13 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                 List<String> validationErrors = expectationValidator.isValid(expectation);
                 if (validationErrors.isEmpty()) {
                     SSLFactory.addSubjectAlternativeName(expectation.getHttpRequest().getFirstHeader(HttpHeaders.Names.HOST));
-                    mockServerMatcher.when(expectation.getHttpRequest(), expectation.getTimes(), expectation.getTimeToLive()).thenRespond(expectation.getHttpResponse(false)).thenForward(expectation.getHttpForward()).thenError(expectation.getHttpError()).thenCallback(expectation.getHttpCallback());
+                    mockServerMatcher
+                            .when(expectation.getHttpRequest(), expectation.getTimes(), expectation.getTimeToLive())
+                            .thenRespond(expectation.getHttpResponse(false))
+                            .thenForward(expectation.getHttpForward())
+                            .thenError(expectation.getHttpError())
+                            .thenCallback(expectation.getHttpClassCallback())
+                            .thenCallback(expectation.getHttpObjectCallback());
                     logFormatter.infoLog("creating expectation:{}", expectation);
                     writeResponse(ctx, request, HttpResponseStatus.CREATED);
                 } else {
@@ -185,6 +192,16 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                     if (httpError.getDropConnection()) {
                         ctx.close();
                     }
+                } else if (handle instanceof HttpObjectCallback) {
+                    String clientId = ((HttpObjectCallback) handle).getClientId();
+                    webSocketClientRegistry.registerCallbackResponseHandler(clientId, new ExpectationCallbackResponse() {
+                        @Override
+                        public void handle(HttpResponse response) {
+                            logFormatter.infoLog("returning response:{}" + System.getProperty("line.separator") + " for request:{}", response, request);
+                            writeResponse(ctx, request, response.withConnectionOptions(connectionOptions().withCloseSocket(true)));
+                        }
+                    });
+                    webSocketClientRegistry.sendClientMessage(clientId, request);
                 } else {
                     HttpResponse response = actionHandler.processAction(handle, request);
                     logFormatter.infoLog("returning response:{}" + System.getProperty("line.separator") + " for request:{}", response, request);

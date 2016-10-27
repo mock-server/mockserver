@@ -11,7 +11,7 @@ import java.io.IOException;
 /**
  * @author jamesdbloom
  */
-public class VerificationSequenceSerializer {
+public class VerificationSequenceSerializer implements Serializer<VerificationSequence> {
     private Logger logger = LoggerFactory.getLogger(this.getClass());
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
 
@@ -40,6 +40,11 @@ public class VerificationSequenceSerializer {
             }
         }
         return verificationSequence;
+    }
+
+    @Override
+    public Class<VerificationSequence> supportsType() {
+        return VerificationSequence.class;
     }
 
 }

@@ -8,6 +8,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockserver.integration.server.SameJVMAbstractClientServerIntegrationTest;
+import org.mockserver.matchers.MatcherBuilder;
+import org.mockserver.mock.action.ExpectationCallback;
+import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.server.TestClasspathTestExpectationCallback;
 import org.mockserver.socket.PortFactory;
@@ -31,9 +35,10 @@ import static org.junit.Assert.*;
 import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.ConnectionOptions.connectionOptions;
 import static org.mockserver.model.Header.header;
-import static org.mockserver.model.HttpCallback.callback;
+import static org.mockserver.model.HttpClassCallback.callback;
 import static org.mockserver.model.HttpError.error;
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
 
 /**
@@ -55,6 +60,82 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
 
         // when
         startServerAgain();
+    }
+
+    @Test
+    public void shouldCallbackToSpecifiedObject() {
+        // when
+        mockServerClient
+                .when(
+                        request()
+                                .withPath(calculatePath("object_callback"))
+                )
+                .callback(
+                        new ExpectationCallback() {
+                            @Override
+                            public HttpResponse handle(HttpRequest httpRequest) {
+                                HttpRequest expectation = request()
+                                        .withPath(calculatePath("object_callback"))
+                                        .withMethod("POST")
+                                        .withHeaders(
+                                                header("x-test", "test_headers_and_body")
+                                        )
+                                        .withBody("an_example_body_http");
+                                if (new MatcherBuilder().transformsToMatcher(expectation).matches(httpRequest)) {
+                                    return response()
+                                            .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                                            .withHeaders(
+                                                    header("x-object-callback", "test_object_callback_header")
+                                            )
+                                            .withBody("an_object_callback_response");
+                                } else {
+                                    return notFoundResponse();
+                                }
+                            }
+                        }
+                );
+
+        // then
+        // - in http
+        assertEquals(
+                response()
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withHeaders(
+                                header("x-object-callback", "test_object_callback_header")
+                        )
+                        .withBody("an_object_callback_response"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("object_callback"))
+                                .withMethod("POST")
+                                .withHeaders(
+                                        header("x-test", "test_headers_and_body")
+                                )
+                                .withBody("an_example_body_http"),
+                        headersToIgnore
+                )
+        );
+
+        // - in https
+        assertEquals(
+                response()
+                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withHeaders(
+                                header("x-object-callback", "test_object_callback_header")
+                        )
+                        .withBody("an_object_callback_response"),
+                makeRequest(
+                        request()
+                                .withSecure(true)
+                                .withPath(calculatePath("object_callback"))
+                                .withMethod("POST")
+                                .withHeaders(
+                                        header("x-test", "test_headers_and_body")
+                                )
+                                .withBody("an_example_body_http"),
+                        headersToIgnore
+                )
+        );
     }
 
     @Test

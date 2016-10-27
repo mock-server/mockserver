@@ -2,7 +2,6 @@ package org.mockserver.server;
 
 import com.google.common.base.Strings;
 import com.google.common.net.MediaType;
-import io.netty.handler.codec.http.HttpHeaders;
 import org.mockserver.client.serialization.*;
 import org.mockserver.filters.RequestLogFilter;
 import org.mockserver.mappers.HttpServletRequestToMockServerRequestDecoder;
@@ -10,6 +9,7 @@ import org.mockserver.mappers.MockServerResponseToHttpServletResponseEncoder;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.mock.action.ActionHandler;
+import org.mockserver.mock.action.ExpectationCallback;
 import org.mockserver.model.*;
 import org.mockserver.streams.IOStreamUtils;
 import org.slf4j.Logger;
@@ -59,6 +59,10 @@ public class MockServerServlet extends HttpServlet {
                 httpServletResponse.setStatus(HttpStatusCode.OK_200.code());
                 addCORSHeaders(httpServletResponse);
 
+            } else if (request.getPath().getValue().equals("/_mockserver_callback_websocket")) {
+
+                writeNotSupportedResponse(ExpectationCallback.class, httpServletResponse);
+
             } else if (request.matches("PUT", "/status")) {
 
                 httpServletResponse.setStatus(HttpStatusCode.OK_200.code());
@@ -78,7 +82,7 @@ public class MockServerServlet extends HttpServlet {
                 addCORSHeaders(httpServletResponse);
                 Action action = expectation.getAction(false);
                 if (validateSupportedFeatures(action, httpServletResponse)) {
-                    mockServerMatcher.when(expectation.getHttpRequest(), expectation.getTimes(), expectation.getTimeToLive()).thenRespond(expectation.getHttpResponse(false)).thenForward(expectation.getHttpForward()).thenCallback(expectation.getHttpCallback());
+                    mockServerMatcher.when(expectation.getHttpRequest(), expectation.getTimes(), expectation.getTimeToLive()).thenRespond(expectation.getHttpResponse(false)).thenForward(expectation.getHttpForward()).thenCallback(expectation.getHttpClassCallback());
                     httpServletResponse.setStatus(HttpStatusCode.CREATED_201.code());
                 }
 
@@ -178,6 +182,9 @@ public class MockServerServlet extends HttpServlet {
         if (action instanceof HttpResponse && ((HttpResponse) action).getConnectionOptions() != null) {
             writeNotSupportedResponse(ConnectionOptions.class, httpServletResponse);
             valid = false;
+        } else if (action instanceof HttpObjectCallback) {
+            writeNotSupportedResponse(HttpObjectCallback.class, httpServletResponse);
+            valid = false;
         } else if (action instanceof HttpError) {
             writeNotSupportedResponse(HttpError.class, httpServletResponse);
             valid = false;
@@ -185,7 +192,7 @@ public class MockServerServlet extends HttpServlet {
         return valid;
     }
 
-    private void writeNotSupportedResponse(Class<? extends ObjectWithJsonToString> notSupportedFeature, HttpServletResponse httpServletResponse) {
+    private void writeNotSupportedResponse(Class<?> notSupportedFeature, HttpServletResponse httpServletResponse) {
         httpServletResponse.setStatus(HttpStatusCode.NOT_ACCEPTABLE_406.code());
         IOStreamUtils.writeToOutputStream((notSupportedFeature.getSimpleName() + NOT_SUPPORTED_MESSAGE).getBytes(), httpServletResponse);
     }

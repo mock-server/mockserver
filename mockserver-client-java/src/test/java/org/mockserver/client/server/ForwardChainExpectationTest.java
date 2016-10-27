@@ -2,40 +2,46 @@ package org.mockserver.client.server;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockserver.client.netty.websocket.WebSocketClient;
 import org.mockserver.mock.Expectation;
-import org.mockserver.model.HttpCallback;
-import org.mockserver.model.HttpError;
-import org.mockserver.model.HttpForward;
-import org.mockserver.model.HttpResponse;
+import org.mockserver.mock.action.ExpectationCallback;
+import org.mockserver.model.*;
 
 import static org.mockito.Matchers.same;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpForward.forward;
 import static org.mockserver.model.HttpError.error;
-import static org.mockserver.model.HttpCallback.callback;
+import static org.mockserver.model.HttpClassCallback.callback;
 
 public class ForwardChainExpectationTest {
 
-    @Mock
     private MockServerClient mockMockServerClient;
 
-    @Mock
     private Expectation mockExpectation;
+
+    @Mock
+    private WebSocketClient webSocketClient;
+
+    @InjectMocks
+    private ForwardChainExpectation forwardChainExpectation;
 
     @Before
     public void setupMocks() {
+        mockMockServerClient = mock(MockServerClient.class);
+        mockExpectation = mock(Expectation.class);
+        forwardChainExpectation = new ForwardChainExpectation(mockMockServerClient, mockExpectation);
         initMocks(this);
     }
 
     @Test
     public void shouldSetResponse() {
         // given
-        ForwardChainExpectation forwardChainExpectation = new ForwardChainExpectation(mockMockServerClient, mockExpectation);
-
-        // and
         HttpResponse response = response();
 
         // when
@@ -49,9 +55,6 @@ public class ForwardChainExpectationTest {
     @Test
     public void shouldSetForward() {
         // given
-        ForwardChainExpectation forwardChainExpectation = new ForwardChainExpectation(mockMockServerClient, mockExpectation);
-
-        // and
         HttpForward forward = forward();
 
         // when
@@ -65,9 +68,6 @@ public class ForwardChainExpectationTest {
     @Test
     public void shouldSetError() {
         // given
-        ForwardChainExpectation forwardChainExpectation = new ForwardChainExpectation(mockMockServerClient, mockExpectation);
-
-        // and
         HttpError error = error();
 
         // when
@@ -79,18 +79,38 @@ public class ForwardChainExpectationTest {
     }
 
     @Test
-    public void shouldSetCallback() {
+    public void shouldSetClassCallback() {
         // given
-        ForwardChainExpectation forwardChainExpectation = new ForwardChainExpectation(mockMockServerClient, mockExpectation);
-
-        // and
-        HttpCallback callback = callback();
+        HttpClassCallback callback = callback();
 
         // when
         forwardChainExpectation.callback(callback);
 
         // then
         verify(mockExpectation).thenCallback(same(callback));
+        verify(mockMockServerClient).sendExpectation(mockExpectation);
+    }
+
+    @Test
+    public void shouldSetObjectCallback() {
+        // given
+        ExpectationCallback callback = new ExpectationCallback() {
+            @Override
+            public HttpResponse handle(HttpRequest httpRequest) {
+                return response();
+            }
+        };
+
+        // and
+        when(webSocketClient.registerExpectationCallback(callback)).thenReturn(webSocketClient);
+        when(webSocketClient.clientId()).thenReturn("some_client_id");
+
+        // when
+        forwardChainExpectation.callback(callback);
+
+        // then
+        verify(webSocketClient).registerExpectationCallback(same(callback));
+        verify(mockExpectation).thenCallback(new HttpObjectCallback().withClientId("some_client_id"));
         verify(mockMockServerClient).sendExpectation(mockExpectation);
     }
 

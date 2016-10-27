@@ -13,7 +13,7 @@ import java.util.List;
 /**
  * @author jamesdbloom
  */
-public class HttpRequestSerializer {
+public class HttpRequestSerializer implements Serializer<HttpRequest> {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
 
@@ -49,6 +49,11 @@ public class HttpRequestSerializer {
             }
         }
         return httpRequest;
+    }
+
+    @Override
+    public Class<HttpRequest> supportsType() {
+        return HttpRequest.class;
     }
 
     public HttpRequest[] deserializeArray(String jsonHttpRequests) {

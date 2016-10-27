@@ -1,11 +1,10 @@
 package org.mockserver.client.server;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.mockserver.client.netty.websocket.WebSocketClient;
 import org.mockserver.mock.Expectation;
-import org.mockserver.model.HttpCallback;
-import org.mockserver.model.HttpError;
-import org.mockserver.model.HttpForward;
-import org.mockserver.model.HttpResponse;
+import org.mockserver.mock.action.ExpectationCallback;
+import org.mockserver.model.*;
 
 /**
  * @author jamesdbloom
@@ -14,6 +13,7 @@ public class ForwardChainExpectation {
 
     private final MockServerClient mockServerClient;
     private final Expectation expectation;
+    private WebSocketClient webSocketClient;
 
     public ForwardChainExpectation(MockServerClient mockServerClient, Expectation expectation) {
         this.mockServerClient = mockServerClient;
@@ -35,13 +35,31 @@ public class ForwardChainExpectation {
         mockServerClient.sendExpectation(expectation);
     }
 
-    public void callback(HttpCallback httpCallback) {
-        expectation.thenCallback(httpCallback);
+    public void callback(HttpClassCallback httpClassCallback) {
+        expectation.thenCallback(httpClassCallback);
+        mockServerClient.sendExpectation(expectation);
+    }
+
+    public void callback(ExpectationCallback httpObjectCallback) {
+        if (webSocketClient == null) {
+            webSocketClient = new WebSocketClient(mockServerClient.remoteAddress(), mockServerClient.contextPath());
+        }
+        expectation.thenCallback(new HttpObjectCallback()
+                .withClientId(
+                        webSocketClient
+                                .registerExpectationCallback(httpObjectCallback)
+                                .clientId()
+                ));
         mockServerClient.sendExpectation(expectation);
     }
 
     @VisibleForTesting
     Expectation getExpectation() {
         return expectation;
+    }
+
+    @VisibleForTesting
+    void setWebSocketClient(WebSocketClient webSocketClient) {
+        this.webSocketClient = webSocketClient;
     }
 }

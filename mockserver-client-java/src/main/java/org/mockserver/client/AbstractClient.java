@@ -12,6 +12,8 @@ import org.mockserver.model.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.InetSocketAddress;
+
 import static org.mockserver.model.OutboundHttpRequest.outboundRequest;
 
 /**
@@ -33,11 +35,11 @@ public abstract class AbstractClient {
     /**
      * Start the client communicating to the proxy at the specified host and port
      * and contextPath for example:
+     * <p>
+     * ProxyClient mockServerClient = new ProxyClient("localhost", 1080, "/proxy");
      *
-     *   ProxyClient mockServerClient = new ProxyClient("localhost", 1080, "/proxy");
-     *
-     * @param host the host for the proxy to communicate with
-     * @param port the port for the proxy to communicate with
+     * @param host        the host for the proxy to communicate with
+     * @param port        the port for the proxy to communicate with
      * @param contextPath the context path that the proxy war is deployed to
      */
     protected AbstractClient(String host, int port, String contextPath) {
@@ -78,5 +80,13 @@ public abstract class AbstractClient {
             indentedObjects[i] = System.getProperty("line.separator") + System.getProperty("line.separator") + String.valueOf(objects[i]).replaceAll("(?m)^", "\t") + System.getProperty("line.separator");
         }
         return String.format(System.getProperty("line.separator") + message + System.getProperty("line.separator"), indentedObjects);
+    }
+
+    public InetSocketAddress remoteAddress() {
+        return new InetSocketAddress(host, port);
+    }
+
+    public String contextPath() {
+        return contextPath;
     }
 }

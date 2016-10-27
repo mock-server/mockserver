@@ -521,7 +521,7 @@ public class ExpectationSerializerIntegrationTest {
                 "      \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
                 "    } ]" + System.getProperty("line.separator") +
                 "  }," + System.getProperty("line.separator") +
-                "  \"httpCallback\" : {" + System.getProperty("line.separator") +
+                "  \"httpClassCallback\" : {" + System.getProperty("line.separator") +
                 "    \"callbackClass\" : \"someClass\"" + System.getProperty("line.separator") +
                 "  }," + System.getProperty("line.separator") +
                 "  \"times\" : {" + System.getProperty("line.separator") +
@@ -547,8 +547,8 @@ public class ExpectationSerializerIntegrationTest {
                                         .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
                                         .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
                         )
-                        .setHttpCallback(
-                                new HttpCallbackDTO()
+                        .setHttpClassCallback(
+                                new HttpClassCallbackDTO()
                                         .setCallbackClass("someClass")
                         )
                         .setTimes(new TimesDTO(Times.exactly(5))).buildObject(), expectation
@@ -906,8 +906,8 @@ public class ExpectationSerializerIntegrationTest {
                                         .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
                                         .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
                         )
-                        .setHttpCallback(
-                                new HttpCallbackDTO()
+                        .setHttpClassCallback(
+                                new HttpClassCallbackDTO()
                                         .setCallbackClass("someClass")
                         )
                         .setTimes(new TimesDTO(Times.exactly(5)))
@@ -937,7 +937,7 @@ public class ExpectationSerializerIntegrationTest {
                 "    } ]," + System.getProperty("line.separator") +
                 "    \"body\" : \"someBody\"" + System.getProperty("line.separator") +
                 "  }," + System.getProperty("line.separator") +
-                "  \"httpCallback\" : {" + System.getProperty("line.separator") +
+                "  \"httpClassCallback\" : {" + System.getProperty("line.separator") +
                 "    \"callbackClass\" : \"someClass\"" + System.getProperty("line.separator") +
                 "  }," + System.getProperty("line.separator") +
                 "  \"times\" : {" + System.getProperty("line.separator") +

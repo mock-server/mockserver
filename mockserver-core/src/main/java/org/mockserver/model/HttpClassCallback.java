@@ -5,15 +5,15 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 /**
  * @author jamesdbloom
  */
-public class HttpCallback extends Action {
+public class HttpClassCallback extends Action {
 
     private String callbackClass;
 
     /**
      * Static builder to create a callback.
      */
-    public static HttpCallback callback() {
-        return new HttpCallback();
+    public static HttpClassCallback callback() {
+        return new HttpClassCallback();
     }
 
     /**
@@ -26,8 +26,8 @@ public class HttpCallback extends Action {
      *
      * @param callbackClass class to callback as a fully qualified class name, i.e. "com.foo.MyExpectationCallback"
      */
-    public static HttpCallback callback(String callbackClass) {
-        return new HttpCallback().withCallbackClass(callbackClass);
+    public static HttpClassCallback callback(String callbackClass) {
+        return new HttpClassCallback().withCallbackClass(callbackClass);
     }
 
     @Override
@@ -50,7 +50,7 @@ public class HttpCallback extends Action {
      *
      * @param callbackClass class to callback as a fully qualified class name, i.e. "com.foo.MyExpectationCallback"
      */
-    public HttpCallback withCallbackClass(String callbackClass) {
+    public HttpClassCallback withCallbackClass(String callbackClass) {
         this.callbackClass = callbackClass;
         return this;
     }

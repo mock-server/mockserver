@@ -9,6 +9,7 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.util.AttributeKey;
 import org.mockserver.filters.RequestLogFilter;
 import org.mockserver.mock.MockServerMatcher;
+import org.mockserver.mockserver.callback.WebSocketClientRegistry;
 import org.mockserver.stop.StopEventQueue;
 import org.mockserver.stop.Stoppable;
 import org.slf4j.Logger;
@@ -26,11 +27,12 @@ import java.util.concurrent.TimeUnit;
  */
 public class MockServer implements Stoppable {
 
-    public static final AttributeKey<RequestLogFilter> LOG_FILTER = AttributeKey.valueOf("SERVER_LOG_FILTER");
+    static final AttributeKey<RequestLogFilter> LOG_FILTER = AttributeKey.valueOf("SERVER_LOG_FILTER");
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     // mockserver
     private final MockServerMatcher mockServerMatcher = new MockServerMatcher();
     private final RequestLogFilter requestLogFilter = new RequestLogFilter();
+    private final WebSocketClientRegistry webSocketClientRegistry = new WebSocketClientRegistry();
     private final List<Future<Channel>> channelOpenedFutures = new ArrayList<Future<Channel>>();
     // netty
     private final EventLoopGroup bossGroup = new NioEventLoopGroup();
@@ -56,7 +58,7 @@ public class MockServer implements Stoppable {
                 .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                 .childOption(ChannelOption.WRITE_BUFFER_HIGH_WATER_MARK, 32 * 1024)
                 .childOption(ChannelOption.WRITE_BUFFER_LOW_WATER_MARK, 8 * 1024)
-                .childHandler(new MockServerInitializer(mockServerMatcher, MockServer.this))
+                .childHandler(new MockServerInitializer(mockServerMatcher, MockServer.this, webSocketClientRegistry))
                 .childAttr(LOG_FILTER, requestLogFilter);
 
         bindToPorts(Arrays.asList(requestedPortBindings));
@@ -69,7 +71,7 @@ public class MockServer implements Stoppable {
         }));
     }
 
-    public List<Integer> bindToPorts(final List<Integer> requestedPortBindings) {
+    List<Integer> bindToPorts(final List<Integer> requestedPortBindings) {
         List<Integer> actualPortBindings = new ArrayList<Integer>();
         for (final Integer port : requestedPortBindings) {
             try {
@@ -127,7 +129,7 @@ public class MockServer implements Stoppable {
         }
     }
 
-    public MockServer withStopEventQueue(StopEventQueue stopEventQueue) {
+    MockServer withStopEventQueue(StopEventQueue stopEventQueue) {
         this.stopEventQueue = stopEventQueue;
         this.stopEventQueue.register(this);
         return this;

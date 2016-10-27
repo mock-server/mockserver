@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
-import static org.mockserver.model.HttpCallback.callback;
+import static org.mockserver.model.HttpClassCallback.callback;
 import static org.mockserver.model.NottableString.string;
 
 /**
@@ -52,9 +52,9 @@ public class ExpectationWithCallbackSerializerTest {
                             .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("headerName", Arrays.asList("headerValue")))))
                             .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("cookieName", "cookieValue"))))
             )
-            .setHttpCallback(
-                    new HttpCallbackDTO(
-                            new HttpCallback()
+            .setHttpClassCallback(
+                    new HttpClassCallbackDTO(
+                            new HttpClassCallback()
                                     .withCallbackClass("some_random_class")
                     )
             )
