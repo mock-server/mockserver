@@ -51,7 +51,7 @@
         <!-- tomcat version &gt; 7.0.56 causes SSL to fail -->
         <tomcat.version>7.0.56</tomcat.version>
         <jackson.version>2.5.3</jackson.version>
-        <netty.version>4.0.34.Final</netty.version>
+        <netty.version>4.0.42.Final</netty.version>
         <boucycastle.verion>1.52</boucycastle.verion>
         <spring.version>4.1.6.RELEASE</spring.version>
         <skipTests>false</skipTests>
