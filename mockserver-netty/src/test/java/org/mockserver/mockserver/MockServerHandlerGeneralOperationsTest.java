@@ -14,6 +14,7 @@ import org.mockserver.verify.VerificationSequence;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.nullValue;
@@ -382,12 +383,15 @@ public class MockServerHandlerGeneralOperationsTest extends MockServerHandlerTes
     }
 
     @Test
-    public void shouldStopMockServer() {
+    public void shouldStopMockServer() throws InterruptedException {
         // given
         HttpRequest request = request("/stop").withMethod("PUT").withBody("some_content");
 
         // when
         embeddedChannel.writeInbound(request);
+
+        // ensure that stop thread has run
+        TimeUnit.SECONDS.sleep(3);
 
         // then - mock server is stopped
         verify(mockMockServer).stop();
@@ -395,7 +399,6 @@ public class MockServerHandlerGeneralOperationsTest extends MockServerHandlerTes
         // and - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
         assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.ACCEPTED.code()));
-        assertThat(httpResponse.getBodyAsString(), is(""));
     }
 
     @Test

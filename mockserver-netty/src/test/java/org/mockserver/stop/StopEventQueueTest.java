@@ -4,8 +4,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -22,16 +20,18 @@ public class StopEventQueueTest {
         // given
         Stoppable stoppableOne = mock(Stoppable.class);
         Stoppable stoppableTwo = mock(Stoppable.class);
+        Stoppable stoppableThree = mock(Stoppable.class);
         StopEventQueue stopEventQueue = new StopEventQueue();
         stopEventQueue.register(stoppableOne);
         stopEventQueue.register(stoppableTwo);
+        stopEventQueue.register(stoppableThree);
 
         // when
-        stopEventQueue.stop();
+        stopEventQueue.stopOthers(stoppableOne);
 
         // then
-        verify(stoppableOne).stop();
         verify(stoppableTwo).stop();
+        verify(stoppableThree).stop();
     }
 
     @Test

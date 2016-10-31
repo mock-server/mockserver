@@ -215,19 +215,4 @@ public class MockServerHandlerCORSTest extends MockServerHandlerTest {
         assertThat(httpResponse.getHeader("X-CORS"), contains("MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORS(false) or -Dmockserver.disableCORS=false"));
     }
 
-    @Test
-    public void shouldAddCORSHeadersToStopRequest() {
-        // given - a request
-        HttpRequest request = request().withMethod("PUT").withPath("/stop");
-
-        // when
-        embeddedChannel.writeInbound(request);
-
-        // then - correct response written to ChannelHandlerContext
-        HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
-        assertThat(httpResponse.getHeader("Access-Control-Allow-Origin"), contains("*"));
-        assertThat(httpResponse.getHeader("Access-Control-Allow-Methods"), contains("PUT"));
-        assertThat(httpResponse.getHeader("X-CORS"), contains("MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORS(false) or -Dmockserver.disableCORS=false"));
-    }
-
 }

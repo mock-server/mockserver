@@ -23,14 +23,13 @@ import java.net.SocketAddress;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Future;
 
 /**
  * This class should not be constructed directly instead use HttpProxyBuilder to build and configure this class
  *
- * @see org.mockserver.proxy.ProxyBuilder
- *
  * @author jamesdbloom
+ * @see org.mockserver.proxy.ProxyBuilder
  */
 public class HttpProxy implements Proxy {
 
@@ -40,6 +39,7 @@ public class HttpProxy implements Proxy {
     private final RequestLogFilter requestLogFilter = new RequestLogFilter();
     private final RequestResponseLogFilter requestResponseLogFilter = new RequestResponseLogFilter();
     private final SettableFuture<String> hasStarted;
+    private final SettableFuture<String> stopping = SettableFuture.<String>create();
     // netty
     private final EventLoopGroup bossGroup = new NioEventLoopGroup();
     private final EventLoopGroup workerGroup = new NioEventLoopGroup();
@@ -86,8 +86,8 @@ public class HttpProxy implements Proxy {
 
                     channel.closeFuture().syncUninterruptibly();
                 } finally {
-                    bossGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
-                    workerGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
+                    bossGroup.shutdownGracefully();
+                    workerGroup.shutdownGracefully();
                 }
             }
         }, "MockServer HttpProxy Thread").start();
@@ -115,18 +115,19 @@ public class HttpProxy implements Proxy {
         };
     }
 
-    public void stop() {
+    public Future<?> stop() {
         try {
             proxyStopping();
-            bossGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
-            workerGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
-            stopEventQueue.stop();
-            channel.close();
-            // wait for socket to be released
-            TimeUnit.MILLISECONDS.sleep(500);
+            channel.close().sync();
+            bossGroup.shutdownGracefully().sync();
+            workerGroup.shutdownGracefully().sync();
+            stopEventQueue.stopOthers(this).get();
+            stopping.set("stopped");
         } catch (Exception ie) {
             logger.trace("Exception while stopping MockServer proxy", ie);
+            stopping.setException(ie);
         }
+        return stopping;
     }
 
     public HttpProxy withStopEventQueue(StopEventQueue stopEventQueue) {
@@ -136,16 +137,7 @@ public class HttpProxy implements Proxy {
     }
 
     public boolean isRunning() {
-        if (hasStarted.isDone()) {
-            try {
-                TimeUnit.MILLISECONDS.sleep(500);
-            } catch (InterruptedException e) {
-                logger.trace("Exception while waiting for the proxy to confirm running status", e);
-            }
-            return !bossGroup.isShuttingDown() && !workerGroup.isShuttingDown();
-        } else {
-            return false;
-        }
+        return !bossGroup.isShuttingDown() || !workerGroup.isShuttingDown() || !stopping.isDone();
     }
 
     public Integer getPort() {

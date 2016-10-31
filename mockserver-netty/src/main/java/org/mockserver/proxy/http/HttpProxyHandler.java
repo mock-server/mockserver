@@ -139,10 +139,13 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
             } else if (request.matches("PUT", "/stop")) {
 
-                writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
-                ctx.flush();
-                ctx.close();
-                server.stop();
+                ctx.writeAndFlush(response().withStatusCode(HttpResponseStatus.ACCEPTED.code()));
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        server.stop();
+                    }
+                }).start();
 
             } else {
 

@@ -16,14 +16,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Future;
 
 /**
  * This class should not be constructed directly instead use HttpProxyBuilder to build and configure this class
  *
- * @see org.mockserver.proxy.ProxyBuilder
- *
  * @author jamesdbloom
+ * @see org.mockserver.proxy.ProxyBuilder
  */
 public class DirectProxy implements Proxy {
 
@@ -32,6 +31,7 @@ public class DirectProxy implements Proxy {
     private final RequestLogFilter requestLogFilter = new RequestLogFilter();
     private final RequestResponseLogFilter requestResponseLogFilter = new RequestResponseLogFilter();
     private final SettableFuture<String> hasStarted;
+    private final SettableFuture<String> stopping = SettableFuture.<String>create();
     // netty
     private final EventLoopGroup bossGroup = new NioEventLoopGroup();
     private final EventLoopGroup workerGroup = new NioEventLoopGroup();
@@ -41,10 +41,9 @@ public class DirectProxy implements Proxy {
     private InetSocketAddress remoteSocket;
 
     /**
-     *
      * Start the instance using the ports provided
      *
-     * @param localPort the local port to expose
+     * @param localPort  the local port to expose
      * @param remoteHost the hostname of the remote server to connect to
      * @param remotePort the port of the remote server to connect to
      */
@@ -80,19 +79,17 @@ public class DirectProxy implements Proxy {
                             .childAttr(REQUEST_LOG_FILTER, requestLogFilter)
                             .childAttr(REQUEST_RESPONSE_LOG_FILTER, requestResponseLogFilter)
                             .bind(localPort)
-                            .sync()
+                            .syncUninterruptibly()
                             .channel();
 
                     logger.info("MockServer proxy started on port: {} connected to remote server: {}", ((InetSocketAddress) channel.localAddress()).getPort(), remoteHost + ":" + remotePort);
 
                     hasStarted.set("STARTED");
 
-                    channel.closeFuture().sync();
-                } catch (InterruptedException ie) {
-                    logger.error("MockServer proxy receive InterruptedException", ie);
+                    channel.closeFuture().syncUninterruptibly();
                 } finally {
-                    bossGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
-                    workerGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
+                    bossGroup.shutdownGracefully().syncUninterruptibly();
+                    workerGroup.shutdownGracefully().syncUninterruptibly();
                 }
             }
         }, "MockServer DirectProxy Thread").start();
@@ -104,17 +101,18 @@ public class DirectProxy implements Proxy {
         }
     }
 
-    public void stop() {
+    public Future<?> stop() {
         try {
-            bossGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
-            workerGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
-            stopEventQueue.stop();
             channel.close();
-            // wait for socket to be released
-            TimeUnit.MILLISECONDS.sleep(500);
+            bossGroup.shutdownGracefully();
+            workerGroup.shutdownGracefully();
+            stopEventQueue.stopOthers(this).get();
+            stopping.set("stopped");
         } catch (Exception ie) {
             logger.trace("Exception while stopping MockServer proxy", ie);
+            stopping.setException(ie);
         }
+        return stopping;
     }
 
     public DirectProxy withStopEventQueue(StopEventQueue stopEventQueue) {
@@ -124,16 +122,7 @@ public class DirectProxy implements Proxy {
     }
 
     public boolean isRunning() {
-        if (hasStarted.isDone()) {
-            try {
-                TimeUnit.MILLISECONDS.sleep(500);
-            } catch (InterruptedException e) {
-                logger.trace("Exception while waiting for the proxy to confirm running status", e);
-            }
-            return !bossGroup.isShuttingDown() && !workerGroup.isShuttingDown();
-        } else {
-            return false;
-        }
+        return !bossGroup.isShuttingDown() || !workerGroup.isShuttingDown() || !stopping.isDone();
     }
 
     public Integer getLocalPort() {

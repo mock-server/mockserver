@@ -16,7 +16,7 @@ public class MockServerStopTest {
     private final static int serverPort = PortFactory.findFreePort();
 
     @Test
-    public void canStartAndStopMultipleTimes() {
+    public void canStartAndStopMultipleTimesViaClient() {
         // start server
         MockServer mockServer = new MockServer(serverPort);
 
@@ -26,6 +26,26 @@ public class MockServerStopTest {
         for (int i = 0; i < 2; i++) {
             // when
             mockServerClient.stop();
+
+            // then
+            assertFalse(mockServerClient.isRunning());
+            mockServer = new MockServer(serverPort);
+            assertTrue(mockServerClient.isRunning());
+        }
+
+        assertTrue(mockServerClient.isRunning());
+        mockServerClient.stop();
+        assertFalse(mockServerClient.isRunning());
+    }
+
+    @Test
+    public void canStartAndStopMultipleTimes() {
+        // start server
+        MockServer mockServer = new MockServer(serverPort);
+
+        for (int i = 0; i < 2; i++) {
+            // when
+            mockServer.stop();
 
             // then
             assertFalse(mockServer.isRunning());

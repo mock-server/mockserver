@@ -3,7 +3,10 @@ package org.mockserver.mockserver;
 import com.google.common.base.Joiner;
 import com.google.common.net.MediaType;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.*;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpServerCodec;
@@ -34,7 +37,6 @@ import static org.mockserver.model.ConnectionOptions.isFalseOrNull;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
-import static org.mockserver.model.OutboundHttpRequest.outboundRequest;
 import static org.mockserver.model.PortBinding.portBinding;
 
 @ChannelHandler.Sharable
@@ -172,10 +174,13 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
             } else if (request.matches("PUT", "/stop")) {
 
-                writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
-                ctx.flush();
-                ctx.close();
-                server.stop();
+                ctx.writeAndFlush(response().withStatusCode(HttpResponseStatus.ACCEPTED.code()));
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        server.stop();
+                    }
+                }).start();
 
             } else {
 

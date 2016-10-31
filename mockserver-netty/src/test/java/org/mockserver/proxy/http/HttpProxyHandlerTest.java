@@ -21,6 +21,8 @@ import org.mockserver.proxy.Proxy;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 
+import java.util.concurrent.TimeUnit;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
@@ -314,12 +316,15 @@ public class HttpProxyHandlerTest {
     }
 
     @Test
-    public void shouldStopMockServer() {
+    public void shouldStopMockServer() throws InterruptedException {
         // given
         HttpRequest request = request("/stop").withMethod("PUT").withBody("some_content");
 
         // when
         embeddedChannel.writeInbound(request);
+
+        // ensure that stop thread has run
+        TimeUnit.SECONDS.sleep(3);
 
         // then - mock server is stopped
         verify(mockHttpProxy).stop();
@@ -327,6 +332,5 @@ public class HttpProxyHandlerTest {
         // and - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse)embeddedChannel.readOutbound();
         assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.ACCEPTED.code()));
-        assertThat(httpResponse.getBodyAsString(), is(""));
     }
 }
