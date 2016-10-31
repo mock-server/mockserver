@@ -172,7 +172,8 @@ public class MockServerServlet extends HttpServlet {
     private void addCORSHeaders(HttpServletResponse httpServletResponse) {
         if (enableCORS()) {
             httpServletResponse.setHeader("Access-Control-Allow-Origin", "*");
-            httpServletResponse.setHeader("Access-Control-Allow-Methods", "PUT");
+            httpServletResponse.setHeader("Access-Control-Allow-Methods", "CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE");
+            httpServletResponse.setHeader("Access-Control-Allow-Headers", "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary");
             httpServletResponse.setHeader("X-CORS", "MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORS(false) or -Dmockserver.disableCORS=false");
         }
     }

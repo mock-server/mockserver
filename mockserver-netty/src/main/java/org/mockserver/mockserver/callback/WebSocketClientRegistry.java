@@ -4,6 +4,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import org.mockserver.client.netty.websocket.WebSocketException;
 import org.mockserver.client.serialization.WebSocketMessageSerializer;
+import org.mockserver.client.serialization.model.WebSocketClientIdDTO;
 import org.mockserver.collections.CircularHashMap;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -34,6 +35,11 @@ public class WebSocketClientRegistry {
     }
 
     void registerClient(String clientId, ChannelHandlerContext ctx) {
+        try {
+            ctx.channel().writeAndFlush(new TextWebSocketFrame(webSocketMessageSerializer.serialize(new WebSocketClientIdDTO().setClientId(clientId))));
+        } catch (Exception e) {
+            throw new WebSocketException("Exception while sending web socket registration client id message to client " + clientId, e);
+        }
         clientRegistry.put(clientId, ctx);
     }
 

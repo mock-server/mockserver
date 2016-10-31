@@ -12,6 +12,7 @@ import io.netty.handler.codec.http.HttpClientCodec;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import org.mockserver.client.serialization.WebSocketMessageSerializer;
+import org.mockserver.client.serialization.model.WebSocketClientIdDTO;
 import org.mockserver.mock.action.ExpectationCallback;
 import org.mockserver.model.HttpRequest;
 
@@ -62,7 +63,7 @@ public class WebSocketClient {
             Object deserializedMessage = webSocketMessageSerializer.deserialize(textWebSocketFrame.text());
             if (deserializedMessage instanceof HttpRequest) {
                 channel.writeAndFlush(new TextWebSocketFrame(webSocketMessageSerializer.serialize(expectationCallback.handle((HttpRequest) deserializedMessage))));
-            } else {
+            } else if (!(deserializedMessage instanceof WebSocketClientIdDTO)) {
                 throw new WebSocketException("Unsupported web socket message " + deserializedMessage);
             }
         } catch (Exception e) {

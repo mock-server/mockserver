@@ -28,7 +28,8 @@ public class MockServerHandlerCORSTest extends MockServerHandlerTest {
         HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
         assertThat(httpResponse.getStatusCode(), is(200));
         assertThat(httpResponse.getHeader("Access-Control-Allow-Origin"), contains("*"));
-        assertThat(httpResponse.getHeader("Access-Control-Allow-Methods"), contains("PUT"));
+        assertThat(httpResponse.getHeader("Access-Control-Allow-Methods"), contains("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"));
+        assertThat(httpResponse.getHeader("Access-Control-Allow-Headers"), contains("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
         assertThat(httpResponse.getHeader("X-CORS"), contains("MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORS(false) or -Dmockserver.disableCORS=false"));
     }
 
@@ -83,7 +84,8 @@ public class MockServerHandlerCORSTest extends MockServerHandlerTest {
         // then - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
         assertThat(httpResponse.getHeader("Access-Control-Allow-Origin"), contains("*"));
-        assertThat(httpResponse.getHeader("Access-Control-Allow-Methods"), contains("PUT"));
+        assertThat(httpResponse.getHeader("Access-Control-Allow-Methods"), contains("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"));
+        assertThat(httpResponse.getHeader("Access-Control-Allow-Headers"), contains("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
         assertThat(httpResponse.getHeader("X-CORS"), contains("MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORS(false) or -Dmockserver.disableCORS=false"));
     }
 
@@ -121,7 +123,8 @@ public class MockServerHandlerCORSTest extends MockServerHandlerTest {
         // then - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
         assertThat(httpResponse.getHeader("Access-Control-Allow-Origin"), contains("*"));
-        assertThat(httpResponse.getHeader("Access-Control-Allow-Methods"), contains("PUT"));
+        assertThat(httpResponse.getHeader("Access-Control-Allow-Methods"), contains("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"));
+        assertThat(httpResponse.getHeader("Access-Control-Allow-Headers"), contains("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
         assertThat(httpResponse.getHeader("X-CORS"), contains("MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORS(false) or -Dmockserver.disableCORS=false"));
     }
 
@@ -136,7 +139,8 @@ public class MockServerHandlerCORSTest extends MockServerHandlerTest {
         // then - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
         assertThat(httpResponse.getHeader("Access-Control-Allow-Origin"), contains("*"));
-        assertThat(httpResponse.getHeader("Access-Control-Allow-Methods"), contains("PUT"));
+        assertThat(httpResponse.getHeader("Access-Control-Allow-Methods"), contains("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"));
+        assertThat(httpResponse.getHeader("Access-Control-Allow-Headers"), contains("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
         assertThat(httpResponse.getHeader("X-CORS"), contains("MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORS(false) or -Dmockserver.disableCORS=false"));
     }
 
@@ -151,7 +155,8 @@ public class MockServerHandlerCORSTest extends MockServerHandlerTest {
         // then - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
         assertThat(httpResponse.getHeader("Access-Control-Allow-Origin"), contains("*"));
-        assertThat(httpResponse.getHeader("Access-Control-Allow-Methods"), contains("PUT"));
+        assertThat(httpResponse.getHeader("Access-Control-Allow-Methods"), contains("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"));
+        assertThat(httpResponse.getHeader("Access-Control-Allow-Headers"), contains("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
         assertThat(httpResponse.getHeader("X-CORS"), contains("MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORS(false) or -Dmockserver.disableCORS=false"));
     }
 
@@ -166,7 +171,8 @@ public class MockServerHandlerCORSTest extends MockServerHandlerTest {
         // then - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
         assertThat(httpResponse.getHeader("Access-Control-Allow-Origin"), contains("*"));
-        assertThat(httpResponse.getHeader("Access-Control-Allow-Methods"), contains("PUT"));
+        assertThat(httpResponse.getHeader("Access-Control-Allow-Methods"), contains("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"));
+        assertThat(httpResponse.getHeader("Access-Control-Allow-Headers"), contains("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
         assertThat(httpResponse.getHeader("X-CORS"), contains("MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORS(false) or -Dmockserver.disableCORS=false"));
     }
 
@@ -181,7 +187,8 @@ public class MockServerHandlerCORSTest extends MockServerHandlerTest {
         // then - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
         assertThat(httpResponse.getHeader("Access-Control-Allow-Origin"), contains("*"));
-        assertThat(httpResponse.getHeader("Access-Control-Allow-Methods"), contains("PUT"));
+        assertThat(httpResponse.getHeader("Access-Control-Allow-Methods"), contains("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"));
+        assertThat(httpResponse.getHeader("Access-Control-Allow-Headers"), contains("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
         assertThat(httpResponse.getHeader("X-CORS"), contains("MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORS(false) or -Dmockserver.disableCORS=false"));
     }
 
@@ -196,7 +203,8 @@ public class MockServerHandlerCORSTest extends MockServerHandlerTest {
         // then - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
         assertThat(httpResponse.getHeader("Access-Control-Allow-Origin"), contains("*"));
-        assertThat(httpResponse.getHeader("Access-Control-Allow-Methods"), contains("PUT"));
+        assertThat(httpResponse.getHeader("Access-Control-Allow-Methods"), contains("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"));
+        assertThat(httpResponse.getHeader("Access-Control-Allow-Headers"), contains("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
         assertThat(httpResponse.getHeader("X-CORS"), contains("MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORS(false) or -Dmockserver.disableCORS=false"));
     }
 
@@ -211,7 +219,8 @@ public class MockServerHandlerCORSTest extends MockServerHandlerTest {
         // then - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
         assertThat(httpResponse.getHeader("Access-Control-Allow-Origin"), contains("*"));
-        assertThat(httpResponse.getHeader("Access-Control-Allow-Methods"), contains("PUT"));
+        assertThat(httpResponse.getHeader("Access-Control-Allow-Methods"), contains("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"));
+        assertThat(httpResponse.getHeader("Access-Control-Allow-Headers"), contains("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
         assertThat(httpResponse.getHeader("X-CORS"), contains("MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORS(false) or -Dmockserver.disableCORS=false"));
     }
 

@@ -73,6 +73,7 @@ public abstract class AbstractClientServerIntegrationTest {
             "transfer-encoding",
             "access-control-allow-origin",
             "access-control-allow-methods",
+            "access-control-allow-headers",
             "x-cors"
     );
     private NettyHttpClient httpClient = new NettyHttpClient();

@@ -234,7 +234,8 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
         }
         if (enableCORS()) {
             response.withHeader("Access-Control-Allow-Origin", "*");
-            response.withHeader("Access-Control-Allow-Methods", "PUT");
+            response.withHeader("Access-Control-Allow-Methods", "CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE");
+            response.withHeader("Access-Control-Allow-Headers", "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary");
             response.withHeader("X-CORS", "MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORS(false) or -Dmockserver.disableCORS=false");
         }
         writeResponse(ctx, request, response);

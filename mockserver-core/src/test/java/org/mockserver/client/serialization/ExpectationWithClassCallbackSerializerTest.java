@@ -27,7 +27,7 @@ import static org.mockserver.model.NottableString.string;
 /**
  * @author jamesdbloom
  */
-public class ExpectationWithCallbackSerializerTest {
+public class ExpectationWithClassCallbackSerializerTest {
 
     private final Expectation fullExpectation = new Expectation(
             new HttpRequest()

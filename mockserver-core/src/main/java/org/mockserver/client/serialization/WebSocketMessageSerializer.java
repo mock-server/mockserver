@@ -3,7 +3,6 @@ package org.mockserver.client.serialization;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.mockserver.client.serialization.model.WebSocketMessageDTO;
-import org.mockserver.model.ObjectWithJsonToString;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -28,7 +27,7 @@ public class WebSocketMessageSerializer {
         }
     }
 
-    public String serialize(ObjectWithJsonToString message) throws JsonProcessingException {
+    public String serialize(Object message) throws JsonProcessingException {
         if (serializers.containsKey(message.getClass())) {
             return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(new WebSocketMessageDTO().setType(message.getClass().getName()).setValue(serializers.get(message.getClass()).serialize((message))));
         } else {

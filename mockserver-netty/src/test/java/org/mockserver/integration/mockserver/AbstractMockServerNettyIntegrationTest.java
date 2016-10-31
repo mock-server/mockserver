@@ -54,7 +54,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
     @Test
     public void shouldThrowExceptionIfFailToBindToSocket() {
         // given
-        System.out.println("--- IGNORE THE FOLLOWING java.net.BindException EXCEPTION ---");
+        System.out.println("\n\n--- IGNORE THE FOLLOWING java.net.BindException EXCEPTION ---\n\n");
         expectedException.expect(RuntimeException.class);
         expectedException.expectMessage(containsString("Exception while binding MockServer to port "));
 
@@ -227,6 +227,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
 
     @Test
     public void shouldErrorWhenBindingToUnavailableSocket() throws InterruptedException, IOException {
+        System.out.println("\n\n--- IGNORE THE FOLLOWING java.net.BindException EXCEPTION ---\n\n");
         ServerSocket server = null;
         try {
             // given
