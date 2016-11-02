@@ -1,10 +1,8 @@
 package org.mockserver.filters;
 
 import org.mockserver.client.serialization.ExpectationSerializer;
-import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.client.serialization.java.ExpectationToJavaSerializer;
 import org.mockserver.collections.CircularMultiMap;
-import org.mockserver.logging.LogFormatter;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.matchers.TimeToLive;
@@ -15,10 +13,7 @@ import org.mockserver.model.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 
@@ -99,6 +94,28 @@ public class RequestResponseLogFilter implements ResponseFilter, RequestFilter {
                 }
             }
         }
+    }
+
+    public /* synchronized */ Expectation[] getExpectations(HttpRequest httpRequest) {
+        List<Expectation> expectations = new ArrayList<Expectation>();
+        Set<Map.Entry<HttpRequest, HttpResponse>> requestResponseLogEntrySet = requestResponseLog.entrySet();
+        if (httpRequest != null) {
+            HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
+            for (HttpRequest loggedHttpRequest : requestResponseLog.keySet()) {
+                if (httpRequestMatcher.matches(loggedHttpRequest)) {
+                    for (HttpResponse loggedHttpResponse : requestResponseLog.getAll(loggedHttpRequest)) {
+                        expectations.add(new Expectation(loggedHttpRequest, Times.once(), TimeToLive.unlimited()).thenRespond(loggedHttpResponse));
+                    }
+                }
+            }
+        } else {
+            for (HttpRequest loggedHttpRequest : requestResponseLog.keySet()) {
+                for (HttpResponse loggedHttpResponse : requestResponseLog.getAll(loggedHttpRequest)) {
+                    expectations.add(new Expectation(loggedHttpRequest, Times.once(), TimeToLive.unlimited()).thenRespond(loggedHttpResponse));
+                }
+            }
+        }
+        return expectations.toArray(new Expectation[expectations.size()]);
     }
 
 }
