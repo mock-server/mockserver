@@ -13,6 +13,7 @@ import org.mockserver.verify.VerificationSequence;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
@@ -172,6 +173,7 @@ public class MockServerHandlerGeneralOperationsTest extends MockServerHandlerTes
         embeddedChannel.writeInbound(request);
 
         // then
+        System.out.println("ConfigurationProperties.sslSubjectAlternativeNameDomains() = " + Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()));
         if (inetAddress != null) {
             assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()), containsInAnyOrder("localhost", inetAddress.getHostName(), inetAddress.getCanonicalHostName()));
         } else {
