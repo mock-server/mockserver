@@ -31,7 +31,8 @@ import java.util.List;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONNECTION;
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
-import static org.mockserver.configuration.ConfigurationProperties.enableCORS;
+import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAPI;
+import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAllResponses;
 import static org.mockserver.model.ConnectionOptions.connectionOptions;
 import static org.mockserver.model.ConnectionOptions.isFalseOrNull;
 import static org.mockserver.model.Header.header;
@@ -71,7 +72,8 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
     protected void channelRead0(final ChannelHandlerContext ctx, final HttpRequest request) {
 
         try {
-            if (enableCORS() && request.getMethod().getValue().equals("OPTIONS") && !request.getFirstHeader("Origin").isEmpty()) {
+
+            if ((enableCORSForAPI() || enableCORSForAllResponses()) && request.getMethod().getValue().equals("OPTIONS") && !request.getFirstHeader("Origin").isEmpty()) {
 
                 writeResponse(ctx, request, HttpResponseStatus.OK);
 
@@ -232,11 +234,8 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
         if (body != null && !body.isEmpty()) {
             response.updateHeader(header(CONTENT_TYPE, contentType + "; charset=utf-8"));
         }
-        if (enableCORS()) {
-            response.withHeader("Access-Control-Allow-Origin", "*");
-            response.withHeader("Access-Control-Allow-Methods", "CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE");
-            response.withHeader("Access-Control-Allow-Headers", "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary");
-            response.withHeader("X-CORS", "MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORS(false) or -Dmockserver.disableCORS=false");
+        if (enableCORSForAPI()) {
+            addCORSHeaders(response);
         }
         writeResponse(ctx, request, response);
     }
@@ -245,10 +244,36 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
         if (response == null) {
             response = notFoundResponse();
         }
+        if (enableCORSForAllResponses()) {
+            addCORSHeaders(response);
+        }
 
         addConnectionHeader(request, response);
 
         writeAndCloseSocket(ctx, request, response);
+    }
+
+    private void addCORSHeaders(HttpResponse response) {
+        String methods = "CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE";
+        String headers = "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary";
+        if (response.getFirstHeader("Access-Control-Allow-Origin").isEmpty()) {
+            response.withHeader("Access-Control-Allow-Origin", "*");
+        }
+        if (response.getFirstHeader("Access-Control-Allow-Methods").isEmpty()) {
+            response.withHeader("Access-Control-Allow-Methods", methods);
+        }
+        if (response.getFirstHeader("Access-Control-Allow-Headers").isEmpty()) {
+            response.withHeader("Access-Control-Allow-Headers", headers);
+        }
+        if (response.getFirstHeader("Access-Control-Expose-Headers").isEmpty()) {
+            response.withHeader("Access-Control-Expose-Headers", headers);
+        }
+        if (response.getFirstHeader("Access-Control-Max-Age").isEmpty()) {
+            response.withHeader("Access-Control-Max-Age", "1");
+        }
+        if (response.getFirstHeader("X-CORS").isEmpty()) {
+            response.withHeader("X-CORS", "MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORSForAPI(false) or -Dmockserver.disableCORS=false");
+        }
     }
 
     private void addConnectionHeader(HttpRequest request, HttpResponse response) {

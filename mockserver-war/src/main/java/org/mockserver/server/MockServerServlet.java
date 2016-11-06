@@ -21,7 +21,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.nio.charset.Charset;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
-import static org.mockserver.configuration.ConfigurationProperties.enableCORS;
+import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAPI;
+import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAllResponses;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.PortBinding.portBinding;
@@ -54,10 +55,10 @@ public class MockServerServlet extends HttpServlet {
         try {
             request = httpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(httpServletRequest);
 
-            if (enableCORS() && request.getMethod().getValue().equals("OPTIONS") && !request.getFirstHeader("Origin").isEmpty()) {
+            if ((enableCORSForAPI() || enableCORSForAllResponses()) && request.getMethod().getValue().equals("OPTIONS") && !request.getFirstHeader("Origin").isEmpty()) {
 
                 httpServletResponse.setStatus(HttpStatusCode.OK_200.code());
-                addCORSHeaders(httpServletResponse);
+                addCORSHeadersForAPI(httpServletResponse);
 
             } else if (request.getPath().getValue().equals("/_mockserver_callback_websocket")) {
 
@@ -68,18 +69,18 @@ public class MockServerServlet extends HttpServlet {
                 httpServletResponse.setStatus(HttpStatusCode.OK_200.code());
                 httpServletResponse.setHeader(CONTENT_TYPE, MediaType.JSON_UTF_8.toString());
                 IOStreamUtils.writeToOutputStream(portBindingSerializer.serialize(portBinding(httpServletRequest.getLocalPort())).getBytes(), httpServletResponse);
-                addCORSHeaders(httpServletResponse);
+                addCORSHeadersForAPI(httpServletResponse);
 
             } else if (request.matches("PUT", "/bind")) {
 
                 httpServletResponse.setStatus(HttpStatusCode.NOT_IMPLEMENTED_501.code());
-                addCORSHeaders(httpServletResponse);
+                addCORSHeadersForAPI(httpServletResponse);
 
             } else if (request.matches("PUT", "/expectation")) {
 
                 Expectation expectation = expectationSerializer.deserialize(request.getBodyAsString());
 
-                addCORSHeaders(httpServletResponse);
+                addCORSHeadersForAPI(httpServletResponse);
                 Action action = expectation.getAction(false);
                 if (validateSupportedFeatures(action, httpServletResponse)) {
                     mockServerMatcher.when(expectation.getHttpRequest(), expectation.getTimes(), expectation.getTimeToLive()).thenRespond(expectation.getHttpResponse(false)).thenForward(expectation.getHttpForward()).thenCallback(expectation.getHttpClassCallback());
@@ -98,24 +99,24 @@ public class MockServerServlet extends HttpServlet {
                     mockServerMatcher.clear(httpRequest);
                 }
                 httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
-                addCORSHeaders(httpServletResponse);
+                addCORSHeadersForAPI(httpServletResponse);
 
             } else if (request.matches("PUT", "/reset")) {
 
                 requestLogFilter.reset();
                 mockServerMatcher.reset();
                 httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
-                addCORSHeaders(httpServletResponse);
+                addCORSHeadersForAPI(httpServletResponse);
 
             } else if (request.matches("PUT", "/dumpToLog")) {
 
                 mockServerMatcher.dumpToLog(httpRequestSerializer.deserialize(request.getBodyAsString()));
                 httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
-                addCORSHeaders(httpServletResponse);
+                addCORSHeadersForAPI(httpServletResponse);
 
             } else if (request.matches("PUT", "/retrieve")) {
 
-                addCORSHeaders(httpServletResponse);
+                addCORSHeadersForAPI(httpServletResponse);
                 if (request.hasQueryStringParameter("type", "expectation")) {
                     Expectation[] expectations = mockServerMatcher.retrieve(httpRequestSerializer.deserialize(request.getBodyAsString()));
                     httpServletResponse.setStatus(HttpStatusCode.OK_200.code());
@@ -131,25 +132,26 @@ public class MockServerServlet extends HttpServlet {
             } else if (request.matches("PUT", "/verify")) {
 
                 String result = requestLogFilter.verify(verificationSerializer.deserialize(request.getBodyAsString()));
-                addCORSHeaders(httpServletResponse);
+                addCORSHeadersForAPI(httpServletResponse);
                 verifyResponse(httpServletResponse, result);
 
             } else if (request.matches("PUT", "/verifySequence")) {
 
                 String result = requestLogFilter.verify(verificationSequenceSerializer.deserialize(request.getBodyAsString()));
-                addCORSHeaders(httpServletResponse);
+                addCORSHeadersForAPI(httpServletResponse);
                 verifyResponse(httpServletResponse, result);
 
             } else if (request.matches("PUT", "/stop")) {
 
                 httpServletResponse.setStatus(HttpStatusCode.NOT_IMPLEMENTED_501.code());
-                addCORSHeaders(httpServletResponse);
+                addCORSHeadersForAPI(httpServletResponse);
 
             } else {
 
                 Action action = mockServerMatcher.handle(request);
                 if (validateSupportedFeatures(action, httpServletResponse)) {
                     mapResponse(actionHandler.processAction(action, request), httpServletResponse);
+                    addCORSHeadersForAllResponses(httpServletResponse);
                 }
 
             }
@@ -169,12 +171,40 @@ public class MockServerServlet extends HttpServlet {
         }
     }
 
+    private void addCORSHeadersForAPI(HttpServletResponse httpServletResponse) {
+        if (enableCORSForAPI()) {
+            addCORSHeaders(httpServletResponse);
+        } else {
+            addCORSHeadersForAllResponses(httpServletResponse);
+        }
+    }
+
+    private void addCORSHeadersForAllResponses(HttpServletResponse httpServletResponse) {
+        if (enableCORSForAllResponses()) {
+            addCORSHeaders(httpServletResponse);
+        }
+    }
+
     private void addCORSHeaders(HttpServletResponse httpServletResponse) {
-        if (enableCORS()) {
+        String methods = "CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE";
+        String headers = "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary";
+        if (httpServletResponse.getHeaders("Access-Control-Allow-Origin").isEmpty()) {
             httpServletResponse.setHeader("Access-Control-Allow-Origin", "*");
-            httpServletResponse.setHeader("Access-Control-Allow-Methods", "CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE");
-            httpServletResponse.setHeader("Access-Control-Allow-Headers", "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary");
-            httpServletResponse.setHeader("X-CORS", "MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORS(false) or -Dmockserver.disableCORS=false");
+        }
+        if (httpServletResponse.getHeaders("Access-Control-Allow-Methods").isEmpty()) {
+            httpServletResponse.setHeader("Access-Control-Allow-Methods", methods);
+        }
+        if (httpServletResponse.getHeaders("Access-Control-Allow-Headers").isEmpty()) {
+            httpServletResponse.setHeader("Access-Control-Allow-Headers", headers);
+        }
+        if (httpServletResponse.getHeaders("Access-Control-Expose-Headers").isEmpty()) {
+            httpServletResponse.setHeader("Access-Control-Expose-Headers", headers);
+        }
+        if (httpServletResponse.getHeaders("Access-Control-Max-Age").isEmpty()) {
+            httpServletResponse.setHeader("Access-Control-Max-Age", "1");
+        }
+        if (httpServletResponse.getHeaders("X-CORS").isEmpty()) {
+            httpServletResponse.setHeader("X-CORS", "MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORSForAPI(false) or -Dmockserver.disableCORS=false");
         }
     }
 

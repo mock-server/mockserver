@@ -43,13 +43,22 @@ public class ConfigurationProperties {
         return System.getProperty("mockserver.propertyFile", "mockserver.properties");
     }
 
-    // cors config
-    public static boolean enableCORS() {
-        return Boolean.parseBoolean(readPropertyHierarchically("mockserver.enableCORS", "" + true));
+    // cors config for API
+    public static boolean enableCORSForAPI() {
+        return Boolean.parseBoolean(readPropertyHierarchically("mockserver.enableCORSForAPI", "" + true));
     }
 
-    public static void enableCORS(boolean enableCORS) {
-        System.setProperty("mockserver.enableCORS", "" + enableCORS);
+    public static void enableCORSForAPI(boolean enableCORSForAPI) {
+        System.setProperty("mockserver.enableCORSForAPI", "" + enableCORSForAPI);
+    }
+
+    // cors config for all responses
+    public static boolean enableCORSForAllResponses() {
+        return Boolean.parseBoolean(readPropertyHierarchically("mockserver.enableCORSForAllResponses", "" + false));
+    }
+
+    public static void enableCORSForAllResponses(boolean enableCORSForAPI) {
+        System.setProperty("mockserver.enableCORSForAllResponses", "" + enableCORSForAPI);
     }
 
     // socket config

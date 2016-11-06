@@ -44,17 +44,31 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
-    public void shouldSetAndReadEnableCORSSetting() {
+    public void shouldSetAndReadEnableCORSSettingForAPI() {
         // given
-        System.clearProperty("mockserver.enableCORS");
+        System.clearProperty("mockserver.enableCORSForAPI");
 
         // when
-        assertEquals(true, ConfigurationProperties.enableCORS());
-        ConfigurationProperties.enableCORS(false);
+        assertEquals(true, ConfigurationProperties.enableCORSForAPI());
+        ConfigurationProperties.enableCORSForAPI(false);
 
         // then
-        assertEquals(false, ConfigurationProperties.enableCORS());
-        assertEquals("false", System.getProperty("mockserver.enableCORS"));
+        assertEquals(false, ConfigurationProperties.enableCORSForAPI());
+        assertEquals("false", System.getProperty("mockserver.enableCORSForAPI"));
+    }
+
+    @Test
+    public void shouldSetAndReadEnableCORSSettingForAllResponses() {
+        // given
+        System.clearProperty("mockserver.enableCORSForAllResponses");
+
+        // when
+        assertEquals(false, ConfigurationProperties.enableCORSForAllResponses());
+        ConfigurationProperties.enableCORSForAllResponses(false);
+
+        // then
+        assertEquals(false, ConfigurationProperties.enableCORSForAllResponses());
+        assertEquals("false", System.getProperty("mockserver.enableCORSForAllResponses"));
     }
     
     @Test

@@ -74,6 +74,8 @@ public abstract class AbstractClientServerIntegrationTest {
             "access-control-allow-origin",
             "access-control-allow-methods",
             "access-control-allow-headers",
+            "access-control-expose-headers",
+            "access-control-max-age",
             "x-cors"
     );
     private NettyHttpClient httpClient = new NettyHttpClient();

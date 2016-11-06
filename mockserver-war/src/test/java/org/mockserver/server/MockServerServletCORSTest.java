@@ -21,6 +21,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
@@ -77,7 +78,9 @@ public class MockServerServletCORSTest {
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Origin"), is("*"));
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Methods"), is("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"));
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Headers"), is("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
-        assertThat(httpServletResponse.getHeader("X-CORS"), is("MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORS(false) or -Dmockserver.disableCORS=false"));
+        assertThat(httpServletResponse.getHeader("Access-Control-Expose-Headers"), is("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
+        assertThat(httpServletResponse.getHeader("Access-Control-Max-Age"), is("1"));
+        assertThat(httpServletResponse.getHeader("X-CORS"), is("MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORSForAPI(false) or -Dmockserver.disableCORS=false"));
     }
 
     @Test
@@ -94,12 +97,14 @@ public class MockServerServletCORSTest {
         assertThat(httpServletResponse.getStatus(), is(200));
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Origin"), nullValue());
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Methods"), nullValue());
+        assertThat(httpServletResponse.getHeader("Access-Control-Expose-Methods"), nullValue());
+        assertThat(httpServletResponse.getHeader("Access-Control-Max-Age"), nullValue());
         assertThat(httpServletResponse.getHeader("X-CORS"), nullValue());
     }
 
     @Test
     public void shouldNotAddCORSHeadersForOptionsRequestIfCORSDisabled() {
-        boolean originalValue = ConfigurationProperties.enableCORS();
+        boolean originalValue = ConfigurationProperties.enableCORSForAPI();
         try {
             // given - a request
             MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
@@ -107,7 +112,7 @@ public class MockServerServletCORSTest {
             when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class))).thenReturn(request);
 
             // and - cors disabled
-            ConfigurationProperties.enableCORS(false);
+            ConfigurationProperties.enableCORSForAPI(false);
 
             // when
             mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
@@ -116,9 +121,91 @@ public class MockServerServletCORSTest {
             assertThat(httpServletResponse.getStatus(), is(200));
             assertThat(httpServletResponse.getHeader("Access-Control-Allow-Origin"), nullValue());
             assertThat(httpServletResponse.getHeader("Access-Control-Allow-Methods"), nullValue());
+            assertThat(httpServletResponse.getHeader("Access-Control-Expose-Methods"), nullValue());
+            assertThat(httpServletResponse.getHeader("Access-Control-Max-Age"), nullValue());
             assertThat(httpServletResponse.getHeader("X-CORS"), nullValue());
         } finally {
-            ConfigurationProperties.enableCORS(originalValue);
+            ConfigurationProperties.enableCORSForAPI(originalValue);
+        }
+    }
+
+    @Test
+    public void shouldAddCORSHeadersForOptionsRequestIfEnabledForAllRequestButDisabledForAPI() {
+        boolean originalValueForAPI = ConfigurationProperties.enableCORSForAPI();
+        boolean originalValueForAllRequests = ConfigurationProperties.enableCORSForAllResponses();
+        try {
+            // given - a request
+            MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
+            HttpRequest request = request().withMethod("OPTIONS").withHeader("Origin", "some_origin");
+            when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class))).thenReturn(request);
+
+            // and - cors for API disabled
+            ConfigurationProperties.enableCORSForAPI(false);
+
+            // but - cors for all request enabled
+            ConfigurationProperties.enableCORSForAllResponses(true);
+
+            // when
+            mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
+
+            // then - correct response written to ChannelHandlerContext
+            assertThat(httpServletResponse.getStatus(), is(200));
+            assertThat(httpServletResponse.getHeader("Access-Control-Allow-Origin"), is("*"));
+            assertThat(httpServletResponse.getHeader("Access-Control-Allow-Methods"), is("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"));
+            assertThat(httpServletResponse.getHeader("Access-Control-Allow-Headers"), is("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
+            assertThat(httpServletResponse.getHeader("Access-Control-Expose-Headers"), is("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
+            assertThat(httpServletResponse.getHeader("Access-Control-Max-Age"), is("1"));
+            assertThat(httpServletResponse.getHeader("X-CORS"), is("MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORSForAPI(false) or -Dmockserver.disableCORS=false"));
+        } finally {
+            ConfigurationProperties.enableCORSForAPI(originalValueForAPI);
+            ConfigurationProperties.enableCORSForAllResponses(originalValueForAllRequests);
+        }
+    }
+
+    @Test
+    public void shouldAddCORSHeadersToRandomRequestIfDisabledForAllRequest() {
+        // given - a request
+        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
+        HttpRequest request = request().withPath("/randomPath");
+        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class))).thenReturn(request);
+
+        // when
+        mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
+
+        // then - correct response written to ChannelHandlerContext
+        assertThat(httpServletResponse.getStatus(), is(200));
+        assertThat(httpServletResponse.getHeader("Access-Control-Allow-Origin"), nullValue());
+        assertThat(httpServletResponse.getHeader("Access-Control-Allow-Methods"), nullValue());
+        assertThat(httpServletResponse.getHeader("Access-Control-Expose-Headers"), nullValue());
+        assertThat(httpServletResponse.getHeader("Access-Control-Max-Age"), nullValue());
+        assertThat(httpServletResponse.getHeader("X-CORS"), nullValue());
+    }
+
+    @Test
+    public void shouldAddCORSHeadersToRandomRequestIfEnabledForAllRequest() {
+        boolean originalValue = ConfigurationProperties.enableCORSForAllResponses();
+        try {
+            // given - a request
+            MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
+            HttpRequest request = request().withPath("/randomPath");
+            when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class))).thenReturn(request);
+
+            // and - cors disabled
+            ConfigurationProperties.enableCORSForAllResponses(true);
+
+            // when
+            mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
+
+            // then - correct response written to ChannelHandlerContext
+            assertThat(httpServletResponse.getStatus(), is(200));
+            assertThat(httpServletResponse.getHeader("Access-Control-Allow-Origin"), is("*"));
+            assertThat(httpServletResponse.getHeader("Access-Control-Allow-Methods"), is("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"));
+            assertThat(httpServletResponse.getHeader("Access-Control-Allow-Headers"), is("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
+            assertThat(httpServletResponse.getHeader("Access-Control-Expose-Headers"), is("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
+            assertThat(httpServletResponse.getHeader("Access-Control-Max-Age"), is("1"));
+            assertThat(httpServletResponse.getHeader("X-CORS"), is("MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORSForAPI(false) or -Dmockserver.disableCORS=false"));
+        } finally {
+            ConfigurationProperties.enableCORSForAllResponses(originalValue);
         }
     }
 
@@ -136,12 +223,14 @@ public class MockServerServletCORSTest {
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Origin"), is("*"));
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Methods"), is("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"));
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Headers"), is("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
-        assertThat(httpServletResponse.getHeader("X-CORS"), is("MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORS(false) or -Dmockserver.disableCORS=false"));
+        assertThat(httpServletResponse.getHeader("Access-Control-Expose-Headers"), is("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
+        assertThat(httpServletResponse.getHeader("Access-Control-Max-Age"), is("1"));
+        assertThat(httpServletResponse.getHeader("X-CORS"), is("MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORSForAPI(false) or -Dmockserver.disableCORS=false"));
     }
 
     @Test
     public void shouldNotAddCORSHeadersForStatusRequestIfCORSDisabled() {
-        boolean originalValue = ConfigurationProperties.enableCORS();
+        boolean originalValue = ConfigurationProperties.enableCORSForAPI();
         try {
             // given - a request
             MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
@@ -149,7 +238,7 @@ public class MockServerServletCORSTest {
             when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class))).thenReturn(request);
 
             // and - cors disabled
-            ConfigurationProperties.enableCORS(false);
+            ConfigurationProperties.enableCORSForAPI(false);
 
             // when
             mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
@@ -157,9 +246,11 @@ public class MockServerServletCORSTest {
             // then - correct response written to ChannelHandlerContext
             assertThat(httpServletResponse.getHeader("Access-Control-Allow-Origin"), nullValue());
             assertThat(httpServletResponse.getHeader("Access-Control-Allow-Methods"), nullValue());
+            assertThat(httpServletResponse.getHeader("Access-Control-Expose-Methods"), nullValue());
+            assertThat(httpServletResponse.getHeader("Access-Control-Max-Age"), nullValue());
             assertThat(httpServletResponse.getHeader("X-CORS"), nullValue());
         } finally {
-            ConfigurationProperties.enableCORS(originalValue);
+            ConfigurationProperties.enableCORSForAPI(originalValue);
         }
     }
 
@@ -177,7 +268,9 @@ public class MockServerServletCORSTest {
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Origin"), is("*"));
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Methods"), is("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"));
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Headers"), is("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
-        assertThat(httpServletResponse.getHeader("X-CORS"), is("MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORS(false) or -Dmockserver.disableCORS=false"));
+        assertThat(httpServletResponse.getHeader("Access-Control-Expose-Headers"), is("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
+        assertThat(httpServletResponse.getHeader("Access-Control-Max-Age"), is("1"));
+        assertThat(httpServletResponse.getHeader("X-CORS"), is("MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORSForAPI(false) or -Dmockserver.disableCORS=false"));
     }
 
     @Test
@@ -194,7 +287,9 @@ public class MockServerServletCORSTest {
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Origin"), is("*"));
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Methods"), is("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"));
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Headers"), is("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
-        assertThat(httpServletResponse.getHeader("X-CORS"), is("MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORS(false) or -Dmockserver.disableCORS=false"));
+        assertThat(httpServletResponse.getHeader("Access-Control-Expose-Headers"), is("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
+        assertThat(httpServletResponse.getHeader("Access-Control-Max-Age"), is("1"));
+        assertThat(httpServletResponse.getHeader("X-CORS"), is("MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORSForAPI(false) or -Dmockserver.disableCORS=false"));
     }
 
     @Test
@@ -211,7 +306,9 @@ public class MockServerServletCORSTest {
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Origin"), is("*"));
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Methods"), is("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"));
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Headers"), is("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
-        assertThat(httpServletResponse.getHeader("X-CORS"), is("MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORS(false) or -Dmockserver.disableCORS=false"));
+        assertThat(httpServletResponse.getHeader("Access-Control-Expose-Headers"), is("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
+        assertThat(httpServletResponse.getHeader("Access-Control-Max-Age"), is("1"));
+        assertThat(httpServletResponse.getHeader("X-CORS"), is("MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORSForAPI(false) or -Dmockserver.disableCORS=false"));
     }
 
     @Test
@@ -228,7 +325,9 @@ public class MockServerServletCORSTest {
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Origin"), is("*"));
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Methods"), is("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"));
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Headers"), is("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
-        assertThat(httpServletResponse.getHeader("X-CORS"), is("MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORS(false) or -Dmockserver.disableCORS=false"));
+        assertThat(httpServletResponse.getHeader("Access-Control-Expose-Headers"), is("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
+        assertThat(httpServletResponse.getHeader("Access-Control-Max-Age"), is("1"));
+        assertThat(httpServletResponse.getHeader("X-CORS"), is("MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORSForAPI(false) or -Dmockserver.disableCORS=false"));
     }
 
     @Test
@@ -245,7 +344,9 @@ public class MockServerServletCORSTest {
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Origin"), is("*"));
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Methods"), is("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"));
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Headers"), is("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
-        assertThat(httpServletResponse.getHeader("X-CORS"), is("MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORS(false) or -Dmockserver.disableCORS=false"));
+        assertThat(httpServletResponse.getHeader("Access-Control-Expose-Headers"), is("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
+        assertThat(httpServletResponse.getHeader("Access-Control-Max-Age"), is("1"));
+        assertThat(httpServletResponse.getHeader("X-CORS"), is("MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORSForAPI(false) or -Dmockserver.disableCORS=false"));
     }
 
     @Test
@@ -262,7 +363,9 @@ public class MockServerServletCORSTest {
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Origin"), is("*"));
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Methods"), is("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"));
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Headers"), is("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
-        assertThat(httpServletResponse.getHeader("X-CORS"), is("MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORS(false) or -Dmockserver.disableCORS=false"));
+        assertThat(httpServletResponse.getHeader("Access-Control-Expose-Headers"), is("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
+        assertThat(httpServletResponse.getHeader("Access-Control-Max-Age"), is("1"));
+        assertThat(httpServletResponse.getHeader("X-CORS"), is("MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORSForAPI(false) or -Dmockserver.disableCORS=false"));
     }
 
     @Test
@@ -279,7 +382,9 @@ public class MockServerServletCORSTest {
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Origin"), is("*"));
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Methods"), is("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"));
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Headers"), is("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
-        assertThat(httpServletResponse.getHeader("X-CORS"), is("MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORS(false) or -Dmockserver.disableCORS=false"));
+        assertThat(httpServletResponse.getHeader("Access-Control-Expose-Headers"), is("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
+        assertThat(httpServletResponse.getHeader("Access-Control-Max-Age"), is("1"));
+        assertThat(httpServletResponse.getHeader("X-CORS"), is("MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORSForAPI(false) or -Dmockserver.disableCORS=false"));
     }
 
     @Test
@@ -296,7 +401,9 @@ public class MockServerServletCORSTest {
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Origin"), is("*"));
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Methods"), is("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"));
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Headers"), is("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
-        assertThat(httpServletResponse.getHeader("X-CORS"), is("MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORS(false) or -Dmockserver.disableCORS=false"));
+        assertThat(httpServletResponse.getHeader("Access-Control-Expose-Headers"), is("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
+        assertThat(httpServletResponse.getHeader("Access-Control-Max-Age"), is("1"));
+        assertThat(httpServletResponse.getHeader("X-CORS"), is("MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORSForAPI(false) or -Dmockserver.disableCORS=false"));
     }
 
 }
