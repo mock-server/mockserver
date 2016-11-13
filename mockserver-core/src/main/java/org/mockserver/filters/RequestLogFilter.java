@@ -24,7 +24,7 @@ public class RequestLogFilter implements ResponseFilter, RequestFilter {
 
     private static final Logger logger = LoggerFactory.getLogger(RequestLogFilter.class);
     // request persistence
-    private final EvictingQueue<HttpRequest> requestLog = EvictingQueue.create(100);
+    private final EvictingQueue<HttpRequest> requestLog = EvictingQueue.create(5000);
 
     // matcher
     private final MatcherBuilder matcherBuilder = new MatcherBuilder();

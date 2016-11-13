@@ -28,7 +28,7 @@ import static org.mockserver.model.HttpResponse.notFoundResponse;
 public class RequestResponseLogFilter implements ResponseFilter, RequestFilter {
 
     // request / response persistence
-    private final CircularMultiMap<HttpRequest, HttpResponse> requestResponseLog = new CircularMultiMap<HttpRequest, HttpResponse>(100, 50);
+    private final CircularMultiMap<HttpRequest, HttpResponse> requestResponseLog = new CircularMultiMap<HttpRequest, HttpResponse>(5000, 50);
     // matcher
     private final MatcherBuilder matcherBuilder = new MatcherBuilder();
     private Logger requestLogger = LoggerFactory.getLogger("REQUEST");
