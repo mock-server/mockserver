@@ -101,4 +101,21 @@ public class RequestResponseLogFilter implements ResponseFilter, RequestFilter {
         }
     }
 
+    public Expectation[] retrieve(HttpRequest httpRequestToMatch) {
+        List<Expectation> matchingExpectations = new ArrayList<Expectation>();
+        if (httpRequestToMatch != null) {
+            HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequestToMatch);
+            for (Map.Entry<HttpRequest, HttpResponse> entry : requestResponseLog.entrySet()) {
+                if (httpRequestMatcher.matches(entry.getKey(), true)) {
+                    matchingExpectations.add(new Expectation(entry.getKey(), Times.unlimited(), TimeToLive.unlimited()).thenRespond(entry.getValue()));
+                }
+            }
+        } else {
+            for (Map.Entry<HttpRequest, HttpResponse> entry : requestResponseLog.entrySet()) {
+                matchingExpectations.add(new Expectation(entry.getKey(), Times.unlimited(), TimeToLive.unlimited()).thenRespond(entry.getValue()));
+            }
+        }
+        return matchingExpectations.toArray(new Expectation[matchingExpectations.size()]);
+    }
+
 }
