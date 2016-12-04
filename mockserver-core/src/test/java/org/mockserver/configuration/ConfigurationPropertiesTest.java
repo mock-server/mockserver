@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
@@ -173,12 +174,12 @@ public class ConfigurationPropertiesTest {
         ConfigurationProperties.clearSslSubjectAlternativeNameDomains();
 
         // when
-        assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()), containsInAnyOrder("localhost"));
+        assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()), empty());
         ConfigurationProperties.addSslSubjectAlternativeNameDomains("a", "b", "c", "d");
 
         // then
-        assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()), containsInAnyOrder("a", "b", "c", "d", "localhost"));
-        assertEquals("a,b,c,d,localhost", System.getProperty("mockserver.sslSubjectAlternativeNameDomains"));
+        assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()), containsInAnyOrder("a", "b", "c", "d"));
+        assertEquals("a,b,c,d", System.getProperty("mockserver.sslSubjectAlternativeNameDomains"));
         assertEquals(true, ConfigurationProperties.rebuildKeyStore());
     }
 
@@ -189,19 +190,19 @@ public class ConfigurationPropertiesTest {
         ConfigurationProperties.rebuildKeyStore(false);
 
         // when
-        assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()), containsInAnyOrder("localhost"));
+        assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()), empty());
         ConfigurationProperties.addSslSubjectAlternativeNameDomains("a", "b", "c", "d");
 
         // then
-        assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()), containsInAnyOrder("a", "b", "c", "d", "localhost"));
-        assertEquals("a,b,c,d,localhost", System.getProperty("mockserver.sslSubjectAlternativeNameDomains"));
+        assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()), containsInAnyOrder("a", "b", "c", "d"));
+        assertEquals("a,b,c,d", System.getProperty("mockserver.sslSubjectAlternativeNameDomains"));
 
         // when
         ConfigurationProperties.addSslSubjectAlternativeNameDomains("e", "f", "g");
 
         // then - add subject alternative domain names
-        assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()), containsInAnyOrder("a", "b", "c", "d", "e", "f", "g", "localhost"));
-        assertEquals("a,b,c,d,e,f,g,localhost", System.getProperty("mockserver.sslSubjectAlternativeNameDomains"));
+        assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()), containsInAnyOrder("a", "b", "c", "d", "e", "f", "g"));
+        assertEquals("a,b,c,d,e,f,g", System.getProperty("mockserver.sslSubjectAlternativeNameDomains"));
         assertEquals(true, ConfigurationProperties.rebuildKeyStore());
 
         // given
@@ -211,8 +212,8 @@ public class ConfigurationPropertiesTest {
         ConfigurationProperties.addSslSubjectAlternativeNameDomains("e", "f", "g");
 
         // then - do not add duplicate subject alternative domain names
-        assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()), containsInAnyOrder("a", "b", "c", "d", "e", "f", "g", "localhost"));
-        assertEquals("a,b,c,d,e,f,g,localhost", System.getProperty("mockserver.sslSubjectAlternativeNameDomains"));
+        assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()), containsInAnyOrder("a", "b", "c", "d", "e", "f", "g"));
+        assertEquals("a,b,c,d,e,f,g", System.getProperty("mockserver.sslSubjectAlternativeNameDomains"));
         assertEquals(false, ConfigurationProperties.rebuildKeyStore());
     }
 

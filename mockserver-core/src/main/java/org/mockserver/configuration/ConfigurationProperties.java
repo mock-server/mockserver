@@ -135,7 +135,6 @@ public class ConfigurationProperties {
 
     public static void clearSslSubjectAlternativeNameDomains() {
         ALL_SUBJECT_ALTERNATIVE_DOMAINS.clear();
-        addSslSubjectAlternativeNameDomains(readPropertyHierarchically("mockserver.sslSubjectAlternativeNameDomains", "localhost").split(","));
     }
 
     public static boolean containsSslSubjectAlternativeName(String domainOrIp) {

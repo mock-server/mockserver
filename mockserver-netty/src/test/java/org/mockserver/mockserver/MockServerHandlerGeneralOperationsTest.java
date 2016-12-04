@@ -164,7 +164,6 @@ public class MockServerHandlerGeneralOperationsTest extends MockServerHandlerTes
         HttpRequest request = request("/expectation").withMethod("PUT").withBody("some_content");
         when(mockHttpRequest.getFirstHeader(HttpHeaders.Names.HOST)).thenReturn("somehostname");
         Set<String> expectedDomainNames = new TreeSet<String>();
-        expectedDomainNames.add("localhost");
         try {
             for (InetAddress addr : InetAddress.getAllByName("somehostname")) {
                 expectedDomainNames.add(addr.getHostAddress());
