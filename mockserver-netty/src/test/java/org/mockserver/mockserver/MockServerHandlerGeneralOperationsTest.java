@@ -177,6 +177,8 @@ public class MockServerHandlerGeneralOperationsTest extends MockServerHandlerTes
         embeddedChannel.writeInbound(request);
 
         // then
+        System.out.println("ConfigurationProperties.sslSubjectAlternativeNameDomains() = " + Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()));
+        System.out.println("expectedDomainNames = " + expectedDomainNames);
         assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()), containsInAnyOrder(expectedDomainNames.toArray()));
 
         // cleanup
