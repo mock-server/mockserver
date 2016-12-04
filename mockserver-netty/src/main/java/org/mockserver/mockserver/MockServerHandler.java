@@ -120,10 +120,13 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
                 org.mockserver.model.HttpRequest httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
                 if (request.hasQueryStringParameter("type", "expectation")) {
+                    logFormatter.infoLog("clearing expectations that match:{}", httpRequest);
                     mockServerMatcher.clear(httpRequest);
                 } else if (request.hasQueryStringParameter("type", "log")) {
+                    logFormatter.infoLog("clearing request logs that match:{}", httpRequest);
                     requestLogFilter.clear(httpRequest);
                 } else {
+                    logFormatter.infoLog("clearing expectations and request logs that match:{}", httpRequest);
                     requestLogFilter.clear(httpRequest);
                     mockServerMatcher.clear(httpRequest);
                 }
@@ -144,19 +147,22 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
             } else if (request.matches("PUT", "/retrieve")) {
 
+                HttpRequest httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
                 if (request.hasQueryStringParameter("type", "expectation")) {
-                    Expectation[] expectations = mockServerMatcher.retrieve(httpRequestSerializer.deserialize(request.getBodyAsString()));
+                    Expectation[] expectations = mockServerMatcher.retrieve(httpRequest);
+                    logFormatter.infoLog("retrieving expectations that match:{}", httpRequest);
                     writeResponse(ctx, request, HttpResponseStatus.OK, expectationSerializer.serialize(expectations), "application/json");
                 } else {
-                    HttpRequest[] requests = requestLogFilter.retrieve(httpRequestSerializer.deserialize(request.getBodyAsString()));
+                    HttpRequest[] requests = requestLogFilter.retrieve(httpRequest);
+                    logFormatter.infoLog("retrieving requests that match:{}", httpRequest);
                     writeResponse(ctx, request, HttpResponseStatus.OK, httpRequestSerializer.serialize(requests), "application/json");
                 }
 
             } else if (request.matches("PUT", "/verify")) {
 
                 Verification verification = verificationSerializer.deserialize(request.getBodyAsString());
-                logFormatter.infoLog("verifying:{}", verification);
                 String result = requestLogFilter.verify(verification);
+                logFormatter.infoLog("verifying requests that match:{}", verification);
                 if (result.isEmpty()) {
                     writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
                 } else {
@@ -167,7 +173,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
                 VerificationSequence verificationSequence = verificationSequenceSerializer.deserialize(request.getBodyAsString());
                 String result = requestLogFilter.verify(verificationSequence);
-                logFormatter.infoLog("verifying sequence:{}", verificationSequence);
+                logFormatter.infoLog("verifying sequence that match:{}", verificationSequence);
                 if (result.isEmpty()) {
                     writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
                 } else {
