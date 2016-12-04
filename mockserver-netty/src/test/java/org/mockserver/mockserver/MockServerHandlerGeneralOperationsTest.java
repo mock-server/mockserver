@@ -157,8 +157,10 @@ public class MockServerHandlerGeneralOperationsTest extends MockServerHandlerTes
 
     @Test
     public void shouldAddSubjectAlternativeName() throws UnknownHostException {
+        System.out.println("ConfigurationProperties.sslSubjectAlternativeNameDomains() = " + Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()));
         // given
         ConfigurationProperties.clearSslSubjectAlternativeNameDomains();
+        System.out.println("ConfigurationProperties.sslSubjectAlternativeNameDomains() = " + Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()));
         HttpRequest request = request("/expectation").withMethod("PUT").withBody("some_content");
         when(mockHttpRequest.getFirstHeader(HttpHeaders.Names.HOST)).thenReturn("somehostname");
         Set<String> expectedDomainNames = new TreeSet<String>();
