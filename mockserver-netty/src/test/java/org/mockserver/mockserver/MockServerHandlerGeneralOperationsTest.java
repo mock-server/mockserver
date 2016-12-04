@@ -13,8 +13,7 @@ import org.mockserver.verify.VerificationSequence;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -162,23 +161,23 @@ public class MockServerHandlerGeneralOperationsTest extends MockServerHandlerTes
         ConfigurationProperties.clearSslSubjectAlternativeNameDomains();
         HttpRequest request = request("/expectation").withMethod("PUT").withBody("some_content");
         when(mockHttpRequest.getFirstHeader(HttpHeaders.Names.HOST)).thenReturn("somehostname");
-        InetAddress inetAddress = null;
+        Set<String> expectedDomainNames = new TreeSet<String>();
+        expectedDomainNames.add("localhost");
         try {
-            inetAddress = InetAddress.getByName("somehostname");
+            for (InetAddress addr : InetAddress.getAllByName("somehostname")) {
+                expectedDomainNames.add(addr.getHostAddress());
+                expectedDomainNames.add(addr.getHostName());
+                expectedDomainNames.add(addr.getCanonicalHostName());
+            }
         } catch (UnknownHostException uhe) {
-            // do nothing
+            expectedDomainNames.add("somehostname");
         }
 
         // when
         embeddedChannel.writeInbound(request);
 
         // then
-        System.out.println("ConfigurationProperties.sslSubjectAlternativeNameDomains() = " + Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()));
-        if (inetAddress != null) {
-            assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()), containsInAnyOrder("localhost", inetAddress.getHostName(), inetAddress.getCanonicalHostName()));
-        } else {
-            assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()), containsInAnyOrder("localhost", "somehostname"));
-        }
+        assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()), containsInAnyOrder(expectedDomainNames.toArray()));
 
         // cleanup
         embeddedChannel.readOutbound();
