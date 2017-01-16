@@ -89,6 +89,10 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
                 ctx.pipeline().remove(this);
                 ctx.fireChannelRead(request);
 
+            } else if (request.matches("GET", "/ping")) {
+
+                writeResponse(ctx, request, HttpResponseStatus.OK, "pong", "text/plain");
+
             } else if (request.matches("PUT", "/status")) {
 
                 writeResponse(ctx, request, HttpResponseStatus.OK);
@@ -97,12 +101,14 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
                 org.mockserver.model.HttpRequest httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
                 requestLogFilter.clear(httpRequest);
+                requestResponseLogFilter.clear(httpRequest);
                 logFormatter.infoLog("clearing expectations and request logs that match:{}", httpRequest);
                 writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
 
             } else if (request.matches("PUT", "/reset")) {
 
                 requestLogFilter.reset();
+                requestResponseLogFilter.reset();
                 logFormatter.infoLog("resetting all expectations and request logs");
                 writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
 
