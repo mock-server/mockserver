@@ -1,6 +1,8 @@
 package org.mockserver.client.server;
 
 import com.google.common.base.Charsets;
+
+import org.apache.commons.io.IOUtils;
 import org.mockserver.client.AbstractClient;
 import org.mockserver.client.netty.SocketConnectionException;
 import org.mockserver.matchers.TimeToLive;
@@ -9,12 +11,16 @@ import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpStatusCode;
+import org.mockserver.model.JsonBody;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.mockserver.verify.VerificationTimes;
 
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.verify.VerificationTimes.exactly;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * @author jamesdbloom
@@ -143,6 +149,26 @@ public class MockServerClient extends AbstractClient {
      */
     public MockServerClient dumpToLog(HttpRequest httpRequest) {
         sendRequest(request().withMethod("PUT").withPath(calculatePath("dumpToLog")).withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", Charsets.UTF_8));
+        return this;
+    }
+
+    /**
+     * Expectations can be logged with {@link #dumpToLog()}. These dumps can be used to create new expectations
+     * @param json the expectation
+     */
+    public MockServerClient createExpectationFromJson(String json) {
+        sendRequest(request().withMethod("PUT").withPath(calculatePath("expectation")).withBody(new JsonBody(json)));
+        return this;
+    }
+
+    /**
+     * Expectations can be logged with {@link #dumpToLog()}. These dumps can be used to create new expectations
+     *
+     * @param jsonStream the expectation, for example from MyTest.class.getResourceAsStream("/get-request.json")
+     */
+    public MockServerClient createExpectationFromJson(InputStream jsonStream) throws IOException {
+        String json = IOUtils.toString(jsonStream);
+        createExpectationFromJson(json);
         return this;
     }
 

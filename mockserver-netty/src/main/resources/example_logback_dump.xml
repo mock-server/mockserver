@@ -1,0 +1,102 @@
+<configuration debug="false">
+    <!-- to use add system property logback.configurationFile, for example: -Dlogback.configurationFile=/Users/james.bloom/git/mockserver/mockserver-netty/src/main/resources/example_logback.xml -->
+
+    <!-- To completely disable all logging completely -Droot.logLevel=OFF -->
+
+    <!-- application log -->
+    <appender name="FILE" class="org.mockserver.logging.DelayedFileCreationRollingFileAppender">
+        <file>${log.dir:-./}mockserver.log</file>
+        <encoder>
+            <pattern>%date %level [%thread] %logger{35} [%file:%line] %msg%n</pattern>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>TRACE</level>
+        </filter>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${log.dir:-./}mockserver.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>100MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+            <maxHistory>1</maxHistory>
+        </rollingPolicy>
+    </appender>
+
+    <!-- make application log asynchronous -->
+    <appender name="ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>128</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <appender-ref ref="FILE" />
+    </appender>
+
+    <!-- application console log (for errors and warnings) -->
+    <appender name="STDERR" class="ch.qos.logback.core.ConsoleAppender">
+        <target>System.err</target>
+        <encoder>
+            <pattern>%date %level %logger{20} %msg%n</pattern>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>WARN</level>
+        </filter>
+    </appender>
+
+    <!-- make console log (for errors and warnings) asynchronous -->
+    <appender name="ASYNC_STDERR" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>128</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <appender-ref ref="STDERR" />
+    </appender>
+
+    <!-- application console log -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <target>System.out</target>
+        <encoder>
+            <pattern>%date %level %logger{20} %msg%n</pattern>
+        </encoder>
+        <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
+            <evaluator>
+                <!--<expression>level &gt;= INFO &amp;&amp; level &lt; WARN</expression>-->
+                <expression>level &lt; WARN</expression>
+            </evaluator>
+            <OnMismatch>DENY</OnMismatch>
+            <OnMatch>NEUTRAL</OnMatch>
+        </filter>
+    </appender>
+
+    <!-- make console log asynchronous -->
+    <appender name="ASYNC_STDOUT" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>128</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <appender-ref ref="STDOUT" />
+    </appender>
+
+    <!-- request log configuration -->
+    <appender name="REQUEST_LOG" class="org.mockserver.logging.DelayedFileCreationRollingFileAppender">
+        <file>${log.dir:-./}mockserver_request.json</file>
+
+        <encoder class="org.mockserver.logging.FilterExpectationEncoder" >
+            <excludeResponseHeaders>false</excludeResponseHeaders>
+        </encoder>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+            <fileNamePattern>${log.dir:-./}mockserver_request.%i.json</fileNamePattern>
+            <maxIndex>20</maxIndex>
+        </rollingPolicy>
+
+        <triggeringPolicy class="org.mockserver.logging.TriggerAlwaysPolicy" />
+    </appender>
+
+    <logger name="REQUEST" level="INFO" additivity="false">
+        <appender-ref ref="REQUEST_LOG"/>
+    </logger>
+
+    <logger name="org.mockserver" level="${mockserver.logLevel:-WARN}"/>
+    <logger name="org.mockserver.proxy" level="${mockserver.logLevel:-WARN}"/>
+    <logger name="org.mockserver.mockserver" level="${mockserver.logLevel:-WARN}"/>
+
+    <root level="${root.logLevel:-WARN}">
+        <appender-ref ref="ASYNC_FILE"/>
+        <appender-ref ref="ASYNC_STDERR"/>
+        <appender-ref ref="ASYNC_STDOUT"/>
+    </root>
+</configuration>

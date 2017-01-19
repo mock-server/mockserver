@@ -1,6 +1,8 @@
 package org.mockserver.client.server;
 
 import com.google.common.base.Charsets;
+
+import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -22,6 +24,7 @@ import org.mockserver.verify.VerificationSequence;
 import org.mockserver.verify.VerificationTimes;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URL;
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -347,6 +350,19 @@ public class MockServerClientTest {
 
         // then
         verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1080, "", request().withMethod("PUT").withPath("/dumpToLog").withBody("", Charsets.UTF_8)));
+    }
+
+    @Test
+    public void shouldSendExpectationsFromStream() throws Exception {
+        // given
+        URL jsonLocation = MockServerClientTest.class.getResource("/dumpedRequestLogs/get-post1.json");
+        String jsonString = IOUtils.toString(jsonLocation.openStream());
+
+        // when
+        mockServerClient.createExpectationFromJson(jsonLocation.openStream());
+
+        // then
+        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1080, "", request().withMethod("PUT").withPath("/expectation").withBody(new JsonBody(jsonString))));
     }
 
     @Test
