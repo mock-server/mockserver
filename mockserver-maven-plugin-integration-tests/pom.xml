@@ -98,8 +98,8 @@
                 <configuration>
                     <skipInvocation>${skipTests}</skipInvocation>
                     <debug>false</debug>
-                    <streamLogs>false</streamLogs>
-                    <showErrors>false</showErrors>
+                    <streamLogs>true</streamLogs>
+                    <showErrors>true</showErrors>
                     <showVersion>false</showVersion>
                     <disableReports>true</disableReports>
                     <parallelThreads>${maven-invoker-parallel-threads}</parallelThreads>
