@@ -14,7 +14,7 @@
                     <url>https://oss.sonatype.org/content/repositories/snapshots</url>
                     <layout>default</layout>
                     <releases>
-                        <enabled>true</enabled>
+                        <enabled>false</enabled>
                     </releases>
                     <snapshots>
                         <enabled>true</enabled>
@@ -28,7 +28,7 @@
                     <url>https://oss.sonatype.org/content/repositories/snapshots</url>
                     <layout>default</layout>
                     <releases>
-                        <enabled>true</enabled>
+                        <enabled>false</enabled>
                     </releases>
                     <snapshots>
                         <enabled>true</enabled>
