@@ -18,6 +18,43 @@
         <maven-version>3.2.5</maven-version>
     </properties>
 
+    <profiles>
+        <profile>
+            <id>sonatype</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <repositories>
+                <repository>
+                    <id>sonatype-nexus-snapshots</id>
+                    <name>sonatype-nexus-snapshots</name>
+                    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+                    <layout>default</layout>
+                    <releases>
+                        <enabled>true</enabled>
+                    </releases>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                </repository>
+            </repositories>
+            <pluginRepositories>
+                <pluginRepository>
+                    <id>sonatype-nexus-snapshots</id>
+                    <name>sonatype-nexus-snapshots</name>
+                    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+                    <layout>default</layout>
+                    <releases>
+                        <enabled>true</enabled>
+                    </releases>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                </pluginRepository>
+            </pluginRepositories>
+        </profile>
+    </profiles>
+
     <dependencies>
         <!-- mockserver -->
         <dependency>
