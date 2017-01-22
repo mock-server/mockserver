@@ -24,7 +24,7 @@ function branchName {
 function runSubModule {
     printModule "$1"
     cd $1
-    mvn -q compile -Dmaven.test.skip=true -DskipTests=true -DskipITs=true
+    mvn -X compile -Dmaven.test.skip=true -DskipTests=true -DskipITs=true
     if [ "$(branchName)" = "master" ]; then
         mvn deploy --settings settings.xml -Djava.security.egd=file:/dev/./urandom
     else
