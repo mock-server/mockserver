@@ -1,7 +1,0 @@
-Style/LineLength:
-  Max: 180
-Style/ClassAndModuleChildren:
-  EnforcedStyle: compact
-Style/FileName:
-  Exclude:
-    - '**/mockserver-client.rb'

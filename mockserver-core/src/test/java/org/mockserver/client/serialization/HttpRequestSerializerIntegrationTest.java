@@ -490,20 +490,6 @@ public class HttpRequestSerializerIntegrationTest {
     }
 
     @Test
-    public void shouldSerializePartialRequestAndResponse() throws IOException {
-        // when
-        String jsonHttpRequest = new HttpRequestSerializer().serialize(new HttpRequestDTO()
-                        .setPath(string("somePath"))
-                        .buildObject()
-        );
-
-        // then
-        assertEquals("{" + System.getProperty("line.separator") +
-                "  \"path\" : \"somePath\"" + System.getProperty("line.separator") +
-                "}", jsonHttpRequest);
-    }
-
-    @Test
     public void shouldSerializePartialHttpRequest() throws IOException {
         // when
         String jsonHttpRequest = new HttpRequestSerializer().serialize(new HttpRequestDTO()

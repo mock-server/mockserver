@@ -1,42 +1,27 @@
 package org.mockserver.mockserver;
 
-import com.google.common.base.Charsets;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockserver.client.serialization.ExpectationSerializer;
-import org.mockserver.client.serialization.HttpRequestSerializer;
-import org.mockserver.client.serialization.VerificationSequenceSerializer;
-import org.mockserver.client.serialization.VerificationSerializer;
 import org.mockserver.configuration.ConfigurationProperties;
-import org.mockserver.filters.RequestLogFilter;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
-import org.mockserver.mock.MockServerMatcher;
-import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.model.*;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Arrays;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
@@ -162,7 +147,7 @@ public class MockServerHandlerGeneralOperationsTest extends MockServerHandlerTes
         verify(mockExpectation).thenRespond(any(HttpResponse.class));
         verify(mockExpectation).thenForward(any(HttpForward.class));
         verify(mockExpectation).thenError(any(HttpError.class));
-        verify(mockExpectation).thenCallback(any(HttpCallback.class));
+        verify(mockExpectation).thenCallback(any(HttpClassCallback.class));
 
         // and - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
@@ -176,22 +161,22 @@ public class MockServerHandlerGeneralOperationsTest extends MockServerHandlerTes
         ConfigurationProperties.clearSslSubjectAlternativeNameDomains();
         HttpRequest request = request("/expectation").withMethod("PUT").withBody("some_content");
         when(mockHttpRequest.getFirstHeader(HttpHeaders.Names.HOST)).thenReturn("somehostname");
-        InetAddress inetAddress = null;
+        Set<String> expectedDomainNames = new TreeSet<String>();
         try {
-            inetAddress = InetAddress.getByName("somehostname");
+            for (InetAddress addr : InetAddress.getAllByName("somehostname")) {
+                expectedDomainNames.add(addr.getHostAddress());
+                expectedDomainNames.add(addr.getHostName());
+                expectedDomainNames.add(addr.getCanonicalHostName());
+            }
         } catch (UnknownHostException uhe) {
-            // do nothing
+            expectedDomainNames.add("somehostname");
         }
 
         // when
         embeddedChannel.writeInbound(request);
 
         // then
-        if (inetAddress != null) {
-            assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()), containsInAnyOrder("localhost", inetAddress.getHostName(), inetAddress.getCanonicalHostName()));
-        } else {
-            assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()), containsInAnyOrder("localhost", "somehostname"));
-        }
+        assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()), containsInAnyOrder(expectedDomainNames.toArray()));
 
         // cleanup
         embeddedChannel.readOutbound();
@@ -398,12 +383,15 @@ public class MockServerHandlerGeneralOperationsTest extends MockServerHandlerTes
     }
 
     @Test
-    public void shouldStopMockServer() {
+    public void shouldStopMockServer() throws InterruptedException {
         // given
         HttpRequest request = request("/stop").withMethod("PUT").withBody("some_content");
 
         // when
         embeddedChannel.writeInbound(request);
+
+        // ensure that stop thread has run
+        TimeUnit.SECONDS.sleep(3);
 
         // then - mock server is stopped
         verify(mockMockServer).stop();
@@ -411,7 +399,6 @@ public class MockServerHandlerGeneralOperationsTest extends MockServerHandlerTes
         // and - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
         assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.ACCEPTED.code()));
-        assertThat(httpResponse.getBodyAsString(), is(""));
     }
 
     @Test

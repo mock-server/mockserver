@@ -1,7 +1,6 @@
 package org.mockserver.mockserver;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Strings;
 import com.google.common.net.MediaType;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
@@ -14,10 +13,11 @@ import io.netty.handler.codec.http.HttpServerCodec;
 import org.mockserver.client.serialization.*;
 import org.mockserver.filters.RequestLogFilter;
 import org.mockserver.logging.LogFormatter;
-import org.mockserver.mappers.ContentTypeMapper;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.mock.action.ActionHandler;
+import org.mockserver.mockserver.callback.ExpectationCallbackResponse;
+import org.mockserver.mockserver.callback.WebSocketClientRegistry;
 import org.mockserver.model.*;
 import org.mockserver.socket.SSLFactory;
 import org.mockserver.validator.ExpectationValidator;
@@ -31,7 +31,9 @@ import java.util.List;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONNECTION;
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
-import static org.mockserver.configuration.ConfigurationProperties.enableCORS;
+import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAPI;
+import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAllResponses;
+import static org.mockserver.model.ConnectionOptions.connectionOptions;
 import static org.mockserver.model.ConnectionOptions.isFalseOrNull;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
@@ -47,6 +49,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
     private MockServer server;
     private RequestLogFilter requestLogFilter;
     private MockServerMatcher mockServerMatcher;
+    private WebSocketClientRegistry webSocketClientRegistry;
     private ActionHandler actionHandler;
     // serializers
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
@@ -57,18 +60,20 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
     // validators
     private ExpectationValidator expectationValidator = new ExpectationValidator();
 
-    public MockServerHandler(MockServer server, MockServerMatcher mockServerMatcher, RequestLogFilter requestLogFilter) {
-        this.mockServerMatcher = mockServerMatcher;
+    public MockServerHandler(MockServer server, MockServerMatcher mockServerMatcher, WebSocketClientRegistry webSocketClientRegistry, RequestLogFilter requestLogFilter) {
         this.server = server;
         this.requestLogFilter = requestLogFilter;
+        this.mockServerMatcher = mockServerMatcher;
+        this.webSocketClientRegistry = webSocketClientRegistry;
         actionHandler = new ActionHandler(requestLogFilter);
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, HttpRequest request) {
+    protected void channelRead0(final ChannelHandlerContext ctx, final HttpRequest request) {
 
         try {
-            if (enableCORS() && request.getMethod().getValue().equals("OPTIONS") && !request.getFirstHeader("Origin").isEmpty()) {
+
+            if ((enableCORSForAPI() || enableCORSForAllResponses()) && request.getMethod().getValue().equals("OPTIONS") && !request.getFirstHeader("Origin").isEmpty()) {
 
                 writeResponse(ctx, request, HttpResponseStatus.OK);
 
@@ -97,7 +102,13 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                 List<String> validationErrors = expectationValidator.isValid(expectation);
                 if (validationErrors.isEmpty()) {
                     SSLFactory.addSubjectAlternativeName(expectation.getHttpRequest().getFirstHeader(HttpHeaders.Names.HOST));
-                    mockServerMatcher.when(expectation.getHttpRequest(), expectation.getTimes(), expectation.getTimeToLive()).thenRespond(expectation.getHttpResponse(false)).thenForward(expectation.getHttpForward()).thenError(expectation.getHttpError()).thenCallback(expectation.getHttpCallback());
+                    mockServerMatcher
+                            .when(expectation.getHttpRequest(), expectation.getTimes(), expectation.getTimeToLive())
+                            .thenRespond(expectation.getHttpResponse(false))
+                            .thenForward(expectation.getHttpForward())
+                            .thenError(expectation.getHttpError())
+                            .thenCallback(expectation.getHttpClassCallback())
+                            .thenCallback(expectation.getHttpObjectCallback());
                     logFormatter.infoLog("creating expectation:{}", expectation);
                     writeResponse(ctx, request, HttpResponseStatus.CREATED);
                 } else {
@@ -109,10 +120,13 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
                 org.mockserver.model.HttpRequest httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
                 if (request.hasQueryStringParameter("type", "expectation")) {
+                    logFormatter.infoLog("clearing expectations that match:{}", httpRequest);
                     mockServerMatcher.clear(httpRequest);
                 } else if (request.hasQueryStringParameter("type", "log")) {
+                    logFormatter.infoLog("clearing request logs that match:{}", httpRequest);
                     requestLogFilter.clear(httpRequest);
                 } else {
+                    logFormatter.infoLog("clearing expectations and request logs that match:{}", httpRequest);
                     requestLogFilter.clear(httpRequest);
                     mockServerMatcher.clear(httpRequest);
                 }
@@ -133,19 +147,22 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
             } else if (request.matches("PUT", "/retrieve")) {
 
+                HttpRequest httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
                 if (request.hasQueryStringParameter("type", "expectation")) {
-                    Expectation[] expectations = mockServerMatcher.retrieve(httpRequestSerializer.deserialize(request.getBodyAsString()));
+                    Expectation[] expectations = mockServerMatcher.retrieve(httpRequest);
+                    logFormatter.infoLog("retrieving expectations that match:{}", httpRequest);
                     writeResponse(ctx, request, HttpResponseStatus.OK, expectationSerializer.serialize(expectations), "application/json");
                 } else {
-                    HttpRequest[] requests = requestLogFilter.retrieve(httpRequestSerializer.deserialize(request.getBodyAsString()));
+                    HttpRequest[] requests = requestLogFilter.retrieve(httpRequest);
+                    logFormatter.infoLog("retrieving requests that match:{}", httpRequest);
                     writeResponse(ctx, request, HttpResponseStatus.OK, httpRequestSerializer.serialize(requests), "application/json");
                 }
 
             } else if (request.matches("PUT", "/verify")) {
 
                 Verification verification = verificationSerializer.deserialize(request.getBodyAsString());
-                logFormatter.infoLog("verifying:{}", verification);
                 String result = requestLogFilter.verify(verification);
+                logFormatter.infoLog("verifying requests that match:{}", verification);
                 if (result.isEmpty()) {
                     writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
                 } else {
@@ -156,7 +173,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
                 VerificationSequence verificationSequence = verificationSequenceSerializer.deserialize(request.getBodyAsString());
                 String result = requestLogFilter.verify(verificationSequence);
-                logFormatter.infoLog("verifying sequence:{}", verificationSequence);
+                logFormatter.infoLog("verifying sequence that match:{}", verificationSequence);
                 if (result.isEmpty()) {
                     writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
                 } else {
@@ -165,10 +182,13 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
             } else if (request.matches("PUT", "/stop")) {
 
-                writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
-                ctx.flush();
-                ctx.close();
-                server.stop();
+                ctx.writeAndFlush(response().withStatusCode(HttpResponseStatus.ACCEPTED.code()));
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        server.stop();
+                    }
+                }).start();
 
             } else {
 
@@ -185,6 +205,16 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                     if (httpError.getDropConnection()) {
                         ctx.close();
                     }
+                } else if (handle instanceof HttpObjectCallback) {
+                    String clientId = ((HttpObjectCallback) handle).getClientId();
+                    webSocketClientRegistry.registerCallbackResponseHandler(clientId, new ExpectationCallbackResponse() {
+                        @Override
+                        public void handle(HttpResponse response) {
+                            logFormatter.infoLog("returning response:{}" + System.getProperty("line.separator") + " for request:{}", response, request);
+                            writeResponse(ctx, request, response.withConnectionOptions(connectionOptions().withCloseSocket(true)));
+                        }
+                    });
+                    webSocketClientRegistry.sendClientMessage(clientId, request);
                 } else {
                     HttpResponse response = actionHandler.processAction(handle, request);
                     logFormatter.infoLog("returning response:{}" + System.getProperty("line.separator") + " for request:{}", response, request);
@@ -210,10 +240,8 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
         if (body != null && !body.isEmpty()) {
             response.updateHeader(header(CONTENT_TYPE, contentType + "; charset=utf-8"));
         }
-        if (enableCORS()) {
-            response.withHeader("Access-Control-Allow-Origin", "*");
-            response.withHeader("Access-Control-Allow-Methods", "PUT");
-            response.withHeader("X-CORS", "MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORS(false) or -Dmockserver.disableCORS=false");
+        if (enableCORSForAPI()) {
+            addCORSHeaders(response);
         }
         writeResponse(ctx, request, response);
     }
@@ -222,10 +250,36 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
         if (response == null) {
             response = notFoundResponse();
         }
+        if (enableCORSForAllResponses()) {
+            addCORSHeaders(response);
+        }
 
         addConnectionHeader(request, response);
 
         writeAndCloseSocket(ctx, request, response);
+    }
+
+    private void addCORSHeaders(HttpResponse response) {
+        String methods = "CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE";
+        String headers = "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary";
+        if (response.getFirstHeader("Access-Control-Allow-Origin").isEmpty()) {
+            response.withHeader("Access-Control-Allow-Origin", "*");
+        }
+        if (response.getFirstHeader("Access-Control-Allow-Methods").isEmpty()) {
+            response.withHeader("Access-Control-Allow-Methods", methods);
+        }
+        if (response.getFirstHeader("Access-Control-Allow-Headers").isEmpty()) {
+            response.withHeader("Access-Control-Allow-Headers", headers);
+        }
+        if (response.getFirstHeader("Access-Control-Expose-Headers").isEmpty()) {
+            response.withHeader("Access-Control-Expose-Headers", headers);
+        }
+        if (response.getFirstHeader("Access-Control-Max-Age").isEmpty()) {
+            response.withHeader("Access-Control-Max-Age", "1");
+        }
+        if (response.getFirstHeader("X-CORS").isEmpty()) {
+            response.withHeader("X-CORS", "MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORSForAPI(false) or -Dmockserver.disableCORS=false");
+        }
     }
 
     private void addConnectionHeader(HttpRequest request, HttpResponse response) {

@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 /**
  * @author jamesdbloom
  */
-public class PortBindingSerializer {
+public class PortBindingSerializer implements Serializer<PortBinding> {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
 
@@ -34,5 +34,10 @@ public class PortBindingSerializer {
             }
         }
         return portBinding;
+    }
+
+    @Override
+    public Class<PortBinding> supportsType() {
+        return PortBinding.class;
     }
 }

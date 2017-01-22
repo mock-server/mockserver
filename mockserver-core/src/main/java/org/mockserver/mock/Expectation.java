@@ -19,7 +19,8 @@ public class Expectation extends ObjectWithJsonToString {
     private HttpResponse httpResponse;
     private HttpForward httpForward;
     private HttpError httpError;
-    private HttpCallback httpCallback;
+    private HttpClassCallback httpClassCallback;
+    private HttpObjectCallback httpObjectCallback;
 
     public Expectation(HttpRequest httpRequest, Times times, TimeToLive timeToLive) {
         this.httpRequest = httpRequest;
@@ -56,8 +57,12 @@ public class Expectation extends ObjectWithJsonToString {
         return httpError;
     }
 
-    public HttpCallback getHttpCallback() {
-        return httpCallback;
+    public HttpClassCallback getHttpClassCallback() {
+        return httpClassCallback;
+    }
+
+    public HttpObjectCallback getHttpObjectCallback() {
+        return httpObjectCallback;
     }
 
     public Action getAction(boolean applyDelay) {
@@ -67,8 +72,12 @@ public class Expectation extends ObjectWithJsonToString {
             return getHttpForward();
         } else if (httpError != null) {
             return getHttpError();
+        } else if (httpClassCallback != null) {
+            return getHttpClassCallback();
+        } else if (httpObjectCallback != null) {
+            return getHttpObjectCallback();
         } else {
-            return getHttpCallback();
+            return null;
         }
     }
 
@@ -88,8 +97,11 @@ public class Expectation extends ObjectWithJsonToString {
             if (httpError != null) {
                 throw new IllegalArgumentException("It is not possible to set a response once an error has been set");
             }
-            if (httpCallback != null) {
-                throw new IllegalArgumentException("It is not possible to set a response once a callback has been set");
+            if (httpClassCallback != null) {
+                throw new IllegalArgumentException("It is not possible to set a response once a class callback has been set");
+            }
+            if (httpObjectCallback != null) {
+                throw new IllegalArgumentException("It is not possible to set a response once an object callback has been set");
             }
             this.httpResponse = httpResponse;
         }
@@ -104,8 +116,11 @@ public class Expectation extends ObjectWithJsonToString {
             if (httpError != null) {
                 throw new IllegalArgumentException("It is not possible to set a forward once an error has been set");
             }
-            if (httpCallback != null) {
-                throw new IllegalArgumentException("It is not possible to set a forward once a callback has been set");
+            if (httpClassCallback != null) {
+                throw new IllegalArgumentException("It is not possible to set a forward once a class callback has been set");
+            }
+            if (httpObjectCallback != null) {
+                throw new IllegalArgumentException("It is not possible to set a forward once an object callback has been set");
             }
             this.httpForward = httpForward;
         }
@@ -120,26 +135,51 @@ public class Expectation extends ObjectWithJsonToString {
             if (httpForward != null) {
                 throw new IllegalArgumentException("It is not possible to set an error once a forward has been set");
             }
-            if (httpCallback != null) {
-                throw new IllegalArgumentException("It is not possible to set an error once a callback has been set");
+            if (httpClassCallback != null) {
+                throw new IllegalArgumentException("It is not possible to set a error once a class callback has been set");
+            }
+            if (httpObjectCallback != null) {
+                throw new IllegalArgumentException("It is not possible to set a error once an object callback has been set");
             }
             this.httpError = httpError;
         }
         return this;
     }
 
-    public Expectation thenCallback(HttpCallback httpCallback) {
-        if (httpCallback != null) {
+    public Expectation thenCallback(HttpClassCallback httpClassCallback) {
+        if (httpClassCallback != null) {
             if (httpResponse != null) {
-                throw new IllegalArgumentException("It is not possible to set a callback once a response has been set");
+                throw new IllegalArgumentException("It is not possible to set a class callback once a response has been set");
             }
             if (httpError != null) {
-                throw new IllegalArgumentException("It is not possible to set a callback once an error has been set");
+                throw new IllegalArgumentException("It is not possible to set a class callback once an error has been set");
             }
             if (httpForward != null) {
-                throw new IllegalArgumentException("It is not possible to set a callback once a forward has been set");
+                throw new IllegalArgumentException("It is not possible to set a class callback once a forward has been set");
             }
-            this.httpCallback = httpCallback;
+            if (httpObjectCallback != null) {
+                throw new IllegalArgumentException("It is not possible to set a class callback once an object callback has been set");
+            }
+            this.httpClassCallback = httpClassCallback;
+        }
+        return this;
+    }
+
+    public Expectation thenCallback(HttpObjectCallback httpObjectCallback) {
+        if (httpObjectCallback != null) {
+            if (httpResponse != null) {
+                throw new IllegalArgumentException("It is not possible to set a object callback once a response has been set");
+            }
+            if (httpError != null) {
+                throw new IllegalArgumentException("It is not possible to set a object callback once an error has been set");
+            }
+            if (httpForward != null) {
+                throw new IllegalArgumentException("It is not possible to set a object callback once a forward has been set");
+            }
+            if (httpClassCallback != null) {
+                throw new IllegalArgumentException("It is not possible to set a object callback once an class callback has been set");
+            }
+            this.httpObjectCallback = httpObjectCallback;
         }
         return this;
     }

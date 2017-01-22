@@ -9,6 +9,7 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.util.AttributeKey;
 import org.mockserver.filters.RequestLogFilter;
 import org.mockserver.mock.MockServerMatcher;
+import org.mockserver.mockserver.callback.WebSocketClientRegistry;
 import org.mockserver.stop.StopEventQueue;
 import org.mockserver.stop.Stoppable;
 import org.slf4j.Logger;
@@ -26,12 +27,14 @@ import java.util.concurrent.TimeUnit;
  */
 public class MockServer implements Stoppable {
 
-    public static final AttributeKey<RequestLogFilter> LOG_FILTER = AttributeKey.valueOf("SERVER_LOG_FILTER");
+    static final AttributeKey<RequestLogFilter> LOG_FILTER = AttributeKey.valueOf("SERVER_LOG_FILTER");
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     // mockserver
     private final MockServerMatcher mockServerMatcher = new MockServerMatcher();
     private final RequestLogFilter requestLogFilter = new RequestLogFilter();
+    private final WebSocketClientRegistry webSocketClientRegistry = new WebSocketClientRegistry();
     private final List<Future<Channel>> channelOpenedFutures = new ArrayList<Future<Channel>>();
+    private final SettableFuture<String> stopping = SettableFuture.<String>create();
     // netty
     private final EventLoopGroup bossGroup = new NioEventLoopGroup();
     private final EventLoopGroup workerGroup = new NioEventLoopGroup();
@@ -56,20 +59,20 @@ public class MockServer implements Stoppable {
                 .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                 .childOption(ChannelOption.WRITE_BUFFER_HIGH_WATER_MARK, 32 * 1024)
                 .childOption(ChannelOption.WRITE_BUFFER_LOW_WATER_MARK, 8 * 1024)
-                .childHandler(new MockServerInitializer(mockServerMatcher, MockServer.this))
+                .childHandler(new MockServerInitializer(mockServerMatcher, MockServer.this, webSocketClientRegistry))
                 .childAttr(LOG_FILTER, requestLogFilter);
 
         bindToPorts(Arrays.asList(requestedPortBindings));
 
-        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable(){
+        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
             public void run() {
-                bossGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
-                workerGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
+                bossGroup.shutdownGracefully();
+                workerGroup.shutdownGracefully();
             }
         }));
     }
 
-    public List<Integer> bindToPorts(final List<Integer> requestedPortBindings) {
+    List<Integer> bindToPorts(final List<Integer> requestedPortBindings) {
         List<Integer> actualPortBindings = new ArrayList<Integer>();
         for (final Integer port : requestedPortBindings) {
             try {
@@ -112,34 +115,30 @@ public class MockServer implements Stoppable {
         return actualPortBindings;
     }
 
-    public void stop() {
+    public Future<?> stop() {
         try {
-            for (Future<Channel> channelOpened : channelOpenedFutures) {
-                channelOpened.get(2, TimeUnit.SECONDS).close();
+            for (Future<Channel> channelOpened : new ArrayList<Future<Channel>>(channelOpenedFutures)) {
+                channelOpened.get().close().sync();
             }
-            bossGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
-            workerGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
-            stopEventQueue.stop();
-            // wait for socket to be released
-            TimeUnit.MILLISECONDS.sleep(500);
+            bossGroup.shutdownGracefully().sync();
+            workerGroup.shutdownGracefully().sync();
+            stopEventQueue.stopOthers(this).get();
+            stopping.set("stopped");
         } catch (Exception ie) {
             logger.trace("Exception while stopping MockServer", ie);
+            stopping.setException(ie);
         }
+        return stopping;
     }
 
-    public MockServer withStopEventQueue(StopEventQueue stopEventQueue) {
+    MockServer withStopEventQueue(StopEventQueue stopEventQueue) {
         this.stopEventQueue = stopEventQueue;
         this.stopEventQueue.register(this);
         return this;
     }
 
     public boolean isRunning() {
-        try {
-            TimeUnit.MILLISECONDS.sleep(500);
-        } catch (InterruptedException e) {
-            logger.trace("Exception while waiting for the proxy to confirm running status", e);
-        }
-        return !bossGroup.isShuttingDown() && !workerGroup.isShuttingDown();
+        return !bossGroup.isShuttingDown() || !workerGroup.isShuttingDown() || !stopping.isDone();
     }
 
     public List<Integer> getPorts() {

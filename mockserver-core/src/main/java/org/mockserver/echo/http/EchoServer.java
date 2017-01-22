@@ -56,7 +56,7 @@ public class EchoServer {
         try {
             // wait for proxy to start all channels
             hasStarted.get();
-            TimeUnit.MICROSECONDS.sleep(100);
+            TimeUnit.MILLISECONDS.sleep(5);
         } catch (Exception e) {
             logger.error("Exception while waiting for proxy to complete starting up", e);
         }

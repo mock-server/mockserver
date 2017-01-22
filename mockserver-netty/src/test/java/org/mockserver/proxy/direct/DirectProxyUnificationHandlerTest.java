@@ -54,14 +54,12 @@ public class DirectProxyUnificationHandlerTest {
                     "SslHandler#0",
                     "LoggingHandler#0",
                     "HttpProxyUnificationHandler#0",
-                    "EmbeddedChannel$LastInboundHandler#0",
                     "DefaultChannelPipeline$TailContext#0"
             ));
         } else {
             assertThat(embeddedChannel.pipeline().names(), contains(
                     "SslHandler#0",
                     "HttpProxyUnificationHandler#0",
-                    "EmbeddedChannel$LastInboundHandler#0",
                     "DefaultChannelPipeline$TailContext#0"
             ));
         }
@@ -105,7 +103,7 @@ public class DirectProxyUnificationHandlerTest {
                     "SocksMessageEncoder#0",
                     "SocksProxyHandler#0",
                     "HttpProxyUnificationHandler#0",
-                    "EmbeddedChannel$LastInboundHandler#0",
+
                     "DefaultChannelPipeline$TailContext#0"
             ));
         } else {
@@ -114,7 +112,6 @@ public class DirectProxyUnificationHandlerTest {
                     "SocksMessageEncoder#0",
                     "SocksProxyHandler#0",
                     "HttpProxyUnificationHandler#0",
-                    "EmbeddedChannel$LastInboundHandler#0",
                     "DefaultChannelPipeline$TailContext#0"
             ));
         }
@@ -137,7 +134,6 @@ public class DirectProxyUnificationHandlerTest {
         if (LoggerFactory.getLogger(PortUnificationHandler.class).isTraceEnabled()) {
             assertThat(embeddedChannel.pipeline().names(), contains(
                     "LoggingHandler#0",
-                    "EmbeddedChannel$LastInboundHandler#0",
                     "HttpServerCodec#0",
                     "HttpContentDecompressor#0",
                     "HttpObjectAggregator#0",
@@ -147,7 +143,6 @@ public class DirectProxyUnificationHandlerTest {
             ));
         } else {
             assertThat(embeddedChannel.pipeline().names(), contains(
-                    "EmbeddedChannel$LastInboundHandler#0",
                     "HttpServerCodec#0",
                     "HttpContentDecompressor#0",
                     "HttpObjectAggregator#0",
@@ -171,6 +166,7 @@ public class DirectProxyUnificationHandlerTest {
 
         // then - should add no handlers
         assertThat(embeddedChannel.pipeline().names(), contains(
+                "HttpProxyUnificationHandler#0",
                 "DefaultChannelPipeline$TailContext#0"
         ));
 

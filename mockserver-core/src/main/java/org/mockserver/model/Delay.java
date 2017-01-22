@@ -10,6 +10,22 @@ public class Delay extends ObjectWithReflectiveEqualsHashCodeToString {
     private final TimeUnit timeUnit;
     private final long value;
 
+    public static Delay milliseconds(long value) {
+        return new Delay(TimeUnit.MILLISECONDS, value);
+    }
+
+    public static Delay seconds(long value) {
+        return new Delay(TimeUnit.SECONDS, value);
+    }
+
+    public static Delay minutes(long value) {
+        return new Delay(TimeUnit.MINUTES, value);
+    }
+
+    public static Delay delay(TimeUnit timeUnit, long value) {
+        return new Delay(timeUnit, value);
+    }
+
     public Delay(TimeUnit timeUnit, long value) {
         this.timeUnit = timeUnit;
         this.value = value;

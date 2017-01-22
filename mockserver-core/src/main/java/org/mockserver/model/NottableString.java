@@ -49,14 +49,30 @@ public class NottableString extends Not {
 
     @Override
     public boolean equals(Object other) {
+        return equals(other, false);
+    }
+
+    public boolean equalsIgnoreCase(Object other) {
+        return equals(other, true);
+    }
+
+    private boolean equals(Object other, boolean ignoreCase) {
         if (other instanceof String) {
-            return isNot() != other.equals(value);
+            if (ignoreCase) {
+                return isNot() != ((String) other).equalsIgnoreCase(value);
+            } else {
+                return isNot() != other.equals(value);
+            }
         } else if (other instanceof NottableString) {
             NottableString otherNottableString = (NottableString) other;
             if (otherNottableString.getValue() == null) {
                 return value == null;
             }
-            return otherNottableString.isNot() == (isNot() == otherNottableString.getValue().equals(value));
+            if (ignoreCase) {
+                return otherNottableString.isNot() == (isNot() == otherNottableString.getValue().equalsIgnoreCase(value));
+            } else {
+                return otherNottableString.isNot() == (isNot() == otherNottableString.getValue().equals(value));
+            }
         }
         return false;
     }

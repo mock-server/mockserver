@@ -1,13 +1,12 @@
 package org.mockserver.integration.server;
 
-import com.google.common.net.HttpHeaders;
 import org.junit.Test;
 import org.mockserver.integration.callback.StaticTestExpectationCallback;
 import org.mockserver.model.HttpStatusCode;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.model.Header.header;
-import static org.mockserver.model.HttpCallback.callback;
+import static org.mockserver.model.HttpClassCallback.callback;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 

@@ -14,7 +14,8 @@ public class ExpectationDTO extends ObjectWithJsonToString {
     private HttpResponseDTO httpResponse;
     private HttpForwardDTO httpForward;
     private HttpErrorDTO httpError;
-    private HttpCallbackDTO httpCallback;
+    private HttpClassCallbackDTO httpClassCallback;
+    private HttpObjectCallbackDTO httpObjectCallback;
     private TimesDTO times;
     private TimeToLiveDTO timeToLive;
 
@@ -36,9 +37,13 @@ public class ExpectationDTO extends ObjectWithJsonToString {
             if (httpError != null) {
                 this.httpError = new HttpErrorDTO(httpError);
             }
-            HttpCallback httpCallback = expectation.getHttpCallback();
-            if (httpCallback != null) {
-                this.httpCallback = new HttpCallbackDTO(httpCallback);
+            HttpClassCallback httpClassCallback = expectation.getHttpClassCallback();
+            if (httpClassCallback != null) {
+                this.httpClassCallback = new HttpClassCallbackDTO(httpClassCallback);
+            }
+            HttpObjectCallback httpObjectCallback = expectation.getHttpObjectCallback();
+            if (httpObjectCallback != null) {
+                this.httpObjectCallback = new HttpObjectCallbackDTO(httpObjectCallback);
             }
             Times times = expectation.getTimes();
             if (times != null) {
@@ -59,7 +64,8 @@ public class ExpectationDTO extends ObjectWithJsonToString {
         HttpResponse httpResponse = null;
         HttpForward httpForward = null;
         HttpError httpError = null;
-        HttpCallback httpCallback = null;
+        HttpClassCallback httpClassCallback = null;
+        HttpObjectCallback httpObjectCallback = null;
         Times times;
         TimeToLive timeToLive;
         if (this.httpRequest != null) {
@@ -74,8 +80,11 @@ public class ExpectationDTO extends ObjectWithJsonToString {
         if (this.httpError != null) {
             httpError = this.httpError.buildObject();
         }
-        if (this.httpCallback != null) {
-            httpCallback = this.httpCallback.buildObject();
+        if (this.httpClassCallback != null) {
+            httpClassCallback = this.httpClassCallback.buildObject();
+        }
+        if (this.httpObjectCallback != null) {
+            httpObjectCallback = this.httpObjectCallback.buildObject();
         }
         if (this.times != null) {
             times = this.times.buildObject();
@@ -87,7 +96,7 @@ public class ExpectationDTO extends ObjectWithJsonToString {
         } else {
             timeToLive = TimeToLive.unlimited();
         }
-        return new Expectation(httpRequest, times, timeToLive).thenRespond(httpResponse).thenForward(httpForward).thenError(httpError).thenCallback(httpCallback);
+        return new Expectation(httpRequest, times, timeToLive).thenRespond(httpResponse).thenForward(httpForward).thenError(httpError).thenCallback(httpClassCallback).thenCallback(httpObjectCallback);
     }
 
     public HttpRequestDTO getHttpRequest() {
@@ -126,12 +135,21 @@ public class ExpectationDTO extends ObjectWithJsonToString {
         return this;
     }
 
-    public HttpCallbackDTO getHttpCallback() {
-        return httpCallback;
+    public HttpClassCallbackDTO getHttpClassCallback() {
+        return httpClassCallback;
     }
 
-    public ExpectationDTO setHttpCallback(HttpCallbackDTO httpCallback) {
-        this.httpCallback = httpCallback;
+    public ExpectationDTO setHttpClassCallback(HttpClassCallbackDTO httpClassCallback) {
+        this.httpClassCallback = httpClassCallback;
+        return this;
+    }
+
+    public HttpObjectCallbackDTO getHttpObjectCallback() {
+        return httpObjectCallback;
+    }
+
+    public ExpectationDTO setHttpObjectCallback(HttpObjectCallbackDTO httpObjectCallback) {
+        this.httpObjectCallback = httpObjectCallback;
         return this;
     }
 

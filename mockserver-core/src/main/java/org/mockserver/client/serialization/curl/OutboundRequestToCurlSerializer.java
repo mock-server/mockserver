@@ -6,7 +6,7 @@ import io.netty.handler.codec.http.cookie.ClientCookieEncoder;
 import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.DefaultCookie;
 import org.apache.commons.lang3.StringUtils;
-import org.mockserver.client.netty.codec.MockServerRequestEncoder;
+import org.mockserver.client.netty.codec.mappers.MockServerOutboundHttpRequestToFullHttpRequest;
 import org.mockserver.model.Header;
 import org.mockserver.model.NottableString;
 import org.mockserver.model.OutboundHttpRequest;
@@ -57,7 +57,7 @@ public class OutboundRequestToCurlSerializer {
     }
 
     private String getUri(OutboundHttpRequest outboundHttpRequest) {
-        String uri = new MockServerRequestEncoder().getURI(outboundHttpRequest);
+        String uri = new MockServerOutboundHttpRequestToFullHttpRequest().getURI(outboundHttpRequest);
         if (Strings.isNullOrEmpty(uri)) {
             uri = "/";
         } else if (!StringUtils.startsWith(uri, "/")) {

@@ -6,7 +6,7 @@ import java.util.Map;
 /**
  * @author jamesdbloom
  */
-class CircularHashMap<K, V> extends LinkedHashMap<K, V> {
+public class CircularHashMap<K, V> extends LinkedHashMap<K, V> {
     static final long serialVersionUID = 1530623482381786485L;
     private final int maxSize;
 
@@ -17,5 +17,15 @@ class CircularHashMap<K, V> extends LinkedHashMap<K, V> {
     @Override
     protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
         return size() > maxSize;
+    }
+
+    public K findKey(V value) {
+        for (Map.Entry<K, V> entry : entrySet()) {
+            V entryValue = entry.getValue();
+            if (entryValue == value || (value != null && value.equals(entryValue))) {
+                return entry.getKey();
+            }
+        }
+        return null;
     }
 }

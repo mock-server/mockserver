@@ -4,15 +4,14 @@ import org.junit.Test;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
-import org.mockserver.model.HttpCallback;
-import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpObjectCallback;
 
 import java.util.List;
 
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.emptyIterableOf;
 import static org.junit.Assert.*;
-import static org.mockserver.model.HttpCallback.callback;
+import static org.mockserver.model.HttpClassCallback.callback;
 import static org.mockserver.model.HttpError.error;
 import static org.mockserver.model.HttpForward.forward;
 import static org.mockserver.model.HttpRequest.request;
@@ -69,9 +68,21 @@ public class ExpectationValidatorTest {
     }
 
     @Test
-    public void shouldValidateNoErrorsWithCallback() {
+    public void shouldValidateNoErrorsWithClassCallback() {
         // given
         Expectation expectation = new Expectation(request(), Times.once(), TimeToLive.unlimited()).thenCallback(callback());
+
+        // when
+        List<String> valid = new ExpectationValidator().isValid(expectation);
+
+        // then
+        assertThat(valid, emptyIterableOf(String.class));
+    }
+
+    @Test
+    public void shouldValidateNoErrorsWithObjectCallback() {
+        // given
+        Expectation expectation = new Expectation(request(), Times.once(), TimeToLive.unlimited()).thenCallback(new HttpObjectCallback());
 
         // when
         List<String> valid = new ExpectationValidator().isValid(expectation);
