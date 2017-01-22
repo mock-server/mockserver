@@ -15,12 +15,9 @@ function printModule {
 function runSubModule {
     printModule "$1"
     cd $1
-    if [ $? -eq 0 ]; then
-	    #/usr/local/Cellar/maven/3.2.3/bin/mvn release:clean -Drelease.arguments="-DnonReleaseBuild=false -Dmaven.test.skip=true -DskipTests=true" && \
-	    #/usr/local/Cellar/maven/3.2.3/bin/mvn release:prepare -Drelease.arguments="-DnonReleaseBuild=false -Dmaven.test.skip=true -DskipTests=true" && \
-	    #/usr/local/Cellar/maven/3.2.3/bin/mvn release:perform -Drelease.arguments="-DnonReleaseBuild=false -Dmaven.test.skip=true -DskipTests=true"
-	fi
-	cd $current_directory
+    mvn -q compile -Dmaven.test.skip=true -DskipTests=true -DskipITs=true
+    mvn deploy --settings settings.xml -Djava.security.egd=file:/dev/./urandom
+    cd $current_directory
 }
 
 MODULE_LIST="mockserver-maven-plugin mockserver-maven-plugin-integration-tests"
