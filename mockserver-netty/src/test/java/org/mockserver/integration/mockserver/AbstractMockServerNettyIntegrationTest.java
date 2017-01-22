@@ -255,7 +255,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
             if (server != null) {
                 server.close();
                 // allow time for the socket to be released
-                TimeUnit.MILLISECONDS.sleep(350);
+                TimeUnit.MILLISECONDS.sleep(50);
             }
         }
     }

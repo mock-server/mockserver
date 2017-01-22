@@ -5408,7 +5408,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 attemptsRemaining--;
                 logger.info("Retrying connection to mock server, attempts remaining: " + attemptsRemaining);
                 try {
-                    TimeUnit.MILLISECONDS.sleep(500);
+                    TimeUnit.MILLISECONDS.sleep(50);
                 } catch (InterruptedException e) {
                     // do nothing
                 }
