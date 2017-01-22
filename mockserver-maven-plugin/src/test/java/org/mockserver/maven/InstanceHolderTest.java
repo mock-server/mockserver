@@ -60,6 +60,8 @@ public class InstanceHolderTest {
     @After
     public void shutdownProxyAndMockServer() {
         instanceHolder.stop();
+        InstanceHolder.proxyClients.clear();
+        InstanceHolder.mockServerClients.clear();
     }
 
     @Test
@@ -176,8 +178,8 @@ public class InstanceHolderTest {
         verify(mockProxyClient).stop(false);
 
         // and - no new clients added
-        assertThat(InstanceHolder.mockServerClients.size(), is(1));
-        assertThat(InstanceHolder.proxyClients.size(), is(1));
+        assertThat("mockServerClients.size", InstanceHolder.mockServerClients.size(), is(1));
+        assertThat("proxyClients.size", InstanceHolder.proxyClients.size(), is(1));
     }
 
     @Test
@@ -194,8 +196,8 @@ public class InstanceHolderTest {
         verify(mockProxyClient).stop(true);
 
         // and - no new clients added
-        assertThat(InstanceHolder.mockServerClients.size(), is(1));
-        assertThat(InstanceHolder.proxyClients.size(), is(1));
+        assertThat("mockServerClients.size", InstanceHolder.mockServerClients.size(), is(1));
+        assertThat("proxyClients.size", InstanceHolder.proxyClients.size(), is(1));
     }
 
     @Test
@@ -212,8 +214,8 @@ public class InstanceHolderTest {
         verify(mockProxyClient, times(0)).stop(anyBoolean());
 
         // and - no new clients added
-        assertThat(InstanceHolder.mockServerClients.size(), is(1));
-        assertThat(InstanceHolder.proxyClients.size(), is(1));
+        assertThat("mockServerClients.size", InstanceHolder.mockServerClients.size(), is(1));
+        assertThat("proxyClients.size", InstanceHolder.proxyClients.size(), is(1));
     }
 
     @Test
@@ -230,8 +232,8 @@ public class InstanceHolderTest {
         verify(mockProxyClient).stop(false);
 
         // and - no new clients added
-        assertThat(InstanceHolder.mockServerClients.size(), is(1));
-        assertThat(InstanceHolder.proxyClients.size(), is(1));
+        assertThat("mockServerClients.size", InstanceHolder.mockServerClients.size(), is(1));
+        assertThat("proxyClients.size", InstanceHolder.proxyClients.size(), is(1));
     }
 
     @Test
@@ -248,8 +250,8 @@ public class InstanceHolderTest {
         verify(mockProxyClient, times(0)).stop(anyBoolean());
 
         // and - no new clients added
-        assertThat(InstanceHolder.mockServerClients.size(), is(1));
-        assertThat(InstanceHolder.proxyClients.size(), is(1));
+        assertThat("mockServerClients.size", InstanceHolder.mockServerClients.size(), is(1));
+        assertThat("proxyClients.size", InstanceHolder.proxyClients.size(), is(1));
     }
 
     @Test
