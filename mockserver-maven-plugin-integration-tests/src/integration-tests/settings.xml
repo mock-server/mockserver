@@ -3,6 +3,27 @@
     <profiles>
         <!-- multiple repository sections query in reverse order -->
         <profile>
+            <id>securecentral</id>
+            <repositories>
+                <repository>
+                    <id>central</id>
+                    <url>https://repo1.maven.org/maven2</url>
+                    <releases>
+                        <enabled>true</enabled>
+                    </releases>
+                </repository>
+            </repositories>
+            <pluginRepositories>
+                <pluginRepository>
+                    <id>central</id>
+                    <url>https://repo1.maven.org/maven2</url>
+                    <releases>
+                        <enabled>true</enabled>
+                    </releases>
+                </pluginRepository>
+            </pluginRepositories>
+        </profile>
+        <profile>
             <id>sonatype</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
@@ -14,7 +35,7 @@
                     <url>https://oss.sonatype.org/content/repositories/snapshots</url>
                     <layout>default</layout>
                     <releases>
-                        <enabled>false</enabled>
+                        <enabled>true</enabled>
                     </releases>
                     <snapshots>
                         <enabled>true</enabled>
@@ -28,7 +49,7 @@
                     <url>https://oss.sonatype.org/content/repositories/snapshots</url>
                     <layout>default</layout>
                     <releases>
-                        <enabled>false</enabled>
+                        <enabled>true</enabled>
                     </releases>
                     <snapshots>
                         <enabled>true</enabled>
