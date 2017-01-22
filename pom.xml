@@ -63,7 +63,6 @@
     <modules>
         <module>mockserver-logging</module>
         <module>mockserver-client-java</module>
-        <module>mockserver-client-ruby</module>
         <module>mockserver-core</module>
         <module>mockserver-integration-testing</module>
         <module>mockserver-netty</module>

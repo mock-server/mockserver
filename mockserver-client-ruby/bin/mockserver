@@ -1,9 +1,0 @@
-# encoding: UTF-8
-#!/usr/bin/env ruby
-
-#
-# A thor-based runner for commands in this project
-# @author: Nayyara Samuel (mailto: nayyara.samuel@opower.com)
-#
-require_relative '../lib/cli'
-MockServerCLI.start
