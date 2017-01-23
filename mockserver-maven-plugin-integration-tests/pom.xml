@@ -98,9 +98,9 @@
                 <configuration>
                     <skipInvocation>${skipTests}</skipInvocation>
                     <debug>false</debug>
-                    <streamLogs>true</streamLogs>
-                    <showErrors>true</showErrors>
-                    <showVersion>false</showVersion>
+                    <streamLogs>false</streamLogs>
+                    <showErrors>false</showErrors>
+                    <showVersion>true</showVersion>
                     <disableReports>true</disableReports>
                     <parallelThreads>${maven-invoker-parallel-threads}</parallelThreads>
                     <projectsDirectory>${basedir}/src/integration-tests/</projectsDirectory>
