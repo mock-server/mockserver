@@ -1,6 +1,7 @@
 package org.mockserver.filters;
 
 import com.google.common.collect.EvictingQueue;
+import com.google.common.collect.Queues;
 import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.logging.LogFormatter;
 import org.mockserver.matchers.HttpRequestMatcher;
@@ -13,9 +14,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 /**
  * @author jamesdbloom
@@ -24,7 +25,8 @@ public class RequestLogFilter implements ResponseFilter, RequestFilter {
 
     private static final Logger logger = LoggerFactory.getLogger(RequestLogFilter.class);
     // request persistence
-    private final EvictingQueue<HttpRequest> requestLog = EvictingQueue.create(100);
+    private final EvictingQueue<HttpRequest> evictingQueue = EvictingQueue.create(100);
+    private final Queue<HttpRequest> requestLog =  Queues.synchronizedQueue(evictingQueue);
 
     // matcher
     private final MatcherBuilder matcherBuilder = new MatcherBuilder();
