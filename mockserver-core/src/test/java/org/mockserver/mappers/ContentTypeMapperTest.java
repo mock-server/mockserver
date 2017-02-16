@@ -4,6 +4,7 @@ import com.google.common.base.Charsets;
 import com.google.common.net.MediaType;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMessage;
+import io.netty.util.CharsetUtil;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 
@@ -240,6 +241,18 @@ public class ContentTypeMapperTest {
 
         // then
         assertThat(charset, is(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET));
+    }
+
+    @Test
+    public void shouldDetermineUTFCharsetFromResponseContentTypeForHttpResponseWhenUTFDefaultCharset() {
+        // when
+        Charset charset = ContentTypeMapper.determineCharsetForMessage(
+                response()
+                        .withHeader(HttpHeaders.Names.CONTENT_TYPE, "application/json")
+        );
+
+        // then
+        assertThat(charset, is(CharsetUtil.UTF_8));
     }
 
     @Test
