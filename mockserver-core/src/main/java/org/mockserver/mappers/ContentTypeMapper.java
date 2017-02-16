@@ -101,6 +101,8 @@ public class ContentTypeMapper {
                 } catch (IllegalCharsetNameException icne) {
                     logger.info("Illegal character set {} in Content-Type header: {}.", StringUtils.substringAfterLast(contentType, HttpHeaders.Values.CHARSET + HttpConstants.EQUALS), contentType);
                 }
+            } else if (ContentTypeUtil.utf8ContentTypes.containsKey(contentType)) {
+                charset = CharsetUtil.UTF_8;
             }
         }
         return charset;

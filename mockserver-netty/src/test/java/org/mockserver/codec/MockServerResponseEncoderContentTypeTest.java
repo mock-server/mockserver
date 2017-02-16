@@ -4,6 +4,7 @@ import com.google.common.base.Charsets;
 import com.google.common.net.MediaType;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.util.CharsetUtil;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.mappers.ContentTypeMapper;
@@ -53,7 +54,7 @@ public class MockServerResponseEncoderContentTypeTest {
 
         // then
         FullHttpResponse fullHttpResponse = (FullHttpResponse) output.get(0);
-        assertThat(fullHttpResponse.content().array(), is("avro işarəsi: \u20AC".getBytes(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET)));
+        assertThat(fullHttpResponse.content().array(), is("avro işarəsi: \u20AC".getBytes(CharsetUtil.UTF_8)));
     }
 
     @Test
