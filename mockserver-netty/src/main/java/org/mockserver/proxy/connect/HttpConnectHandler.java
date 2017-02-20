@@ -3,7 +3,10 @@ package org.mockserver.proxy.connect;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
-import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http.HttpContentDecompressor;
+import io.netty.handler.codec.http.HttpObjectAggregator;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.ssl.SslHandler;
 import org.mockserver.codec.MockServerServerCodec;
 import org.mockserver.model.HttpRequest;
@@ -21,7 +24,9 @@ public final class HttpConnectHandler extends RelayConnectHandler<HttpRequest> {
         removeHandler(pipeline, HttpContentDecompressor.class);
         removeHandler(pipeline, HttpObjectAggregator.class);
         removeHandler(pipeline, MockServerServerCodec.class);
-        pipeline.remove(this);
+        if (pipeline.get(this.getClass()) != null) {
+            pipeline.remove(this);
+        }
     }
 
     protected Object successResponse(Object request) {

@@ -1,7 +1,6 @@
 package org.mockserver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.base.Strings;
 
 import java.nio.charset.Charset;
 import java.util.*;
@@ -78,7 +77,7 @@ public class HttpResponse extends Action {
      * Set response body to return a string response body with the specified encoding. <b>Note:</b> The character set of the
      * response will be forced to the specified charset, even if the Content-Type header specifies otherwise.
      *
-     * @param body a string
+     * @param body    a string
      * @param charset character set the string will be encoded in
      */
     public HttpResponse withBody(String body, Charset charset) {
@@ -182,7 +181,7 @@ public class HttpResponse extends Action {
      * the same name already exists this will NOT be modified but
      * two headers will exist
      *
-     * @param name the header name
+     * @param name   the header name
      * @param values the header values which can be a varags of strings or regular expressions
      */
     public HttpResponse withHeader(String name, String... values) {
@@ -209,7 +208,7 @@ public class HttpResponse extends Action {
      * Update header to return as a Header object, if a header with
      * the same name already exists it will be modified
      *
-     * @param name the header name
+     * @param name   the header name
      * @param values the header values which can be a varags of strings or regular expressions
      */
     public HttpResponse updateHeader(String name, String... values) {
@@ -223,26 +222,36 @@ public class HttpResponse extends Action {
 
     public List<String> getHeader(String name) {
         List<String> headerValues = new ArrayList<String>();
-        if (headers.containsKey(string(name))) {
-            for (NottableString headerValue : headers.get(string(name)).getValues()) {
-                headerValues.add(headerValue.getValue());
+        for (NottableString headerName : headers.keySet()) {
+            if (headerName.equalsIgnoreCase(string(name))) {
+                for (NottableString headerValue : headers.get(headerName).getValues()) {
+                    headerValues.add(headerValue.getValue());
+                }
             }
         }
         return headerValues;
     }
 
     public String getFirstHeader(String name) {
-        String firstHeadValue = "";
-        if (headers.containsKey(string(name)) || headers.containsKey(string(name.toLowerCase()))) {
-            Header header = headers.get(string(name));
-            if (header == null) {
-                header = headers.get(string(name.toLowerCase()));
-            }
-            if (!header.getValues().isEmpty() && !Strings.isNullOrEmpty(header.getValues().get(0).getValue())) {
-                firstHeadValue = header.getValues().get(0).getValue();
+        List<String> headerValues = getHeader(name);
+        if (headerValues.size() > 0) {
+            return headerValues.get(0);
+        } else {
+            return "";
+        }
+    }
+
+    public boolean containsHeader(String name, String value) {
+        for (NottableString headerName : headers.keySet()) {
+            if (headerName.equalsIgnoreCase(string(name))) {
+                for (NottableString headerValue : headers.get(headerName).getValues()) {
+                    if (headerValue.equalsIgnoreCase(value)) {
+                        return true;
+                    }
+                }
             }
         }
-        return firstHeadValue;
+        return false;
     }
 
     /**
@@ -283,7 +292,7 @@ public class HttpResponse extends Action {
     /**
      * Add cookie to return as Set-Cookie header
      *
-     * @param name the cookies name
+     * @param name  the cookies name
      * @param value the cookies value which can be a string or regular expression
      */
     public HttpResponse withCookie(String name, String value) {
@@ -309,7 +318,7 @@ public class HttpResponse extends Action {
      * The delay before responding with this request as a Delay object, for example new Delay(TimeUnit.SECONDS, 3)
      *
      * @param timeUnit a the time unit, for example TimeUnit.SECONDS
-     * @param value a the number of time units to delay the response
+     * @param value    a the number of time units to delay the response
      */
     public HttpResponse withDelay(TimeUnit timeUnit, long value) {
         this.delay = new Delay(timeUnit, value);

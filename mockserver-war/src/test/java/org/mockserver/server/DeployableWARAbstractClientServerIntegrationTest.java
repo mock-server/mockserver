@@ -1,36 +1,21 @@
 package org.mockserver.server;
 
-import com.google.common.base.Charsets;
-import com.google.common.net.HttpHeaders;
-import com.google.common.net.MediaType;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.mockserver.client.netty.websocket.WebSocketException;
 import org.mockserver.client.server.ClientException;
-import org.mockserver.integration.server.AbstractClientServerIntegrationTest;
 import org.mockserver.integration.server.SameJVMAbstractClientServerIntegrationTest;
+import org.mockserver.mock.action.ExpectationCallback;
+import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpStatusCode;
-import org.mockserver.socket.SSLFactory;
-import org.mockserver.streams.IOStreamUtils;
-
-import javax.net.ssl.SSLSocket;
-import java.io.OutputStream;
-import java.net.Socket;
-import java.net.SocketException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.core.AnyOf.anyOf;
-import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
-import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.ConnectionOptions.connectionOptions;
 import static org.mockserver.model.Header.header;
-import static org.mockserver.model.HttpCallback.callback;
+import static org.mockserver.model.HttpClassCallback.callback;
 import static org.mockserver.model.HttpError.error;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -42,6 +27,29 @@ public abstract class DeployableWARAbstractClientServerIntegrationTest extends S
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
+
+    @Test
+    public void shouldReturnErrorResponseForExpectationWithObjectCallback() {
+        // given
+        exception.expect(WebSocketException.class);
+        exception.expectMessage(containsString("ExpectationCallback is not supported by MockServer deployable WAR"));
+
+        // when
+        mockServerClient
+                .when(
+                        request()
+                                .withPath(calculatePath("object_callback"))
+                )
+                .callback(
+                        new ExpectationCallback() {
+                            @Override
+                            public HttpResponse handle(HttpRequest httpRequest) {
+                                return response();
+                            }
+                        }
+                );
+
+    }
 
     @Test
     public void shouldReturnErrorResponseForExpectationWithConnectionOptions() {
@@ -78,7 +86,7 @@ public abstract class DeployableWARAbstractClientServerIntegrationTest extends S
                 )
                 .error(
                         error()
-                            .withDropConnection(true)
+                                .withDropConnection(true)
                 );
     }
 

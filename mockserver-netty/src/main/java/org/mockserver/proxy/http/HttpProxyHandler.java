@@ -1,7 +1,10 @@
 package org.mockserver.proxy.http;
 
 import com.google.common.net.MediaType;
-import io.netty.channel.*;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.mockserver.client.netty.NettyHttpClient;
@@ -15,9 +18,7 @@ import org.mockserver.filters.HopByHopHeaderFilter;
 import org.mockserver.filters.RequestLogFilter;
 import org.mockserver.filters.RequestResponseLogFilter;
 import org.mockserver.logging.LogFormatter;
-import org.mockserver.mappers.ContentTypeMapper;
 import org.mockserver.mock.Expectation;
-import org.mockserver.model.Body;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.OutboundHttpRequest;
@@ -30,11 +31,10 @@ import org.mockserver.verify.VerificationSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.charset.Charset;
-
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONNECTION;
-import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH;
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
+import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAPI;
+import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAllResponses;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
@@ -92,6 +92,10 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
             } else if (request.matches("GET", "/ping")) {
 
                 writeResponse(ctx, request, HttpResponseStatus.OK, "pong", "text/plain");
+
+            } else if ((enableCORSForAPI() || enableCORSForAllResponses()) && request.getMethod().getValue().equals("OPTIONS") && !request.getFirstHeader("Origin").isEmpty()) {
+
+                writeResponse(ctx, request, HttpResponseStatus.OK);
 
             } else if (request.matches("PUT", "/status")) {
 
@@ -151,10 +155,13 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
             } else if (request.matches("PUT", "/stop")) {
 
-                writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
-                ctx.flush();
-                ctx.close();
-                server.stop();
+                ctx.writeAndFlush(response().withStatusCode(HttpResponseStatus.ACCEPTED.code()));
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        server.stop();
+                    }
+                }).start();
 
             } else {
 
@@ -196,21 +203,52 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
     }
 
     private void writeResponse(ChannelHandlerContext ctx, HttpRequest request, HttpResponseStatus responseStatus, String body, String contentType) {
-        writeResponse(ctx, request,
-                response()
-                        .withStatusCode(responseStatus.code())
-                        .withBody(body)
-                        .updateHeader(header(CONTENT_TYPE, contentType + "; charset=utf-8"))
-        );
+        HttpResponse response = response()
+                .withStatusCode(responseStatus.code())
+                .withBody(body);
+        if (body != null && !body.isEmpty()) {
+            response.updateHeader(header(CONTENT_TYPE, contentType + "; charset=utf-8"));
+        }
+        if (enableCORSForAPI()) {
+            addCORSHeaders(response);
+        }
+        writeResponse(ctx, request, response);
     }
 
     private void writeResponse(ChannelHandlerContext ctx, HttpRequest request, HttpResponse response) {
+        if (enableCORSForAllResponses()) {
+            addCORSHeaders(response);
+        }
+
         if (request.isKeepAlive() != null && request.isKeepAlive()) {
             response.updateHeader(header(CONNECTION, HttpHeaders.Values.KEEP_ALIVE));
             ctx.write(response);
         } else {
             response.updateHeader(header(CONNECTION, HttpHeaders.Values.CLOSE));
             ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+        }
+    }
+
+    private void addCORSHeaders(HttpResponse response) {
+        String methods = "CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE";
+        String headers = "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary";
+        if (response.getFirstHeader("Access-Control-Allow-Origin").isEmpty()) {
+            response.withHeader("Access-Control-Allow-Origin", "*");
+        }
+        if (response.getFirstHeader("Access-Control-Allow-Methods").isEmpty()) {
+            response.withHeader("Access-Control-Allow-Methods", methods);
+        }
+        if (response.getFirstHeader("Access-Control-Allow-Headers").isEmpty()) {
+            response.withHeader("Access-Control-Allow-Headers", headers);
+        }
+        if (response.getFirstHeader("Access-Control-Expose-Headers").isEmpty()) {
+            response.withHeader("Access-Control-Expose-Headers", headers);
+        }
+        if (response.getFirstHeader("Access-Control-Max-Age").isEmpty()) {
+            response.withHeader("Access-Control-Max-Age", "1");
+        }
+        if (response.getFirstHeader("X-CORS").isEmpty()) {
+            response.withHeader("X-CORS", "MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORSForAPI(false) or -Dmockserver.disableCORS=false");
         }
     }
 

@@ -31,7 +31,7 @@ public class ActionHandler {
                     httpResponse = httpForwardActionHandler.handle((HttpForward) action, httpRequest);
                     break;
                 case CALLBACK:
-                    httpResponse = httpCallbackActionHandler.handle((HttpCallback) action, httpRequest);
+                    httpResponse = httpCallbackActionHandler.handle((HttpClassCallback) action, httpRequest);
                     break;
                 case RESPONSE:
                     httpResponse = httpResponseActionHandler.handle((HttpResponse) action);

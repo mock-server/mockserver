@@ -344,7 +344,7 @@ public class ExpectationToJavaSerializerTest {
                                 Times.once(),
                                 TimeToLive.unlimited())
                                 .thenCallback(
-                                        new HttpCallback()
+                                        new HttpClassCallback()
                                                 .withCallbackClass("some_class")
                                 )
                 )

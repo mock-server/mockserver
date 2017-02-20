@@ -1,7 +1,5 @@
 package org.mockserver.client.netty;
 
-import com.google.common.net.InetAddresses;
-import com.google.common.net.MediaType;
 import io.netty.handler.codec.http.HttpHeaders;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -16,7 +14,6 @@ import org.mockserver.socket.PortFactory;
 import java.net.InetSocketAddress;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.*;
-import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.Is.is;

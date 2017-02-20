@@ -1,5 +1,6 @@
 package org.mockserver.integration;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.cli.Main;
 import org.mockserver.client.proxy.ProxyClient;
@@ -16,8 +17,14 @@ import static org.junit.Assert.assertTrue;
  */
 public class MockServerAndProxyStopTest {
 
-    private static final int SERVER_HTTP_PORT = PortFactory.findFreePort();
-    private final static Integer PROXY_HTTP_PORT = PortFactory.findFreePort();
+    private int SERVER_HTTP_PORT;
+    private Integer PROXY_HTTP_PORT;
+
+    @Before
+    public void generatePorts() {
+        SERVER_HTTP_PORT = PortFactory.findFreePort();
+        PROXY_HTTP_PORT = PortFactory.findFreePort();
+    }
 
     @Test
     public void shouldStopMockServerAndProxyByMockServerClient() throws InterruptedException {
@@ -32,7 +39,6 @@ public class MockServerAndProxyStopTest {
         mockServerClient.stop();
 
         // then
-        TimeUnit.SECONDS.sleep(1);
         assertFalse(mockServerClient.isRunning());
     }
 
@@ -49,7 +55,6 @@ public class MockServerAndProxyStopTest {
         proxyClient.stop();
 
         // then
-        TimeUnit.SECONDS.sleep(1);
         assertFalse(proxyClient.isRunning());
     }
 
@@ -66,7 +71,6 @@ public class MockServerAndProxyStopTest {
         mockServerClient.stop();
 
         // then
-        TimeUnit.SECONDS.sleep(1);
         assertFalse(mockServerClient.isRunning());
     }
 
@@ -83,7 +87,6 @@ public class MockServerAndProxyStopTest {
         proxyClient.stop();
 
         // then
-        TimeUnit.SECONDS.sleep(1);
         assertFalse(proxyClient.isRunning());
     }
 }

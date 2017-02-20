@@ -13,6 +13,8 @@ import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.mockserver.verify.VerificationTimes;
 
+import java.util.concurrent.TimeUnit;
+
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.verify.VerificationTimes.exactly;
 
@@ -150,9 +152,25 @@ public class MockServerClient extends AbstractClient {
      * Returns whether MockServer is running
      */
     public boolean isRunning() {
+        return isRunning(10, 500, TimeUnit.MILLISECONDS);
+    }
+
+    /**
+     * Returns whether MockServer is running, by polling the MockServer a configurable amount of times
+     */
+    public boolean isRunning(int attempts, long  timeout, TimeUnit timeUnit) {
         try {
             HttpResponse httpResponse = sendRequest(request().withMethod("PUT").withPath(calculatePath("status")));
-            return httpResponse.getStatusCode() == HttpStatusCode.OK_200.code();
+            if (httpResponse.getStatusCode() == HttpStatusCode.OK_200.code()) {
+                return true;
+            } else {
+                try {
+                    timeUnit.sleep(timeout);
+                } catch (InterruptedException e) {
+                    // ignore interrupted exception
+                }
+                return isRunning(attempts  - 1, timeout, timeUnit);
+            }
         } catch (SocketConnectionException sce) {
             return false;
         }
@@ -168,6 +186,11 @@ public class MockServerClient extends AbstractClient {
     public MockServerClient stop(boolean ignoreFailure) {
         try {
             sendRequest(request().withMethod("PUT").withPath(calculatePath("stop")));
+            if (isRunning()) {
+                for (int i = 0; isRunning() && i < 50; i++) {
+                    TimeUnit.MILLISECONDS.sleep(5);
+                }
+            }
         } catch (Exception e) {
             if (!ignoreFailure) {
                 logger.warn("Failed to send stop request to MockServer " + e.getMessage());

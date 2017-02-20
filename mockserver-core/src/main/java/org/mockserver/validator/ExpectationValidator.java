@@ -19,7 +19,8 @@ public class ExpectationValidator implements Validator<Expectation> {
         }
         if (expectation.getHttpResponse() == null
                 && expectation.getHttpForward() == null
-                && expectation.getHttpCallback() == null
+                && expectation.getHttpClassCallback() == null
+                && expectation.getHttpObjectCallback() == null
                 && expectation.getHttpError() == null) {
             validationErrors.add("no response, forward, callback or error");
         }

@@ -169,14 +169,14 @@ public class MockServerServletTest {
     public void shouldCallbackMatchedExpectation() throws IOException {
         // given
         HttpRequest request = new HttpRequest().withPath("somepath");
-        HttpCallback callback = new HttpCallback().withCallbackClass("some-class");
+        HttpClassCallback callback = new HttpClassCallback().withCallbackClass("some-class");
         HttpResponse response = new HttpResponse();
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
         MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("GET", "somepath");
 
         when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class))).thenReturn(request);
         when(mockMockServerMatcher.handle(any(HttpRequest.class))).thenReturn(callback);
-        when(mockActionHandler.processAction(any(HttpCallback.class), any(HttpRequest.class))).thenReturn(response);
+        when(mockActionHandler.processAction(any(HttpClassCallback.class), any(HttpRequest.class))).thenReturn(response);
 
         // when
         mockServerServlet.service(httpServletRequest, httpServletResponse);

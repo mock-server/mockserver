@@ -7,21 +7,21 @@ current_directory=${PWD}
 
 if [ $JAVA_VER -eq 16 ]; then
     echo
-    echo "------------------------"
-    echo "------- JAVA 1.6 -------"
-    echo "------------------------"
+    echo "----------------------"
+    echo "------ JAVA 1.6 ------"
+    echo "----------------------"
     echo
 elif [ $JAVA_VER -eq 17 ]; then
     echo
-    echo "--------------------"
-    echo "----- JAVA 1.7 -----"
-    echo "--------------------"
+    echo "----------------------"
+    echo "------ JAVA 1.7 ------"
+    echo "----------------------"
     echo
 else
     echo
-    echo "--------------------"
-    echo "-UNKOWN JAVA VERSION-"
-    echo "--------------------"
+    echo "----------------------"
+    echo "-UNKNOWN JAVA VERSION-"
+    echo "----------------------"
     echo
     exit 1
 fi

@@ -11,11 +11,9 @@ import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.netty.SocketConnectionException;
 import org.mockserver.client.server.MockServerClient;
 import org.mockserver.echo.http.EchoServer;
-import org.mockserver.matchers.HttpRequestMatcher;
-import org.mockserver.matchers.MatchType;
-import org.mockserver.matchers.TimeToLive;
-import org.mockserver.matchers.Times;
+import org.mockserver.matchers.*;
 import org.mockserver.mock.Expectation;
+import org.mockserver.mock.action.ExpectationCallback;
 import org.mockserver.model.*;
 import org.mockserver.socket.PortFactory;
 import org.mockserver.verify.VerificationTimes;
@@ -31,13 +29,14 @@ import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.StringStartsWith.startsWith;
 import static org.hamcrest.number.OrderingComparison.greaterThan;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static org.mockserver.matchers.Times.exactly;
 import static org.mockserver.matchers.Times.once;
 import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.Cookie.cookie;
 import static org.mockserver.model.Header.header;
-import static org.mockserver.model.HttpCallback.callback;
+import static org.mockserver.model.HttpClassCallback.callback;
 import static org.mockserver.model.HttpForward.forward;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
@@ -74,6 +73,9 @@ public abstract class AbstractClientServerIntegrationTest {
             "transfer-encoding",
             "access-control-allow-origin",
             "access-control-allow-methods",
+            "access-control-allow-headers",
+            "access-control-expose-headers",
+            "access-control-max-age",
             "x-cors"
     );
     private NettyHttpClient httpClient = new NettyHttpClient();
@@ -5406,7 +5408,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 attemptsRemaining--;
                 logger.info("Retrying connection to mock server, attempts remaining: " + attemptsRemaining);
                 try {
-                    TimeUnit.MILLISECONDS.sleep(500);
+                    TimeUnit.MILLISECONDS.sleep(50);
                 } catch (InterruptedException e) {
                     // do nothing
                 }

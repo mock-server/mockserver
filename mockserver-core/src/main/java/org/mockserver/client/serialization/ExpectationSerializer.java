@@ -1,23 +1,17 @@
 package org.mockserver.client.serialization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Strings;
-import org.apache.commons.lang3.StringEscapeUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.mockserver.client.serialization.model.ExpectationDTO;
 import org.mockserver.mock.Expectation;
-import org.mockserver.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 /**
  * @author jamesdbloom
  */
-public class ExpectationSerializer {
+public class ExpectationSerializer implements Serializer<Expectation> {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
 
@@ -65,6 +59,11 @@ public class ExpectationSerializer {
             throw new RuntimeException("Exception while parsing response [" + jsonExpectation + "] for Expectation", e);
         }
         return expectation;
+    }
+
+    @Override
+    public Class<Expectation> supportsType() {
+        return Expectation.class;
     }
 
     public Expectation[] deserializeArray(String jsonExpectations) {

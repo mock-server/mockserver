@@ -1,9 +1,8 @@
 package org.mockserver.mock.action;
 
-import org.mockserver.model.HttpCallback;
+import org.mockserver.model.HttpClassCallback;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
-import org.mockserver.filters.Filters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,34 +17,34 @@ import static org.mockserver.model.HttpResponse.notFoundResponse;
 public class HttpCallbackActionHandler {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public HttpResponse handle(HttpCallback httpCallback, HttpRequest httpRequest) {
-        return sendRequest(httpCallback, httpRequest);
+    public HttpResponse handle(HttpClassCallback httpClassCallback, HttpRequest httpRequest) {
+        return sendRequest(httpClassCallback, httpRequest);
     }
 
-    private ExpectationCallback instantiateCallback(HttpCallback httpCallback) {
+    private ExpectationCallback instantiateCallback(HttpClassCallback httpClassCallback) {
         try {
-            Class expectationCallbackClass = Class.forName(httpCallback.getCallbackClass());
+            Class expectationCallbackClass = Class.forName(httpClassCallback.getCallbackClass());
             if (ExpectationCallback.class.isAssignableFrom(expectationCallbackClass)) {
                 Constructor<? extends ExpectationCallback> constructor = expectationCallbackClass.getConstructor();
                 return constructor.newInstance();
             }
         } catch (ClassNotFoundException e) {
-            logger.error("ClassNotFoundException - while trying to instantiate ExceptionCallback class \"" + httpCallback.getCallbackClass() + "\"", e);
+            logger.error("ClassNotFoundException - while trying to instantiate ExceptionCallback class \"" + httpClassCallback.getCallbackClass() + "\"", e);
         } catch (NoSuchMethodException e) {
-            logger.error("NoSuchMethodException - while trying to create default constructor on ExceptionCallback class \"" + httpCallback.getCallbackClass() + "\"", e);
+            logger.error("NoSuchMethodException - while trying to create default constructor on ExceptionCallback class \"" + httpClassCallback.getCallbackClass() + "\"", e);
         } catch (InvocationTargetException e) {
-            logger.error("InvocationTargetException - while trying to execute default constructor on ExceptionCallback class \"" + httpCallback.getCallbackClass() + "\"", e);
+            logger.error("InvocationTargetException - while trying to execute default constructor on ExceptionCallback class \"" + httpClassCallback.getCallbackClass() + "\"", e);
         } catch (InstantiationException e) {
-            logger.error("InvocationTargetException - while trying to execute default constructor on ExceptionCallback class \"" + httpCallback.getCallbackClass() + "\"", e);
+            logger.error("InvocationTargetException - while trying to execute default constructor on ExceptionCallback class \"" + httpClassCallback.getCallbackClass() + "\"", e);
         } catch (IllegalAccessException e) {
-            logger.error("InvocationTargetException - while trying to execute default constructor on ExceptionCallback class \"" + httpCallback.getCallbackClass() + "\"", e);
+            logger.error("InvocationTargetException - while trying to execute default constructor on ExceptionCallback class \"" + httpClassCallback.getCallbackClass() + "\"", e);
         }
         return null;
     }
 
-    private HttpResponse sendRequest(HttpCallback httpCallback, HttpRequest httpRequest) {
+    private HttpResponse sendRequest(HttpClassCallback httpClassCallback, HttpRequest httpRequest) {
         if (httpRequest != null) {
-            ExpectationCallback expectationCallback = instantiateCallback(httpCallback);
+            ExpectationCallback expectationCallback = instantiateCallback(httpClassCallback);
             if (expectationCallback != null) {
                 return expectationCallback.handle(httpRequest);
             } else {

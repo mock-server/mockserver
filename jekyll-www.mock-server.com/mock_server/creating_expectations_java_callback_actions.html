@@ -6,11 +6,11 @@ section: 'Mock Server'
 subsection: false
 ---
 
-<p>When mocking a callback in Java use the <strong>org.mockserver.model.HttpCallback</strong> class which specifies the details class to callback as follows, for example:</p>
+<p>When mocking a callback in Java use the <strong>org.mockserver.model.HttpClassCallback</strong> class which specifies the details class to callback as follows, for example:</p>
 
-<pre><code class="code">HttpCallback httpCallback = callback(<span class="string_literal">"org.some.package.MyCallback"</span>);</code></pre>
+<pre><code class="code">HttpCallback httpClassCallback = callback(<span class="string_literal">"org.some.package.MyCallback"</span>);</code></pre>
 
-<p>The full specification of <strong>org.mockserver.model.HttpCallback</strong> is as follows:</p>
+<p>The full specification of <strong>org.mockserver.model.HttpClassCallback</strong> is as follows:</p>
 
 <pre><code class="code"><span class="keyword">public class</span> HttpCallback {
 
