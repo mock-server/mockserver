@@ -29,15 +29,15 @@ public class HttpCallbackActionHandler {
                 return constructor.newInstance();
             }
         } catch (ClassNotFoundException e) {
-            logger.error("ClassNotFoundException - while trying to instantiate ExceptionCallback class \"" + httpClassCallback.getCallbackClass() + "\"", e);
+            logger.error("ClassNotFoundException - while trying to instantiate ExpectationCallback class \"" + httpClassCallback.getCallbackClass() + "\"", e);
         } catch (NoSuchMethodException e) {
-            logger.error("NoSuchMethodException - while trying to create default constructor on ExceptionCallback class \"" + httpClassCallback.getCallbackClass() + "\"", e);
+            logger.error("NoSuchMethodException - while trying to create default constructor on ExpectationCallback class \"" + httpClassCallback.getCallbackClass() + "\"", e);
         } catch (InvocationTargetException e) {
-            logger.error("InvocationTargetException - while trying to execute default constructor on ExceptionCallback class \"" + httpClassCallback.getCallbackClass() + "\"", e);
+            logger.error("InvocationTargetException - while trying to execute default constructor on ExpectationCallback class \"" + httpClassCallback.getCallbackClass() + "\"", e);
         } catch (InstantiationException e) {
-            logger.error("InvocationTargetException - while trying to execute default constructor on ExceptionCallback class \"" + httpClassCallback.getCallbackClass() + "\"", e);
+            logger.error("InvocationTargetException - while trying to execute default constructor on ExpectationCallback class \"" + httpClassCallback.getCallbackClass() + "\"", e);
         } catch (IllegalAccessException e) {
-            logger.error("InvocationTargetException - while trying to execute default constructor on ExceptionCallback class \"" + httpClassCallback.getCallbackClass() + "\"", e);
+            logger.error("InvocationTargetException - while trying to execute default constructor on ExpectationCallback class \"" + httpClassCallback.getCallbackClass() + "\"", e);
         }
         return null;
     }
