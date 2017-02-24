@@ -4,6 +4,7 @@ import com.google.common.base.Charsets;
 import com.google.common.net.MediaType;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.*;
+import io.netty.util.CharsetUtil;
 import org.hamcrest.core.Is;
 import org.junit.Before;
 import org.junit.Test;
@@ -201,7 +202,7 @@ public class MockServerRequestDecoderTest {
 
         // then
         Body body = ((HttpRequest) output.get(0)).getBody();
-        assertThat(body, Is.<Body>is(exact("A normal string with ASCII characters")));
+        assertThat(body, Is.<Body>is(exact("A normal string with ASCII characters", CharsetUtil.UTF_8)));
     }
 
     @Test
