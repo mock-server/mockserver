@@ -28,7 +28,7 @@ import static org.mockserver.model.HttpResponse.notFoundResponse;
 public class RequestResponseLogFilter implements ResponseFilter, RequestFilter {
 
     // request / response persistence
-    private final CircularMultiMap<HttpRequest, HttpResponse> requestResponseLog = new CircularMultiMap<HttpRequest, HttpResponse>(100, 50);
+    private final CircularMultiMap<HttpRequest, HttpResponse> requestResponseLog = new CircularMultiMap<HttpRequest, HttpResponse>(500, 50);
     // matcher
     private final MatcherBuilder matcherBuilder = new MatcherBuilder();
     private Logger requestLogger = LoggerFactory.getLogger("REQUEST");
@@ -99,6 +99,23 @@ public class RequestResponseLogFilter implements ResponseFilter, RequestFilter {
                 }
             }
         }
+    }
+
+    public Expectation[] retrieve(HttpRequest httpRequestToMatch) {
+        List<Expectation> matchingExpectations = new ArrayList<Expectation>();
+        if (httpRequestToMatch != null) {
+            HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequestToMatch);
+            for (Map.Entry<HttpRequest, HttpResponse> entry : requestResponseLog.entrySet()) {
+                if (httpRequestMatcher.matches(entry.getKey(), true)) {
+                    matchingExpectations.add(new Expectation(entry.getKey(), Times.unlimited(), TimeToLive.unlimited()).thenRespond(entry.getValue()));
+                }
+            }
+        } else {
+            for (Map.Entry<HttpRequest, HttpResponse> entry : requestResponseLog.entrySet()) {
+                matchingExpectations.add(new Expectation(entry.getKey(), Times.unlimited(), TimeToLive.unlimited()).thenRespond(entry.getValue()));
+            }
+        }
+        return matchingExpectations.toArray(new Expectation[matchingExpectations.size()]);
     }
 
 }

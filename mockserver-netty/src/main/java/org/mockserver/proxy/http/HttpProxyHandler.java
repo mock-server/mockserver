@@ -18,6 +18,7 @@ import org.mockserver.filters.HopByHopHeaderFilter;
 import org.mockserver.filters.RequestLogFilter;
 import org.mockserver.filters.RequestResponseLogFilter;
 import org.mockserver.logging.LogFormatter;
+import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.OutboundHttpRequest;
@@ -88,6 +89,10 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
                 ctx.pipeline().remove(this);
                 ctx.fireChannelRead(request);
 
+            } else if (request.matches("GET", "/ping")) {
+
+                writeResponse(ctx, request, HttpResponseStatus.OK, "pong", "text/plain");
+
             } else if ((enableCORSForAPI() || enableCORSForAllResponses()) && request.getMethod().getValue().equals("OPTIONS") && !request.getFirstHeader("Origin").isEmpty()) {
 
                 writeResponse(ctx, request, HttpResponseStatus.OK);
@@ -100,12 +105,14 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
                 org.mockserver.model.HttpRequest httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
                 requestLogFilter.clear(httpRequest);
+                requestResponseLogFilter.clear(httpRequest);
                 logFormatter.infoLog("clearing expectations and request logs that match:{}", httpRequest);
                 writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
 
             } else if (request.matches("PUT", "/reset")) {
 
                 requestLogFilter.reset();
+                requestResponseLogFilter.reset();
                 logFormatter.infoLog("resetting all expectations and request logs");
                 writeResponse(ctx, request, HttpResponseStatus.ACCEPTED);
 
@@ -116,8 +123,13 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
             } else if (request.matches("PUT", "/retrieve")) {
 
-                HttpRequest[] requests = requestLogFilter.retrieve(httpRequestSerializer.deserialize(request.getBodyAsString()));
-                writeResponse(ctx, request, HttpResponseStatus.OK, httpRequestSerializer.serialize(requests), "application/json");
+                if (request.hasQueryStringParameter("type", "expectations")) {
+                    Expectation[] expectations = requestResponseLogFilter.retrieve(httpRequestSerializer.deserialize(request.getBodyAsString()));
+                    writeResponse(ctx, request, HttpResponseStatus.OK, expectationSerializer.serialize(expectations), "application/json");
+                } else {
+                    HttpRequest[] requests = requestLogFilter.retrieve(httpRequestSerializer.deserialize(request.getBodyAsString()));
+                    writeResponse(ctx, request, HttpResponseStatus.OK, httpRequestSerializer.serialize(requests), "application/json");
+                }
 
             } else if (request.matches("PUT", "/verify")) {
 
