@@ -10,9 +10,10 @@ function branchName {
     echo "$branch_name"
 }
 
-mvn -q compile --settings settings.xml -Dmaven.test.skip=true -DskipTests=true -DskipITs=true
 if [ "$(branchName)" = "master" ]; then
+    mvn -q compile --settings settings.xml -Dmaven.test.skip=true -DskipTests=true -DskipITs=true
     mvn deploy --settings settings.xml -Djava.security.egd=file:/dev/./urandom
 else
-    mvn install --settings settings.xml -Djava.security.egd=file:/dev/./urandom
+    mvn -q compile -Dmaven.test.skip=true -DskipTests=true -DskipITs=true
+    mvn install -Djava.security.egd=file:/dev/./urandom
 fi
