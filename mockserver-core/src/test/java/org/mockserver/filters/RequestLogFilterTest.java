@@ -9,10 +9,7 @@ import org.mockserver.model.HttpResponse;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -42,10 +39,15 @@ public class RequestLogFilterTest {
 
         ExecutorService executorService = Executors.newFixedThreadPool(100);
 
-        List<Future<HttpRequest>> httpRequestFutureList = new ArrayList<>();
+        List<Future<HttpRequest>> httpRequestFutureList = new ArrayList<Future<HttpRequest>>();
 
         for (int i = 0; i < 10000; i++) {
-            Future<HttpRequest> futureHttpRequest = executorService.submit(() -> requestLogFilter.onRequest(httpRequest));
+            Future<HttpRequest> futureHttpRequest = executorService.submit(new Callable<HttpRequest>() {
+                @Override
+                public HttpRequest call() throws Exception {
+                    return requestLogFilter.onRequest(httpRequest);
+                }
+            });
             httpRequestFutureList.add(futureHttpRequest);
         }
 
