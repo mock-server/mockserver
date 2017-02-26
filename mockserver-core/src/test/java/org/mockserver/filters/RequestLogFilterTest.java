@@ -6,13 +6,14 @@ import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.*;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.model.HttpRequest.request;
-import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
 
 /**
@@ -21,6 +22,44 @@ import static org.mockserver.model.HttpResponse.response;
 public class RequestLogFilterTest {
 
     public static final List<HttpRequest> EMPTY_REQUEST_LIST = Arrays.<HttpRequest>asList();
+
+    @Test
+    public void shouldPassConcurrent() throws ExecutionException, InterruptedException {
+        // given
+        final RequestLogFilter requestLogFilter = new RequestLogFilter();
+        final HttpRequest httpRequest =
+                request()
+                        .withBody("some_body")
+                        .withCookies(
+                                new Cookie("some_cookie_name", "some_cookie_value")
+                        )
+                        .withHeaders(
+                                new Header("some_header_name", "some_header_value")
+                        );
+
+        ExecutorService executorService = Executors.newFixedThreadPool(100);
+
+        List<Future<HttpRequest>> httpRequestFutureList = new ArrayList<Future<HttpRequest>>();
+
+        for (int i = 0; i < 10000; i++) {
+            Future<HttpRequest> futureHttpRequest = executorService.submit(new Callable<HttpRequest>() {
+                @Override
+                public HttpRequest call() throws Exception {
+                    return requestLogFilter.onRequest(httpRequest);
+                }
+            });
+            httpRequestFutureList.add(futureHttpRequest);
+        }
+
+        // then
+        for (int i = 0; i < 10000; i++) {
+            HttpRequest returnedHttpRequest = httpRequestFutureList.get(i).get();
+            assertEquals(httpRequest, returnedHttpRequest);
+        }
+
+        HttpRequest[] retrievedLogs = requestLogFilter.retrieve(new HttpRequest());
+        assertEquals(100, retrievedLogs.length);
+    }
 
     @Test
     public void shouldPassThroughRequestsUnchanged() {
