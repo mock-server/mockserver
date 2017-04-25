@@ -87,3 +87,10 @@ custom_tmp
 # drone.io build testing #
 ##########################
 drone.io
+
+# tomcat working directories #
+##############################
+mockserver-proxy-war/tomcat/
+mockserver-proxy-war/tomcat_proxy/
+mockserver-war/tomcat/
+mockserver-war/tomcat_mockserver/
