@@ -46,6 +46,29 @@ Run commands:
     mvn release:prepare -Dgpg.passphrase=eWare3bsfla -Drelease.arguments="-DnonReleaseBuild=false -Dmaven.test.skip=true -DskipTests=true" && \
     mvn release:perform -Dgpg.passphrase=eWare3bsfla -Drelease.arguments="-DnonReleaseBuild=false -Dmaven.test.skip=true -DskipTests=true"
     
+Test username & password:
+    
+    settings.xml must contain:
+    
+    <servers>
+        <server>
+            <id>sonatype-nexus-snapshots</id>
+            <username><username></username>
+            <password><password></password>
+        </server>
+        <server>
+            <id>sonatype-nexus-staging</id>
+            <username><username></username>
+            <password><password></password>
+        </server>
+    </servers>
+    
+    Note: username and password is the same values as for https://oss.sonatype.org/index.html#nexus-search;quick~mockserver
+    
+    curl -v -u <username>:<password> --upload-file pom.xml https://oss.sonatype.org/service/local/staging/deploy/maven2/org/mock-server/mockserver/3.10.5/mockserver-3.10.5.pom
+    
+    see: https://support.sonatype.com/hc/en-us/articles/213465818-How-can-I-programmatically-upload-an-artifact-into-Nexus-
+    
 Delete tag:
 
     git tag -d 12345
