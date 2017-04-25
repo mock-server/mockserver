@@ -9,6 +9,7 @@ https://docs.sonatype.org/display/Repository/Sonatype+OSS+Maven+Repository+Usage
 https://oss.sonatype.org/index.html#nexus-search;quick~mockserver
 http://oss.sonatype.org/content/repositories/snapshots/org/mock-server/mockserver/
 https://docs.sonatype.org/display/Repository/How+To+Generate+PGP+Signatures+With+Maven
+http://blog.sonatype.com/2010/01/how-to-generate-pgp-signatures-with-maven/
 
 Add to maven settings.xml:
 
@@ -33,6 +34,24 @@ Run commands:
 
     gpg --gen-key
     gpg --list-keys
-    gpg --keyserver hkp://pool.sks-keyservers.net --send-keys A6BAB25C
-    mvn clean deploy -> deploy SNAPSHOT
-    mv .git/hooks .git/mooks && mvn release:clean && mvn release:prepare && mvn release:perform && mv .git/mooks .git/hooks
+    
+    > pub   2048R/7E0E8A0A 2017-04-25
+    > uid       [ultimate] James Duncan Bloom <jamesdbloom@gmail.com>
+    > sub   2048R/FCF5FB31 2017-04-25
+    
+    gpg --keyserver hkp://pool.sks-keyservers.net --send-keys 7E0E8A0A 
+    
+    export JAVA_HOME=`/usr/libexec/java_home -v 1.6`
+    mvn release:clean -Dgpg.passphrase=eWare3bsfla -Drelease.arguments="-DnonReleaseBuild=false -Dmaven.test.skip=true -DskipTests=true" && \
+    mvn release:prepare -Dgpg.passphrase=eWare3bsfla -Drelease.arguments="-DnonReleaseBuild=false -Dmaven.test.skip=true -DskipTests=true" && \
+    mvn release:perform -Dgpg.passphrase=eWare3bsfla -Drelease.arguments="-DnonReleaseBuild=false -Dmaven.test.skip=true -DskipTests=true"
+    
+Delete tag:
+
+    git tag -d 12345
+    git push origin :refs/tags/12345
+    
+Reset git history:
+
+    git reset --hard <commit-hash>
+    git push -f origin master
