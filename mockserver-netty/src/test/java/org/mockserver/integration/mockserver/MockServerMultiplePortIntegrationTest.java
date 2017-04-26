@@ -9,13 +9,11 @@ import org.mockserver.integration.ClientAndServer;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.socket.PortFactory;
 
-import java.io.IOException;
-import java.net.ServerSocket;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.model.HttpRequest.request;
@@ -80,7 +78,7 @@ public class MockServerMultiplePortIntegrationTest extends AbstractMockServerNet
         assertEquals(
                 response()
                         .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withHeader("Content-Type", "application/json; charset=utf-8")
+                        .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
                         .withBody("{" + System.getProperty("line.separator") +
                                 "  \"ports\" : [ " + Joiner.on(", ").join(severHttpPort) + " ]" + System.getProperty("line.separator") +
                                 "}"),
@@ -94,7 +92,7 @@ public class MockServerMultiplePortIntegrationTest extends AbstractMockServerNet
         assertEquals(
                 response()
                         .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withHeader("Content-Type", "application/json; charset=utf-8")
+                        .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
                         .withBody("{" + System.getProperty("line.separator") +
                                 "  \"ports\" : [ " + Joiner.on(", ").join(severHttpPort) + " ]" + System.getProperty("line.separator") +
                                 "}"),
@@ -118,7 +116,7 @@ public class MockServerMultiplePortIntegrationTest extends AbstractMockServerNet
         assertEquals(
                 response()
                         .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                        .withHeader("Content-Type", "application/json; charset=utf-8")
+                        .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
                         .withBody("{" + System.getProperty("line.separator") +
                                 "  \"ports\" : [ " + firstNewPort + " ]" + System.getProperty("line.separator") +
                                 "}"),
@@ -134,7 +132,7 @@ public class MockServerMultiplePortIntegrationTest extends AbstractMockServerNet
         assertEquals(
                 response()
                         .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withHeader("Content-Type", "application/json; charset=utf-8")
+                        .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
                         .withBody("{" + System.getProperty("line.separator") +
                                 "  \"ports\" : [ " + Joiner.on(", ").join(severHttpPort) + ", " + firstNewPort + " ]" + System.getProperty("line.separator") +
                                 "}"),
@@ -148,7 +146,7 @@ public class MockServerMultiplePortIntegrationTest extends AbstractMockServerNet
         assertEquals(
                 response()
                         .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                        .withHeader("Content-Type", "application/json; charset=utf-8")
+                        .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
                         .withBody("{" + System.getProperty("line.separator") +
                                 "  \"ports\" : [ " + secondNewPort + " ]" + System.getProperty("line.separator") +
                                 "}"),
@@ -165,7 +163,7 @@ public class MockServerMultiplePortIntegrationTest extends AbstractMockServerNet
         assertEquals(
                 response()
                         .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withHeader("Content-Type", "application/json; charset=utf-8")
+                        .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
                         .withBody("{" + System.getProperty("line.separator") +
                                 "  \"ports\" : [ " + Joiner.on(", ").join(severHttpPort) + ", " + firstNewPort + ", " + secondNewPort + " ]" + System.getProperty("line.separator") +
                                 "}"),

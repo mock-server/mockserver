@@ -45,7 +45,7 @@ public class UpstreamProxyRelayHandler extends SimpleChannelInboundHandler<FullH
                     ctx.channel().read();
                 } else {
                     if (isNotSocketClosedException(future.cause())) {
-                        logger.error("Exception while returning response for request \"" + request.getMethod() + " " + request.getUri() + "\"", future.cause());
+                        logger.error("Exception while returning response for request \"" + request.method() + " " + request.uri() + "\"", future.cause());
                     }
                     future.channel().close();
                 }

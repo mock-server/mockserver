@@ -185,7 +185,7 @@ public class HttpRequest extends Not {
      * Adds one query string parameter to match which can specified using plain strings or regular expressions
      * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
      *
-     * @param name the parameter name
+     * @param name   the parameter name
      * @param values the parameter values which can be a varags of strings or regular expressions
      */
     public HttpRequest withQueryStringParameter(String name, String... values) {
@@ -203,7 +203,7 @@ public class HttpRequest extends Not {
      * can also be a plain string or a regex (for more details of the supported regex syntax
      * see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
      *
-     * @param name the parameter name as a NottableString
+     * @param name   the parameter name as a NottableString
      * @param values the parameter values which can be a varags of NottableStrings
      */
     public HttpRequest withQueryStringParameter(NottableString name, NottableString... values) {
@@ -254,7 +254,7 @@ public class HttpRequest extends Not {
     /**
      * The exact string body to match on such as "this is an exact string body"
      *
-     * @param body the body on such as "this is an exact string body"
+     * @param body    the body on such as "this is an exact string body"
      * @param charset character set the string will be encoded in
      */
     public HttpRequest withBody(String body, Charset charset) {
@@ -276,70 +276,70 @@ public class HttpRequest extends Not {
 
     /**
      * The body match rules on such as using one of the Body subclasses as follows:
-     *
+     * <p>
      * exact string match:
-     *   - exact("this is an exact string body");
-     *
-     *   or
-     *
-     *   - new StringBody("this is an exact string body")
-     *
+     * - exact("this is an exact string body");
+     * <p>
+     * or
+     * <p>
+     * - new StringBody("this is an exact string body")
+     * <p>
      * regular expression match:
-     *   - regex("username[a-z]{4}");
-     *
-     *   or
-     *
-     *   - new RegexBody("username[a-z]{4}");
-     *
+     * - regex("username[a-z]{4}");
+     * <p>
+     * or
+     * <p>
+     * - new RegexBody("username[a-z]{4}");
+     * <p>
      * json match:
-     *   - json("{username: 'foo', password: 'bar'}");
-     *
-     *   or
-     *
-     *   - json("{username: 'foo', password: 'bar'}", MatchType.STRICT);
-     *
-     *   or
-     *
-     *   - new JsonBody("{username: 'foo', password: 'bar'}");
-     *
+     * - json("{username: 'foo', password: 'bar'}");
+     * <p>
+     * or
+     * <p>
+     * - json("{username: 'foo', password: 'bar'}", MatchType.STRICT);
+     * <p>
+     * or
+     * <p>
+     * - new JsonBody("{username: 'foo', password: 'bar'}");
+     * <p>
      * json schema match:
-     *   - jsonSchema("{type: 'object', properties: { 'username': { 'type': 'string' }, 'password': { 'type': 'string' } }, 'required': ['username', 'password']}");
-     *
-     *   or
-     *
-     *   - jsonSchemaFromResource("org/mockserver/model/loginSchema.json");
-     *
-     *   or
-     *
-     *   - new JsonSchemaBody("{type: 'object', properties: { 'username': { 'type': 'string' }, 'password': { 'type': 'string' } }, 'required': ['username', 'password']}");
-     *
+     * - jsonSchema("{type: 'object', properties: { 'username': { 'type': 'string' }, 'password': { 'type': 'string' } }, 'required': ['username', 'password']}");
+     * <p>
+     * or
+     * <p>
+     * - jsonSchemaFromResource("org/mockserver/model/loginSchema.json");
+     * <p>
+     * or
+     * <p>
+     * - new JsonSchemaBody("{type: 'object', properties: { 'username': { 'type': 'string' }, 'password': { 'type': 'string' } }, 'required': ['username', 'password']}");
+     * <p>
      * xpath match:
-     *   - xpath("/element[key = 'some_key' and value = 'some_value']");
-     *
-     *   or
-     *
-     *   - new XPathBody("/element[key = 'some_key' and value = 'some_value']");
-     *
+     * - xpath("/element[key = 'some_key' and value = 'some_value']");
+     * <p>
+     * or
+     * <p>
+     * - new XPathBody("/element[key = 'some_key' and value = 'some_value']");
+     * <p>
      * body parameter match:
-     *   - params(
-     *             param("name_one", "value_one_one", "value_one_two")
-     *             param("name_two", "value_two")
-     *     );
-     *
-     *   or
-     *
-     *   - new ParameterBody(
-     *             new Parameter("name_one", "value_one_one", "value_one_two")
-     *             new Parameter("name_two", "value_two")
-     *     );
-     *
+     * - params(
+     * param("name_one", "value_one_one", "value_one_two")
+     * param("name_two", "value_two")
+     * );
+     * <p>
+     * or
+     * <p>
+     * - new ParameterBody(
+     * new Parameter("name_one", "value_one_one", "value_one_two")
+     * new Parameter("name_two", "value_two")
+     * );
+     * <p>
      * binary match:
-     *   - binary(IOUtils.readFully(getClass().getClassLoader().getResourceAsStream("example.pdf"), 1024));
-     *
-     *   or
-     *
-     *   - new BinaryBody(IOUtils.readFully(getClass().getClassLoader().getResourceAsStream("example.pdf"), 1024));
-     *
+     * - binary(IOUtils.readFully(getClass().getClassLoader().getResourceAsStream("example.pdf"), 1024));
+     * <p>
+     * or
+     * <p>
+     * - new BinaryBody(IOUtils.readFully(getClass().getClassLoader().getResourceAsStream("example.pdf"), 1024));
+     * <p>
      * for more details of the supported regular expression syntax see <a href="http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html</a>
      * for more details of the supported json syntax see <a href="http://jsonassert.skyscreamer.org">http://jsonassert.skyscreamer.org</a>
      * for more details of the supported json schema syntax see <a href="http://json-schema.org/">http://json-schema.org/</a>
@@ -416,7 +416,7 @@ public class HttpRequest extends Not {
      * Adds one header to match which can specified using plain strings or regular expressions
      * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
      *
-     * @param name the header name
+     * @param name   the header name
      * @param values the header values which can be a varags of strings or regular expressions
      */
     public HttpRequest withHeader(String name, String... values) {
@@ -434,7 +434,7 @@ public class HttpRequest extends Not {
      * can also be a plain string or a regex (for more details of the supported regex syntax
      * see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
      *
-     * @param name the header name as a NottableString
+     * @param name   the header name as a NottableString
      * @param values the header values which can be a varags of NottableStrings
      */
     public HttpRequest withHeader(NottableString name, NottableString... values) {
@@ -468,11 +468,14 @@ public class HttpRequest extends Not {
 
     public String getFirstHeader(String name) {
         String firstHeadValue = "";
-        if (headers.containsKey(string(name)) || headers.containsKey(string(name.toLowerCase()))) {
-            Header header = headers.get(string(name));
-            if (header == null) {
-                header = headers.get(string(name.toLowerCase()));
-            }
+        Header header = headers.get(string(name));
+        if (header == null) {
+            header = headers.get(string(name.toLowerCase()));
+        }
+        if (header == null) {
+            header = headers.get(string(name).capitalize());
+        }
+        if (header != null) {
             if (!header.getValues().isEmpty() && !Strings.isNullOrEmpty(header.getValues().get(0).getValue())) {
                 firstHeadValue = header.getValues().get(0).getValue();
             }
@@ -532,7 +535,7 @@ public class HttpRequest extends Not {
      * Adds one cookie to match on, which can specified using either plain strings or regular expressions
      * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
      *
-     * @param name the cookies name
+     * @param name  the cookies name
      * @param value the cookies value which can be a string or regular expression
      */
     public HttpRequest withCookie(String name, String value) {
@@ -546,7 +549,7 @@ public class HttpRequest extends Not {
      * can be a plain string or a regex (for more details of the supported regex syntax see
      * http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
      *
-     * @param name the cookies name
+     * @param name  the cookies name
      * @param value the cookies value which can be a string or regular expression
      */
     public HttpRequest withCookie(NottableString name, NottableString value) {

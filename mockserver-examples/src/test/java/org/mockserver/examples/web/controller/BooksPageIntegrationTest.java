@@ -19,6 +19,7 @@ import org.springframework.web.context.WebApplicationContext;
 import javax.annotation.Resource;
 import java.util.Arrays;
 
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static org.mockserver.integration.ClientAndProxy.startClientAndProxy;
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.model.HttpRequest.request;
@@ -79,7 +80,7 @@ public abstract class BooksPageIntegrationTest {
                 .respond(
                         response()
                                 .withHeaders(
-                                        new Header(HttpHeaders.Names.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                                        new Header(CONTENT_TYPE.toString(), MediaType.APPLICATION_JSON_VALUE)
                                 )
                                 .withBody("" +
                                         "[" + System.getProperty("line.separator") +
@@ -140,7 +141,7 @@ public abstract class BooksPageIntegrationTest {
                 .respond(
                         response()
                                 .withHeaders(
-                                        new Header(HttpHeaders.Names.CONTENT_TYPE, "application/json")
+                                        new Header(CONTENT_TYPE.toString(), "application/json")
                                 )
                                 .withBody("" +
                                         "{" + System.getProperty("line.separator") +

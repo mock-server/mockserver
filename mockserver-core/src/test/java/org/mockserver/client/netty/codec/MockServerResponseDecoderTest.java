@@ -15,6 +15,7 @@ import org.mockserver.model.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
 
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.core.Is.is;
@@ -111,7 +112,7 @@ public class MockServerResponseDecoderTest {
     public void shouldDecodeUTF8Body() {
         // given
         fullHttpResponse = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.wrappedBuffer("some_random_string".getBytes()));
-        fullHttpResponse.headers().add(HttpHeaders.Names.CONTENT_TYPE, MediaType.create("text", "plain").toString());
+        fullHttpResponse.headers().add(CONTENT_TYPE, MediaType.create("text", "plain").toString());
 
         // when
         mockServerResponseDecoder.decode(null, fullHttpResponse, output);
@@ -125,7 +126,7 @@ public class MockServerResponseDecoderTest {
     public void shouldDecodeUTF16Body() {
         // given
         fullHttpResponse = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.wrappedBuffer("我说中国话".getBytes(Charsets.UTF_16)));
-        fullHttpResponse.headers().add(HttpHeaders.Names.CONTENT_TYPE, MediaType.create("text", "plain").withCharset(Charsets.UTF_16).toString());
+        fullHttpResponse.headers().add(CONTENT_TYPE, MediaType.create("text", "plain").withCharset(Charsets.UTF_16).toString());
 
         // when
         mockServerResponseDecoder.decode(null, fullHttpResponse, output);
@@ -139,7 +140,7 @@ public class MockServerResponseDecoderTest {
     public void shouldDecodeBinaryBody() {
         // given
         fullHttpResponse = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.wrappedBuffer("some_random_bytes".getBytes()));
-        fullHttpResponse.headers().add(HttpHeaders.Names.CONTENT_TYPE, "image/jpeg");
+        fullHttpResponse.headers().add(CONTENT_TYPE, "image/jpeg");
 
         // when
         mockServerResponseDecoder.decode(null, fullHttpResponse, output);

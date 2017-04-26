@@ -1,6 +1,5 @@
 package org.mockserver.mappers;
 
-import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.cookie.ClientCookieDecoder;
 import io.netty.handler.codec.http.cookie.DefaultCookie;
 import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
@@ -12,8 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.nio.charset.Charset;
 import java.util.List;
 
-import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
-import static io.netty.handler.codec.http.HttpHeaders.Names.SET_COOKIE;
+import static io.netty.handler.codec.http.HttpHeaderNames.*;
 
 /**
  * @author jamesdbloom
@@ -39,11 +37,11 @@ public class MockServerResponseToHttpServletResponseEncoder {
         if (httpResponse.getHeaders() != null) {
             for (Header header : httpResponse.getHeaders()) {
                 String headerName = header.getName().getValue();
-                if (!headerName.equalsIgnoreCase(HttpHeaders.Names.CONTENT_LENGTH)
-                        && !headerName.equalsIgnoreCase(HttpHeaders.Names.TRANSFER_ENCODING)
-                        && !headerName.equalsIgnoreCase(HttpHeaders.Names.HOST)
-                        && !headerName.equalsIgnoreCase(HttpHeaders.Names.ACCEPT_ENCODING)
-                        && !headerName.equalsIgnoreCase(HttpHeaders.Names.CONNECTION)) {
+                if (!headerName.equalsIgnoreCase(CONTENT_LENGTH.toString())
+                        && !headerName.equalsIgnoreCase(TRANSFER_ENCODING.toString())
+                        && !headerName.equalsIgnoreCase(HOST.toString())
+                        && !headerName.equalsIgnoreCase(ACCEPT_ENCODING.toString())
+                        && !headerName.equalsIgnoreCase(CONNECTION.toString())) {
                     for (NottableString value : header.getValues()) {
                         httpServletResponse.addHeader(headerName, value.getValue());
                     }
@@ -57,15 +55,14 @@ public class MockServerResponseToHttpServletResponseEncoder {
         if (httpResponse.getCookies() != null) {
             for (Cookie cookie : httpResponse.getCookies()) {
                 if (!cookieHeaderAlreadyExists(httpResponse, cookie)) {
-                    httpServletResponse.addHeader(SET_COOKIE, ServerCookieEncoder.LAX.encode(new DefaultCookie(cookie.getName().getValue(), cookie.getValue().getValue())));
+                    httpServletResponse.addHeader(SET_COOKIE.toString(), ServerCookieEncoder.LAX.encode(new DefaultCookie(cookie.getName().getValue(), cookie.getValue().getValue())));
                 }
             }
         }
     }
 
     private boolean cookieHeaderAlreadyExists(HttpResponse response, Cookie cookieValue) {
-        List<String> setCookieHeaders = response.getHeader(SET_COOKIE);
-        setCookieHeaders.addAll(response.getHeader(SET_COOKIE.toLowerCase()));
+        List<String> setCookieHeaders = response.getHeader(SET_COOKIE.toString());
         for (String setCookieHeader : setCookieHeaders) {
             String existingCookieName = ClientCookieDecoder.LAX.decode(setCookieHeader).name();
             String existingCookieValue = ClientCookieDecoder.LAX.decode(setCookieHeader).value();
@@ -91,7 +88,7 @@ public class MockServerResponseToHttpServletResponseEncoder {
         if (httpServletResponse.getContentType() == null
                 && httpResponse.getBody() != null
                 && httpResponse.getBody().getContentType() != null) {
-            httpServletResponse.addHeader(CONTENT_TYPE, httpResponse.getBody().getContentType());
+            httpServletResponse.addHeader(CONTENT_TYPE.toString(), httpResponse.getBody().getContentType());
         }
     }
 }

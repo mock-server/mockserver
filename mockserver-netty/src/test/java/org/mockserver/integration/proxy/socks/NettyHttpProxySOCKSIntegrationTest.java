@@ -132,7 +132,6 @@ public class NettyHttpProxySOCKSIntegrationTest {
         }
     }
 
-
     @Test
     public void shouldProxyRequestsUsingHttpClientViaSOCKS() throws Exception {
         // given

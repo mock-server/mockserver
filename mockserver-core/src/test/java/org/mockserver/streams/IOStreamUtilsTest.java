@@ -67,6 +67,38 @@ public class IOStreamUtilsTest {
     }
 
     @Test
+    public void shouldReadHttpRequestOnSocketInputStreamToStringLowerCaseHeaders() throws IOException {
+        // given
+        Socket socket = mock(Socket.class);
+        when(socket.getInputStream()).thenReturn(IOUtils.toInputStream("" +
+                        "cache-control:public, max-age=60\r\n" +
+                        "content-length:10\r\n" +
+                        "content-type:text/html; charset=utf-8\r\n" +
+                        "date:Sat, 04 Jan 2014 17:18:54 GMT\r\n" +
+                        "expires:Sat, 04 Jan 2014 17:19:54 GMT\r\n" +
+                        "last-modified:Sat, 04 Jan 2014 17:18:54 GMT\r\n" +
+                        "vary:*\n" +
+                        "\r\n" +
+                        "1234567890"
+        ));
+
+        // when
+        String result = IOStreamUtils.readInputStreamToString(socket);
+
+        // then
+        assertEquals("" +
+                "cache-control:public, max-age=60\n" +
+                "content-length:10\n" +
+                "content-type:text/html; charset=utf-8\n" +
+                "date:Sat, 04 Jan 2014 17:18:54 GMT\n" +
+                "expires:Sat, 04 Jan 2014 17:19:54 GMT\n" +
+                "last-modified:Sat, 04 Jan 2014 17:18:54 GMT\n" +
+                "vary:*\n" +
+                "\n" +
+                "1234567890", result);
+    }
+
+    @Test
     public void shouldReadServletRequestInputStreamToString() throws IOException {
         // given
         ServletRequest servletRequest = mock(ServletRequest.class);

@@ -5,7 +5,6 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.serialization.ExpectationSerializer;
@@ -30,8 +29,10 @@ import org.mockserver.verify.VerificationSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static io.netty.handler.codec.http.HttpHeaders.Names.CONNECTION;
-import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
+import static io.netty.handler.codec.http.HttpHeaderNames.CONNECTION;
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
+import static io.netty.handler.codec.http.HttpHeaderValues.CLOSE;
+import static io.netty.handler.codec.http.HttpHeaderValues.KEEP_ALIVE;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAPI;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAllResponses;
 import static org.mockserver.model.Header.header;
@@ -195,7 +196,7 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
                 .withStatusCode(responseStatus.code())
                 .withBody(body);
         if (body != null && !body.isEmpty()) {
-            response.updateHeader(header(CONTENT_TYPE, contentType + "; charset=utf-8"));
+            response.updateHeader(header(CONTENT_TYPE.toString(), contentType + "; charset=utf-8"));
         }
         if (enableCORSForAPI()) {
             addCORSHeaders(response);
@@ -209,10 +210,10 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
         }
 
         if (request.isKeepAlive() != null && request.isKeepAlive()) {
-            response.updateHeader(header(CONNECTION, HttpHeaders.Values.KEEP_ALIVE));
+            response.updateHeader(header(CONNECTION.toString(), KEEP_ALIVE.toString()));
             ctx.write(response);
         } else {
-            response.updateHeader(header(CONNECTION, HttpHeaders.Values.CLOSE));
+            response.updateHeader(header(CONNECTION.toString(), CLOSE.toString()));
             ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
         }
     }

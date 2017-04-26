@@ -57,8 +57,7 @@ public class MockServer implements Stoppable {
                 .channel(NioServerSocketChannel.class)
                 .childOption(ChannelOption.AUTO_READ, true)
                 .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-                .childOption(ChannelOption.WRITE_BUFFER_HIGH_WATER_MARK, 32 * 1024)
-                .childOption(ChannelOption.WRITE_BUFFER_LOW_WATER_MARK, 8 * 1024)
+                .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024))
                 .childHandler(new MockServerInitializer(mockServerMatcher, MockServer.this, webSocketClientRegistry))
                 .childAttr(LOG_FILTER, requestLogFilter);
 

@@ -1,7 +1,5 @@
 package org.mockserver.client.netty;
 
-import com.google.common.net.MediaType;
-import io.netty.handler.codec.http.HttpHeaders;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -11,7 +9,10 @@ import org.mockserver.echo.http.EchoServer;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.socket.PortFactory;
 
-import static io.netty.handler.codec.http.HttpHeaders.Names.*;
+import static io.netty.handler.codec.http.HttpHeaderNames.*;
+import static io.netty.handler.codec.http.HttpHeaderValues.DEFLATE;
+import static io.netty.handler.codec.http.HttpHeaderValues.GZIP;
+import static io.netty.handler.codec.http.HttpHeaderValues.KEEP_ALIVE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.Is.is;
@@ -52,10 +53,10 @@ public class NettyHttpClientTest {
         assertThat(httpResponse, is(
                 response()
                         .withStatusCode(200)
-                        .withHeader(header(HOST, "0.0.0.0:" + freePort))
-                        .withHeader(header(CONTENT_LENGTH, 0))
-                        .withHeader(header(ACCEPT_ENCODING, HttpHeaders.Values.GZIP + "," + HttpHeaders.Values.DEFLATE))
-                        .withHeader(header(CONNECTION, HttpHeaders.Values.KEEP_ALIVE))
+                        .withHeader(header(HOST.toString(), "0.0.0.0:" + freePort))
+                        .withHeader(header(CONTENT_LENGTH.toString(), 0))
+                        .withHeader(header(ACCEPT_ENCODING.toString(), GZIP.toString() + "," + DEFLATE.toString()))
+                        .withHeader(header(CONNECTION.toString(), KEEP_ALIVE.toString()))
         ));
     }
 
@@ -78,11 +79,11 @@ public class NettyHttpClientTest {
         assertThat(httpResponse, is(
                 response()
                         .withStatusCode(200)
-                        .withHeader(header(HOST, "0.0.0.0:" + freePort))
-                        .withHeader(header(CONTENT_LENGTH, "this is an example body".length()))
-                        .withHeader(header(ACCEPT_ENCODING, HttpHeaders.Values.GZIP + "," + HttpHeaders.Values.DEFLATE))
-                        .withHeader(header(CONNECTION, HttpHeaders.Values.KEEP_ALIVE))
-                        .withHeader(header(COOKIE, "some_cookie_name=some_cookie_value; another_cookie_name=another_cookie_value"))
+                        .withHeader(header(HOST.toString(), "0.0.0.0:" + freePort))
+                        .withHeader(header(CONTENT_LENGTH.toString(), "this is an example body".length()))
+                        .withHeader(header(ACCEPT_ENCODING.toString(), GZIP.toString() + "," + DEFLATE.toString()))
+                        .withHeader(header(CONNECTION.toString(), KEEP_ALIVE.toString()))
+                        .withHeader(header(COOKIE.toString(), "some_cookie_name=some_cookie_value; another_cookie_name=another_cookie_value"))
                         .withHeader(header("some_header_name", "some_header_value"))
                         .withHeader(header("another_header_name", "first_header_value", "second_header_value"))
                         .withCookie(cookie("some_cookie_name", "some_cookie_value"))

@@ -547,7 +547,7 @@ public class JsonSchemaMatcherTest {
 
         // and
         verify(logger).trace("Failed to perform JSON match \"{}\" with \"{}\" because {}", "some_value", "", "No content to map due to end-of-input\n" +
-                " at [Source: ; line: 1, column: 1]");
+                " at [Source: ; line: 1, column: 0]");
     }
 
     @Test

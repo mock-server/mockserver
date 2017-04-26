@@ -1,7 +1,6 @@
 package org.mockserver.integration.mockserver;
 
 import com.google.common.base.Charsets;
-import com.google.common.net.HttpHeaders;
 import com.google.common.net.MediaType;
 import org.apache.commons.io.IOUtils;
 import org.junit.Rule;
@@ -28,6 +27,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static io.netty.handler.codec.http.HttpHeaderNames.CONNECTION;
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH;
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.AnyOf.anyOf;
 import static org.hamcrest.core.Is.is;
@@ -146,7 +148,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
         assertEquals(
                 response()
                         .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withHeader("Content-Type", "application/json; charset=utf-8")
+                        .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
                         .withBody("{" + System.getProperty("line.separator") +
                                 "  \"ports\" : [ " + getMockServerPort() + " ]" + System.getProperty("line.separator") +
                                 "}"),
@@ -162,7 +164,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
         assertEquals(
                 response()
                         .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                        .withHeader("Content-Type", "application/json; charset=utf-8")
+                        .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
                         .withBody("{" + System.getProperty("line.separator") +
                                 "  \"ports\" : [ " + firstNewPort + " ]" + System.getProperty("line.separator") +
                                 "}"),
@@ -178,7 +180,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
         assertEquals(
                 response()
                         .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withHeader("Content-Type", "application/json; charset=utf-8")
+                        .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
                         .withBody("{" + System.getProperty("line.separator") +
                                 "  \"ports\" : [ " + getMockServerPort() + ", " + firstNewPort + " ]" + System.getProperty("line.separator") +
                                 "}"),
@@ -192,7 +194,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
         assertEquals(
                 response()
                         .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                        .withHeader("Content-Type", "application/json; charset=utf-8")
+                        .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
                         .withBody("{" + System.getProperty("line.separator") +
                                 "  \"ports\" : [ " + secondNewPort + " ]" + System.getProperty("line.separator") +
                                 "}"),
@@ -209,7 +211,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
         assertEquals(
                 response()
                         .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withHeader("Content-Type", "application/json; charset=utf-8")
+                        .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
                         .withBody("{" + System.getProperty("line.separator") +
                                 "  \"ports\" : [ " + getMockServerSecurePort() + ", " + firstNewPort + ", " + secondNewPort + " ]" + System.getProperty("line.separator") +
                                 "}"),
@@ -239,7 +241,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
             assertEquals(
                     response()
                             .withStatusCode(HttpStatusCode.NOT_ACCEPTABLE_406.code())
-                            .withHeader("Content-Type", "text/plain; charset=utf-8")
+                            .withHeader(CONTENT_TYPE.toString(), "text/plain; charset=utf-8")
                             .withBody("Exception while binding MockServer to port " + newPort + " port already in use"),
                     makeRequest(
                             request()
@@ -286,8 +288,8 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
         // - in http
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONNECTION, "close")
-                        .withHeader(header(HttpHeaders.CONTENT_LENGTH, "some_long_body".length() / 2))
+                        .withHeader(CONNECTION.toString(), "close")
+                        .withHeader(header(CONTENT_LENGTH.toString(), "some_long_body".length() / 2))
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withBody("some_lo"),
                 makeRequest(
@@ -298,8 +300,8 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
         // - in https
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONNECTION, "close")
-                        .withHeader(header(HttpHeaders.CONTENT_LENGTH, "some_long_body".length() / 2))
+                        .withHeader(CONNECTION.toString(), "close")
+                        .withHeader(header(CONTENT_LENGTH.toString(), "some_long_body".length() / 2))
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withBody("some_lo"),
                 makeRequest(
@@ -325,7 +327,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
                 .respond(
                         response()
                                 .withBody(binary("some_long_body".getBytes()))
-                                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.ANY_AUDIO_TYPE.toString())
+                                .withHeader(CONTENT_TYPE.toString(), MediaType.ANY_AUDIO_TYPE.toString())
                                 .withConnectionOptions(
                                         connectionOptions()
                                                 .withKeepAliveOverride(true)
@@ -337,9 +339,9 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
         // - in http
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONNECTION, "keep-alive")
-                        .withHeader(header(HttpHeaders.CONTENT_LENGTH, "some_long_body".length() / 2))
-                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.ANY_AUDIO_TYPE.toString())
+                        .withHeader(CONNECTION.toString(), "keep-alive")
+                        .withHeader(header(CONTENT_LENGTH.toString(), "some_long_body".length() / 2))
+                        .withHeader(CONTENT_TYPE.toString(), MediaType.ANY_AUDIO_TYPE.toString())
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withBody(binary("some_lo".getBytes())),
                 makeRequest(
@@ -350,9 +352,9 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
         // - in https
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONNECTION, "keep-alive")
-                        .withHeader(header(HttpHeaders.CONTENT_LENGTH, "some_long_body".length() / 2))
-                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.ANY_AUDIO_TYPE.toString())
+                        .withHeader(CONNECTION.toString(), "keep-alive")
+                        .withHeader(header(CONTENT_LENGTH.toString(), "some_long_body".length() / 2))
+                        .withHeader(CONTENT_TYPE.toString(), MediaType.ANY_AUDIO_TYPE.toString())
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withBody(binary("some_lo".getBytes())),
                 makeRequest(
@@ -373,7 +375,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
                 .respond(
                         response()
                                 .withBody(binary("some_long_body".getBytes()))
-                                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.ANY_AUDIO_TYPE.toString())
+                                .withHeader(CONTENT_TYPE.toString(), MediaType.ANY_AUDIO_TYPE.toString())
                                 .withConnectionOptions(
                                         connectionOptions()
                                                 .withCloseSocket(true)
@@ -400,8 +402,8 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
             // then
             assertThat(IOStreamUtils.readInputStreamToString(socket), is("" +
                             "HTTP/1.1 200 OK\n" +
-                            "Content-Type: audio/*\n" +
-                            "Connection: close\n"
+                            "content-type: audio/*\n" +
+                            "connection: close\n"
             ));
 
             TimeUnit.SECONDS.sleep(3);
@@ -445,8 +447,8 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
             // then
             assertThat(IOStreamUtils.readInputStreamToString(sslSocket), is("" +
                             "HTTP/1.1 200 OK\n" +
-                            "Content-Type: audio/*\n" +
-                            "Connection: close\n"
+                            "content-type: audio/*\n" +
+                            "connection: close\n"
             ));
         } finally {
             if (sslSocket != null) {

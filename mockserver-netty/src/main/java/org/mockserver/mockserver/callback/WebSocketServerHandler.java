@@ -6,12 +6,13 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.netty.handler.codec.http.FullHttpRequest;
-import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.websocketx.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.UUID;
+
+import static com.google.common.net.HttpHeaders.HOST;
 
 /**
  * @author jamesdbloom
@@ -29,7 +30,7 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object> 
 
     @Override
     public void channelRead0(ChannelHandlerContext ctx, Object msg) {
-        if (msg instanceof FullHttpRequest && ((FullHttpRequest) msg).getUri().equals(WEB_SOCKET_URI)) {
+        if (msg instanceof FullHttpRequest && ((FullHttpRequest) msg).uri().equals(WEB_SOCKET_URI)) {
             upgradeChannel(ctx, (FullHttpRequest) msg);
         } else if (msg instanceof WebSocketFrame) {
             handleWebSocketFrame(ctx, (WebSocketFrame) msg);
@@ -38,7 +39,7 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object> 
 
     @Override
     public boolean acceptInboundMessage(Object msg) throws Exception {
-        boolean websocketHandshake = msg instanceof FullHttpRequest && ((FullHttpRequest) msg).getUri().equals(WEB_SOCKET_URI);
+        boolean websocketHandshake = msg instanceof FullHttpRequest && ((FullHttpRequest) msg).uri().equals(WEB_SOCKET_URI);
         boolean websocketFrame = msg instanceof WebSocketFrame;
         return websocketHandshake || websocketFrame;
     }
@@ -50,7 +51,7 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object> 
 
     private void upgradeChannel(final ChannelHandlerContext ctx, FullHttpRequest httpRequest) {
         handshaker = new WebSocketServerHandshakerFactory(
-                "ws://" + httpRequest.headers().get(HttpHeaders.Names.HOST) + WEB_SOCKET_URI,
+                "ws://" + httpRequest.headers().get(HOST) + WEB_SOCKET_URI,
                 null,
                 true
         ).newHandshaker(httpRequest);

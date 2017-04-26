@@ -8,10 +8,10 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.*;
 import org.mockserver.server.unification.PortUnificationHandler;
 
-import static io.netty.handler.codec.http.HttpHeaders.Names.CONNECTION;
-import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH;
-import static io.netty.handler.codec.http.HttpHeaders.is100ContinueExpected;
-import static io.netty.handler.codec.http.HttpHeaders.isKeepAlive;
+import static io.netty.handler.codec.http.HttpHeaderNames.CONNECTION;
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH;
+import static io.netty.handler.codec.http.HttpUtil.is100ContinueExpected;
+import static io.netty.handler.codec.http.HttpUtil.isKeepAlive;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
@@ -27,7 +27,7 @@ public class EchoServerUnificationHandler extends PortUnificationHandler {
 
             protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) {
                 HttpResponseStatus responseStatus = OK;
-                if (request.getUri().equals("/not_found")) {
+                if (request.uri().equals("/not_found")) {
                     responseStatus = NOT_FOUND;
                 }
                 // echo back request headers and body
@@ -37,7 +37,7 @@ public class EchoServerUnificationHandler extends PortUnificationHandler {
                 // set hop-by-hop headers
                 response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
                 if (isKeepAlive(request)) {
-                    response.headers().set(CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
+                    response.headers().set(CONNECTION, HttpHeaderValues.KEEP_ALIVE);
                 }
                 if (is100ContinueExpected(request)) {
                     ctx.write(new DefaultFullHttpResponse(HTTP_1_1, CONTINUE));

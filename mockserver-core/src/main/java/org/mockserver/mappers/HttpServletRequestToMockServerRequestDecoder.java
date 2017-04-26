@@ -1,6 +1,5 @@
 package org.mockserver.mappers;
 
-import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.model.*;
@@ -12,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static org.mockserver.mappers.ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET;
 
 /**
@@ -47,7 +47,7 @@ public class HttpServletRequestToMockServerRequestDecoder {
     private void setBody(HttpRequest httpRequest, HttpServletRequest httpServletRequest) {
         byte[] bodyBytes = IOStreamUtils.readInputStreamToByteArray(httpServletRequest);
         if (bodyBytes.length > 0) {
-            if (ContentTypeMapper.isBinary(httpServletRequest.getHeader(HttpHeaders.Names.CONTENT_TYPE))) {
+            if (ContentTypeMapper.isBinary(httpServletRequest.getHeader(CONTENT_TYPE.toString()))) {
                 httpRequest.withBody(new BinaryBody(bodyBytes));
             } else {
                 Charset requestCharset = ContentTypeMapper.determineCharsetForMessage(httpServletRequest);

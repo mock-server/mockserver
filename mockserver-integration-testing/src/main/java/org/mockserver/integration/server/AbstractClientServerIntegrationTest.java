@@ -1,7 +1,6 @@
 package org.mockserver.integration.server;
 
 import com.google.common.base.Charsets;
-import com.google.common.net.HttpHeaders;
 import com.google.common.net.MediaType;
 import com.google.common.util.concurrent.Uninterruptibles;
 import org.apache.commons.io.IOUtils;
@@ -13,7 +12,6 @@ import org.mockserver.client.server.MockServerClient;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.matchers.*;
 import org.mockserver.mock.Expectation;
-import org.mockserver.mock.action.ExpectationCallback;
 import org.mockserver.model.*;
 import org.mockserver.socket.PortFactory;
 import org.mockserver.verify.VerificationTimes;
@@ -24,6 +22,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
+import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.Is.is;
@@ -430,7 +429,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
+                        .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withBody(body),
                 makeRequest(
@@ -442,7 +441,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in https
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
+                        .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withBody(body),
                 makeRequest(
@@ -461,7 +460,7 @@ public abstract class AbstractClientServerIntegrationTest {
         mockServerClient
                 .when(
                         request()
-                                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
+                                .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
                                 .withBody(body)
                 )
                 .respond(
@@ -473,12 +472,12 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
+                        .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withBody(body),
                 makeRequest(
                         request()
-                                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
+                                .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
                                 .withPath(calculatePath(""))
                                 .withBody(body),
                         headersToIgnore)
@@ -486,12 +485,12 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in https
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
+                        .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withBody(body),
                 makeRequest(
                         request()
-                                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
+                                .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
                                 .withSecure(true)
                                 .withPath(calculatePath(""))
                                 .withBody(body),
@@ -509,7 +508,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.create("text", "plain").withCharset(Charsets.UTF_16).toString())
+                        .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_16).toString())
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withBody(body),
                 makeRequest(
@@ -520,7 +519,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in https
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.create("text", "plain").withCharset(Charsets.UTF_16).toString())
+                        .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_16).toString())
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withBody(body),
                 makeRequest(
@@ -541,7 +540,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 )
                 .respond(
                         response()
-                                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
+                                .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
                                 .withBody(body)
                 );
 
@@ -549,7 +548,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
+                        .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withBody(body),
                 makeRequest(
@@ -560,7 +559,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in https
         assertEquals(
                 response()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
+                        .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withBody(body),
                 makeRequest(
@@ -1063,7 +1062,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body"),
                 makeRequest(
                         request()
-                                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.create("text", "plain").withCharset(Charsets.UTF_16).toString())
+                                .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_16).toString())
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
                                 .withBody(json("{" + System.getProperty("line.separator") +
@@ -1083,7 +1082,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         request()
                                 .withSecure(true)
-                                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.create("text", "plain").withCharset(Charsets.UTF_16).toString())
+                                .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_16).toString())
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
                                 .withBody(json("{" + System.getProperty("line.separator") +
@@ -1237,9 +1236,9 @@ public abstract class AbstractClientServerIntegrationTest {
                         response()
                                 .withStatusCode(HttpStatusCode.OK_200.code())
                                 .withHeaders(
-                                        header(HttpHeaders.CONTENT_TYPE, MediaType.PDF.toString()),
-                                        header(HttpHeaders.CONTENT_DISPOSITION, "form-data; name=\"test.pdf\"; filename=\"test.pdf\""),
-                                        header(HttpHeaders.CACHE_CONTROL, "must-revalidate, post-check=0, pre-check=0")
+                                        header(CONTENT_TYPE.toString(), MediaType.PDF.toString()),
+                                        header(CONTENT_DISPOSITION.toString(), "form-data; name=\"test.pdf\"; filename=\"test.pdf\""),
+                                        header(CACHE_CONTROL.toString(), "must-revalidate, post-check=0, pre-check=0")
                                 )
                                 .withBody(binary(pdfBytes))
                 );
@@ -1250,9 +1249,9 @@ public abstract class AbstractClientServerIntegrationTest {
                 response()
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withHeaders(
-                                header(HttpHeaders.CONTENT_DISPOSITION, "form-data; name=\"test.pdf\"; filename=\"test.pdf\""),
-                                header(HttpHeaders.CACHE_CONTROL, "must-revalidate, post-check=0, pre-check=0"),
-                                header(HttpHeaders.CONTENT_TYPE, MediaType.PDF.toString())
+                                header(CONTENT_DISPOSITION.toString(), "form-data; name=\"test.pdf\"; filename=\"test.pdf\""),
+                                header(CACHE_CONTROL.toString(), "must-revalidate, post-check=0, pre-check=0"),
+                                header(CONTENT_TYPE.toString(), MediaType.PDF.toString())
                         )
                         .withBody(binary(pdfBytes)),
                 makeRequest(
@@ -1266,9 +1265,9 @@ public abstract class AbstractClientServerIntegrationTest {
                 response()
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withHeaders(
-                                header(HttpHeaders.CONTENT_DISPOSITION, "form-data; name=\"test.pdf\"; filename=\"test.pdf\""),
-                                header(HttpHeaders.CACHE_CONTROL, "must-revalidate, post-check=0, pre-check=0"),
-                                header(HttpHeaders.CONTENT_TYPE, MediaType.PDF.toString())
+                                header(CONTENT_DISPOSITION.toString(), "form-data; name=\"test.pdf\"; filename=\"test.pdf\""),
+                                header(CACHE_CONTROL.toString(), "must-revalidate, post-check=0, pre-check=0"),
+                                header(CONTENT_TYPE.toString(), MediaType.PDF.toString())
                         )
                         .withBody(binary(pdfBytes)),
                 makeRequest(
@@ -1293,8 +1292,8 @@ public abstract class AbstractClientServerIntegrationTest {
                         response()
                                 .withStatusCode(HttpStatusCode.OK_200.code())
                                 .withHeaders(
-                                        header(HttpHeaders.CONTENT_TYPE, MediaType.PNG.toString()),
-                                        header(HttpHeaders.CONTENT_DISPOSITION, "form-data; name=\"test.png\"; filename=\"test.png\"")
+                                        header(CONTENT_TYPE.toString(), MediaType.PNG.toString()),
+                                        header(CONTENT_DISPOSITION.toString(), "form-data; name=\"test.png\"; filename=\"test.png\"")
                                 )
                                 .withBody(binary(pngBytes))
                 );
@@ -1305,8 +1304,8 @@ public abstract class AbstractClientServerIntegrationTest {
                 response()
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withHeaders(
-                                header(HttpHeaders.CONTENT_DISPOSITION, "form-data; name=\"test.png\"; filename=\"test.png\""),
-                                header(HttpHeaders.CONTENT_TYPE, MediaType.PNG.toString())
+                                header(CONTENT_DISPOSITION.toString(), "form-data; name=\"test.png\"; filename=\"test.png\""),
+                                header(CONTENT_TYPE.toString(), MediaType.PNG.toString())
                         )
                         .withBody(binary(pngBytes)),
                 makeRequest(
@@ -1321,8 +1320,8 @@ public abstract class AbstractClientServerIntegrationTest {
                 response()
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withHeaders(
-                                header(HttpHeaders.CONTENT_DISPOSITION, "form-data; name=\"test.png\"; filename=\"test.png\""),
-                                header(HttpHeaders.CONTENT_TYPE, MediaType.PNG.toString())
+                                header(CONTENT_DISPOSITION.toString(), "form-data; name=\"test.png\"; filename=\"test.png\""),
+                                header(CONTENT_TYPE.toString(), MediaType.PNG.toString())
                         )
                         .withBody(binary(pngBytes)),
                 makeRequest(
@@ -1346,9 +1345,9 @@ public abstract class AbstractClientServerIntegrationTest {
                         response()
                                 .withStatusCode(HttpStatusCode.OK_200.code())
                                 .withHeaders(
-                                        header(HttpHeaders.CONTENT_TYPE, MediaType.PDF.toString()),
-                                        header(HttpHeaders.CONTENT_DISPOSITION, "form-data; name=\"test.pdf\"; filename=\"test.pdf\""),
-                                        header(HttpHeaders.CACHE_CONTROL, "must-revalidate, post-check=0, pre-check=0")
+                                        header(CONTENT_TYPE.toString(), MediaType.PDF.toString()),
+                                        header(CONTENT_DISPOSITION.toString(), "form-data; name=\"test.pdf\"; filename=\"test.pdf\""),
+                                        header(CACHE_CONTROL.toString(), "must-revalidate, post-check=0, pre-check=0")
                                 )
                                 .withBody(binary(pdfBytes))
                 );
@@ -1359,9 +1358,9 @@ public abstract class AbstractClientServerIntegrationTest {
                 response()
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withHeaders(
-                                header(HttpHeaders.CONTENT_DISPOSITION, "form-data; name=\"test.pdf\"; filename=\"test.pdf\""),
-                                header(HttpHeaders.CACHE_CONTROL, "must-revalidate, post-check=0, pre-check=0"),
-                                header(HttpHeaders.CONTENT_TYPE, MediaType.PDF.toString())
+                                header(CONTENT_DISPOSITION.toString(), "form-data; name=\"test.pdf\"; filename=\"test.pdf\""),
+                                header(CACHE_CONTROL.toString(), "must-revalidate, post-check=0, pre-check=0"),
+                                header(CONTENT_TYPE.toString(), MediaType.PDF.toString())
                         )
                         .withBody(binary(pdfBytes)),
                 makeRequest(
@@ -1376,9 +1375,9 @@ public abstract class AbstractClientServerIntegrationTest {
                 response()
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withHeaders(
-                                header(HttpHeaders.CONTENT_DISPOSITION, "form-data; name=\"test.pdf\"; filename=\"test.pdf\""),
-                                header(HttpHeaders.CACHE_CONTROL, "must-revalidate, post-check=0, pre-check=0"),
-                                header(HttpHeaders.CONTENT_TYPE, MediaType.PDF.toString())
+                                header(CONTENT_DISPOSITION.toString(), "form-data; name=\"test.pdf\"; filename=\"test.pdf\""),
+                                header(CACHE_CONTROL.toString(), "must-revalidate, post-check=0, pre-check=0"),
+                                header(CONTENT_TYPE.toString(), MediaType.PDF.toString())
                         )
                         .withBody(binary(pdfBytes)),
                 makeRequest(
@@ -1403,8 +1402,8 @@ public abstract class AbstractClientServerIntegrationTest {
                         response()
                                 .withStatusCode(HttpStatusCode.OK_200.code())
                                 .withHeaders(
-                                        header(HttpHeaders.CONTENT_TYPE, MediaType.PNG.toString()),
-                                        header(HttpHeaders.CONTENT_DISPOSITION, "form-data; name=\"test.png\"; filename=\"test.png\"")
+                                        header(CONTENT_TYPE.toString(), MediaType.PNG.toString()),
+                                        header(CONTENT_DISPOSITION.toString(), "form-data; name=\"test.png\"; filename=\"test.png\"")
                                 )
                                 .withBody(binary(pngBytes))
                 );
@@ -1415,8 +1414,8 @@ public abstract class AbstractClientServerIntegrationTest {
                 response()
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withHeaders(
-                                header(HttpHeaders.CONTENT_DISPOSITION, "form-data; name=\"test.png\"; filename=\"test.png\""),
-                                header(HttpHeaders.CONTENT_TYPE, MediaType.PNG.toString())
+                                header(CONTENT_DISPOSITION.toString(), "form-data; name=\"test.png\"; filename=\"test.png\""),
+                                header(CONTENT_TYPE.toString(), MediaType.PNG.toString())
                         )
                         .withBody(binary(pngBytes)),
                 makeRequest(
@@ -1431,8 +1430,8 @@ public abstract class AbstractClientServerIntegrationTest {
                 response()
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withHeaders(
-                                header(HttpHeaders.CONTENT_DISPOSITION, "form-data; name=\"test.png\"; filename=\"test.png\""),
-                                header(HttpHeaders.CONTENT_TYPE, MediaType.PNG.toString())
+                                header(CONTENT_DISPOSITION.toString(), "form-data; name=\"test.png\"; filename=\"test.png\""),
+                                header(CONTENT_TYPE.toString(), MediaType.PNG.toString())
                         )
                         .withBody(binary(pngBytes)),
                 makeRequest(
@@ -1730,7 +1729,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body_response")
                         .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
                         .withHeaders(
-                                header("Set-Cookie", "cookieNameResponse=cookieValueResponse")
+                                header(SET_COOKIE.toString(), "cookieNameResponse=cookieValueResponse")
                         ),
                 makeRequest(
                         request()
@@ -1751,7 +1750,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body_response")
                         .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
                         .withHeaders(
-                                header("Set-Cookie", "cookieNameResponse=cookieValueResponse")
+                                header(SET_COOKIE.toString(), "cookieNameResponse=cookieValueResponse")
                         ),
                 makeRequest(
                         request()
@@ -1796,7 +1795,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body_response")
                         .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
                         .withHeaders(
-                                header("Set-Cookie", "cookieNameResponse=cookieValueResponse")
+                                header(SET_COOKIE.toString(), "cookieNameResponse=cookieValueResponse")
                         ),
                 makeRequest(
                         request()
@@ -1816,7 +1815,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body_response")
                         .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
                         .withHeaders(
-                                header("Set-Cookie", "cookieNameResponse=cookieValueResponse")
+                                header(SET_COOKIE.toString(), "cookieNameResponse=cookieValueResponse")
                         ),
                 makeRequest(
                         request()
@@ -1866,7 +1865,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 cookie("responseCookieNameTwo", "responseCookieValueTwo")
                         )
                         .withHeaders(
-                                header("Set-Cookie", "responseCookieNameOne=responseCookieValueOne", "responseCookieNameTwo=responseCookieValueTwo")
+                                header(SET_COOKIE.toString(), "responseCookieNameOne=responseCookieValueOne", "responseCookieNameTwo=responseCookieValueTwo")
                         ),
                 makeRequest(
                         request()
@@ -1874,7 +1873,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withPath(calculatePath("some_pathRequest"))
                                 .withHeaders(
                                         header("headerNameRequest", "headerValueRequest"),
-                                        header(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN)
+                                        header(CONTENT_TYPE.toString(), TEXT_PLAIN)
                                 )
                                 .withCookies(
                                         cookie("requestCookieNameOne", "requestCookieValueOne"),
@@ -1892,7 +1891,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 cookie("responseCookieNameTwo", "responseCookieValueTwo")
                         )
                         .withHeaders(
-                                header("Set-Cookie", "responseCookieNameOne=responseCookieValueOne", "responseCookieNameTwo=responseCookieValueTwo")
+                                header(SET_COOKIE.toString(), "responseCookieNameOne=responseCookieValueOne", "responseCookieNameTwo=responseCookieValueTwo")
                         ),
                 makeRequest(
                         request()
@@ -1914,7 +1913,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 cookie("responseCookieNameTwo", "responseCookieValueTwo")
                         )
                         .withHeaders(
-                                header("Set-Cookie", "responseCookieNameOne=responseCookieValueOne", "responseCookieNameTwo=responseCookieValueTwo")
+                                header(SET_COOKIE.toString(), "responseCookieNameOne=responseCookieValueOne", "responseCookieNameTwo=responseCookieValueTwo")
                         ),
                 makeRequest(
                         request()
@@ -1940,7 +1939,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 cookie("responseCookieNameTwo", "responseCookieValueTwo")
                         )
                         .withHeaders(
-                                header("Set-Cookie", "responseCookieNameOne=responseCookieValueOne", "responseCookieNameTwo=responseCookieValueTwo")
+                                header(SET_COOKIE.toString(), "responseCookieNameOne=responseCookieValueOne", "responseCookieNameTwo=responseCookieValueTwo")
                         ),
                 makeRequest(
                         request()
@@ -2042,7 +2041,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
                         .withHeaders(
                                 header("headerNameResponse", "headerValueResponse"),
-                                header("Set-Cookie", "cookieNameResponse=cookieValueResponse")
+                                header(SET_COOKIE.toString(), "cookieNameResponse=cookieValueResponse")
                         ),
                 makeRequest(
                         request()
@@ -2065,7 +2064,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
                         .withHeaders(
                                 header("headerNameResponse", "headerValueResponse"),
-                                header("Set-Cookie", "cookieNameResponse=cookieValueResponse")
+                                header(SET_COOKIE.toString(), "cookieNameResponse=cookieValueResponse")
                         ),
                 makeRequest(
                         request()
@@ -2088,7 +2087,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
                         .withHeaders(
                                 header("headerNameResponse", "headerValueResponse"),
-                                header("Set-Cookie", "cookieNameResponse=cookieValueResponse")
+                                header(SET_COOKIE.toString(), "cookieNameResponse=cookieValueResponse")
                         ),
                 makeRequest(
                         request()
@@ -2135,7 +2134,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
                         .withHeaders(
                                 header("headerNameResponse", "headerValueResponse"),
-                                header("Set-Cookie", "cookieNameResponse=cookieValueResponse")
+                                header(SET_COOKIE.toString(), "cookieNameResponse=cookieValueResponse")
                         ),
                 makeRequest(
                         request()
@@ -2156,7 +2155,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
                         .withHeaders(
                                 header("headerNameResponse", "headerValueResponse"),
-                                header("Set-Cookie", "cookieNameResponse=cookieValueResponse")
+                                header(SET_COOKIE.toString(), "cookieNameResponse=cookieValueResponse")
                         ),
                 makeRequest(
                         request()
@@ -2178,7 +2177,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
                         .withHeaders(
                                 header("headerNameResponse", "headerValueResponse"),
-                                header("Set-Cookie", "cookieNameResponse=cookieValueResponse")
+                                header(SET_COOKIE.toString(), "cookieNameResponse=cookieValueResponse")
                         ),
                 makeRequest(
                         request()
@@ -2225,7 +2224,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
                         .withHeaders(
                                 header("headerNameResponse", "headerValueResponse"),
-                                header("Set-Cookie", "cookieNameResponse=cookieValueResponse")
+                                header(SET_COOKIE.toString(), "cookieNameResponse=cookieValueResponse")
                         ),
                 makeRequest(
                         request()
@@ -2248,7 +2247,7 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
                         .withHeaders(
                                 header("headerNameResponse", "headerValueResponse"),
-                                header("Set-Cookie", "cookieNameResponse=cookieValueResponse")
+                                header(SET_COOKIE.toString(), "cookieNameResponse=cookieValueResponse")
                         ),
                 makeRequest(
                         request()
@@ -5391,13 +5390,14 @@ public abstract class AbstractClientServerIntegrationTest {
                 List<Header> headers = new ArrayList<Header>();
                 for (Header header : httpResponse.getHeaders()) {
                     if (!headersToIgnore.contains(header.getName().getValue().toLowerCase())) {
-                        if (header.getName().getValue().equalsIgnoreCase(HttpHeaders.CONTENT_TYPE)) {
+                        if (header.getName().getValue().equalsIgnoreCase(CONTENT_TYPE.toString())) {
                             // this fixes Tomcat which removes the space between
                             // media type and charset in the Content-Type header
                             for (NottableString value : new ArrayList<NottableString>(header.getValues())) {
                                 header.getValues().clear();
                                 header.addValues(value.getValue().replace(";charset", "; charset"));
                             }
+                            header = header(header.getName().lowercase(), header.getValues());
                         }
                         headers.add(header);
                     }

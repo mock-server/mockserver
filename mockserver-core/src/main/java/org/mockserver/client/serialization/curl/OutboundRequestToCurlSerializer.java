@@ -14,6 +14,8 @@ import org.mockserver.model.OutboundHttpRequest;
 import java.util.ArrayList;
 import java.util.List;
 
+import static io.netty.handler.codec.http.HttpHeaderNames.COOKIE;
+
 /**
  * @author jamesdbloom
  */
@@ -80,7 +82,7 @@ public class OutboundRequestToCurlSerializer {
             cookies.add(new DefaultCookie(cookie.getName().getValue(), cookie.getValue().getValue()));
         }
         if (cookies.size() > 0) {
-            return " -H '" + HttpHeaders.Names.COOKIE + ": " + ClientCookieEncoder.LAX.encode(cookies) + "'";
+            return " -H '" + COOKIE + ": " + ClientCookieEncoder.LAX.encode(cookies) + "'";
         } else {
             return "";
         }

@@ -17,8 +17,9 @@ import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Set;
 
-import static io.netty.handler.codec.http.HttpHeaders.Names.COOKIE;
-import static io.netty.handler.codec.http.HttpHeaders.isKeepAlive;
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
+import static io.netty.handler.codec.http.HttpHeaderNames.COOKIE;
+import static io.netty.handler.codec.http.HttpUtil.isKeepAlive;
 import static org.mockserver.mappers.ContentTypeMapper.*;
 
 /**
@@ -39,7 +40,7 @@ public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
         if (fullHttpRequest != null) {
             setMethod(httpRequest, fullHttpRequest);
 
-            QueryStringDecoder queryStringDecoder = new QueryStringDecoder(fullHttpRequest.getUri());
+            QueryStringDecoder queryStringDecoder = new QueryStringDecoder(fullHttpRequest.uri());
             setPath(httpRequest, queryStringDecoder);
             setQueryString(httpRequest, queryStringDecoder);
 
@@ -54,7 +55,7 @@ public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
     }
 
     private void setMethod(HttpRequest httpRequest, FullHttpRequest fullHttpResponse) {
-        httpRequest.withMethod(fullHttpResponse.getMethod().name());
+        httpRequest.withMethod(fullHttpResponse.method().name());
     }
 
     private void setPath(HttpRequest httpRequest, QueryStringDecoder queryStringDecoder) {
@@ -74,7 +75,7 @@ public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
             byte[] bodyBytes = new byte[fullHttpRequest.content().readableBytes()];
             fullHttpRequest.content().readBytes(bodyBytes);
             if (bodyBytes.length > 0) {
-                if (ContentTypeMapper.isBinary(fullHttpRequest.headers().get(HttpHeaders.Names.CONTENT_TYPE))) {
+                if (ContentTypeMapper.isBinary(fullHttpRequest.headers().get(CONTENT_TYPE))) {
                     httpRequest.withBody(new BinaryBody(bodyBytes));
                 } else {
                     Charset requestCharset = determineCharsetForMessage(fullHttpRequest);

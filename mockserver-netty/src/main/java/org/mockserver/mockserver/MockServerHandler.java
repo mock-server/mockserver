@@ -7,7 +7,6 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpServerCodec;
 import org.mockserver.client.serialization.*;
@@ -29,8 +28,11 @@ import org.slf4j.LoggerFactory;
 import java.net.BindException;
 import java.util.List;
 
-import static io.netty.handler.codec.http.HttpHeaders.Names.CONNECTION;
-import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
+import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
+import static io.netty.handler.codec.http.HttpHeaderNames.CONNECTION;
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
+import static io.netty.handler.codec.http.HttpHeaderValues.CLOSE;
+import static io.netty.handler.codec.http.HttpHeaderValues.KEEP_ALIVE;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAPI;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAllResponses;
 import static org.mockserver.model.ConnectionOptions.connectionOptions;
@@ -101,7 +103,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                 Expectation expectation = expectationSerializer.deserialize(request.getBodyAsString());
                 List<String> validationErrors = expectationValidator.isValid(expectation);
                 if (validationErrors.isEmpty()) {
-                    SSLFactory.addSubjectAlternativeName(expectation.getHttpRequest().getFirstHeader(HttpHeaders.Names.HOST));
+                    SSLFactory.addSubjectAlternativeName(expectation.getHttpRequest().getFirstHeader(HOST.toString()));
                     mockServerMatcher
                             .when(expectation.getHttpRequest(), expectation.getTimes(), expectation.getTimeToLive())
                             .thenRespond(expectation.getHttpResponse(false))
@@ -238,7 +240,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                 .withStatusCode(responseStatus.code())
                 .withBody(body);
         if (body != null && !body.isEmpty()) {
-            response.updateHeader(header(CONTENT_TYPE, contentType + "; charset=utf-8"));
+            response.updateHeader(header(CONTENT_TYPE.toString(), contentType + "; charset=utf-8"));
         }
         if (enableCORSForAPI()) {
             addCORSHeaders(response);
@@ -286,16 +288,16 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
         ConnectionOptions connectionOptions = response.getConnectionOptions();
         if (connectionOptions != null && connectionOptions.getKeepAliveOverride() != null) {
             if (connectionOptions.getKeepAliveOverride()) {
-                response.updateHeader(header(CONNECTION, HttpHeaders.Values.KEEP_ALIVE));
+                response.updateHeader(header(CONNECTION.toString(), KEEP_ALIVE.toString()));
             } else {
-                response.updateHeader(header(CONNECTION, HttpHeaders.Values.CLOSE));
+                response.updateHeader(header(CONNECTION.toString(), CLOSE.toString()));
             }
         } else if (connectionOptions == null || isFalseOrNull(connectionOptions.getSuppressConnectionHeader())) {
             if (request.isKeepAlive() != null && request.isKeepAlive()
                     && (connectionOptions == null || isFalseOrNull(connectionOptions.getCloseSocket()))) {
-                response.updateHeader(header(CONNECTION, HttpHeaders.Values.KEEP_ALIVE));
+                response.updateHeader(header(CONNECTION.toString(), KEEP_ALIVE.toString()));
             } else {
-                response.updateHeader(header(CONNECTION, HttpHeaders.Values.CLOSE));
+                response.updateHeader(header(CONNECTION.toString(), CLOSE.toString()));
             }
         }
     }

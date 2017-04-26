@@ -2,10 +2,7 @@ package org.mockserver.client.netty;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.ssl.NotSslRecordException;
@@ -46,8 +43,7 @@ public class NettyHttpClient {
                     .channel(NioSocketChannel.class)
                     .option(ChannelOption.AUTO_READ, true)
                     .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-                    .option(ChannelOption.WRITE_BUFFER_HIGH_WATER_MARK, 32 * 1024)
-                    .option(ChannelOption.WRITE_BUFFER_LOW_WATER_MARK, 8 * 1024)
+                    .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024))
                     .handler(channelInitializer)
                     .connect(httpRequest.getDestination())
                     .addListener(new ChannelFutureListener() {

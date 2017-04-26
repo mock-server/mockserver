@@ -20,8 +20,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH;
-import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH;
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
@@ -108,7 +108,7 @@ public class BookServer {
         @Override
         public void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {
             FullHttpResponse response = null;
-            if (request.getUri().startsWith("/get_books")) {
+            if (request.uri().startsWith("/get_books")) {
                 response = new DefaultFullHttpResponse(HTTP_1_1, OK,
                         Unpooled.wrappedBuffer(
                                 objectMapper
@@ -118,8 +118,8 @@ public class BookServer {
                 );
                 response.headers().set(CONTENT_TYPE, "application/json");
                 response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
-            } else if (request.getUri().startsWith("/get_book")) {
-                List<String> id = new QueryStringDecoder(request.getUri()).parameters().get("id");
+            } else if (request.uri().startsWith("/get_book")) {
+                List<String> id = new QueryStringDecoder(request.uri()).parameters().get("id");
                 if (id != null && !id.isEmpty()) {
                     Book book = booksDB.get(id.get(0));
                     if (book != null) {

@@ -16,6 +16,7 @@ import org.mockserver.model.HttpRequest;
 import java.util.ArrayList;
 import java.util.List;
 
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.core.Is.is;
@@ -195,7 +196,7 @@ public class MockServerRequestDecoderTest {
     public void shouldDecodeBodyWithContentTypeAndNoCharset() {
         // given
         fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/uri", Unpooled.wrappedBuffer("A normal string with ASCII characters".getBytes(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET)));
-        fullHttpRequest.headers().add(HttpHeaders.Names.CONTENT_TYPE, MediaType.create("text", "plain").toString());
+        fullHttpRequest.headers().add(CONTENT_TYPE, MediaType.create("text", "plain").toString());
 
         // when
         mockServerRequestDecoder.decode(null, fullHttpRequest, output);
@@ -222,7 +223,7 @@ public class MockServerRequestDecoderTest {
     public void shouldTransmitUnencodableCharacters() {
         // given
         fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/uri", Unpooled.wrappedBuffer("Euro sign: \u20AC".getBytes(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET)));
-        fullHttpRequest.headers().add(HttpHeaders.Names.CONTENT_TYPE, MediaType.create("text", "plain").toString());
+        fullHttpRequest.headers().add(CONTENT_TYPE, MediaType.create("text", "plain").toString());
 
         // when
         mockServerRequestDecoder.decode(null, fullHttpRequest, output);
@@ -237,7 +238,7 @@ public class MockServerRequestDecoderTest {
     public void shouldUseDefaultCharsetIfCharsetNotSupported() {
         // given
         fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/uri", Unpooled.wrappedBuffer("A normal string with ASCII characters".getBytes(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET)));
-        fullHttpRequest.headers().add(HttpHeaders.Names.CONTENT_TYPE, "plain/text; charset=invalid-charset");
+        fullHttpRequest.headers().add(CONTENT_TYPE, "plain/text; charset=invalid-charset");
 
         // when
         mockServerRequestDecoder.decode(null, fullHttpRequest, output);
@@ -251,7 +252,7 @@ public class MockServerRequestDecoderTest {
     public void shouldDecodeBodyWithUTF8ContentType() {
         // given
         fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/uri", Unpooled.wrappedBuffer("avro işarəsi: \u20AC".getBytes(Charsets.UTF_8)));
-        fullHttpRequest.headers().add(HttpHeaders.Names.CONTENT_TYPE, MediaType.PLAIN_TEXT_UTF_8.toString());
+        fullHttpRequest.headers().add(CONTENT_TYPE, MediaType.PLAIN_TEXT_UTF_8.toString());
 
         // when
         mockServerRequestDecoder.decode(null, fullHttpRequest, output);
@@ -265,7 +266,7 @@ public class MockServerRequestDecoderTest {
     public void shouldDecodeBodyWithUTF16ContentType() {
         // given
         fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/uri", Unpooled.wrappedBuffer("我说中国话".getBytes(Charsets.UTF_16)));
-        fullHttpRequest.headers().add(HttpHeaders.Names.CONTENT_TYPE, MediaType.create("text", "plain").withCharset(Charsets.UTF_16).toString());
+        fullHttpRequest.headers().add(CONTENT_TYPE, MediaType.create("text", "plain").withCharset(Charsets.UTF_16).toString());
 
         // when
         mockServerRequestDecoder.decode(null, fullHttpRequest, output);
@@ -279,7 +280,7 @@ public class MockServerRequestDecoderTest {
     public void shouldDecodeBinaryBody() {
         // given
         fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/uri", Unpooled.wrappedBuffer("some_random_bytes".getBytes()));
-        fullHttpRequest.headers().add(HttpHeaders.Names.CONTENT_TYPE, MediaType.JPEG);
+        fullHttpRequest.headers().add(CONTENT_TYPE, MediaType.JPEG);
 
         // when
         mockServerRequestDecoder.decode(null, fullHttpRequest, output);

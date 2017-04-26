@@ -6,6 +6,7 @@ import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
+import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.mockserver.filters.RequestLogFilter;
@@ -71,8 +72,7 @@ public class DirectProxy implements Proxy {
                             .channel(NioServerSocketChannel.class)
                             .childOption(ChannelOption.AUTO_READ, true)
                             .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-                            .childOption(ChannelOption.WRITE_BUFFER_HIGH_WATER_MARK, 32 * 1024)
-                            .childOption(ChannelOption.WRITE_BUFFER_LOW_WATER_MARK, 8 * 1024)
+                            .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024))
                             .childHandler(new DirectProxyUnificationHandler())
                             .childAttr(HTTP_PROXY, DirectProxy.this)
                             .childAttr(REMOTE_SOCKET, remoteSocket)

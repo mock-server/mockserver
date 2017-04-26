@@ -19,9 +19,9 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
-import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH;
-import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
-import static io.netty.handler.codec.http.HttpHeaders.Names.SET_COOKIE;
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH;
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
+import static io.netty.handler.codec.http.HttpHeaderNames.SET_COOKIE;
 import static org.mockserver.model.ConnectionOptions.isFalseOrNull;
 
 /**
@@ -68,7 +68,7 @@ public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpRespo
         }
 
         // Content-Type
-        if (Strings.isNullOrEmpty(response.getFirstHeader(CONTENT_TYPE))) {
+        if (Strings.isNullOrEmpty(response.getFirstHeader(CONTENT_TYPE.toString()))) {
             if (response.getBody() != null
                     && response.getBody().getContentType() != null) {
                 defaultFullHttpResponse.headers().set(CONTENT_TYPE, response.getBody().getContentType());
@@ -76,7 +76,7 @@ public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpRespo
         }
 
         // Content-Length
-        if (Strings.isNullOrEmpty(response.getFirstHeader(CONTENT_LENGTH))) {
+        if (Strings.isNullOrEmpty(response.getFirstHeader(CONTENT_LENGTH.toString()))) {
             ConnectionOptions connectionOptions = response.getConnectionOptions();
             boolean overrideContentLength = connectionOptions != null && connectionOptions.getContentLengthHeaderOverride() != null;
             boolean addContentLength = connectionOptions == null || isFalseOrNull(connectionOptions.getSuppressContentLengthHeader());
@@ -116,8 +116,7 @@ public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpRespo
     }
 
     private boolean cookieHeaderAlreadyExists(HttpResponse response, org.mockserver.model.Cookie cookieValue) {
-        List<String> setCookieHeaders = response.getHeader(SET_COOKIE);
-        setCookieHeaders.addAll(response.getHeader(SET_COOKIE.toLowerCase()));
+        List<String> setCookieHeaders = response.getHeader(SET_COOKIE.toString());
         for (String setCookieHeader : setCookieHeaders) {
             String existingCookieName = ClientCookieDecoder.LAX.decode(setCookieHeader).name();
             String existingCookieValue = ClientCookieDecoder.LAX.decode(setCookieHeader).value();

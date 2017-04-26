@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 
 /**
  * @author jamesdbloom
@@ -31,7 +31,7 @@ public class FullHttpResponseToMockServerResponse {
     }
 
     private void setStatusCode(HttpResponse httpResponse, FullHttpResponse fullHttpResponse) {
-        httpResponse.withStatusCode(fullHttpResponse.getStatus().code());
+        httpResponse.withStatusCode(fullHttpResponse.status().code());
     }
 
     private void setHeaders(HttpResponse httpResponse, FullHttpResponse fullHttpResponse) {

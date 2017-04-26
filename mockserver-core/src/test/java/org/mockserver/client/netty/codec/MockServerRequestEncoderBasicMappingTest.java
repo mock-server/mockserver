@@ -25,7 +25,7 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.OutboundHttpRequest.outboundRequest;
 import static org.mockserver.model.Parameter.param;
-import static io.netty.handler.codec.http.HttpHeaders.Names.*;
+import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static org.mockserver.model.StringBody.exact;
 
 /**
@@ -53,7 +53,7 @@ public class MockServerRequestEncoderBasicMappingTest {
         mockServerRequestEncoder.encode(null, httpRequest, output);
 
         // then
-        HttpMethod method = ((FullHttpRequest) output.get(0)).getMethod();
+        HttpMethod method = ((FullHttpRequest) output.get(0)).method();
         assertThat(method, is(HttpMethod.OPTIONS));
     }
 
@@ -71,7 +71,7 @@ public class MockServerRequestEncoderBasicMappingTest {
         mockServerRequestEncoder.encode(null, httpRequest, output);
 
         // then
-        String uri = ((FullHttpRequest) output.get(0)).getUri();
+        String uri = ((FullHttpRequest) output.get(0)).uri();
         assertThat(uri, is("/uri?" +
                 "queryStringParameterNameOne=queryStringParameterValueOne_One&" +
                 "queryStringParameterNameOne=queryStringParameterValueOne_Two&" +
@@ -92,7 +92,7 @@ public class MockServerRequestEncoderBasicMappingTest {
         mockServerRequestEncoder.encode(null, httpRequest, output);
 
         // then
-        String uri = ((FullHttpRequest) output.get(0)).getUri();
+        String uri = ((FullHttpRequest) output.get(0)).uri();
         assertThat(uri, is("/uri?" +
                 "parameter%20name%20with%20spaces=a%20value%20with%20double%20%22quotes%22%20and%20spaces&" +
                 "another%20parameter=a%20value%20with%20single%20%27quotes%27%20and%20spaces"));
@@ -107,7 +107,7 @@ public class MockServerRequestEncoderBasicMappingTest {
         mockServerRequestEncoder.encode(null, httpRequest, output);
 
         // then
-        String uri = ((FullHttpRequest) output.get(0)).getUri();
+        String uri = ((FullHttpRequest) output.get(0)).uri();
         assertThat(uri, is("/other_path"));
     }
 
@@ -191,10 +191,10 @@ public class MockServerRequestEncoderBasicMappingTest {
         // then
         HttpHeaders headers = ((FullHttpRequest) output.get(0)).headers();
         assertThat(headers.names(), containsInAnyOrder(
-                "Host",
-                "Accept-Encoding",
-                "Content-Length",
-                "Connection"
+                "host",
+                "accept-encoding",
+                "content-length",
+                "connection"
         ));
         assertThat(headers.getAll("Host"), containsInAnyOrder("localhost"));
         assertThat(headers.getAll("Accept-Encoding"), containsInAnyOrder("gzip,deflate"));

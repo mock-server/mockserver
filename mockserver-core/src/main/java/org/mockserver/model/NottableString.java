@@ -1,5 +1,8 @@
 package org.mockserver.model;
 
+import com.google.common.base.Joiner;
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -45,6 +48,18 @@ public class NottableString extends Not {
 
     public String getValue() {
         return value;
+    }
+
+    public NottableString capitalize() {
+        final String[] split = (value + "_").split("-");
+        for (int i = 0; i < split.length; i++) {
+            split[i] = StringUtils.capitalize(split[i]);
+        }
+        return new NottableString(StringUtils.substringBeforeLast(Joiner.on("-").join(split), "_"), not);
+    }
+
+    public NottableString lowercase() {
+        return new NottableString(value.toLowerCase(), not);
     }
 
     @Override

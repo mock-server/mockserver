@@ -1,6 +1,5 @@
 package org.mockserver.mockserver;
 
-import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.junit.Test;
 import org.mockserver.configuration.ConfigurationProperties;
@@ -16,6 +15,7 @@ import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
@@ -160,7 +160,7 @@ public class MockServerHandlerGeneralOperationsTest extends MockServerHandlerTes
         // given
         ConfigurationProperties.clearSslSubjectAlternativeNameDomains();
         HttpRequest request = request("/expectation").withMethod("PUT").withBody("some_content");
-        when(mockHttpRequest.getFirstHeader(HttpHeaders.Names.HOST)).thenReturn("somehostname");
+        when(mockHttpRequest.getFirstHeader(HOST.toString())).thenReturn("somehostname");
         Set<String> expectedDomainNames = new TreeSet<String>();
         try {
             for (InetAddress addr : InetAddress.getAllByName("somehostname")) {

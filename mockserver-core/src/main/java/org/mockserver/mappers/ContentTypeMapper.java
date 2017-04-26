@@ -1,8 +1,9 @@
 package org.mockserver.mappers;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import io.netty.handler.codec.http.HttpConstants;
-import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMessage;
 import io.netty.util.CharsetUtil;
 import org.apache.commons.lang3.StringUtils;
@@ -15,8 +16,11 @@ import javax.servlet.http.HttpServletRequest;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
+import java.util.Map;
+import java.util.Set;
 
-import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
+import static io.netty.handler.codec.http.HttpHeaderValues.CHARSET;
 
 /**
  * @author jamesdbloom
@@ -34,6 +38,34 @@ public class ContentTypeMapper {
      */
     public static final Charset DEFAULT_HTTP_CHARACTER_SET = CharsetUtil.ISO_8859_1;
     private static final Logger logger = LoggerFactory.getLogger(ContentTypeMapper.class);
+
+    private static final Set<String> UTF_8_CONTENT_TYPES = ImmutableSet.<String>builder()
+            .add("application/atom+xml")
+            .add("application/ecmascript")
+            .add("application/javascript")
+            .add("application/json")
+            .add("application/jsonml+json")
+            .add("application/lost+xml")
+            .add("application/wsdl+xml")
+            .add("application/xaml+xml")
+            .add("application/xhtml+xml")
+            .add("application/xml")
+            .add("application/xml-dtd")
+            .add("application/xop+xml")
+            .add("application/xslt+xml")
+            .add("application/xspf+xml")
+            .add("application/x-www-form-urlencoded")
+            .add("image/svg+xml")
+            .add("text/css")
+            .add("text/csv")
+            .add("text/html")
+            .add("text/plain")
+            .add("text/richtext")
+            .add("text/sgml")
+            .add("text/tab-separated-values")
+            .add("text/x-fortran")
+            .add("text/x-java-source")
+            .build();
 
     public static boolean isBinary(String contentTypeHeader) {
         boolean binary = false;
@@ -78,30 +110,30 @@ public class ContentTypeMapper {
     }
 
     public static Charset determineCharsetForMessage(HttpServletRequest servletRequest) {
-        return getCharsetFromContentTypeHeader(servletRequest.getHeader(CONTENT_TYPE));
+        return getCharsetFromContentTypeHeader(servletRequest.getHeader(CONTENT_TYPE.toString()));
     }
 
     public static Charset determineCharsetForMessage(HttpResponse httpResponse) {
-        return getCharsetFromContentTypeHeader(httpResponse.getFirstHeader(CONTENT_TYPE));
+        return getCharsetFromContentTypeHeader(httpResponse.getFirstHeader(CONTENT_TYPE.toString()));
     }
 
     public static Charset determineCharsetForMessage(HttpRequest httpRequest) {
-        return getCharsetFromContentTypeHeader(httpRequest.getFirstHeader(CONTENT_TYPE));
+        return getCharsetFromContentTypeHeader(httpRequest.getFirstHeader(CONTENT_TYPE.toString()));
     }
 
     private static Charset getCharsetFromContentTypeHeader(String contentType) {
         Charset charset = DEFAULT_HTTP_CHARACTER_SET;
         if (contentType != null) {
-            String charsetName = StringUtils.substringAfterLast(contentType, HttpHeaders.Values.CHARSET + (char) HttpConstants.EQUALS);
+            String charsetName = StringUtils.substringAfterLast(contentType, CHARSET.toString() + (char) HttpConstants.EQUALS);
             if (!Strings.isNullOrEmpty(charsetName)) {
                 try {
                     charset = Charset.forName(charsetName);
                 } catch (UnsupportedCharsetException uce) {
-                    logger.info("Unsupported character set {} in Content-Type header: {}.", StringUtils.substringAfterLast(contentType, HttpHeaders.Values.CHARSET + HttpConstants.EQUALS), contentType);
+                    logger.info("Unsupported character set {} in Content-Type header: {}.", StringUtils.substringAfterLast(contentType, CHARSET.toString() + HttpConstants.EQUALS), contentType);
                 } catch (IllegalCharsetNameException icne) {
-                    logger.info("Illegal character set {} in Content-Type header: {}.", StringUtils.substringAfterLast(contentType, HttpHeaders.Values.CHARSET + HttpConstants.EQUALS), contentType);
+                    logger.info("Illegal character set {} in Content-Type header: {}.", StringUtils.substringAfterLast(contentType, CHARSET.toString() + HttpConstants.EQUALS), contentType);
                 }
-            } else if (ContentTypeUtil.utf8ContentTypes.containsKey(contentType)) {
+            } else if (UTF_8_CONTENT_TYPES.contains(contentType)) {
                 charset = CharsetUtil.UTF_8;
             }
         }

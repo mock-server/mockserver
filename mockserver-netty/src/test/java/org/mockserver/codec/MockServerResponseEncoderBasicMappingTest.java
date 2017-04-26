@@ -2,8 +2,6 @@ package org.mockserver.codec;
 
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaders;
-import org.hamcrest.collection.IsIterableContainingInAnyOrder;
-import org.hamcrest.collection.IsIterableContainingInOrder;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.mappers.ContentTypeMapper;
@@ -12,6 +10,7 @@ import org.mockserver.model.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
@@ -66,7 +65,7 @@ public class MockServerResponseEncoderBasicMappingTest {
 
         // then
         HttpHeaders headers = ((FullHttpResponse) output.get(0)).headers();
-        assertThat(headers.names(), containsInAnyOrder("Content-Length"));
+        assertThat(headers.names(), containsInAnyOrder(CONTENT_LENGTH.toString()));
         assertThat(headers.get("Content-Length"), is("0"));
     }
 
@@ -96,7 +95,7 @@ public class MockServerResponseEncoderBasicMappingTest {
 
         // then
         HttpHeaders headers = ((FullHttpResponse) output.get(0)).headers();
-        assertThat(headers.names(), containsInAnyOrder("Content-Length"));
+        assertThat(headers.names(), containsInAnyOrder(CONTENT_LENGTH.toString()));
         assertThat(headers.get("Content-Length"), is("0"));
     }
 
@@ -110,7 +109,7 @@ public class MockServerResponseEncoderBasicMappingTest {
 
         // then
         FullHttpResponse fullHttpResponse = (FullHttpResponse) output.get(0);
-        assertThat(fullHttpResponse.getStatus().code(), is(10));
+        assertThat(fullHttpResponse.status().code(), is(10));
     }
 
     @Test
@@ -123,7 +122,7 @@ public class MockServerResponseEncoderBasicMappingTest {
 
         // then
         FullHttpResponse fullHttpResponse = (FullHttpResponse) output.get(0);
-        assertThat(fullHttpResponse.getStatus().code(), is(200));
+        assertThat(fullHttpResponse.status().code(), is(200));
     }
 
     @Test

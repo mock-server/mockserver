@@ -12,9 +12,10 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
-import static io.netty.handler.codec.http.HttpHeaders.Names.*;
-import static io.netty.handler.codec.http.HttpHeaders.Values.*;
-import static io.netty.handler.codec.http.HttpHeaders.isKeepAlive;
+import static io.netty.handler.codec.http.HttpHeaderNames.*;
+import static io.netty.handler.codec.http.HttpHeaderValues.*;
+import static io.netty.handler.codec.http.HttpHeaderValues.KEEP_ALIVE;
+import static io.netty.handler.codec.http.HttpUtil.isKeepAlive;
 
 /**
  * @author jamesdbloom
@@ -81,7 +82,7 @@ public class MockServerOutboundHttpRequestToFullHttpRequest {
         }
         if (cookies.size() > 0) {
             request.headers().set(
-                    HttpHeaders.Names.COOKIE,
+                    COOKIE.toString(),
                     io.netty.handler.codec.http.cookie.ClientCookieEncoder.LAX.encode(cookies)
             );
         }
@@ -91,10 +92,10 @@ public class MockServerOutboundHttpRequestToFullHttpRequest {
         for (Header header : httpRequest.getHeaders()) {
             String headerName = header.getName().getValue();
             // do not set hop-by-hop headers
-            if (!headerName.equalsIgnoreCase(CONTENT_LENGTH)
-                    && !headerName.equalsIgnoreCase(TRANSFER_ENCODING)
-                    && !headerName.equalsIgnoreCase(HOST)
-                    && !headerName.equalsIgnoreCase(ACCEPT_ENCODING)) {
+            if (!headerName.equalsIgnoreCase(CONTENT_LENGTH.toString())
+                    && !headerName.equalsIgnoreCase(TRANSFER_ENCODING.toString())
+                    && !headerName.equalsIgnoreCase(HOST.toString())
+                    && !headerName.equalsIgnoreCase(ACCEPT_ENCODING.toString())) {
                 if (!header.getValues().isEmpty()) {
                     for (NottableString headerValue : header.getValues()) {
                         request.headers().add(headerName, headerValue.getValue());
@@ -117,7 +118,7 @@ public class MockServerOutboundHttpRequestToFullHttpRequest {
         if (isKeepAlive(request)) {
             request.headers().set(CONNECTION, KEEP_ALIVE);
         } else {
-            request.headers().set(CONNECTION, HttpHeaders.Values.CLOSE);
+            request.headers().set(CONNECTION, CLOSE);
         }
 
         if (!request.headers().contains(CONTENT_TYPE)) {

@@ -105,7 +105,8 @@ public class OutboundRequestToCurlSerializerTest {
         ));
 
         // then
-        assertThat(curl, is("curl -v 'http://localhost:80/' -H 'Cookie: cookieName1=cookieValue1; cookieName2=cookieValue2'"));
+        assertThat(curl, is("curl -v 'http://localhost:80/' " +
+                "-H 'cookie: cookieName1=cookieValue1; cookieName2=cookieValue2'"));
     }
 
     @Test
@@ -140,7 +141,7 @@ public class OutboundRequestToCurlSerializerTest {
                 " -H 'headerName1: headerValue1'" +
                 " -H 'headerName2: headerValue2_1'" +
                 " -H 'headerName2: headerValue2_2'" +
-                " -H 'Cookie: cookieName1=cookieValue1; cookieName2=cookieValue2'"));
+                " -H 'cookie: cookieName1=cookieValue1; cookieName2=cookieValue2'"));
     }
 
     @Test

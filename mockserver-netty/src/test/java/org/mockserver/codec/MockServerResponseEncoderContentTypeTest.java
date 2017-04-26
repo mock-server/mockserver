@@ -14,7 +14,7 @@ import org.mockserver.model.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
 
-import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
@@ -47,7 +47,7 @@ public class MockServerResponseEncoderContentTypeTest {
     public void shouldDecodeBodyWithContentTypeAndNoCharset() {
         // given
         httpResponse.withBody("avro işarəsi: \u20AC");
-        httpResponse.withHeader(new Header(HttpHeaders.Names.CONTENT_TYPE, MediaType.create("text", "plain").toString()));
+        httpResponse.withHeader(new Header(CONTENT_TYPE.toString(), MediaType.create("text", "plain").toString()));
 
         // when
         new MockServerResponseEncoder().encode(null, httpResponse, output);
@@ -74,7 +74,7 @@ public class MockServerResponseEncoderContentTypeTest {
     public void shouldTransmitUnencodableCharacters() {
         // given
         httpResponse.withBody("avro işarəsi: \u20AC", ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET);
-        httpResponse.withHeader(new Header(HttpHeaders.Names.CONTENT_TYPE, MediaType.create("text", "plain").toString()));
+        httpResponse.withHeader(new Header(CONTENT_TYPE.toString(), MediaType.create("text", "plain").toString()));
 
         // when
         new MockServerResponseEncoder().encode(null, httpResponse, output);
@@ -88,7 +88,7 @@ public class MockServerResponseEncoderContentTypeTest {
     public void shouldUseDefaultCharsetIfCharsetNotSupported() {
         // given
         httpResponse.withBody("avro işarəsi: \u20AC");
-        httpResponse.withHeader(new Header(HttpHeaders.Names.CONTENT_TYPE, "text/plain; charset=invalid-charset"));
+        httpResponse.withHeader(new Header(CONTENT_TYPE.toString(), "text/plain; charset=invalid-charset"));
 
         // when
         new MockServerResponseEncoder().encode(null, httpResponse, output);
@@ -102,7 +102,7 @@ public class MockServerResponseEncoderContentTypeTest {
     public void shouldDecodeBodyWithUTF8ContentType() {
         // given
         httpResponse.withBody("avro işarəsi: \u20AC", Charsets.UTF_8);
-        httpResponse.withHeader(new Header(HttpHeaders.Names.CONTENT_TYPE, MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString()));
+        httpResponse.withHeader(new Header(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString()));
 
         // when
         new MockServerResponseEncoder().encode(null, httpResponse, output);
@@ -116,7 +116,7 @@ public class MockServerResponseEncoderContentTypeTest {
     public void shouldDecodeBodyWithUTF16ContentType() {
         // given
         httpResponse.withBody("我说中国话", Charsets.UTF_16);
-        httpResponse.withHeader(new Header(HttpHeaders.Names.CONTENT_TYPE, MediaType.create("text", "plain").withCharset(Charsets.UTF_16).toString()));
+        httpResponse.withHeader(new Header(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_16).toString()));
 
         // when
         new MockServerResponseEncoder().encode(null, httpResponse, output);
@@ -143,7 +143,7 @@ public class MockServerResponseEncoderContentTypeTest {
     @Test
     public void shouldEncodeUTF8JsonBodyWithContentType() {
         // given
-        httpResponse.withBody("{ \"some_field\": \"我说中国话\" }").withHeader(CONTENT_TYPE, MediaType.JSON_UTF_8.toString());
+        httpResponse.withBody("{ \"some_field\": \"我说中国话\" }").withHeader(CONTENT_TYPE.toString(), MediaType.JSON_UTF_8.toString());
 
         // when
         new MockServerResponseEncoder().encode(null, httpResponse, output);
@@ -172,7 +172,7 @@ public class MockServerResponseEncoderContentTypeTest {
     public void shouldPreferStringBodyCharacterSet() {
         // given
         httpResponse.withBody("avro işarəsi: \u20AC", Charsets.UTF_16);
-        httpResponse.withHeader(new Header(HttpHeaders.Names.CONTENT_TYPE, MediaType.create("text", "plain").withCharset(Charsets.US_ASCII).toString()));
+        httpResponse.withHeader(new Header(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.US_ASCII).toString()));
 
         // when
         new MockServerResponseEncoder().encode(null, httpResponse, output);

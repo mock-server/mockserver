@@ -13,7 +13,10 @@ import org.mockserver.socket.PortFactory;
 
 import java.net.InetSocketAddress;
 
-import static io.netty.handler.codec.http.HttpHeaders.Names.*;
+import static io.netty.handler.codec.http.HttpHeaderNames.*;
+import static io.netty.handler.codec.http.HttpHeaderValues.DEFLATE;
+import static io.netty.handler.codec.http.HttpHeaderValues.GZIP;
+import static io.netty.handler.codec.http.HttpHeaderValues.KEEP_ALIVE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.Is.is;
@@ -99,10 +102,10 @@ public class NettyHttpClientErrorHandlingTest {
             assertThat(httpResponse, is(
                     response()
                             .withStatusCode(200)
-                            .withHeader(header(HOST, socket.getHostName() + ":" + freePort))
-                            .withHeader(header(CONTENT_LENGTH, "this is an example body".length() / 2))
-                            .withHeader(header(ACCEPT_ENCODING, HttpHeaders.Values.GZIP + "," + HttpHeaders.Values.DEFLATE))
-                            .withHeader(header(CONNECTION, HttpHeaders.Values.KEEP_ALIVE))
+                            .withHeader(header(HOST.toString(), socket.getHostName() + ":" + freePort))
+                            .withHeader(header(CONTENT_LENGTH.toString(), "this is an example body".length() / 2))
+                            .withHeader(header(ACCEPT_ENCODING.toString(), GZIP.toString() + "," + DEFLATE.toString()))
+                            .withHeader(header(CONNECTION.toString(), KEEP_ALIVE.toString()))
                             .withBody(exact("this is an "))
             ));
         } finally {

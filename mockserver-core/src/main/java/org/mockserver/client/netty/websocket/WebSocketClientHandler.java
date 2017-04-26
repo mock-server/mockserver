@@ -17,8 +17,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 
-import static io.netty.handler.codec.http.HttpHeaders.Names.UPGRADE;
-import static io.netty.handler.codec.http.HttpHeaders.Values.WEBSOCKET;
+import static io.netty.handler.codec.http.HttpHeaderNames.UPGRADE;
+import static io.netty.handler.codec.http.HttpHeaderValues.WEBSOCKET;
 
 public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> {
 
@@ -56,7 +56,7 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
                 webSocketClient.registrationFuture().set(httpResponse.headers().get("X-CLIENT-REGISTRATION-ID"));
                 logger.debug("web socket client " + webSocketClient.registrationFuture().get() + " connected!");
                 return;
-            } else if (httpResponse.getStatus().equals(HttpResponseStatus.NOT_ACCEPTABLE)) {
+            } else if (httpResponse.status().equals(HttpResponseStatus.NOT_ACCEPTABLE)) {
                 throw new WebSocketException(readRequestBody(httpResponse));
             } else {
                 throw new WebSocketException("Unsupported web socket message " + new FullHttpResponseToMockServerResponse().mapMockServerResponseToHttpServletResponse(httpResponse));

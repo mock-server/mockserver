@@ -26,7 +26,7 @@ public class IOStreamUtils {
         String line;
         Integer contentLength = null;
         while ((line = bufferedReader.readLine()) != null) {
-            if (line.startsWith("Content-Length")) {
+            if (line.startsWith("content-length") || line.startsWith("Content-Length")) {
                 contentLength = Integer.parseInt(line.split(":")[1].trim());
             }
             if (line.length() == 0) {
