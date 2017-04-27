@@ -1,3 +1,4 @@
 steps:
-  - command: "docker run -v /var/lib/buildkite-agent/builds/$BUILDKITE_AGENT_NAME/mockserver:/build -w /build/mockserver -a stdout -a stderr jamesdbloom/mockserver:build /build/mockserver/scripts/local_quick_build.sh"
-    label: "build"
+  - label: "build"
+    command: "docker run -v /var/lib/buildkite-agent/builds/$BUILDKITE_AGENT_NAME/mockserver:/build -w /build/mockserver -a stdout -a stderr jamesdbloom/mockserver:build /build/mockserver/scripts/local_quick_build.sh"
+    timeout_in_minutes: 60
