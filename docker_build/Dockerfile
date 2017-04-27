@@ -6,7 +6,7 @@
 #
 
 # pull base image.
-FROM dockerfile/ubuntu
+FROM ubuntu
 
 # maintainer details
 MAINTAINER James Bloom "jamesdbloom@gmail.com"
