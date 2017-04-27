@@ -1,4 +1,5 @@
 steps:
   - label: "build"
     command: "docker run -v /var/lib/buildkite-agent/builds/$BUILDKITE_AGENT_NAME/mockserver:/build -w /build/mockserver -a stdout -a stderr jamesdbloom/mockserver:build /build/mockserver/scripts/local_quick_build.sh"
-    timeout_in_minutes: 60
+  - label: "determine killed reason"
+    command: "dmesg | grep -E -i -B100 'killed process'"
