@@ -46,7 +46,7 @@ MODULE_LIST="mockserver-logging mockserver-core mockserver-client-java mockserve
 #    (runSubModule $module);
 #done
 
-mvn clean deploy -Dmaven-invoker-parallel-threads=4 -Djava.security.egd=file:/dev/./urandom
+mvn clean deploy --settings $current_directory/target/travis/settings.xml -Dmaven-invoker-parallel-threads=4 -Djava.security.egd=file:/dev/./urandom
 
 
 
