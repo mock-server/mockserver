@@ -42,9 +42,11 @@ function runSubModule {
 
 MODULE_LIST="mockserver-logging mockserver-core mockserver-client-java mockserver-integration-testing mockserver-netty mockserver-maven-plugin mockserver-client-ruby mockserver-war mockserver-proxy-war mockserver-maven-plugin-integration-tests mockserver-client-javascript mockserver-examples"
 
-for module in $MODULE_LIST; do
-    (runSubModule $module);
-done
+#for module in $MODULE_LIST; do
+#    (runSubModule $module);
+#done
+
+mvn clean deploy -Dmaven-invoker-parallel-threads=4 -Djava.security.egd=file:/dev/./urandom
 
 
 
