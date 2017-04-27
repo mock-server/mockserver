@@ -9,3 +9,9 @@ docker run -v /var/lib/buildkite-agent/builds/$BUILDKITE_AGENT_NAME/mockserver:/
 docker run -v /var/lib/buildkite-agent/builds/$BUILDKITE_AGENT_NAME/mockserver:/build -w /build/mockserver -a stdout -a stderr jamesdbloom/mockserver:build /build/mockserver/scripts/local_quick_build.sh
 
 determine killed reason:  "dmesg | grep -E -i -B100 'killed process'"
+
+connecting to AWS EC2 instance:
+
+$ aws ec2 get-console-output --instance-id i-02e9048a86e8fdcc2 --region us-east-1
+$ chmod 400 ~/Downloads/buildkite.pem
+$ ssh -i ~/Downloads/buildkite.pem ec2-user@ec2-34-204-42-237.compute-1.amazonaws.com
