@@ -5,5 +5,5 @@ curl -u "jamesdbloom@gmail.com" https://api.buildkite.com/v2/organizations/mocks
   -F "message=First build :rocket:"
 
 docker run -v /var/lib/buildkite-agent/builds/$BUILDKITE_AGENT_NAME:/build -i -t jamesdbloom/mockserver:build /bin/bash
-docker run -v /var/lib/buildkite-agent/builds/$BUILDKITE_AGENT_NAME:/build -w /build/mockserver -a stdout -a stderr jamesdbloom/mockserver:build 'ls -lrt'
-docker run -v /var/lib/buildkite-agent/builds/$BUILDKITE_AGENT_NAME:/build -w /build/mockserver -a stdout -a stderr jamesdbloom/mockserver:build /build/mockserver/scripts/local_quick_build.sh
+docker run -v /var/lib/buildkite-agent/builds/$BUILDKITE_AGENT_NAME/mockserver:/build -w /build/mockserver -a stdout -a stderr jamesdbloom/mockserver:build ls -lrt
+docker run -v /var/lib/buildkite-agent/builds/$BUILDKITE_AGENT_NAME/mockserver:/build -w /build/mockserver -a stdout -a stderr jamesdbloom/mockserver:build /build/mockserver/scripts/local_quick_build.sh
