@@ -1,7 +1,5 @@
-Release Process
-===============
-
-# Setting Maven Central Deployments
+Release Process Notes
+=====================
 
 See:
 

@@ -1,0 +1,8 @@
+steps:
+  - label: "update docker image"
+    command: "docker pull jamesdbloom/mockserver:build"
+
+  - wait
+
+  - label: "build"
+    command: "docker run -v /var/lib/buildkite-agent/builds/$BUILDKITE_AGENT_NAME/mockserver:/build -w /build/mockserver -a stdout -a stderr jamesdbloom/mockserver:build /build/mockserver/scripts/local_quick_build.sh"

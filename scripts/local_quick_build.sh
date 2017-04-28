@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+function finish {
+  dmesg | grep -E -i -B100 'killed process'
+}
+trap finish EXIT
+
 # java 1.6 build
 export MAVEN_OPTS="$MAVEN_OPTS -XX:MaxPermSize=1024m -Xmx2048m"
 export JAVA_OPTS="$JAVA_OPTS -XX:MaxPermSize=1024m -Xmx2048m"
