@@ -12,6 +12,9 @@ determine killed reason:  "dmesg | grep -E -i -B100 'killed process'"
 
 connecting to AWS EC2 instance:
 
-$ aws ec2 get-console-output --instance-id i-02e9048a86e8fdcc2 --region us-east-1
-$ chmod 400 ~/Downloads/buildkite.pem
-$ ssh -i ~/Downloads/buildkite.pem ec2-user@ec2-34-204-42-237.compute-1.amazonaws.com
+$ aws ec2 get-console-output --instance-id i-04bc2edc8b4187ca8 --region us-east-1
+$ chmod 400 ~/Downloads/mockserver-buildkite.pem
+$ ssh -i ~/Downloads/mockserver-buildkite.pem ec2-user@ec2-34-204-42-237.compute-1.amazonaws.com
+
+
+$ ssh -i ~/Downloads/mockserver-buildkite.pem ec2-user@52.91.13.160
