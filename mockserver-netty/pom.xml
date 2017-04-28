@@ -5,10 +5,12 @@
         <artifactId>mockserver</artifactId>
         <version>3.10.7-SNAPSHOT</version>
     </parent>
+
     <modelVersion>4.0.0</modelVersion>
 
     <name>MockServer &amp; Proxy Netty</name>
     <artifactId>mockserver-netty</artifactId>
+    <url>http://www.mock-server.com</url>
 
     <dependencies>
         <!-- mockserver -->

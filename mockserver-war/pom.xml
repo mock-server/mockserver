@@ -13,6 +13,7 @@
 
     <name>MockServer Web Archive</name>
     <description>A MockServer that can be deployed as a WAR to any JEE web server</description>
+    <url>http://www.mock-server.com</url>
 
     <dependencies>
         <!-- mockserver -->

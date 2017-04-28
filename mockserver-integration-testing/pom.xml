@@ -5,11 +5,13 @@
         <artifactId>mockserver</artifactId>
         <version>3.10.7-SNAPSHOT</version>
     </parent>
+
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>mockserver-integration-testing</artifactId>
     <name>MockServer Integration Test</name>
-    <description>A module used to simplify integration testing of all MockServer versions by sharing commons integration testing components.</description>
+    <description>A module used to simplify integration testing of all MockServer versions by sharing commons integration testing components</description>
+    <url>http://www.mock-server.com</url>
 
     <dependencies>
         <!-- MockServer -->

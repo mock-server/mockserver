@@ -1,8 +1,0 @@
-steps:
-  - label: "update docker image"
-    command: "docker pull jamesdbloom/mockserver:build"
-
-  - wait
-
-  - label: "build"
-    command: "docker run -v /var/lib/buildkite-agent/builds/$BUILDKITE_AGENT_NAME/mockserver:/build -w /build/mockserver-maven-plugin -a stdout -a stderr jamesdbloom/mockserver:build /build/mockserver-maven-plugin/scripts/local_build.sh"

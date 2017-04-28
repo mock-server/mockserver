@@ -3,14 +3,16 @@
     <parent>
         <groupId>org.mock-server</groupId>
         <artifactId>mockserver</artifactId>
-        <version>3.10.5-SNAPSHOT</version>
+        <version>3.10.7-SNAPSHOT</version>
     </parent>
+
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>mockserver-maven-plugin-integration-tests</artifactId>
 
     <name>MockServer Maven Plugin Integration Tests</name>
-    <description>Test the maven plugin for starting and stopping the MockServer.</description>
+    <description>Test the maven plugin for starting and stopping the MockServer</description>
+    <url>http://www.mock-server.com</url>
 
     <properties>
         <mavenPluginPluginVersion>3.2</mavenPluginPluginVersion>

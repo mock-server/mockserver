@@ -17,14 +17,11 @@ function printModule {
 function runSubModule {
     printModule "$1"
     cd $1
-    export JAVA_HOME=`/usr/libexec/java_home -v 1.6`
-    mvn release:clean -Drelease.arguments="-DnonReleaseBuild=false -Dmaven.test.skip=true -DskipTests=true" && \
-    mvn release:prepare -Drelease.arguments="-DnonReleaseBuild=false -Dmaven.test.skip=true -DskipTests=true" && \
-    mvn release:perform -Drelease.arguments="-DnonReleaseBuild=false -Dmaven.test.skip=true -DskipTests=true"
-	cd $current_directory
+    mvn install -Dmaven-invoker-parallel-threads=2 -Djava.security.egd=file:/dev/./urandom
+    cd $current_directory
 }
 
-MODULE_LIST="mockserver-maven-plugin mockserver-maven-plugin-integration-tests"
+MODULE_LIST="mockserver-logging mockserver-core mockserver-client-java mockserver-integration-testing mockserver-netty mockserver-war mockserver-proxy-war mockserver-maven-plugin mockserver-maven-plugin-integration-tests mockserver-examples"
 
 for module in $MODULE_LIST; do
     (runSubModule $module);
