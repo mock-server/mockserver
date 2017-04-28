@@ -1,0 +1,89 @@
+# Compiled source #
+###################
+*.class
+*.dll
+*.exe
+*.o
+*.so
+
+# Packages #
+############
+# it's better to unpack these files and commit the raw source
+# git has its own built in compression methods
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+mods
+
+# Logs and databases #
+######################
+*.log
+test.csv
+*.sql
+*.sqlite
+
+# Runtime artifacts #
+#####################
+mockserver_keystore.jks
+mockserver.properties
+
+# OS generated files #
+######################
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Icon?
+ehthumbs.db
+Thumbs.db
+
+# JetBrains config files #
+##########################
+.idea
+*.iml
+
+# Eclipse config files #
+########################
+.project
+.classpath
+.settings
+
+# Maven build artifacts files #
+###############################
+target
+pom.xml.releaseBackup
+release.properties
+google
+.extract
+
+# rbenv config #
+################
+.ruby-version
+
+# Gradle build artifacts files #
+################################
+.gradle
+build
+out
+
+# grunt / node build artifacts #
+################################
+node_modules
+npm-debug.log
+tmp
+custom_tmp
+.bundle
+
+# vagrant #
+###########
+.vagrant
+
+# drone.io build testing #
+##########################
+drone.io
