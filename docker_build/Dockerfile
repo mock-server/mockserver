@@ -19,9 +19,10 @@ RUN \
   apt-get -y upgrade && \
   apt-get install -y build-essential && \
   apt-get install -y software-properties-common && \
-  add-apt-repository -y ppa:webupd8team/java && \
-  curl -sL https://deb.nodesource.com/setup_7.x | sudo -E bash - && \
+  curl -sL https://deb.nodesource.com/setup_7.x | bash - && \
   apt-get install -y nodejs curl git htop man unzip vim wget pkg-config && \
+  add-apt-repository -y ppa:webupd8team/java && \
+  apt-get update && \
   echo debconf shared/accepted-oracle-license-v1-1 select true | debconf-set-selections && \
   echo debconf shared/accepted-oracle-license-v1-1 seen true | debconf-set-selections && \
   apt-get install -y oracle-java6-installer maven
