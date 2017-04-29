@@ -35,7 +35,7 @@ NPM Registry contains the following module:
 
 Docker Index contains the following artifacts:
 
-* [MockServer Docker Container](https://registry.hub.docker.com/u/jamesdbloom/mockserver) - a Docker container containing the Netty MockServer and proxy
+* [MockServer Docker Container](https://hub.docker.com/r/jamesdbloom/mockserver/) - a Docker container containing the Netty MockServer and proxy
 
 ### Vert.X Module Registry
 
