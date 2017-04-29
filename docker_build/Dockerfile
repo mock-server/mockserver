@@ -20,7 +20,8 @@ RUN apt-get -y upgrade
 # install basic build tools
 RUN apt-get install -y build-essential
 RUN apt-get install -y software-properties-common
-RUN apt-get install -y curl git htop man unzip vim wget pkg-config
+RUN apt-get install -y curl git htop man unzip vim wget pkg-config python2.7
+RUN ln -s /usr/bin/python2.7 /usr/bin/python
 
 # install java
 RUN add-apt-repository -y ppa:webupd8team/java
