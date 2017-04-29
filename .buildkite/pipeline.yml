@@ -6,8 +6,3 @@ steps:
 
   - label: "build"
     command: "docker run -v /var/lib/buildkite-agent/builds/$BUILDKITE_AGENT_NAME/mockserver:/build -w /build/mockserver -a stdout -a stderr jamesdbloom/mockserver:build /build/mockserver/scripts/local_quick_build.sh"
-
-  - wait
-
-  - label: "docker garbage collection"
-    command: "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v /etc:/etc:ro spotify/docker-gc"
