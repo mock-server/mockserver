@@ -6,7 +6,6 @@ import org.junit.Test;
 import org.mockserver.matchers.MatchType;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 import static org.mockserver.matchers.MatchType.ONLY_MATCHING_FIELDS;
 import static org.mockserver.matchers.MatchType.STRICT;
@@ -126,4 +125,84 @@ public class JsonBodyTest {
         assertThat(jsonBody.getContentType(), is("application/json; charset=utf-16"));
     }
 
+    @Test
+    public void shouldReturnValuesFromStaticObjectBuilder() {
+        // when
+        JsonBody jsonBody = json(new TestObject());
+
+        // then
+        assertThat(jsonBody.getValue(), is("{\"fieldOne\":\"valueOne\",\"fieldTwo\":\"valueTwo\"}"));
+        assertThat(jsonBody.getType(), is(Body.Type.JSON));
+        assertThat(jsonBody.getMatchType(), is(ONLY_MATCHING_FIELDS));
+        assertThat(jsonBody.getContentType(), is("application/json"));
+    }
+
+    @Test
+    public void shouldReturnValuesFromStaticObjectBuilderWithMatchType() {
+        // when
+        JsonBody jsonBody = json(new TestObject(), STRICT);
+
+        // then
+        assertThat(jsonBody.getValue(), is("{\"fieldOne\":\"valueOne\",\"fieldTwo\":\"valueTwo\"}"));
+        assertThat(jsonBody.getType(), is(Body.Type.JSON));
+        assertThat(jsonBody.getMatchType(), is(STRICT));
+        assertThat(jsonBody.getContentType(), is("application/json"));
+    }
+
+    @Test
+    public void shouldReturnValuesFromStaticObjectBuilderWithCharsetAndMatchType() {
+        // when
+        JsonBody jsonBody = json(new TestObject(), Charsets.UTF_16, STRICT);
+
+        // then
+        assertThat(jsonBody.getValue(), is("{\"fieldOne\":\"valueOne\",\"fieldTwo\":\"valueTwo\"}"));
+        assertThat(jsonBody.getType(), is(Body.Type.JSON));
+        assertThat(jsonBody.getMatchType(), is(STRICT));
+        assertThat(jsonBody.getContentType(), is("application/json; charset=utf-16"));
+    }
+
+    @Test
+    public void shouldReturnValuesFromStaticObjectBuilderWithMediaTypeAndMatchType() {
+        // when
+        JsonBody jsonBody = json(new TestObject(), MediaType.JSON_UTF_8, STRICT);
+
+        // then
+        assertThat(jsonBody.getValue(), is("{\"fieldOne\":\"valueOne\",\"fieldTwo\":\"valueTwo\"}"));
+        assertThat(jsonBody.getType(), is(Body.Type.JSON));
+        assertThat(jsonBody.getMatchType(), is(STRICT));
+        assertThat(jsonBody.getContentType(), is("application/json; charset=utf-8"));
+    }
+
+    @Test
+    public void shouldReturnValuesFromStaticObjectBuilderWithMatchTypeAndCharset() {
+        // when
+        JsonBody jsonBody = json(new TestObject(), Charsets.UTF_16, STRICT);
+
+        // then
+        assertThat(jsonBody.getValue(), is("{\"fieldOne\":\"valueOne\",\"fieldTwo\":\"valueTwo\"}"));
+        assertThat(jsonBody.getType(), is(Body.Type.JSON));
+        assertThat(jsonBody.getMatchType(), is(STRICT));
+        assertThat(jsonBody.getContentType(), is("application/json; charset=utf-16"));
+    }
+
+    public class TestObject {
+        private String fieldOne = "valueOne";
+        private String fieldTwo = "valueTwo";
+
+        public String getFieldOne() {
+            return fieldOne;
+        }
+
+        public void setFieldOne(String fieldOne) {
+            this.fieldOne = fieldOne;
+        }
+
+        public String getFieldTwo() {
+            return fieldTwo;
+        }
+
+        public void setFieldTwo(String fieldTwo) {
+            this.fieldTwo = fieldTwo;
+        }
+    }
 }
