@@ -5316,6 +5316,33 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
+    public void shouldEnsureThatInterruptedRequestsAreVerifiable() throws Exception {
+        final HttpRequest delayedRequest = request("/delayed");
+
+        mockServerClient
+                .when(
+                        delayedRequest
+                )
+                .respond(
+                        response("delayed data")
+                                .withDelay(new Delay(TimeUnit.SECONDS, 3))
+                );
+
+        Future<HttpResponse> delayedFuture = Executors.newSingleThreadExecutor().submit(new Callable<HttpResponse>() {
+            @Override
+            public HttpResponse call() throws Exception {
+                return httpClient.sendRequest(outboundRequest("localhost", getMockServerPort(), servletContext, delayedRequest));
+            }
+        });
+
+        Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS); // Let request reach server
+
+        delayedFuture.cancel(true); // Then interrupt requesting thread
+
+        mockServerClient.verify(delayedRequest); // We should be able to verify request that reached server even though its later interrupted
+    }
+
+    @Test
     public void shouldEnsureThatRequestDelaysDoNotAffectOtherRequests() throws Exception {
         mockServerClient
                 .when(
