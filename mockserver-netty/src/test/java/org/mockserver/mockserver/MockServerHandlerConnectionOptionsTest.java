@@ -1,36 +1,14 @@
 package org.mockserver.mockserver;
 
-import com.google.common.base.Charsets;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.embedded.EmbeddedChannel;
-import org.hamcrest.collection.IsIterableContainingInOrder;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockserver.client.serialization.ExpectationSerializer;
-import org.mockserver.client.serialization.HttpRequestSerializer;
-import org.mockserver.client.serialization.VerificationSequenceSerializer;
-import org.mockserver.client.serialization.VerificationSerializer;
-import org.mockserver.filters.RequestLogFilter;
-import org.mockserver.matchers.TimeToLive;
-import org.mockserver.matchers.Times;
-import org.mockserver.mock.Expectation;
-import org.mockserver.mock.MockServerMatcher;
-import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.model.*;
-import org.mockserver.verify.Verification;
-import org.mockserver.verify.VerificationSequence;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
@@ -45,7 +23,7 @@ public class MockServerHandlerConnectionOptionsTest extends MockServerHandlerTes
         HttpRequest request = request("/randomPath").withMethod("GET").withBody("some_content");
 
         // and - a matcher
-        when(mockMockServerMatcher.handle(request)).thenReturn(response().withBody("some_response"));
+        when(mockMockServerMatcher.retrieveAction(request)).thenReturn(response().withBody("some_response"));
 
         // and - a action handler
         when(mockActionHandler.processAction(response().withBody("some_response"), request.withKeepAlive(true)))
@@ -80,7 +58,7 @@ public class MockServerHandlerConnectionOptionsTest extends MockServerHandlerTes
         HttpRequest request = request("/randomPath").withMethod("GET").withBody("some_content");
 
         // and - a matcher
-        when(mockMockServerMatcher.handle(request)).thenReturn(response().withBody("some_response"));
+        when(mockMockServerMatcher.retrieveAction(request)).thenReturn(response().withBody("some_response"));
 
         // and - a action handler
         when(mockActionHandler.processAction(response().withBody("some_response"), request.withKeepAlive(true)))
@@ -114,7 +92,7 @@ public class MockServerHandlerConnectionOptionsTest extends MockServerHandlerTes
         HttpRequest request = request("/randomPath").withMethod("GET").withBody("some_content");
 
         // and - a matcher
-        when(mockMockServerMatcher.handle(request)).thenReturn(response().withBody("some_response"));
+        when(mockMockServerMatcher.retrieveAction(request)).thenReturn(response().withBody("some_response"));
 
         // and - a action handler
         when(mockActionHandler.processAction(response().withBody("some_response"), request.withKeepAlive(false)))
@@ -148,7 +126,7 @@ public class MockServerHandlerConnectionOptionsTest extends MockServerHandlerTes
         HttpRequest request = request("/randomPath").withMethod("GET").withBody("some_content");
 
         // and - a matcher
-        when(mockMockServerMatcher.handle(request)).thenReturn(response().withBody("some_response"));
+        when(mockMockServerMatcher.retrieveAction(request)).thenReturn(response().withBody("some_response"));
 
         // and - a action handler
         when(mockActionHandler.processAction(response().withBody("some_response"), request.withKeepAlive(true)))
@@ -178,7 +156,7 @@ public class MockServerHandlerConnectionOptionsTest extends MockServerHandlerTes
         HttpRequest request = request("/randomPath").withMethod("GET").withBody("some_content");
 
         // and - a matcher
-        when(mockMockServerMatcher.handle(request)).thenReturn(response().withBody("some_response"));
+        when(mockMockServerMatcher.retrieveAction(request)).thenReturn(response().withBody("some_response"));
 
         // and - a action handler
         when(mockActionHandler.processAction(response().withBody("some_response"), request.withKeepAlive(true)))
@@ -212,7 +190,7 @@ public class MockServerHandlerConnectionOptionsTest extends MockServerHandlerTes
         HttpRequest request = request("/randomPath").withMethod("GET").withBody("some_content");
 
         // and - a matcher
-        when(mockMockServerMatcher.handle(request)).thenReturn(response().withBody("some_response"));
+        when(mockMockServerMatcher.retrieveAction(request)).thenReturn(response().withBody("some_response"));
 
         // and - a action handler
         when(mockActionHandler.processAction(response().withBody("some_response"), request.withKeepAlive(false)))
@@ -242,7 +220,7 @@ public class MockServerHandlerConnectionOptionsTest extends MockServerHandlerTes
         HttpRequest request = request("/randomPath").withMethod("GET").withBody("some_content");
 
         // and - a matcher
-        when(mockMockServerMatcher.handle(request)).thenReturn(response().withBody("some_response"));
+        when(mockMockServerMatcher.retrieveAction(request)).thenReturn(response().withBody("some_response"));
 
         // and - a action handler
         when(mockActionHandler.processAction(response().withBody("some_response"), request.withKeepAlive(true)))
@@ -276,7 +254,7 @@ public class MockServerHandlerConnectionOptionsTest extends MockServerHandlerTes
         HttpRequest request = request("/randomPath").withMethod("GET").withBody("some_content");
 
         // and - a matcher
-        when(mockMockServerMatcher.handle(request)).thenReturn(response().withBody("some_response"));
+        when(mockMockServerMatcher.retrieveAction(request)).thenReturn(response().withBody("some_response"));
 
         // and - a action handler
         when(mockActionHandler.processAction(response().withBody("some_response"), request.withKeepAlive(false)))

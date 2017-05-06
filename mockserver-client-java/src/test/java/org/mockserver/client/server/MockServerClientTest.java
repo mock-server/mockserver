@@ -110,7 +110,7 @@ public class MockServerClientTest {
         // then
         Expectation expectation = forwardChainExpectation.getExpectation();
         assertTrue(expectation.matches(httpRequest));
-        assertSame(httpResponse, expectation.getHttpResponse(false));
+        assertSame(httpResponse, expectation.getHttpResponse());
         assertEquals(Times.unlimited(), expectation.getTimes());
     }
 

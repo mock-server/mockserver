@@ -34,8 +34,8 @@ public class ExpectationTest {
 
         // then
         assertEquals(httpRequest, expectationThatResponds.getHttpRequest());
-        assertEquals(httpResponse, expectationThatResponds.getHttpResponse(false));
-        assertEquals(httpResponse, expectationThatResponds.getAction(false));
+        assertEquals(httpResponse, expectationThatResponds.getHttpResponse());
+        assertEquals(httpResponse, expectationThatResponds.getAction());
         assertNull(expectationThatResponds.getHttpForward());
         assertNull(expectationThatResponds.getHttpError());
         assertNull(expectationThatResponds.getHttpClassCallback());
@@ -48,9 +48,9 @@ public class ExpectationTest {
 
         // then
         assertEquals(httpRequest, expectationThatForwards.getHttpRequest());
-        assertNull(expectationThatForwards.getHttpResponse(false));
+        assertNull(expectationThatForwards.getHttpResponse());
         assertEquals(httpForward, expectationThatForwards.getHttpForward());
-        assertEquals(httpForward, expectationThatForwards.getAction(false));
+        assertEquals(httpForward, expectationThatForwards.getAction());
         assertNull(expectationThatForwards.getHttpError());
         assertNull(expectationThatForwards.getHttpClassCallback());
         assertNull(expectationThatForwards.getHttpObjectCallback());
@@ -62,10 +62,10 @@ public class ExpectationTest {
 
         // then
         assertEquals(httpRequest, expectationThatErrors.getHttpRequest());
-        assertNull(expectationThatErrors.getHttpResponse(false));
+        assertNull(expectationThatErrors.getHttpResponse());
         assertNull(expectationThatErrors.getHttpForward());
         assertEquals(httpError, expectationThatErrors.getHttpError());
-        assertEquals(httpError, expectationThatErrors.getAction(false));
+        assertEquals(httpError, expectationThatErrors.getAction());
         assertNull(expectationThatErrors.getHttpClassCallback());
         assertNull(expectationThatErrors.getHttpObjectCallback());
         assertEquals(times, expectationThatErrors.getTimes());
@@ -76,11 +76,11 @@ public class ExpectationTest {
 
         // then
         assertEquals(httpRequest, expectationThatForwards.getHttpRequest());
-        assertNull(expectationThatCallsbacksClass.getHttpResponse(false));
+        assertNull(expectationThatCallsbacksClass.getHttpResponse());
         assertNull(expectationThatCallsbacksClass.getHttpForward());
         assertNull(expectationThatCallsbacksClass.getHttpError());
         assertEquals(httpClassCallback, expectationThatCallsbacksClass.getHttpClassCallback());
-        assertEquals(httpClassCallback, expectationThatCallsbacksClass.getAction(false));
+        assertEquals(httpClassCallback, expectationThatCallsbacksClass.getAction());
         assertNull(expectationThatCallsbacksClass.getHttpObjectCallback());
         assertEquals(times, expectationThatCallsbacksClass.getTimes());
         assertEquals(timeToLive, expectationThatCallsbacksClass.getTimeToLive());
@@ -90,12 +90,12 @@ public class ExpectationTest {
 
         // then
         assertEquals(httpRequest, expectationThatForwards.getHttpRequest());
-        assertNull(expectationThatCallsbackObject.getHttpResponse(false));
+        assertNull(expectationThatCallsbackObject.getHttpResponse());
         assertNull(expectationThatCallsbackObject.getHttpForward());
         assertNull(expectationThatCallsbackObject.getHttpError());
         assertNull(expectationThatCallsbackObject.getHttpClassCallback());
         assertEquals(httpObjectCallback, expectationThatCallsbackObject.getHttpObjectCallback());
-        assertEquals(httpObjectCallback, expectationThatCallsbackObject.getAction(false));
+        assertEquals(httpObjectCallback, expectationThatCallsbackObject.getAction());
         assertEquals(times, expectationThatCallsbackObject.getTimes());
         assertEquals(timeToLive, expectationThatCallsbackObject.getTimeToLive());
     }
@@ -111,7 +111,7 @@ public class ExpectationTest {
         assertTrue(expectation.matches(new HttpRequest()));
         assertFalse(expectation.contains(null));
         assertNull(expectation.getHttpRequest());
-        assertNull(expectation.getHttpResponse(false));
+        assertNull(expectation.getHttpResponse());
         assertNull(expectation.getHttpForward());
         assertNull(expectation.getHttpClassCallback());
         assertNull(expectation.getHttpObjectCallback());

@@ -56,7 +56,7 @@ public class MockServerMatcher extends ObjectWithReflectiveEqualsHashCodeToStrin
         return expectation;
     }
 
-    public Action handle(HttpRequest httpRequest) {
+    public Action retrieveAction(HttpRequest httpRequest) {
         for (Expectation expectation : new ArrayList<Expectation>(this.expectations)) {
             if (expectation.matches(httpRequest)) {
                 expectation.decrementRemainingMatches();
@@ -65,7 +65,7 @@ public class MockServerMatcher extends ObjectWithReflectiveEqualsHashCodeToStrin
                         this.expectations.remove(expectation);
                     }
                 }
-                return expectation.getAction(true);
+                return expectation.getAction();
             } else if (!expectation.isStillAlive()) {
                 if (this.expectations.contains(expectation)) {
                     this.expectations.remove(expectation);
@@ -120,7 +120,7 @@ public class MockServerMatcher extends ObjectWithReflectiveEqualsHashCodeToStrin
         }
     }
 
-    public synchronized Expectation[] retrieve(HttpRequest httpRequest) {
+    public Expectation[] retrieveExpectations(HttpRequest httpRequest) {
         List<Expectation> expectations = new ArrayList<Expectation>();
         if (httpRequest != null) {
             for (Expectation expectation : new ArrayList<Expectation>(this.expectations)) {

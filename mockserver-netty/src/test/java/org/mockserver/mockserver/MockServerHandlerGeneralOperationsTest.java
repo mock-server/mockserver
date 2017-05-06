@@ -209,7 +209,7 @@ public class MockServerHandlerGeneralOperationsTest extends MockServerHandlerTes
     public void shouldReturnSetupExpectationsRequests() {
         // given
         Expectation[] expectations = {};
-        when(mockMockServerMatcher.retrieve(mockHttpRequest)).thenReturn(expectations);
+        when(mockMockServerMatcher.retrieveExpectations(mockHttpRequest)).thenReturn(expectations);
         when(mockExpectationSerializer.serialize(expectations)).thenReturn("expectations");
         HttpRequest request = request("/retrieve").withQueryStringParameter("type", "expectation").withMethod("PUT").withBody("some_content");
 
@@ -220,7 +220,7 @@ public class MockServerHandlerGeneralOperationsTest extends MockServerHandlerTes
         verify(mockHttpRequestSerializer).deserialize("some_content");
 
         // then - matching expectations should be retrieved
-        verify(mockMockServerMatcher).retrieve(mockHttpRequest);
+        verify(mockMockServerMatcher).retrieveExpectations(mockHttpRequest);
 
         // and - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
@@ -232,7 +232,7 @@ public class MockServerHandlerGeneralOperationsTest extends MockServerHandlerTes
     public void shouldReturnBadRequestAfterException() {
         // given
         HttpRequest request = request("/randomPath").withMethod("GET").withBody("some_content");
-        when(mockMockServerMatcher.handle(request)).thenThrow(new RuntimeException("TEST EXCEPTION"));
+        when(mockMockServerMatcher.retrieveAction(request)).thenThrow(new RuntimeException("TEST EXCEPTION"));
 
         // when
         embeddedChannel.writeInbound(request);
@@ -247,7 +247,7 @@ public class MockServerHandlerGeneralOperationsTest extends MockServerHandlerTes
     public void shouldReturnNotFoundAfterNoMatch() {
         // given
         HttpRequest request = request("/randomPath").withMethod("GET").withBody("some_content");
-        when(mockMockServerMatcher.handle(request)).thenReturn(null);
+        when(mockMockServerMatcher.retrieveAction(request)).thenReturn(null);
 
         // when
         embeddedChannel.writeInbound(request);
@@ -264,7 +264,7 @@ public class MockServerHandlerGeneralOperationsTest extends MockServerHandlerTes
         HttpRequest request = request("/randomPath").withMethod("GET").withBody("some_content");
 
         // and - a matcher
-        when(mockMockServerMatcher.handle(request)).thenReturn(response().withBody("some_response"));
+        when(mockMockServerMatcher.retrieveAction(request)).thenReturn(response().withBody("some_response"));
 
         // and - a action handler
         when(mockActionHandler.processAction(response().withBody("some_response"), request))

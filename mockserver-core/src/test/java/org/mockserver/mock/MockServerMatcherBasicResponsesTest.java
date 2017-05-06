@@ -29,7 +29,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withPath("somePath")).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withPath("somePath")));
+        assertEquals(httpResponse, mockServerMatcher.retrieveAction(new HttpRequest().withPath("somePath")));
     }
 
     @Test
@@ -38,7 +38,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withPath("[a-zA-Z]*")).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withPath("somePath")));
+        assertEquals(httpResponse, mockServerMatcher.retrieveAction(new HttpRequest().withPath("somePath")));
     }
 
     @Test
@@ -47,7 +47,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withPath("somePath")).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertNull(mockServerMatcher.handle(new HttpRequest().withPath("someOtherPath")));
+        assertNull(mockServerMatcher.retrieveAction(new HttpRequest().withPath("someOtherPath")));
     }
 
     @Test
@@ -56,7 +56,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withPath("[a-z]*")).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertNull(mockServerMatcher.handle(new HttpRequest().withPath("someOtherPath123")));
+        assertNull(mockServerMatcher.retrieveAction(new HttpRequest().withPath("someOtherPath123")));
     }
 
     @Test
@@ -65,7 +65,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withPath("somePath")).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withPath("somePath").withHeaders(new Header("name", "value"))));
+        assertEquals(httpResponse, mockServerMatcher.retrieveAction(new HttpRequest().withPath("somePath").withHeaders(new Header("name", "value"))));
     }
 
     @Test
@@ -74,7 +74,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withPath("somePath")).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withPath("somePath").withQueryStringParameter(new Parameter("name", "value"))));
+        assertEquals(httpResponse, mockServerMatcher.retrieveAction(new HttpRequest().withPath("somePath").withQueryStringParameter(new Parameter("name", "value"))));
     }
 
     @Test
@@ -83,7 +83,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withPath("somePath")).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withPath("somePath").withBody(new ParameterBody(new Parameter("name", "value")))));
+        assertEquals(httpResponse, mockServerMatcher.retrieveAction(new HttpRequest().withPath("somePath").withBody(new ParameterBody(new Parameter("name", "value")))));
     }
 
     @Test
@@ -92,7 +92,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withBody(new StringBody("someBody"))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withBody(new StringBody("someBody"))));
+        assertEquals(httpResponse, mockServerMatcher.retrieveAction(new HttpRequest().withBody(new StringBody("someBody"))));
     }
 
     @Test
@@ -101,7 +101,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withBody(new RegexBody("[a-zA-Z]*"))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withBody(new StringBody("someBody"))));
+        assertEquals(httpResponse, mockServerMatcher.retrieveAction(new HttpRequest().withBody(new StringBody("someBody"))));
     }
 
     @Test
@@ -110,7 +110,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withBody(new StringBody("someBody"))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertNull(mockServerMatcher.handle(new HttpRequest().withBody(new StringBody("someOtherBody"))));
+        assertNull(mockServerMatcher.retrieveAction(new HttpRequest().withBody(new StringBody("someOtherBody"))));
     }
 
     @Test
@@ -119,7 +119,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withBody(new RegexBody("[a-z]*"))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertNull(mockServerMatcher.handle(new HttpRequest().withBody(new StringBody("someOtherBody123"))));
+        assertNull(mockServerMatcher.retrieveAction(new HttpRequest().withBody(new StringBody("someOtherBody123"))));
     }
 
     @Test
@@ -128,7 +128,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withBody(new StringBody("someBody"))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withBody(new StringBody("someBody")).withHeaders(new Header("name", "value"))));
+        assertEquals(httpResponse, mockServerMatcher.retrieveAction(new HttpRequest().withBody(new StringBody("someBody")).withHeaders(new Header("name", "value"))));
     }
 
     @Test
@@ -137,7 +137,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withBody(new StringBody("someBody"))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withBody(new StringBody("someBody")).withQueryStringParameter(new Parameter("name", "value"))));
+        assertEquals(httpResponse, mockServerMatcher.retrieveAction(new HttpRequest().withBody(new StringBody("someBody")).withQueryStringParameter(new Parameter("name", "value"))));
     }
 
     @Test
@@ -146,7 +146,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withBody(new ParameterBody(new Parameter("name", "value")))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withBody(new ParameterBody(new Parameter("name", "value"), new Parameter("additionalName", "additionalValue")))));
+        assertEquals(httpResponse, mockServerMatcher.retrieveAction(new HttpRequest().withBody(new ParameterBody(new Parameter("name", "value"), new Parameter("additionalName", "additionalValue")))));
     }
 
     @Test
@@ -155,7 +155,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withHeaders(new Header("name", "value"))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withHeaders(new Header("name", "value"))));
+        assertEquals(httpResponse, mockServerMatcher.retrieveAction(new HttpRequest().withHeaders(new Header("name", "value"))));
     }
 
     @Test
@@ -164,7 +164,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withHeaders(new Header("name", "value1", "value2"))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertNull(mockServerMatcher.handle(new HttpRequest().withHeaders(new Header("name", "value1", "value3"))));
+        assertNull(mockServerMatcher.retrieveAction(new HttpRequest().withHeaders(new Header("name", "value1", "value3"))));
     }
 
     @Test
@@ -173,7 +173,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withHeaders(new Header("name", "value1", "value2"))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertNull(mockServerMatcher.handle(new HttpRequest().withHeaders(new Header("name", "value1"))));
+        assertNull(mockServerMatcher.retrieveAction(new HttpRequest().withHeaders(new Header("name", "value1"))));
     }
 
     @Test
@@ -182,7 +182,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withHeaders(new Header("name", "value"))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withHeaders(new Header("nameExtra", "valueExtra"), new Header("name", "value"), new Header("nameExtraExtra", "valueExtraExtra"))));
+        assertEquals(httpResponse, mockServerMatcher.retrieveAction(new HttpRequest().withHeaders(new Header("nameExtra", "valueExtra"), new Header("name", "value"), new Header("nameExtraExtra", "valueExtraExtra"))));
     }
 
     @Test
@@ -191,7 +191,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withHeaders(new Header("name", "value"))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withPath("somePath").withHeaders(new Header("name", "value"))));
+        assertEquals(httpResponse, mockServerMatcher.retrieveAction(new HttpRequest().withPath("somePath").withHeaders(new Header("name", "value"))));
     }
 
     @Test
@@ -200,7 +200,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withQueryStringParameter(new Parameter("name", "value"))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withQueryStringParameter(new Parameter("name", "value"))));
+        assertEquals(httpResponse, mockServerMatcher.retrieveAction(new HttpRequest().withQueryStringParameter(new Parameter("name", "value"))));
     }
 
     @Test
@@ -209,7 +209,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withBody(new ParameterBody(new Parameter("name", "value")))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withBody(new ParameterBody(new Parameter("name", "value")))));
+        assertEquals(httpResponse, mockServerMatcher.retrieveAction(new HttpRequest().withBody(new ParameterBody(new Parameter("name", "value")))));
     }
 
     @Test
@@ -218,7 +218,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withQueryStringParameter(new Parameter("name", "value1", "value2"))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withQueryStringParameter(new Parameter("name", "value1", "value2"))));
+        assertEquals(httpResponse, mockServerMatcher.retrieveAction(new HttpRequest().withQueryStringParameter(new Parameter("name", "value1", "value2"))));
     }
 
     @Test
@@ -227,7 +227,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withBody(new ParameterBody(new Parameter("name", "value1", "value2")))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withBody(new ParameterBody(new Parameter("name", "value1", "value2")))));
+        assertEquals(httpResponse, mockServerMatcher.retrieveAction(new HttpRequest().withBody(new ParameterBody(new Parameter("name", "value1", "value2")))));
     }
 
     @Test
@@ -236,7 +236,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withQueryStringParameter(new Parameter("name", "value1", "value2"))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertNull(mockServerMatcher.handle(new HttpRequest().withQueryStringParameter(new Parameter("name", "value1", "value3"))));
+        assertNull(mockServerMatcher.retrieveAction(new HttpRequest().withQueryStringParameter(new Parameter("name", "value1", "value3"))));
     }
 
     @Test
@@ -245,7 +245,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withBody(new ParameterBody(new Parameter("name", "value1", "value2")))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertNull(mockServerMatcher.handle(new HttpRequest().withBody(new ParameterBody(new Parameter("name", "value1", "value3")))));
+        assertNull(mockServerMatcher.retrieveAction(new HttpRequest().withBody(new ParameterBody(new Parameter("name", "value1", "value3")))));
     }
 
     @Test
@@ -254,7 +254,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withQueryStringParameter(new Parameter("name", "value1", "value2"))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertNull(mockServerMatcher.handle(new HttpRequest().withQueryStringParameter(new Parameter("name", "value1"))));
+        assertNull(mockServerMatcher.retrieveAction(new HttpRequest().withQueryStringParameter(new Parameter("name", "value1"))));
     }
 
     @Test
@@ -263,7 +263,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withBody(new ParameterBody(new Parameter("name", "value1", "value2")))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertNull(mockServerMatcher.handle(new HttpRequest().withBody(new ParameterBody(new Parameter("name", "value1")))));
+        assertNull(mockServerMatcher.retrieveAction(new HttpRequest().withBody(new ParameterBody(new Parameter("name", "value1")))));
     }
 
     @Test
@@ -272,7 +272,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withQueryStringParameter(new Parameter(".*name", "value.*"))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withQueryStringParameters(
+        assertEquals(httpResponse, mockServerMatcher.retrieveAction(new HttpRequest().withQueryStringParameters(
                 new Parameter("nameExtra", "valueExtra"), new Parameter("name", "value"),
                 new Parameter("nameExtraExtra", "valueExtraExtra")
         )));
@@ -284,7 +284,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withBody(new ParameterBody(new Parameter(".*name", "value.*")))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withBody(new ParameterBody(
+        assertEquals(httpResponse, mockServerMatcher.retrieveAction(new HttpRequest().withBody(new ParameterBody(
                 new Parameter("nameExtra", "valueExtra"),
                 new Parameter("name", "value"),
                 new Parameter("nameExtraExtra", "valueExtraExtra")
@@ -297,7 +297,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withQueryStringParameters(new Parameter("name", "val[a-z]{2}"))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withQueryStringParameters(new Parameter("name", "value"))));
+        assertEquals(httpResponse, mockServerMatcher.retrieveAction(new HttpRequest().withQueryStringParameters(new Parameter("name", "value"))));
     }
 
     @Test
@@ -306,7 +306,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withQueryStringParameters(new Parameter("name", "valueOne", "valueTwo"))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withQueryStringParameters(new Parameter("name", "valueOne", "valueTwo"))));
+        assertEquals(httpResponse, mockServerMatcher.retrieveAction(new HttpRequest().withQueryStringParameters(new Parameter("name", "valueOne", "valueTwo"))));
     }
 
     @Test
@@ -315,7 +315,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withQueryStringParameters(new Parameter("name", "valueOne", "valueTwo"))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertNull(mockServerMatcher.handle(new HttpRequest().withQueryStringParameters(new Parameter("name", "valueOne", "valueThree"))));
+        assertNull(mockServerMatcher.retrieveAction(new HttpRequest().withQueryStringParameters(new Parameter("name", "valueOne", "valueThree"))));
     }
 
     @Test
@@ -324,7 +324,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withQueryStringParameters(new Parameter("name", "valueOne", "valueTwo"))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertNull(mockServerMatcher.handle(new HttpRequest().withQueryStringParameters(new Parameter("name", "valueOne"))));
+        assertNull(mockServerMatcher.retrieveAction(new HttpRequest().withQueryStringParameters(new Parameter("name", "valueOne"))));
     }
 
     @Test
@@ -333,7 +333,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withQueryStringParameters(new Parameter("name", "val[a-z]{2}"))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withQueryStringParameters(
+        assertEquals(httpResponse, mockServerMatcher.retrieveAction(new HttpRequest().withQueryStringParameters(
                 new Parameter("nameExtra", "valueExtra"),
                 new Parameter("name", "value"),
                 new Parameter("nameExtraExtra", "valueExtraExtra")
@@ -346,7 +346,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withBody(new ParameterBody(new Parameter("name", "val[a-z]{2}")))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withBody(new ParameterBody(
+        assertEquals(httpResponse, mockServerMatcher.retrieveAction(new HttpRequest().withBody(new ParameterBody(
                 new Parameter("nameExtra", "valueExtra"),
                 new Parameter("name", "value"),
                 new Parameter("nameExtraExtra", "valueExtraExtra")
@@ -359,7 +359,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withQueryStringParameters(new Parameter("nameOne", "valueOne"), new Parameter("nameTwo", "valueTwo"))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withQueryStringParameters(
+        assertEquals(httpResponse, mockServerMatcher.retrieveAction(new HttpRequest().withQueryStringParameters(
                 new Parameter("nameOne", "valueOne"),
                 new Parameter("nameTwo", "valueTwo")
         )));
@@ -371,7 +371,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withBody(new ParameterBody(new Parameter("nameOne", "valueOne"), new Parameter("nameTwo", "valueTwo")))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withBody(new ParameterBody(
+        assertEquals(httpResponse, mockServerMatcher.retrieveAction(new HttpRequest().withBody(new ParameterBody(
                 new Parameter("nameOne", "valueOne"),
                 new Parameter("nameTwo", "valueTwo")
         ))));
@@ -383,7 +383,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withQueryStringParameters(new Parameter("nameOne", "valueTwo", "valueTwo"))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertNull(mockServerMatcher.handle(new HttpRequest().withQueryStringParameters(
+        assertNull(mockServerMatcher.retrieveAction(new HttpRequest().withQueryStringParameters(
                 new Parameter("nameOne", "valueOne"),
                 new Parameter("nameTwo", "valueTwo")
         )));
@@ -395,7 +395,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withQueryStringParameters(new Parameter("nameOne", "valueTwo"), new Parameter("nameTwo", "valueOne"))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertNull(mockServerMatcher.handle(new HttpRequest().withQueryStringParameters(
+        assertNull(mockServerMatcher.retrieveAction(new HttpRequest().withQueryStringParameters(
                 new Parameter("nameOne", "valueOne"),
                 new Parameter("nameTwo", "valueTwo")
         )));
@@ -407,7 +407,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withBody(new ParameterBody(new Parameter("nameOne", "valueOne"), new Parameter("nameTwo", "valueTwo")))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertNull(mockServerMatcher.handle(new HttpRequest().withBody(new ParameterBody(
+        assertNull(mockServerMatcher.retrieveAction(new HttpRequest().withBody(new ParameterBody(
                 new Parameter("nameOne", "valueTwo"),
                 new Parameter("nameTwo", "valueOne")
         ))));
@@ -419,7 +419,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withQueryStringParameters(new Parameter("name", "value"))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withPath("somePath").withQueryStringParameters(new Parameter("name", "value"))));
+        assertEquals(httpResponse, mockServerMatcher.retrieveAction(new HttpRequest().withPath("somePath").withQueryStringParameters(new Parameter("name", "value"))));
     }
 
     @Test
@@ -428,7 +428,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withBody(new ParameterBody(new Parameter("name", "value")))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withPath("somePath").withBody(new ParameterBody(new Parameter("name", "value")))));
+        assertEquals(httpResponse, mockServerMatcher.retrieveAction(new HttpRequest().withPath("somePath").withBody(new ParameterBody(new Parameter("name", "value")))));
     }
 
     @Test
@@ -437,7 +437,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withCookies(new Cookie("name", "value"))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withCookies(new Cookie("name", "value"))));
+        assertEquals(httpResponse, mockServerMatcher.retrieveAction(new HttpRequest().withCookies(new Cookie("name", "value"))));
     }
 
     @Test
@@ -446,7 +446,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withCookies(new Cookie("name", "value1"))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertNull(mockServerMatcher.handle(new HttpRequest().withCookies(new Cookie("name", "value2"))));
+        assertNull(mockServerMatcher.retrieveAction(new HttpRequest().withCookies(new Cookie("name", "value2"))));
     }
 
     @Test
@@ -455,7 +455,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withCookies(new Cookie("name1", "value"))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertNull(mockServerMatcher.handle(new HttpRequest().withCookies(new Cookie("name2", "value"))));
+        assertNull(mockServerMatcher.retrieveAction(new HttpRequest().withCookies(new Cookie("name2", "value"))));
     }
 
     @Test
@@ -464,7 +464,7 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withCookies(new Cookie("name", "value"))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withCookies(new Cookie("nameExtra", "valueExtra"), new Cookie("name", "value"), new Cookie("nameExtraExtra", "valueExtraExtra"))));
+        assertEquals(httpResponse, mockServerMatcher.retrieveAction(new HttpRequest().withCookies(new Cookie("nameExtra", "valueExtra"), new Cookie("name", "value"), new Cookie("nameExtraExtra", "valueExtraExtra"))));
     }
 
     @Test
@@ -473,6 +473,6 @@ public class MockServerMatcherBasicResponsesTest {
         mockServerMatcher.when(httpRequest.withCookies(new Cookie("name", "value"))).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withPath("somePath").withCookies(new Cookie("name", "value"))));
+        assertEquals(httpResponse, mockServerMatcher.retrieveAction(new HttpRequest().withPath("somePath").withCookies(new Cookie("name", "value"))));
     }
 }

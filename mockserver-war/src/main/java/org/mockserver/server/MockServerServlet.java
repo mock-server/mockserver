@@ -81,9 +81,9 @@ public class MockServerServlet extends HttpServlet {
                 Expectation expectation = expectationSerializer.deserialize(request.getBodyAsString());
 
                 addCORSHeadersForAPI(httpServletResponse);
-                Action action = expectation.getAction(false);
+                Action action = expectation.getAction();
                 if (validateSupportedFeatures(action, httpServletResponse)) {
-                    mockServerMatcher.when(expectation.getHttpRequest(), expectation.getTimes(), expectation.getTimeToLive()).thenRespond(expectation.getHttpResponse(false)).thenForward(expectation.getHttpForward()).thenCallback(expectation.getHttpClassCallback());
+                    mockServerMatcher.when(expectation.getHttpRequest(), expectation.getTimes(), expectation.getTimeToLive()).thenRespond(expectation.getHttpResponse()).thenForward(expectation.getHttpForward()).thenCallback(expectation.getHttpClassCallback());
                     httpServletResponse.setStatus(HttpStatusCode.CREATED_201.code());
                 }
 
@@ -118,7 +118,7 @@ public class MockServerServlet extends HttpServlet {
 
                 addCORSHeadersForAPI(httpServletResponse);
                 if (request.hasQueryStringParameter("type", "expectation")) {
-                    Expectation[] expectations = mockServerMatcher.retrieve(httpRequestSerializer.deserialize(request.getBodyAsString()));
+                    Expectation[] expectations = mockServerMatcher.retrieveExpectations(httpRequestSerializer.deserialize(request.getBodyAsString()));
                     httpServletResponse.setStatus(HttpStatusCode.OK_200.code());
                     httpServletResponse.setHeader(CONTENT_TYPE.toString(), MediaType.JSON_UTF_8.toString());
                     IOStreamUtils.writeToOutputStream(expectationSerializer.serialize(expectations).getBytes(), httpServletResponse);
@@ -148,7 +148,7 @@ public class MockServerServlet extends HttpServlet {
 
             } else {
 
-                Action action = mockServerMatcher.handle(request);
+                Action action = mockServerMatcher.retrieveAction(request);
                 if (validateSupportedFeatures(action, httpServletResponse)) {
                     mapResponse(actionHandler.processAction(action, request), httpServletResponse);
                     addCORSHeadersForAllResponses(httpServletResponse);

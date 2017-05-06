@@ -33,18 +33,6 @@ public class Expectation extends ObjectWithJsonToString {
         return httpRequest;
     }
 
-    public HttpResponse getHttpResponse(boolean applyDelay) {
-        if (httpResponse != null) {
-            if (applyDelay) {
-                return httpResponse.applyDelay();
-            } else {
-                return httpResponse;
-            }
-        } else {
-            return null;
-        }
-    }
-
     public HttpResponse getHttpResponse() {
         return httpResponse;
     }
@@ -65,9 +53,9 @@ public class Expectation extends ObjectWithJsonToString {
         return httpObjectCallback;
     }
 
-    public Action getAction(boolean applyDelay) {
+    public Action getAction() {
         if (httpResponse != null) {
-            return getHttpResponse(applyDelay);
+            return getHttpResponse();
         } else if (httpForward != null) {
             return getHttpForward();
         } else if (httpError != null) {

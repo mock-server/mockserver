@@ -36,7 +36,7 @@ public class MockServerMatcherManageExpectationsTest {
         mockServerMatcher.when(httpRequest.withPath("somePath"), Times.unlimited(), TimeToLive.exactly(TimeUnit.MICROSECONDS, 0L)).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertThat(mockServerMatcher.handle(new HttpRequest().withPath("somePath")), nullValue());
+        assertThat(mockServerMatcher.retrieveAction(new HttpRequest().withPath("somePath")), nullValue());
         assertThat(mockServerMatcher.expectations, empty());
     }
 
@@ -46,7 +46,7 @@ public class MockServerMatcherManageExpectationsTest {
         mockServerMatcher.when(httpRequest.withPath("somePath"), Times.unlimited(), TimeToLive.exactly(TimeUnit.HOURS, 1L)).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertThat(mockServerMatcher.handle(new HttpRequest().withPath("somePath")), Is.<Action>is(httpResponse.withBody("someBody")));
+        assertThat(mockServerMatcher.retrieveAction(new HttpRequest().withPath("somePath")), Is.<Action>is(httpResponse.withBody("someBody")));
         assertThat(mockServerMatcher.expectations.size(), is(1));
     }
 
@@ -56,8 +56,8 @@ public class MockServerMatcherManageExpectationsTest {
         mockServerMatcher.when(httpRequest.withPath("somePath"), Times.exactly(1), TimeToLive.unlimited()).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertThat(mockServerMatcher.handle(new HttpRequest().withPath("somePath")), Is.<Action>is(httpResponse.withBody("someBody")));
-        assertThat(mockServerMatcher.handle(new HttpRequest().withPath("somePath")), nullValue());
+        assertThat(mockServerMatcher.retrieveAction(new HttpRequest().withPath("somePath")), Is.<Action>is(httpResponse.withBody("someBody")));
+        assertThat(mockServerMatcher.retrieveAction(new HttpRequest().withPath("somePath")), nullValue());
         assertThat(mockServerMatcher.expectations, empty());
     }
 
@@ -67,7 +67,7 @@ public class MockServerMatcherManageExpectationsTest {
         mockServerMatcher.when(httpRequest.withPath("somePath"), Times.exactly(2), TimeToLive.unlimited()).thenRespond(httpResponse.withBody("someBody"));
 
         // then
-        assertThat(mockServerMatcher.handle(new HttpRequest().withPath("somePath")), Is.<Action>is(httpResponse.withBody("someBody")));
+        assertThat(mockServerMatcher.retrieveAction(new HttpRequest().withPath("somePath")), Is.<Action>is(httpResponse.withBody("someBody")));
         assertThat(mockServerMatcher.expectations.size(), is(1));
     }
 }

@@ -49,7 +49,6 @@ public class NettyHttpClientErrorHandlingTest {
         new NettyHttpClient().sendRequest(outboundRequest("127.0.0.1", freePort, "", request()));
     }
 
-    @Test
     @Ignore
     public void shouldHandleConnectionClosure() {
         // given

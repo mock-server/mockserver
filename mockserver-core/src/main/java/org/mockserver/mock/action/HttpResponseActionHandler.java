@@ -8,6 +8,6 @@ import org.mockserver.model.HttpResponse;
 public class HttpResponseActionHandler {
 
     public HttpResponse handle(HttpResponse httpResponse) {
-        return httpResponse.shallowClone();
+        return httpResponse.applyDelay().shallowClone();
     }
 }

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 function finish {
-  dmesg | grep -E -i -B100 'killed process'
+  sudo dmesg | grep -E -i -B100 'killed process'
 }
 trap finish ERR
 

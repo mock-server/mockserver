@@ -106,7 +106,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                     SSLFactory.addSubjectAlternativeName(expectation.getHttpRequest().getFirstHeader(HOST.toString()));
                     mockServerMatcher
                             .when(expectation.getHttpRequest(), expectation.getTimes(), expectation.getTimeToLive())
-                            .thenRespond(expectation.getHttpResponse(false))
+                            .thenRespond(expectation.getHttpResponse())
                             .thenForward(expectation.getHttpForward())
                             .thenError(expectation.getHttpError())
                             .thenCallback(expectation.getHttpClassCallback())
@@ -151,7 +151,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
                 HttpRequest httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
                 if (request.hasQueryStringParameter("type", "expectation")) {
-                    Expectation[] expectations = mockServerMatcher.retrieve(httpRequest);
+                    Expectation[] expectations = mockServerMatcher.retrieveExpectations(httpRequest);
                     logFormatter.infoLog("retrieving expectations that match:{}", httpRequest);
                     writeResponse(ctx, request, HttpResponseStatus.OK, expectationSerializer.serialize(expectations), "application/json");
                 } else {
@@ -194,7 +194,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
             } else {
 
-                Action handle = mockServerMatcher.handle(request);
+                Action handle = mockServerMatcher.retrieveAction(request);
                 if (handle instanceof HttpError) {
                     HttpError httpError = ((HttpError) handle).applyDelay();
                     if (httpError.getResponseBytes() != null) {
