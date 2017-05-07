@@ -6,18 +6,15 @@
 #
 
 # pull base image
-FROM java
+FROM openjdk:alpine
 
 # maintainer details
 MAINTAINER James Bloom "jamesdbloom@gmail.com"
 
-# download MockServer
-RUN  \
-  mkdir -p /opt/mockserver && \
-  wget -O /opt/mockserver/mockserver-netty-jar-with-dependencies.jar https://oss.sonatype.org/content/repositories/releases/org/mock-server/mockserver-netty/3.10.7/mockserver-netty-3.10.7-jar-with-dependencies.jar && \
-  wget -O /opt/mockserver/run_mockserver.sh https://raw.github.com/jamesdbloom/mockserver/master/docker/run_mockserver.sh && \
-  wget -O /opt/mockserver/CertificateAuthorityCertificate.pem https://raw.github.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/socket/CertificateAuthorityCertificate.pem && \
-  chmod +x /opt/mockserver/run_mockserver.sh
+# obtain MockServer jar and script
+RUN apk add --update openssl ca-certificates bash
+ADD run_mockserver.sh /opt/mockserver/run_mockserver.sh
+RUN wget -O /opt/mockserver/mockserver-netty-jar-with-dependencies.jar https://oss.sonatype.org/content/repositories/releases/org/mock-server/mockserver-netty/3.10.7/mockserver-netty-3.10.7-jar-with-dependencies.jar
 
 # set working directory
 WORKDIR /opt/mockserver
