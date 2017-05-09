@@ -92,8 +92,6 @@
     </logger>
 
     <logger name="org.mockserver" level="${mockserver.logLevel:-WARN}"/>
-    <logger name="org.mockserver.proxy" level="${mockserver.logLevel:-WARN}"/>
-    <logger name="org.mockserver.mockserver" level="${mockserver.logLevel:-WARN}"/>
 
     <root level="${root.logLevel:-WARN}">
         <appender-ref ref="ASYNC_FILE"/>
