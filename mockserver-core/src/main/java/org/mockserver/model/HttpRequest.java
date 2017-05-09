@@ -24,6 +24,13 @@ public class HttpRequest extends Not {
     Boolean keepAlive = null;
     Boolean secure = null;
 
+    public enum Protocol {
+        HTTP,
+        HTTPS,
+        SOCKS,
+        any
+    }
+
     public static HttpRequest request() {
         return new HttpRequest();
     }

@@ -33,7 +33,7 @@ public class MockServerClient extends AbstractClient {
      * @param port the port for the MockServer to communicate with
      */
     public MockServerClient(String host, int port) {
-        this(host, port, "");
+        this(HttpRequest.Protocol.any, host, port, "", "");
     }
 
     /**
@@ -47,7 +47,21 @@ public class MockServerClient extends AbstractClient {
      * @param contextPath the context path that the MockServer war is deployed to
      */
     public MockServerClient(String host, int port, String contextPath) {
-        super(host, port, contextPath);
+        this(HttpRequest.Protocol.any, host, port, "", contextPath);
+    }
+
+    /**
+     * Start the client communicating to a MockServer at the specified host, port, base path
+     * and contextPath, and the specified protocol for example:
+     *
+     *   MockServerClient mockServerClient = new MockServerClient("localhost", 1080, "/mockserver");
+     *
+     * @param host the host for the MockServer to communicate with
+     * @param port the port for the MockServer to communicate with
+     * @param contextPath the context path that the MockServer war is deployed to
+     */
+    public MockServerClient(HttpRequest.Protocol protocol, String host, int port, String basePath, String contextPath) {
+        super(protocol, host, port, basePath, contextPath);
     }
 
     /**

@@ -23,8 +23,10 @@ public abstract class AbstractClient {
 
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
+    protected final HttpRequest.Protocol protocol;
     protected final String host;
     protected final int port;
+    protected final String basePath;
     protected final String contextPath;
     protected NettyHttpClient nettyHttpClient = new NettyHttpClient();
     protected HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
@@ -49,8 +51,24 @@ public abstract class AbstractClient {
         if (contextPath == null) {
             throw new IllegalArgumentException("ContextPath can not be null");
         }
+        this.protocol = HttpRequest.Protocol.any;
         this.host = host;
         this.port = port;
+        this.basePath = "";
+        this.contextPath = cleanContextPath(contextPath);
+    }
+
+    public AbstractClient(HttpRequest.Protocol protocol, String host, int port, String basePath, String contextPath) {
+        if (StringUtils.isEmpty(host)) {
+            throw new IllegalArgumentException("Host can not be null or empty");
+        }
+        if (contextPath == null) {
+            throw new IllegalArgumentException("ContextPath can not be null");
+        }
+        this.protocol = protocol;
+        this.host = host;
+        this.port = port;
+        this.basePath = cleanContextPath(basePath);
         this.contextPath = cleanContextPath(contextPath);
     }
 
@@ -71,7 +89,7 @@ public abstract class AbstractClient {
     }
 
     protected HttpResponse sendRequest(HttpRequest httpRequest) {
-        return nettyHttpClient.sendRequest(outboundRequest(host, port, contextPath, httpRequest));
+        return nettyHttpClient.sendRequest(outboundRequest(protocol, host, port, StringUtils.isEmpty(basePath) ? contextPath : basePath + "/" + contextPath, httpRequest));
     }
 
     protected String formatErrorMessage(String message, Object... objects) {

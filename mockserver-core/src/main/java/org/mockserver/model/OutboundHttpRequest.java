@@ -10,11 +10,13 @@ import java.net.InetSocketAddress;
  */
 public class OutboundHttpRequest extends HttpRequest {
 
+    private Protocol protocol;
     private String hostname;
     private int port;
     private String contextPath;
 
     public OutboundHttpRequest(String hostname, int port, String contextPath, HttpRequest httpRequest) {
+        this.protocol = Protocol.any;
         this.hostname = hostname;
         this.port = port;
         this.contextPath = Strings.nullToEmpty(contextPath);
@@ -26,6 +28,11 @@ public class OutboundHttpRequest extends HttpRequest {
         this.headers = httpRequest.headers;
         this.cookies = httpRequest.cookies;
         this.keepAlive = httpRequest.keepAlive;
+    }
+
+    public OutboundHttpRequest(Protocol protocol, String hostname, int port, String contextPath, HttpRequest httpRequest) {
+        this(hostname, port, contextPath, httpRequest);
+        this.protocol = protocol;
     }
 
     public static OutboundHttpRequest outboundRequest(InetSocketAddress inetSocketAddress, String contextPath, HttpRequest httpRequest) {
@@ -56,7 +63,11 @@ public class OutboundHttpRequest extends HttpRequest {
     }
 
     public static OutboundHttpRequest outboundRequest(String hostname, int port, String contextPath, HttpRequest httpRequest) {
-        return new OutboundHttpRequest(hostname, port, contextPath, httpRequest);
+        return outboundRequest(Protocol.any, hostname, port, contextPath, httpRequest);
+    }
+
+    public static OutboundHttpRequest outboundRequest(Protocol protocol, String hostname, int port, String contextPath, HttpRequest httpRequest) {
+        return new OutboundHttpRequest(protocol, hostname, port, contextPath, httpRequest);
     }
 
     public InetSocketAddress getDestination() {
@@ -75,5 +86,9 @@ public class OutboundHttpRequest extends HttpRequest {
         }
         super.withSecure(isSsl);
         return this;
+    }
+
+    public Protocol getProtocol() {
+        return protocol;
     }
 }
