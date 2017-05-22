@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 
-import static org.mockserver.model.OutboundHttpRequest.outboundRequest;
+import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 
 /**
  * @author jamesdbloom
@@ -51,27 +51,24 @@ public abstract class AbstractClient {
         }
         this.host = host;
         this.port = port;
-        this.contextPath = cleanContextPath(contextPath);
-    }
-
-    private String cleanContextPath(String contextPath) {
-        if (!Strings.isNullOrEmpty(contextPath)) {
-            if (!contextPath.endsWith("/")) {
-                contextPath += "/";
-            }
-            if (!contextPath.startsWith("/")) {
-                contextPath = "/" + contextPath;
-            }
-        }
-        return contextPath;
+        this.contextPath = contextPath;
     }
 
     protected String calculatePath(String path) {
-        return "/" + path;
+        String cleanedPath = path;
+        if (!Strings.isNullOrEmpty(contextPath)) {
+            cleanedPath =
+                    (!contextPath.startsWith("/") ? "/" : "") +
+                            contextPath +
+                            (!contextPath.endsWith("/") ? "/" : "") +
+                            (cleanedPath.startsWith("/") ? cleanedPath.substring(1) : cleanedPath);
+        }
+        return (!cleanedPath.startsWith("/") ? "/" : "") + cleanedPath;
     }
 
     protected HttpResponse sendRequest(HttpRequest httpRequest) {
-        return nettyHttpClient.sendRequest(outboundRequest(host, port, contextPath, httpRequest));
+        httpRequest.withHeader(HOST.toString(), host + ":" + port);
+        return nettyHttpClient.sendRequest(httpRequest);
     }
 
     protected String formatErrorMessage(String message, Object... objects) {

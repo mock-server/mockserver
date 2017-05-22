@@ -1,4 +1,4 @@
-package org.mockserver.codec;
+package org.mockserver.server.netty.codec;
 
 import com.google.common.base.Charsets;
 import com.google.common.net.MediaType;
@@ -12,6 +12,7 @@ import org.mockserver.mappers.ContentTypeMapper;
 import org.mockserver.model.*;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.server.netty.codec.MockServerRequestDecoder;
 
 import java.util.ArrayList;
 import java.util.List;

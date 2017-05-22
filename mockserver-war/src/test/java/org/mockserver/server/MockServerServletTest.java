@@ -35,6 +35,7 @@ import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.model.ConnectionOptions.connectionOptions;
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.verify.Verification.verification;
 
 /**
  * @author jamesdbloom
@@ -480,7 +481,7 @@ public class MockServerServletTest {
     public void shouldVerifyRequestNotMatching() throws IOException {
         // given
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-        Verification verification = new Verification().withRequest(new HttpRequest()).withTimes(VerificationTimes.once());
+        Verification verification = verification().withRequest(new HttpRequest()).withTimes(VerificationTimes.once());
 
         when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class)))
                 .thenReturn(
@@ -505,7 +506,7 @@ public class MockServerServletTest {
     public void shouldVerifyRequestMatching() throws IOException {
         // given
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-        Verification verification = new Verification().withRequest(new HttpRequest()).withTimes(VerificationTimes.once());
+        Verification verification = verification().withRequest(new HttpRequest()).withTimes(VerificationTimes.once());
 
         when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class)))
                 .thenReturn(

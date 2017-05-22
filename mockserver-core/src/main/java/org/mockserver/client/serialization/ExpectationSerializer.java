@@ -26,7 +26,7 @@ public class ExpectationSerializer implements Serializer<Expectation> {
         }
     }
 
-    public String serialize(Expectation[] expectation) {
+    public String serialize(Expectation... expectation) {
         try {
             if (expectation != null && expectation.length > 0) {
                 ExpectationDTO[] expectationDTOs = new ExpectationDTO[expectation.length];

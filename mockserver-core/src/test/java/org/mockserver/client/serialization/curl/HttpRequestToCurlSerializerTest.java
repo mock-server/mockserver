@@ -3,22 +3,27 @@ package org.mockserver.client.serialization.curl;
 import org.junit.Test;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
-import org.mockserver.model.OutboundHttpRequest;
 
+import java.net.InetSocketAddress;
+
+import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.Parameter.param;
 
-public class OutboundRequestToCurlSerializerTest {
+public class HttpRequestToCurlSerializerTest {
 
     @Test
     public void shouldGenerateCurlForSimpleRequest() {
         // given
-        OutboundRequestToCurlSerializer outboundRequestToCurlSerializer = new OutboundRequestToCurlSerializer();
+        HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer();
 
         // when
-        String curl = outboundRequestToCurlSerializer.toCurl(OutboundHttpRequest.outboundRequest("localhost", 80, null, request()));
+        String curl = httpRequestToCurlSerializer.toCurl(
+                request(),
+                new InetSocketAddress("localhost", 80)
+        );
 
         // then
         assertThat(curl, is("curl -v 'http://localhost:80/'"));
@@ -27,46 +32,82 @@ public class OutboundRequestToCurlSerializerTest {
     @Test
     public void shouldGenerateCurlForRequestWithPOST() {
         // given
-        OutboundRequestToCurlSerializer outboundRequestToCurlSerializer = new OutboundRequestToCurlSerializer();
+        HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer();
 
         // when
-        String curl = outboundRequestToCurlSerializer.toCurl(OutboundHttpRequest.outboundRequest("localhost", 80, null,
+        String curl = httpRequestToCurlSerializer.toCurl(
                 request()
-                        .withMethod("POST")
-        ));
+                        .withMethod("POST"),
+                new InetSocketAddress("localhost", 80)
+        );
 
         // then
         assertThat(curl, is("curl -v 'http://localhost:80/' -X POST"));
     }
 
     @Test
-    public void shouldGenerateCurlForRequestWithGET() {
+    public void shouldGenerateCurlForRequestWithGETAndSocketAddress() {
         // given
-        OutboundRequestToCurlSerializer outboundRequestToCurlSerializer = new OutboundRequestToCurlSerializer();
+        HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer();
 
         // when
-        String curl = outboundRequestToCurlSerializer.toCurl(OutboundHttpRequest.outboundRequest("localhost", 80, null,
+        String curl = httpRequestToCurlSerializer.toCurl(
                 request()
-                        .withMethod("GET")
-        ));
+                        .withMethod("GET"),
+                new InetSocketAddress("localhost", 80)
+        );
 
         // then
         assertThat(curl, is("curl -v 'http://localhost:80/'"));
     }
 
     @Test
-    public void shouldGenerateCurlForRequestWithParameter() {
+    public void shouldGenerateCurlForRequestWithGETAndNullSocketAddress() {
         // given
-        OutboundRequestToCurlSerializer outboundRequestToCurlSerializer = new OutboundRequestToCurlSerializer();
+        HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer();
 
         // when
-        String curl = outboundRequestToCurlSerializer.toCurl(OutboundHttpRequest.outboundRequest("localhost", 80, null,
+        String curl = httpRequestToCurlSerializer.toCurl(
+                request()
+                        .withHeader(HOST.toString(), "localhost:" + 80)
+                        .withMethod("GET"),
+                null
+        );
+
+        // then
+        assertThat(curl, is("curl -v 'http://localhost:80/' -H 'host: localhost:80'"));
+    }
+
+    @Test
+    public void shouldGenerateCurlForRequestWithGETAndNullSocketAddressAndNoHostHeader() {
+        // given
+        HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer();
+
+        // when
+        String curl = httpRequestToCurlSerializer.toCurl(
+                request()
+                        .withMethod("GET"),
+                null
+        );
+
+        // then
+        assertThat(curl, is("no host header or remote address specified"));
+    }
+
+    @Test
+    public void shouldGenerateCurlForRequestWithParameter() {
+        // given
+        HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer();
+
+        // when
+        String curl = httpRequestToCurlSerializer.toCurl(
                 request()
                         .withQueryStringParameters(
                                 param("parameterName1", "parameterValue1_1", "parameterValue1_2"),
                                 param("another parameter with spaces", "a value with single \'quotes\', double \"quotes\" and spaces")
-                        )
-        ));
+                        ),
+                new InetSocketAddress("localhost", 80)
+        );
 
         // then
         assertThat(curl, is("curl -v 'http://localhost:80/?parameterName1=parameterValue1_1&parameterName1=parameterValue1_2&another%20parameter%20with%20spaces=a%20value%20with%20single%20%27quotes%27%2C%20double%20%22quotes%22%20and%20spaces'"));
@@ -75,16 +116,17 @@ public class OutboundRequestToCurlSerializerTest {
     @Test
     public void shouldGenerateCurlForRequestWithHeaders() {
         // given
-        OutboundRequestToCurlSerializer outboundRequestToCurlSerializer = new OutboundRequestToCurlSerializer();
+        HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer();
 
         // when
-        String curl = outboundRequestToCurlSerializer.toCurl(OutboundHttpRequest.outboundRequest("localhost", 80, null,
+        String curl = httpRequestToCurlSerializer.toCurl(
                 request()
                         .withHeaders(
                                 new Header("headerName1", "headerValue1"),
                                 new Header("headerName2", "headerValue2_1", "headerValue2_2")
-                        )
-        ));
+                        ),
+                new InetSocketAddress("localhost", 80)
+        );
 
         // then
         assertThat(curl, is("curl -v 'http://localhost:80/' -H 'headerName1: headerValue1' -H 'headerName2: headerValue2_1' -H 'headerName2: headerValue2_2'"));
@@ -93,16 +135,17 @@ public class OutboundRequestToCurlSerializerTest {
     @Test
     public void shouldGenerateCurlForRequestWithCookies() {
         // given
-        OutboundRequestToCurlSerializer outboundRequestToCurlSerializer = new OutboundRequestToCurlSerializer();
+        HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer();
 
         // when
-        String curl = outboundRequestToCurlSerializer.toCurl(OutboundHttpRequest.outboundRequest("localhost", 80, null,
+        String curl = httpRequestToCurlSerializer.toCurl(
                 request()
                         .withCookies(
                                 new Cookie("cookieName1", "cookieValue1"),
                                 new Cookie("cookieName2", "cookieValue2")
-                        )
-        ));
+                        ),
+                new InetSocketAddress("localhost", 80)
+        );
 
         // then
         assertThat(curl, is("curl -v 'http://localhost:80/' " +
@@ -112,10 +155,10 @@ public class OutboundRequestToCurlSerializerTest {
     @Test
     public void shouldGenerateCurlForRequestWithPOSTParameterHeadersAndCookies() {
         // given
-        OutboundRequestToCurlSerializer outboundRequestToCurlSerializer = new OutboundRequestToCurlSerializer();
+        HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer();
 
         // when
-        String curl = outboundRequestToCurlSerializer.toCurl(OutboundHttpRequest.outboundRequest("localhost", 80, null,
+        String curl = httpRequestToCurlSerializer.toCurl(
                 request()
                         .withPath("/somePath")
                         .withMethod("POST")
@@ -130,8 +173,9 @@ public class OutboundRequestToCurlSerializerTest {
                         .withCookies(
                                 new Cookie("cookieName1", "cookieValue1"),
                                 new Cookie("cookieName2", "cookieValue2")
-                        )
-        ));
+                        ),
+                new InetSocketAddress("localhost", 80)
+        );
 
         // then
         assertThat(curl, is("curl -v " +
@@ -147,13 +191,13 @@ public class OutboundRequestToCurlSerializerTest {
     @Test
     public void shouldHandleNullWhenGeneratingCurl() {
         // given
-        OutboundRequestToCurlSerializer outboundRequestToCurlSerializer = new OutboundRequestToCurlSerializer();
+        HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer();
 
         // when
-        String curl = outboundRequestToCurlSerializer.toCurl(null);
+        String curl = httpRequestToCurlSerializer.toCurl(null, null);
 
         // then
-        assertThat(curl, is(""));
+        assertThat(curl, is("null HttpRequest"));
     }
 
 }

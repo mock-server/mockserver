@@ -1,4 +1,4 @@
-package org.mockserver.codec;
+package org.mockserver.server.netty.codec;
 
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaders;
@@ -6,6 +6,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.model.ConnectionOptions;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.server.netty.codec.MockServerResponseEncoder;
 
 import java.util.ArrayList;
 import java.util.List;

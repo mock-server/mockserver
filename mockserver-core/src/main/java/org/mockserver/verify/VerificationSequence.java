@@ -13,6 +13,10 @@ import java.util.List;
 public class VerificationSequence extends ObjectWithReflectiveEqualsHashCodeToString {
     private List<HttpRequest> httpRequests = new ArrayList<HttpRequest>();
 
+    public static VerificationSequence verificationSequence() {
+        return new VerificationSequence();
+    }
+
     public VerificationSequence withRequests(HttpRequest... httpRequests) {
         Collections.addAll(this.httpRequests, httpRequests);
         return this;

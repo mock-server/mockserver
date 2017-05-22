@@ -27,6 +27,7 @@ import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.verify.Verification.verification;
 
 public class VerificationSerializerTest {
 
@@ -37,7 +38,7 @@ public class VerificationSerializerTest {
             .withCookies(new Cookie("cookieName", "cookieValue"));
     private final VerificationTimes times = VerificationTimes.atLeast(2);
     private final Verification fullVerification =
-            new Verification()
+            verification()
                     .withRequest(request)
                     .withTimes(times);
     private final VerificationDTO fullVerificationDTO =

@@ -19,7 +19,7 @@ import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
  */
 public class FullHttpResponseToMockServerResponse {
 
-    public HttpResponse mapMockServerResponseToHttpServletResponse(FullHttpResponse fullHttpResponse) {
+    public HttpResponse mapMockServerResponseToFullHttpResponse(FullHttpResponse fullHttpResponse) {
         HttpResponse httpResponse = new HttpResponse();
         if (fullHttpResponse != null) {
             setStatusCode(httpResponse, fullHttpResponse);

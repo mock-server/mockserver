@@ -1,6 +1,7 @@
 package org.mockserver.integration.server;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Strings;
 import com.google.common.net.MediaType;
 import com.google.common.util.concurrent.Uninterruptibles;
 import org.apache.commons.io.IOUtils;
@@ -10,7 +11,10 @@ import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.netty.SocketConnectionException;
 import org.mockserver.client.server.MockServerClient;
 import org.mockserver.echo.http.EchoServer;
-import org.mockserver.matchers.*;
+import org.mockserver.matchers.HttpRequestMatcher;
+import org.mockserver.matchers.MatchType;
+import org.mockserver.matchers.TimeToLive;
+import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 import org.mockserver.socket.PortFactory;
@@ -19,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -44,7 +49,6 @@ import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.JsonSchemaBody.jsonSchema;
 import static org.mockserver.model.NottableString.not;
 import static org.mockserver.model.NottableString.string;
-import static org.mockserver.model.OutboundHttpRequest.outboundRequest;
 import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.ParameterBody.params;
 import static org.mockserver.model.StringBody.exact;
@@ -88,10 +92,6 @@ public abstract class AbstractClientServerIntegrationTest {
     public abstract int getMockServerSecurePort();
 
     public abstract int getTestServerPort();
-
-    protected String calculatePath(String path) {
-        return "/" + path;
-    }
 
     @Before
     public void resetServer() {
@@ -5317,11 +5317,9 @@ public abstract class AbstractClientServerIntegrationTest {
 
     @Test
     public void shouldEnsureThatInterruptedRequestsAreVerifiable() throws Exception {
-        final HttpRequest delayedRequest = request("/delayed");
-
         mockServerClient
                 .when(
-                        delayedRequest
+                        request(calculatePath("delayed"))
                 )
                 .respond(
                         response("delayed data")
@@ -5331,7 +5329,10 @@ public abstract class AbstractClientServerIntegrationTest {
         Future<HttpResponse> delayedFuture = Executors.newSingleThreadExecutor().submit(new Callable<HttpResponse>() {
             @Override
             public HttpResponse call() throws Exception {
-                return httpClient.sendRequest(outboundRequest("localhost", getMockServerPort(), servletContext, delayedRequest));
+                return httpClient.sendRequest(
+                        request(addContextToPath(calculatePath("delayed")))
+                                .withHeader(HOST.toString(), "localhost:" + getMockServerPort())
+                );
             }
         });
 
@@ -5339,7 +5340,7 @@ public abstract class AbstractClientServerIntegrationTest {
 
         delayedFuture.cancel(true); // Then interrupt requesting thread
 
-        mockServerClient.verify(delayedRequest); // We should be able to verify request that reached server even though its later interrupted
+        mockServerClient.verify(request(calculatePath("delayed"))); // We should be able to verify request that reached server even though its later interrupted
     }
 
     @Test
@@ -5407,13 +5408,31 @@ public abstract class AbstractClientServerIntegrationTest {
         return makeRequest(httpRequest, Collections.<String>emptySet());
     }
 
+    protected String calculatePath(String path) {
+        return (!path.startsWith("/") ? "/" : "") + path;
+    }
+
+    protected String addContextToPath(String path) {
+        String cleanedPath = path;
+        if (!Strings.isNullOrEmpty(servletContext)) {
+            cleanedPath =
+                    (!servletContext.startsWith("/") ? "/" : "") +
+                            servletContext +
+                            (!servletContext.endsWith("/") ? "/" : "") +
+                            (cleanedPath.startsWith("/") ? cleanedPath.substring(1) : cleanedPath);
+        }
+        return (!cleanedPath.startsWith("/") ? "/" : "") + cleanedPath;
+    }
+
     protected HttpResponse makeRequest(HttpRequest httpRequest, Collection<String> headersToIgnore) {
         int attemptsRemaining = 10;
         while (attemptsRemaining > 0) {
             try {
                 boolean isSsl = httpRequest.isSecure() != null && httpRequest.isSecure();
                 int port = (isSsl ? getMockServerSecurePort() : getMockServerPort());
-                HttpResponse httpResponse = httpClient.sendRequest(outboundRequest("localhost", port, servletContext, httpRequest));
+                httpRequest.withPath(addContextToPath(httpRequest.getPath().getValue()));
+                httpRequest.withHeader(HOST.toString(), "localhost:" + port);
+                HttpResponse httpResponse = httpClient.sendRequest(httpRequest, new InetSocketAddress("localhost", port));
                 List<Header> headers = new ArrayList<Header>();
                 for (Header header : httpResponse.getHeaders()) {
                     if (!headersToIgnore.contains(header.getName().getValue().toLowerCase())) {

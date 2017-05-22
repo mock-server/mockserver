@@ -7,10 +7,13 @@ import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.ssl.SslHandler;
-import org.mockserver.logging.LoggingHandler;
+import org.mockserver.server.netty.codec.MockServerServerCodec;
 import org.mockserver.socket.SSLFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.mockserver.echo.http.EchoServer.LOG_FILTER;
+import static org.mockserver.echo.http.EchoServer.NEXT_RESPONSE;
 
 /**
  * @author jamesdbloom
@@ -47,6 +50,8 @@ public class EchoServerInitializer extends ChannelInitializer<SocketChannel> {
 
         pipeline.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
 
-        pipeline.addLast(new EchoServerHandler(error));
+        pipeline.addLast(new MockServerServerCodec(secure));
+
+        pipeline.addLast(new EchoServerHandler(error, secure, channel.attr(LOG_FILTER).get(), channel.attr(NEXT_RESPONSE).get()));
     }
 }

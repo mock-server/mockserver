@@ -1,4 +1,4 @@
-package org.mockserver.codec;
+package org.mockserver.server.netty.codec;
 
 import com.google.common.base.Strings;
 import io.netty.buffer.ByteBuf;
@@ -30,6 +30,10 @@ import static org.mockserver.model.ConnectionOptions.isFalseOrNull;
 public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpResponse> {
     @Override
     protected void encode(ChannelHandlerContext ctx, HttpResponse response, List<Object> out) {
+        out.add(encode(response));
+    }
+
+    public DefaultFullHttpResponse encode(HttpResponse response) {
         DefaultFullHttpResponse defaultFullHttpResponse = new DefaultFullHttpResponse(
                 HttpVersion.HTTP_1_1,
                 HttpResponseStatus.valueOf((response.getStatusCode() != null ? response.getStatusCode() : 200)),
@@ -37,7 +41,7 @@ public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpRespo
         );
         setHeaders(response, defaultFullHttpResponse);
         setCookies(response, defaultFullHttpResponse);
-        out.add(defaultFullHttpResponse);
+        return defaultFullHttpResponse;
     }
 
     private ByteBuf getBody(HttpResponse response) {

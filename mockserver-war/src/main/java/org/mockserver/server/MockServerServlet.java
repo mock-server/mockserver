@@ -150,7 +150,8 @@ public class MockServerServlet extends HttpServlet {
 
                 Action action = mockServerMatcher.retrieveAction(request);
                 if (validateSupportedFeatures(action, httpServletResponse)) {
-                    mapResponse(actionHandler.processAction(action, request), httpServletResponse);
+                    HttpResponse response = actionHandler.processAction(action, request);
+                    mapResponse(response, httpServletResponse);
                     addCORSHeadersForAllResponses(httpServletResponse);
                 }
 

@@ -1,4 +1,4 @@
-package org.mockserver.codec;
+package org.mockserver.server.netty.codec;
 
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaders;
@@ -7,6 +7,7 @@ import org.junit.Test;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.server.netty.codec.MockServerResponseEncoder;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;

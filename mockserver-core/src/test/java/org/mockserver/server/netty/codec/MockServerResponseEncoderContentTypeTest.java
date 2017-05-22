@@ -1,15 +1,15 @@
-package org.mockserver.codec;
+package org.mockserver.server.netty.codec;
 
 import com.google.common.base.Charsets;
 import com.google.common.net.MediaType;
 import io.netty.handler.codec.http.FullHttpResponse;
-import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.util.CharsetUtil;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.mappers.ContentTypeMapper;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.server.netty.codec.MockServerResponseEncoder;
 
 import java.util.ArrayList;
 import java.util.List;

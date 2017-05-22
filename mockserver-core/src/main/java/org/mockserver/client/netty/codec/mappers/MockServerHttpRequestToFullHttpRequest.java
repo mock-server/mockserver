@@ -20,9 +20,9 @@ import static io.netty.handler.codec.http.HttpUtil.isKeepAlive;
 /**
  * @author jamesdbloom
  */
-public class MockServerOutboundHttpRequestToFullHttpRequest {
+public class MockServerHttpRequestToFullHttpRequest {
 
-    public FullHttpRequest mapMockServerResponseToHttpServletResponse(OutboundHttpRequest httpRequest) {
+    public FullHttpRequest mapMockServerResponseToHttpServletResponse(HttpRequest httpRequest) {
         // method
         HttpMethod httpMethod = HttpMethod.valueOf(httpRequest.getMethod("GET"));
 
@@ -38,17 +38,8 @@ public class MockServerOutboundHttpRequestToFullHttpRequest {
         return request;
     }
 
-    public String getURI(OutboundHttpRequest httpRequest) {
-        String contextPath = httpRequest.getContextPath();
-        if (!Strings.isNullOrEmpty(contextPath)) {
-            if (contextPath.endsWith("/")) {
-                contextPath = contextPath.substring(0, contextPath.lastIndexOf("/"));
-            }
-            if (!contextPath.startsWith("/")) {
-                contextPath = "/" + contextPath;
-            }
-        }
-        QueryStringEncoder queryStringEncoder = new QueryStringEncoder(contextPath + httpRequest.getPath().getValue());
+    public String getURI(HttpRequest httpRequest) {
+        QueryStringEncoder queryStringEncoder = new QueryStringEncoder(httpRequest.getPath().getValue());
         for (Parameter parameter : httpRequest.getQueryStringParameters()) {
             for (NottableString value : parameter.getValues()) {
                 queryStringEncoder.addParam(parameter.getName().getValue(), value.getValue());
@@ -88,7 +79,7 @@ public class MockServerOutboundHttpRequestToFullHttpRequest {
         }
     }
 
-    private void setHeader(OutboundHttpRequest httpRequest, FullHttpRequest request) {
+    private void setHeader(HttpRequest httpRequest, FullHttpRequest request) {
         for (Header header : httpRequest.getHeaders()) {
             String headerName = header.getName().getValue();
             // do not set hop-by-hop headers
@@ -106,13 +97,9 @@ public class MockServerOutboundHttpRequestToFullHttpRequest {
             }
         }
 
-        String port = "";
-        boolean isSsl = httpRequest.isSecure() != null && httpRequest.isSecure();
-        if ((!isSsl && httpRequest.getDestination().getPort() != 80) ||
-                (isSsl && httpRequest.getDestination().getPort() != 443)) {
-            port = ":" + httpRequest.getDestination().getPort();
+        if (!Strings.isNullOrEmpty(httpRequest.getFirstHeader(HOST.toString()))) {
+            request.headers().add(HOST, httpRequest.getFirstHeader(HOST.toString()));
         }
-        request.headers().add(HOST, httpRequest.getDestination().getHostName() + port);
         request.headers().set(ACCEPT_ENCODING, GZIP + "," + DEFLATE);
         request.headers().set(CONTENT_LENGTH, request.content().readableBytes());
         if (isKeepAlive(request)) {

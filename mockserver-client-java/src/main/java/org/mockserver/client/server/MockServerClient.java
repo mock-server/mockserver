@@ -17,6 +17,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.verify.VerificationTimes.exactly;
+import static org.mockserver.verify.Verification.verification;
 
 /**
  * @author jamesdbloom
@@ -163,6 +164,8 @@ public class MockServerClient extends AbstractClient {
             HttpResponse httpResponse = sendRequest(request().withMethod("PUT").withPath(calculatePath("status")));
             if (httpResponse.getStatusCode() == HttpStatusCode.OK_200.code()) {
                 return true;
+            } else if (attempts == 0) {
+                return false;
             } else {
                 try {
                     timeUnit.sleep(timeout);
@@ -301,7 +304,7 @@ public class MockServerClient extends AbstractClient {
             throw new IllegalArgumentException("verify(HttpRequest, VerificationTimes) requires a non null VerificationTimes object");
         }
 
-        Verification verification = new Verification().withRequest(httpRequest).withTimes(times);
+        Verification verification = verification().withRequest(httpRequest).withTimes(times);
         String result = sendRequest(request().withMethod("PUT").withPath(calculatePath("verify")).withBody(verificationSerializer.serialize(verification), Charsets.UTF_8)).getBodyAsString();
 
         if (result != null && !result.isEmpty()) {
@@ -316,7 +319,7 @@ public class MockServerClient extends AbstractClient {
      * @throws AssertionError if any request has been found
      */
     public MockServerClient verifyZeroInteractions() throws AssertionError {
-        Verification verification = new Verification().withRequest(request()).withTimes(exactly(0));
+        Verification verification = verification().withRequest(request()).withTimes(exactly(0));
         String result = sendRequest(request().withMethod("PUT").withPath(calculatePath("verify")).withBody(verificationSerializer.serialize(verification), Charsets.UTF_8)).getBodyAsString();
 
         if (result != null && !result.isEmpty()) {

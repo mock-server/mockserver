@@ -1,4 +1,4 @@
-package org.mockserver.codec;
+package org.mockserver.server.netty.codec;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
@@ -36,6 +36,10 @@ public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
 
     @Override
     protected void decode(ChannelHandlerContext ctx, FullHttpRequest fullHttpRequest, List<Object> out) {
+        out.add(decode(fullHttpRequest));
+    }
+
+    public HttpRequest decode(FullHttpRequest fullHttpRequest) {
         HttpRequest httpRequest = new HttpRequest();
         if (fullHttpRequest != null) {
             setMethod(httpRequest, fullHttpRequest);
@@ -51,7 +55,7 @@ public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
             httpRequest.withKeepAlive(isKeepAlive(fullHttpRequest));
             httpRequest.withSecure(isSecure);
         }
-        out.add(httpRequest);
+        return httpRequest;
     }
 
     private void setMethod(HttpRequest httpRequest, FullHttpRequest fullHttpResponse) {

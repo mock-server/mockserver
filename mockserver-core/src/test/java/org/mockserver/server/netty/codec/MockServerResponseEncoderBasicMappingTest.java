@@ -1,4 +1,4 @@
-package org.mockserver.codec;
+package org.mockserver.server.netty.codec;
 
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaders;
@@ -6,6 +6,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.mappers.ContentTypeMapper;
 import org.mockserver.model.*;
+import org.mockserver.server.netty.codec.MockServerResponseEncoder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,11 +14,8 @@ import java.util.List;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.collection.IsEmptyCollection.empty;
-import static org.hamcrest.collection.IsEmptyIterable.emptyIterable;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;

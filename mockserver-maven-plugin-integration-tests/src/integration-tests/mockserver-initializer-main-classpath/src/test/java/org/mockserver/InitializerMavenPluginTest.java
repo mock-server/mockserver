@@ -7,13 +7,13 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpStatusCode;
 
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockserver.model.OutboundHttpRequest.outboundRequest;
 
 /**
  * @author jamesdbloom
@@ -22,6 +22,18 @@ public class InitializerMavenPluginTest {
 
     private final static int SERVER_HTTP_PORT = 1080;
     private final static int SERVER_HTTPS_PORT = 1081;
+    protected List<String> headersToIgnore = Arrays.asList(
+            "server",
+            "expires",
+            "date",
+            "host",
+            "connection",
+            "user-agent",
+            "content-type",
+            "content-length",
+            "accept-encoding",
+            "transfer-encoding"
+    );
     // http client
     private NettyHttpClient httpClient = new NettyHttpClient();
 
@@ -56,23 +68,10 @@ public class InitializerMavenPluginTest {
         );
     }
 
-    protected List<String> headersToIgnore = Arrays.asList(
-            "server",
-            "expires",
-            "date",
-            "host",
-            "connection",
-            "user-agent",
-            "content-type",
-            "content-length",
-            "accept-encoding",
-            "transfer-encoding"
-    );
-
     protected HttpResponse makeRequest(HttpRequest httpRequest, Collection<String> headersToIgnore) {
         boolean isSsl = httpRequest.isSecure() != null && httpRequest.isSecure();
         int port = (isSsl ? SERVER_HTTPS_PORT : SERVER_HTTP_PORT);
-        HttpResponse httpResponse = httpClient.sendRequest(outboundRequest("localhost", port, "", httpRequest));
+        HttpResponse httpResponse = httpClient.sendRequest(httpRequest, new InetSocketAddress("localhost", port));
         List<Header> headers = new ArrayList<Header>();
         for (Header header : httpResponse.getHeaders()) {
             if (!headersToIgnore.contains(header.getName().getValue().toLowerCase())) {

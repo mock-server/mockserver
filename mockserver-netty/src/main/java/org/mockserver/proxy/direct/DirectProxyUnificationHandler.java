@@ -3,7 +3,7 @@ package org.mockserver.proxy.direct;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
-import org.mockserver.codec.MockServerServerCodec;
+import org.mockserver.server.netty.codec.MockServerServerCodec;
 import org.mockserver.proxy.Proxy;
 import org.mockserver.proxy.http.HttpProxy;
 import org.mockserver.proxy.http.HttpProxyHandler;

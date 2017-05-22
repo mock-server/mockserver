@@ -20,9 +20,10 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import java.net.InetSocketAddress;
+
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
-import static org.mockserver.model.OutboundHttpRequest.outboundRequest;
 
 /**
  * @author jamesdbloom
@@ -185,7 +186,10 @@ public class ProxyServlet extends HttpServlet {
                 if (hostHeaderParts.length > 1) {
                     port = Integer.parseInt(hostHeaderParts[1]);  // non-default
                 }
-                HttpResponse httpResponse = filters.applyOnResponseFilters(httpRequest, httpClient.sendRequest(outboundRequest(hostHeaderParts[0], port, "", httpRequest)));
+                InetSocketAddress remoteAddress = new InetSocketAddress(hostHeaderParts[0], port);
+
+                HttpResponse httpResponse = httpClient.sendRequest(httpRequest, remoteAddress);
+                httpResponse = filters.applyOnResponseFilters(httpRequest, httpResponse);
                 if (httpResponse != null) {
                     return httpResponse;
                 }
