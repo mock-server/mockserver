@@ -61,6 +61,15 @@ public class ConfigurationProperties {
         System.setProperty("mockserver.enableCORSForAllResponses", "" + enableCORSForAPI);
     }
 
+    // credentials config for CORS
+    public static boolean enableCredentialsForCORS() {
+        return Boolean.parseBoolean(readPropertyHierarchically("mockserver.enableCredentialsForCORS", "" + false));
+    }
+
+    public static void enableCredentialsForCORS(boolean enableCredentialsForCORS) {
+        System.setProperty("mockserver.enableCredentialsForCORS", "" + enableCredentialsForCORS);
+    }
+
     // socket config
     public static long maxSocketTimeout() {
         return readLongProperty("mockserver.maxSocketTimeout", TimeUnit.SECONDS.toMillis(DEFAULT_MAX_TIMEOUT));

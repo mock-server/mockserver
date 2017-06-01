@@ -37,6 +37,35 @@ public class HttpProxyHandlerCORSTest extends HttpProxyHandlerTest {
     }
 
     @Test
+    public void shouldSetAllowedOriginToSourceOriginForOptionsRequestAllowingCredentials() {
+        boolean originalEnableCredentialsForCORS = ConfigurationProperties.enableCredentialsForCORS();
+        try {
+            // given - a request
+            HttpRequest request = request().withMethod("OPTIONS").withHeader("Origin", "some_origin");
+
+            // but - credentials for CORS enabled
+            ConfigurationProperties.enableCredentialsForCORS(true);
+
+            // when
+            embeddedChannel.writeInbound(request);
+
+            // then - correct response written to ChannelHandlerContext
+            HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
+            assertThat(httpResponse.getStatusCode(), is(200));
+            assertThat(httpResponse.getHeader("Access-Control-Allow-Origin"), contains("some_origin"));
+            assertThat(httpResponse.getHeader("Access-Control-Allow-Credentials"), contains("true"));
+            assertThat(httpResponse.getHeader("Access-Control-Allow-Methods"), contains("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"));
+            assertThat(httpResponse.getHeader("Access-Control-Allow-Headers"), contains("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
+            assertThat(httpResponse.getHeader("Access-Control-Expose-Headers"), contains("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
+            assertThat(httpResponse.getHeader("Access-Control-Max-Age"), contains("1"));
+            assertThat(httpResponse.getHeader("X-CORS"), contains("MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORSForAPI(false) or -Dmockserver.disableCORS=false"));
+
+        } finally {
+            ConfigurationProperties.enableCredentialsForCORS(originalEnableCredentialsForCORS);
+        }
+    }
+
+    @Test
     public void shouldNotAddCORSHeadersForOptionsRequestWithoutOrigin() {
         // given - a request
         HttpRequest request = request().withMethod("OPTIONS");
