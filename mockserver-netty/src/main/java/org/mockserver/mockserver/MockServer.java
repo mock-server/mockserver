@@ -1,5 +1,7 @@
 package org.mockserver.mockserver;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.SettableFuture;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
@@ -15,10 +17,12 @@ import org.mockserver.stop.Stoppable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -115,19 +119,15 @@ public class MockServer implements Stoppable {
     }
 
     public Future<?> stop() {
-        try {
-            for (Future<Channel> channelOpened : new ArrayList<Future<Channel>>(channelOpenedFutures)) {
-                channelOpened.get().close().sync();
+        return stopEventQueue.stop(this, stopping, bossGroup, workerGroup, Lists.transform(channelOpenedFutures, new Function<Future<Channel>, Channel>() {
+            public Channel apply(Future<Channel> input) {
+                try {
+                    return input.get();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
             }
-            bossGroup.shutdownGracefully().sync();
-            workerGroup.shutdownGracefully().sync();
-            stopEventQueue.stopOthers(this).get();
-            stopping.set("stopped");
-        } catch (Exception ie) {
-            logger.trace("Exception while stopping MockServer", ie);
-            stopping.setException(ie);
-        }
-        return stopping;
+        }));
     }
 
     MockServer withStopEventQueue(StopEventQueue stopEventQueue) {

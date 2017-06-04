@@ -107,6 +107,7 @@ public class MockServerRule implements TestRule {
                     base.evaluate();
                 } finally {
                     if (!perTestSuite) {
+                        clientAndServer.reset();
                         clientAndServer.stop();
                     }
                 }

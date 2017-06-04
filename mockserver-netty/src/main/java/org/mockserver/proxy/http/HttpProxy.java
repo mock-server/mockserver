@@ -23,6 +23,7 @@ import java.net.ProxySelector;
 import java.net.SocketAddress;
 import java.net.URI;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Future;
 
@@ -103,7 +104,7 @@ public class HttpProxy implements Proxy {
         return new ProxySelector() {
             @Override
             public List<java.net.Proxy> select(URI uri) {
-                return Arrays.asList(
+                return Collections.singletonList(
                         new java.net.Proxy(java.net.Proxy.Type.SOCKS, new InetSocketAddress(host, port))
                 );
             }
@@ -116,18 +117,8 @@ public class HttpProxy implements Proxy {
     }
 
     public Future<?> stop() {
-        try {
-            proxyStopping();
-            channel.close().sync();
-            bossGroup.shutdownGracefully().sync();
-            workerGroup.shutdownGracefully().sync();
-            stopEventQueue.stopOthers(this).get();
-            stopping.set("stopped");
-        } catch (Exception ie) {
-            logger.trace("Exception while stopping MockServer proxy", ie);
-            stopping.setException(ie);
-        }
-        return stopping;
+        proxyStopping();
+        return stopEventQueue.stop(this, stopping, bossGroup, workerGroup, Collections.singletonList(channel));
     }
 
     public HttpProxy withStopEventQueue(StopEventQueue stopEventQueue) {
