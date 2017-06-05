@@ -1,0 +1,19 @@
+{
+  "httpRequest" : {
+    "method" : "GET",
+    "path" : "/posts/1",
+    "keepAlive" : true,
+    "secure" : false
+  },
+  "httpResponse" : {
+    "statusCode" : 200,
+    "body" : "post1Body"
+  },
+  "times" : {
+    "remainingTimes" : 1,
+    "unlimited" : false
+  },
+  "timeToLive" : {
+    "unlimited" : true
+  }
+}
