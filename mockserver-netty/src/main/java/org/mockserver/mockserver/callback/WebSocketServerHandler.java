@@ -53,7 +53,8 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object> 
         handshaker = new WebSocketServerHandshakerFactory(
                 "ws://" + httpRequest.headers().get(HOST) + WEB_SOCKET_URI,
                 null,
-                true
+                true,
+                Integer.MAX_VALUE
         ).newHandshaker(httpRequest);
         if (handshaker == null) {
             WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(ctx.channel());
