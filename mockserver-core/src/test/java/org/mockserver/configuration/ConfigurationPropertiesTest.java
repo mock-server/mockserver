@@ -71,6 +71,20 @@ public class ConfigurationPropertiesTest {
         assertEquals(false, ConfigurationProperties.enableCORSForAllResponses());
         assertEquals("false", System.getProperty("mockserver.enableCORSForAllResponses"));
     }
+
+    @Test
+    public void shouldSetAndReadEnableCredentialsForCORS() {
+        // given
+        System.clearProperty("mockserver.enableCredentialsForCORS");
+
+        // when
+        assertEquals(false, ConfigurationProperties.enableCredentialsForCORS());
+        ConfigurationProperties.enableCredentialsForCORS(true);
+
+        // then
+        assertEquals(true, ConfigurationProperties.enableCredentialsForCORS());
+        assertEquals("true", System.getProperty("mockserver.enableCredentialsForCORS"));
+    }
     
     @Test
     public void shouldSetAndReadMaxSocketTimeout() {

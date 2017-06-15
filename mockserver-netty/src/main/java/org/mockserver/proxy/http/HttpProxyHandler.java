@@ -36,6 +36,7 @@ import static io.netty.handler.codec.http.HttpHeaderValues.CLOSE;
 import static io.netty.handler.codec.http.HttpHeaderValues.KEEP_ALIVE;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAPI;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAllResponses;
+import static org.mockserver.configuration.ConfigurationProperties.enableCredentialsForCORS;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
@@ -200,14 +201,14 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
             response.updateHeader(header(CONTENT_TYPE.toString(), contentType + "; charset=utf-8"));
         }
         if (enableCORSForAPI()) {
-            addCORSHeaders(response);
+            addCORSHeaders(response, request);
         }
         writeResponse(ctx, request, response);
     }
 
     private void writeResponse(ChannelHandlerContext ctx, HttpRequest request, HttpResponse response) {
         if (enableCORSForAllResponses()) {
-            addCORSHeaders(response);
+            addCORSHeaders(response, request);
         }
 
         if (request.isKeepAlive() != null && request.isKeepAlive()) {
@@ -219,11 +220,18 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
         }
     }
 
-    private void addCORSHeaders(HttpResponse response) {
+    private void addCORSHeaders(HttpResponse response, HttpRequest request) {
         String methods = "CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE";
         String headers = "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary";
         if (response.getFirstHeader("Access-Control-Allow-Origin").isEmpty()) {
-            response.withHeader("Access-Control-Allow-Origin", "*");
+
+            if (enableCredentialsForCORS() && response.getFirstHeader("Access-Control-Allow-Credentials").isEmpty()) {
+                response.withHeader("Access-Control-Allow-Origin", request.getFirstHeader("Origin"));
+                response.withHeader("Access-Control-Allow-Credentials", "true");
+            } else {
+                response.withHeader("Access-Control-Allow-Origin", "*");
+            }
+
         }
         if (response.getFirstHeader("Access-Control-Allow-Methods").isEmpty()) {
             response.withHeader("Access-Control-Allow-Methods", methods);

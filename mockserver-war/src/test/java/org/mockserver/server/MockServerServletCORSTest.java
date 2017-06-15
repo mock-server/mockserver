@@ -84,6 +84,36 @@ public class MockServerServletCORSTest {
     }
 
     @Test
+    public void shouldSetAllowedOriginToSourceOriginForOptionsRequestAllowingCredentials() {
+        boolean originalEnableCredentialsForCORS = ConfigurationProperties.enableCredentialsForCORS();
+        try {
+        // given
+        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
+        HttpRequest request = request().withMethod("OPTIONS").withHeader("Origin", "some_origin");
+        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class))).thenReturn(request);
+
+        // but - credentials for CORS enabled
+        ConfigurationProperties.enableCredentialsForCORS(true);
+
+        // when
+        mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
+
+        // then
+        assertThat(httpServletResponse.getStatus(), is(200));
+        assertThat(httpServletResponse.getHeader("Access-Control-Allow-Origin"), is("some_origin"));
+        assertThat(httpServletResponse.getHeader("Access-Control-Allow-Credentials"), is("true"));
+        assertThat(httpServletResponse.getHeader("Access-Control-Allow-Methods"), is("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"));
+        assertThat(httpServletResponse.getHeader("Access-Control-Allow-Headers"), is("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
+        assertThat(httpServletResponse.getHeader("Access-Control-Expose-Headers"), is("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
+        assertThat(httpServletResponse.getHeader("Access-Control-Max-Age"), is("1"));
+        assertThat(httpServletResponse.getHeader("X-CORS"), is("MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORSForAPI(false) or -Dmockserver.disableCORS=false"));
+
+        } finally {
+            ConfigurationProperties.enableCredentialsForCORS(originalEnableCredentialsForCORS);
+        }
+    }
+
+    @Test
     public void shouldNotAddCORSHeadersForOptionsRequestWithoutOrigin() {
         // given
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
