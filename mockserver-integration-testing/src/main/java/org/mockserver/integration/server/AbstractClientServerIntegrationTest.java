@@ -45,12 +45,14 @@ import static org.mockserver.model.HttpForward.forward;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.HttpStatusCode.OK_200;
 import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.JsonSchemaBody.jsonSchema;
 import static org.mockserver.model.NottableString.not;
 import static org.mockserver.model.NottableString.string;
 import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.ParameterBody.params;
+import static org.mockserver.model.RegexBody.regex;
 import static org.mockserver.model.StringBody.exact;
 import static org.mockserver.model.XPathBody.xpath;
 import static org.mockserver.model.XmlBody.xml;
@@ -116,7 +118,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withHeaders(
                                 header("x-test", "test_headers_and_body")
                         )
@@ -134,7 +136,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in https
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withHeaders(
                                 header("x-test", "test_headers_and_body")
                         )
@@ -174,7 +176,7 @@ public abstract class AbstractClientServerIntegrationTest {
             // - in http
             assertEquals(
                     response()
-                            .withStatusCode(HttpStatusCode.OK_200.code())
+                            .withStatusCode(OK_200.code())
                             .withHeaders(
                                     header("x-test", "test_headers_and_body")
                             )
@@ -192,7 +194,7 @@ public abstract class AbstractClientServerIntegrationTest {
             // - in https
             assertEquals(
                     response()
-                            .withStatusCode(HttpStatusCode.OK_200.code())
+                            .withStatusCode(OK_200.code())
                             .withHeaders(
                                     header("x-test", "test_headers_and_body")
                             )
@@ -242,7 +244,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - forward
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withHeaders(
                                 header("x-test", "test_headers_and_body")
                         )
@@ -260,7 +262,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - respond
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body"),
                 makeRequest(
                         request()
@@ -343,7 +345,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body"),
                 makeRequest(
                         request()
@@ -353,7 +355,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in https
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body"),
                 makeRequest(
                         request()
@@ -381,7 +383,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in https
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body"),
                 makeRequest(
                         request()
@@ -400,7 +402,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body"),
                 makeRequest(
                         request()
@@ -430,7 +432,7 @@ public abstract class AbstractClientServerIntegrationTest {
         assertEquals(
                 response()
                         .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody(body),
                 makeRequest(
                         request()
@@ -442,7 +444,7 @@ public abstract class AbstractClientServerIntegrationTest {
         assertEquals(
                 response()
                         .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody(body),
                 makeRequest(
                         request()
@@ -473,7 +475,7 @@ public abstract class AbstractClientServerIntegrationTest {
         assertEquals(
                 response()
                         .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody(body),
                 makeRequest(
                         request()
@@ -486,7 +488,7 @@ public abstract class AbstractClientServerIntegrationTest {
         assertEquals(
                 response()
                         .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody(body),
                 makeRequest(
                         request()
@@ -509,7 +511,7 @@ public abstract class AbstractClientServerIntegrationTest {
         assertEquals(
                 response()
                         .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_16).toString())
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody(body),
                 makeRequest(
                         request()
@@ -520,7 +522,7 @@ public abstract class AbstractClientServerIntegrationTest {
         assertEquals(
                 response()
                         .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_16).toString())
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody(body),
                 makeRequest(
                         request()
@@ -549,7 +551,7 @@ public abstract class AbstractClientServerIntegrationTest {
         assertEquals(
                 response()
                         .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody(body),
                 makeRequest(
                         request()
@@ -560,7 +562,7 @@ public abstract class AbstractClientServerIntegrationTest {
         assertEquals(
                 response()
                         .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody(body),
                 makeRequest(
                         request()
@@ -588,7 +590,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code()),
+                        .withStatusCode(OK_200.code()),
                 makeRequest(
                         request()
                                 .withPath(calculatePath("some_path"))
@@ -598,7 +600,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in https
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code()),
+                        .withStatusCode(OK_200.code()),
                 makeRequest(
                         request()
                                 .withSecure(true)
@@ -634,7 +636,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body2"),
                 makeRequest(
                         request()
@@ -643,7 +645,7 @@ public abstract class AbstractClientServerIntegrationTest {
         );
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body1"),
                 makeRequest(
                         request()
@@ -653,7 +655,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in https
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body2"),
                 makeRequest(
                         request()
@@ -663,7 +665,7 @@ public abstract class AbstractClientServerIntegrationTest {
         );
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body1"),
                 makeRequest(
                         request()
@@ -690,7 +692,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body"),
                 makeRequest(
                         request()
@@ -700,7 +702,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in https
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body"),
                 makeRequest(
                         request()
@@ -746,7 +748,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body"),
                 makeRequest(
                         request()
@@ -756,7 +758,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in https
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body"),
                 makeRequest(
                         request()
@@ -794,7 +796,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body"),
                 makeRequest(
                         request()
@@ -827,7 +829,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in https
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body"),
                 makeRequest(
                         request()
@@ -872,7 +874,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body"),
                 makeRequest(
                         request()
@@ -893,7 +895,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in https
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body"),
                 makeRequest(
                         request()
@@ -1189,7 +1191,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body"),
                 makeRequest(
                         request()
@@ -1206,7 +1208,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in https
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body"),
                 makeRequest(
                         request()
@@ -1234,7 +1236,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 )
                 .respond(
                         response()
-                                .withStatusCode(HttpStatusCode.OK_200.code())
+                                .withStatusCode(OK_200.code())
                                 .withHeaders(
                                         header(CONTENT_TYPE.toString(), MediaType.PDF.toString()),
                                         header(CONTENT_DISPOSITION.toString(), "form-data; name=\"test.pdf\"; filename=\"test.pdf\""),
@@ -1247,7 +1249,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withHeaders(
                                 header(CONTENT_DISPOSITION.toString(), "form-data; name=\"test.pdf\"; filename=\"test.pdf\""),
                                 header(CACHE_CONTROL.toString(), "must-revalidate, post-check=0, pre-check=0"),
@@ -1263,7 +1265,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in https
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withHeaders(
                                 header(CONTENT_DISPOSITION.toString(), "form-data; name=\"test.pdf\"; filename=\"test.pdf\""),
                                 header(CACHE_CONTROL.toString(), "must-revalidate, post-check=0, pre-check=0"),
@@ -1290,7 +1292,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 )
                 .respond(
                         response()
-                                .withStatusCode(HttpStatusCode.OK_200.code())
+                                .withStatusCode(OK_200.code())
                                 .withHeaders(
                                         header(CONTENT_TYPE.toString(), MediaType.PNG.toString()),
                                         header(CONTENT_DISPOSITION.toString(), "form-data; name=\"test.png\"; filename=\"test.png\"")
@@ -1302,7 +1304,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withHeaders(
                                 header(CONTENT_DISPOSITION.toString(), "form-data; name=\"test.png\"; filename=\"test.png\""),
                                 header(CONTENT_TYPE.toString(), MediaType.PNG.toString())
@@ -1318,7 +1320,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in https
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withHeaders(
                                 header(CONTENT_DISPOSITION.toString(), "form-data; name=\"test.png\"; filename=\"test.png\""),
                                 header(CONTENT_TYPE.toString(), MediaType.PNG.toString())
@@ -1343,7 +1345,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 )
                 .respond(
                         response()
-                                .withStatusCode(HttpStatusCode.OK_200.code())
+                                .withStatusCode(OK_200.code())
                                 .withHeaders(
                                         header(CONTENT_TYPE.toString(), MediaType.PDF.toString()),
                                         header(CONTENT_DISPOSITION.toString(), "form-data; name=\"test.pdf\"; filename=\"test.pdf\""),
@@ -1356,7 +1358,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withHeaders(
                                 header(CONTENT_DISPOSITION.toString(), "form-data; name=\"test.pdf\"; filename=\"test.pdf\""),
                                 header(CACHE_CONTROL.toString(), "must-revalidate, post-check=0, pre-check=0"),
@@ -1373,7 +1375,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in https
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withHeaders(
                                 header(CONTENT_DISPOSITION.toString(), "form-data; name=\"test.pdf\"; filename=\"test.pdf\""),
                                 header(CACHE_CONTROL.toString(), "must-revalidate, post-check=0, pre-check=0"),
@@ -1400,7 +1402,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 )
                 .respond(
                         response()
-                                .withStatusCode(HttpStatusCode.OK_200.code())
+                                .withStatusCode(OK_200.code())
                                 .withHeaders(
                                         header(CONTENT_TYPE.toString(), MediaType.PNG.toString()),
                                         header(CONTENT_DISPOSITION.toString(), "form-data; name=\"test.png\"; filename=\"test.png\"")
@@ -1412,7 +1414,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withHeaders(
                                 header(CONTENT_DISPOSITION.toString(), "form-data; name=\"test.png\"; filename=\"test.png\""),
                                 header(CONTENT_TYPE.toString(), MediaType.PNG.toString())
@@ -1428,7 +1430,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in https
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withHeaders(
                                 header(CONTENT_DISPOSITION.toString(), "form-data; name=\"test.png\"; filename=\"test.png\""),
                                 header(CONTENT_TYPE.toString(), MediaType.PNG.toString())
@@ -1472,7 +1474,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body2"),
                 makeRequest(
                         request()
@@ -1481,7 +1483,7 @@ public abstract class AbstractClientServerIntegrationTest {
         );
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body1"),
                 makeRequest(
                         request()
@@ -1491,7 +1493,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in https
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body2"),
                 makeRequest(
                         request()
@@ -1501,7 +1503,7 @@ public abstract class AbstractClientServerIntegrationTest {
         );
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body1"),
                 makeRequest(
                         request()
@@ -2855,7 +2857,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // then
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body"),
                 makeRequest(
                         request()
@@ -4105,7 +4107,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body"),
                 makeRequest(
                         request()
@@ -4120,7 +4122,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in https
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body"),
                 makeRequest(
                         request()
@@ -4149,7 +4151,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body"),
                 makeRequest(
                         request()
@@ -4166,7 +4168,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in https
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body"),
                 makeRequest(
                         request()
@@ -4183,6 +4185,71 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
+    public void shouldVerifyReceivedRequestsWithRegexBody() {
+        // when
+        mockServerClient
+                .when(
+                        request()
+                                .withMethod("POST")
+                                .withPath(calculatePath("some_path"))
+                                .withBody("{type: 'some_random_type', value: 'some_random_value'}"),
+                        exactly(2)
+                )
+                .respond(
+                        response()
+                                .withBody("some_response")
+                );
+
+        // then
+        // - in http
+        assertEquals(
+                response()
+                        .withStatusCode(OK_200.code())
+                        .withBody("some_response"),
+                makeRequest(
+                        request()
+                                .withMethod("POST")
+                                .withPath(calculatePath("some_path"))
+                                .withBody("{type: 'some_random_type', value: 'some_random_value'}"),
+                        headersToIgnore)
+        );
+        mockServerClient.verify(
+                request()
+                        .withBody(regex("\\{type\\: \\'some_random_type\\'\\, value\\: \\'some_random_value\\'\\}"))
+        );
+        mockServerClient.verify(
+                request()
+                        .withBody(regex("\\{type\\: \\'some_random_type\\'\\, value\\: \\'some_random_value\\'\\}")),
+                VerificationTimes.exactly(1)
+        );
+
+        // - in https
+        assertEquals(
+                response()
+                        .withStatusCode(OK_200.code())
+                        .withBody("some_response"),
+                makeRequest(
+                        request()
+                                .withSecure(true)
+                                .withMethod("POST")
+                                .withPath(calculatePath("some_path"))
+                                .withBody("{type: 'some_random_type', value: 'some_random_value'}"),
+                        headersToIgnore)
+        );
+        mockServerClient.verify(
+                request()
+                        .withSecure(true)
+                        .withBody(regex("\\{type\\: \\'some_random_type\\'\\, value\\: \\'some_random_value\\'\\}"))
+        );
+        mockServerClient.verify(
+                request()
+                        .withSecure(true)
+                        .withBody(regex("\\{type\\: \\'some_random_type\\'\\, value\\: \\'some_random_value\\'\\}")),
+                VerificationTimes.atLeast(1)
+        );
+    }
+
+    @Test
     public void shouldVerifyReceivedRequestsWithNoBody() {
         // when
         mockServerClient.when(request().withPath(calculatePath("some_path")), exactly(2)).respond(response());
@@ -4191,7 +4258,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code()),
+                        .withStatusCode(OK_200.code()),
                 makeRequest(
                         request()
                                 .withPath(calculatePath("some_path")),
@@ -4211,7 +4278,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // then
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body"),
                 makeRequest(
                         request()
@@ -4239,7 +4306,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // then
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body"),
                 makeRequest(
                         request()
@@ -4267,7 +4334,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // then
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body"),
                 makeRequest(
                         request()
@@ -4304,7 +4371,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // then
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body"),
                 makeRequest(
                         request()
@@ -4330,7 +4397,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body"),
                 makeRequest(
                         request()
@@ -4357,7 +4424,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in https
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body"),
                 makeRequest(
                         request()
@@ -4625,7 +4692,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // and - some matching requests
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body1"),
                 makeRequest(
                         request()
@@ -4634,7 +4701,7 @@ public abstract class AbstractClientServerIntegrationTest {
         );
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body2"),
                 makeRequest(
                         request()
@@ -4673,7 +4740,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // and then - remaining expectations not cleared
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body2"),
                 makeRequest(
                         request()
@@ -4715,7 +4782,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // and - some matching requests
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body1"),
                 makeRequest(
                         request()
@@ -4724,7 +4791,7 @@ public abstract class AbstractClientServerIntegrationTest {
         );
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body2"),
                 makeRequest(
                         request()
@@ -4788,7 +4855,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // and - some matching requests
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body1"),
                 makeRequest(
                         request()
@@ -4797,7 +4864,7 @@ public abstract class AbstractClientServerIntegrationTest {
         );
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body2"),
                 makeRequest(
                         request()
@@ -4866,7 +4933,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 );
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body2"),
                 makeRequest(
                         request()
@@ -4905,7 +4972,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 );
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body2"),
                 makeRequest(
                         request()
@@ -4970,7 +5037,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // then
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body1"),
                 makeRequest(
                         request()
@@ -5002,7 +5069,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body2"),
                 makeRequest(
                         request()
@@ -5012,7 +5079,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in https
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body2"),
                 makeRequest(
                         request()
@@ -5107,7 +5174,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // then
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body1"),
                 makeRequest(
                         request()
@@ -5144,7 +5211,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body2"),
                 makeRequest(
                         request()
@@ -5159,7 +5226,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in https
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body2"),
                 makeRequest(
                         request()
@@ -5199,7 +5266,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // then
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body1"),
                 makeRequest(
                         request()
@@ -5231,7 +5298,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in http
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body2"),
                 makeRequest(
                         request()
@@ -5241,7 +5308,7 @@ public abstract class AbstractClientServerIntegrationTest {
         // - in https
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
+                        .withStatusCode(OK_200.code())
                         .withBody("some_body2"),
                 makeRequest(
                         request()

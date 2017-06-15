@@ -66,7 +66,7 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                     try {
                         type = Body.Type.valueOf(jsonParser.getText());
                     } catch (IllegalArgumentException iae) {
-                        logger.warn("Ignoring invalid value for \"type\" field of \"" + jsonParser.getText() + "\"");
+                        logger.debug("Ignoring invalid value for \"type\" field of \"" + jsonParser.getText() + "\"");
                     }
                 }
                 if (jsonParser.getCurrentToken() == JsonToken.FIELD_NAME && containsIgnoreCase(jsonParser.getText(), "string", "regex", "json", "jsonSchema", "xpath", "xml", "bytes", "value") && type != Body.Type.PARAMETERS) {
