@@ -33,7 +33,8 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
                 WebSocketVersion.V13,
                 null,
                 false,
-                new DefaultHttpHeaders()
+                new DefaultHttpHeaders(),
+                Integer.MAX_VALUE
         );
         this.webSocketClient = webSocketClient;
     }
