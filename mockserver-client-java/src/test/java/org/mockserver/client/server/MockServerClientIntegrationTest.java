@@ -850,7 +850,6 @@ public class MockServerClientIntegrationTest {
         );
 
         // then
-        System.out.println(new HttpRequestToJavaSerializer().serializeAsJava(3, requestLogFilter.httpRequests(request()).get(0)));
         assertThat(requestLogFilter.httpRequests(request()).size(), is(1));
         String result = requestLogFilter.verify(verification().withRequest(
                 request()
