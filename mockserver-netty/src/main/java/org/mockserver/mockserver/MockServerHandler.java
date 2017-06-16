@@ -227,7 +227,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
             }
         } catch (Exception e) {
             logger.error("Exception processing " + request, e);
-            writeResponse(ctx, request, response().withStatusCode(BAD_REQUEST.code()));
+            writeResponse(ctx, request, response().withStatusCode(BAD_REQUEST.code()).withBody(e.getMessage()));
         }
 
     }

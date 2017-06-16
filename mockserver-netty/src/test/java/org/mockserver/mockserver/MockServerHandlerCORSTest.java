@@ -4,11 +4,16 @@ import org.junit.Test;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.verify.Verification;
+import org.mockserver.verify.VerificationSequence;
 
+import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.hamcrest.core.Is.is;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.when;
 import static org.mockserver.model.HttpRequest.request;
 
 /**
@@ -198,9 +203,31 @@ public class MockServerHandlerCORSTest extends MockServerHandlerTest {
     }
 
     @Test
+    public void shouldNotAddCORSHeadersForInvalidRequest() {
+        // given - a request with missing body
+        HttpRequest request = request().withMethod("PUT").withPath("/bind");
+
+        // when
+        embeddedChannel.writeInbound(request);
+
+        // then - correct response written to ChannelHandlerContext
+        HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
+        assertThat(httpResponse.getStatusCode(), is(BAD_REQUEST.code()));
+        assertThat(httpResponse.getHeader("Access-Control-Allow-Origin"), empty());
+        assertThat(httpResponse.getHeader("Access-Control-Allow-Methods"), empty());
+        assertThat(httpResponse.getHeader("Access-Control-Expose-Headers"), empty());
+        assertThat(httpResponse.getHeader("Access-Control-Max-Age"), empty());
+        assertThat(httpResponse.getHeader("X-CORS"), empty());
+    }
+
+    @Test
     public void shouldAddCORSHeadersToBindRequest() {
         // given - a request
-        HttpRequest request = request().withMethod("PUT").withPath("/bind");
+        HttpRequest request = request().withMethod("PUT").withPath("/bind").withBody("{\n" +
+                "    \"ports\": [\n" +
+                "        0\n" +
+                "    ]\n" +
+                "}");
 
         // when
         embeddedChannel.writeInbound(request);
@@ -291,6 +318,7 @@ public class MockServerHandlerCORSTest extends MockServerHandlerTest {
     public void shouldAddCORSHeadersToVerifyRequest() {
         // given - a request
         HttpRequest request = request().withMethod("PUT").withPath("/verify");
+        when(mockRequestLogFilter.verify(any(Verification.class))).thenReturn("some_verification_response");
 
         // when
         embeddedChannel.writeInbound(request);
@@ -309,6 +337,7 @@ public class MockServerHandlerCORSTest extends MockServerHandlerTest {
     public void shouldAddCORSHeadersToVerifySequenceRequest() {
         // given - a request
         HttpRequest request = request().withMethod("PUT").withPath("/verifySequence");
+        when(mockRequestLogFilter.verify(any(VerificationSequence.class))).thenReturn("some_verification_response");
 
         // when
         embeddedChannel.writeInbound(request);

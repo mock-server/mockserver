@@ -4,11 +4,15 @@ import org.junit.Test;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.verify.Verification;
+import org.mockserver.verify.VerificationSequence;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.hamcrest.core.Is.is;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.when;
 import static org.mockserver.model.HttpRequest.request;
 
 /**
@@ -256,6 +260,7 @@ public class HttpProxyHandlerCORSTest extends HttpProxyHandlerTest {
     public void shouldAddCORSHeadersToVerifyRequest() {
         // given - a request
         HttpRequest request = request().withMethod("PUT").withPath("/verify");
+        when(mockRequestLogFilter.verify(any(Verification.class))).thenReturn("some_verification_response");
 
         // when
         embeddedChannel.writeInbound(request);
@@ -274,6 +279,7 @@ public class HttpProxyHandlerCORSTest extends HttpProxyHandlerTest {
     public void shouldAddCORSHeadersToVerifySequenceRequest() {
         // given - a request
         HttpRequest request = request().withMethod("PUT").withPath("/verifySequence");
+        when(mockRequestLogFilter.verify(any(VerificationSequence.class))).thenReturn("some_verification_response");
 
         // when
         embeddedChannel.writeInbound(request);
