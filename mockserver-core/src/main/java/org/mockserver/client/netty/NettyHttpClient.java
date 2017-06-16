@@ -62,7 +62,7 @@ public class NettyHttpClient {
         EventLoopGroup group = new NioEventLoopGroup();
 
         try {
-            final HttpClientInitializer channelInitializer = new HttpClientInitializer(httpRequest.isSecure() != null && httpRequest.isSecure());
+            final HttpClientInitializer channelInitializer = new HttpClientInitializer(httpRequest.isSecure() != null && httpRequest.isSecure(), remoteAddress);
 
             // make the connection attempt
             new Bootstrap()

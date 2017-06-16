@@ -7,6 +7,7 @@ import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.ssl.SslHandler;
+import org.mockserver.logging.LoggingHandler;
 import org.mockserver.server.netty.codec.MockServerServerCodec;
 import org.mockserver.socket.SSLFactory;
 import org.slf4j.Logger;
@@ -35,6 +36,10 @@ public class EchoServerInitializer extends ChannelInitializer<SocketChannel> {
 
     public void initChannel(SocketChannel channel) throws Exception {
         ChannelPipeline pipeline = channel.pipeline();
+
+        if (logger.isDebugEnabled()) {
+            pipeline.addLast(new LoggingHandler(logger));
+        }
 
         if (error != null) {
             pipeline.addLast(new ErrorHandler(error));
