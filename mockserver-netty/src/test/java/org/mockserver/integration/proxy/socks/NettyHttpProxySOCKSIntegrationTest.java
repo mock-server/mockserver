@@ -45,6 +45,7 @@ import static org.mockserver.verify.VerificationTimes.exactly;
 /**
  * @author jamesdbloom
  */
+@Ignore
 public class NettyHttpProxySOCKSIntegrationTest {
 
     private static final Logger logger = LoggerFactory.getLogger(NettyHttpProxySOCKSIntegrationTest.class);
