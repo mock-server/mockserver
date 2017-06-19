@@ -188,7 +188,7 @@ public class ProxyServlet extends HttpServlet {
                 }
                 InetSocketAddress remoteAddress = new InetSocketAddress(hostHeaderParts[0], port);
 
-                HttpResponse httpResponse = httpClient.sendRequest(httpRequest, remoteAddress);
+                HttpResponse httpResponse = httpClient.sendRequest(httpRequest, remoteAddress, true);
                 httpResponse = filters.applyOnResponseFilters(httpRequest, httpResponse);
                 if (httpResponse != null) {
                     return httpResponse;

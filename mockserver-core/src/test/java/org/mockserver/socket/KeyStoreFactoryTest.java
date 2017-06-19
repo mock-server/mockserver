@@ -38,7 +38,7 @@ public class KeyStoreFactoryTest {
         X509Certificate caCert = this.keyStoreFactory.createCACert(caKeyPair.getPublic(), caKeyPair.getPrivate());
         KeyPair clientKeyPair = this.keyStoreFactory.generateKeyPair(1024);
 
-        X509Certificate clientCert = this.keyStoreFactory.createClientCert(
+        X509Certificate clientCert = this.keyStoreFactory.createMockServerCert(
             clientKeyPair.getPublic(),
             caCert,
             this.caKeyPair.getPrivate(),

@@ -13,6 +13,10 @@ import org.mockserver.proxy.relay.RelayConnectHandler;
 @ChannelHandler.Sharable
 public final class SocksConnectHandler extends RelayConnectHandler<SocksCmdRequest> {
 
+    public SocksConnectHandler(String host, int port) {
+        super(host, port);
+    }
+
     protected void removeCodecSupport(ChannelHandlerContext ctx) {
         ChannelPipeline pipeline = ctx.pipeline();
         removeHandler(pipeline, SslHandler.class);

@@ -55,7 +55,7 @@ public class SocksProxyHandler extends SimpleChannelInboundHandler<SocksRequest>
                     // add Subject Alternative Name for SSL certificate
                     SSLFactory.addSubjectAlternativeName(req.host());
 
-                    ctx.pipeline().addAfter(getClass().getSimpleName() + "#0", SocksConnectHandler.class.getSimpleName() + "#0", new SocksConnectHandler());
+                    ctx.pipeline().addAfter(getClass().getSimpleName() + "#0", SocksConnectHandler.class.getSimpleName() + "#0", new SocksConnectHandler(req.host(), req.port()));
                     ctx.pipeline().remove(this);
                     ctx.fireChannelRead(socksRequest);
 

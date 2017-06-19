@@ -1,7 +1,9 @@
 package org.mockserver.socket;
 
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.SslProvider;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.configuration.ConfigurationProperties;
@@ -9,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.*;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.net.InetAddress;
@@ -66,18 +67,6 @@ public class SSLFactory {
 
     public static SSLFactory getInstance() {
         return SSL_FACTORY;
-    }
-
-    public synchronized static SSLEngine createClientSSLEngine() {
-        SSLEngine engine = SSLFactory.getInstance().sslContext().createSSLEngine();
-        engine.setUseClientMode(true);
-        return engine;
-    }
-
-    public synchronized static SSLEngine createServerSSLEngine() {
-        SSLEngine engine = SSLFactory.getInstance().sslContext().createSSLEngine();
-        engine.setUseClientMode(false);
-        return engine;
     }
 
     public static void addSubjectAlternativeName(String host) {
@@ -152,7 +141,7 @@ public class SSLFactory {
         }
     }
 
-    private KeyManagerFactory getKeyManagerFactoryInstance(String algorithm) throws NoSuchAlgorithmException {
+    KeyManagerFactory getKeyManagerFactoryInstance(String algorithm) throws NoSuchAlgorithmException {
         return KeyManagerFactory.getInstance(algorithm);
     }
 

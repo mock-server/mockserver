@@ -5,9 +5,12 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import org.mockserver.filters.RequestLogFilter;
+import org.mockserver.logging.LogFormatter;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.server.netty.codec.MockServerResponseEncoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH;
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
@@ -20,10 +23,12 @@ import static org.mockserver.model.HttpResponse.response;
 @ChannelHandler.Sharable
 public class EchoServerHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final EchoServer.Error error;
     private final boolean isSecure;
     private final RequestLogFilter requestLogFilter;
     private final EchoServer.NextResponse nextResponse;
+    private LogFormatter logFormatter = new LogFormatter(logger);
 
     public EchoServerHandler(EchoServer.Error error, boolean isSecure, RequestLogFilter requestLogFilter, EchoServer.NextResponse nextResponse) {
         this.error = error;
@@ -33,6 +38,9 @@ public class EchoServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
     }
 
     protected void channelRead0(ChannelHandlerContext ctx, HttpRequest request) {
+
+        logFormatter.traceLog("received request:{}" + System.getProperty("line.separator"), request);
+
         requestLogFilter.onRequest(request);
 
         if (!nextResponse.httpResponse.isEmpty()) {

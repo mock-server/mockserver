@@ -17,6 +17,10 @@ import static org.mockserver.model.HttpResponse.response;
 @ChannelHandler.Sharable
 public final class HttpConnectHandler extends RelayConnectHandler<HttpRequest> {
 
+    public HttpConnectHandler(String host, int port) {
+        super(host, port);
+    }
+
     protected void removeCodecSupport(ChannelHandlerContext ctx) {
         ChannelPipeline pipeline = ctx.pipeline();
         removeHandler(pipeline, SslHandler.class);

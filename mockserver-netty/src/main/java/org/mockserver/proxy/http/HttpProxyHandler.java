@@ -87,7 +87,7 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
                 PortUnificationHandler.enabledSslUpstreamAndDownstream(ctx.channel());
                 // add Subject Alternative Name for SSL certificate
                 SSLFactory.addSubjectAlternativeName(request.getPath().getValue());
-                ctx.pipeline().addLast(new HttpConnectHandler());
+                ctx.pipeline().addLast(new HttpConnectHandler(request.getPath().getValue(), -1));
                 ctx.pipeline().remove(this);
                 ctx.fireChannelRead(request);
 
@@ -182,7 +182,7 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
     }
 
     private HttpResponse sendRequest(HttpRequest httpRequest, InetSocketAddress remoteAddress) {
-        HttpResponse httpResponse = filters.applyOnResponseFilters(httpRequest, httpClient.sendRequest(httpRequest, remoteAddress));
+        HttpResponse httpResponse = filters.applyOnResponseFilters(httpRequest, httpClient.sendRequest(httpRequest, remoteAddress, true));
         // allow for filter to set response to null
         if (httpResponse == null) {
             httpResponse = notFoundResponse();

@@ -45,7 +45,6 @@ import static org.mockserver.verify.VerificationTimes.exactly;
 /**
  * @author jamesdbloom
  */
-@Ignore
 public class NettyHttpProxySOCKSIntegrationTest {
 
     private static final Logger logger = LoggerFactory.getLogger(NettyHttpProxySOCKSIntegrationTest.class);
@@ -185,7 +184,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
                 new URIBuilder()
                         .setScheme("http")
                         .setHost("localhost")
-                        .setPort(SERVER_HTTP_PORT)
+                        .setPort(SERVER_HTTPS_PORT)
                         .setPath("/test_headers_and_body")
                         .build()
         );
@@ -232,7 +231,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
             // - send GET request for headers and body
             output.write(("" +
                     "GET /test_headers_and_body HTTP/1.1\r\n" +
-                    "Host: localhost:" + SERVER_HTTP_PORT + "\r\n" +
+                    "Host: localhost:" + SERVER_HTTPS_PORT + "\r\n" +
                     "X-Test: test_headers_and_body\r\n" +
                     "Content-Length:" + "an_example_body".getBytes(Charsets.UTF_8).length + "\r\n" +
                     "\r\n" +
@@ -281,7 +280,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
                 }
             });
 
-            socket = SSLFactory.getInstance().wrapSocket(new Socket("localhost", SERVER_HTTP_PORT));
+            socket = SSLFactory.getInstance().wrapSocket(new Socket("localhost", SERVER_HTTPS_PORT));
 
             // given
             OutputStream output = socket.getOutputStream();
@@ -289,7 +288,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
             // - send GET request for headers and body
             output.write(("" +
                     "GET /test_headers_and_body HTTP/1.1\r\n" +
-                    "Host: localhost:" + SERVER_HTTP_PORT + "\r\n" +
+                    "Host: localhost:" + SERVER_HTTPS_PORT + "\r\n" +
                     "X-Test: test_headers_and_body\r\n" +
                     "Content-Length:" + "an_example_body".getBytes(Charsets.UTF_8).length + "\r\n" +
                     "\r\n" +
@@ -298,7 +297,6 @@ public class NettyHttpProxySOCKSIntegrationTest {
             output.flush();
 
             // then
-            // assertThat(socket.getInputStream().available(), greaterThan(0));
             String response = IOStreamUtils.readInputStreamToString(socket);
             assertContains(response, "X-Test: test_headers_and_body");
             assertContains(response, "an_example_body");

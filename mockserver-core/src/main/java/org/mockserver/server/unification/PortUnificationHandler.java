@@ -11,7 +11,7 @@ import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.util.AttributeKey;
-import org.mockserver.socket.SSLFactory;
+import org.mockserver.socket.NettySslContextFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,7 +78,7 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
 
     private void enableSsl(ChannelHandlerContext ctx, ByteBuf msg) {
         ChannelPipeline pipeline = ctx.pipeline();
-        pipeline.addFirst(new SslHandler(SSLFactory.createServerSSLEngine()));
+        pipeline.addFirst(new NettySslContextFactory().createServerSslContext().newHandler(ctx.alloc()));
         ctx.channel().attr(PortUnificationHandler.SSL_ENABLED).set(Boolean.TRUE);
 
         // re-unify (with SSL enabled)
