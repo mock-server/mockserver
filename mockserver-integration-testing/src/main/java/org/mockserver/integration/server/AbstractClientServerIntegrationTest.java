@@ -2848,10 +2848,10 @@ public abstract class AbstractClientServerIntegrationTest {
                 .when(
                         request().withPath(calculatePath("some_path")),
                         exactly(2),
-                        TimeToLive.exactly(TimeUnit.SECONDS, 5L)
+                        TimeToLive.exactly(TimeUnit.SECONDS, 3L)
                 )
                 .respond(
-                        response().withBody("some_body").withDelay(TimeUnit.SECONDS, 5L)
+                        response().withBody("some_body").withDelay(TimeUnit.SECONDS, 3L)
                 );
 
         // then
@@ -5418,7 +5418,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 )
                 .respond(
                         response("super slow")
-                                .withDelay(new Delay(TimeUnit.SECONDS, 8))
+                                .withDelay(new Delay(TimeUnit.SECONDS, 5))
                 );
         mockServerClient
                 .when(
@@ -5455,7 +5455,7 @@ public abstract class AbstractClientServerIntegrationTest {
         Long slowRequestElapsedMillis = slowFuture.get();
         Long fastRequestElapsedMillis = fastFuture.get();
 
-        assertThat("Slow request takes less than expected", slowRequestElapsedMillis, is(greaterThan(7 * 1000L)));
+        assertThat("Slow request takes less than expected", slowRequestElapsedMillis, is(greaterThan(5 * 1000L)));
         assertThat("Fast request takes longer than expected", fastRequestElapsedMillis, is(lessThan(3 * 1000L)));
     }
 

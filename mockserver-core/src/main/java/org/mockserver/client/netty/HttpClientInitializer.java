@@ -7,15 +7,10 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.HttpClientCodec;
 import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
-import io.netty.handler.ssl.ApplicationProtocolConfig;
-import io.netty.handler.ssl.SslContext;
-import io.netty.handler.ssl.SslContextBuilder;
-import io.netty.handler.ssl.SslProvider;
-import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import org.mockserver.client.netty.codec.MockServerClientCodec;
 import org.mockserver.logging.LoggingHandler;
 import org.mockserver.model.HttpResponse;
-import org.mockserver.socket.SSLFactory;
+import org.mockserver.socket.NettySslContextFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,16 +34,12 @@ public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
         ChannelPipeline pipeline = channel.pipeline();
 
         if (secure) {
-            SslContext sslCtx = SslContextBuilder.forClient()
-                    .sslProvider(SslProvider.JDK)
-                    .trustManager(InsecureTrustManagerFactory.INSTANCE)
-                    .build();
-            pipeline.addLast(sslCtx.newHandler(channel.alloc(), remoteAddress.getHostName(), remoteAddress.getPort()));
+            pipeline.addLast(new NettySslContextFactory().createClientSslContext().newHandler(channel.alloc(), remoteAddress.getHostName(), remoteAddress.getPort()));
         }
 
         // add logging
-        if (logger.isDebugEnabled()) {
-            pipeline.addLast(new LoggingHandler(this.getClass().getSimpleName() + " -->"));
+        if (logger.isTraceEnabled()) {
+            pipeline.addLast(new LoggingHandler("NettyHttpClient -->"));
         }
 
         pipeline.addLast(new HttpClientCodec());

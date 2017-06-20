@@ -6,10 +6,9 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
-import io.netty.handler.ssl.SslHandler;
 import org.mockserver.logging.LoggingHandler;
 import org.mockserver.server.netty.codec.MockServerServerCodec;
-import org.mockserver.socket.SSLFactory;
+import org.mockserver.socket.NettySslContextFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,7 +20,7 @@ import static org.mockserver.echo.http.EchoServer.NEXT_RESPONSE;
  */
 public class EchoServerInitializer extends ChannelInitializer<SocketChannel> {
 
-    private static final Logger logger = LoggerFactory.getLogger(EchoServerInitializer.class);
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final boolean secure;
     private final EchoServer.Error error;
@@ -37,16 +36,16 @@ public class EchoServerInitializer extends ChannelInitializer<SocketChannel> {
     public void initChannel(SocketChannel channel) throws Exception {
         ChannelPipeline pipeline = channel.pipeline();
 
-        if (logger.isDebugEnabled()) {
-            pipeline.addLast(new LoggingHandler(logger));
-        }
-
         if (error != null) {
             pipeline.addLast(new ErrorHandler(error));
         }
 
         if (secure) {
-            pipeline.addLast(new SslHandler(SSLFactory.createServerSSLEngine()));
+            pipeline.addLast(new NettySslContextFactory().createServerSslContext().newHandler(channel.alloc()));
+        }
+
+        if (logger.isTraceEnabled()) {
+            pipeline.addLast(new LoggingHandler("EchoServer <-->"));
         }
 
         pipeline.addLast(new HttpServerCodec());

@@ -1,5 +1,8 @@
 package org.mockserver.socket;
 
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import org.apache.commons.io.IOUtils;
 import org.bouncycastle.asn1.*;
 import org.bouncycastle.asn1.x500.X500Name;
@@ -19,13 +22,14 @@ import org.mockserver.configuration.ConfigurationProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLException;
 import javax.xml.bind.DatatypeConverter;
-
 import java.io.*;
 import java.math.BigInteger;
 import java.security.*;
-import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -37,10 +41,12 @@ import java.util.Random;
 /**
  * @author jamesdbloom, ganskef
  */
-public class KeyStoreFactory {
+public class NettySslContextFactory {
 
     private static final Logger logger = LoggerFactory.getLogger(SSLFactory.class);
 
+    public static final String KEY_STORE_PASSWORD = "changeit";
+    public static final String CERTIFICATE_DOMAIN = "localhost";
     private static final String PROVIDER_NAME = BouncyCastleProvider.PROVIDER_NAME;
 
     static {
@@ -75,15 +81,42 @@ public class KeyStoreFactory {
      * The maximum possible value in X.509 specification: 9999-12-31 23:59:59,
      * new Date(253402300799000L), but Apple iOS 8 fails with a certificate
      * expiration date grater than Mon, 24 Jan 6084 02:07:59 GMT (issue #6).
-     * 
+     * <p>
      * Hundred years in the future from starting the proxy should be enough.
      */
     private static final Date NOT_AFTER = new Date(System.currentTimeMillis() + 86400000L * 365 * 100);
 
+    private static SslContext clientSslContext = null;
+    private static SslContext serverSslContext = null;
+
+    public synchronized SslContext createClientSslContext() {
+        if (clientSslContext == null) {
+            try {
+                clientSslContext = SslContextBuilder.forClient()
+                        .trustManager(InsecureTrustManagerFactory.INSTANCE)
+                        .build();
+            } catch (SSLException e) {
+                throw new RuntimeException("Exception creating SSL context for client", e);
+            }
+        }
+        return clientSslContext;
+    }
+
+    public synchronized SslContext createServerSslContext() {
+        if (serverSslContext == null || ConfigurationProperties.rebuildKeyStore()) {
+            try {
+                serverSslContext = buildSslContext();
+            } catch (Exception e) {
+                throw new RuntimeException("Exception creating SSL context for client", e);
+            }
+        }
+        return serverSslContext;
+    }
+
     /**
      * Create a random 2048 bit RSA key pair with the given length
      */
-    static KeyPair generateKeyPair(int keySize) throws Exception {
+    private static KeyPair generateKeyPair(int keySize) throws Exception {
         KeyPairGenerator generator = KeyPairGenerator.getInstance(KEY_GENERATION_ALGORITHM, PROVIDER_NAME);
         generator.initialize(keySize, new SecureRandom());
         return generator.generateKeyPair();
@@ -109,7 +142,7 @@ public class KeyStoreFactory {
     /**
      * Create a certificate to use by a Certificate Authority, signed by a self signed certificate.
      */
-    X509Certificate createCACert(PublicKey publicKey, PrivateKey privateKey) throws Exception {
+    private X509Certificate createCACert(PublicKey publicKey, PrivateKey privateKey) throws Exception {
 
         //
         // signers name
@@ -152,7 +185,7 @@ public class KeyStoreFactory {
     /**
      * Create a server certificate for the given domain and subject alternative names, signed by the given Certificate Authority.
      */
-    public X509Certificate createMockServerCert(PublicKey publicKey, X509Certificate certificateAuthorityCert, PrivateKey certificateAuthorityPrivateKey, PublicKey certificateAuthorityPublicKey, String domain, String[] subjectAlternativeNameDomains, String[] subjectAlternativeNameIps) throws Exception {
+    private X509Certificate createMockServerCert(PublicKey publicKey, X509Certificate certificateAuthorityCert, PrivateKey certificateAuthorityPrivateKey, PublicKey certificateAuthorityPublicKey, String domain, String[] subjectAlternativeNameDomains, String[] subjectAlternativeNameIps) throws Exception {
 
         //
         // signers name
@@ -212,7 +245,12 @@ public class KeyStoreFactory {
     /**
      * Create a KeyStore with a server certificate for the given domain and subject alternative names.
      */
-    KeyStore generateCertificate(KeyStore keyStore, String certificationAlias, String certificateAuthorityAlias, char[] keyStorePassword, String domain, String[] subjectAlternativeNameDomains, String[] subjectAlternativeNameIps) throws Exception {
+    SslContext buildSslContext() throws Exception {
+        char[] keyStorePassword = ConfigurationProperties.javaKeyStorePassword().toCharArray();
+        String domain = ConfigurationProperties.sslCertificateDomainName();
+        String[] subjectAlternativeNameDomains = ConfigurationProperties.sslSubjectAlternativeNameDomains();
+        String[] subjectAlternativeNameIps = ConfigurationProperties.sslSubjectAlternativeNameIps();
+
 
         //
         // personal keys
@@ -225,7 +263,8 @@ public class KeyStoreFactory {
         // ca keys
         //
         PrivateKey caPrivateKey = loadPrivateKeyFromPEMFile("org/mockserver/socket/CertificateAuthorityPrivateKey.pem");
-        X509Certificate caCert = (X509Certificate) loadCertificateFromKeyStore("org/mockserver/socket/CertificateAuthorityKeyStore.jks", certificateAuthorityAlias, keyStorePassword);
+        X509Certificate caCert = loadX509FromPEMFile("org/mockserver/socket/CertificateAuthorityCertificate.pem");
+//        X509Certificate caCert = (X509Certificate) new KeyStoreFactory().loadCertificateFromKeyStore("org/mockserver/socket/CertificateAuthorityKeyStore.jks", KEY_STORE_CA_ALIAS, keyStorePassword);
 
         //
         // regenerate ca private key and ca certificate (for development / debugging only)
@@ -238,16 +277,6 @@ public class KeyStoreFactory {
 
             KeyStore caKeyStore = KeyStore.getInstance(KeyStore.getDefaultType());
             caKeyStore.load(readFileFromClassPathOrPath("org/mockserver/socket/CertificateAuthorityKeyStore.jks"), ConfigurationProperties.javaKeyStorePassword().toCharArray());
-            saveCertificateAsKeyStore(
-                    caKeyStore,
-                    false,
-                    "CertificateAuthorityKeyStore.jks",
-                    certificateAuthorityAlias,
-                    mockServerPrivateKey,
-                    keyStorePassword,
-                    new X509Certificate[]{caCert},
-                    caCert
-            );
             saveCertificateAsPEMFile(caCert, "CertificateAuthorityCertificate.pem", false);
             saveCertificateAsPEMFile(caPublicKey, "CertificateAuthorityPublicKey.pem", false);
             saveCertificateAsPEMFile(caPrivateKey, "CertificateAuthorityPrivateKey.pem", false);
@@ -261,16 +290,7 @@ public class KeyStoreFactory {
         saveCertificateAsPEMFile(mockServerPublicKey, "MockServerPublicKey.pem", true);
         saveCertificateAsPEMFile(mockServerPrivateKey, "MockServerPrivateKey.pem", true);
 
-        return saveCertificateAsKeyStore(
-                keyStore,
-                ConfigurationProperties.deleteGeneratedKeyStoreOnExit(),
-                ConfigurationProperties.javaKeyStoreFilePath(),
-                certificationAlias,
-                mockServerPrivateKey,
-                keyStorePassword,
-                new X509Certificate[]{mockServerCert, caCert},
-                caCert
-        );
+        return SslContextBuilder.forServer(mockServerPrivateKey, new String(keyStorePassword), new X509Certificate[]{mockServerCert, caCert}).build();
     }
 
     /**
@@ -293,58 +313,11 @@ public class KeyStoreFactory {
     }
 
     /**
-     * Save X509Certificate in KeyStore file.
-     */
-    private KeyStore saveCertificateAsKeyStore(KeyStore existingKeyStore, boolean deleteOnExit, String keyStoreFileName, String certificationAlias, Key privateKey, char[] keyStorePassword, Certificate[] chain, X509Certificate caCert) {
-        try {
-            KeyStore keyStore = existingKeyStore;
-            if (keyStore == null) {
-                // create new key store
-                keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-                keyStore.load(null, keyStorePassword);
-            }
-
-            // add certificate
-            try {
-                keyStore.deleteEntry(certificationAlias);
-            } catch (KeyStoreException kse) {
-                // ignore as may not exist in keystore yet
-            }
-            keyStore.setKeyEntry(certificationAlias, privateKey, keyStorePassword, chain);
-
-            // add CA certificate
-            try {
-                keyStore.deleteEntry(SSLFactory.KEY_STORE_CA_ALIAS);
-            } catch (KeyStoreException kse) {
-                // ignore as may not exist in keystore yet
-            }
-            keyStore.setCertificateEntry(SSLFactory.KEY_STORE_CA_ALIAS, caCert);
-
-            // save as JKS file
-            File keyStoreFile = new File(keyStoreFileName);
-            FileOutputStream fileOutputStream = null;
-            try {
-                fileOutputStream = new FileOutputStream(keyStoreFile);
-                keyStore.store(fileOutputStream, keyStorePassword);
-                logger.trace("Saving key store to file [" + keyStoreFileName + "]");
-            } finally {
-                IOUtils.closeQuietly(fileOutputStream);
-            }
-            if (deleteOnExit) {
-                keyStoreFile.deleteOnExit();
-            }
-            return keyStore;
-        } catch (Exception e) {
-            throw new RuntimeException("Exception while saving KeyStore", e);
-        }
-    }
-
-    /**
      * Load PrivateKey from PEM file.
      */
     private RSAPrivateKey loadPrivateKeyFromPEMFile(String privateKeyFileName) {
         try {
-            String publicKeyFile = IOUtils.toString(new InputStreamReader(KeyStoreFactory.class.getClassLoader().getResourceAsStream(privateKeyFileName)));
+            String publicKeyFile = IOUtils.toString(new InputStreamReader(NettySslContextFactory.class.getClassLoader().getResourceAsStream(privateKeyFileName)));
             byte[] publicKeyBytes = DatatypeConverter.parseBase64Binary(publicKeyFile.replace("-----BEGIN RSA PRIVATE KEY-----", "").replace("-----END RSA PRIVATE KEY-----", ""));
             return (RSAPrivateKey) KeyFactory.getInstance("RSA").generatePrivate(new PKCS8EncodedKeySpec(publicKeyBytes));
         } catch (Exception e) {
@@ -353,21 +326,16 @@ public class KeyStoreFactory {
     }
 
     /**
-     * Load X509Certificate from KeyStore file.
+     * Load X509 from PEM file.
      */
-    private Certificate loadCertificateFromKeyStore(String keyStoreFileName, String certificationAlias, char[] keyStorePassword) {
+    private X509Certificate loadX509FromPEMFile(String privateKeyFileName) {
         try {
-            InputStream inputStream = readFileFromClassPathOrPath(keyStoreFileName);
-            try {
-                logger.trace("Loading key store from file [" + keyStoreFileName + "]");
-                KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
-                keystore.load(inputStream, keyStorePassword);
-                return keystore.getCertificate(certificationAlias);
-            } finally {
-                IOUtils.closeQuietly(inputStream);
-            }
+            return (X509Certificate) CertificateFactory.getInstance("X.509")
+                    .generateCertificate(
+                            NettySslContextFactory.class.getClassLoader().getResourceAsStream(privateKeyFileName)
+                    );
         } catch (Exception e) {
-            throw new RuntimeException("Exception while loading KeyStore from " + keyStoreFileName, e);
+            throw new RuntimeException("Exception reading X509 from PEM file", e);
         }
     }
 
