@@ -10,7 +10,7 @@ import org.mockserver.client.server.MockServerClient;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.socket.PortFactory;
-import org.mockserver.socket.SSLFactory;
+import org.mockserver.socket.KeyStoreFactory;
 
 import java.io.File;
 
@@ -36,11 +36,11 @@ public class ClientServerWarNoContextPathIntegrationTest extends DeployableWARAb
         tomcat.setPort(SERVER_HTTP_PORT);
 
         // add https connector
-        SSLFactory.getInstance().buildKeyStore();
+        KeyStoreFactory.getInstance().buildKeyStore();
         Connector httpsConnector = new Connector();
         httpsConnector.setPort(SERVER_HTTPS_PORT);
         httpsConnector.setSecure(true);
-        httpsConnector.setAttribute("keyAlias", SSLFactory.KEY_STORE_CERT_ALIAS);
+        httpsConnector.setAttribute("keyAlias", KeyStoreFactory.KEY_STORE_CERT_ALIAS);
         httpsConnector.setAttribute("keystorePass", ConfigurationProperties.javaKeyStorePassword());
         httpsConnector.setAttribute("keystoreFile", new File(ConfigurationProperties.javaKeyStoreFilePath()).getAbsoluteFile());
         httpsConnector.setAttribute("sslProtocol", "TLS");

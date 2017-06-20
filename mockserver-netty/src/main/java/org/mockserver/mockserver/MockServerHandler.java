@@ -18,7 +18,7 @@ import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.mockserver.callback.ExpectationCallbackResponse;
 import org.mockserver.mockserver.callback.WebSocketClientRegistry;
 import org.mockserver.model.*;
-import org.mockserver.socket.SSLFactory;
+import org.mockserver.socket.KeyStoreFactory;
 import org.mockserver.validator.ExpectationValidator;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
@@ -104,7 +104,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                 Expectation expectation = expectationSerializer.deserialize(request.getBodyAsString());
                 List<String> validationErrors = expectationValidator.isValid(expectation);
                 if (validationErrors.isEmpty()) {
-                    SSLFactory.addSubjectAlternativeName(expectation.getHttpRequest().getFirstHeader(HOST.toString()));
+                    KeyStoreFactory.addSubjectAlternativeName(expectation.getHttpRequest().getFirstHeader(HOST.toString()));
                     mockServerMatcher
                             .when(expectation.getHttpRequest(), expectation.getTimes(), expectation.getTimeToLive())
                             .thenRespond(expectation.getHttpResponse())

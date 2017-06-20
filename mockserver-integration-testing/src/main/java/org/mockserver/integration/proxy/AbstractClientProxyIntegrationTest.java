@@ -18,7 +18,7 @@ import org.apache.http.util.EntityUtils;
 import org.junit.Test;
 import org.mockserver.client.proxy.ProxyClient;
 import org.mockserver.model.HttpStatusCode;
-import org.mockserver.socket.SSLFactory;
+import org.mockserver.socket.KeyStoreFactory;
 import org.mockserver.streams.IOStreamUtils;
 
 import java.io.OutputStream;
@@ -42,7 +42,7 @@ public abstract class AbstractClientProxyIntegrationTest {
     protected HttpClient createHttpClient() throws Exception {
         return HttpClients
                 .custom()
-                .setSSLSocketFactory(new SSLConnectionSocketFactory(SSLFactory.getInstance().sslContext(), NoopHostnameVerifier.INSTANCE))
+                .setSSLSocketFactory(new SSLConnectionSocketFactory(KeyStoreFactory.getInstance().sslContext(), NoopHostnameVerifier.INSTANCE))
                 .setRoutePlanner(new DefaultProxyRoutePlanner(
                         new HttpHost(
                                 System.getProperty("http.proxyHost", "localhost"),

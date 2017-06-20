@@ -15,7 +15,7 @@ import org.apache.http.util.EntityUtils;
 import org.junit.Test;
 import org.mockserver.client.proxy.ProxyClient;
 import org.mockserver.model.HttpStatusCode;
-import org.mockserver.socket.SSLFactory;
+import org.mockserver.socket.KeyStoreFactory;
 import org.mockserver.streams.IOStreamUtils;
 
 import javax.net.ssl.SSLSocket;
@@ -86,7 +86,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
             // Upgrade the socket to SSL
             SSLSocket sslSocket = null;
             try {
-                sslSocket = SSLFactory.getInstance().wrapSocket(socket);
+                sslSocket = KeyStoreFactory.getInstance().wrapSocket(socket);
 
                 output = sslSocket.getOutputStream();
 
@@ -144,7 +144,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
         // given
         HttpClient httpClient = HttpClients
                 .custom()
-                .setSSLSocketFactory(new SSLConnectionSocketFactory(SSLFactory.getInstance().sslContext(), NoopHostnameVerifier.INSTANCE))
+                .setSSLSocketFactory(new SSLConnectionSocketFactory(KeyStoreFactory.getInstance().sslContext(), NoopHostnameVerifier.INSTANCE))
                 .setRoutePlanner(
                         new DefaultProxyRoutePlanner(
                                 new HttpHost(
@@ -203,7 +203,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
             // Upgrade the socket to SSL
             SSLSocket sslSocket = null;
             try {
-                sslSocket = SSLFactory.getInstance().wrapSocket(socket);
+                sslSocket = KeyStoreFactory.getInstance().wrapSocket(socket);
 
                 // - send GET request
                 output = sslSocket.getOutputStream();

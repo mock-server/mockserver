@@ -22,7 +22,7 @@ import org.mockserver.model.HttpResponse;
 import org.mockserver.proxy.Proxy;
 import org.mockserver.proxy.connect.HttpConnectHandler;
 import org.mockserver.proxy.unification.PortUnificationHandler;
-import org.mockserver.socket.SSLFactory;
+import org.mockserver.socket.KeyStoreFactory;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.slf4j.Logger;
@@ -86,7 +86,7 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
                 // assume CONNECT always for SSL
                 PortUnificationHandler.enabledSslUpstreamAndDownstream(ctx.channel());
                 // add Subject Alternative Name for SSL certificate
-                SSLFactory.addSubjectAlternativeName(request.getPath().getValue());
+                KeyStoreFactory.addSubjectAlternativeName(request.getPath().getValue());
                 ctx.pipeline().addLast(new HttpConnectHandler(request.getPath().getValue(), -1));
                 ctx.pipeline().remove(this);
                 ctx.fireChannelRead(request);

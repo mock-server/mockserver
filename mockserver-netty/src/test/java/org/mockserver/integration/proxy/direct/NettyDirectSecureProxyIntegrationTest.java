@@ -8,8 +8,8 @@ import org.mockserver.client.proxy.ProxyClient;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.proxy.Proxy;
 import org.mockserver.proxy.ProxyBuilder;
+import org.mockserver.socket.KeyStoreFactory;
 import org.mockserver.socket.PortFactory;
-import org.mockserver.socket.SSLFactory;
 import org.mockserver.streams.IOStreamUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,7 +65,7 @@ public class NettyDirectSecureProxyIntegrationTest {
     public void shouldForwardRequestsUsingSocketDirectlyHeadersOnly() throws Exception {
         Socket socket = null;
         try {
-            socket = SSLFactory.getInstance().wrapSocket(new Socket("localhost", PROXY_DIRECT_SECURE_PORT));
+            socket = KeyStoreFactory.getInstance().wrapSocket(new Socket("localhost", PROXY_DIRECT_SECURE_PORT));
 
             // given
             OutputStream output = socket.getOutputStream();
@@ -102,7 +102,7 @@ public class NettyDirectSecureProxyIntegrationTest {
         Socket socket = null;
         try {
 
-            socket = SSLFactory.getInstance().wrapSocket(new Socket("localhost", PROXY_DIRECT_SECURE_PORT));
+            socket = KeyStoreFactory.getInstance().wrapSocket(new Socket("localhost", PROXY_DIRECT_SECURE_PORT));
 
             // given
             OutputStream output = socket.getOutputStream();
@@ -143,7 +143,7 @@ public class NettyDirectSecureProxyIntegrationTest {
         Socket socket = null;
         try {
 
-            socket = SSLFactory.getInstance().wrapSocket(new Socket("localhost", PROXY_DIRECT_SECURE_PORT));
+            socket = KeyStoreFactory.getInstance().wrapSocket(new Socket("localhost", PROXY_DIRECT_SECURE_PORT));
 
             // given
             OutputStream output = socket.getOutputStream();

@@ -1,8 +1,5 @@
 package org.mockserver.socket;
 
-import io.netty.handler.ssl.SslContext;
-import io.netty.handler.ssl.SslContextBuilder;
-import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import org.apache.commons.io.IOUtils;
 import org.bouncycastle.asn1.*;
 import org.bouncycastle.asn1.x500.X500Name;
@@ -22,7 +19,6 @@ import org.mockserver.configuration.ConfigurationProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.net.ssl.SSLException;
 import javax.xml.bind.DatatypeConverter;
 import java.io.*;
 import java.math.BigInteger;
@@ -37,10 +33,13 @@ import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
+import static org.mockserver.socket.KeyStoreFactory.KEY_STORE_CA_ALIAS;
+import static org.mockserver.socket.KeyStoreFactory.KEY_STORE_CERT_ALIAS;
+
 /**
  * @author jamesdbloom, ganskef
  */
-public class NettySslContextFactory {
+public class KeyAndCertificateFactory {
 
     private static final Logger logger = LoggerFactory.getLogger(KeyStoreFactory.class);
 
@@ -82,33 +81,6 @@ public class NettySslContextFactory {
      * Hundred years in the future from starting the proxy should be enough.
      */
     private static final Date NOT_AFTER = new Date(System.currentTimeMillis() + 86400000L * 365 * 100);
-
-    private static SslContext clientSslContext = null;
-    private static SslContext serverSslContext = null;
-
-    public synchronized SslContext createClientSslContext() {
-        if (clientSslContext == null) {
-            try {
-                clientSslContext = SslContextBuilder.forClient()
-                        .trustManager(InsecureTrustManagerFactory.INSTANCE)
-                        .build();
-            } catch (SSLException e) {
-                throw new RuntimeException("Exception creating SSL context for client", e);
-            }
-        }
-        return clientSslContext;
-    }
-
-    public synchronized SslContext createServerSslContext() {
-        if (serverSslContext == null || ConfigurationProperties.rebuildKeyStore()) {
-            try {
-                serverSslContext = buildSslContext();
-            } catch (Exception e) {
-                throw new RuntimeException("Exception creating SSL context for client", e);
-            }
-        }
-        return serverSslContext;
-    }
 
     /**
      * Create a random 2048 bit RSA key pair with the given length
@@ -242,12 +214,11 @@ public class NettySslContextFactory {
     /**
      * Create a KeyStore with a server certificate for the given domain and subject alternative names.
      */
-    SslContext buildSslContext() throws Exception {
+    KeyStore generateCertificate(KeyStore keyStore) throws Exception {
         char[] keyStorePassword = ConfigurationProperties.javaKeyStorePassword().toCharArray();
         String domain = ConfigurationProperties.sslCertificateDomainName();
         String[] subjectAlternativeNameDomains = ConfigurationProperties.sslSubjectAlternativeNameDomains();
         String[] subjectAlternativeNameIps = ConfigurationProperties.sslSubjectAlternativeNameIps();
-
 
         //
         // personal keys
@@ -273,6 +244,16 @@ public class NettySslContextFactory {
 
             KeyStore caKeyStore = KeyStore.getInstance(KeyStore.getDefaultType());
             caKeyStore.load(readFileFromClassPathOrPath("org/mockserver/socket/CertificateAuthorityKeyStore.jks"), ConfigurationProperties.javaKeyStorePassword().toCharArray());
+            KeyStoreFactory.saveCertificateAsKeyStore(
+                    caKeyStore,
+                    false,
+                    "CertificateAuthorityKeyStore.jks",
+                    KEY_STORE_CA_ALIAS,
+                    mockServerPrivateKey,
+                    keyStorePassword,
+                    new X509Certificate[]{caCert},
+                    caCert
+            );
             saveCertificateAsPEMFile(caCert, "CertificateAuthorityCertificate.pem", false);
             saveCertificateAsPEMFile(caPublicKey, "CertificateAuthorityPublicKey.pem", false);
             saveCertificateAsPEMFile(caPrivateKey, "CertificateAuthorityPrivateKey.pem", false);
@@ -286,7 +267,16 @@ public class NettySslContextFactory {
         saveCertificateAsPEMFile(mockServerPublicKey, "MockServerPublicKey.pem", true);
         saveCertificateAsPEMFile(mockServerPrivateKey, "MockServerPrivateKey.pem", true);
 
-        return SslContextBuilder.forServer(mockServerPrivateKey, new String(keyStorePassword), new X509Certificate[]{mockServerCert, caCert}).build();
+        return KeyStoreFactory.saveCertificateAsKeyStore(
+                keyStore,
+                ConfigurationProperties.deleteGeneratedKeyStoreOnExit(),
+                ConfigurationProperties.javaKeyStoreFilePath(),
+                KEY_STORE_CERT_ALIAS,
+                mockServerPrivateKey,
+                keyStorePassword,
+                new X509Certificate[]{mockServerCert, caCert},
+                caCert
+        );
     }
 
     /**

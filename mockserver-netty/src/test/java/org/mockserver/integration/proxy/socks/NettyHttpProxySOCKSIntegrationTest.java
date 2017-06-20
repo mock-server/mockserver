@@ -23,8 +23,8 @@ import org.mockserver.echo.http.EchoServer;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.proxy.Proxy;
 import org.mockserver.proxy.ProxyBuilder;
+import org.mockserver.socket.KeyStoreFactory;
 import org.mockserver.socket.PortFactory;
-import org.mockserver.socket.SSLFactory;
 import org.mockserver.streams.IOStreamUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -119,7 +119,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
             });
 
             // and - an HTTP client
-            HttpClient httpClient = HttpClientBuilder.create().setSslcontext(SSLFactory.getInstance().sslContext()).build();
+            HttpClient httpClient = HttpClientBuilder.create().setSslcontext(KeyStoreFactory.getInstance().sslContext()).build();
 
             // when
             HttpResponse response = httpClient.execute(new HttpHost("127.0.0.1", SERVER_HTTPS_PORT, "https"), new HttpGet("/"));
@@ -280,7 +280,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
                 }
             });
 
-            socket = SSLFactory.getInstance().wrapSocket(new Socket("localhost", SERVER_HTTPS_PORT));
+            socket = KeyStoreFactory.getInstance().wrapSocket(new Socket("localhost", SERVER_HTTPS_PORT));
 
             // given
             OutputStream output = socket.getOutputStream();
@@ -461,7 +461,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
                 }
             });
 
-            socket = SSLFactory.getInstance().wrapSocket(new Socket("localhost", SERVER_HTTPS_PORT));
+            socket = KeyStoreFactory.getInstance().wrapSocket(new Socket("localhost", SERVER_HTTPS_PORT));
 
             // given
             OutputStream output = socket.getOutputStream();

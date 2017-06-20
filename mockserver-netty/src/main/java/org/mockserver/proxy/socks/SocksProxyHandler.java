@@ -6,7 +6,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.socks.*;
 import org.mockserver.proxy.http.HttpProxy;
 import org.mockserver.proxy.unification.PortUnificationHandler;
-import org.mockserver.socket.SSLFactory;
+import org.mockserver.socket.KeyStoreFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,7 +53,7 @@ public class SocksProxyHandler extends SimpleChannelInboundHandler<SocksRequest>
                     }
 
                     // add Subject Alternative Name for SSL certificate
-                    SSLFactory.addSubjectAlternativeName(req.host());
+                    KeyStoreFactory.addSubjectAlternativeName(req.host());
 
                     ctx.pipeline().addAfter(getClass().getSimpleName() + "#0", SocksConnectHandler.class.getSimpleName() + "#0", new SocksConnectHandler(req.host(), req.port()));
                     ctx.pipeline().remove(this);
