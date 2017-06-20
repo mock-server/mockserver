@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import static org.mockserver.echo.http.EchoServer.LOG_FILTER;
 import static org.mockserver.echo.http.EchoServer.NEXT_RESPONSE;
+import static org.mockserver.socket.NettySslContextFactory.nettySslContextFactory;
 
 /**
  * @author jamesdbloom
@@ -41,7 +42,7 @@ public class EchoServerInitializer extends ChannelInitializer<SocketChannel> {
         }
 
         if (secure) {
-            pipeline.addLast(new NettySslContextFactory().createServerSslContext().newHandler(channel.alloc()));
+            pipeline.addLast(nettySslContextFactory().createServerSslContext().newHandler(channel.alloc()));
         }
 
         if (logger.isTraceEnabled()) {

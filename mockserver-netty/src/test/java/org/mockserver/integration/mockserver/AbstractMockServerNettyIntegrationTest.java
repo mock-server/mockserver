@@ -45,6 +45,7 @@ import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpStatusCode.ACCEPTED_202;
 import static org.mockserver.model.HttpStatusCode.NOT_ACCEPTABLE_406;
 import static org.mockserver.model.HttpStatusCode.OK_200;
+import static org.mockserver.socket.SSLSocketFactory.sslSocketFactory;
 
 /**
  * @author jamesdbloom
@@ -490,7 +491,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
         // - in https
         SSLSocket sslSocket = null;
         try {
-            sslSocket = KeyStoreFactory.getInstance().wrapSocket(new Socket("localhost", getMockServerPort()));
+            sslSocket = sslSocketFactory().wrapSocket(new Socket("localhost", getMockServerPort()));
             OutputStream output = sslSocket.getOutputStream();
 
             // when
@@ -555,7 +556,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
         // - in https
         SSLSocket sslSocket = null;
         try {
-            sslSocket = KeyStoreFactory.getInstance().wrapSocket(new Socket("localhost", getMockServerPort()));
+            sslSocket = sslSocketFactory().wrapSocket(new Socket("localhost", getMockServerPort()));
             OutputStream output = sslSocket.getOutputStream();
 
             // when

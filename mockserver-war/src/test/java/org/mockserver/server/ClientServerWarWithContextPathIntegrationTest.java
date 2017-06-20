@@ -36,7 +36,7 @@ public class ClientServerWarWithContextPathIntegrationTest extends DeployableWAR
         tomcat.setPort(SERVER_HTTP_PORT);
 
         // add https connector
-        KeyStoreFactory.getInstance().buildKeyStore();
+        KeyStoreFactory.keyStoreFactory().loadOrCreateKeyStore();
         Connector httpsConnector = new Connector();
         httpsConnector.setPort(SERVER_HTTPS_PORT);
         httpsConnector.setSecure(true);

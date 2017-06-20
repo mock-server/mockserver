@@ -33,46 +33,31 @@ import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
-import static org.mockserver.socket.KeyStoreFactory.KEY_STORE_CA_ALIAS;
-import static org.mockserver.socket.KeyStoreFactory.KEY_STORE_CERT_ALIAS;
-
 /**
  * @author jamesdbloom, ganskef
  */
 public class KeyAndCertificateFactory {
 
-    private static final Logger logger = LoggerFactory.getLogger(KeyStoreFactory.class);
+    private static final Logger logger = LoggerFactory.getLogger(KeyAndCertificateFactory.class);
 
     private static final String PROVIDER_NAME = BouncyCastleProvider.PROVIDER_NAME;
-
-    static {
-        Security.addProvider(new BouncyCastleProvider());
-    }
-
     private static final String SIGNATURE_ALGORITHM = "SHA256WithRSAEncryption";
-
     private static final String KEY_GENERATION_ALGORITHM = "RSA";
-
-    private static final boolean REGENERATE_FRESH_CA_CERTIFICATE = false;
-
     /**
      * Generates an 2048 bit RSA key pair using SHA1PRNG for the Certificate Authority.
      */
     private static final int ROOT_KEYSIZE = 2048;
-
     /**
      * Generates an 1024 bit RSA key pair using SHA1PRNG for the server
      * certificates. Thoughts: 2048 takes much longer time on older CPUs. And
      * for almost every client, 1024 is sufficient.
      */
     private static final int FAKE_KEYSIZE = 1024;
-
     /**
      * Current time minus 1 year, just in case software clock goes back due to
      * time synchronization
      */
     private static final Date NOT_BEFORE = new Date(System.currentTimeMillis() - 86400000L * 365);
-
     /**
      * The maximum possible value in X.509 specification: 9999-12-31 23:59:59,
      * new Date(253402300799000L), but Apple iOS 8 fails with a certificate
@@ -82,13 +67,18 @@ public class KeyAndCertificateFactory {
      */
     private static final Date NOT_AFTER = new Date(System.currentTimeMillis() + 86400000L * 365 * 100);
 
-    /**
-     * Create a random 2048 bit RSA key pair with the given length
-     */
-    private static KeyPair generateKeyPair(int keySize) throws Exception {
-        KeyPairGenerator generator = KeyPairGenerator.getInstance(KEY_GENERATION_ALGORITHM, PROVIDER_NAME);
-        generator.initialize(keySize, new SecureRandom());
-        return generator.generateKeyPair();
+    static {
+        Security.addProvider(new BouncyCastleProvider());
+    }
+
+    private static final KeyAndCertificateFactory KEY_AND_CERTIFICATE_FACTORY = new KeyAndCertificateFactory();
+
+    private KeyAndCertificateFactory() {
+
+    }
+
+    public static KeyAndCertificateFactory keyAndCertificateFactory() {
+        return KEY_AND_CERTIFICATE_FACTORY;
     }
 
     private static SubjectKeyIdentifier createSubjectKeyIdentifier(Key key) throws IOException {
@@ -109,28 +99,29 @@ public class KeyAndCertificateFactory {
     }
 
     /**
+     * Create a random 2048 bit RSA key pair with the given length
+     */
+    KeyPair generateKeyPair(int keySize) throws Exception {
+        KeyPairGenerator generator = KeyPairGenerator.getInstance(KEY_GENERATION_ALGORITHM, PROVIDER_NAME);
+        generator.initialize(keySize, new SecureRandom());
+        return generator.generateKeyPair();
+    }
+
+    /**
      * Create a certificate to use by a Certificate Authority, signed by a self signed certificate.
      */
     private X509Certificate createCACert(PublicKey publicKey, PrivateKey privateKey) throws Exception {
 
-        //
         // signers name
-        //
         X500Name issuerName = new X500Name("CN=www.mockserver.com, O=MockServer, L=London, ST=England, C=UK");
 
-        //
         // subjects name - the same as we are self signed.
-        //
         X500Name subjectName = issuerName;
 
-        //
         // serial
-        //
         BigInteger serial = BigInteger.valueOf(new Random().nextInt(Integer.MAX_VALUE));
 
-        //
         // create the certificate - version 3
-        //
         X509v3CertificateBuilder builder = new JcaX509v3CertificateBuilder(issuerName, serial, NOT_BEFORE, NOT_AFTER, subjectName, publicKey);
         builder.addExtension(Extension.subjectKeyIdentifier, false, createSubjectKeyIdentifier(publicKey));
         builder.addExtension(Extension.basicConstraints, true, new BasicConstraints(true));
@@ -154,33 +145,23 @@ public class KeyAndCertificateFactory {
     /**
      * Create a server certificate for the given domain and subject alternative names, signed by the given Certificate Authority.
      */
-    private X509Certificate createMockServerCert(PublicKey publicKey, X509Certificate certificateAuthorityCert, PrivateKey certificateAuthorityPrivateKey, PublicKey certificateAuthorityPublicKey, String domain, String[] subjectAlternativeNameDomains, String[] subjectAlternativeNameIps) throws Exception {
+    private X509Certificate createCASignedCert(PublicKey publicKey, X509Certificate certificateAuthorityCert, PrivateKey certificateAuthorityPrivateKey, PublicKey certificateAuthorityPublicKey, String domain, String[] subjectAlternativeNameDomains, String[] subjectAlternativeNameIps) throws Exception {
 
-        //
         // signers name
-        //
         X500Name issuer = new X509CertificateHolder(certificateAuthorityCert.getEncoded()).getSubject();
 
-        //
         // subjects name - the same as we are self signed.
-        //
         X500Name subject = new X500Name("CN=" + domain + ", O=MockServer, L=London, ST=England, C=UK");
 
-        //
         // serial
-        //
         BigInteger serial = BigInteger.valueOf(new Random().nextInt(Integer.MAX_VALUE));
 
-        //
         // create the certificate - version 3
-        //
         X509v3CertificateBuilder builder = new JcaX509v3CertificateBuilder(issuer, serial, NOT_BEFORE, NOT_AFTER, subject, publicKey);
         builder.addExtension(Extension.subjectKeyIdentifier, false, createSubjectKeyIdentifier(publicKey));
         builder.addExtension(Extension.basicConstraints, false, new BasicConstraints(false));
 
-        //
         // subject alternative name
-        //
         List<ASN1Encodable> subjectAlternativeNames = new ArrayList<ASN1Encodable>();
         if (subjectAlternativeNameDomains != null) {
             subjectAlternativeNames.add(new GeneralName(GeneralName.dNSName, domain));
@@ -211,72 +192,56 @@ public class KeyAndCertificateFactory {
         return cert;
     }
 
+    public static void main(String[] args) throws Exception {
+        keyAndCertificateFactory().buildAndSaveCertificateAuthorityCertificates();
+    }
+
+    /**
+     * Regenerate Certificate Authority public/private keys and X.509 certificate
+     * <p>
+     * Note: X.509 certificate should be stable so this method should rarely be used
+     */
+    synchronized KeyAndCertificateFactory buildAndSaveCertificateAuthorityCertificates() throws Exception {
+        KeyPair caKeyPair = generateKeyPair(ROOT_KEYSIZE);
+
+        saveCertificateAsPEMFile(createCACert(caKeyPair.getPublic(), caKeyPair.getPrivate()), "CertificateAuthorityCertificate.pem", false);
+        saveCertificateAsPEMFile(caKeyPair.getPublic(), "CertificateAuthorityPublicKey.pem", false);
+        saveCertificateAsPEMFile(caKeyPair.getPrivate(), "CertificateAuthorityPrivateKey.pem", false);
+
+        return this;
+    }
+
     /**
      * Create a KeyStore with a server certificate for the given domain and subject alternative names.
      */
-    KeyStore generateCertificate(KeyStore keyStore) throws Exception {
-        char[] keyStorePassword = ConfigurationProperties.javaKeyStorePassword().toCharArray();
-        String domain = ConfigurationProperties.sslCertificateDomainName();
-        String[] subjectAlternativeNameDomains = ConfigurationProperties.sslSubjectAlternativeNameDomains();
-        String[] subjectAlternativeNameIps = ConfigurationProperties.sslSubjectAlternativeNameIps();
+    synchronized KeyAndCertificateFactory buildAndSaveCertificates() {
+        try {
+            // personal keys
+            KeyPair keyPair = generateKeyPair(FAKE_KEYSIZE);
+            PrivateKey mockServerPrivateKey = keyPair.getPrivate();
+            PublicKey mockServerPublicKey = keyPair.getPublic();
 
-        //
-        // personal keys
-        //
-        KeyPair keyPair = generateKeyPair(FAKE_KEYSIZE);
-        PrivateKey mockServerPrivateKey = keyPair.getPrivate();
-        PublicKey mockServerPublicKey = keyPair.getPublic();
+            // ca keys
+            PrivateKey caPrivateKey = loadPrivateKeyFromPEMFile("org/mockserver/socket/CertificateAuthorityPrivateKey.pem");
+            X509Certificate caCert = loadX509FromPEMFile("org/mockserver/socket/CertificateAuthorityCertificate.pem");
 
-        //
-        // ca keys
-        //
-        PrivateKey caPrivateKey = loadPrivateKeyFromPEMFile("org/mockserver/socket/CertificateAuthorityPrivateKey.pem");
-        X509Certificate caCert = loadX509FromPEMFile("org/mockserver/socket/CertificateAuthorityCertificate.pem");
-
-        //
-        // regenerate ca private key and ca certificate (for development / debugging only)
-        //
-        if (REGENERATE_FRESH_CA_CERTIFICATE) {
-            KeyPair caKeyPair = generateKeyPair(ROOT_KEYSIZE);
-            PublicKey caPublicKey = caKeyPair.getPublic();
-            caPrivateKey = caKeyPair.getPrivate();
-            caCert = createCACert(caPublicKey, caPrivateKey);
-
-            KeyStore caKeyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-            caKeyStore.load(readFileFromClassPathOrPath("org/mockserver/socket/CertificateAuthorityKeyStore.jks"), ConfigurationProperties.javaKeyStorePassword().toCharArray());
-            KeyStoreFactory.saveCertificateAsKeyStore(
-                    caKeyStore,
-                    false,
-                    "CertificateAuthorityKeyStore.jks",
-                    KEY_STORE_CA_ALIAS,
-                    mockServerPrivateKey,
-                    keyStorePassword,
-                    new X509Certificate[]{caCert},
-                    caCert
+            // generate mockServer certificate
+            X509Certificate mockServerCert = createCASignedCert(
+                    mockServerPublicKey,
+                    caCert,
+                    caPrivateKey,
+                    caCert.getPublicKey(),
+                    ConfigurationProperties.sslCertificateDomainName(),
+                    ConfigurationProperties.sslSubjectAlternativeNameDomains(),
+                    ConfigurationProperties.sslSubjectAlternativeNameIps()
             );
-            saveCertificateAsPEMFile(caCert, "CertificateAuthorityCertificate.pem", false);
-            saveCertificateAsPEMFile(caPublicKey, "CertificateAuthorityPublicKey.pem", false);
-            saveCertificateAsPEMFile(caPrivateKey, "CertificateAuthorityPrivateKey.pem", false);
+            saveCertificateAsPEMFile(mockServerCert, "MockServerCertificate.pem", true);
+            saveCertificateAsPEMFile(mockServerPublicKey, "MockServerPublicKey.pem", true);
+            saveCertificateAsPEMFile(mockServerPrivateKey, "MockServerPrivateKey.pem", true);
+        } catch (Exception e) {
+            logger.error("Error while refreshing certificates", e);
         }
-
-        //
-        // generate mockServer certificate
-        //
-        X509Certificate mockServerCert = createMockServerCert(mockServerPublicKey, caCert, caPrivateKey, caCert.getPublicKey(), domain, subjectAlternativeNameDomains, subjectAlternativeNameIps);
-        saveCertificateAsPEMFile(mockServerCert, "MockServerCertificate.pem", true);
-        saveCertificateAsPEMFile(mockServerPublicKey, "MockServerPublicKey.pem", true);
-        saveCertificateAsPEMFile(mockServerPrivateKey, "MockServerPrivateKey.pem", true);
-
-        return KeyStoreFactory.saveCertificateAsKeyStore(
-                keyStore,
-                ConfigurationProperties.deleteGeneratedKeyStoreOnExit(),
-                ConfigurationProperties.javaKeyStoreFilePath(),
-                KEY_STORE_CERT_ALIAS,
-                mockServerPrivateKey,
-                keyStorePassword,
-                new X509Certificate[]{mockServerCert, caCert},
-                caCert
-        );
+        return this;
     }
 
     /**
@@ -298,12 +263,24 @@ public class KeyAndCertificateFactory {
         }
     }
 
+    public PrivateKey mockServerPrivateKey() {
+        return loadPrivateKeyFromPEMFile("MockServerPrivateKey.pem");
+    }
+
+    public X509Certificate mockServerX509Certificate() {
+        return loadX509FromPEMFile("MockServerCertificate.pem");
+    }
+
+    public X509Certificate mockServerCertificateAuthorityX509Certificate() {
+        return loadX509FromPEMFile("org/mockserver/socket/CertificateAuthorityCertificate.pem");
+    }
+
     /**
      * Load PrivateKey from PEM file.
      */
-    private RSAPrivateKey loadPrivateKeyFromPEMFile(String privateKeyFileName) {
+    private RSAPrivateKey loadPrivateKeyFromPEMFile(String filename) {
         try {
-            String publicKeyFile = IOUtils.toString(new InputStreamReader(this.getClass().getClassLoader().getResourceAsStream(privateKeyFileName)));
+            String publicKeyFile = IOUtils.toString(new InputStreamReader(readFileFromClassPathOrPath(filename)));
             byte[] publicKeyBytes = DatatypeConverter.parseBase64Binary(publicKeyFile.replace("-----BEGIN RSA PRIVATE KEY-----", "").replace("-----END RSA PRIVATE KEY-----", ""));
             return (RSAPrivateKey) KeyFactory.getInstance("RSA").generatePrivate(new PKCS8EncodedKeySpec(publicKeyBytes));
         } catch (Exception e) {
@@ -314,12 +291,9 @@ public class KeyAndCertificateFactory {
     /**
      * Load X509 from PEM file.
      */
-    private X509Certificate loadX509FromPEMFile(String privateKeyFileName) {
+    private X509Certificate loadX509FromPEMFile(String filename) {
         try {
-            return (X509Certificate) CertificateFactory.getInstance("X.509")
-                    .generateCertificate(
-                            NettySslContextFactory.class.getClassLoader().getResourceAsStream(privateKeyFileName)
-                    );
+            return (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(readFileFromClassPathOrPath(filename));
         } catch (Exception e) {
             throw new RuntimeException("Exception reading X509 from PEM file", e);
         }
@@ -328,11 +302,11 @@ public class KeyAndCertificateFactory {
     /**
      * Load file from classpath and if not found then try file path
      */
-    private InputStream readFileFromClassPathOrPath(String keyStoreFileName) throws FileNotFoundException {
-        InputStream inputStream = getClass().getClassLoader().getResourceAsStream(keyStoreFileName);
+    private InputStream readFileFromClassPathOrPath(String filename) throws FileNotFoundException {
+        InputStream inputStream = getClass().getClassLoader().getResourceAsStream(filename);
         if (inputStream == null) {
             // load from path if not found in classpath
-            inputStream = new FileInputStream(keyStoreFileName);
+            inputStream = new FileInputStream(filename);
         }
         return inputStream;
     }

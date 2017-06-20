@@ -18,6 +18,7 @@ import java.io.OutputStream;
 import java.net.Socket;
 
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.socket.SSLSocketFactory.sslSocketFactory;
 import static org.mockserver.test.Assert.assertContains;
 import static org.mockserver.verify.VerificationTimes.exactly;
 
@@ -65,7 +66,7 @@ public class NettyDirectSecureProxyIntegrationTest {
     public void shouldForwardRequestsUsingSocketDirectlyHeadersOnly() throws Exception {
         Socket socket = null;
         try {
-            socket = KeyStoreFactory.getInstance().wrapSocket(new Socket("localhost", PROXY_DIRECT_SECURE_PORT));
+            socket = sslSocketFactory().wrapSocket(new Socket("localhost", PROXY_DIRECT_SECURE_PORT));
 
             // given
             OutputStream output = socket.getOutputStream();
@@ -102,7 +103,7 @@ public class NettyDirectSecureProxyIntegrationTest {
         Socket socket = null;
         try {
 
-            socket = KeyStoreFactory.getInstance().wrapSocket(new Socket("localhost", PROXY_DIRECT_SECURE_PORT));
+            socket = sslSocketFactory().wrapSocket(new Socket("localhost", PROXY_DIRECT_SECURE_PORT));
 
             // given
             OutputStream output = socket.getOutputStream();
@@ -143,7 +144,7 @@ public class NettyDirectSecureProxyIntegrationTest {
         Socket socket = null;
         try {
 
-            socket = KeyStoreFactory.getInstance().wrapSocket(new Socket("localhost", PROXY_DIRECT_SECURE_PORT));
+            socket = sslSocketFactory().wrapSocket(new Socket("localhost", PROXY_DIRECT_SECURE_PORT));
 
             // given
             OutputStream output = socket.getOutputStream();

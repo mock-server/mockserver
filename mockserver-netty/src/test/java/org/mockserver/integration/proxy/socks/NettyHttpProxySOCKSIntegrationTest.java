@@ -39,6 +39,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.socket.SSLSocketFactory.sslSocketFactory;
 import static org.mockserver.test.Assert.assertContains;
 import static org.mockserver.verify.VerificationTimes.exactly;
 
@@ -119,7 +120,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
             });
 
             // and - an HTTP client
-            HttpClient httpClient = HttpClientBuilder.create().setSslcontext(KeyStoreFactory.getInstance().sslContext()).build();
+            HttpClient httpClient = HttpClientBuilder.create().setSslcontext(KeyStoreFactory.keyStoreFactory().sslContext()).build();
 
             // when
             HttpResponse response = httpClient.execute(new HttpHost("127.0.0.1", SERVER_HTTPS_PORT, "https"), new HttpGet("/"));
@@ -280,7 +281,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
                 }
             });
 
-            socket = KeyStoreFactory.getInstance().wrapSocket(new Socket("localhost", SERVER_HTTPS_PORT));
+            socket = sslSocketFactory().wrapSocket(new Socket("localhost", SERVER_HTTPS_PORT));
 
             // given
             OutputStream output = socket.getOutputStream();
@@ -461,7 +462,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
                 }
             });
 
-            socket = KeyStoreFactory.getInstance().wrapSocket(new Socket("localhost", SERVER_HTTPS_PORT));
+            socket = sslSocketFactory().wrapSocket(new Socket("localhost", SERVER_HTTPS_PORT));
 
             // given
             OutputStream output = socket.getOutputStream();

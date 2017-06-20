@@ -118,6 +118,20 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
         </dependency>
+        <dependency>
+            <groupId>janino</groupId>
+            <artifactId>janino</artifactId>
+            <version>2.5.10</version>
+            <scope>runtime</scope>
+            <optional>true</optional> <!-- do not impose on project importing mock-server -->
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>mockserver-logging</artifactId>
+            <version>${project.version}</version>
+            <scope>runtime</scope>
+            <optional>true</optional> <!-- do not impose on project importing mock-server -->
+        </dependency>
 
         <!-- test -->
         <dependency>

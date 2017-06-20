@@ -42,7 +42,7 @@ public abstract class AbstractClientProxyIntegrationTest {
     protected HttpClient createHttpClient() throws Exception {
         return HttpClients
                 .custom()
-                .setSSLSocketFactory(new SSLConnectionSocketFactory(KeyStoreFactory.getInstance().sslContext(), NoopHostnameVerifier.INSTANCE))
+                .setSSLSocketFactory(new SSLConnectionSocketFactory(KeyStoreFactory.keyStoreFactory().sslContext(), NoopHostnameVerifier.INSTANCE))
                 .setRoutePlanner(new DefaultProxyRoutePlanner(
                         new HttpHost(
                                 System.getProperty("http.proxyHost", "localhost"),
