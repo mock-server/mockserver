@@ -22,7 +22,7 @@ import static org.mockserver.model.HttpResponse.response;
 /**
  * @author jamesdbloom
  */
-public class MockServerMultiplePortIntegrationTest extends AbstractMockServerNettyIntegrationTest {
+public class MockServerMultiplePortIntegrationTest extends AbstractRestartableMockServerNettyIntegrationTest {
 
     private final static int TEST_SERVER_HTTP_PORT = PortFactory.findFreePort();
     private static Integer[] severHttpPort;

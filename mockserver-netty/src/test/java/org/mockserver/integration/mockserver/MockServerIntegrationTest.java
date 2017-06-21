@@ -12,7 +12,7 @@ import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 /**
  * @author jamesdbloom
  */
-public class MockServerIntegrationTest extends AbstractMockServerNettyIntegrationTest {
+public class MockServerIntegrationTest extends AbstractRestartableMockServerNettyIntegrationTest {
 
     private final static int TEST_SERVER_HTTP_PORT = PortFactory.findFreePort();
     private final static int SERVER_HTTP_PORT = PortFactory.findFreePort();

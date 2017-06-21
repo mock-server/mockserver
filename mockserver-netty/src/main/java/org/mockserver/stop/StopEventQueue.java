@@ -10,17 +10,15 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author jamesdbloom
  */
 public class StopEventQueue {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
-
     @VisibleForTesting
     protected final List<Stoppable> stoppables = new ArrayList<Stoppable>();
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public void register(Stoppable stoppable) {
         synchronized (stoppables) {
@@ -60,19 +58,24 @@ public class StopEventQueue {
         return stopped;
     }
 
-    public Future<?> stop(Stoppable currentStoppable, SettableFuture<String> stopping, EventLoopGroup bossGroup, EventLoopGroup workerGroup, List<Channel> channels) {
+    public Future<?> stop(Stoppable currentStoppable, SettableFuture<String> stopping, EventLoopGroup bossGroup, EventLoopGroup workerGroup) {
+        // Shut down all event loops to terminate all threads.
+        bossGroup.shutdownGracefully();
+        workerGroup.shutdownGracefully();
+
+        // Wait until all threads are terminated.
         try {
-            for (Channel channel : new ArrayList<Channel>(channels)) {
-                channel.close().sync();
+            bossGroup.terminationFuture().sync();
+            workerGroup.terminationFuture().sync();
+        } catch (InterruptedException e) {
+            // ignore interrupted exceptions
+        } finally {
+            try {
+                stopOthers(currentStoppable).get();
+            } catch (Exception ie) {
+                // ignore interrupted or execution exceptions
             }
-            bossGroup.shutdownGracefully(0, 500, TimeUnit.MILLISECONDS).sync();
-            workerGroup.shutdownGracefully(0, 500, TimeUnit.MILLISECONDS).sync();
-            TimeUnit.MILLISECONDS.sleep(500);
-            stopOthers(currentStoppable).get();
             stopping.set("stopped");
-        } catch (Exception ie) {
-            logger.trace("Exception while stopping " + currentStoppable.getClass().getName(), ie);
-            stopping.setException(ie);
         }
         return stopping;
     }
