@@ -22,7 +22,6 @@ import java.net.InetSocketAddress;
 import java.net.ProxySelector;
 import java.net.SocketAddress;
 import java.net.URI;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Future;
@@ -118,7 +117,7 @@ public class HttpProxy implements Proxy {
 
     public Future<?> stop() {
         proxyStopping();
-        return stopEventQueue.stop(this, stopping, bossGroup, workerGroup, Collections.singletonList(channel));
+        return stopEventQueue.stop(this, stopping, bossGroup, workerGroup);
     }
 
     public HttpProxy withStopEventQueue(StopEventQueue stopEventQueue) {

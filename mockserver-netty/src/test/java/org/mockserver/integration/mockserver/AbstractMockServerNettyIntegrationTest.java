@@ -53,22 +53,6 @@ import static org.mockserver.model.HttpStatusCode.OK_200;
  */
 public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbstractClientServerIntegrationTest {
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
-    public abstract void startServerAgain();
-
-    @Test
-    public void shouldThrowExceptionIfFailToBindToSocket() {
-        // given
-        System.out.println("\n\n--- IGNORE THE FOLLOWING java.net.BindException EXCEPTION ---\n\n");
-        expectedException.expect(RuntimeException.class);
-        expectedException.expectMessage(containsString("Exception while binding MockServer to port "));
-
-        // when
-        startServerAgain();
-    }
-
     @Test
     public void shouldCallbackToSpecifiedObject() {
         // when

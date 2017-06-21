@@ -17,7 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
-import java.util.Collections;
 import java.util.concurrent.Future;
 
 /**
@@ -103,7 +102,7 @@ public class DirectProxy implements Proxy {
     }
 
     public Future<?> stop() {
-        return stopEventQueue.stop(this, stopping, bossGroup, workerGroup, Collections.singletonList(channel));
+        return stopEventQueue.stop(this, stopping, bossGroup, workerGroup);
     }
 
     public DirectProxy withStopEventQueue(StopEventQueue stopEventQueue) {
