@@ -6,6 +6,7 @@ import com.google.common.net.MediaType;
 import com.google.common.util.concurrent.Uninterruptibles;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.netty.SocketConnectionException;
@@ -96,6 +97,11 @@ public abstract class AbstractClientServerIntegrationTest {
     public abstract int getMockServerSecurePort();
 
     public abstract int getTestServerPort();
+
+    @BeforeClass
+    public static void resetServletContext() throws Exception {
+        servletContext = "";
+    }
 
     @Before
     public void resetServer() {
@@ -373,7 +379,8 @@ public abstract class AbstractClientServerIntegrationTest {
         new NettyHttpClient().sendRequest(
                 request()
                         .withMethod("PUT")
-                        .withPath("/expectation")
+                        .withHeader(HOST.toString(), "localhost:" + getMockServerPort())
+                        .withPath(addContextToPath("/expectation"))
                         .withBody("" +
                                 "[" +
                                 new ExpectationSerializer()
@@ -392,8 +399,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                                         .thenRespond(response().withBody("some_body_three"))
                                         ) +
                                 "]"
-                        ),
-                new InetSocketAddress("localhost", getMockServerPort())
+                        )
         );
 
         // then
