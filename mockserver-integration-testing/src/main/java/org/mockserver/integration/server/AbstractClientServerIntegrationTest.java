@@ -6,9 +6,11 @@ import com.google.common.net.MediaType;
 import com.google.common.util.concurrent.Uninterruptibles;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.netty.SocketConnectionException;
+import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.server.MockServerClient;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.matchers.HttpRequestMatcher;
@@ -37,6 +39,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockserver.matchers.Times.exactly;
 import static org.mockserver.matchers.Times.once;
+import static org.mockserver.matchers.Times.unlimited;
 import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.Cookie.cookie;
 import static org.mockserver.model.Header.header;
@@ -94,6 +97,11 @@ public abstract class AbstractClientServerIntegrationTest {
     public abstract int getMockServerSecurePort();
 
     public abstract int getTestServerPort();
+
+    @BeforeClass
+    public static void resetServletContext() throws Exception {
+        servletContext = "";
+    }
 
     @Before
     public void resetServer() {
@@ -361,6 +369,65 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withSecure(true)
                                 .withPath(calculatePath("")),
+                        headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldSupportBatchedExpectations() {
+        // when
+        new NettyHttpClient().sendRequest(
+                request()
+                        .withMethod("PUT")
+                        .withHeader(HOST.toString(), "localhost:" + getMockServerPort())
+                        .withPath(addContextToPath("/expectation"))
+                        .withBody("" +
+                                "[" +
+                                new ExpectationSerializer()
+                                        .serialize(
+                                                new Expectation(request("/path_one"), once(), TimeToLive.unlimited())
+                                                        .thenRespond(response().withBody("some_body_one"))
+                                        ) + "," +
+                                new ExpectationSerializer()
+                                        .serialize(
+                                                new Expectation(request("/path_two"), once(), TimeToLive.unlimited())
+                                                        .thenRespond(response().withBody("some_body_two"))
+                                        ) + "," +
+                                new ExpectationSerializer()
+                                        .serialize(
+                                                new Expectation(request("/path_three"), once(), TimeToLive.unlimited())
+                                                        .thenRespond(response().withBody("some_body_three"))
+                                        ) +
+                                "]"
+                        )
+        );
+
+        // then
+        assertEquals(
+                response()
+                        .withStatusCode(OK_200.code())
+                        .withBody("some_body_one"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("/path_one")),
+                        headersToIgnore)
+        );
+        assertEquals(
+                response()
+                        .withStatusCode(OK_200.code())
+                        .withBody("some_body_two"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("/path_two")),
+                        headersToIgnore)
+        );
+        assertEquals(
+                response()
+                        .withStatusCode(OK_200.code())
+                        .withBody("some_body_three"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("/path_three")),
                         headersToIgnore)
         );
     }

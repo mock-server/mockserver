@@ -206,7 +206,7 @@ public class MockServerServletTest {
                                 .withPath("/expectation")
                                 .withBody("requestBytes")
                 );
-        when(mockExpectationSerializer.deserialize("requestBytes")).thenReturn(expectation);
+        when(mockExpectationSerializer.deserializeArray("requestBytes")).thenReturn(new Expectation[]{expectation});
         when(mockMockServerMatcher.when(same(httpRequest), same(times), same(timeToLive))).thenReturn(expectation);
 
         // when

@@ -80,14 +80,14 @@ public class MockServerServlet extends HttpServlet {
 
             } else if (request.matches("PUT", "/expectation")) {
 
-                Expectation expectation = expectationSerializer.deserialize(request.getBodyAsString());
-
                 addCORSHeadersForAPI(httpServletResponse);
-                Action action = expectation.getAction();
-                if (validateSupportedFeatures(action, httpServletResponse)) {
-                    mockServerMatcher.when(expectation.getHttpRequest(), expectation.getTimes(), expectation.getTimeToLive()).thenRespond(expectation.getHttpResponse()).thenForward(expectation.getHttpForward()).thenCallback(expectation.getHttpClassCallback());
-                    httpServletResponse.setStatus(CREATED_201.code());
+                for (Expectation expectation : expectationSerializer.deserializeArray(request.getBodyAsString())) {
+                    Action action = expectation.getAction();
+                    if (validateSupportedFeatures(action, httpServletResponse)) {
+                        mockServerMatcher.when(expectation.getHttpRequest(), expectation.getTimes(), expectation.getTimeToLive()).thenRespond(expectation.getHttpResponse()).thenForward(expectation.getHttpForward()).thenCallback(expectation.getHttpClassCallback());
+                    }
                 }
+                httpServletResponse.setStatus(CREATED_201.code());
 
             } else if (request.matches("PUT", "/clear")) {
 
