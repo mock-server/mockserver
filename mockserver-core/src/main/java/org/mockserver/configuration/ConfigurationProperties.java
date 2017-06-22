@@ -3,7 +3,7 @@ package org.mockserver.configuration;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Sets;
 import org.apache.commons.io.IOUtils;
-import org.mockserver.socket.SSLFactory;
+import org.mockserver.socket.KeyStoreFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,7 +72,7 @@ public class ConfigurationProperties {
 
     // ssl config
     public static String javaKeyStoreFilePath() {
-        return readPropertyHierarchically("mockserver.javaKeyStoreFilePath", SSLFactory.defaultKeyStoreFileName());
+        return readPropertyHierarchically("mockserver.javaKeyStoreFilePath", KeyStoreFactory.defaultKeyStoreFileName());
     }
 
     public static void javaKeyStoreFilePath(String keyStoreFilePath) {
@@ -81,7 +81,7 @@ public class ConfigurationProperties {
     }
 
     public static String javaKeyStorePassword() {
-        return readPropertyHierarchically("mockserver.javaKeyStorePassword", SSLFactory.KEY_STORE_PASSWORD);
+        return readPropertyHierarchically("mockserver.javaKeyStorePassword", KeyStoreFactory.KEY_STORE_PASSWORD);
     }
 
     public static void javaKeyStorePassword(String keyStorePassword) {
@@ -108,7 +108,7 @@ public class ConfigurationProperties {
     }
 
     public static String sslCertificateDomainName() {
-        return readPropertyHierarchically("mockserver.sslCertificateDomainName", SSLFactory.CERTIFICATE_DOMAIN);
+        return readPropertyHierarchically("mockserver.sslCertificateDomainName", KeyStoreFactory.CERTIFICATE_DOMAIN);
     }
 
     public static void sslCertificateDomainName(String domainName) {

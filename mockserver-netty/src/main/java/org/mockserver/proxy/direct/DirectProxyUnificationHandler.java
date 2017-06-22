@@ -21,8 +21,7 @@ public class DirectProxyUnificationHandler extends PortUnificationHandler {
         pipeline.addLast(new HttpProxyHandler(
                         ctx.channel().attr(Proxy.HTTP_PROXY).get(),
                         ctx.channel().attr(Proxy.REQUEST_LOG_FILTER).get(),
-                        ctx.channel().attr(Proxy.REQUEST_RESPONSE_LOG_FILTER).get(),
-                        ctx.channel().attr(HttpProxy.ONWARD_SSL_UNKNOWN).get())
+                        ctx.channel().attr(Proxy.REQUEST_RESPONSE_LOG_FILTER).get())
         );
     }
 }

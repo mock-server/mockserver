@@ -24,6 +24,7 @@ import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
+import static org.mockserver.socket.NettySslContextFactory.nettySslContextFactory;
 
 /**
  * @author jamesdbloom
@@ -55,7 +56,7 @@ public class BookServer {
 
                                 // add HTTPS support
                                 if (secure) {
-                                    pipeline.addLast(new NettySslContextFactory().createServerSslContext().newHandler(ch.alloc()));
+                                    pipeline.addLast(nettySslContextFactory().createServerSslContext().newHandler(ch.alloc()));
                                 }
 
                                 // pipeline.addLast("logger", new LoggingHandler("BOOK_HANDLER"));

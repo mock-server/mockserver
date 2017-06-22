@@ -5,7 +5,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.mockserver.socket.SSLFactory;
+import org.mockserver.socket.KeyStoreFactory;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -100,7 +100,7 @@ public class ConfigurationPropertiesTest {
         System.clearProperty("mockserver.javaKeyStoreFilePath");
 
         // when
-        assertEquals(SSLFactory.defaultKeyStoreFileName(), ConfigurationProperties.javaKeyStoreFilePath());
+        assertEquals(KeyStoreFactory.defaultKeyStoreFileName(), ConfigurationProperties.javaKeyStoreFilePath());
         ConfigurationProperties.javaKeyStoreFilePath("newKeyStoreFile.jks");
 
         // then
@@ -115,7 +115,7 @@ public class ConfigurationPropertiesTest {
         System.clearProperty("mockserver.javaKeyStorePassword");
 
         // when
-        assertEquals(SSLFactory.KEY_STORE_PASSWORD, ConfigurationProperties.javaKeyStorePassword());
+        assertEquals(KeyStoreFactory.KEY_STORE_PASSWORD, ConfigurationProperties.javaKeyStorePassword());
         ConfigurationProperties.javaKeyStorePassword("newPassword");
 
         // then
@@ -159,7 +159,7 @@ public class ConfigurationPropertiesTest {
         System.clearProperty("mockserver.sslCertificateDomainName");
 
         // when
-        assertEquals(SSLFactory.CERTIFICATE_DOMAIN, ConfigurationProperties.sslCertificateDomainName());
+        assertEquals(KeyStoreFactory.CERTIFICATE_DOMAIN, ConfigurationProperties.sslCertificateDomainName());
         ConfigurationProperties.sslCertificateDomainName("newDomain");
 
         // then

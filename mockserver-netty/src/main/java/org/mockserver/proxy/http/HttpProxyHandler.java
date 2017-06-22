@@ -22,7 +22,8 @@ import org.mockserver.model.HttpResponse;
 import org.mockserver.proxy.Proxy;
 import org.mockserver.proxy.connect.HttpConnectHandler;
 import org.mockserver.proxy.unification.PortUnificationHandler;
-import org.mockserver.socket.SSLFactory;
+import org.mockserver.socket.KeyAndCertificateFactory;
+import org.mockserver.socket.KeyStoreFactory;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.slf4j.Logger;
@@ -51,7 +52,6 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
     private final Proxy server;
     private final RequestLogFilter requestLogFilter;
     private final RequestResponseLogFilter requestResponseLogFilter;
-    private final boolean onwardSslStatusUnknown;
     private final Filters filters = new Filters();
     private LogFormatter logFormatter = new LogFormatter(logger);
     // http client
@@ -63,12 +63,11 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
     private VerificationSerializer verificationSerializer = new VerificationSerializer();
     private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer();
 
-    public HttpProxyHandler(Proxy server, RequestLogFilter requestLogFilter, RequestResponseLogFilter requestResponseLogFilter, Boolean onwardSslStatusUnknown) {
+    public HttpProxyHandler(Proxy server, RequestLogFilter requestLogFilter, RequestResponseLogFilter requestResponseLogFilter) {
         super(false);
         this.server = server;
         this.requestLogFilter = requestLogFilter;
         this.requestResponseLogFilter = requestResponseLogFilter;
-        this.onwardSslStatusUnknown = (onwardSslStatusUnknown != null ? onwardSslStatusUnknown : false);
         filters.withFilter(new org.mockserver.model.HttpRequest(), new HopByHopHeaderFilter());
         filters.withFilter(new org.mockserver.model.HttpRequest(), requestLogFilter);
         filters.withFilter(new org.mockserver.model.HttpRequest(), requestResponseLogFilter);
@@ -86,7 +85,7 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
                 // assume CONNECT always for SSL
                 PortUnificationHandler.enabledSslUpstreamAndDownstream(ctx.channel());
                 // add Subject Alternative Name for SSL certificate
-                SSLFactory.addSubjectAlternativeName(request.getPath().getValue());
+                KeyAndCertificateFactory.addSubjectAlternativeName(request.getPath().getValue());
                 ctx.pipeline().addLast(new HttpConnectHandler(request.getPath().getValue(), -1));
                 ctx.pipeline().remove(this);
                 ctx.fireChannelRead(request);
@@ -182,7 +181,7 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
     }
 
     private HttpResponse sendRequest(HttpRequest httpRequest, InetSocketAddress remoteAddress) {
-        HttpResponse httpResponse = filters.applyOnResponseFilters(httpRequest, httpClient.sendRequest(httpRequest, remoteAddress, true));
+        HttpResponse httpResponse = filters.applyOnResponseFilters(httpRequest, httpClient.sendRequest(httpRequest, remoteAddress));
         // allow for filter to set response to null
         if (httpResponse == null) {
             httpResponse = notFoundResponse();

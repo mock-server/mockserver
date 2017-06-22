@@ -15,7 +15,7 @@ import org.apache.http.util.EntityUtils;
 import org.junit.Test;
 import org.mockserver.client.proxy.ProxyClient;
 import org.mockserver.model.HttpStatusCode;
-import org.mockserver.socket.SSLFactory;
+import org.mockserver.socket.KeyStoreFactory;
 import org.mockserver.streams.IOStreamUtils;
 
 import javax.net.ssl.SSLSocket;
@@ -24,6 +24,7 @@ import java.net.Socket;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.socket.SSLSocketFactory.sslSocketFactory;
 import static org.mockserver.test.Assert.assertContains;
 import static org.mockserver.verify.VerificationTimes.exactly;
 
@@ -86,7 +87,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
             // Upgrade the socket to SSL
             SSLSocket sslSocket = null;
             try {
-                sslSocket = SSLFactory.getInstance().wrapSocket(socket);
+                sslSocket = sslSocketFactory().wrapSocket(socket);
 
                 output = sslSocket.getOutputStream();
 
@@ -144,7 +145,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
         // given
         HttpClient httpClient = HttpClients
                 .custom()
-                .setSSLSocketFactory(new SSLConnectionSocketFactory(SSLFactory.getInstance().sslContext(), NoopHostnameVerifier.INSTANCE))
+                .setSSLSocketFactory(new SSLConnectionSocketFactory(KeyStoreFactory.keyStoreFactory().sslContext(), NoopHostnameVerifier.INSTANCE))
                 .setRoutePlanner(
                         new DefaultProxyRoutePlanner(
                                 new HttpHost(
@@ -203,7 +204,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
             // Upgrade the socket to SSL
             SSLSocket sslSocket = null;
             try {
-                sslSocket = SSLFactory.getInstance().wrapSocket(socket);
+                sslSocket = sslSocketFactory().wrapSocket(socket);
 
                 // - send GET request
                 output = sslSocket.getOutputStream();

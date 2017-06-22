@@ -12,13 +12,13 @@ import io.netty.handler.codec.http.HttpServerCodec;
 import org.mockserver.logging.LoggingHandler;
 import org.mockserver.proxy.http.HttpProxy;
 import org.mockserver.proxy.unification.PortUnificationHandler;
-import org.mockserver.socket.NettySslContextFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 
 import static org.mockserver.proxy.error.Logging.shouldIgnoreException;
+import static org.mockserver.socket.NettySslContextFactory.nettySslContextFactory;
 
 @ChannelHandler.Sharable
 public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler<T> {
@@ -51,7 +51,7 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
                                         ChannelPipeline downstreamPipeline = clientCtx.channel().pipeline();
 
                                         if (PortUnificationHandler.isSslEnabledDownstream(serverCtx.channel())) {
-                                            downstreamPipeline.addLast(new NettySslContextFactory().createClientSslContext().newHandler(clientCtx.alloc(), host, port));
+                                            downstreamPipeline.addLast(nettySslContextFactory().createClientSslContext().newHandler(clientCtx.alloc(), host, port));
                                         }
 
                                         if (logger.isTraceEnabled()) {
@@ -71,7 +71,7 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
                                         ChannelPipeline upstreamPipeline = serverCtx.channel().pipeline();
 
                                         if (PortUnificationHandler.isSslEnabledUpstream(serverCtx.channel())) {
-                                            upstreamPipeline.addLast(new NettySslContextFactory().createServerSslContext().newHandler(serverCtx.alloc()));
+                                            upstreamPipeline.addLast(nettySslContextFactory().createServerSslContext().newHandler(serverCtx.alloc()));
                                         }
 
                                         if (logger.isTraceEnabled()) {
@@ -84,7 +84,7 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
 
                                         upstreamPipeline.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
 
-                                        upstreamPipeline.addLast(new UpstreamProxyRelayHandler(clientCtx.channel(), logger));
+                                        upstreamPipeline.addLast(new UpstreamProxyRelayHandler(serverCtx.channel(), clientCtx.channel(), logger));
                                     }
                                 });
                     }

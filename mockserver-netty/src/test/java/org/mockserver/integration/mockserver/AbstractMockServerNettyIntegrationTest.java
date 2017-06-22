@@ -3,7 +3,6 @@ package org.mockserver.integration.mockserver;
 import com.google.common.base.Charsets;
 import com.google.common.net.MediaType;
 import org.apache.commons.io.IOUtils;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -12,10 +11,9 @@ import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.mock.action.ExpectationCallback;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
-import org.mockserver.model.HttpStatusCode;
 import org.mockserver.server.TestClasspathTestExpectationCallback;
+import org.mockserver.socket.KeyStoreFactory;
 import org.mockserver.socket.PortFactory;
-import org.mockserver.socket.SSLFactory;
 import org.mockserver.streams.IOStreamUtils;
 
 import javax.net.ssl.SSLSocket;
@@ -47,6 +45,7 @@ import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpStatusCode.ACCEPTED_202;
 import static org.mockserver.model.HttpStatusCode.NOT_ACCEPTABLE_406;
 import static org.mockserver.model.HttpStatusCode.OK_200;
+import static org.mockserver.socket.SSLSocketFactory.sslSocketFactory;
 
 /**
  * @author jamesdbloom
@@ -476,7 +475,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
         // - in https
         SSLSocket sslSocket = null;
         try {
-            sslSocket = SSLFactory.getInstance().wrapSocket(new Socket("localhost", getMockServerPort()));
+            sslSocket = sslSocketFactory().wrapSocket(new Socket("localhost", getMockServerPort()));
             OutputStream output = sslSocket.getOutputStream();
 
             // when
@@ -541,7 +540,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
         // - in https
         SSLSocket sslSocket = null;
         try {
-            sslSocket = SSLFactory.getInstance().wrapSocket(new Socket("localhost", getMockServerPort()));
+            sslSocket = sslSocketFactory().wrapSocket(new Socket("localhost", getMockServerPort()));
             OutputStream output = sslSocket.getOutputStream();
 
             // when

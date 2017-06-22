@@ -17,6 +17,8 @@ import org.slf4j.LoggerFactory;
 import javax.net.ssl.SSLException;
 import java.net.InetSocketAddress;
 
+import static org.mockserver.socket.NettySslContextFactory.nettySslContextFactory;
+
 public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -34,7 +36,7 @@ public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
         ChannelPipeline pipeline = channel.pipeline();
 
         if (secure) {
-            pipeline.addLast(new NettySslContextFactory().createClientSslContext().newHandler(channel.alloc(), remoteAddress.getHostName(), remoteAddress.getPort()));
+            pipeline.addLast(nettySslContextFactory().createClientSslContext().newHandler(channel.alloc(), remoteAddress.getHostName(), remoteAddress.getPort()));
         }
 
         // add logging

@@ -83,8 +83,7 @@ public class ProxyServletTest {
         when(mockNettyHttpClient
                 .sendRequest(
                         httpRequestArgumentCaptor.capture(),
-                        any(InetSocketAddress.class),
-                        anyBoolean()
+                        any(InetSocketAddress.class)
                 )
         ).thenReturn(httpResponse);
     }
@@ -97,7 +96,7 @@ public class ProxyServletTest {
         // then
         verify(mockHttpServletRequestToMockServerRequestDecoder).mapHttpServletRequestToMockServerRequest(same(mockHttpServletRequest));
         verify(mockServerResponseToHttpServletResponseEncoder).mapMockServerResponseToHttpServletResponse(same(httpResponse), same(mockHttpServletResponse));
-        verify(mockNettyHttpClient).sendRequest(same(httpRequest), any(InetSocketAddress.class), booleanThat(is(true)));
+        verify(mockNettyHttpClient).sendRequest(same(httpRequest), any(InetSocketAddress.class));
     }
 
     @Test
@@ -108,7 +107,7 @@ public class ProxyServletTest {
         // then
         verify(mockHttpServletRequestToMockServerRequestDecoder).mapHttpServletRequestToMockServerRequest(same(mockHttpServletRequest));
         verify(mockServerResponseToHttpServletResponseEncoder).mapMockServerResponseToHttpServletResponse(same(httpResponse), same(mockHttpServletResponse));
-        verify(mockNettyHttpClient).sendRequest(same(httpRequest), any(InetSocketAddress.class), booleanThat(is(true)));
+        verify(mockNettyHttpClient).sendRequest(same(httpRequest), any(InetSocketAddress.class));
     }
 
     @Test
@@ -119,7 +118,7 @@ public class ProxyServletTest {
         // then
         verify(mockHttpServletRequestToMockServerRequestDecoder).mapHttpServletRequestToMockServerRequest(same(mockHttpServletRequest));
         verify(mockServerResponseToHttpServletResponseEncoder).mapMockServerResponseToHttpServletResponse(same(httpResponse), same(mockHttpServletResponse));
-        verify(mockNettyHttpClient).sendRequest(same(httpRequest), any(InetSocketAddress.class), booleanThat(is(true)));
+        verify(mockNettyHttpClient).sendRequest(same(httpRequest), any(InetSocketAddress.class));
     }
 
     @Test
@@ -130,7 +129,7 @@ public class ProxyServletTest {
         // then
         verify(mockHttpServletRequestToMockServerRequestDecoder).mapHttpServletRequestToMockServerRequest(same(mockHttpServletRequest));
         verify(mockServerResponseToHttpServletResponseEncoder).mapMockServerResponseToHttpServletResponse(same(httpResponse), same(mockHttpServletResponse));
-        verify(mockNettyHttpClient).sendRequest(same(httpRequest), any(InetSocketAddress.class), booleanThat(is(true)));
+        verify(mockNettyHttpClient).sendRequest(same(httpRequest), any(InetSocketAddress.class));
     }
 
     @Test
@@ -141,7 +140,7 @@ public class ProxyServletTest {
         // then
         verify(mockHttpServletRequestToMockServerRequestDecoder).mapHttpServletRequestToMockServerRequest(same(mockHttpServletRequest));
         verify(mockServerResponseToHttpServletResponseEncoder).mapMockServerResponseToHttpServletResponse(same(httpResponse), same(mockHttpServletResponse));
-        verify(mockNettyHttpClient).sendRequest(same(httpRequest), any(InetSocketAddress.class), booleanThat(is(true)));
+        verify(mockNettyHttpClient).sendRequest(same(httpRequest), any(InetSocketAddress.class));
     }
 
     @Test
@@ -152,7 +151,7 @@ public class ProxyServletTest {
         // then
         verify(mockHttpServletRequestToMockServerRequestDecoder).mapHttpServletRequestToMockServerRequest(same(mockHttpServletRequest));
         verify(mockServerResponseToHttpServletResponseEncoder).mapMockServerResponseToHttpServletResponse(same(httpResponse), same(mockHttpServletResponse));
-        verify(mockNettyHttpClient).sendRequest(same(httpRequest), any(InetSocketAddress.class), booleanThat(is(true)));
+        verify(mockNettyHttpClient).sendRequest(same(httpRequest), any(InetSocketAddress.class));
     }
 
     @Test
@@ -163,7 +162,7 @@ public class ProxyServletTest {
         // then
         verify(mockHttpServletRequestToMockServerRequestDecoder).mapHttpServletRequestToMockServerRequest(same(mockHttpServletRequest));
         verify(mockServerResponseToHttpServletResponseEncoder).mapMockServerResponseToHttpServletResponse(same(httpResponse), same(mockHttpServletResponse));
-        verify(mockNettyHttpClient).sendRequest(same(httpRequest), any(InetSocketAddress.class), booleanThat(is(true)));
+        verify(mockNettyHttpClient).sendRequest(same(httpRequest), any(InetSocketAddress.class));
     }
 
     @Test
