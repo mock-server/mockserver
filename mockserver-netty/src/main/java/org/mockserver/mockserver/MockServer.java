@@ -69,8 +69,17 @@ public class MockServer implements Stoppable {
 
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
             public void run() {
+                // Shut down all event loops to terminate all threads.
                 bossGroup.shutdownGracefully();
                 workerGroup.shutdownGracefully();
+
+                // Wait until all threads are terminated.
+                try {
+                    bossGroup.terminationFuture().sync();
+                    workerGroup.terminationFuture().sync();
+                } catch (InterruptedException e) {
+                    // ignore interrupted exceptions
+                }
             }
         }));
     }
@@ -119,15 +128,7 @@ public class MockServer implements Stoppable {
     }
 
     public Future<?> stop() {
-        return stopEventQueue.stop(this, stopping, bossGroup, workerGroup, Lists.transform(channelOpenedFutures, new Function<Future<Channel>, Channel>() {
-            public Channel apply(Future<Channel> input) {
-                try {
-                    return input.get();
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }));
+        return stopEventQueue.stop(this, stopping, bossGroup, workerGroup);
     }
 
     MockServer withStopEventQueue(StopEventQueue stopEventQueue) {

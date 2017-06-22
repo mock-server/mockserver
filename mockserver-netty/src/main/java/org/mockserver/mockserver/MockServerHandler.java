@@ -18,7 +18,7 @@ import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.mockserver.callback.ExpectationCallbackResponse;
 import org.mockserver.mockserver.callback.WebSocketClientRegistry;
 import org.mockserver.model.*;
-import org.mockserver.socket.KeyStoreFactory;
+import org.mockserver.socket.SSLFactory;
 import org.mockserver.validator.ExpectationValidator;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
@@ -28,9 +28,7 @@ import org.slf4j.LoggerFactory;
 import java.net.BindException;
 import java.util.List;
 
-import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
-import static io.netty.handler.codec.http.HttpHeaderNames.CONNECTION;
-import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
+import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static io.netty.handler.codec.http.HttpHeaderValues.CLOSE;
 import static io.netty.handler.codec.http.HttpHeaderValues.KEEP_ALIVE;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
@@ -101,22 +99,23 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
             } else if (request.matches("PUT", "/expectation")) {
 
-                Expectation expectation = expectationSerializer.deserialize(request.getBodyAsString());
-                List<String> validationErrors = expectationValidator.isValid(expectation);
-                if (validationErrors.isEmpty()) {
-                    KeyStoreFactory.addSubjectAlternativeName(expectation.getHttpRequest().getFirstHeader(HOST.toString()));
-                    mockServerMatcher
-                            .when(expectation.getHttpRequest(), expectation.getTimes(), expectation.getTimeToLive())
-                            .thenRespond(expectation.getHttpResponse())
-                            .thenForward(expectation.getHttpForward())
-                            .thenError(expectation.getHttpError())
-                            .thenCallback(expectation.getHttpClassCallback())
-                            .thenCallback(expectation.getHttpObjectCallback());
-                    logFormatter.infoLog("creating expectation:{}", expectation);
-                    writeResponse(ctx, request, HttpResponseStatus.CREATED);
-                } else {
-                    String errorMessage = validationErrors.size() + " errors:\n - " + Joiner.on("\n - ").join(validationErrors) + "\n";
-                    writeResponse(ctx, request, NOT_ACCEPTABLE, errorMessage, MediaType.create("text", "plain").toString());
+                for (Expectation expectation : expectationSerializer.deserializeArray(request.getBodyAsString())) {
+                    List<String> validationErrors = expectationValidator.isValid(expectation);
+                    if (validationErrors.isEmpty()) {
+                        SSLFactory.addSubjectAlternativeName(expectation.getHttpRequest().getFirstHeader(HOST.toString()));
+                        mockServerMatcher
+                                .when(expectation.getHttpRequest(), expectation.getTimes(), expectation.getTimeToLive())
+                                .thenRespond(expectation.getHttpResponse())
+                                .thenForward(expectation.getHttpForward())
+                                .thenError(expectation.getHttpError())
+                                .thenCallback(expectation.getHttpClassCallback())
+                                .thenCallback(expectation.getHttpObjectCallback());
+                        logFormatter.infoLog("creating expectation:{}", expectation);
+                        writeResponse(ctx, request, HttpResponseStatus.CREATED);
+                    } else {
+                        String errorMessage = validationErrors.size() + " errors:\n - " + Joiner.on("\n - ").join(validationErrors) + "\n";
+                        writeResponse(ctx, request, NOT_ACCEPTABLE, errorMessage, MediaType.create("text", "plain").toString());
+                    }
                 }
 
             } else if (request.matches("PUT", "/clear")) {

@@ -88,7 +88,7 @@ public class MockServerHandlerTest {
         initMocks(this);
 
         // given - serializers
-        when(mockExpectationSerializer.deserialize(anyString())).thenReturn(mockExpectation);
+        when(mockExpectationSerializer.deserializeArray(anyString())).thenReturn(new Expectation[]{mockExpectation});
         when(mockHttpRequestSerializer.deserialize(anyString())).thenReturn(mockHttpRequest);
         when(mockVerificationSerializer.deserialize(anyString())).thenReturn(mockVerification);
         when(mockVerificationSequenceSerializer.deserialize(anyString())).thenReturn(mockVerificationSequence);
