@@ -11,7 +11,6 @@ import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.util.AttributeKey;
-import org.mockserver.socket.NettySslContextFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

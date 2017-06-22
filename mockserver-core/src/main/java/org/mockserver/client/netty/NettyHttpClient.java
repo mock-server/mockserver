@@ -29,7 +29,7 @@ public class NettyHttpClient {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public HttpResponse sendRequest(final HttpRequest httpRequest) throws SocketConnectionException {
-        return sendRequest(httpRequest, socketAddressFromHostHeader(httpRequest), false);
+        return sendRequest(httpRequest, socketAddressFromHostHeader(httpRequest));
     }
 
     private InetSocketAddress socketAddressFromHostHeader(HttpRequest httpRequest) {
@@ -48,11 +48,7 @@ public class NettyHttpClient {
         }
     }
 
-    public HttpResponse sendRequest(HttpRequest httpRequest, @Nullable InetSocketAddress remoteAddress) {
-        return sendRequest(httpRequest, remoteAddress, false);
-    }
-
-    public HttpResponse sendRequest(final HttpRequest httpRequest, @Nullable InetSocketAddress remoteAddress, final boolean retryIfSslFails) throws SocketConnectionException {
+    public HttpResponse sendRequest(final HttpRequest httpRequest, @Nullable InetSocketAddress remoteAddress) throws SocketConnectionException {
         if (remoteAddress == null) {
             remoteAddress = socketAddressFromHostHeader(httpRequest);
         }
@@ -97,21 +93,17 @@ public class NettyHttpClient {
         } catch (TimeoutException e) {
             throw new SocketCommunicationException("Response was not received after " + ConfigurationProperties.maxSocketTimeout() + " milliseconds, to make the proxy wait longer please use \"mockserver.maxSocketTimeout\" system property or ConfigurationProperties.maxSocketTimeout(long milliseconds)", e.getCause());
         } catch (ExecutionException e) {
-            if (retryIfSslFails) {
-                return sendRequest(httpRequest.withSecure(!(httpRequest.isSecure() != null && httpRequest.isSecure())));
+            Throwable cause = e.getCause();
+            if (cause instanceof ConnectException) {
+                throw new SocketConnectionException("Unable to connect to socket " + remoteAddress, cause);
+            } else if (cause instanceof UnknownHostException) {
+                throw new SocketConnectionException("Unable to resolve host " + remoteAddress, cause);
+            } else if (cause instanceof NotSslRecordException) {
+                return sendRequest(httpRequest.withSecure(false));
+            } else if (cause instanceof IOException) {
+                throw new SocketConnectionException(cause.getMessage(), cause);
             } else {
-                Throwable cause = e.getCause();
-                if (cause instanceof ConnectException) {
-                    throw new SocketConnectionException("Unable to connect to socket " + remoteAddress, cause);
-                } else if (cause instanceof UnknownHostException) {
-                    throw new SocketConnectionException("Unable to resolve host " + remoteAddress, cause);
-                } else if (cause instanceof NotSslRecordException) {
-                    return sendRequest(httpRequest.withSecure(false));
-                } else if (cause instanceof IOException) {
-                    throw new SocketConnectionException(cause.getMessage(), cause);
-                } else {
-                    throw new RuntimeException("Exception while sending request", e);
-                }
+                throw new RuntimeException("Exception while sending request", e);
             }
         } catch (InterruptedException e) {
             throw new RuntimeException("Exception while sending request", e);

@@ -1,6 +1,7 @@
 package org.mockserver.socket;
 
 import javax.net.ssl.SSLSocket;
+import java.io.IOException;
 import java.net.Socket;
 
 import static org.mockserver.socket.KeyStoreFactory.keyStoreFactory;
@@ -14,7 +15,7 @@ public class SSLSocketFactory {
         return new SSLSocketFactory();
     }
 
-    public synchronized SSLSocket wrapSocket(Socket socket) throws Exception {
+    public synchronized SSLSocket wrapSocket(Socket socket) throws IOException {
         // ssl socket factory
         javax.net.ssl.SSLSocketFactory sslSocketFactory = keyStoreFactory().sslContext().getSocketFactory();
 

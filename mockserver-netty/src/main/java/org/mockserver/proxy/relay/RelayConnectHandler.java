@@ -12,7 +12,6 @@ import io.netty.handler.codec.http.HttpServerCodec;
 import org.mockserver.logging.LoggingHandler;
 import org.mockserver.proxy.http.HttpProxy;
 import org.mockserver.proxy.unification.PortUnificationHandler;
-import org.mockserver.socket.NettySslContextFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,7 +84,7 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
 
                                         upstreamPipeline.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
 
-                                        upstreamPipeline.addLast(new UpstreamProxyRelayHandler(clientCtx.channel(), logger));
+                                        upstreamPipeline.addLast(new UpstreamProxyRelayHandler(serverCtx.channel(), clientCtx.channel(), logger));
                                     }
                                 });
                     }
