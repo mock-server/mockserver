@@ -1,6 +1,7 @@
 package org.mockserver.socket;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.asn1.*;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.*;
@@ -22,6 +23,8 @@ import org.slf4j.LoggerFactory;
 import javax.xml.bind.DatatypeConverter;
 import java.io.*;
 import java.math.BigInteger;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.security.*;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -79,6 +82,26 @@ public class KeyAndCertificateFactory {
 
     public static KeyAndCertificateFactory keyAndCertificateFactory() {
         return KEY_AND_CERTIFICATE_FACTORY;
+    }
+
+
+    public static void addSubjectAlternativeName(String host) {
+        if (host != null) {
+            String hostWithoutPort = StringUtils.substringBefore(host, ":");
+
+            if (!ConfigurationProperties.containsSslSubjectAlternativeName(hostWithoutPort)) {
+                try {
+                    // resolve host name for subject alternative name in case host name is ip address
+                    for (InetAddress addr : InetAddress.getAllByName(hostWithoutPort)) {
+                        ConfigurationProperties.addSslSubjectAlternativeNameIps(addr.getHostAddress());
+                        ConfigurationProperties.addSslSubjectAlternativeNameDomains(addr.getHostName());
+                        ConfigurationProperties.addSslSubjectAlternativeNameDomains(addr.getCanonicalHostName());
+                    }
+                } catch (UnknownHostException uhe) {
+                    ConfigurationProperties.addSslSubjectAlternativeNameDomains(hostWithoutPort);
+                }
+            }
+        }
     }
 
     private static SubjectKeyIdentifier createSubjectKeyIdentifier(Key key) throws IOException {

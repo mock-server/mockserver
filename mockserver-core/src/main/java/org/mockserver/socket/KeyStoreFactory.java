@@ -74,25 +74,6 @@ public class KeyStoreFactory {
         }
     }
 
-    public static void addSubjectAlternativeName(String host) {
-        if (host != null) {
-            String hostWithoutPort = StringUtils.substringBefore(host, ":");
-
-            if (!ConfigurationProperties.containsSslSubjectAlternativeName(hostWithoutPort)) {
-                try {
-                    // resolve host name for subject alternative name in case host name is ip address
-                    for (InetAddress addr : InetAddress.getAllByName(hostWithoutPort)) {
-                        ConfigurationProperties.addSslSubjectAlternativeNameIps(addr.getHostAddress());
-                        ConfigurationProperties.addSslSubjectAlternativeNameDomains(addr.getHostName());
-                        ConfigurationProperties.addSslSubjectAlternativeNameDomains(addr.getCanonicalHostName());
-                    }
-                } catch (UnknownHostException uhe) {
-                    ConfigurationProperties.addSslSubjectAlternativeNameDomains(hostWithoutPort);
-                }
-            }
-        }
-    }
-
     /**
      * Save X509Certificate in KeyStore file.
      */
