@@ -24,73 +24,197 @@ host: "localhost:1080"
 paths:
   "/status":
     put:
-      description: ""
-      summary: "return listening ports"
-      consumes:
-      - application/json
       tags:
-      - control
+      - "control"
+      summary: "return listening ports"
+      description: ""
+      produces:
+      - "application/json"
+      consumes:
+      - "application/json"
       responses:
         200:
           description: "MockServer is running and listening on the listed ports"
           schema:
             "$ref": "#/definitions/Ports"
-  "/expectation":
-    put:
-      responses:
-        202:
-          description: "listening on ports"
-          schema:
-            "$ref": "#/definitions/Ports"
-        400:
-          description: "incorrect request format"
-        406:
-          description: "unable to bind to ports (i.e. already bound or JVM process doesn't have permission)"
-      description: ""
-      parameters:
-      - required: true
-        in: body
-        description: "list of ports to bind to, where 0 indicates dynamically bind to any available port"
-        name: body
-        schema:
-          "$ref": "#/definitions/Expectations"
-      produces:
-      - application/json
-      tags:
-      - expectation
-      consumes:
-      - application/json
-      summary: specify expectation
   "/bind":
     put:
+      tags:
+      - "control"
+      summary: "bind additional listening ports"
+      description: "only supported on Netty version"
+      produces:
+      - "application/json"
+      consumes:
+      - "application/json"
+      parameters:
+      - in: body
+        name: ports
+        required: true
+        description: "list of ports to bind to, where 0 indicates dynamically bind to any available port"
+        schema:
+          "$ref": "#/definitions/Ports"
       responses:
         202:
           description: "listening on additional requested ports, note: the response ony contains ports added for the request, to list all ports use /status"
           schema:
             "$ref": "#/definitions/Ports"
-        400:
-          description: "incorrect request format"
         406:
           description: "unable to bind to ports (i.e. already bound or JVM process doesn't have permission)"
-      description: ""
-      parameters:
-      - required: true
-        in: body
-        description: "list of ports to bind to, where 0 indicates dynamically bind to any available port"
-        name: body
-        schema:
-          "$ref": "#/definitions/Ports"
-      produces:
-      - application/json
+        400:
+          description: "incorrect request format"
+  "/stop":
+    put:
       tags:
-      - control
+      - "control"
+      summary: "stop running process"
+      description: "only supported on Netty version"
+      responses:
+        202:
+          description: "MockServer process is stopping"
+  "/expectation":
+    put:
+      tags:
+      - "expectation"
+      summary: "create expectation"
+      produces:
+      - "application/json"
       consumes:
-      - application/json
-      summary: "bind additional listening ports"
+      - "application/json"
+      parameters:
+      - in: body
+        name: expectation
+        required: true
+        description: "expectation to create"
+        schema:
+          "$ref": "#/definitions/Expectations"
+      responses:
+        201:
+          description: "expectation created"
+        406:
+          description: "invalid expectation"
+        400:
+          description: "incorrect request format"
+  "/clear":
+    put:
+      tags:
+      - "expectation"
+      summary: "clears expectations and recorded requests that match the request matcher"
+      consumes:
+      - "application/json"
+      parameters:
+      - in: body
+        name: request_matcher
+        required: false
+        description: "request used to match expectations and recored requests to clear"
+        schema:
+          "$ref": "#/definitions/HttpRequest"
+      responses:
+        202:
+          description: "expectations and recorded requests cleared"
+        400:
+          description: "incorrect request format"
+  "/reset":
+    put:
+      tags:
+      - "expectation"
+      summary: "clears all expectations and recorded requests"
+      responses:
+        202:
+          description: "expectations and recorded requests cleared"
+  "/dumpToLog":
+    put:
+      tags:
+      - "expectation"
+      summary: "write all requests to the request log that match the request matcher"
+      consumes:
+      - "application/json"
+      parameters:
+      - in: body
+        name: request_matcher
+        required: false
+        description: "request used to match which recored requests to write to the request log"
+        schema:
+          "$ref": "#/definitions/HttpRequest"
+      responses:
+        202:
+          description: "recorded requests written to request log"
+        400:
+          description: "incorrect request format"
+  "/verify":
+    put:
+      tags:
+      - "expectation"
+      summary: "verify a request has been received a specific number of times"
+      consumes:
+      - "application/json"
+      produces:
+      - "text/plain"
+      parameters:
+      - in: body
+        name: request_matcher
+        required: false
+        description: "request matcher and the number of times to match"
+        schema:
+          "$ref": "#/definitions/Verification"
+      responses:
+        202:
+          description: "matching request has been received specified number of times"
+        406:
+          description: "request has not been received specified numbers of times"
+          schema:
+            type: string
+            description: "JUnit expected:<...> but was:<...> format"
+        400:
+          description: "incorrect request format"
+  "/verifySequence":
+    put:
+      tags:
+      - "expectation"
+      summary: "verify a sequence of request has been received in the specific order"
+      consumes:
+      - "application/json"
+      produces:
+      - "text/plain"
+      parameters:
+      - in: body
+        name: request_matcher
+        required: false
+        description: "the sequence of requests matchers"
+        schema:
+          "$ref": "#/definitions/VerificationSequence"
+      responses:
+        202:
+          description: "request sequence has been received in specified order"
+        406:
+          description: "request sequence has not been received in specified order"
+          schema:
+            type: string
+            description: "JUnit expected:<...> but was:<...> format"
+        400:
+          description: "incorrect request format"
 definitions:
-  HttpRequest:
+  Expectations:
+    title: "list of expectations"
+    type: array
     additionalProperties: false
+    items:
+      "$ref": "#/definitions/Expectation"
+  Expectation:
+    title: "expectation"
     type: object
+    additionalProperties: false
+    properties:
+      httpRequest:
+        "$ref": "#/definitions/HttpRequest"
+      httpResponse:
+        "$ref": "#/definitions/HttpResponse"
+      times:
+        "$ref": "#/definitions/Times"
+  HttpRequest:
+    title: "request matcher"
+    type: object
+    additionalProperties: false
     properties:
       body:
         "$ref": "#/definitions/Body"
@@ -104,84 +228,10 @@ definitions:
         type: string
       method:
         type: string
-  Body:
-    additionalProperties: false
-    type: object
-    properties:
-      type:
-        type: string
-      value:
-        type: string
-  Cookies:
-    additionalProperties: false
-    items:
-      type: object
-      properties:
-        name:
-          type: string
-        value:
-          type: string
-    type: array
-  QueryStringParameters:
-    additionalProperties: false
-    items:
-      type: object
-      properties:
-        values:
-          items:
-            type: string
-          type: array
-        name:
-          type: string
-    type: array
-  Expectations:
-    additionalProperties: false
-    items:
-      "$ref": "#/definitions/Expectation"
-    type: array
-  Times:
-    additionalProperties: false
-    type: object
-    properties:
-      remainingTimes:
-        type: integer
-      unlimited:
-        type: boolean
-  Delay:
-    type: object
-    properties:
-      timeUnit:
-        type: string
-      value:
-        type: integer
-  Headers:
-    additionalProperties: false
-    items:
-      type: object
-      properties:
-        values:
-          items:
-            type: string
-          type: array
-        name:
-          type: string
-    type: array
-  ConnectionOptions:
-    type: object
-    properties:
-      closeSocket:
-        type: boolean
-      contentLengthHeaderOverride:
-        type: integer
-      suppressContentLengthHeader:
-        type: boolean
-      suppressConnectionHeader:
-        type: boolean
-      keepAliveOverride:
-        type: boolean
   HttpResponse:
-    additionalProperties: false
+    title: "response"
     type: object
+    additionalProperties: false
     properties:
       body:
         type: string
@@ -195,19 +245,116 @@ definitions:
         "$ref": "#/definitions/Headers"
       statusCode:
         type: integer
-  Expectation:
-    additionalProperties: false
+  Times:
+    title: "number of responses"
     type: object
+    additionalProperties: false
+    properties:
+      remainingTimes:
+        type: integer
+      unlimited:
+        type: boolean
+  Headers:
+    title: "headers"
+    type: array
+    additionalProperties: false
+    items:
+      type: object
+      properties:
+        values:
+          items:
+            type: string
+          type: array
+        name:
+          type: string
+  Cookies:
+    title: "cookies"
+    type: array
+    additionalProperties: false
+    items:
+      type: object
+      properties:
+        name:
+          type: string
+        value:
+          type: string
+  QueryStringParameters:
+    title: "parameters"
+    type: array
+    additionalProperties: false
+    items:
+      type: object
+      properties:
+        values:
+          items:
+            type: string
+          type: array
+        name:
+          type: string
+  Body:
+    title: "body"
+    type: object
+    additionalProperties: false
+    properties:
+      type:
+        type: string
+      value:
+        type: string
+  Delay:
+    title: "response delay"
+    type: object
+    additionalProperties: false
+    properties:
+      timeUnit:
+        type: string
+      value:
+        type: integer
+  ConnectionOptions:
+    title: "connection options"
+    type: object
+    additionalProperties: false
+    properties:
+      closeSocket:
+        type: boolean
+      contentLengthHeaderOverride:
+        type: integer
+      suppressContentLengthHeader:
+        type: boolean
+      suppressConnectionHeader:
+        type: boolean
+      keepAliveOverride:
+        type: boolean
+  Verification:
+    title: "verification"
+    type: object
+    additionalProperties: false
     properties:
       httpRequest:
         "$ref": "#/definitions/HttpRequest"
-      httpResponse:
-        "$ref": "#/definitions/HttpResponse"
       times:
-        "$ref": "#/definitions/Times"
-  Ports:
-    additionalProperties: false
+        "$ref": "#/definitions/VerificationTimes"
+  VerificationTimes:
+    title: "number of request to verify"
     type: object
+    additionalProperties: false
+    properties:
+      count:
+        type: integer
+      exact:
+        type: boolean
+  VerificationSequence:
+    title: "verification sequence"
+    type: object
+    additionalProperties: false
+    properties:
+      httpRequests:
+        type: array
+        items:
+          "$ref": "#/definitions/HttpRequest"
+  Ports:
+    title: "list of ports"
+    type: object
+    additionalProperties: false
     properties:
       ports:
         items:
