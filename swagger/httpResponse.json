@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "http://mock-server.com/httpResponse.json",
+  "type": "object",
+  "properties": {
+    "body": {
+      "type": "string"
+    },
+    "connectionOptions": {
+      "$ref": "connectionOptions.json"
+    },
+    "cookies": {
+      "$ref": "cookies.json"
+    },
+    "delay": {
+      "$ref": "delay.json"
+    },
+    "headers": {
+      "$ref": "headers.json"
+    },
+    "statusCode": {
+      "type": "integer"
+    }
+  },
+  "additionalProperties": false
+}

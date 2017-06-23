@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "http://mock-server.com/httpRequest.json",
+  "type": "object",
+  "properties": {
+    "body": {
+      "$ref": "body.json"
+    },
+    "cookies": {
+      "$ref": "cookies.json"
+    },
+    "headers": {
+      "$ref": "headers.json"
+    },
+    "method": {
+      "type": "string"
+    },
+    "path": {
+      "type": "string"
+    },
+    "queryStringParameters": {
+      "$ref": "queryStringParameters.json"
+    }
+  },
+  "additionalProperties": false
+}

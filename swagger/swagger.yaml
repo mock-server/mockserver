@@ -1,0 +1,187 @@
+swagger: "2.0"
+info:
+ description: "MockServer enables easy mocking of any system you integrate with via HTTP or HTTPS with clients written in Java, JavaScript and Ruby.  MockServer also includes a proxy that introspects all proxied traffic including encrypted SSL traffic and supports Port Forwarding, Web Proxying (i.e. HTTP proxy), HTTPS Tunneling Proxying (using HTTP CONNECT) and SOCKS Proxying (i.e. dynamic port forwarding)."
+ version: "10.6"
+ title: "Mock Server API"
+ contact:
+   email: "mockserver@noreply.github.com"
+ license:
+   name: "Apache 2.0"
+   url: "https://github.com/jamesdbloom/mockserver/blob/master/LICENSE.md"
+host: "localhost"
+basePath: "/"
+tags:
+ - name: "expectation"
+   description: "Create expectations"
+ - name: "verify"
+   description: "Verify requests"
+ - name: "control"
+   description: "Manage MockServer process"
+schemes:
+- "http"
+paths:
+ /status:
+   put:
+     tags:
+     - "control"
+     summary: "check MockServer is running"
+     description: ""
+     consumes:
+     - "application/json"
+     responses:
+       200:
+         description: "MockServer is running"
+ /bind:
+   get:
+     tags:
+     - "control"
+     summary: "bind addition ports"
+     description: ""
+     consumes:
+     - "application/json"
+     produces:
+     - "application/json"
+     parameters:
+     - in: "body"
+       name: "body"
+       description: "order placed for purchasing the pet"
+       required: true
+       schema:
+         $ref: "#/definitions/Ports"
+     responses:
+       202:
+         description: "now listening on additional requested ports"
+         schema:
+          $ref: "#/definitions/Ports"
+       406:
+         description: "unable to bind to ports (i.e. already bound or JVM process doesn't have permission)"
+       400:
+         description: "incorrect request format"
+definitions:
+ Expectation:
+  type: "object"
+  additionalProperties: false
+  properties:
+   httpRequest:
+    $ref: "#/definitions/HttpRequest"
+   httpResponse:
+    $ref: "#/definitions/HttpResponse"
+   times:
+    $ref: "#/definitions/Times"
+ Times:
+  type: "object"
+  additionalProperties: false
+  properties:
+   remainingTimes:
+    type: "integer"
+   unlimited:
+    type: "boolean"
+ HttpRequest:
+  type: "object"
+  additionalProperties: false
+  properties:
+   body:
+    $ref: "#/definitions/Body"
+   cookies:
+    $ref: "#/definitions/Cookies"
+   headers:
+    $ref: "#/definitions/Headers"
+   method:
+    type: string
+   path:
+    type: string
+   queryStringParameters:
+    $ref: "#/definitions/QueryStringParameters"
+ HttpResponse:
+  type: "object"
+  additionalProperties: false
+  properties:
+    body:
+      type: string
+    connectionOptions:
+     $ref: "#/definitions/ConnectionOptions"
+    cookies:
+      $ref: "#/definitions/Cookies"
+    delay:
+      $ref: "#/definitions/Delay"
+    headers:
+      $ref: "#/definitions/Headers"
+    statusCode:
+      type: integer
+ ConnectionOptions:
+  type: object
+  properties:
+   closeSocket:
+    type: boolean
+   contentLengthHeaderOverride:
+    type: integer
+   keepAliveOverride:
+    type: boolean
+   suppressConnectionHeader:
+    type: boolean
+   suppressContentLengthHeader:
+    type: boolean
+ Delay:
+  type: "object"
+  properties:
+   timeUnit:
+    type: string
+   value:
+    type: integer
+ Body:
+  type: "object"
+  additionalProperties: false
+  properties:
+   type:
+    type: string
+   value:
+    type: string
+ Cookies:
+  type: "array"
+  additionalProperties: false
+  items:
+   type: "object"
+   properties:
+    name:
+     type: string
+    value:
+     type: string
+ Headers:
+  type: "array"
+  additionalProperties: false
+  items:
+   type: "object"
+   properties:
+    name:
+     type: string
+    values:
+     type: "array"
+     items:
+      type: string
+ QueryStringParameters:
+  type: "array"
+  additionalProperties: false
+  items:
+   type: "object"
+   properties:
+    name:
+     type: string
+    values:
+     type: "array"
+     items:
+      type: string
+ Ports:
+  type: "array"
+  additionalProperties: false
+  items:
+    type: number
+ ApiResponse:
+   type: "object"
+   properties:
+     code:
+       type: "integer"
+       format: "int32"
+     type:
+       type: "string"
+     message:
+       type: "string"

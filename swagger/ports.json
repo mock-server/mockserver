@@ -1,0 +1,9 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "http://mock-server.com/ports.json",
+  "type": "array",
+  "items": {
+    "type": "number"
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "http://mock-server.com/delay.json",
+  "type": "object",
+  "properties": {
+    "timeUnit": {
+      "type": "string"
+    },
+    "value": {
+      "type": "integer"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,23 @@
+schemas:
+  - expectation: |
+    {
+      "$schema": "http://json-schema.org/draft-04/schema#",
+      "id": "expectation",
+      "$ref": "http://mock-server.com/expectation.json"
+    }
+  - request: |
+    {
+      "$schema": "http://json-schema.org/draft-04/schema#",
+      "id": "request",
+      "$ref": "http://mock-server.com/request.json"
+    }
+  - ports: |
+    {
+      "$schema": "http://json-schema.org/draft-04/schema#",
+      "id": "http://mock-server.com/ports.json",
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "additionalProperties": false
+    }

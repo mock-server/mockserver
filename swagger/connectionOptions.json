@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "http://mock-server.com/connectionOptions.json",
+  "type": "object",
+  "properties": {
+    "closeSocket": {
+      "type": "boolean"
+    },
+    "contentLengthHeaderOverride": {
+      "type": "integer"
+    },
+    "keepAliveOverride": {
+      "type": "boolean"
+    },
+    "suppressConnectionHeader": {
+      "type": "boolean"
+    },
+    "suppressContentLengthHeader": {
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false
+}

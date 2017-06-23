@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "http://mock-server.com/expectation.json",
+  "type": "object",
+  "properties": {
+    "httpRequest": {
+      "$ref": "httpRequest.json"
+    },
+    "httpResponse": {
+      "$ref": "httpResponse.json"
+    },
+    "times": {
+      "$ref": "times.json"
+    },
+    "additionalProperties": false
+  }
+}
