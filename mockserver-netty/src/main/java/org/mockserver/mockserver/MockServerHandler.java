@@ -111,7 +111,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                                 .thenCallback(expectation.getHttpClassCallback())
                                 .thenCallback(expectation.getHttpObjectCallback());
                         logFormatter.infoLog("creating expectation:{}", expectation);
-                        writeResponse(ctx, request, HttpResponseStatus.CREATED);
+                        writeResponse(ctx, request, CREATED);
                     } else {
                         String errorMessage = validationErrors.size() + " errors:\n - " + Joiner.on("\n - ").join(validationErrors) + "\n";
                         writeResponse(ctx, request, NOT_ACCEPTABLE, errorMessage, MediaType.create("text", "plain").toString());
