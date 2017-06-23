@@ -1,0 +1,215 @@
+---
+swagger: "2.0"
+info:
+  title: "Mock Server API"
+  version: "10.8"
+  description: "MockServer enables easy mocking of any system you integrate with via HTTP or HTTPS with clients written in Java, JavaScript and Ruby.  MockServer also includes a proxy that introspects all proxied traffic including encrypted SSL traffic and supports Port Forwarding, Web Proxying (i.e. HTTP proxy), HTTPS Tunneling Proxying (using HTTP CONNECT) and SOCKS Proxying (i.e. dynamic port forwarding)."
+  license:
+    url: "https://github.com/jamesdbloom/mockserver/blob/master/LICENSE.md"
+    name: "Apache 2.0"
+  contact:
+    email: "mockserver@noreply.github.com"
+schemes:
+- http
+- https
+tags:
+- name: "expectation"
+  description: "Create expectations"
+- name: "verify"
+  description: "Verify requests"
+- name: "control"
+  description: "Manage MockServer process"
+basePath: "/"
+host: "localhost:1080"
+paths:
+  "/status":
+    put:
+      description: ""
+      summary: "return listening ports"
+      consumes:
+      - application/json
+      tags:
+      - control
+      responses:
+        200:
+          description: "MockServer is running and listening on the listed ports"
+          schema:
+            "$ref": "#/definitions/Ports"
+  "/expectation":
+    put:
+      responses:
+        202:
+          description: "listening on ports"
+          schema:
+            "$ref": "#/definitions/Ports"
+        400:
+          description: "incorrect request format"
+        406:
+          description: "unable to bind to ports (i.e. already bound or JVM process doesn't have permission)"
+      description: ""
+      parameters:
+      - required: true
+        in: body
+        description: "list of ports to bind to, where 0 indicates dynamically bind to any available port"
+        name: body
+        schema:
+          "$ref": "#/definitions/Expectations"
+      produces:
+      - application/json
+      tags:
+      - expectation
+      consumes:
+      - application/json
+      summary: specify expectation
+  "/bind":
+    put:
+      responses:
+        202:
+          description: "listening on additional requested ports, note: the response ony contains ports added for the request, to list all ports use /status"
+          schema:
+            "$ref": "#/definitions/Ports"
+        400:
+          description: "incorrect request format"
+        406:
+          description: "unable to bind to ports (i.e. already bound or JVM process doesn't have permission)"
+      description: ""
+      parameters:
+      - required: true
+        in: body
+        description: "list of ports to bind to, where 0 indicates dynamically bind to any available port"
+        name: body
+        schema:
+          "$ref": "#/definitions/Ports"
+      produces:
+      - application/json
+      tags:
+      - control
+      consumes:
+      - application/json
+      summary: "bind additional listening ports"
+definitions:
+  HttpRequest:
+    additionalProperties: false
+    type: object
+    properties:
+      body:
+        "$ref": "#/definitions/Body"
+      headers:
+        "$ref": "#/definitions/Headers"
+      cookies:
+        "$ref": "#/definitions/Cookies"
+      queryStringParameters:
+        "$ref": "#/definitions/QueryStringParameters"
+      path:
+        type: string
+      method:
+        type: string
+  Body:
+    additionalProperties: false
+    type: object
+    properties:
+      type:
+        type: string
+      value:
+        type: string
+  Cookies:
+    additionalProperties: false
+    items:
+      type: object
+      properties:
+        name:
+          type: string
+        value:
+          type: string
+    type: array
+  QueryStringParameters:
+    additionalProperties: false
+    items:
+      type: object
+      properties:
+        values:
+          items:
+            type: string
+          type: array
+        name:
+          type: string
+    type: array
+  Expectations:
+    additionalProperties: false
+    items:
+      "$ref": "#/definitions/Expectation"
+    type: array
+  Times:
+    additionalProperties: false
+    type: object
+    properties:
+      remainingTimes:
+        type: integer
+      unlimited:
+        type: boolean
+  Delay:
+    type: object
+    properties:
+      timeUnit:
+        type: string
+      value:
+        type: integer
+  Headers:
+    additionalProperties: false
+    items:
+      type: object
+      properties:
+        values:
+          items:
+            type: string
+          type: array
+        name:
+          type: string
+    type: array
+  ConnectionOptions:
+    type: object
+    properties:
+      closeSocket:
+        type: boolean
+      contentLengthHeaderOverride:
+        type: integer
+      suppressContentLengthHeader:
+        type: boolean
+      suppressConnectionHeader:
+        type: boolean
+      keepAliveOverride:
+        type: boolean
+  HttpResponse:
+    additionalProperties: false
+    type: object
+    properties:
+      body:
+        type: string
+      delay:
+        "$ref": "#/definitions/Delay"
+      cookies:
+        "$ref": "#/definitions/Cookies"
+      connectionOptions:
+        "$ref": "#/definitions/ConnectionOptions"
+      headers:
+        "$ref": "#/definitions/Headers"
+      statusCode:
+        type: integer
+  Expectation:
+    additionalProperties: false
+    type: object
+    properties:
+      httpRequest:
+        "$ref": "#/definitions/HttpRequest"
+      httpResponse:
+        "$ref": "#/definitions/HttpResponse"
+      times:
+        "$ref": "#/definitions/Times"
+  Ports:
+    additionalProperties: false
+    type: object
+    properties:
+      ports:
+        items:
+          type: number
+        type: array
