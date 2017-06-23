@@ -324,6 +324,17 @@ definitions:
         type: boolean
       keepAliveOverride:
         type: boolean
+  Error:
+    title: "verification"
+    type: object
+    properties:
+      delay:
+        $ref: '#/definitions/Delay'
+      dropConnection:
+        type: boolean
+      responseBytes:
+        description: "Base64 encoded bytes"
+        type: string
   Verification:
     title: "verification"
     type: object
