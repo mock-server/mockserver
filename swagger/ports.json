@@ -1,9 +1,15 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "id": "http://mock-server.com/ports.json",
-  "type": "array",
-  "items": {
-    "type": "number"
-  },
-  "additionalProperties": false
+  "title": "list of ports",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "ports": {
+      "items": {
+        "type": "number"
+      },
+      "type": "array"
+    }
+  }
 }
