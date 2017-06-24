@@ -1,6 +1,4 @@
 {
-  "$schema": "http://json-schema.org/draft-04/schema#",
-  "id": "http://mock-server.com/ports.json",
   "title": "list of ports",
   "type": "object",
   "additionalProperties": false,
