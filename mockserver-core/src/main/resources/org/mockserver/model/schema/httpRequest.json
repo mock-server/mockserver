@@ -1,0 +1,25 @@
+{
+  "title": "request matcher",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "body": {
+      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/swagger/swagger/body.json"
+    },
+    "headers": {
+      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/swagger/swagger/headers.json"
+    },
+    "cookies": {
+      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/swagger/swagger/cookies.json"
+    },
+    "queryStringParameters": {
+      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/swagger/swagger/queryStringParameters.json"
+    },
+    "path": {
+      "type": "string"
+    },
+    "method": {
+      "type": "string"
+    }
+  }
+}

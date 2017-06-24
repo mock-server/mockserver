@@ -1,0 +1,13 @@
+{
+  "title": "verification sequence",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "httpRequests": {
+      "type": "array",
+      "items": {
+        "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/swagger/swagger/httpRequest.json"
+      }
+    }
+  }
+}

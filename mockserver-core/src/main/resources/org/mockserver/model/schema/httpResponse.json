@@ -1,0 +1,25 @@
+{
+  "title": "response",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "body": {
+      "type": "string"
+    },
+    "delay": {
+      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/swagger/swagger/delay.json"
+    },
+    "cookies": {
+      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/swagger/swagger/cookies.json"
+    },
+    "connectionOptions": {
+      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/swagger/swagger/connectionOptions.json"
+    },
+    "headers": {
+      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/swagger/swagger/headers.json"
+    },
+    "statusCode": {
+      "type": "integer"
+    }
+  }
+}

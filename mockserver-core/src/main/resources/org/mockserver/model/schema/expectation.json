@@ -1,0 +1,16 @@
+{
+  "title": "expectation",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "httpRequest": {
+      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/swagger/swagger/httpRequest.json"
+    },
+    "httpResponse": {
+      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/swagger/swagger/httpResponse.json"
+    },
+    "times": {
+      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/swagger/swagger/times.json"
+    }
+  }
+}

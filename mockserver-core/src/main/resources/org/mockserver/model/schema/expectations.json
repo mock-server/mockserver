@@ -1,0 +1,8 @@
+{
+  "title": "list of expectations",
+  "type": "array",
+  "additionalProperties": false,
+  "items": {
+    "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/swagger/swagger/expectation.json"
+  }
+}

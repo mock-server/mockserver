@@ -17,6 +17,8 @@ import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.util.IPAddress;
 import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.file.*;
+import org.mockserver.file.FileReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -303,7 +305,7 @@ public class KeyAndCertificateFactory {
      */
     private RSAPrivateKey loadPrivateKeyFromPEMFile(String filename) {
         try {
-            String publicKeyFile = IOUtils.toString(new InputStreamReader(readFileFromClassPathOrPath(filename)));
+            String publicKeyFile = FileReader.readFileFromClassPathOrPath(filename);
             byte[] publicKeyBytes = DatatypeConverter.parseBase64Binary(publicKeyFile.replace("-----BEGIN RSA PRIVATE KEY-----", "").replace("-----END RSA PRIVATE KEY-----", ""));
             return (RSAPrivateKey) KeyFactory.getInstance("RSA").generatePrivate(new PKCS8EncodedKeySpec(publicKeyBytes));
         } catch (Exception e) {
@@ -316,22 +318,10 @@ public class KeyAndCertificateFactory {
      */
     private X509Certificate loadX509FromPEMFile(String filename) {
         try {
-            return (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(readFileFromClassPathOrPath(filename));
+            return (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(FileReader.openStreamToFileFromClassPathOrPath(filename));
         } catch (Exception e) {
             throw new RuntimeException("Exception reading X509 from PEM file", e);
         }
-    }
-
-    /**
-     * Load file from classpath and if not found then try file path
-     */
-    private InputStream readFileFromClassPathOrPath(String filename) throws FileNotFoundException {
-        InputStream inputStream = getClass().getClassLoader().getResourceAsStream(filename);
-        if (inputStream == null) {
-            // load from path if not found in classpath
-            inputStream = new FileInputStream(filename);
-        }
-        return inputStream;
     }
 
 }

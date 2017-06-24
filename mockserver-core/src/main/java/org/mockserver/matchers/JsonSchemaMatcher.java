@@ -1,9 +1,6 @@
 package org.mockserver.matchers;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.fge.jsonschema.core.report.ProcessingReport;
-import com.github.fge.jsonschema.main.JsonSchemaFactory;
-import org.mockserver.client.serialization.ObjectMapperFactory;
+import org.mockserver.validator.JsonSchemaValidator;
 
 /**
  * See http://json-schema.org/
@@ -12,41 +9,32 @@ import org.mockserver.client.serialization.ObjectMapperFactory;
  */
 public class JsonSchemaMatcher extends BodyMatcher<String> {
     private final String schema;
-    private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
-
-    protected String[] fieldsExcludedFromEqualsAndHashCode() {
-        return new String[]{"logger", "objectMapper"};
-    }
+    private JsonSchemaValidator jsonSchemaValidator = new JsonSchemaValidator();
 
     public JsonSchemaMatcher(String schema) {
         this.schema = schema;
     }
 
+    protected String[] fieldsExcludedFromEqualsAndHashCode() {
+        return new String[]{"logger", "objectMapper"};
+    }
+
     public boolean matches(String matched) {
         boolean result = false;
 
-        ProcessingReport processingReport;
         try {
-            processingReport = validateJson(matched);
+            String validation = jsonSchemaValidator.validateJson(schema, matched);
 
-            if (processingReport.isSuccess()) {
-                result = true;
-            }
+            result = validation.isEmpty();
 
             if (!result) {
-                logger.trace("Failed to perform JSON match \"{}\" with schema \"{}\" because {}", matched, this.schema, processingReport.toString());
+                logger.trace("Failed to perform JSON match \"{}\" with schema \"{}\" because {}", matched, this.schema, validation);
             }
         } catch (Exception e) {
-            logger.trace("Failed to perform JSON match \"{}\" with \"{}\" because {}", matched, this.schema, e.getMessage());
+            logger.trace("Failed to perform JSON match \"{}\" with schema \"{}\" because {}", matched, this.schema, e.getMessage());
         }
 
         return reverseResultIfNot(result);
     }
 
-    public ProcessingReport validateJson(String json) throws Exception {
-        return JsonSchemaFactory
-                .byDefault()
-                .getValidator()
-                .validate(objectMapper.readTree(schema), objectMapper.readTree(json), true);
-    }
 }
