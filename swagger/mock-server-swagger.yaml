@@ -36,7 +36,7 @@ paths:
         200:
           description: "MockServer is running and listening on the listed ports"
           schema:
-            "$ref": "#/definitions/Ports"
+            $ref: "#/definitions/Ports"
   "/bind":
     put:
       tags:
@@ -53,12 +53,12 @@ paths:
         required: true
         description: "list of ports to bind to, where 0 indicates dynamically bind to any available port"
         schema:
-          "$ref": "#/definitions/Ports"
+          $ref: "#/definitions/Ports"
       responses:
         202:
           description: "listening on additional requested ports, note: the response ony contains ports added for the request, to list all ports use /status"
           schema:
-            "$ref": "#/definitions/Ports"
+            $ref: "#/definitions/Ports"
         406:
           description: "unable to bind to ports (i.e. already bound or JVM process doesn't have permission)"
         400:
@@ -87,7 +87,7 @@ paths:
         required: true
         description: "expectation to create"
         schema:
-          "$ref": "#/definitions/Expectations"
+          $ref: "#/definitions/Expectations"
       responses:
         201:
           description: "expectation created"
@@ -108,7 +108,7 @@ paths:
         required: false
         description: "request used to match expectations and recored requests to clear"
         schema:
-          "$ref": "#/definitions/HttpRequest"
+          $ref: "#/definitions/HttpRequest"
       responses:
         202:
           description: "expectations and recorded requests cleared"
@@ -135,7 +135,7 @@ paths:
         required: false
         description: "request used to match which recored requests to write to the request log"
         schema:
-          "$ref": "#/definitions/HttpRequest"
+          $ref: "#/definitions/HttpRequest"
       responses:
         202:
           description: "recorded requests written to request log"
@@ -156,7 +156,7 @@ paths:
         required: false
         description: "request matcher and the number of times to match"
         schema:
-          "$ref": "#/definitions/Verification"
+          $ref: "#/definitions/Verification"
       responses:
         202:
           description: "matching request has been received specified number of times"
@@ -182,7 +182,7 @@ paths:
         required: false
         description: "the sequence of requests matchers"
         schema:
-          "$ref": "#/definitions/VerificationSequence"
+          $ref: "#/definitions/VerificationSequence"
       responses:
         202:
           description: "request sequence has been received in specified order"
@@ -199,31 +199,31 @@ definitions:
     type: array
     additionalProperties: false
     items:
-      "$ref": "#/definitions/Expectation"
+      $ref: "#/definitions/Expectation"
   Expectation:
     title: "expectation"
     type: object
     additionalProperties: false
     properties:
       httpRequest:
-        "$ref": "#/definitions/HttpRequest"
+        $ref: "#/definitions/HttpRequest"
       httpResponse:
-        "$ref": "#/definitions/HttpResponse"
+        $ref: "#/definitions/HttpResponse"
       times:
-        "$ref": "#/definitions/Times"
+        $ref: "#/definitions/Times"
   HttpRequest:
     title: "request matcher"
     type: object
     additionalProperties: false
     properties:
       body:
-        "$ref": "#/definitions/Body"
+        $ref: "#/definitions/Body"
       headers:
-        "$ref": "#/definitions/Headers"
+        $ref: "#/definitions/Headers"
       cookies:
-        "$ref": "#/definitions/Cookies"
+        $ref: "#/definitions/Cookies"
       queryStringParameters:
-        "$ref": "#/definitions/QueryStringParameters"
+        $ref: "#/definitions/QueryStringParameters"
       path:
         type: string
       method:
@@ -236,13 +236,13 @@ definitions:
       body:
         type: string
       delay:
-        "$ref": "#/definitions/Delay"
+        $ref: "#/definitions/Delay"
       cookies:
-        "$ref": "#/definitions/Cookies"
+        $ref: "#/definitions/Cookies"
       connectionOptions:
-        "$ref": "#/definitions/ConnectionOptions"
+        $ref: "#/definitions/ConnectionOptions"
       headers:
-        "$ref": "#/definitions/Headers"
+        $ref: "#/definitions/Headers"
       statusCode:
         type: integer
   Times:
@@ -341,9 +341,9 @@ definitions:
     additionalProperties: false
     properties:
       httpRequest:
-        "$ref": "#/definitions/HttpRequest"
+        $ref: "#/definitions/HttpRequest"
       times:
-        "$ref": "#/definitions/VerificationTimes"
+        $ref: "#/definitions/VerificationTimes"
   VerificationTimes:
     title: "number of request to verify"
     type: object
@@ -361,7 +361,7 @@ definitions:
       httpRequests:
         type: array
         items:
-          "$ref": "#/definitions/HttpRequest"
+          $ref: "#/definitions/HttpRequest"
   Ports:
     title: "list of ports"
     type: object
