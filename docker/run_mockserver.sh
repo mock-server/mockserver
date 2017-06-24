@@ -120,9 +120,4 @@ then
     GENERIC_JVM_OPTIONS="$genericJVMOptions"
 fi
 
-if [ -z "$MOCKSERVER_HOME" ]
-then
-    MOCKSERVER_HOME="/opt/mockserver"
-fi
-
-runCommand "java $GENERIC_JVM_OPTIONS -Dfile.encoding=UTF-8 -Dmockserver.logLevel=$LOG_LEVEL -jar $MOCKSERVER_HOME/mockserver-netty-jar-with-dependencies.jar$COMMAND_LINE_OPTS"
+runCommand "java $GENERIC_JVM_OPTIONS -Dfile.encoding=UTF-8 -Dmockserver.logLevel=$LOG_LEVEL -jar /opt/mockserver/mockserver-netty-jar-with-dependencies.jar$COMMAND_LINE_OPTS"
