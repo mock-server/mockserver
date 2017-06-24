@@ -4,16 +4,16 @@
   "additionalProperties": false,
   "properties": {
     "body": {
-      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/swagger/swagger/body.json"
+      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/body.json"
     },
     "headers": {
-      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/swagger/swagger/headers.json"
+      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/headers.json"
     },
     "cookies": {
-      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/swagger/swagger/cookies.json"
+      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/cookies.json"
     },
     "queryStringParameters": {
-      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/swagger/swagger/queryStringParameters.json"
+      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/queryStringParameters.json"
     },
     "path": {
       "type": "string"

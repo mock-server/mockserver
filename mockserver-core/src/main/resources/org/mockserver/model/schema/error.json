@@ -3,7 +3,7 @@
   "type": "object",
   "properties": {
     "delay": {
-      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/swagger/swagger/delay.json"
+      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/delay.json"
     },
     "dropConnection": {
       "type": "boolean"

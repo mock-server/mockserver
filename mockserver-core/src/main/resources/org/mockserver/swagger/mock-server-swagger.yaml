@@ -36,7 +36,7 @@ paths:
         200:
           description: "MockServer is running and listening on the listed ports"
           schema:
-            $ref: "#/definitions/Ports"
+            $ref: "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/ports.json"
   "/bind":
     put:
       tags:
@@ -53,12 +53,12 @@ paths:
         required: true
         description: "list of ports to bind to, where 0 indicates dynamically bind to any available port"
         schema:
-          $ref: "#/definitions/Ports"
+          $ref: "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/ports.json"
       responses:
         202:
           description: "listening on additional requested ports, note: the response ony contains ports added for the request, to list all ports use /status"
           schema:
-            $ref: "#/definitions/Ports"
+            $ref: "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/ports.json"
         406:
           description: "unable to bind to ports (i.e. already bound or JVM process doesn't have permission)"
         400:
@@ -87,7 +87,7 @@ paths:
         required: true
         description: "expectation to create"
         schema:
-          $ref: "#/definitions/Expectations"
+          $ref: "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/expectations.json"
       responses:
         201:
           description: "expectation created"
@@ -108,7 +108,7 @@ paths:
         required: false
         description: "request used to match expectations and recored requests to clear"
         schema:
-          $ref: "#/definitions/HttpRequest"
+          $ref: "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/httpRequest.json"
       responses:
         202:
           description: "expectations and recorded requests cleared"
@@ -135,7 +135,7 @@ paths:
         required: false
         description: "request used to match which recored requests to write to the request log"
         schema:
-          $ref: "#/definitions/HttpRequest"
+          $ref: "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/httpRequest.json"
       responses:
         202:
           description: "recorded requests written to request log"
@@ -156,7 +156,7 @@ paths:
         required: false
         description: "request matcher and the number of times to match"
         schema:
-          $ref: "#/definitions/Verification"
+          $ref: "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/verification.json"
       responses:
         202:
           description: "matching request has been received specified number of times"
@@ -182,7 +182,7 @@ paths:
         required: false
         description: "the sequence of requests matchers"
         schema:
-          $ref: "#/definitions/VerificationSequence"
+          $ref: "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/verificationSequence.json"
       responses:
         202:
           description: "request sequence has been received in specified order"
@@ -193,181 +193,3 @@ paths:
             description: "JUnit expected:<...> but was:<...> format"
         400:
           description: "incorrect request format"
-definitions:
-  Expectations:
-    title: "list of expectations"
-    type: array
-    additionalProperties: false
-    items:
-      $ref: "#/definitions/Expectation"
-  Expectation:
-    title: "expectation"
-    type: object
-    additionalProperties: false
-    properties:
-      httpRequest:
-        $ref: "#/definitions/HttpRequest"
-      httpResponse:
-        $ref: "#/definitions/HttpResponse"
-      times:
-        $ref: "#/definitions/Times"
-  HttpRequest:
-    title: "request matcher"
-    type: object
-    additionalProperties: false
-    properties:
-      body:
-        $ref: "#/definitions/Body"
-      headers:
-        $ref: "#/definitions/Headers"
-      cookies:
-        $ref: "#/definitions/Cookies"
-      queryStringParameters:
-        $ref: "#/definitions/QueryStringParameters"
-      path:
-        type: string
-      method:
-        type: string
-  HttpResponse:
-    title: "response"
-    type: object
-    additionalProperties: false
-    properties:
-      body:
-        type: string
-      delay:
-        $ref: "#/definitions/Delay"
-      cookies:
-        $ref: "#/definitions/Cookies"
-      connectionOptions:
-        $ref: "#/definitions/ConnectionOptions"
-      headers:
-        $ref: "#/definitions/Headers"
-      statusCode:
-        type: integer
-  Times:
-    title: "number of responses"
-    type: object
-    additionalProperties: false
-    properties:
-      remainingTimes:
-        type: integer
-      unlimited:
-        type: boolean
-  Headers:
-    title: "headers"
-    type: array
-    additionalProperties: false
-    items:
-      type: object
-      properties:
-        values:
-          items:
-            type: string
-          type: array
-        name:
-          type: string
-  Cookies:
-    title: "cookies"
-    type: array
-    additionalProperties: false
-    items:
-      type: object
-      properties:
-        name:
-          type: string
-        value:
-          type: string
-  QueryStringParameters:
-    title: "parameters"
-    type: array
-    additionalProperties: false
-    items:
-      type: object
-      properties:
-        values:
-          items:
-            type: string
-          type: array
-        name:
-          type: string
-  Body:
-    title: "body"
-    type: object
-    additionalProperties: false
-    properties:
-      type:
-        type: string
-      value:
-        type: string
-  Delay:
-    title: "response delay"
-    type: object
-    additionalProperties: false
-    properties:
-      timeUnit:
-        type: string
-      value:
-        type: integer
-  ConnectionOptions:
-    title: "connection options"
-    type: object
-    additionalProperties: false
-    properties:
-      closeSocket:
-        type: boolean
-      contentLengthHeaderOverride:
-        type: integer
-      suppressContentLengthHeader:
-        type: boolean
-      suppressConnectionHeader:
-        type: boolean
-      keepAliveOverride:
-        type: boolean
-  Error:
-    title: "verification"
-    type: object
-    properties:
-      delay:
-        $ref: '#/definitions/Delay'
-      dropConnection:
-        type: boolean
-      responseBytes:
-        description: "Base64 encoded bytes"
-        type: string
-  Verification:
-    title: "verification"
-    type: object
-    additionalProperties: false
-    properties:
-      httpRequest:
-        $ref: "#/definitions/HttpRequest"
-      times:
-        $ref: "#/definitions/VerificationTimes"
-  VerificationTimes:
-    title: "number of request to verify"
-    type: object
-    additionalProperties: false
-    properties:
-      count:
-        type: integer
-      exact:
-        type: boolean
-  VerificationSequence:
-    title: "verification sequence"
-    type: object
-    additionalProperties: false
-    properties:
-      httpRequests:
-        type: array
-        items:
-          $ref: "#/definitions/HttpRequest"
-  Ports:
-    title: "list of ports"
-    type: object
-    additionalProperties: false
-    properties:
-      ports:
-        items:
-          type: number
-        type: array
