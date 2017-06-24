@@ -1,13 +1,7 @@
 package org.mockserver.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.base.Charsets;
 import com.google.common.net.MediaType;
-import org.apache.commons.io.IOUtils;
-
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import org.mockserver.file.FileReader;
 
 /**
  * @author jamesdbloom
@@ -27,19 +21,7 @@ public class JsonSchemaBody extends Body {
     }
 
     public static JsonSchemaBody jsonSchemaFromResource(String jsonSchemaPath) {
-        return new JsonSchemaBody(readFileFromClassPathOrPath(jsonSchemaPath));
-    }
-
-    private static String readFileFromClassPathOrPath(String filePath) {
-        try {
-            InputStream inputStream = JsonSchemaBody.class.getClassLoader().getResourceAsStream(filePath);
-            if (inputStream == null) {
-                inputStream = new FileInputStream(filePath);
-            }
-            return IOUtils.toString(inputStream, Charsets.UTF_8.name());
-        } catch (IOException e) {
-            throw new RuntimeException("Exception while loading \"" + filePath + "\"");
-        }
+        return new JsonSchemaBody(FileReader.readFileFromClassPathOrPath(jsonSchemaPath));
     }
 
     public String getValue() {
