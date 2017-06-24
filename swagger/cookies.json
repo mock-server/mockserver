@@ -1,7 +1,7 @@
 {
-  "$schema": "http://json-schema.org/draft-04/schema#",
-  "id": "http://mock-server.com/cookies.json",
+  "title": "cookies",
   "type": "array",
+  "additionalProperties": false,
   "items": {
     "type": "object",
     "properties": {
@@ -12,6 +12,5 @@
         "type": "string"
       }
     }
-  },
-  "additionalProperties": false
+  }
 }

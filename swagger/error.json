@@ -1,0 +1,16 @@
+{
+  "title": "verification",
+  "type": "object",
+  "properties": {
+    "delay": {
+      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/swagger/swagger/delay.json"
+    },
+    "dropConnection": {
+      "type": "boolean"
+    },
+    "responseBytes": {
+      "description": "Base64 encoded bytes",
+      "type": "string"
+    }
+  }
+}

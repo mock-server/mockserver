@@ -1,0 +1,13 @@
+{
+  "title": "verification",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "httpRequest": {
+      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/swagger/swagger/httpRequest.json"
+    },
+    "times": {
+      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/swagger/swagger/verificationTimes.json"
+    }
+  }
+}

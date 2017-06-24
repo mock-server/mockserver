@@ -1,20 +1,19 @@
 {
-  "$schema": "http://json-schema.org/draft-04/schema#",
-  "id": "http://mock-server.com/headers.json",
+  "title": "headers",
   "type": "array",
+  "additionalProperties": false,
   "items": {
     "type": "object",
     "properties": {
-      "name": {
-        "type": "string"
-      },
       "values": {
-        "type": "array",
         "items": {
           "type": "string"
-        }
+        },
+        "type": "array"
+      },
+      "name": {
+        "type": "string"
       }
     }
-  },
-  "additionalProperties": false
+  }
 }

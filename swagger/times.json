@@ -1,7 +1,7 @@
 {
-  "$schema": "http://json-schema.org/draft-04/schema#",
-  "id": "http://mock-server.com/times.json",
+  "title": "number of responses",
   "type": "object",
+  "additionalProperties": false,
   "properties": {
     "remainingTimes": {
       "type": "integer"
@@ -9,6 +9,5 @@
     "unlimited": {
       "type": "boolean"
     }
-  },
-  "additionalProperties": false
+  }
 }

@@ -1,26 +1,25 @@
 {
-  "$schema": "http://json-schema.org/draft-04/schema#",
-  "id": "http://mock-server.com/httpResponse.json",
+  "title": "response",
   "type": "object",
+  "additionalProperties": false,
   "properties": {
     "body": {
       "type": "string"
     },
-    "connectionOptions": {
-      "$ref": "connectionOptions.json"
+    "delay": {
+      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/swagger/swagger/delay.json"
     },
     "cookies": {
-      "$ref": "cookies.json"
+      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/swagger/swagger/cookies.json"
     },
-    "delay": {
-      "$ref": "delay.json"
+    "connectionOptions": {
+      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/swagger/swagger/connectionOptions.json"
     },
     "headers": {
-      "$ref": "headers.json"
+      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/swagger/swagger/headers.json"
     },
     "statusCode": {
       "type": "integer"
     }
-  },
-  "additionalProperties": false
+  }
 }

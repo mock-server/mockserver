@@ -1,17 +1,16 @@
 {
-  "$schema": "http://json-schema.org/draft-04/schema#",
-  "id": "http://mock-server.com/expectation.json",
+  "title": "expectation",
   "type": "object",
+  "additionalProperties": false,
   "properties": {
     "httpRequest": {
-      "$ref": "httpRequest.json"
+      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/swagger/swagger/httpRequest.json"
     },
     "httpResponse": {
-      "$ref": "httpResponse.json"
+      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/swagger/swagger/httpResponse.json"
     },
     "times": {
-      "$ref": "times.json"
-    },
-    "additionalProperties": false
+      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/swagger/swagger/times.json"
+    }
   }
 }

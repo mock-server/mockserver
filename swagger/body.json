@@ -1,7 +1,7 @@
 {
-  "$schema": "http://json-schema.org/draft-04/schema#",
-  "id": "http://mock-server.com/body.json",
+  "title": "body",
   "type": "object",
+  "additionalProperties": false,
   "properties": {
     "type": {
       "type": "string"
@@ -9,6 +9,5 @@
     "value": {
       "type": "string"
     }
-  },
-  "additionalProperties": false
+  }
 }

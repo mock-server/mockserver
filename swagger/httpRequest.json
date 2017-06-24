@@ -1,26 +1,25 @@
 {
-  "$schema": "http://json-schema.org/draft-04/schema#",
-  "id": "http://mock-server.com/httpRequest.json",
+  "title": "request matcher",
   "type": "object",
+  "additionalProperties": false,
   "properties": {
     "body": {
-      "$ref": "body.json"
-    },
-    "cookies": {
-      "$ref": "cookies.json"
+      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/swagger/swagger/body.json"
     },
     "headers": {
-      "$ref": "headers.json"
+      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/swagger/swagger/headers.json"
     },
-    "method": {
-      "type": "string"
+    "cookies": {
+      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/swagger/swagger/cookies.json"
+    },
+    "queryStringParameters": {
+      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/swagger/swagger/queryStringParameters.json"
     },
     "path": {
       "type": "string"
     },
-    "queryStringParameters": {
-      "$ref": "queryStringParameters.json"
+    "method": {
+      "type": "string"
     }
-  },
-  "additionalProperties": false
+  }
 }

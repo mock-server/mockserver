@@ -1,13 +1,13 @@
 {
-  "title": "response delay",
+  "title": "number of request to verify",
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "timeUnit": {
-      "type": "string"
-    },
-    "value": {
+    "count": {
       "type": "integer"
+    },
+    "exact": {
+      "type": "boolean"
     }
   }
 }
