@@ -18,7 +18,7 @@
 ###package
 0. `./scripts/local_generate_javadoc_for_web_site.sh`
 1. `cd jekyll-www.mock-server.com`
-2. `bundle exec jekyll serve`
+2. `bundle exec jekyll build`
 3. `cd _site`
 4. `zip -r mockserver_site.zip .`
 
