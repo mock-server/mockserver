@@ -61,13 +61,13 @@ public class JsonSchemaValidatorTest {
 
     @Test
     public void shouldMatchJson() {
-        assertThat(new JsonSchemaValidator().validateJson(JSON_SCHEMA, "{arrayField: [ \"one\" ], enumField: \"one\"}"), is(""));
+        assertThat(new JsonSchemaValidator(JSON_SCHEMA).isValid("{arrayField: [ \"one\" ], enumField: \"one\"}"), is(""));
     }
 
     @Test
     public void shouldHandleJsonMissingRequiredFields() {
         // then
-        assertThat(new JsonSchemaValidator().validateJson(JSON_SCHEMA, "{}"), is("com.github.fge.jsonschema.core.report.ListProcessingReport: failure\n" +
+        assertThat(new JsonSchemaValidator(JSON_SCHEMA).isValid( "{}"), is("com.github.fge.jsonschema.core.report.ListProcessingReport: failure\n" +
                 "--- BEGIN MESSAGES ---\n" +
                 "error: object has missing required properties ([\"arrayField\",\"enumField\"])\n" +
                 "    level: \"error\"\n" +
@@ -84,28 +84,28 @@ public class JsonSchemaValidatorTest {
     @Test
     public void shouldHandleJsonTooFewItems() {
         // then
-        assertThat(new JsonSchemaValidator().validateJson(JSON_SCHEMA, "{arrayField: [ ],         enumField: \\\"one\\\"}"),
+        assertThat(new JsonSchemaValidator(JSON_SCHEMA).isValid( "{arrayField: [ ],         enumField: \\\"one\\\"}"),
                 is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (number, String, array, object, 'true', 'false' or 'null')\n" +
                 " at [Source: {arrayField: [ ],         enumField: \\\"one\\\"}; line: 1, column: 39]"));
     }
 
     @Test
     public void shouldHandleJsonTooLongString() {
-        assertThat(new JsonSchemaValidator().validateJson(JSON_SCHEMA, "{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", stringField: \\\"1234567\\\"}"),
+        assertThat(new JsonSchemaValidator(JSON_SCHEMA).isValid( "{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", stringField: \\\"1234567\\\"}"),
                 is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (number, String, array, object, 'true', 'false' or 'null')\n" +
                 " at [Source: {arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", stringField: \\\"1234567\\\"}; line: 1, column: 17]"));
     }
 
     @Test
     public void shouldHandleJsonIncorrectEnum() {
-        assertThat(new JsonSchemaValidator().validateJson(JSON_SCHEMA, "{arrayField: [ \\\"one\\\" ], enumField: \\\"four\\\"}"),
+        assertThat(new JsonSchemaValidator(JSON_SCHEMA).isValid( "{arrayField: [ \\\"one\\\" ], enumField: \\\"four\\\"}"),
                 is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (number, String, array, object, 'true', 'false' or 'null')\n" +
                 " at [Source: {arrayField: [ \\\"one\\\" ], enumField: \\\"four\\\"}; line: 1, column: 17]"));
     }
 
     @Test
     public void shouldHandleJsonExtraField() {
-        assertThat(new JsonSchemaValidator().validateJson(JSON_SCHEMA, "{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", extra: \\\"field\\\"}"),
+        assertThat(new JsonSchemaValidator(JSON_SCHEMA).isValid( "{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", extra: \\\"field\\\"}"),
                 is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (number, String, array, object, 'true', 'false' or 'null')\n" +
                 " at [Source: {arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", extra: \\\"field\\\"}; line: 1, column: 17]"));
     }
@@ -113,7 +113,7 @@ public class JsonSchemaValidatorTest {
 
     @Test
     public void shouldHandleJsonIncorrectSubField() {
-        assertThat(new JsonSchemaValidator().validateJson(JSON_SCHEMA, "{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", objectField: {stringField: \\\"1234\\\"} }"),
+        assertThat(new JsonSchemaValidator(JSON_SCHEMA).isValid( "{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", objectField: {stringField: \\\"1234\\\"} }"),
                 is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (number, String, array, object, 'true', 'false' or 'null')\n" +
                 " at [Source: {arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", objectField: {stringField: \\\"1234\\\"} }; line: 1, column: 17]"));
     }
@@ -121,7 +121,7 @@ public class JsonSchemaValidatorTest {
 
     @Test
     public void shouldHandleJsonMissingSubField() {
-        assertThat(new JsonSchemaValidator().validateJson(JSON_SCHEMA, "{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", objectField: { } }"),
+        assertThat(new JsonSchemaValidator(JSON_SCHEMA).isValid( "{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", objectField: { } }"),
                 is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (number, String, array, object, 'true', 'false' or 'null')\n" +
                 " at [Source: {arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", objectField: { } }; line: 1, column: 17]"));
     }
@@ -129,7 +129,7 @@ public class JsonSchemaValidatorTest {
 
     @Test
     public void shouldHandleJsonMultipleErrors() {
-        assertThat(new JsonSchemaValidator().validateJson(JSON_SCHEMA, "{arrayField: [ ],  stringField: \\\"1234\\\"}"),
+        assertThat(new JsonSchemaValidator(JSON_SCHEMA).isValid( "{arrayField: [ ],  stringField: \\\"1234\\\"}"),
                 is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (number, String, array, object, 'true', 'false' or 'null')\n" +
                 " at [Source: {arrayField: [ ],  stringField: \\\"1234\\\"}; line: 1, column: 34]"));
     }
@@ -137,12 +137,12 @@ public class JsonSchemaValidatorTest {
     @Test
     public void shouldHandleIllegalJson() {
         // given
-        assertThat(new JsonSchemaValidator().validateJson("illegal_json", "illegal_json"),
+        assertThat(new JsonSchemaValidator("illegal_json").isValid("illegal_json"),
                 is("JsonParseException - Unrecognized token 'illegal_json': was expecting ('true', 'false' or 'null')\n" +
                 " at [Source: illegal_json; line: 1, column: 25]"));
 
         // and
-        assertThat(new JsonSchemaValidator().validateJson("illegal_json", "some_other_illegal_json"),
+        assertThat(new JsonSchemaValidator("illegal_json").isValid("some_other_illegal_json"),
                 is("JsonParseException - Unrecognized token 'illegal_json': was expecting ('true', 'false' or 'null')\n" +
                 " at [Source: illegal_json; line: 1, column: 25]"));
     }
@@ -150,13 +150,13 @@ public class JsonSchemaValidatorTest {
     @Test
     public void shouldHandleNullExpectation() {
         // given
-        assertThat(new JsonSchemaValidator().validateJson(null, "some_value"), is("NullPointerException - null"));
+        assertThat(new JsonSchemaValidator(null).isValid("some_value"), is("NullPointerException - null"));
     }
 
     @Test
     public void shouldHandleEmptyExpectation() {
         // given
-        assertThat(new JsonSchemaValidator().validateJson("", "some_value"),
+        assertThat(new JsonSchemaValidator("").isValid("some_value"),
                 is("JsonMappingException - No content to map due to end-of-input\n" +
                 " at [Source: ; line: 1, column: 0]"));
     }
@@ -164,7 +164,7 @@ public class JsonSchemaValidatorTest {
     @Test
     public void shouldHandleNullTest() {
         // given
-        assertThat(new JsonSchemaValidator().validateJson("some_value", null),
+        assertThat(new JsonSchemaValidator("some_value").isValid(null),
                 is("JsonParseException - Unrecognized token 'some_value': was expecting ('true', 'false' or 'null')\n" +
                 " at [Source: some_value; line: 1, column: 21]"));
     }
@@ -172,7 +172,7 @@ public class JsonSchemaValidatorTest {
     @Test
     public void shouldHandleEmptyTest() {
         // given
-        assertThat(new JsonSchemaValidator().validateJson("some_value", ""),
+        assertThat(new JsonSchemaValidator("some_value").isValid( ""),
                 is("JsonParseException - Unrecognized token 'some_value': was expecting ('true', 'false' or 'null')\n" +
                 " at [Source: some_value; line: 1, column: 21]"));
     }

@@ -8,22 +8,21 @@ import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-
 /**
  * @author jamesdbloom
  */
 public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToString implements Validator<String> {
 
+    private final String schema;
     public Logger logger = LoggerFactory.getLogger(this.getClass());
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
 
-    @Override
-    public List<String> isValid(String s) {
-        return null;
+    public JsonSchemaValidator(String schema) {
+        this.schema = schema;
     }
 
-    public String validateJson(String schema, String json) {
+    @Override
+    public String isValid(String json) {
         try {
             final ProcessingReport validate = JsonSchemaFactory
                     .byDefault()

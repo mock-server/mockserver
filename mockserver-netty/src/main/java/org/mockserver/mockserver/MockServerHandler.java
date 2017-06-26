@@ -100,7 +100,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
             } else if (request.matches("PUT", "/expectation")) {
 
                 for (Expectation expectation : expectationSerializer.deserializeArray(request.getBodyAsString())) {
-                    List<String> validationErrors = expectationValidator.isValid(expectation);
+                    String validationErrors = expectationValidator.isValid(expectation);
                     if (validationErrors.isEmpty()) {
                         KeyAndCertificateFactory.addSubjectAlternativeName(expectation.getHttpRequest().getFirstHeader(HOST.toString()));
                         mockServerMatcher
@@ -113,8 +113,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                         logFormatter.infoLog("creating expectation:{}", expectation);
                         writeResponse(ctx, request, CREATED);
                     } else {
-                        String errorMessage = validationErrors.size() + " errors:\n - " + Joiner.on("\n - ").join(validationErrors) + "\n";
-                        writeResponse(ctx, request, NOT_ACCEPTABLE, errorMessage, MediaType.create("text", "plain").toString());
+                        writeResponse(ctx, request, NOT_ACCEPTABLE, validationErrors, MediaType.create("text", "plain").toString());
                     }
                 }
 

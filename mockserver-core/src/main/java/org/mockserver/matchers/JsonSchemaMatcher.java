@@ -9,10 +9,11 @@ import org.mockserver.validator.JsonSchemaValidator;
  */
 public class JsonSchemaMatcher extends BodyMatcher<String> {
     private final String schema;
-    private JsonSchemaValidator jsonSchemaValidator = new JsonSchemaValidator();
+    private final JsonSchemaValidator jsonSchemaValidator;
 
     public JsonSchemaMatcher(String schema) {
         this.schema = schema;
+        jsonSchemaValidator = new JsonSchemaValidator(schema);
     }
 
     protected String[] fieldsExcludedFromEqualsAndHashCode() {
@@ -23,7 +24,7 @@ public class JsonSchemaMatcher extends BodyMatcher<String> {
         boolean result = false;
 
         try {
-            String validation = jsonSchemaValidator.validateJson(schema, matched);
+            String validation = jsonSchemaValidator.isValid(matched);
 
             result = validation.isEmpty();
 
