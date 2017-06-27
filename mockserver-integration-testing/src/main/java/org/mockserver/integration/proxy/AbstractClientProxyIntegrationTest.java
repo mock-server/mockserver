@@ -297,6 +297,44 @@ public abstract class AbstractClientProxyIntegrationTest {
     }
 
     @Test
+    public void shouldVerifyRequestsWithHopByHopHeaders() throws Exception {
+        // given
+        HttpClient httpClient = createHttpClient();
+
+        // when
+        HttpGet httpGet = new HttpGet(
+                new URIBuilder()
+                        .setScheme("http")
+                        .setHost("localhost")
+                        .setPort(getServerPort())
+                        .setPath(calculatePath("test_headers_only"))
+                        .build()
+        );
+        httpGet.addHeader("Proxy-Authorization", "some-random_value");
+        httpGet.addHeader("keep-alive", "false");
+        httpClient.execute(httpGet);
+
+        // then
+        getProxyClient()
+                .verify(
+                        request()
+                                .withMethod("GET")
+                                .withPath("/test_headers_and_body")
+                                .withHeader("Proxy-Authorization", "some-random_value")
+                                .withHeader("keep-alive", "false")
+                );
+        getProxyClient()
+                .verify(
+                        request()
+                                .withMethod("GET")
+                                .withPath("/test_headers_and_body")
+                                .withHeader("Proxy-Authorization")
+                                .withHeader("keep-alive"),
+                        exactly(1)
+                );
+    }
+
+    @Test
     public void shouldVerifyZeroRequests() throws Exception {
         // given
         HttpClient httpClient = createHttpClient();
