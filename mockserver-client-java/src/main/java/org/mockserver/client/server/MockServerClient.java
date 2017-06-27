@@ -13,6 +13,8 @@ import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.mockserver.verify.VerificationTimes;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import static org.mockserver.model.HttpRequest.request;
@@ -22,7 +24,7 @@ import static org.mockserver.verify.Verification.verification;
 /**
  * @author jamesdbloom
  */
-public class MockServerClient extends AbstractClient {
+public class MockServerClient extends AbstractClient implements Closeable {
 
     /**
      * Start the client communicating to a MockServer at the specified host and port
@@ -200,6 +202,11 @@ public class MockServerClient extends AbstractClient {
             }
         }
         return this;
+    }
+
+    @Override
+    public void close() throws IOException {
+        stop();
     }
 
     /**

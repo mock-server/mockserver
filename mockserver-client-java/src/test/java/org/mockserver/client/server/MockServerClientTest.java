@@ -445,6 +445,15 @@ public class MockServerClientTest {
     }
 
     @Test
+    public void shouldBeCloseable() throws Exception {
+        // when
+        mockServerClient.close();
+
+        // then
+        verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1080).withMethod("PUT").withPath("/stop"));
+    }
+
+    @Test
     public void shouldQueryRunningStatus() throws Exception {
         // given
         when(mockHttpClient.sendRequest(any(HttpRequest.class))).thenReturn(response().withStatusCode(HttpStatusCode.OK_200.code()));
