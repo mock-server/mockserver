@@ -126,6 +126,15 @@ public class ProxyClientTest {
     }
 
     @Test
+    public void shouldBeCloseabl() throws Exception {
+        // when
+        proxyClient.close();
+
+        // then
+        verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1090).withMethod("PUT").withPath("/stop"));
+    }
+
+    @Test
     public void shouldSendDumpToLogAsJavaRequest() throws Exception {
         // when
         proxyClient.dumpToLogAsJava();
