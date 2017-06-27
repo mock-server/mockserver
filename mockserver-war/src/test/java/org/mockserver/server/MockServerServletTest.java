@@ -35,6 +35,7 @@ import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.model.ConnectionOptions.connectionOptions;
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.verify.Verification.verification;
 
 /**
  * @author jamesdbloom
@@ -78,7 +79,7 @@ public class MockServerServletTest {
         MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("GET", "somepath");
 
         when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class))).thenReturn(request);
-        when(mockMockServerMatcher.handle(any(HttpRequest.class))).thenReturn(response);
+        when(mockMockServerMatcher.retrieveAction(any(HttpRequest.class))).thenReturn(response);
         when(mockActionHandler.processAction(any(HttpResponse.class), any(HttpRequest.class))).thenReturn(response);
 
         // when
@@ -86,7 +87,7 @@ public class MockServerServletTest {
 
         // then
         when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(httpServletRequest)).thenReturn(request);
-        verify(mockMockServerMatcher).handle(request);
+        verify(mockMockServerMatcher).retrieveAction(request);
         when(mockActionHandler.processAction(response, request)).thenReturn(response);
         verify(mockServerResponseToHttpServletResponseEncoder).mapMockServerResponseToHttpServletResponse(response, httpServletResponse);
         assertThat(httpServletResponse.getStatus(), is(200));
@@ -101,7 +102,7 @@ public class MockServerServletTest {
         MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("GET", "somepath");
 
         when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class))).thenReturn(request);
-        when(mockMockServerMatcher.handle(any(HttpRequest.class))).thenReturn(response);
+        when(mockMockServerMatcher.retrieveAction(any(HttpRequest.class))).thenReturn(response);
         when(mockActionHandler.processAction(any(HttpResponse.class), any(HttpRequest.class))).thenReturn(response);
 
         // when
@@ -109,7 +110,7 @@ public class MockServerServletTest {
 
         // then
         when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(httpServletRequest)).thenReturn(request);
-        verify(mockMockServerMatcher).handle(request);
+        verify(mockMockServerMatcher).retrieveAction(request);
         when(mockActionHandler.processAction(response, request)).thenReturn(response);
         verifyNoMoreInteractions(mockServerResponseToHttpServletResponseEncoder);
         assertThat(httpServletResponse.getStatus(), is(406));
@@ -126,7 +127,7 @@ public class MockServerServletTest {
         MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("GET", "somepath");
 
         when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class))).thenReturn(request);
-        when(mockMockServerMatcher.handle(any(HttpRequest.class))).thenReturn(forward);
+        when(mockMockServerMatcher.retrieveAction(any(HttpRequest.class))).thenReturn(forward);
         when(mockActionHandler.processAction(any(HttpForward.class), any(HttpRequest.class))).thenReturn(response);
 
         // when
@@ -134,7 +135,7 @@ public class MockServerServletTest {
 
         // then
         when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(httpServletRequest)).thenReturn(request);
-        verify(mockMockServerMatcher).handle(request);
+        verify(mockMockServerMatcher).retrieveAction(request);
         when(mockActionHandler.processAction(forward, request)).thenReturn(response);
         verify(mockServerResponseToHttpServletResponseEncoder).mapMockServerResponseToHttpServletResponse(response, httpServletResponse);
         assertThat(httpServletResponse.getStatus(), is(200));
@@ -150,7 +151,7 @@ public class MockServerServletTest {
         MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("GET", "somepath");
 
         when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class))).thenReturn(request);
-        when(mockMockServerMatcher.handle(any(HttpRequest.class))).thenReturn(error);
+        when(mockMockServerMatcher.retrieveAction(any(HttpRequest.class))).thenReturn(error);
         when(mockActionHandler.processAction(any(HttpForward.class), any(HttpRequest.class))).thenReturn(response);
 
         // when
@@ -158,7 +159,7 @@ public class MockServerServletTest {
 
         // then
         when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(httpServletRequest)).thenReturn(request);
-        verify(mockMockServerMatcher).handle(request);
+        verify(mockMockServerMatcher).retrieveAction(request);
         when(mockActionHandler.processAction(error, request)).thenReturn(response);
         verifyNoMoreInteractions(mockServerResponseToHttpServletResponseEncoder);
         assertThat(httpServletResponse.getStatus(), is(406));
@@ -175,7 +176,7 @@ public class MockServerServletTest {
         MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("GET", "somepath");
 
         when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class))).thenReturn(request);
-        when(mockMockServerMatcher.handle(any(HttpRequest.class))).thenReturn(callback);
+        when(mockMockServerMatcher.retrieveAction(any(HttpRequest.class))).thenReturn(callback);
         when(mockActionHandler.processAction(any(HttpClassCallback.class), any(HttpRequest.class))).thenReturn(response);
 
         // when
@@ -183,7 +184,7 @@ public class MockServerServletTest {
 
         // then
         when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(httpServletRequest)).thenReturn(request);
-        verify(mockMockServerMatcher).handle(request);
+        verify(mockMockServerMatcher).retrieveAction(request);
         when(mockActionHandler.processAction(callback, request)).thenReturn(response);
         verify(mockServerResponseToHttpServletResponseEncoder).mapMockServerResponseToHttpServletResponse(response, httpServletResponse);
         assertThat(httpServletResponse.getStatus(), is(200));
@@ -205,7 +206,7 @@ public class MockServerServletTest {
                                 .withPath("/expectation")
                                 .withBody("requestBytes")
                 );
-        when(mockExpectationSerializer.deserialize("requestBytes")).thenReturn(expectation);
+        when(mockExpectationSerializer.deserializeArray("requestBytes")).thenReturn(new Expectation[]{expectation});
         when(mockMockServerMatcher.when(same(httpRequest), same(times), same(timeToLive))).thenReturn(expectation);
 
         // when
@@ -464,14 +465,14 @@ public class MockServerServletTest {
         // and - a set of expectations retrieved from the matcher
         Expectation expectation = new Expectation(new HttpRequest(), Times.unlimited(), TimeToLive.unlimited()).thenRespond(new HttpResponse());
         Expectation[] expectations = {expectation, expectation};
-        when(mockMockServerMatcher.retrieve(any(HttpRequest.class))).thenReturn(expectations);
+        when(mockMockServerMatcher.retrieveExpectations(any(HttpRequest.class))).thenReturn(expectations);
         when(mockExpectationSerializer.serialize(expectations)).thenReturn("expectations_response");
 
         // when
         mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
 
         // then
-        verify(mockMockServerMatcher).retrieve(request);
+        verify(mockMockServerMatcher).retrieveExpectations(request);
         assertThat(httpServletResponse.getContentAsByteArray(), is("expectations_response".getBytes()));
         assertThat(httpServletResponse.getStatus(), is(HttpStatusCode.OK_200.code()));
     }
@@ -480,7 +481,7 @@ public class MockServerServletTest {
     public void shouldVerifyRequestNotMatching() throws IOException {
         // given
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-        Verification verification = new Verification().withRequest(new HttpRequest()).withTimes(VerificationTimes.once());
+        Verification verification = verification().withRequest(new HttpRequest()).withTimes(VerificationTimes.once());
 
         when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class)))
                 .thenReturn(
@@ -505,7 +506,7 @@ public class MockServerServletTest {
     public void shouldVerifyRequestMatching() throws IOException {
         // given
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-        Verification verification = new Verification().withRequest(new HttpRequest()).withTimes(VerificationTimes.once());
+        Verification verification = verification().withRequest(new HttpRequest()).withTimes(VerificationTimes.once());
 
         when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class)))
                 .thenReturn(

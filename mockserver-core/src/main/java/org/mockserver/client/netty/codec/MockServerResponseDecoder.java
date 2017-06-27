@@ -14,7 +14,7 @@ public class MockServerResponseDecoder extends MessageToMessageDecoder<FullHttpR
 
     @Override
     protected void decode(ChannelHandlerContext ctx, FullHttpResponse fullHttpResponse, List<Object> out) {
-        out.add(new FullHttpResponseToMockServerResponse().mapMockServerResponseToHttpServletResponse(fullHttpResponse));
+        out.add(new FullHttpResponseToMockServerResponse().mapMockServerResponseToFullHttpResponse(fullHttpResponse));
     }
 
 }

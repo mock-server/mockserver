@@ -103,7 +103,7 @@ public class ExpectationDTOTest {
         // then
         assertThat(expectationWithResponse.getHttpRequest(), is(httpRequest));
         assertThat(expectationWithResponse.getTimes(), is(Times.exactly(3)));
-        assertThat(expectationWithResponse.getHttpResponse(false), is(httpResponse));
+        assertThat(expectationWithResponse.getHttpResponse(), is(httpResponse));
         assertNull(expectationWithResponse.getHttpForward());
         assertNull(expectationWithResponse.getHttpError());
         assertNull(expectationWithResponse.getHttpClassCallback());
@@ -115,7 +115,7 @@ public class ExpectationDTOTest {
         // then
         assertThat(expectationWithForward.getHttpRequest(), is(httpRequest));
         assertThat(expectationWithForward.getTimes(), is(Times.exactly(3)));
-        assertNull(expectationWithForward.getHttpResponse(false));
+        assertNull(expectationWithForward.getHttpResponse());
         assertThat(expectationWithForward.getHttpForward(), is(httpForward));
         assertNull(expectationWithForward.getHttpError());
         assertNull(expectationWithForward.getHttpClassCallback());
@@ -127,7 +127,7 @@ public class ExpectationDTOTest {
         // then
         assertThat(expectationWithError.getHttpRequest(), is(httpRequest));
         assertThat(expectationWithError.getTimes(), is(Times.exactly(3)));
-        assertNull(expectationWithError.getHttpResponse(false));
+        assertNull(expectationWithError.getHttpResponse());
         assertNull(expectationWithError.getHttpForward());
         assertThat(expectationWithError.getHttpError(), is(httpError));
         assertNull(expectationWithError.getHttpClassCallback());
@@ -139,7 +139,7 @@ public class ExpectationDTOTest {
         // then
         assertThat(expectationWithClassCallback.getHttpRequest(), is(httpRequest));
         assertThat(expectationWithClassCallback.getTimes(), is(Times.exactly(3)));
-        assertNull(expectationWithClassCallback.getHttpResponse(false));
+        assertNull(expectationWithClassCallback.getHttpResponse());
         assertNull(expectationWithClassCallback.getHttpForward());
         assertNull(expectationWithClassCallback.getHttpError());
         assertThat(expectationWithClassCallback.getHttpClassCallback(), is(httpClassCallback));
@@ -151,7 +151,7 @@ public class ExpectationDTOTest {
         // then
         assertThat(expectationWithObjectCallback.getHttpRequest(), is(httpRequest));
         assertThat(expectationWithObjectCallback.getTimes(), is(Times.exactly(3)));
-        assertNull(expectationWithObjectCallback.getHttpResponse(false));
+        assertNull(expectationWithObjectCallback.getHttpResponse());
         assertNull(expectationWithObjectCallback.getHttpForward());
         assertNull(expectationWithObjectCallback.getHttpError());
         assertNull(expectationWithObjectCallback.getHttpClassCallback());
@@ -166,7 +166,7 @@ public class ExpectationDTOTest {
         // then
         assertThat(expectation.getHttpRequest(), is(nullValue()));
         assertThat(expectation.getTimes(), is(Times.once()));
-        assertThat(expectation.getHttpResponse(false), is(nullValue()));
+        assertThat(expectation.getHttpResponse(), is(nullValue()));
         assertThat(expectation.getHttpForward(), is(nullValue()));
         assertThat(expectation.getHttpError(), is(nullValue()));
         assertThat(expectation.getHttpClassCallback(), is(nullValue()));

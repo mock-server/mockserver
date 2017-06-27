@@ -26,18 +26,17 @@ import org.mockserver.verify.VerificationTimes;
 import java.io.UnsupportedEncodingException;
 import java.util.concurrent.TimeUnit;
 
+import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
-import static org.mockserver.model.OutboundHttpRequest.outboundRequest;
+import static org.mockserver.verify.Verification.verification;
 import static org.mockserver.verify.VerificationTimes.atLeast;
 import static org.mockserver.verify.VerificationTimes.once;
 
@@ -110,7 +109,7 @@ public class MockServerClientTest {
         // then
         Expectation expectation = forwardChainExpectation.getExpectation();
         assertTrue(expectation.matches(httpRequest));
-        assertSame(httpResponse, expectation.getHttpResponse(false));
+        assertSame(httpResponse, expectation.getHttpResponse());
         assertEquals(Times.unlimited(), expectation.getTimes());
     }
 
@@ -433,7 +432,7 @@ public class MockServerClientTest {
         mockServerClient.dumpToLog();
 
         // then
-        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1080, "", request().withMethod("PUT").withPath("/dumpToLog").withBody("", Charsets.UTF_8)));
+        verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1080).withMethod("PUT").withPath("/dumpToLog").withBody("", Charsets.UTF_8));
     }
 
     @Test
@@ -442,33 +441,33 @@ public class MockServerClientTest {
         mockServerClient.stop();
 
         // then
-        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1080, "", request().withMethod("PUT").withPath("/stop")));
+        verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1080).withMethod("PUT").withPath("/stop"));
     }
 
     @Test
     public void shouldQueryRunningStatus() throws Exception {
         // given
-        when(mockHttpClient.sendRequest(any(OutboundHttpRequest.class))).thenReturn(response().withStatusCode(HttpStatusCode.OK_200.code()));
+        when(mockHttpClient.sendRequest(any(HttpRequest.class))).thenReturn(response().withStatusCode(HttpStatusCode.OK_200.code()));
 
         // when
         boolean running = mockServerClient.isRunning();
 
         // then
         assertTrue(running);
-        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1080, "", request().withMethod("PUT").withPath("/status")));
+        verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1080).withMethod("PUT").withPath("/status"));
     }
 
     @Test
     public void shouldQueryRunningStatusWhenSocketConnectionException() throws Exception {
         // given
-        when(mockHttpClient.sendRequest(any(OutboundHttpRequest.class))).thenThrow(SocketConnectionException.class);
+        when(mockHttpClient.sendRequest(any(HttpRequest.class))).thenThrow(SocketConnectionException.class);
 
         // when
         boolean running = mockServerClient.isRunning();
 
         // then
         assertFalse(running);
-        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1080, "", request().withMethod("PUT").withPath("/status")));
+        verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1080).withMethod("PUT").withPath("/status"));
     }
 
     @Test
@@ -477,7 +476,7 @@ public class MockServerClientTest {
         mockServerClient.reset();
 
         // then
-        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1080, "", request().withMethod("PUT").withPath("/reset")));
+        verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1080).withMethod("PUT").withPath("/reset"));
     }
 
     @Test
@@ -492,11 +491,12 @@ public class MockServerClientTest {
         mockServerClient.clear(someRequestMatcher);
 
         // then
-        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1080, "",
+        verify(mockHttpClient).sendRequest(
                 request()
+                        .withHeader(HOST.toString(), "localhost:" + 1080)
                         .withMethod("PUT")
                         .withPath("/clear")
-                        .withBody(someRequestMatcher.toString(), Charsets.UTF_8))
+                        .withBody(someRequestMatcher.toString(), Charsets.UTF_8)
         );
     }
 
@@ -512,12 +512,13 @@ public class MockServerClientTest {
         mockServerClient.clear(someRequestMatcher, MockServerClient.TYPE.LOG);
 
         // then
-        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1080, "",
+        verify(mockHttpClient).sendRequest(
                 request()
+                        .withHeader(HOST.toString(), "localhost:" + 1080)
                         .withMethod("PUT")
                         .withPath("/clear")
                         .withQueryStringParameter("type", "log")
-                        .withBody(someRequestMatcher.toString(), Charsets.UTF_8))
+                        .withBody(someRequestMatcher.toString(), Charsets.UTF_8)
         );
     }
 
@@ -528,7 +529,7 @@ public class MockServerClientTest {
                 .clear(null);
 
         // then
-        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1080, "", request().withMethod("PUT").withPath("/clear").withBody("", Charsets.UTF_8)));
+        verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1080).withMethod("PUT").withPath("/clear").withBody("", Charsets.UTF_8));
     }
 
     @Test
@@ -540,7 +541,7 @@ public class MockServerClientTest {
         when(mockHttpRequestSerializer.serialize(someRequestMatcher)).thenReturn(someRequestMatcher.toString());
 
         // and - a client
-        when(mockHttpClient.sendRequest(any(OutboundHttpRequest.class))).thenReturn(response().withBody("body"));
+        when(mockHttpClient.sendRequest(any(HttpRequest.class))).thenReturn(response().withBody("body"));
 
         // and - a response
         HttpRequest[] httpRequests = {};
@@ -550,11 +551,12 @@ public class MockServerClientTest {
         assertSame(httpRequests, mockServerClient.retrieveRecordedRequests(someRequestMatcher));
 
         // then
-        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1080, "",
+        verify(mockHttpClient).sendRequest(
                 request()
+                        .withHeader(HOST.toString(), "localhost:" + 1080)
                         .withMethod("PUT")
                         .withPath("/retrieve")
-                        .withBody(someRequestMatcher.toString(), Charsets.UTF_8)));
+                        .withBody(someRequestMatcher.toString(), Charsets.UTF_8));
         verify(mockHttpRequestSerializer).deserializeArray("body");
     }
 
@@ -562,14 +564,14 @@ public class MockServerClientTest {
     public void shouldRetrieveRequestsWithNullRequest() throws UnsupportedEncodingException {
         // given
         HttpRequest[] httpRequests = {};
-        when(mockHttpClient.sendRequest(any(OutboundHttpRequest.class))).thenReturn(response().withBody("body"));
+        when(mockHttpClient.sendRequest(any(HttpRequest.class))).thenReturn(response().withBody("body"));
         when(mockHttpRequestSerializer.deserializeArray("body")).thenReturn(httpRequests);
 
         // when
         assertSame(httpRequests, mockServerClient.retrieveRecordedRequests(null));
 
         // then
-        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1080, "", request().withMethod("PUT").withPath("/retrieve").withBody("", Charsets.UTF_8)));
+        verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1080).withMethod("PUT").withPath("/retrieve").withBody("", Charsets.UTF_8));
         verify(mockHttpRequestSerializer).deserializeArray("body");
     }
 
@@ -582,7 +584,7 @@ public class MockServerClientTest {
         when(mockHttpRequestSerializer.serialize(someRequestMatcher)).thenReturn(someRequestMatcher.toString());
 
         // and - a client
-        when(mockHttpClient.sendRequest(any(OutboundHttpRequest.class))).thenReturn(response().withBody("body"));
+        when(mockHttpClient.sendRequest(any(HttpRequest.class))).thenReturn(response().withBody("body"));
 
         // and - an expectation
         Expectation[] expectations = {};
@@ -592,13 +594,14 @@ public class MockServerClientTest {
         assertSame(expectations, mockServerClient.retrieveExistingExpectations(someRequestMatcher));
 
         // then
-        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1080, "",
+        verify(mockHttpClient).sendRequest(
                 request()
+                        .withHeader(HOST.toString(), "localhost:1080")
                         .withMethod("PUT")
                         .withPath("/retrieve")
                         .withQueryStringParameter("type", "expectation")
                         .withBody(someRequestMatcher.toString(), Charsets.UTF_8)
-        ));
+        );
         verify(mockExpectationSerializer).deserializeArray("body");
     }
 
@@ -606,21 +609,21 @@ public class MockServerClientTest {
     public void shouldRetrieveSetupExpectationsWithNullRequest() throws UnsupportedEncodingException {
         // given
         Expectation[] expectations = {};
-        when(mockHttpClient.sendRequest(any(OutboundHttpRequest.class))).thenReturn(response().withBody("body"));
+        when(mockHttpClient.sendRequest(any(HttpRequest.class))).thenReturn(response().withBody("body"));
         when(mockExpectationSerializer.deserializeArray("body")).thenReturn(expectations);
 
         // when
         assertSame(expectations, mockServerClient.retrieveExistingExpectations(null));
 
         // then
-        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1080, "", request().withMethod("PUT").withPath("/retrieve").withQueryStringParameter("type", "expectation").withBody("", Charsets.UTF_8)));
+        verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1080).withMethod("PUT").withPath("/retrieve").withQueryStringParameter("type", "expectation").withBody("", Charsets.UTF_8));
         verify(mockExpectationSerializer).deserializeArray("body");
     }
 
     @Test
     public void shouldVerifyDoesNotMatchSingleRequestNoVerificationTimes() throws UnsupportedEncodingException {
         // given
-        when(mockHttpClient.sendRequest(any(OutboundHttpRequest.class))).thenReturn(response().withBody("Request not found at least once expected:<foo> but was:<bar>"));
+        when(mockHttpClient.sendRequest(any(HttpRequest.class))).thenReturn(response().withBody("Request not found at least once expected:<foo> but was:<bar>"));
         when(mockVerificationSequenceSerializer.serialize(any(VerificationSequence.class))).thenReturn("verification_json");
         HttpRequest httpRequest = new HttpRequest()
                 .withPath("/some_path")
@@ -633,7 +636,7 @@ public class MockServerClientTest {
             fail();
         } catch (AssertionError ae) {
             verify(mockVerificationSequenceSerializer).serialize(new VerificationSequence().withRequests(httpRequest));
-            verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1080, "", request().withMethod("PUT").withPath("/verifySequence").withBody("verification_json", Charsets.UTF_8)));
+            verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1080).withMethod("PUT").withPath("/verifySequence").withBody("verification_json", Charsets.UTF_8));
             assertThat(ae.getMessage(), is("Request not found at least once expected:<foo> but was:<bar>"));
         }
     }
@@ -641,7 +644,7 @@ public class MockServerClientTest {
     @Test
     public void shouldVerifyDoesNotMatchMultipleRequestsNoVerificationTimes() throws UnsupportedEncodingException {
         // given
-        when(mockHttpClient.sendRequest(any(OutboundHttpRequest.class))).thenReturn(response().withBody("Request not found at least once expected:<foo> but was:<bar>"));
+        when(mockHttpClient.sendRequest(any(HttpRequest.class))).thenReturn(response().withBody("Request not found at least once expected:<foo> but was:<bar>"));
         when(mockVerificationSequenceSerializer.serialize(any(VerificationSequence.class))).thenReturn("verification_json");
         HttpRequest httpRequest = new HttpRequest()
                 .withPath("/some_path")
@@ -654,7 +657,7 @@ public class MockServerClientTest {
             fail();
         } catch (AssertionError ae) {
             verify(mockVerificationSequenceSerializer).serialize(new VerificationSequence().withRequests(httpRequest, httpRequest));
-            verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1080, "", request().withMethod("PUT").withPath("/verifySequence").withBody("verification_json", Charsets.UTF_8)));
+            verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1080).withMethod("PUT").withPath("/verifySequence").withBody("verification_json", Charsets.UTF_8));
             assertThat(ae.getMessage(), is("Request not found at least once expected:<foo> but was:<bar>"));
         }
     }
@@ -662,7 +665,7 @@ public class MockServerClientTest {
     @Test
     public void shouldVerifyDoesMatchSingleRequestNoVerificationTimes() throws UnsupportedEncodingException {
         // given
-        when(mockHttpClient.sendRequest(any(OutboundHttpRequest.class))).thenReturn(response().withBody(""));
+        when(mockHttpClient.sendRequest(any(HttpRequest.class))).thenReturn(response().withBody(""));
         when(mockVerificationSequenceSerializer.serialize(any(VerificationSequence.class))).thenReturn("verification_json");
         HttpRequest httpRequest = new HttpRequest()
                 .withPath("/some_path")
@@ -678,13 +681,13 @@ public class MockServerClientTest {
 
         // then
         verify(mockVerificationSequenceSerializer).serialize(new VerificationSequence().withRequests(httpRequest));
-        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1080, "", request().withMethod("PUT").withPath("/verifySequence").withBody("verification_json", Charsets.UTF_8)));
+        verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1080).withMethod("PUT").withPath("/verifySequence").withBody("verification_json", Charsets.UTF_8));
     }
 
     @Test
     public void shouldVerifyDoesMatchSingleRequestOnce() throws UnsupportedEncodingException {
         // given
-        when(mockHttpClient.sendRequest(any(OutboundHttpRequest.class))).thenReturn(response().withBody(""));
+        when(mockHttpClient.sendRequest(any(HttpRequest.class))).thenReturn(response().withBody(""));
         when(mockVerificationSerializer.serialize(any(Verification.class))).thenReturn("verification_json");
         HttpRequest httpRequest = new HttpRequest()
                 .withPath("/some_path")
@@ -699,14 +702,14 @@ public class MockServerClientTest {
         }
 
         // then
-        verify(mockVerificationSerializer).serialize(new Verification().withRequest(httpRequest).withTimes(once()));
-        verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1080, "", request().withMethod("PUT").withPath("/verify").withBody("verification_json", Charsets.UTF_8)));
+        verify(mockVerificationSerializer).serialize(verification().withRequest(httpRequest).withTimes(once()));
+        verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1080).withMethod("PUT").withPath("/verify").withBody("verification_json", Charsets.UTF_8));
     }
 
     @Test
     public void shouldVerifyDoesNotMatchSingleRequest() throws UnsupportedEncodingException {
         // given
-        when(mockHttpClient.sendRequest(any(OutboundHttpRequest.class))).thenReturn(response().withBody("Request not found at least once expected:<foo> but was:<bar>"));
+        when(mockHttpClient.sendRequest(any(HttpRequest.class))).thenReturn(response().withBody("Request not found at least once expected:<foo> but was:<bar>"));
         when(mockVerificationSerializer.serialize(any(Verification.class))).thenReturn("verification_json");
         HttpRequest httpRequest = new HttpRequest()
                 .withPath("/some_path")
@@ -718,8 +721,8 @@ public class MockServerClientTest {
             // then
             fail();
         } catch (AssertionError ae) {
-            verify(mockVerificationSerializer).serialize(new Verification().withRequest(httpRequest).withTimes(atLeast(1)));
-            verify(mockHttpClient).sendRequest(outboundRequest("localhost", 1080, "", request().withMethod("PUT").withPath("/verify").withBody("verification_json", Charsets.UTF_8)));
+            verify(mockVerificationSerializer).serialize(verification().withRequest(httpRequest).withTimes(atLeast(1)));
+            verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1080).withMethod("PUT").withPath("/verify").withBody("verification_json", Charsets.UTF_8));
             assertThat(ae.getMessage(), is("Request not found at least once expected:<foo> but was:<bar>"));
         }
     }
@@ -751,7 +754,7 @@ public class MockServerClientTest {
         exception.expectMessage(containsString("verify(HttpRequest...) requires a non null non empty array of HttpRequest objects"));
 
         // when
-        mockServerClient.verify((HttpRequest)null);
+        mockServerClient.verify((HttpRequest) null);
     }
 
     @Test

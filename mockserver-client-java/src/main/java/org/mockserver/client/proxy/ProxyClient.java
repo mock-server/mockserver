@@ -13,6 +13,7 @@ import org.mockserver.verify.VerificationTimes;
 import java.util.concurrent.TimeUnit;
 
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.verify.Verification.verification;
 
 /**
  * @author jamesdbloom
@@ -212,7 +213,7 @@ public class ProxyClient extends AbstractClient {
             throw new IllegalArgumentException("verify(HttpRequest, VerificationTimes) requires a non null VerificationTimes object");
         }
 
-        Verification verification = new Verification().withRequest(httpRequest).withTimes(times);
+        Verification verification = verification().withRequest(httpRequest).withTimes(times);
         String result = sendRequest(request().withMethod("PUT").withPath(calculatePath("verify")).withBody(verificationSerializer.serialize(verification))).getBodyAsString();
 
         if (result != null && !result.isEmpty()) {

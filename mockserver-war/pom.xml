@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.mock-server</groupId>
         <artifactId>mockserver</artifactId>
-        <version>3.10.6</version>
+        <version>3.10.9-SNAPSHOT</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -13,6 +13,7 @@
 
     <name>MockServer Web Archive</name>
     <description>A MockServer that can be deployed as a WAR to any JEE web server</description>
+    <url>http://www.mock-server.com</url>
 
     <dependencies>
         <!-- mockserver -->

@@ -102,17 +102,7 @@ public class DirectProxy implements Proxy {
     }
 
     public Future<?> stop() {
-        try {
-            channel.close();
-            bossGroup.shutdownGracefully();
-            workerGroup.shutdownGracefully();
-            stopEventQueue.stopOthers(this).get();
-            stopping.set("stopped");
-        } catch (Exception ie) {
-            logger.trace("Exception while stopping MockServer proxy", ie);
-            stopping.setException(ie);
-        }
-        return stopping;
+        return stopEventQueue.stop(this, stopping, bossGroup, workerGroup);
     }
 
     public DirectProxy withStopEventQueue(StopEventQueue stopEventQueue) {

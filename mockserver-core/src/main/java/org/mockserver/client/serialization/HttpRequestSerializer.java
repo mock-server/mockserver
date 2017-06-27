@@ -79,7 +79,7 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
         return serialize(httpRequests.toArray(new HttpRequest[httpRequests.size()]));
     }
 
-    public String serialize(HttpRequest[] httpRequest) {
+    public String serialize(HttpRequest... httpRequest) {
         try {
             if (httpRequest != null && httpRequest.length > 0) {
                 HttpRequestDTO[] httpRequestDTOs = new HttpRequestDTO[httpRequest.length];

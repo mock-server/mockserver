@@ -271,11 +271,6 @@ a.no_link {
   overflow: hidden;
 }
 
-.build_tag img {
-  width: 80px;
-  height: 18px;
-}
-
 pre {
   white-space: pre;
   word-wrap: normal !important;
@@ -489,6 +484,11 @@ Hides the menu at `767px`, but modify this based on your app's needs.
     left: 200px;
   }
 
+  .build_tag img {
+    width: 80px;
+    height: 18px;
+  }
+
   a.anchor, a.anchor:hover, a.anchor:active, a.anchor:focus {
     margin-bottom: 35px;
   }
@@ -509,6 +509,11 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 }
 
 @media (max-width: 568px) {
+
+  .build_tag img {
+    width: 80px;
+    height: 18px;
+  }
 
   ul, ol {
     margin-left: 4%;

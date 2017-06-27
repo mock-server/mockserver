@@ -2,7 +2,7 @@ package org.mockserver.mockserver;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
-import org.mockserver.codec.MockServerServerCodec;
+import org.mockserver.server.netty.codec.MockServerServerCodec;
 import org.mockserver.logging.LoggingHandler;
 import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.mockserver.callback.WebSocketClientRegistry;

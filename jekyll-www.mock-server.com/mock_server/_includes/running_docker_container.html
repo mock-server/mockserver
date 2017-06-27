@@ -83,34 +83,36 @@ In addition it is possible to <a href="#docker_container_customization">customis
                      [-proxyRemoteHost <span class="command_line_argument_placeholder">&lt;hostname&gt;</span>]
 
      valid options are:
-        -logLevel <span class="command_line_argument_placeholder">&lt;level&gt;</span>            OFF, ERROR, WARN, INFO, DEBUG, TRACE or ALL, as follows:
-                                     WARN - exceptions and errors
-                                     INFO - all interactions
+        -logLevel <span class="command_line_argument_placeholder">&lt;level&gt;</span>                       OFF, ERROR, WARN, INFO, DEBUG, TRACE or ALL, as follows:
+                                                WARN - exceptions and errors
+                                                INFO - all interactions
 
-        -serverPort <span class="command_line_argument_placeholder">&lt;port&gt;</span>           Specifies the HTTP, HTTPS, SOCKS and HTTP
-                                     CONNECT port for proxy. Port unification
-                                     supports for all protocols on the same port
+        -serverPort <span class="command_line_argument_placeholder">&lt;port&gt;</span>                      Specifies the HTTP, HTTPS, SOCKS and HTTP
+                                                CONNECT port for proxy. Port unification
+                                                supports for all protocols on the same port
 
-        -proxyPort <span class="command_line_argument_placeholder">&lt;port&gt;</span>            Specifies the HTTP and HTTPS port for the
-                                     MockServer. Port unification is used to
-                                     support HTTP and HTTPS on the same port
+        -proxyPort <span class="command_line_argument_placeholder">&lt;port&gt;</span>                       Specifies the HTTP and HTTPS port for the
+                                                MockServer. Port unification is used to
+                                                support HTTP and HTTPS on the same port
 
-        -proxyRemotePort <span class="command_line_argument_placeholder">&lt;port&gt;</span>      Specifies the port to forward all proxy
-                                     requests to (i.e. all requests received on
-                                     portPort). This setting is used to enable
-                                     the port forwarding mode therefore this
-                                     option disables the HTTP, HTTPS, SOCKS and
-                                     HTTP CONNECT support
+        -proxyRemotePort <span class="command_line_argument_placeholder">&lt;port&gt;</span>                 Specifies the port to forward all proxy
+                                                requests to (i.e. all requests received on
+                                                portPort). This setting is used to enable
+                                                the port forwarding mode therefore this
+                                                option disables the HTTP, HTTPS, SOCKS and
+                                                HTTP CONNECT support
 
-        -proxyRemoteHost <span class="command_line_argument_placeholder">&lt;hostname&gt;</span>  Specified the host to forward all proxy
-                                     requests to (i.e. all requests received on
-                                     portPort). This setting is ignored unless
-                                     proxyRemotePort has been specified. If no
-                                     value is provided for proxyRemoteHost when
-                                     proxyRemotePort has been specified,
-                                     proxyRemoteHost will default to "localhost".
+        -proxyRemoteHost <span class="command_line_argument_placeholder">&lt;hostname&gt;</span>             Specified the host to forward all proxy
+                                                requests to (i.e. all requests received on
+                                                portPort). This setting is ignored unless
+                                                proxyRemotePort has been specified. If no
+                                                value is provided for proxyRemoteHost when
+                                                proxyRemotePort has been specified,
+                                                proxyRemoteHost will default to "localhost".
 
-   i.e. /opt/mockserver/run_mockserver.sh -logLevel INFO -serverPort 1080 -proxyPort 1090 -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com</code></pre>
+        -genericJVMOptions <span class="command_line_argument_placeholder">&lt;system parameters&gt;</span>  Specified generic JVM options or system properties.
+
+   i.e. /opt/mockserver/run_mockserver.sh -logLevel INFO -serverPort 1080 -proxyPort 1090 -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com -genericJVMOptions "-Dmockserver.enableCORSForAllResponses=true -Dmockserver.sslSubjectAlternativeNameDomains='org.mock-server.com,mock-server.com'"</code></pre>
 
 <p>Then the appropriate options can be specified, for example, to setup a direct proxy (from <strong>0.0.0.0:1090</strong> to <strong>www.mock-server.com:80</strong>) using the following command:</p>
 

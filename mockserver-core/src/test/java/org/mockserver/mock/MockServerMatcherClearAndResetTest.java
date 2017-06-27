@@ -32,10 +32,10 @@ public class MockServerMatcherClearAndResetTest {
         mockServerMatcher.when(new HttpRequest().withPath("somepath"), Times.exactly(2), TimeToLive.unlimited()).thenRespond(httpResponse);
 
         // then
-        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withPath("somepath")));
-        assertEquals(httpResponse, mockServerMatcher.handle(new HttpRequest().withPath("somepath")));
+        assertEquals(httpResponse, mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath")));
+        assertEquals(httpResponse, mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath")));
         assertArrayEquals(new Expectation[]{}, mockServerMatcher.expectations.toArray());
-        assertEquals(null, mockServerMatcher.handle(new HttpRequest().withPath("somepath")));
+        assertEquals(null, mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath")));
     }
 
     @Test

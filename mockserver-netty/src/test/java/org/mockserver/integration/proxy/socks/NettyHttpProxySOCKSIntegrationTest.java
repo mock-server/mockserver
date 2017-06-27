@@ -23,8 +23,8 @@ import org.mockserver.echo.http.EchoServer;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.proxy.Proxy;
 import org.mockserver.proxy.ProxyBuilder;
+import org.mockserver.socket.KeyStoreFactory;
 import org.mockserver.socket.PortFactory;
-import org.mockserver.socket.SSLFactory;
 import org.mockserver.streams.IOStreamUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +39,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.socket.SSLSocketFactory.sslSocketFactory;
 import static org.mockserver.test.Assert.assertContains;
 import static org.mockserver.verify.VerificationTimes.exactly;
 
@@ -119,7 +120,47 @@ public class NettyHttpProxySOCKSIntegrationTest {
             });
 
             // and - an HTTP client
-            HttpClient httpClient = HttpClientBuilder.create().setSslcontext(SSLFactory.getInstance().sslContext()).build();
+            HttpClient httpClient = HttpClientBuilder.create().setSslcontext(KeyStoreFactory.keyStoreFactory().sslContext()).build();
+
+            // when
+            HttpResponse response = httpClient.execute(new HttpHost("127.0.0.1", SERVER_HTTP_PORT, "http"), new HttpGet("/"));
+
+            // then
+            assertThat(response.getStatusLine().getStatusCode(), is(200));
+            proxyClient.verify(request().withHeader("Host", "127.0.0.1" + ":" + SERVER_HTTP_PORT));
+        } finally {
+            ProxySelector.setDefault(defaultProxySelector);
+        }
+    }
+
+    @Test
+    public void shouldProxyRequestsUsingHttpClientViaSOCKSConfiguredForJVMToSecureServerPort() throws Exception {
+        ProxySelector defaultProxySelector = ProxySelector.getDefault();
+        try {
+            // given - SOCKS proxy JVM settings
+            ProxySelector.setDefault(new ProxySelector() {
+                @Override
+                public List<java.net.Proxy> select(URI uri) {
+                    return Collections.singletonList(
+                            new java.net.Proxy(
+                                    java.net.Proxy.Type.SOCKS,
+                                    new InetSocketAddress(
+                                            System.getProperty("http.proxyHost"),
+                                            Integer.parseInt(System.getProperty("http.proxyPort"))
+                                    )
+                            )
+                    );
+                }
+
+                @Override
+                public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {
+                    System.out.println("Connection could not be established to proxy at socket [" + sa + "]");
+                    ioe.printStackTrace();
+                }
+            });
+
+            // and - an HTTP client
+            HttpClient httpClient = HttpClientBuilder.create().setSslcontext(KeyStoreFactory.keyStoreFactory().sslContext()).build();
 
             // when
             HttpResponse response = httpClient.execute(new HttpHost("127.0.0.1", SERVER_HTTPS_PORT, "https"), new HttpGet("/"));
@@ -205,120 +246,6 @@ public class NettyHttpProxySOCKSIntegrationTest {
     }
 
     @Test
-    public void shouldProxyRequestsUsingRawSocketViaSOCKS() throws Exception {
-        Socket socket = null;
-        ProxySelector proxySelector = ProxySelector.getDefault();
-        try {
-            ProxySelector.setDefault(new ProxySelector() {
-                @Override
-                public List<java.net.Proxy> select(URI uri) {
-                    return Collections.singletonList(
-                            new java.net.Proxy(java.net.Proxy.Type.SOCKS, new InetSocketAddress("127.0.0.1", PROXY_HTTP_PORT))
-                    );
-                }
-
-                @Override
-                public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {
-                    logger.error("Connection could not be established to proxy at socket [" + sa + "]", ioe);
-                }
-            });
-
-            socket = new Socket("localhost", SERVER_HTTP_PORT);
-
-            // given
-            OutputStream output = socket.getOutputStream();
-
-            // - send GET request for headers and body
-            output.write(("" +
-                    "GET /test_headers_and_body HTTP/1.1\r\n" +
-                    "Host: localhost:" + SERVER_HTTP_PORT + "\r\n" +
-                    "X-Test: test_headers_and_body\r\n" +
-                    "Content-Length:" + "an_example_body".getBytes(Charsets.UTF_8).length + "\r\n" +
-                    "\r\n" +
-                    "an_example_body" + "\r\n"
-            ).getBytes(Charsets.UTF_8));
-            output.flush();
-
-            // then
-            // assertThat(socket.getInputStream().available(), greaterThan(0));
-            String response = IOStreamUtils.readInputStreamToString(socket);
-            assertContains(response, "X-Test: test_headers_and_body");
-            assertContains(response, "an_example_body");
-
-            // and
-            proxyClient.verify(
-                    request()
-                            .withMethod("GET")
-                            .withPath("/test_headers_and_body")
-                            .withBody("an_example_body"),
-                    exactly(1)
-            );
-        } finally {
-            ProxySelector.setDefault(proxySelector);
-            if (socket != null) {
-                socket.close();
-            }
-        }
-    }
-
-    @Test
-    public void shouldProxyRequestsUsingRawSecureSocketViaSOCKS() throws Exception {
-        Socket socket = null;
-        ProxySelector proxySelector = ProxySelector.getDefault();
-        try {
-            ProxySelector.setDefault(new ProxySelector() {
-                @Override
-                public List<java.net.Proxy> select(URI uri) {
-                    return Collections.singletonList(
-                            new java.net.Proxy(java.net.Proxy.Type.SOCKS, new InetSocketAddress("127.0.0.1", PROXY_HTTP_PORT))
-                    );
-                }
-
-                @Override
-                public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {
-                    logger.error("Connection could not be established to proxy at socket [" + sa + "]", ioe);
-                }
-            });
-
-            socket = SSLFactory.getInstance().wrapSocket(new Socket("localhost", SERVER_HTTP_PORT));
-
-            // given
-            OutputStream output = socket.getOutputStream();
-
-            // - send GET request for headers and body
-            output.write(("" +
-                    "GET /test_headers_and_body HTTP/1.1\r\n" +
-                    "Host: localhost:" + SERVER_HTTP_PORT + "\r\n" +
-                    "X-Test: test_headers_and_body\r\n" +
-                    "Content-Length:" + "an_example_body".getBytes(Charsets.UTF_8).length + "\r\n" +
-                    "\r\n" +
-                    "an_example_body" + "\r\n"
-            ).getBytes(Charsets.UTF_8));
-            output.flush();
-
-            // then
-            // assertThat(socket.getInputStream().available(), greaterThan(0));
-            String response = IOStreamUtils.readInputStreamToString(socket);
-            assertContains(response, "X-Test: test_headers_and_body");
-            assertContains(response, "an_example_body");
-
-            // and
-            proxyClient.verify(
-                    request()
-                            .withMethod("GET")
-                            .withPath("/test_headers_and_body")
-                            .withBody("an_example_body"),
-                    exactly(1)
-            );
-        } finally {
-            ProxySelector.setDefault(proxySelector);
-            if (socket != null) {
-                socket.close();
-            }
-        }
-    }
-
-    @Test
     public void shouldProxyRequestsUsingHttpClientViaSOCKSToSecureServerPort() throws Exception {
         // given
         Registry<ConnectionSocketFactory> reg = RegistryBuilder.<ConnectionSocketFactory>create()
@@ -349,7 +276,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
                         } catch (SocketTimeoutException ex) {
                             throw new ConnectTimeoutException(ex, host, remoteAddress.getAddress());
                         }
-                        return sock;
+                        return sslSocketFactory().wrapSocket(sock);
                     }
 
                 })
@@ -387,64 +314,16 @@ public class NettyHttpProxySOCKSIntegrationTest {
     }
 
     @Test
-    public void shouldProxyRequestsUsingRawSocketViaSOCKSToSecureServerPort() throws Exception {
-        Socket socket = null;
-        ProxySelector proxySelector = ProxySelector.getDefault();
-        try {
-            ProxySelector.setDefault(new ProxySelector() {
-                @Override
-                public List<java.net.Proxy> select(URI uri) {
-                    return Collections.singletonList(
-                            new java.net.Proxy(java.net.Proxy.Type.SOCKS, new InetSocketAddress("127.0.0.1", PROXY_HTTP_PORT))
-                    );
-                }
-
-                @Override
-                public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {
-                    logger.error("Connection could not be established to proxy at socket [" + sa + "]", ioe);
-                }
-            });
-
-            socket = new Socket("localhost", SERVER_HTTPS_PORT);
-
-            // given
-            OutputStream output = socket.getOutputStream();
-
-            // - send GET request for headers and body
-            output.write(("" +
-                    "GET /test_headers_and_body HTTP/1.1\r\n" +
-                    "Host: localhost:" + SERVER_HTTPS_PORT + "\r\n" +
-                    "X-Test: test_headers_and_body\r\n" +
-                    "Content-Length:" + "an_example_body".getBytes(Charsets.UTF_8).length + "\r\n" +
-                    "\r\n" +
-                    "an_example_body" + "\r\n"
-            ).getBytes(Charsets.UTF_8));
-            output.flush();
-
-            // then
-            // assertThat(socket.getInputStream().available(), greaterThan(0));
-            String response = IOStreamUtils.readInputStreamToString(socket);
-            assertContains(response, "X-Test: test_headers_and_body");
-            assertContains(response, "an_example_body");
-
-            // and
-            proxyClient.verify(
-                    request()
-                            .withMethod("GET")
-                            .withPath("/test_headers_and_body")
-                            .withBody("an_example_body"),
-                    exactly(1)
-            );
-        } finally {
-            ProxySelector.setDefault(proxySelector);
-            if (socket != null) {
-                socket.close();
-            }
-        }
+    public void shouldProxyRequestsUsingRawSocketViaSOCKS() throws Exception {
+        proxyRequestsUsingRawSocketViaSOCKS(false);
     }
 
     @Test
     public void shouldProxyRequestsUsingRawSecureSocketViaSOCKSToSecureServerPort() throws Exception {
+        proxyRequestsUsingRawSocketViaSOCKS(true);
+    }
+
+    private void proxyRequestsUsingRawSocketViaSOCKS(boolean useTLS) throws Exception {
         Socket socket = null;
         ProxySelector proxySelector = ProxySelector.getDefault();
         try {
@@ -462,7 +341,12 @@ public class NettyHttpProxySOCKSIntegrationTest {
                 }
             });
 
-            socket = SSLFactory.getInstance().wrapSocket(new Socket("localhost", SERVER_HTTPS_PORT));
+            if (useTLS) {
+                Socket localhost = new Socket("localhost", SERVER_HTTPS_PORT);
+                socket = sslSocketFactory().wrapSocket(localhost);
+            } else {
+                socket = new Socket("localhost", SERVER_HTTP_PORT);
+            }
 
             // given
             OutputStream output = socket.getOutputStream();
@@ -470,7 +354,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
             // - send GET request for headers and body
             output.write(("" +
                     "GET /test_headers_and_body HTTP/1.1\r\n" +
-                    "Host: localhost:" + SERVER_HTTPS_PORT + "\r\n" +
+                    "Host: localhost:" + (useTLS ? SERVER_HTTPS_PORT : SERVER_HTTP_PORT) + "\r\n" +
                     "X-Test: test_headers_and_body\r\n" +
                     "Content-Length:" + "an_example_body".getBytes(Charsets.UTF_8).length + "\r\n" +
                     "\r\n" +
@@ -479,7 +363,6 @@ public class NettyHttpProxySOCKSIntegrationTest {
             output.flush();
 
             // then
-            // assertThat(socket.getInputStream().available(), greaterThan(0));
             String response = IOStreamUtils.readInputStreamToString(socket);
             assertContains(response, "X-Test: test_headers_and_body");
             assertContains(response, "an_example_body");

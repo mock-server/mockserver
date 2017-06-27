@@ -36,8 +36,8 @@ public class MockServerMatcherOverlappingRequestsTest {
         mockServerMatcher.when(new HttpRequest().withPath("somepath")).thenRespond(httpResponse[1].withBody("somebody2"));
 
         // then
-        assertEquals(httpResponse[1], mockServerMatcher.handle(new HttpRequest().withPath("somepath")));
-        assertEquals(httpResponse[1], mockServerMatcher.handle(new HttpRequest().withPath("somepath")));
+        assertEquals(httpResponse[1], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath")));
+        assertEquals(httpResponse[1], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath")));
     }
 
     @Test
@@ -47,8 +47,8 @@ public class MockServerMatcherOverlappingRequestsTest {
         mockServerMatcher.when(new HttpRequest().withPath("somepath")).thenRespond(httpResponse[1].withBody("somebody2"));
 
         // then
-        assertEquals(httpResponse[0], mockServerMatcher.handle(new HttpRequest().withPath("somepath").withCookies(new Cookie("name", "value"))));
-        assertEquals(httpResponse[1], mockServerMatcher.handle(new HttpRequest().withPath("somepath").withCookies(new Cookie("name", "value"))));
+        assertEquals(httpResponse[0], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath").withCookies(new Cookie("name", "value"))));
+        assertEquals(httpResponse[1], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath").withCookies(new Cookie("name", "value"))));
     }
 
 }

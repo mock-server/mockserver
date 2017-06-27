@@ -2,6 +2,10 @@ package org.mockserver.stop;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.SettableFuture;
+import io.netty.channel.Channel;
+import io.netty.channel.EventLoopGroup;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,6 +18,7 @@ public class StopEventQueue {
 
     @VisibleForTesting
     protected final List<Stoppable> stoppables = new ArrayList<Stoppable>();
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public void register(Stoppable stoppable) {
         synchronized (stoppables) {
@@ -51,6 +56,28 @@ public class StopEventQueue {
             stopped.setException(e);
         }
         return stopped;
+    }
+
+    public Future<?> stop(Stoppable currentStoppable, SettableFuture<String> stopping, EventLoopGroup bossGroup, EventLoopGroup workerGroup) {
+        // Shut down all event loops to terminate all threads.
+        bossGroup.shutdownGracefully();
+        workerGroup.shutdownGracefully();
+
+        // Wait until all threads are terminated.
+        try {
+            bossGroup.terminationFuture().sync();
+            workerGroup.terminationFuture().sync();
+        } catch (InterruptedException e) {
+            // ignore interrupted exceptions
+        } finally {
+            try {
+                stopOthers(currentStoppable).get();
+            } catch (Exception ie) {
+                // ignore interrupted or execution exceptions
+            }
+            stopping.set("stopped");
+        }
+        return stopping;
     }
 
 }

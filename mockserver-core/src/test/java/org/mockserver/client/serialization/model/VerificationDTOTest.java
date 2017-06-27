@@ -9,6 +9,7 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.verify.Verification.verification;
 
 public class VerificationDTOTest {
 
@@ -17,7 +18,7 @@ public class VerificationDTOTest {
         // given
         HttpRequest request = request();
         VerificationTimes times = VerificationTimes.atLeast(1);
-        Verification verification = new Verification()
+        Verification verification = verification()
                 .withRequest(request)
                 .withTimes(times);
 
@@ -34,7 +35,7 @@ public class VerificationDTOTest {
         // given
         HttpRequest request = request();
         VerificationTimes times = VerificationTimes.atLeast(1);
-        Verification verification = new Verification()
+        Verification verification = verification()
                 .withRequest(request)
                 .withTimes(times);
 
@@ -51,7 +52,7 @@ public class VerificationDTOTest {
         // given
         HttpRequestDTO request = new HttpRequestDTO(request());
         VerificationTimesDTO times = new VerificationTimesDTO(VerificationTimes.atLeast(1));
-        Verification verification = new Verification();
+        Verification verification = verification();
 
         // when
         VerificationDTO verificationDTO = new VerificationDTO(verification);

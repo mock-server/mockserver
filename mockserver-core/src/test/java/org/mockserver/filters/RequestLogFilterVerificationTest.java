@@ -7,6 +7,7 @@ import org.mockserver.verify.Verification;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.verify.Verification.verification;
 import static org.mockserver.verify.VerificationTimes.atLeast;
 import static org.mockserver.verify.VerificationTimes.exactly;
 
@@ -45,7 +46,7 @@ public class RequestLogFilterVerificationTest {
 
         // then
         assertThat(requestLogFilter.verify(
-                        new Verification()
+                        verification()
                                 .withRequest(
                                         new HttpRequest()
                                                 .withPath("some_path")
@@ -53,7 +54,7 @@ public class RequestLogFilterVerificationTest {
                 ),
                 is(""));
         assertThat(requestLogFilter.verify(
-                        new Verification()
+                        verification()
                                 .withRequest(
                                         new HttpRequest()
                                                 .withPath("some_other_path")
@@ -76,7 +77,7 @@ public class RequestLogFilterVerificationTest {
 
         // then
         assertThat(requestLogFilter.verify(
-                        new Verification()
+                        verification()
                                 .withRequest(
                                         new HttpRequest().withPath("some_path")
                                 )
@@ -99,7 +100,7 @@ public class RequestLogFilterVerificationTest {
 
         // then
         assertThat(requestLogFilter.verify(
-                        new Verification()
+                        verification()
                                 .withRequest(
                                         new HttpRequest().withPath("some_non_matching_path")
                                 )
@@ -122,7 +123,7 @@ public class RequestLogFilterVerificationTest {
 
         // then
         assertThat(requestLogFilter.verify(
-                        new Verification()
+                        verification()
                                 .withRequest(
                                         new HttpRequest()
                                                 .withPath("some_path")
@@ -146,7 +147,7 @@ public class RequestLogFilterVerificationTest {
 
         // then
         assertThat(requestLogFilter.verify(
-                        new Verification()
+                        verification()
                                 .withRequest(
                                         new HttpRequest()
                                                 .withPath("some_non_matching_path")
@@ -179,7 +180,7 @@ public class RequestLogFilterVerificationTest {
 
         // then
         assertThat(requestLogFilter.verify(
-                        new Verification()
+                        verification()
                                 .withRequest(
                                         new HttpRequest().withPath("some_non_matching_path")
                                 )
@@ -209,7 +210,7 @@ public class RequestLogFilterVerificationTest {
 
         // then
         assertThat(requestLogFilter.verify(
-                        new Verification()
+                        verification()
                                 .withRequest(
                                         new HttpRequest().withPath("some_other_path")
                                 )
@@ -240,7 +241,7 @@ public class RequestLogFilterVerificationTest {
 
         // then
         assertThat(requestLogFilter.verify(
-                        new Verification()
+                        verification()
                                 .withRequest(
                                         new HttpRequest()
                                                 .withPath("some_other_path")
@@ -265,7 +266,7 @@ public class RequestLogFilterVerificationTest {
 
         // then
         assertThat(requestLogFilter.verify(
-                        new Verification()
+                        verification()
                                 .withRequest(
                                         new HttpRequest()
                                                 .withPath("some_other_path")
@@ -291,7 +292,7 @@ public class RequestLogFilterVerificationTest {
 
         // then
         assertThat(requestLogFilter.verify(
-                        new Verification()
+                        verification()
                                 .withRequest(
                                         new HttpRequest()
                                                 .withPath("some_other_path")
@@ -320,7 +321,7 @@ public class RequestLogFilterVerificationTest {
 
         // then
         assertThat(requestLogFilter.verify(
-                        new Verification()
+                        verification()
                                 .withRequest(request())
                                 .withTimes(exactly(0))
                 ),

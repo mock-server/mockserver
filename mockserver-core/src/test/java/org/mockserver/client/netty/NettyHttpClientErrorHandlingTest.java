@@ -23,7 +23,6 @@ import static org.hamcrest.core.Is.is;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
-import static org.mockserver.model.OutboundHttpRequest.outboundRequest;
 import static org.mockserver.model.StringBody.exact;
 
 public class NettyHttpClientErrorHandlingTest {
@@ -46,10 +45,9 @@ public class NettyHttpClientErrorHandlingTest {
         exception.expectMessage(containsString("Unable to connect to socket /127.0.0.1:" + freePort));
 
         // when
-        new NettyHttpClient().sendRequest(outboundRequest("127.0.0.1", freePort, "", request()));
+        new NettyHttpClient().sendRequest(request().withHeader(HOST.toString(), "127.0.0.1:" + freePort));
     }
 
-    @Test
     @Ignore
     public void shouldHandleConnectionClosure() {
         // given
@@ -61,7 +59,7 @@ public class NettyHttpClientErrorHandlingTest {
             exception.expectMessage(containsString("Connection reset by peer"));
 
             // when
-            new NettyHttpClient().sendRequest(outboundRequest("127.0.0.1", freePort, "", request()).withSsl(true));
+            new NettyHttpClient().sendRequest(request().withSecure(true).withHeader(HOST.toString(), "127.0.0.1:" + freePort));
         } finally {
             echoServer.stop();
         }
@@ -81,7 +79,7 @@ public class NettyHttpClientErrorHandlingTest {
             exception.expectMessage(containsString("Response was not received after 5 milliseconds, to make the proxy wait longer please use \"mockserver.maxSocketTimeout\" system property or ConfigurationProperties.maxSocketTimeout(long milliseconds)"));
 
             // when
-            new NettyHttpClient().sendRequest(outboundRequest("127.0.0.1", freePort, "", request().withBody(exact("this is an example body"))).withSsl(true));
+            new NettyHttpClient().sendRequest(request().withHeader(HOST.toString(), "127.0.0.1:" + freePort).withBody(exact("this is an example body")).withSecure(true));
         } finally {
             echoServer.stop();
             ConfigurationProperties.maxSocketTimeout(originalMaxSocketTimeout);
@@ -96,13 +94,12 @@ public class NettyHttpClientErrorHandlingTest {
         try {
             // when
             InetSocketAddress socket = new InetSocketAddress("127.0.0.1", freePort);
-            HttpResponse httpResponse = new NettyHttpClient().sendRequest(outboundRequest(socket, "", request().withBody(exact("this is an example body"))).withSsl(true));
+            HttpResponse httpResponse = new NettyHttpClient().sendRequest(request().withBody(exact("this is an example body")).withSecure(true), socket);
 
             // then
             assertThat(httpResponse, is(
                     response()
                             .withStatusCode(200)
-                            .withHeader(header(HOST.toString(), socket.getHostName() + ":" + freePort))
                             .withHeader(header(CONTENT_LENGTH.toString(), "this is an example body".length() / 2))
                             .withHeader(header(ACCEPT_ENCODING.toString(), GZIP.toString() + "," + DEFLATE.toString()))
                             .withHeader(header(CONNECTION.toString(), KEEP_ALIVE.toString()))

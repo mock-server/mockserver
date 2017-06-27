@@ -7,5 +7,5 @@ import java.util.List;
  */
 public interface Validator<T> {
 
-    public List<String> isValid(T t);
+    public String isValid(T t);
 }

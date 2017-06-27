@@ -2,19 +2,21 @@ package org.mockserver.client.netty.codec;
 
 import com.google.common.base.Charsets;
 import com.google.common.net.MediaType;
-import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.HttpMethod;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockserver.mappers.ContentTypeMapper;
-import org.mockserver.matchers.MatchType;
-import org.mockserver.model.*;
 import org.mockserver.model.Cookie;
+import org.mockserver.model.Header;
+import org.mockserver.model.HttpRequest;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
+import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.nullValue;
@@ -22,10 +24,7 @@ import static org.hamcrest.collection.IsEmptyIterable.emptyIterable;
 import static org.hamcrest.core.Is.is;
 import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.HttpRequest.request;
-import static org.mockserver.model.JsonBody.json;
-import static org.mockserver.model.OutboundHttpRequest.outboundRequest;
 import static org.mockserver.model.Parameter.param;
-import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static org.mockserver.model.StringBody.exact;
 
 /**
@@ -35,13 +34,13 @@ public class MockServerRequestEncoderBasicMappingTest {
 
     private MockServerRequestEncoder mockServerRequestEncoder;
     private List<Object> output;
-    private OutboundHttpRequest httpRequest;
+    private HttpRequest httpRequest;
 
     @Before
     public void setupFixture() {
         mockServerRequestEncoder = new MockServerRequestEncoder();
         output = new ArrayList<Object>();
-        httpRequest = outboundRequest("localhost", 80, "", request());
+        httpRequest = request();
     }
 
     @Test
@@ -114,10 +113,12 @@ public class MockServerRequestEncoderBasicMappingTest {
     @Test
     public void shouldEncodeHeaders() {
         // given
-        httpRequest.withHeaders(
-                new Header("headerName1", "headerValue1"),
-                new Header("headerName2", "headerValue2_1", "headerValue2_2")
-        );
+        httpRequest
+                .withHeaders(
+                        new Header("headerName1", "headerValue1"),
+                        new Header("headerName2", "headerValue2_1", "headerValue2_2")
+                )
+                .withHeader(HOST.toString(), "localhost");
 
         // when
         mockServerRequestEncoder.encode(null, httpRequest, output);
@@ -126,58 +127,7 @@ public class MockServerRequestEncoderBasicMappingTest {
         HttpHeaders headers = ((FullHttpRequest) output.get(0)).headers();
         assertThat(headers.getAll("headerName1"), containsInAnyOrder("headerValue1"));
         assertThat(headers.getAll("headerName2"), containsInAnyOrder("headerValue2_1", "headerValue2_2"));
-    }
-
-    @Test
-    public void shouldEncodeDefaultNonSecureHostHeader() {
-        // given
-        httpRequest = outboundRequest("localhost", 80, "", request());
-
-        // when
-        mockServerRequestEncoder.encode(null, httpRequest, output);
-
-        // then
-        HttpHeaders headers = ((FullHttpRequest) output.get(0)).headers();
-        assertThat(headers.getAll("Host"), containsInAnyOrder("localhost"));
-    }
-
-    @Test
-    public void shouldEncodeNonDefaultNonSecureHostHeader() {
-        // given
-        httpRequest = outboundRequest("localhost", 666, "", request());
-
-        // when
-        mockServerRequestEncoder.encode(null, httpRequest, output);
-
-        // then
-        HttpHeaders headers = ((FullHttpRequest) output.get(0)).headers();
-        assertThat(headers.getAll("Host"), containsInAnyOrder("localhost:666"));
-    }
-
-    @Test
-    public void shouldEncodeDefaultSecureHostHeader() {
-        // given
-        httpRequest = outboundRequest("localhost", 443, "", request().withSecure(true));
-
-        // when
-        mockServerRequestEncoder.encode(null, httpRequest, output);
-
-        // then
-        HttpHeaders headers = ((FullHttpRequest) output.get(0)).headers();
-        assertThat(headers.getAll("Host"), containsInAnyOrder("localhost"));
-    }
-
-    @Test
-    public void shouldEncodeNonDefaultSecureHostHeader() {
-        // given
-        httpRequest = outboundRequest("localhost", 999, "", request().withSecure(true));
-
-        // when
-        mockServerRequestEncoder.encode(null, httpRequest, output);
-
-        // then
-        HttpHeaders headers = ((FullHttpRequest) output.get(0)).headers();
-        assertThat(headers.getAll("Host"), containsInAnyOrder("localhost:999"));
+        assertThat(headers.getAll(HOST.toString()), containsInAnyOrder("localhost"));
     }
 
     @Test
@@ -191,12 +141,10 @@ public class MockServerRequestEncoderBasicMappingTest {
         // then
         HttpHeaders headers = ((FullHttpRequest) output.get(0)).headers();
         assertThat(headers.names(), containsInAnyOrder(
-                "host",
                 "accept-encoding",
                 "content-length",
                 "connection"
         ));
-        assertThat(headers.getAll("Host"), containsInAnyOrder("localhost"));
         assertThat(headers.getAll("Accept-Encoding"), containsInAnyOrder("gzip,deflate"));
         assertThat(headers.getAll("Content-Length"), containsInAnyOrder("0"));
         assertThat(headers.getAll("Connection"), containsInAnyOrder("keep-alive"));

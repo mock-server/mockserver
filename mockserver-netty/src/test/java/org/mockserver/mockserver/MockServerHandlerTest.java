@@ -24,7 +24,6 @@ import org.mockserver.verify.VerificationSequence;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -89,7 +88,7 @@ public class MockServerHandlerTest {
         initMocks(this);
 
         // given - serializers
-        when(mockExpectationSerializer.deserialize(anyString())).thenReturn(mockExpectation);
+        when(mockExpectationSerializer.deserializeArray(anyString())).thenReturn(new Expectation[]{mockExpectation});
         when(mockHttpRequestSerializer.deserialize(anyString())).thenReturn(mockHttpRequest);
         when(mockVerificationSerializer.deserialize(anyString())).thenReturn(mockVerification);
         when(mockVerificationSequenceSerializer.deserialize(anyString())).thenReturn(mockVerificationSequence);
@@ -104,7 +103,7 @@ public class MockServerHandlerTest {
         // given - an expectation that has been setup
         when(mockExpectation.getHttpRequest()).thenReturn(mockHttpRequest);
         when(mockExpectation.getTimes()).thenReturn(Times.once());
-        when(mockExpectation.getHttpResponse(anyBoolean())).thenReturn(mockHttpResponse);
+        when(mockExpectation.getHttpResponse()).thenReturn(mockHttpResponse);
         when(mockExpectation.getHttpForward()).thenReturn(mockHttpForward);
         when(mockExpectation.getHttpError()).thenReturn(mockHttpError);
         when(mockExpectation.getHttpClassCallback()).thenReturn(mockHttpClassCallback);

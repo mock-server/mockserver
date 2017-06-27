@@ -7,6 +7,7 @@ import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.websocketx.*;
+import joptsimple.internal.Strings;
 import org.mockserver.client.netty.codec.mappers.FullHttpResponseToMockServerResponse;
 import org.mockserver.mappers.ContentTypeMapper;
 import org.slf4j.Logger;
@@ -28,12 +29,22 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
 
     public WebSocketClientHandler(InetSocketAddress serverAddress, String contextPath, WebSocketClient webSocketClient) throws URISyntaxException {
         this.handshaker = WebSocketClientHandshakerFactory.newHandshaker(
-                new URI("ws://" + serverAddress.getHostName() + ":" + serverAddress.getPort() + contextPath + "/_mockserver_callback_websocket"), WebSocketVersion.V13,
+                new URI("ws://" + serverAddress.getHostName() + ":" + serverAddress.getPort() + cleanContextPath(contextPath) + "/_mockserver_callback_websocket"),
+                WebSocketVersion.V13,
                 null,
                 false,
-                new DefaultHttpHeaders()
+                new DefaultHttpHeaders(),
+                Integer.MAX_VALUE
         );
         this.webSocketClient = webSocketClient;
+    }
+
+    private String cleanContextPath(String contextPath) {
+        if (!Strings.isNullOrEmpty(contextPath)) {
+            return (!contextPath.startsWith("/") ? "/" : "") + contextPath;
+        } else {
+            return "";
+        }
     }
 
     @Override
@@ -59,7 +70,7 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
             } else if (httpResponse.status().equals(HttpResponseStatus.NOT_ACCEPTABLE)) {
                 throw new WebSocketException(readRequestBody(httpResponse));
             } else {
-                throw new WebSocketException("Unsupported web socket message " + new FullHttpResponseToMockServerResponse().mapMockServerResponseToHttpServletResponse(httpResponse));
+                throw new WebSocketException("Unsupported web socket message " + new FullHttpResponseToMockServerResponse().mapMockServerResponseToFullHttpResponse(httpResponse));
             }
         }
 

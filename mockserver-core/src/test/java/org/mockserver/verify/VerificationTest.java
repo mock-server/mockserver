@@ -7,6 +7,7 @@ import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.verify.VerificationTimes.atLeast;
+import static org.mockserver.verify.Verification.verification;
 
 /**
  * @author jamesdbloom
@@ -18,7 +19,7 @@ public class VerificationTest {
         // when
         HttpRequest request = request();
         VerificationTimes times = atLeast(2);
-        Verification verification = new Verification()
+        Verification verification = verification()
                 .withRequest(request)
                 .withTimes(times);
 

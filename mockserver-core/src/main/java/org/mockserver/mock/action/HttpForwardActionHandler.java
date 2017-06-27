@@ -1,11 +1,13 @@
 package org.mockserver.mock.action;
 
 import org.mockserver.client.netty.NettyHttpClient;
-import org.mockserver.model.*;
+import org.mockserver.model.HttpForward;
+import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.mockserver.model.OutboundHttpRequest.outboundRequest;
+import java.net.InetSocketAddress;
 
 /**
  * @author jamesdbloom
@@ -22,13 +24,13 @@ public class HttpForwardActionHandler {
         } else {
             httpRequest.withSecure(false);
         }
-        return sendRequest(outboundRequest(httpForward.getHost(), httpForward.getPort(), "", httpRequest));
+        return sendRequest(httpRequest, new InetSocketAddress(httpForward.getHost(), httpForward.getPort()));
     }
 
-    private HttpResponse sendRequest(OutboundHttpRequest httpRequest) {
+    private HttpResponse sendRequest(HttpRequest httpRequest, InetSocketAddress remoteAddress) {
         if (httpRequest != null) {
             try {
-                return httpClient.sendRequest(httpRequest);
+                return httpClient.sendRequest(httpRequest, remoteAddress);
             } catch (Exception e) {
                 logger.error("Exception forwarding request " + httpRequest, e);
             }

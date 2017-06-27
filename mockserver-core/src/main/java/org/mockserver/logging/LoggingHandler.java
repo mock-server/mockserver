@@ -3,15 +3,15 @@ package org.mockserver.logging;
 import com.google.common.base.Charsets;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufHolder;
-import io.netty.channel.*;
+import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandler.Sharable;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPromise;
 import io.netty.handler.ssl.SslHandshakeCompletionEvent;
-import io.netty.util.internal.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.SocketAddress;
-import java.util.List;
 
 @Sharable
 public class LoggingHandler extends ChannelDuplexHandler {
@@ -173,7 +173,7 @@ public class LoggingHandler extends ChannelDuplexHandler {
     protected String format(ChannelHandlerContext ctx, String message) {
         String chStr = ctx.channel().toString() + ' ' + message;
         if (logger.isTraceEnabled()) {
-            chStr += "\npipeline: " + ctx.pipeline().names() + "\n";
+            chStr += "\nchannel: " + ctx.channel().id() + "\npipeline: " + ctx.pipeline().names() + "\n";
         }
         return chStr;
     }

@@ -1,8 +1,11 @@
 package org.mockserver.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.net.MediaType;
+import org.mockserver.client.serialization.ObjectMapperFactory;
 import org.mockserver.matchers.MatchType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.charset.Charset;
 
@@ -28,7 +31,7 @@ public class JsonBody extends Body {
     }
 
     public JsonBody(String json, Charset charset, MatchType matchType) {
-        this(json,  (charset != null ? MediaType.create("application", "json").withCharset(charset) : null), matchType);
+        this(json, (charset != null ? MediaType.create("application", "json").withCharset(charset) : null), matchType);
     }
 
     public JsonBody(String json, MediaType contentType, MatchType matchType) {
@@ -65,6 +68,40 @@ public class JsonBody extends Body {
 
     public static JsonBody json(String json, MediaType contentType, MatchType matchType) {
         return new JsonBody(json, contentType, matchType);
+    }
+
+    private static String toJson(Object object) {
+        String json = "";
+        try {
+            json = ObjectMapperFactory.createObjectMapper().writeValueAsString(object);
+        } catch (JsonProcessingException e) {
+            LoggerFactory.getLogger(JsonBody.class).error("error mapping object for json body to JSON", e);
+        }
+        return json;
+    }
+
+    public static JsonBody json(Object object) {
+        return new JsonBody(toJson(object));
+    }
+
+    public static JsonBody json(Object object, MatchType matchType) {
+        return new JsonBody(toJson(object), matchType);
+    }
+
+    public static JsonBody json(Object object, Charset charset) {
+        return new JsonBody(toJson(object), charset, DEFAULT_MATCH_TYPE);
+    }
+
+    public static JsonBody json(Object object, Charset charset, MatchType matchType) {
+        return new JsonBody(toJson(object), charset, matchType);
+    }
+
+    public static JsonBody json(Object object, MediaType contentType) {
+        return new JsonBody(toJson(object), contentType, DEFAULT_MATCH_TYPE);
+    }
+
+    public static JsonBody json(Object object, MediaType contentType, MatchType matchType) {
+        return new JsonBody(toJson(object), contentType, matchType);
     }
 
     public String getValue() {

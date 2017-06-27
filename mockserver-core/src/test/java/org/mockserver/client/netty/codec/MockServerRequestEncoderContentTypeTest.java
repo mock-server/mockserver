@@ -7,12 +7,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.mappers.ContentTypeMapper;
 import org.mockserver.model.Header;
-import org.mockserver.model.OutboundHttpRequest;
+import org.mockserver.model.HttpRequest;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
+import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
@@ -21,7 +22,6 @@ import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.JsonSchemaBody.jsonSchema;
-import static org.mockserver.model.OutboundHttpRequest.outboundRequest;
 import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.ParameterBody.params;
 import static org.mockserver.model.RegexBody.regex;
@@ -34,12 +34,12 @@ import static org.mockserver.model.XmlBody.xml;
 public class MockServerRequestEncoderContentTypeTest {
 
     private List<Object> output;
-    private OutboundHttpRequest httpRequest;
+    private HttpRequest httpRequest;
 
     @Before
     public void setupFixture() {
         output = new ArrayList<Object>();
-        httpRequest = outboundRequest("localhost", 80, "", request());
+        httpRequest = request().withHeader(HOST.toString(), "localhost:" + 80);
     }
 
     @Test

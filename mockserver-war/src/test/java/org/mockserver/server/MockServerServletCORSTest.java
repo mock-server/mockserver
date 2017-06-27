@@ -15,6 +15,8 @@ import org.mockserver.mappers.MockServerResponseToHttpServletResponseEncoder;
 import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.verify.Verification;
+import org.mockserver.verify.VerificationSequence;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -354,6 +356,7 @@ public class MockServerServletCORSTest {
         // given - a request
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
         HttpRequest request = request().withMethod("PUT").withPath("/verify");
+        when(mockRequestLogFilter.verify(any(Verification.class))).thenReturn("some_verification_response");
         when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class))).thenReturn(request);
 
         // when
@@ -373,6 +376,7 @@ public class MockServerServletCORSTest {
         // given - a request
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
         HttpRequest request = request().withMethod("PUT").withPath("/verifySequence");
+        when(mockRequestLogFilter.verify(any(VerificationSequence.class))).thenReturn("some_verification_response");
         when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class))).thenReturn(request);
 
         // when

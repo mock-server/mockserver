@@ -4,6 +4,7 @@ import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 import org.mockserver.verify.Verification;
 
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.verify.Verification.verification;
 import static org.mockserver.verify.VerificationTimes.once;
 
 /**
@@ -24,7 +25,7 @@ public class VerificationDTO extends ObjectWithReflectiveEqualsHashCodeToString 
     }
 
     public Verification buildObject() {
-        return new Verification()
+        return verification()
                 .withRequest((httpRequest != null ? httpRequest.buildObject() : request()))
                 .withTimes((times != null ? times.buildObject() : once()));
     }

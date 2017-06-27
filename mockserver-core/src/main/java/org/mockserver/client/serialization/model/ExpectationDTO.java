@@ -25,7 +25,7 @@ public class ExpectationDTO extends ObjectWithJsonToString {
             if (httpRequest != null) {
                 this.httpRequest = new HttpRequestDTO(httpRequest, httpRequest.getNot());
             }
-            HttpResponse httpResponse = expectation.getHttpResponse(false);
+            HttpResponse httpResponse = expectation.getHttpResponse();
             if (httpResponse != null) {
                 this.httpResponse = new HttpResponseDTO(httpResponse);
             }

@@ -7,24 +7,28 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.HttpClientCodec;
 import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
-import io.netty.handler.ssl.SslHandler;
 import org.mockserver.client.netty.codec.MockServerClientCodec;
 import org.mockserver.logging.LoggingHandler;
 import org.mockserver.model.HttpResponse;
-import org.mockserver.socket.SSLFactory;
+import org.mockserver.socket.NettySslContextFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLException;
+import java.net.InetSocketAddress;
+
+import static org.mockserver.socket.NettySslContextFactory.nettySslContextFactory;
 
 public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final boolean secure;
+    private final InetSocketAddress remoteAddress;
     private HttpClientHandler httpClientHandler = new HttpClientHandler();
 
-    public HttpClientInitializer(boolean secure) {
+    public HttpClientInitializer(boolean secure, InetSocketAddress remoteAddress) {
         this.secure = secure;
+        this.remoteAddress = remoteAddress;
     }
 
     @Override
@@ -32,12 +36,12 @@ public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
         ChannelPipeline pipeline = channel.pipeline();
 
         if (secure) {
-            pipeline.addLast(new SslHandler(SSLFactory.createClientSSLEngine()));
+            pipeline.addLast(nettySslContextFactory().createClientSslContext().newHandler(channel.alloc(), remoteAddress.getHostName(), remoteAddress.getPort()));
         }
 
         // add logging
-        if (logger.isDebugEnabled()) {
-            pipeline.addLast(new LoggingHandler(this.getClass().getSimpleName() + " -->"));
+        if (logger.isTraceEnabled()) {
+            pipeline.addLast(new LoggingHandler("NettyHttpClient -->"));
         }
 
         pipeline.addLast(new HttpClientCodec());

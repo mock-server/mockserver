@@ -150,7 +150,7 @@ public class HttpProxyHandlerGeneralOperationsTest extends HttpProxyHandlerTest 
         // and - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse)embeddedChannel.readOutbound();
         assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.BAD_REQUEST.code()));
-        assertThat(httpResponse.getBodyAsString(), is(""));
+        assertThat(httpResponse.getBodyAsString(), is("TEST EXCEPTION"));
     }
 
     @Test

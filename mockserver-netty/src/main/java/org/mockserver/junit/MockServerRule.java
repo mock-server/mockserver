@@ -22,7 +22,7 @@ public class MockServerRule implements TestRule {
      * Start the MockServer prior to test execution and stop the MockServer after the tests have completed.
      * This constructor dynamically allocates a free port for the MockServer to use.
      *
-     * @param target        an instance of the test being executed
+     * @param target an instance of the test being executed
      */
     public MockServerRule(Object target) {
         this(target, PortFactory.findFreePort());
@@ -32,10 +32,10 @@ public class MockServerRule implements TestRule {
      * Start the MockServer prior to test execution and stop the MockServer after the tests have completed.
      * This constructor dynamically allocates a free port for the MockServer to use.
      *
-     * @param target        an instance of the test being executed
-     * @param perTestSuite  indicates how many instances of MockServer are created
-     *                      if true a single MockServer is created per JVM
-     *                      if false one instance per test class is created
+     * @param target       an instance of the test being executed
+     * @param perTestSuite indicates how many instances of MockServer are created
+     *                     if true a single MockServer is created per JVM
+     *                     if false one instance per test class is created
      */
     public MockServerRule(Object target, boolean perTestSuite) {
         this(target, perTestSuite, PortFactory.findFreePort());
@@ -45,8 +45,8 @@ public class MockServerRule implements TestRule {
      * Start the proxy prior to test execution and stop the proxy after the tests have completed.
      * This constructor dynamically create a proxy that accepts HTTP(s) requests on the specified port
      *
-     * @param target        an instance of the test being executed
-     * @param port          the HTTP(S) port for the proxy
+     * @param target an instance of the test being executed
+     * @param port   the HTTP(S) port for the proxy
      */
     public MockServerRule(Object target, Integer... port) {
         this(target, false, port);
@@ -56,9 +56,9 @@ public class MockServerRule implements TestRule {
      * Start the proxy prior to test execution and stop the proxy after the tests have completed.
      * This constructor dynamically create a proxy that accepts HTTP(s) requests on the specified port
      *
-     * @param target        an instance of the test being executed
-     * @param perTestSuite  indicates how many instances of MockServer are created
-     * @param port          the HTTP(S) port for the proxy
+     * @param target       an instance of the test being executed
+     * @param perTestSuite indicates how many instances of MockServer are created
+     * @param port         the HTTP(S) port for the proxy
      */
     public MockServerRule(Object target, boolean perTestSuite, Integer... port) {
         this.port = port;
@@ -107,6 +107,7 @@ public class MockServerRule implements TestRule {
                     base.evaluate();
                 } finally {
                     if (!perTestSuite) {
+                        clientAndServer.reset();
                         clientAndServer.stop();
                     }
                 }
@@ -115,13 +116,15 @@ public class MockServerRule implements TestRule {
     }
 
     private void setMockServerClient(Object target, ClientAndServer clientAndServer) {
-        for (Field field : target.getClass().getDeclaredFields()) {
-            if (field.getType().equals(MockServerClient.class)) {
-                field.setAccessible(true);
-                try {
-                    field.set(target, clientAndServer);
-                } catch (IllegalAccessException e) {
-                    throw new RuntimeException("Error setting MockServerClient field on " + target.getClass().getName(), e);
+        for (Class<?> clazz = target.getClass(); !clazz.equals(Object.class); clazz = clazz.getSuperclass()) {
+            for (Field field : clazz.getDeclaredFields()) {
+                if (field.getType().equals(MockServerClient.class)) {
+                    field.setAccessible(true);
+                    try {
+                        field.set(target, clientAndServer);
+                    } catch (IllegalAccessException e) {
+                        throw new RuntimeException("Error setting MockServerClient field on " + target.getClass().getName(), e);
+                    }
                 }
             }
         }

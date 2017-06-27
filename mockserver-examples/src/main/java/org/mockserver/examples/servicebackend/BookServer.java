@@ -8,10 +8,9 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.*;
-import io.netty.handler.ssl.SslHandler;
 import org.mockserver.examples.json.ObjectMapperFactory;
 import org.mockserver.examples.model.Book;
-import org.mockserver.socket.SSLFactory;
+import org.mockserver.socket.NettySslContextFactory;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -25,6 +24,7 @@ import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
+import static org.mockserver.socket.NettySslContextFactory.nettySslContextFactory;
 
 /**
  * @author jamesdbloom
@@ -56,7 +56,7 @@ public class BookServer {
 
                                 // add HTTPS support
                                 if (secure) {
-                                    pipeline.addLast(new SslHandler(SSLFactory.createServerSSLEngine()));
+                                    pipeline.addLast(nettySslContextFactory().createServerSslContext().newHandler(ch.alloc()));
                                 }
 
                                 // pipeline.addLast("logger", new LoggingHandler("BOOK_HANDLER"));

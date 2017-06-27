@@ -69,7 +69,7 @@ public class HttpProxyHandlerTest {
         mockRequestLogFilter = mock(RequestLogFilter.class);
         mockRequestResponseLogFilter = mock(RequestResponseLogFilter.class);
         mockHttpProxy = mock(Proxy.class);
-        httpProxyHandler = new HttpProxyHandler(mockHttpProxy, mockRequestLogFilter, mockRequestResponseLogFilter, false);
+        httpProxyHandler = new HttpProxyHandler(mockHttpProxy, mockRequestLogFilter, mockRequestResponseLogFilter);
         embeddedChannel = new EmbeddedChannel(httpProxyHandler);
 
         initMocks(this);

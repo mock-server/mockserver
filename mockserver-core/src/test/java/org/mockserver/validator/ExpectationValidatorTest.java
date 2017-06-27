@@ -6,11 +6,9 @@ import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpObjectCallback;
 
-import java.util.List;
-
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.emptyIterableOf;
-import static org.junit.Assert.*;
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.text.IsEmptyString.isEmptyString;
+import static org.junit.Assert.assertThat;
 import static org.mockserver.model.HttpClassCallback.callback;
 import static org.mockserver.model.HttpError.error;
 import static org.mockserver.model.HttpForward.forward;
@@ -25,10 +23,10 @@ public class ExpectationValidatorTest {
         Expectation expectation = new Expectation(null, Times.once(), TimeToLive.unlimited());
 
         // when
-        List<String> valid = new ExpectationValidator().isValid(expectation);
+        String valid = new ExpectationValidator().isValid(expectation);
 
         // then
-        assertThat(valid, contains("no request matcher", "no response, forward, callback or error"));
+        assertThat(valid, is("2 errors:\n - no request matcher\n - no response, forward, callback or error\n"));
     }
 
     @Test
@@ -37,10 +35,10 @@ public class ExpectationValidatorTest {
         Expectation expectation = new Expectation(null, Times.once(), TimeToLive.unlimited()).thenRespond(response());
 
         // when
-        List<String> valid = new ExpectationValidator().isValid(expectation);
+        String valid = new ExpectationValidator().isValid(expectation);
 
         // then
-        assertThat(valid, contains("no request matcher"));
+        assertThat(valid, is("1 errors:\n - no request matcher\n"));
     }
 
     @Test
@@ -49,10 +47,10 @@ public class ExpectationValidatorTest {
         Expectation expectation = new Expectation(request(), Times.once(), TimeToLive.unlimited());
 
         // when
-        List<String> valid = new ExpectationValidator().isValid(expectation);
+        String valid = new ExpectationValidator().isValid(expectation);
 
         // then
-        assertThat(valid, contains("no response, forward, callback or error"));
+        assertThat(valid, is("1 errors:\n - no response, forward, callback or error\n"));
     }
 
     @Test
@@ -61,10 +59,10 @@ public class ExpectationValidatorTest {
         Expectation expectation = new Expectation(request(), Times.once(), TimeToLive.unlimited()).thenRespond(response());
 
         // when
-        List<String> valid = new ExpectationValidator().isValid(expectation);
+        String valid = new ExpectationValidator().isValid(expectation);
 
         // then
-        assertThat(valid, emptyIterableOf(String.class));
+        assertThat(valid, isEmptyString());
     }
 
     @Test
@@ -73,10 +71,10 @@ public class ExpectationValidatorTest {
         Expectation expectation = new Expectation(request(), Times.once(), TimeToLive.unlimited()).thenCallback(callback());
 
         // when
-        List<String> valid = new ExpectationValidator().isValid(expectation);
+        String valid = new ExpectationValidator().isValid(expectation);
 
         // then
-        assertThat(valid, emptyIterableOf(String.class));
+        assertThat(valid, isEmptyString());
     }
 
     @Test
@@ -85,10 +83,10 @@ public class ExpectationValidatorTest {
         Expectation expectation = new Expectation(request(), Times.once(), TimeToLive.unlimited()).thenCallback(new HttpObjectCallback());
 
         // when
-        List<String> valid = new ExpectationValidator().isValid(expectation);
+        String valid = new ExpectationValidator().isValid(expectation);
 
         // then
-        assertThat(valid, emptyIterableOf(String.class));
+        assertThat(valid, isEmptyString());
     }
 
     @Test
@@ -97,10 +95,10 @@ public class ExpectationValidatorTest {
         Expectation expectation = new Expectation(request(), Times.once(), TimeToLive.unlimited()).thenForward(forward());
 
         // when
-        List<String> valid = new ExpectationValidator().isValid(expectation);
+        String valid = new ExpectationValidator().isValid(expectation);
 
         // then
-        assertThat(valid, emptyIterableOf(String.class));
+        assertThat(valid, isEmptyString());
     }
 
     @Test
@@ -109,10 +107,10 @@ public class ExpectationValidatorTest {
         Expectation expectation = new Expectation(request(), Times.once(), TimeToLive.unlimited()).thenError(error());
 
         // when
-        List<String> valid = new ExpectationValidator().isValid(expectation);
+        String valid = new ExpectationValidator().isValid(expectation);
 
         // then
-        assertThat(valid, emptyIterableOf(String.class));
+        assertThat(valid, isEmptyString());
     }
 
 }

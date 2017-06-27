@@ -1,4 +1,4 @@
-MockServer &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[![Build status](https://badge.buildkite.com/3b6803f4fe98cb5ed7bf18292a1434f800b53d8fecb92811d8.svg)](https://buildkite.com/mockserver/mockserver)
+MockServer &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[![Build status](https://badge.buildkite.com/3b6803f4fe98cb5ed7bf18292a1434f800b53d8fecb92811d8.svg?style=square&theme=slack)](https://buildkite.com/mockserver/mockserver)
 ========== 
 
 
@@ -35,20 +35,24 @@ NPM Registry contains the following module:
 
 Docker Index contains the following artifacts:
 
-* [MockServer Docker Container](https://registry.hub.docker.com/u/jamesdbloom/mockserver) - a Docker container containing the Netty MockServer and proxy
+* [MockServer Docker Container](https://hub.docker.com/r/jamesdbloom/mockserver/) - a Docker container containing the Netty MockServer and proxy
 
 ### Vert.X Module Registry
 
 Vert.X Module Registry contains the following artifacts:
 
-* [org.mock-server~mockserver-vertx~2.9](http://modulereg.vertx.io/) - a Vert.X module that mocks HTTP and HTTPS requests 
+* [`org.mock-server~mockserver-vertx~2.9`](http://modulereg.vertx.io/) - a Vert.X module that mocks HTTP and HTTPS requests 
 
 ### MockServer Clients
 
 * [mockserver-client-ruby ![mockserver-client](https://badge.fury.io/rb/mockserver-client.png)](https://rubygems.org/gems/mockserver-client) - Ruby client for both the MockServer and the proxy 
 * [mockserver-client-java](http://search.maven.org/#search%7Cga%7C1%7Cmockserver-client-java) - a Java client for both the MockServer and the proxy 
 * [mockserver-client-javascript](https://github.com/jamesdbloom/mockserver/tree/master/mockserver-client-javascript) - a JavaScript client for both the MockServer and the proxy 
-* [mockserver-client-node](https://www.npmjs.org/package/mockserver-client) - a Node.js client for both the MockServer and the proxy 
+* [mockserver-client-node](https://www.npmjs.org/package/mockserver-client) - a Node.js client for both the MockServer and the proxy
+
+# REST API
+
+https://app.swaggerhub.com/apis/jamesdbloom/mock-server_api/10.8
 
 # Issues
 

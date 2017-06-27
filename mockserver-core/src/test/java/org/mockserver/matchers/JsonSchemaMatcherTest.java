@@ -139,7 +139,7 @@ public class JsonSchemaMatcherTest {
         assertFalse(jsonSchemaMatcher.matches("{arrayField: [ ],         enumField: \\\"one\\\"}"));
 
         // and
-        verify(logger).trace("Failed to perform JSON match \"{}\" with \"{}\" because {}",
+        verify(logger).trace("Failed to perform JSON match \"{}\" with schema \"{}\" because {}",
                 "{arrayField: [ ],         enumField: \\\"one\\\"}",
                 "{\n" +
                         "    \"type\": \"object\",\n" +
@@ -178,7 +178,7 @@ public class JsonSchemaMatcherTest {
                         "    \"additionalProperties\" : false,\n" +
                         "    \"required\": [ \"enumField\", \"arrayField\" ]\n" +
                         "}",
-                "Unexpected character ('\\' (code 92)): expected a valid value (number, String, array, object, 'true', 'false' or 'null')\n" +
+                "JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (number, String, array, object, 'true', 'false' or 'null')\n" +
                         " at [Source: {arrayField: [ ],         enumField: \\\"one\\\"}; line: 1, column: 39]");
     }
 
@@ -192,7 +192,7 @@ public class JsonSchemaMatcherTest {
         assertFalse(jsonSchemaMatcher.matches("{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", stringField: \\\"1234567\\\"}"));
 
         // and
-        verify(logger).trace("Failed to perform JSON match \"{}\" with \"{}\" because {}",
+        verify(logger).trace("Failed to perform JSON match \"{}\" with schema \"{}\" because {}",
                 "{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", stringField: \\\"1234567\\\"}",
                 "{\n" +
                         "    \"type\": \"object\",\n" +
@@ -231,7 +231,7 @@ public class JsonSchemaMatcherTest {
                         "    \"additionalProperties\" : false,\n" +
                         "    \"required\": [ \"enumField\", \"arrayField\" ]\n" +
                         "}",
-                "Unexpected character ('\\' (code 92)): expected a valid value (number, String, array, object, 'true', 'false' or 'null')\n" +
+                "JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (number, String, array, object, 'true', 'false' or 'null')\n" +
                         " at [Source: {arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", stringField: \\\"1234567\\\"}; line: 1, column: 17]");
     }
 
@@ -245,7 +245,7 @@ public class JsonSchemaMatcherTest {
         assertFalse(jsonSchemaMatcher.matches("{arrayField: [ \\\"one\\\" ], enumField: \\\"four\\\"}"));
 
         // and
-        verify(logger).trace("Failed to perform JSON match \"{}\" with \"{}\" because {}", "{arrayField: [ \\\"one\\\" ], enumField: \\\"four\\\"}", "{\n" +
+        verify(logger).trace("Failed to perform JSON match \"{}\" with schema \"{}\" because {}", "{arrayField: [ \\\"one\\\" ], enumField: \\\"four\\\"}", "{\n" +
                         "    \"type\": \"object\",\n" +
                         "    \"properties\": {\n" +
                         "        \"enumField\": {\n" +
@@ -282,7 +282,7 @@ public class JsonSchemaMatcherTest {
                         "    \"additionalProperties\" : false,\n" +
                         "    \"required\": [ \"enumField\", \"arrayField\" ]\n" +
                         "}",
-                "Unexpected character ('\\' (code 92)): expected a valid value (number, String, array, object, 'true', 'false' or 'null')\n" +
+                "JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (number, String, array, object, 'true', 'false' or 'null')\n" +
                         " at [Source: {arrayField: [ \\\"one\\\" ], enumField: \\\"four\\\"}; line: 1, column: 17]");
     }
 
@@ -296,7 +296,7 @@ public class JsonSchemaMatcherTest {
         assertFalse(jsonSchemaMatcher.matches("{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", extra: \\\"field\\\"}"));
 
         // and
-        verify(logger).trace("Failed to perform JSON match \"{}\" with \"{}\" because {}",
+        verify(logger).trace("Failed to perform JSON match \"{}\" with schema \"{}\" because {}",
                 "{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", extra: \\\"field\\\"}",
                 "{\n" +
                         "    \"type\": \"object\",\n" +
@@ -335,7 +335,7 @@ public class JsonSchemaMatcherTest {
                         "    \"additionalProperties\" : false,\n" +
                         "    \"required\": [ \"enumField\", \"arrayField\" ]\n" +
                         "}",
-                "Unexpected character ('\\' (code 92)): expected a valid value (number, String, array, object, 'true', 'false' or 'null')\n" +
+                "JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (number, String, array, object, 'true', 'false' or 'null')\n" +
                         " at [Source: {arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", extra: \\\"field\\\"}; line: 1, column: 17]");
     }
 
@@ -351,7 +351,7 @@ public class JsonSchemaMatcherTest {
 
         // and
         verify(logger).trace(
-                "Failed to perform JSON match \"{}\" with \"{}\" because {}",
+                "Failed to perform JSON match \"{}\" with schema \"{}\" because {}",
                 "{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", objectField: {stringField: \\\"1234\\\"} }",
                 "{\n" +
                         "    \"type\": \"object\",\n" +
@@ -390,7 +390,7 @@ public class JsonSchemaMatcherTest {
                         "    \"additionalProperties\" : false,\n" +
                         "    \"required\": [ \"enumField\", \"arrayField\" ]\n" +
                         "}",
-                "Unexpected character ('\\' (code 92)): expected a valid value (number, String, array, object, 'true', 'false' or 'null')\n" +
+                "JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (number, String, array, object, 'true', 'false' or 'null')\n" +
                         " at [Source: {arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", objectField: {stringField: \\\"1234\\\"} }; line: 1, column: 17]");
     }
 
@@ -405,7 +405,7 @@ public class JsonSchemaMatcherTest {
         assertFalse(jsonSchemaMatcher.matches("{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", objectField: { } }"));
 
         // and
-        verify(logger).trace("Failed to perform JSON match \"{}\" with \"{}\" because {}",
+        verify(logger).trace("Failed to perform JSON match \"{}\" with schema \"{}\" because {}",
                 "{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", objectField: { } }",
                 "{\n" +
                         "    \"type\": \"object\",\n" +
@@ -444,7 +444,7 @@ public class JsonSchemaMatcherTest {
                         "    \"additionalProperties\" : false,\n" +
                         "    \"required\": [ \"enumField\", \"arrayField\" ]\n" +
                         "}",
-                "Unexpected character ('\\' (code 92)): expected a valid value (number, String, array, object, 'true', 'false' or 'null')\n" +
+                "JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (number, String, array, object, 'true', 'false' or 'null')\n" +
                         " at [Source: {arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", objectField: { } }; line: 1, column: 17]");
     }
 
@@ -459,7 +459,7 @@ public class JsonSchemaMatcherTest {
         assertFalse(jsonSchemaMatcher.matches("{arrayField: [ ],  stringField: \\\"1234\\\"}"));
 
         // and
-        verify(logger).trace("Failed to perform JSON match \"{}\" with \"{}\" because {}",
+        verify(logger).trace("Failed to perform JSON match \"{}\" with schema \"{}\" because {}",
                 "{arrayField: [ ],  stringField: \\\"1234\\\"}",
                 "{\n" +
                         "    \"type\": \"object\",\n" +
@@ -498,7 +498,7 @@ public class JsonSchemaMatcherTest {
                         "    \"additionalProperties\" : false,\n" +
                         "    \"required\": [ \"enumField\", \"arrayField\" ]\n" +
                         "}",
-                "Unexpected character ('\\' (code 92)): expected a valid value (number, String, array, object, 'true', 'false' or 'null')\n" +
+                "JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (number, String, array, object, 'true', 'false' or 'null')\n" +
                         " at [Source: {arrayField: [ ],  stringField: \\\"1234\\\"}; line: 1, column: 34]");
     }
 
@@ -512,14 +512,14 @@ public class JsonSchemaMatcherTest {
         assertFalse(jsonSchemaMatcher.matches("illegal_json"));
 
         // and
-        verify(logger).trace("Failed to perform JSON match \"{}\" with \"{}\" because {}", "illegal_json", "illegal_json", "Unrecognized token 'illegal_json': was expecting ('true', 'false' or 'null')\n" +
+        verify(logger).trace("Failed to perform JSON match \"{}\" with schema \"{}\" because {}", "illegal_json", "illegal_json", "JsonParseException - Unrecognized token 'illegal_json': was expecting ('true', 'false' or 'null')\n" +
                 " at [Source: illegal_json; line: 1, column: 25]");
 
         // and
         assertFalse(jsonSchemaMatcher.matches("some_other_illegal_json"));
 
         // and
-        verify(logger).trace("Failed to perform JSON match \"{}\" with \"{}\" because {}", "some_other_illegal_json", "illegal_json", "Unrecognized token 'illegal_json': was expecting ('true', 'false' or 'null')\n" +
+        verify(logger).trace("Failed to perform JSON match \"{}\" with schema \"{}\" because {}", "some_other_illegal_json", "illegal_json", "JsonParseException - Unrecognized token 'illegal_json': was expecting ('true', 'false' or 'null')\n" +
                 " at [Source: illegal_json; line: 1, column: 25]");
     }
 
@@ -546,7 +546,7 @@ public class JsonSchemaMatcherTest {
         assertFalse(jsonSchemaMatcher.matches("some_value"));
 
         // and
-        verify(logger).trace("Failed to perform JSON match \"{}\" with \"{}\" because {}", "some_value", "", "No content to map due to end-of-input\n" +
+        verify(logger).trace("Failed to perform JSON match \"{}\" with schema \"{}\" because {}", "some_value", "", "JsonMappingException - No content to map due to end-of-input\n" +
                 " at [Source: ; line: 1, column: 0]");
     }
 
@@ -560,7 +560,7 @@ public class JsonSchemaMatcherTest {
         assertFalse(jsonSchemaMatcher.matches(null));
 
         // and
-        verify(logger).trace("Failed to perform JSON match \"{}\" with \"{}\" because {}", null, "some_value", "Unrecognized token 'some_value': was expecting ('true', 'false' or 'null')\n" +
+        verify(logger).trace("Failed to perform JSON match \"{}\" with schema \"{}\" because {}", null, "some_value", "JsonParseException - Unrecognized token 'some_value': was expecting ('true', 'false' or 'null')\n" +
                 " at [Source: some_value; line: 1, column: 21]");
     }
 
@@ -574,7 +574,7 @@ public class JsonSchemaMatcherTest {
         assertFalse(jsonSchemaMatcher.matches(""));
 
         // and
-        verify(logger).trace("Failed to perform JSON match \"{}\" with \"{}\" because {}", "", "some_value", "Unrecognized token 'some_value': was expecting ('true', 'false' or 'null')\n" +
+        verify(logger).trace("Failed to perform JSON match \"{}\" with schema \"{}\" because {}", "", "some_value", "JsonParseException - Unrecognized token 'some_value': was expecting ('true', 'false' or 'null')\n" +
                 " at [Source: some_value; line: 1, column: 21]");
     }
 

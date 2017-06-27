@@ -1,0 +1,19 @@
+{
+  "title": "headers",
+  "type": "array",
+  "additionalProperties": false,
+  "items": {
+    "type": "object",
+    "properties": {
+      "values": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "name": {
+        "type": "string"
+      }
+    }
+  }
+}

@@ -110,13 +110,15 @@ public class ProxyRule implements TestRule {
     }
 
     private void setProxyClient(Object target, ClientAndProxy clientAndProxy) {
-        for (Field field : target.getClass().getDeclaredFields()) {
-            if (field.getType().equals(ProxyClient.class)) {
-                field.setAccessible(true);
-                try {
-                    field.set(target, clientAndProxy);
-                } catch (IllegalAccessException e) {
-                    throw new RuntimeException("Error setting ProxyClient field on " + target.getClass().getName(), e);
+        for (Class<?> clazz = target.getClass(); !clazz.equals(Object.class); clazz = clazz.getSuperclass()) {
+            for (Field field : clazz.getDeclaredFields()) {
+                if (field.getType().equals(ProxyClient.class)) {
+                    field.setAccessible(true);
+                    try {
+                        field.set(target, clientAndProxy);
+                    } catch (IllegalAccessException e) {
+                        throw new RuntimeException("Error setting ProxyClient field on " + target.getClass().getName(), e);
+                    }
                 }
             }
         }

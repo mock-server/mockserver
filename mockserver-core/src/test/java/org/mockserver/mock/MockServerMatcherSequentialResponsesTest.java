@@ -37,11 +37,11 @@ public class MockServerMatcherSequentialResponsesTest {
         mockServerMatcher.when(new HttpRequest().withPath("somepath"), Times.unlimited(), TimeToLive.unlimited()).thenRespond(httpResponse[2].withBody("somebody3"));
 
         // then
-        assertEquals(httpResponse[0], mockServerMatcher.handle(new HttpRequest().withPath("somepath")));
-        assertEquals(httpResponse[1], mockServerMatcher.handle(new HttpRequest().withPath("somepath")));
-        assertEquals(httpResponse[2], mockServerMatcher.handle(new HttpRequest().withPath("somepath")));
-        assertEquals(httpResponse[2], mockServerMatcher.handle(new HttpRequest().withPath("somepath")));
-        assertEquals(httpResponse[2], mockServerMatcher.handle(new HttpRequest().withPath("somepath")));
+        assertEquals(httpResponse[0], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath")));
+        assertEquals(httpResponse[1], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath")));
+        assertEquals(httpResponse[2], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath")));
+        assertEquals(httpResponse[2], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath")));
+        assertEquals(httpResponse[2], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath")));
     }
 
     @Test
@@ -52,9 +52,9 @@ public class MockServerMatcherSequentialResponsesTest {
         mockServerMatcher.when(new HttpRequest().withPath("somepath")).thenRespond(httpResponse[2].withBody("somebody3"));
 
         // then
-        assertEquals(httpResponse[0], mockServerMatcher.handle(new HttpRequest().withPath("somepath")));
-        assertEquals(httpResponse[1], mockServerMatcher.handle(new HttpRequest().withPath("somepath")));
-        assertEquals(httpResponse[2], mockServerMatcher.handle(new HttpRequest().withPath("somepath")));
+        assertEquals(httpResponse[0], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath")));
+        assertEquals(httpResponse[1], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath")));
+        assertEquals(httpResponse[2], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath")));
     }
 
     @Test
@@ -65,10 +65,10 @@ public class MockServerMatcherSequentialResponsesTest {
         mockServerMatcher.when(new HttpRequest().withPath("somepath")).thenRespond(httpResponse[2].withBody("somebody3"));
 
         // then
-        assertEquals(httpResponse[0], mockServerMatcher.handle(new HttpRequest().withPath("somepath")));
-        assertEquals(httpResponse[0], mockServerMatcher.handle(new HttpRequest().withPath("somepath")));
-        assertEquals(httpResponse[1], mockServerMatcher.handle(new HttpRequest().withPath("somepath")));
-        assertEquals(httpResponse[2], mockServerMatcher.handle(new HttpRequest().withPath("somepath")));
+        assertEquals(httpResponse[0], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath")));
+        assertEquals(httpResponse[0], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath")));
+        assertEquals(httpResponse[1], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath")));
+        assertEquals(httpResponse[2], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath")));
     }
 
     @Test
@@ -78,12 +78,12 @@ public class MockServerMatcherSequentialResponsesTest {
         mockServerMatcher.when(new HttpRequest().withPath("somepath2")).thenRespond(httpResponse[1].withBody("somebody2"));
 
         // then
-        assertEquals(httpResponse[0], mockServerMatcher.handle(new HttpRequest().withPath("somepath1")));
-        assertEquals(httpResponse[0], mockServerMatcher.handle(new HttpRequest().withPath("somepath1")));
-        assertEquals(httpResponse[1], mockServerMatcher.handle(new HttpRequest().withPath("somepath2")));
-        assertEquals(httpResponse[1], mockServerMatcher.handle(new HttpRequest().withPath("somepath2")));
-        assertEquals(httpResponse[0], mockServerMatcher.handle(new HttpRequest().withPath("somepath1")));
-        assertEquals(httpResponse[1], mockServerMatcher.handle(new HttpRequest().withPath("somepath2")));
+        assertEquals(httpResponse[0], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath1")));
+        assertEquals(httpResponse[0], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath1")));
+        assertEquals(httpResponse[1], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath2")));
+        assertEquals(httpResponse[1], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath2")));
+        assertEquals(httpResponse[0], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath1")));
+        assertEquals(httpResponse[1], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath2")));
     }
 
     @Test
@@ -92,9 +92,9 @@ public class MockServerMatcherSequentialResponsesTest {
         mockServerMatcher.when(new HttpRequest().withPath("somepath"), Times.exactly(2), TimeToLive.unlimited()).thenRespond(httpResponse[0].withBody("somebody"));
 
         // then
-        assertEquals(httpResponse[0], mockServerMatcher.handle(new HttpRequest().withPath("somepath")));
-        assertEquals(httpResponse[0], mockServerMatcher.handle(new HttpRequest().withPath("somepath")));
-        assertNull(mockServerMatcher.handle(new HttpRequest().withPath("somepath")));
+        assertEquals(httpResponse[0], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath")));
+        assertEquals(httpResponse[0], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath")));
+        assertNull(mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath")));
     }
 
 

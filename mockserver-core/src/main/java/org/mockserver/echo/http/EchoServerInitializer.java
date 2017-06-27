@@ -6,18 +6,22 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
-import io.netty.handler.ssl.SslHandler;
 import org.mockserver.logging.LoggingHandler;
-import org.mockserver.socket.SSLFactory;
+import org.mockserver.server.netty.codec.MockServerServerCodec;
+import org.mockserver.socket.NettySslContextFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.mockserver.echo.http.EchoServer.LOG_FILTER;
+import static org.mockserver.echo.http.EchoServer.NEXT_RESPONSE;
+import static org.mockserver.socket.NettySslContextFactory.nettySslContextFactory;
 
 /**
  * @author jamesdbloom
  */
 public class EchoServerInitializer extends ChannelInitializer<SocketChannel> {
 
-    private static final Logger logger = LoggerFactory.getLogger(EchoServerInitializer.class);
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final boolean secure;
     private final EchoServer.Error error;
@@ -38,7 +42,11 @@ public class EchoServerInitializer extends ChannelInitializer<SocketChannel> {
         }
 
         if (secure) {
-            pipeline.addLast(new SslHandler(SSLFactory.createServerSSLEngine()));
+            pipeline.addLast(nettySslContextFactory().createServerSslContext().newHandler(channel.alloc()));
+        }
+
+        if (logger.isTraceEnabled()) {
+            pipeline.addLast(new LoggingHandler("EchoServer <-->"));
         }
 
         pipeline.addLast(new HttpServerCodec());
@@ -47,6 +55,8 @@ public class EchoServerInitializer extends ChannelInitializer<SocketChannel> {
 
         pipeline.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
 
-        pipeline.addLast(new EchoServerHandler(error));
+        pipeline.addLast(new MockServerServerCodec(secure));
+
+        pipeline.addLast(new EchoServerHandler(error, secure, channel.attr(LOG_FILTER).get(), channel.attr(NEXT_RESPONSE).get()));
     }
 }
