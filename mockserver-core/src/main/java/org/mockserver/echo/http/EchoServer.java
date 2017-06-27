@@ -10,6 +10,8 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.util.AttributeKey;
+import java.io.Closeable;
+import java.io.IOException;
 import org.mockserver.filters.RequestLogFilter;
 import org.mockserver.model.HttpResponse;
 import org.slf4j.Logger;
@@ -20,8 +22,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.TimeUnit;
 
-
-public class EchoServer {
+public class EchoServer implements Closeable {
 
     static final AttributeKey<RequestLogFilter> LOG_FILTER = AttributeKey.valueOf("SERVER_LOG_FILTER");
     static final AttributeKey<NextResponse> NEXT_RESPONSE = AttributeKey.valueOf("NEXT_RESPONSE");
@@ -77,6 +78,11 @@ public class EchoServer {
 
     public void stop() {
         eventLoopGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
+    }
+
+    @Override
+    public void close() throws IOException {
+        this.stop();
     }
 
     public RequestLogFilter requestLogFilter() {

@@ -1,6 +1,7 @@
 package org.mockserver.client.netty;
 
 import io.netty.handler.codec.http.HttpHeaders;
+import java.io.IOException;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -49,29 +50,23 @@ public class NettyHttpClientErrorHandlingTest {
     }
 
     @Ignore
-    public void shouldHandleConnectionClosure() {
+    public void shouldHandleConnectionClosure() throws IOException {
         // given
-        EchoServer echoServer = new EchoServer(freePort, true, EchoServer.Error.CLOSE_CONNECTION);
-
-        try {
+        try (EchoServer ignored = new EchoServer(freePort, true, EchoServer.Error.CLOSE_CONNECTION)) {
             // then
             exception.expect(RuntimeException.class);
             exception.expectMessage(containsString("Connection reset by peer"));
 
             // when
             new NettyHttpClient().sendRequest(request().withSecure(true).withHeader(HOST.toString(), "127.0.0.1:" + freePort));
-        } finally {
-            echoServer.stop();
         }
     }
 
     @Test
-    public void shouldHandleLargerContentLengthHeader() {
+    public void shouldHandleLargerContentLengthHeader() throws IOException {
         // given
-        EchoServer echoServer = new EchoServer(freePort, true, EchoServer.Error.LARGER_CONTENT_LENGTH);
         long originalMaxSocketTimeout = ConfigurationProperties.maxSocketTimeout();
-
-        try {
+        try (EchoServer ignored = new EchoServer(freePort, true, EchoServer.Error.LARGER_CONTENT_LENGTH)){
             ConfigurationProperties.maxSocketTimeout(5);
 
             // then
@@ -81,17 +76,14 @@ public class NettyHttpClientErrorHandlingTest {
             // when
             new NettyHttpClient().sendRequest(request().withHeader(HOST.toString(), "127.0.0.1:" + freePort).withBody(exact("this is an example body")).withSecure(true));
         } finally {
-            echoServer.stop();
             ConfigurationProperties.maxSocketTimeout(originalMaxSocketTimeout);
         }
     }
 
     @Test
-    public void shouldHandleSmallerContentLengthHeader() {
+    public void shouldHandleSmallerContentLengthHeader() throws IOException {
         // given
-        EchoServer echoServer = new EchoServer(freePort, true, EchoServer.Error.SMALLER_CONTENT_LENGTH);
-
-        try {
+        try (EchoServer ignored = new EchoServer(freePort, true, EchoServer.Error.SMALLER_CONTENT_LENGTH)) {
             // when
             InetSocketAddress socket = new InetSocketAddress("127.0.0.1", freePort);
             HttpResponse httpResponse = new NettyHttpClient().sendRequest(request().withBody(exact("this is an example body")).withSecure(true), socket);
@@ -105,8 +97,6 @@ public class NettyHttpClientErrorHandlingTest {
                             .withHeader(header(CONNECTION.toString(), KEEP_ALIVE.toString()))
                             .withBody(exact("this is an "))
             ));
-        } finally {
-            echoServer.stop();
         }
     }
 

@@ -163,10 +163,9 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void shouldForwardRequestInHTTPS() {
+    public void shouldForwardRequestInHTTPS() throws IOException {
         int testServerHttpsPort = PortFactory.findFreePort();
-        EchoServer secureEchoServer = new EchoServer(testServerHttpsPort, true);
-        try {
+        try (EchoServer ignored = new EchoServer(testServerHttpsPort, true)) {
             // when
             mockServerClient
                     .when(
@@ -218,8 +217,6 @@ public abstract class AbstractClientServerIntegrationTest {
                                     .withBody("an_example_body_https"),
                             headersToIgnore)
             );
-        } finally {
-            secureEchoServer.stop();
         }
     }
 

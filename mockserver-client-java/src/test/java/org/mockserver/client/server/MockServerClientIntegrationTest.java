@@ -1,5 +1,6 @@
 package org.mockserver.client.server;
 
+import java.io.IOException;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
 import org.mockserver.client.serialization.ExpectationSerializer;
@@ -412,6 +413,25 @@ public class MockServerClientIntegrationTest {
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
         }
+    }
+
+    @Test
+    public void shouldSendStopRequestAsResource() throws IOException {
+      // given
+      int specificFreePort = PortFactory.findFreePort();
+      try (EchoServer specificEchoServer = new EchoServer(specificFreePort, false)) {
+
+        // when
+        try (MockServerClient ignore = new MockServerClient("localhost", specificFreePort)) {
+        }
+
+        // then
+        String result = specificEchoServer.requestLogFilter().verify(verificationSequence().withRequests(
+            request().withMethod("PUT").withPath("/stop")
+        ));
+        Assert.assertNotNull(result);
+        Assert.assertTrue(result.isEmpty());
+      }
     }
 
     @Test

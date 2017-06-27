@@ -1,6 +1,8 @@
 package org.mockserver.client.server;
 
 import com.google.common.base.Charsets;
+import java.io.Closeable;
+import java.io.IOException;
 import org.mockserver.client.AbstractClient;
 import org.mockserver.client.netty.SocketConnectionException;
 import org.mockserver.matchers.TimeToLive;
@@ -22,7 +24,7 @@ import static org.mockserver.verify.Verification.verification;
 /**
  * @author jamesdbloom
  */
-public class MockServerClient extends AbstractClient {
+public class MockServerClient extends AbstractClient implements Closeable {
 
     /**
      * Start the client communicating to a MockServer at the specified host and port
@@ -200,6 +202,11 @@ public class MockServerClient extends AbstractClient {
             }
         }
         return this;
+    }
+
+    @Override
+    public void close() throws IOException {
+        this.stop(true);
     }
 
     /**
