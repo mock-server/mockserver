@@ -1,12 +1,19 @@
 package org.mockserver.client.serialization;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.github.fge.jackson.JacksonUtils;
 import org.mockserver.client.serialization.model.ExpectationDTO;
 import org.mockserver.mock.Expectation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * @author jamesdbloom
@@ -83,5 +90,22 @@ public class ExpectationSerializer implements Serializer<Expectation> {
             }
         }
         return expectations;
+    }
+
+    public List<String> returnJSONObjects(String jsonArray) {
+        List<String> arrayItems = new ArrayList<String>();
+        try {
+            JsonNode jsonNode = objectMapper.readTree(jsonArray);
+            if (jsonNode instanceof ArrayNode) {
+                for (JsonNode arrayElement : jsonNode) {
+                    arrayItems.add(JacksonUtils.prettyPrint(arrayElement));
+                }
+            } else {
+                arrayItems.add(JacksonUtils.prettyPrint(jsonNode));
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return arrayItems;
     }
 }

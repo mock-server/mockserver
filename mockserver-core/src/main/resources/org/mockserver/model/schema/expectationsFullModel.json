@@ -1,0 +1,291 @@
+{
+  "title": "expectation",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "httpRequest": {
+      "$ref": "#/definitions/httpRequest"
+    },
+    "httpResponse": {
+      "$ref": "#/definitions/httpResponse"
+    },
+    "httpForward": {
+      "$ref": "#/definitions/httpForward"
+    },
+    "httpClassCallback": {
+      "$ref": "#/definitions/httpClassCallback"
+    },
+    "httpObjectCallback": {
+      "$ref": "#/definitions/httpObjectCallback"
+    },
+    "times": {
+      "$ref": "#/definitions/times"
+    },
+    "timeToLive": {
+      "$ref": "#/definitions/timeToLive"
+    }
+  },
+  "oneOf": [
+    {
+      "required": [
+        "httpResponse"
+      ]
+    },
+    {
+      "required": [
+        "httpForward"
+      ]
+    },
+    {
+      "required": [
+        "httpClassCallback"
+      ]
+    },
+    {
+      "required": [
+        "httpObjectCallback"
+      ]
+    }
+  ],
+  "definitions": {
+    "httpRequest": {
+      "title": "request matcher",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "$ref": "#/definitions/body"
+        },
+        "headers": {
+          "$ref": "#/definitions/headers"
+        },
+        "cookies": {
+          "$ref": "#/definitions/cookies"
+        },
+        "queryStringParameters": {
+          "$ref": "#/definitions/queryStringParameters"
+        },
+        "path": {
+          "type": "string"
+        },
+        "method": {
+          "type": "string"
+        }
+      }
+    },
+    "httpResponse": {
+      "title": "response to return",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "type": "string"
+        },
+        "delay": {
+          "$ref": "#/definitions/delay"
+        },
+        "cookies": {
+          "$ref": "#/definitions/cookies"
+        },
+        "connectionOptions": {
+          "$ref": "#/definitions/connectionOptions"
+        },
+        "headers": {
+          "$ref": "#/definitions/headers"
+        },
+        "statusCode": {
+          "type": "integer"
+        }
+      }
+    },
+    "httpForward": {
+      "title": "host and port to forward to",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "host": {
+          "type": "string"
+        },
+        "port": {
+          "type": "integer"
+        },
+        "scheme": {
+          "enum": [
+            "HTTP",
+            "HTTPS"
+          ]
+        }
+      }
+    },
+    "httpClassCallback": {
+      "title": "class callback",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "callbackClass": {
+          "type": "string"
+        }
+      }
+    },
+    "httpObjectCallback": {
+      "title": "object / method callback",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "clientId": {
+          "type": "string"
+        }
+      }
+    },
+    "times": {
+      "title": "number of responses",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "remainingTimes": {
+          "type": "integer"
+        },
+        "unlimited": {
+          "type": "boolean"
+        }
+      }
+    },
+    "timeToLive": {
+      "title": "time expectation is valid for",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "timeUnit": {
+          "enum": [
+            "HOURS",
+            "MINUTES",
+            "SECONDS",
+            "MILLISECONDS",
+            "MICROSECONDS",
+            "NANOSECONDS"
+          ]
+        },
+        "timeToLive": {
+          "type": "integer"
+        },
+        "unlimited": {
+          "type": "boolean"
+        }
+      }
+    },
+    "body": {
+      "title": "body",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "not" : {
+          "type": "boolean"
+        },
+        "type": {
+          "enum": [
+            "PARAMETERS",
+            "XPATH",
+            "XML",
+            "JSON",
+            "JSON_SCHEMA",
+            "REGEX",
+            "STRING",
+            "BINARY"
+          ]
+        },
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "headers": {
+      "title": "headers",
+      "type": "array",
+      "additionalProperties": false,
+      "items": {
+        "type": "object",
+        "properties": {
+          "values": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "cookies": {
+      "title": "cookies",
+      "type": "array",
+      "additionalProperties": false,
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "queryStringParameters": {
+      "title": "parameters",
+      "type": "array",
+      "additionalProperties": false,
+      "items": {
+        "type": "object",
+        "properties": {
+          "values": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "delay": {
+      "title": "response delay",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "timeUnit": {
+          "type": "string"
+        },
+        "value": {
+          "type": "integer"
+        }
+      }
+    },
+    "connectionOptions": {
+      "title": "connection options",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "closeSocket": {
+          "type": "boolean"
+        },
+        "contentLengthHeaderOverride": {
+          "type": "integer"
+        },
+        "suppressContentLengthHeader": {
+          "type": "boolean"
+        },
+        "suppressConnectionHeader": {
+          "type": "boolean"
+        },
+        "keepAliveOverride": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}
