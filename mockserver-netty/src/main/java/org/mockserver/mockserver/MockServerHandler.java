@@ -9,6 +9,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpServerCodec;
 import org.mockserver.client.serialization.*;
+import org.mockserver.file.FileReader;
 import org.mockserver.filters.RequestLogFilter;
 import org.mockserver.logging.LogFormatter;
 import org.mockserver.mock.Expectation;
@@ -18,13 +19,15 @@ import org.mockserver.mockserver.callback.ExpectationCallbackResponse;
 import org.mockserver.mockserver.callback.WebSocketClientRegistry;
 import org.mockserver.model.*;
 import org.mockserver.socket.KeyAndCertificateFactory;
-import org.mockserver.validator.ExpectationValidator;
+import org.mockserver.validator.JsonSchemaValidator;
+import org.mockserver.validator.Validator;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.BindException;
+import java.util.ArrayList;
 import java.util.List;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
@@ -59,7 +62,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
     private VerificationSerializer verificationSerializer = new VerificationSerializer();
     private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer();
     // validators
-    private ExpectationValidator expectationValidator = new ExpectationValidator();
+    private Validator<String> expectationValidator = new JsonSchemaValidator(FileReader.readFileFromClassPathOrPath("org/mockserver/model/schema/expectationsFullModel.json"));
 
     public MockServerHandler(MockServer server, MockServerMatcher mockServerMatcher, WebSocketClientRegistry webSocketClientRegistry, RequestLogFilter requestLogFilter) {
         this.server = server;
@@ -99,22 +102,32 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
             } else if (request.matches("PUT", "/expectation")) {
 
-                for (Expectation expectation : expectationSerializer.deserializeArray(request.getBodyAsString())) {
-                    String validationErrors = expectationValidator.isValid(expectation);
-                    if (validationErrors.isEmpty()) {
-                        KeyAndCertificateFactory.addSubjectAlternativeName(expectation.getHttpRequest().getFirstHeader(HOST.toString()));
-                        mockServerMatcher
-                                .when(expectation.getHttpRequest(), expectation.getTimes(), expectation.getTimeToLive())
-                                .thenRespond(expectation.getHttpResponse())
-                                .thenForward(expectation.getHttpForward())
-                                .thenError(expectation.getHttpError())
-                                .thenCallback(expectation.getHttpClassCallback())
-                                .thenCallback(expectation.getHttpObjectCallback());
-                        logFormatter.infoLog("creating expectation:{}", expectation);
-                        writeResponse(ctx, request, CREATED);
-                    } else {
-                        writeResponse(ctx, request, NOT_ACCEPTABLE, validationErrors, MediaType.create("text", "plain").toString());
+                final List<String> strings = expectationSerializer.returnJSONObjects(request.getBodyAsString());
+                if (strings.isEmpty()) {
+                    writeResponse(ctx, request, NOT_ACCEPTABLE, "1 error:\n - an expectation or array of expectations is required", MediaType.create("text", "plain").toString());
+                } else {
+                    List<String> validationErrorsList = new ArrayList<String>();
+                    for (String expectationJson : strings) {
+                        String validationErrors = expectationValidator.isValid(expectationJson);
+                        if (validationErrors.isEmpty()) {
+                            Expectation expectation = expectationSerializer.deserialize(expectationJson);
+                            KeyAndCertificateFactory.addSubjectAlternativeName(expectation.getHttpRequest().getFirstHeader(HOST.toString()));
+                            mockServerMatcher
+                                    .when(expectation.getHttpRequest(), expectation.getTimes(), expectation.getTimeToLive())
+                                    .thenRespond(expectation.getHttpResponse())
+                                    .thenForward(expectation.getHttpForward())
+                                    .thenError(expectation.getHttpError())
+                                    .thenCallback(expectation.getHttpClassCallback())
+                                    .thenCallback(expectation.getHttpObjectCallback());
+                            logFormatter.infoLog("creating expectation:{}", expectation);
+                            writeResponse(ctx, request, CREATED);
+                        } else {
+                            validationErrorsList.add(validationErrors);
+                        }
                     }
+                    writeResponse(ctx, request, NOT_ACCEPTABLE,
+                            (validationErrorsList.size() > 1 ? "[" : "") + Joiner.on(",\n").join(validationErrorsList) + (validationErrorsList.size() > 1 ? "]" : ""),
+                            MediaType.create("text", "plain").toString());
                 }
 
             } else if (request.matches("PUT", "/clear")) {
