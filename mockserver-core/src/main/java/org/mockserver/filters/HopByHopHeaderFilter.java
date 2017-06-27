@@ -32,7 +32,7 @@ public class HopByHopHeaderFilter implements RequestFilter {
                     filteredHeaders.add(header);
                 }
             }
-            return httpRequest.withHeaders(filteredHeaders);
+            return httpRequest.clone().withHeaders(filteredHeaders);
         } else {
             return null;
         }

@@ -23,7 +23,6 @@ import org.mockserver.proxy.Proxy;
 import org.mockserver.proxy.connect.HttpConnectHandler;
 import org.mockserver.proxy.unification.PortUnificationHandler;
 import org.mockserver.socket.KeyAndCertificateFactory;
-import org.mockserver.socket.KeyStoreFactory;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.slf4j.Logger;
@@ -155,22 +154,9 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
             } else {
 
-                HttpRequest httpRequest = filters.applyOnRequestFilters(request);
                 InetSocketAddress remoteAddress = ctx.channel().attr(REMOTE_SOCKET).get();
-
-                // allow for filter to set request to null
-                if (httpRequest != null) {
-                    HttpResponse response = sendRequest(httpRequest, remoteAddress);
-                    logFormatter.infoLog(
-                            "returning response:{}" + System.getProperty("line.separator") + " for request as json:{}" + System.getProperty("line.separator") + " as curl:{}",
-                            response,
-                            request,
-                            httpRequestToCurlSerializer.toCurl(httpRequest, remoteAddress)
-                    );
-                    writeResponse(ctx, request, response);
-                } else {
-                    writeResponse(ctx, request, notFoundResponse());
-                }
+                HttpResponse response = sendRequest(request, remoteAddress);
+                writeResponse(ctx, request, response);
 
             }
         } catch (Exception e) {
@@ -181,10 +167,20 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
     }
 
     private HttpResponse sendRequest(HttpRequest httpRequest, InetSocketAddress remoteAddress) {
-        HttpResponse httpResponse = filters.applyOnResponseFilters(httpRequest, httpClient.sendRequest(httpRequest, remoteAddress));
+        HttpResponse httpResponse = notFoundResponse();
+        HttpRequest filteredRequest = filters.applyOnRequestFilters(httpRequest);
         // allow for filter to set response to null
-        if (httpResponse == null) {
-            httpResponse = notFoundResponse();
+        if (filteredRequest != null) {
+            httpResponse = filters.applyOnResponseFilters(httpRequest, httpClient.sendRequest(filteredRequest, remoteAddress));
+            if (httpResponse == null) {
+                httpResponse = notFoundResponse();
+            }
+            logFormatter.infoLog(
+                    "returning response:{}" + System.getProperty("line.separator") + " for request as json:{}" + System.getProperty("line.separator") + " as curl:{}",
+                    httpResponse,
+                    httpRequest,
+                    httpRequestToCurlSerializer.toCurl(httpRequest, remoteAddress)
+            );
         }
         return httpResponse;
     }

@@ -560,4 +560,16 @@ public class HttpRequest extends Not {
     public List<Cookie> getCookies() {
         return new ArrayList<Cookie>(cookies.values());
     }
+
+    public HttpRequest clone() {
+        return not(request(), not)
+                .withMethod(method)
+                .withPath(path)
+                .withQueryStringParameters(getQueryStringParameters())
+                .withBody(body)
+                .withHeaders(getHeaders())
+                .withCookies(getCookies())
+                .withKeepAlive(keepAlive)
+                .withSecure(secure);
+    }
 }
