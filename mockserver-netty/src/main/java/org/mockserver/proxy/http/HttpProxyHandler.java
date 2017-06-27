@@ -38,6 +38,7 @@ import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAPI;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAllResponses;
 import static org.mockserver.model.Header.header;
+import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.proxy.Proxy.REMOTE_SOCKET;
@@ -56,7 +57,6 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
     // http client
     private NettyHttpClient httpClient = new NettyHttpClient();
     // serializers
-    private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
     private HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer();
     private VerificationSerializer verificationSerializer = new VerificationSerializer();
@@ -67,9 +67,9 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
         this.server = server;
         this.requestLogFilter = requestLogFilter;
         this.requestResponseLogFilter = requestResponseLogFilter;
-        filters.withFilter(new org.mockserver.model.HttpRequest(), new HopByHopHeaderFilter());
-        filters.withFilter(new org.mockserver.model.HttpRequest(), requestLogFilter);
-        filters.withFilter(new org.mockserver.model.HttpRequest(), requestResponseLogFilter);
+        filters.withFilter(request(), requestLogFilter);
+        filters.withFilter(request(), requestResponseLogFilter);
+        filters.withFilter(request(), new HopByHopHeaderFilter());
     }
 
     @Override

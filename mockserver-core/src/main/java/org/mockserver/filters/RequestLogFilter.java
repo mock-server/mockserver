@@ -34,12 +34,12 @@ public class RequestLogFilter implements ResponseFilter, RequestFilter {
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
 
     @Override
-    public /* synchronized */ HttpResponse onResponse(HttpRequest httpRequest, HttpResponse httpResponse) {
+    public HttpResponse onResponse(HttpRequest httpRequest, HttpResponse httpResponse) {
         return httpResponse;
     }
 
     @Override
-    public /* synchronized */ HttpRequest onRequest(HttpRequest httpRequest) {
+    public HttpRequest onRequest(HttpRequest httpRequest) {
         requestLog.add(httpRequest);
         return httpRequest;
     }
@@ -86,9 +86,7 @@ public class RequestLogFilter implements ResponseFilter, RequestFilter {
                 }
             }
         } else {
-            for (HttpRequest httpRequest : requestLog) {
-                matchingRequests.add(httpRequest);
-            }
+            matchingRequests.addAll(requestLog);
         }
         return matchingRequests.toArray(new HttpRequest[matchingRequests.size()]);
     }

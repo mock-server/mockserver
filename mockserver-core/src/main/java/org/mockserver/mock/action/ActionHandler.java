@@ -5,6 +5,7 @@ import org.mockserver.filters.HopByHopHeaderFilter;
 import org.mockserver.filters.RequestLogFilter;
 import org.mockserver.model.*;
 
+import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 
 /**
@@ -18,8 +19,8 @@ public class ActionHandler {
     private Filters filters = new Filters();
 
     public ActionHandler(RequestLogFilter requestLogFilter) {
-        filters.withFilter(new org.mockserver.model.HttpRequest(), new HopByHopHeaderFilter());
-        filters.withFilter(new org.mockserver.model.HttpRequest(), requestLogFilter);
+        filters.withFilter(request(), new HopByHopHeaderFilter());
+        filters.withFilter(request(), requestLogFilter);
     }
 
     public HttpResponse processAction(Action action, HttpRequest httpRequest) {

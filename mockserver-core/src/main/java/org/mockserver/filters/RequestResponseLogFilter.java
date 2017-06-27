@@ -1,10 +1,8 @@
 package org.mockserver.filters;
 
 import org.mockserver.client.serialization.ExpectationSerializer;
-import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.client.serialization.java.ExpectationToJavaSerializer;
 import org.mockserver.collections.CircularMultiMap;
-import org.mockserver.logging.LogFormatter;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.matchers.TimeToLive;
@@ -34,7 +32,7 @@ public class RequestResponseLogFilter implements ResponseFilter, RequestFilter {
     private Logger requestLogger = LoggerFactory.getLogger("REQUEST");
 
     @Override
-    public /* synchronized */ HttpResponse onResponse(HttpRequest httpRequest, HttpResponse httpResponse) {
+    public HttpResponse onResponse(HttpRequest httpRequest, HttpResponse httpResponse) {
         if (httpRequest != null && httpResponse != null) {
             requestResponseLog.put(httpRequest, httpResponse);
         } else if (httpRequest != null) {
@@ -44,11 +42,11 @@ public class RequestResponseLogFilter implements ResponseFilter, RequestFilter {
     }
 
     @Override
-    public /* synchronized */ HttpRequest onRequest(HttpRequest httpRequest) {
+    public HttpRequest onRequest(HttpRequest httpRequest) {
         return httpRequest;
     }
 
-    public /* synchronized */ List<HttpResponse> httpResponses(HttpRequest httpRequest) {
+    public List<HttpResponse> httpResponses(HttpRequest httpRequest) {
         List<HttpResponse> httpResponses = new ArrayList<HttpResponse>();
         HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
         for (HttpRequest loggedHttpRequest : new LinkedList<HttpRequest>(requestResponseLog.keySet())) {
@@ -59,11 +57,11 @@ public class RequestResponseLogFilter implements ResponseFilter, RequestFilter {
         return httpResponses;
     }
 
-    public /* synchronized */ void reset() {
+    public void reset() {
         requestResponseLog.clear();
     }
 
-    public /* synchronized */ void clear(HttpRequest httpRequest) {
+    public void clear(HttpRequest httpRequest) {
         if (httpRequest != null) {
             HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
             for (HttpRequest key : new LinkedList<HttpRequest>(requestResponseLog.keySet())) {
@@ -76,7 +74,7 @@ public class RequestResponseLogFilter implements ResponseFilter, RequestFilter {
         }
     }
 
-    public /* synchronized */ void dumpToLog(HttpRequest httpRequest, boolean asJava) {
+    public void dumpToLog(HttpRequest httpRequest, boolean asJava) {
         ExpectationSerializer expectationSerializer = new ExpectationSerializer();
         ExpectationToJavaSerializer expectationToJavaSerializer = new ExpectationToJavaSerializer();
         if (httpRequest != null) {
