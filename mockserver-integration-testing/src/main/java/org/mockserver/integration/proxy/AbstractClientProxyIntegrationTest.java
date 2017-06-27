@@ -319,7 +319,7 @@ public abstract class AbstractClientProxyIntegrationTest {
                 .verify(
                         request()
                                 .withMethod("GET")
-                                .withPath("/test_headers_and_body")
+                                .withPath("/test_headers_only")
                                 .withHeader("Proxy-Authorization", "some-random_value")
                                 .withHeader("keep-alive", "false")
                 );
@@ -327,7 +327,7 @@ public abstract class AbstractClientProxyIntegrationTest {
                 .verify(
                         request()
                                 .withMethod("GET")
-                                .withPath("/test_headers_and_body")
+                                .withPath("/test_headers_only")
                                 .withHeader("Proxy-Authorization")
                                 .withHeader("keep-alive"),
                         exactly(1)
