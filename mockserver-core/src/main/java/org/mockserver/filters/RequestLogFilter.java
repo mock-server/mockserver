@@ -18,6 +18,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
+import static org.mockserver.character.Character.NEW_LINE;
+
 /**
  * @author jamesdbloom
  */
@@ -121,7 +123,7 @@ public class RequestLogFilter implements ResponseFilter, RequestFilter {
                 HttpRequest[] allRequestsArray = requestLog.toArray(new HttpRequest[requestLog.size()]);
                 String serializedRequestToBeVerified = httpRequestSerializer.serialize(verification.getHttpRequest());
                 String serializedAllRequestInLog = allRequestsArray.length == 1 ? httpRequestSerializer.serialize(allRequestsArray[0]) : httpRequestSerializer.serialize(allRequestsArray);
-                logFormatter.infoLog("request not found " + verification.getTimes() + ", expected:{}" + System.getProperty("line.separator") + " but was:{}", serializedRequestToBeVerified, serializedAllRequestInLog);
+                logFormatter.infoLog("request not found " + verification.getTimes() + ", expected:{}" + NEW_LINE + " but was:{}", serializedRequestToBeVerified, serializedAllRequestInLog);
                 failureMessage = "Request not found " + verification.getTimes() + ", expected:<" + serializedRequestToBeVerified + "> but was:<" + serializedAllRequestInLog + ">";
             }
         }
@@ -152,7 +154,7 @@ public class RequestLogFilter implements ResponseFilter, RequestFilter {
                         String serializedRequestToBeVerified = httpRequestSerializer.serialize(verificationSequence.getHttpRequests());
                         String serializedAllRequestInLog = httpRequestSerializer.serialize(requestLog);
                         failureMessage = "Request sequence not found, expected:<" + serializedRequestToBeVerified + "> but was:<" + serializedAllRequestInLog + ">";
-                        logFormatter.infoLog("request sequence not found, expected:{}" + System.getProperty("line.separator") + " but was:{}", serializedRequestToBeVerified, serializedAllRequestInLog);
+                        logFormatter.infoLog("request sequence not found, expected:{}" + NEW_LINE + " but was:{}", serializedRequestToBeVerified, serializedAllRequestInLog);
                         break;
                     }
                 }

@@ -37,6 +37,7 @@ import static org.hamcrest.core.StringStartsWith.startsWith;
 import static org.hamcrest.number.OrderingComparison.greaterThan;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.matchers.Times.exactly;
 import static org.mockserver.matchers.Times.once;
 import static org.mockserver.matchers.Times.unlimited;
@@ -870,26 +871,26 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
                                 .withBody(new StringBody("" +
-                                        "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + System.getProperty("line.separator") +
-                                        "<bookstore>" + System.getProperty("line.separator") +
-                                        "  <book category=\"COOKING\">" + System.getProperty("line.separator") +
-                                        "    <title lang=\"en\">Everyday Italian</title>" + System.getProperty("line.separator") +
-                                        "    <author>Giada De Laurentiis</author>" + System.getProperty("line.separator") +
-                                        "    <year>2005</year>" + System.getProperty("line.separator") +
-                                        "    <price>30.00</price>" + System.getProperty("line.separator") +
-                                        "  </book>" + System.getProperty("line.separator") +
-                                        "  <book category=\"CHILDREN\">" + System.getProperty("line.separator") +
-                                        "    <title lang=\"en\">Harry Potter</title>" + System.getProperty("line.separator") +
-                                        "    <author>J K. Rowling</author>" + System.getProperty("line.separator") +
-                                        "    <year>2005</year>" + System.getProperty("line.separator") +
-                                        "    <price>29.99</price>" + System.getProperty("line.separator") +
-                                        "  </book>" + System.getProperty("line.separator") +
-                                        "  <book category=\"WEB\">" + System.getProperty("line.separator") +
-                                        "    <title lang=\"en\">Learning XML</title>" + System.getProperty("line.separator") +
-                                        "    <author>Erik T. Ray</author>" + System.getProperty("line.separator") +
-                                        "    <year>2003</year>" + System.getProperty("line.separator") +
-                                        "    <price>31.95</price>" + System.getProperty("line.separator") +
-                                        "  </book>" + System.getProperty("line.separator") +
+                                        "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + NEW_LINE +
+                                        "<bookstore>" + NEW_LINE +
+                                        "  <book category=\"COOKING\">" + NEW_LINE +
+                                        "    <title lang=\"en\">Everyday Italian</title>" + NEW_LINE +
+                                        "    <author>Giada De Laurentiis</author>" + NEW_LINE +
+                                        "    <year>2005</year>" + NEW_LINE +
+                                        "    <price>30.00</price>" + NEW_LINE +
+                                        "  </book>" + NEW_LINE +
+                                        "  <book category=\"CHILDREN\">" + NEW_LINE +
+                                        "    <title lang=\"en\">Harry Potter</title>" + NEW_LINE +
+                                        "    <author>J K. Rowling</author>" + NEW_LINE +
+                                        "    <year>2005</year>" + NEW_LINE +
+                                        "    <price>29.99</price>" + NEW_LINE +
+                                        "  </book>" + NEW_LINE +
+                                        "  <book category=\"WEB\">" + NEW_LINE +
+                                        "    <title lang=\"en\">Learning XML</title>" + NEW_LINE +
+                                        "    <author>Erik T. Ray</author>" + NEW_LINE +
+                                        "    <year>2003</year>" + NEW_LINE +
+                                        "    <price>31.95</price>" + NEW_LINE +
+                                        "  </book>" + NEW_LINE +
                                         "</bookstore>")),
                         headersToIgnore)
         );
@@ -904,26 +905,26 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
                                 .withBody(new StringBody("" +
-                                        "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + System.getProperty("line.separator") +
-                                        "<bookstore>" + System.getProperty("line.separator") +
-                                        "  <book category=\"COOKING\">" + System.getProperty("line.separator") +
-                                        "    <title lang=\"en\">Everyday Italian</title>" + System.getProperty("line.separator") +
-                                        "    <author>Giada De Laurentiis</author>" + System.getProperty("line.separator") +
-                                        "    <year>2005</year>" + System.getProperty("line.separator") +
-                                        "    <price>30.00</price>" + System.getProperty("line.separator") +
-                                        "  </book>" + System.getProperty("line.separator") +
-                                        "  <book category=\"CHILDREN\">" + System.getProperty("line.separator") +
-                                        "    <title lang=\"en\">Harry Potter</title>" + System.getProperty("line.separator") +
-                                        "    <author>J K. Rowling</author>" + System.getProperty("line.separator") +
-                                        "    <year>2005</year>" + System.getProperty("line.separator") +
-                                        "    <price>29.99</price>" + System.getProperty("line.separator") +
-                                        "  </book>" + System.getProperty("line.separator") +
-                                        "  <book category=\"WEB\">" + System.getProperty("line.separator") +
-                                        "    <title lang=\"en\">Learning XML</title>" + System.getProperty("line.separator") +
-                                        "    <author>Erik T. Ray</author>" + System.getProperty("line.separator") +
-                                        "    <year>2003</year>" + System.getProperty("line.separator") +
-                                        "    <price>31.95</price>" + System.getProperty("line.separator") +
-                                        "  </book>" + System.getProperty("line.separator") +
+                                        "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + NEW_LINE +
+                                        "<bookstore>" + NEW_LINE +
+                                        "  <book category=\"COOKING\">" + NEW_LINE +
+                                        "    <title lang=\"en\">Everyday Italian</title>" + NEW_LINE +
+                                        "    <author>Giada De Laurentiis</author>" + NEW_LINE +
+                                        "    <year>2005</year>" + NEW_LINE +
+                                        "    <price>30.00</price>" + NEW_LINE +
+                                        "  </book>" + NEW_LINE +
+                                        "  <book category=\"CHILDREN\">" + NEW_LINE +
+                                        "    <title lang=\"en\">Harry Potter</title>" + NEW_LINE +
+                                        "    <author>J K. Rowling</author>" + NEW_LINE +
+                                        "    <year>2005</year>" + NEW_LINE +
+                                        "    <price>29.99</price>" + NEW_LINE +
+                                        "  </book>" + NEW_LINE +
+                                        "  <book category=\"WEB\">" + NEW_LINE +
+                                        "    <title lang=\"en\">Learning XML</title>" + NEW_LINE +
+                                        "    <author>Erik T. Ray</author>" + NEW_LINE +
+                                        "    <year>2003</year>" + NEW_LINE +
+                                        "    <price>31.95</price>" + NEW_LINE +
+                                        "  </book>" + NEW_LINE +
                                         "</bookstore>")),
                         headersToIgnore)
         );
@@ -933,8 +934,8 @@ public abstract class AbstractClientServerIntegrationTest {
     public void shouldReturnResponseByMatchingBodyWithXml() {
         // when
         mockServerClient.when(request().withBody(xml("" +
-                "<bookstore>" + System.getProperty("line.separator") +
-                "  <book nationality=\"ITALIAN\" category=\"COOKING\"><title lang=\"en\">Everyday Italian</title><author>Giada De Laurentiis</author><year>2005</year><price>30.00</price></book>" + System.getProperty("line.separator") +
+                "<bookstore>" + NEW_LINE +
+                "  <book nationality=\"ITALIAN\" category=\"COOKING\"><title lang=\"en\">Everyday Italian</title><author>Giada De Laurentiis</author><year>2005</year><price>30.00</price></book>" + NEW_LINE +
                 "</bookstore>")), exactly(2)).respond(response().withBody("some_body"));
 
         // then
@@ -948,14 +949,14 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
                                 .withBody(new StringBody("" +
-                                        "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + System.getProperty("line.separator") +
-                                        "<bookstore>" + System.getProperty("line.separator") +
-                                        "  <book category=\"COOKING\" nationality=\"ITALIAN\">" + System.getProperty("line.separator") +
-                                        "    <title lang=\"en\">Everyday Italian</title>" + System.getProperty("line.separator") +
-                                        "    <author>Giada De Laurentiis</author>" + System.getProperty("line.separator") +
-                                        "    <year>2005</year>" + System.getProperty("line.separator") +
-                                        "    <price>30.00</price>" + System.getProperty("line.separator") +
-                                        "  </book>" + System.getProperty("line.separator") +
+                                        "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + NEW_LINE +
+                                        "<bookstore>" + NEW_LINE +
+                                        "  <book category=\"COOKING\" nationality=\"ITALIAN\">" + NEW_LINE +
+                                        "    <title lang=\"en\">Everyday Italian</title>" + NEW_LINE +
+                                        "    <author>Giada De Laurentiis</author>" + NEW_LINE +
+                                        "    <year>2005</year>" + NEW_LINE +
+                                        "    <price>30.00</price>" + NEW_LINE +
+                                        "  </book>" + NEW_LINE +
                                         "</bookstore>")),
                         headersToIgnore)
         );
@@ -970,14 +971,14 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
                                 .withBody(new StringBody("" +
-                                        "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + System.getProperty("line.separator") +
-                                        "<bookstore>" + System.getProperty("line.separator") +
-                                        "  <book category=\"COOKING\" nationality=\"ITALIAN\">" + System.getProperty("line.separator") +
-                                        "    <title lang=\"en\">Everyday Italian</title>" + System.getProperty("line.separator") +
-                                        "    <author>Giada De Laurentiis</author>" + System.getProperty("line.separator") +
-                                        "    <year>2005</year>" + System.getProperty("line.separator") +
-                                        "    <price>30.00</price>" + System.getProperty("line.separator") +
-                                        "  </book>" + System.getProperty("line.separator") +
+                                        "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + NEW_LINE +
+                                        "<bookstore>" + NEW_LINE +
+                                        "  <book category=\"COOKING\" nationality=\"ITALIAN\">" + NEW_LINE +
+                                        "    <title lang=\"en\">Everyday Italian</title>" + NEW_LINE +
+                                        "    <author>Giada De Laurentiis</author>" + NEW_LINE +
+                                        "    <year>2005</year>" + NEW_LINE +
+                                        "    <price>30.00</price>" + NEW_LINE +
+                                        "  </book>" + NEW_LINE +
                                         "</bookstore>")),
                         headersToIgnore)
         );
@@ -989,11 +990,11 @@ public abstract class AbstractClientServerIntegrationTest {
         mockServerClient
                 .when(
                         request()
-                                .withBody(json("{" + System.getProperty("line.separator") +
-                                        "    \"id\": 1," + System.getProperty("line.separator") +
-                                        "    \"name\": \"A green door\"," + System.getProperty("line.separator") +
-                                        "    \"price\": 12.50," + System.getProperty("line.separator") +
-                                        "    \"tags\": [\"home\", \"green\"]" + System.getProperty("line.separator") +
+                                .withBody(json("{" + NEW_LINE +
+                                        "    \"id\": 1," + NEW_LINE +
+                                        "    \"name\": \"A green door\"," + NEW_LINE +
+                                        "    \"price\": 12.50," + NEW_LINE +
+                                        "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
                                         "}")),
                         exactly(2)
                 )
@@ -1013,12 +1014,12 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
-                                .withBody("{" + System.getProperty("line.separator") +
-                                        "    \"id\": 1," + System.getProperty("line.separator") +
-                                        "    \"extra ignored field\": \"some value\"," + System.getProperty("line.separator") +
-                                        "    \"name\": \"A green door\"," + System.getProperty("line.separator") +
-                                        "    \"price\": 12.50," + System.getProperty("line.separator") +
-                                        "    \"tags\": [\"home\", \"green\"]" + System.getProperty("line.separator") +
+                                .withBody("{" + NEW_LINE +
+                                        "    \"id\": 1," + NEW_LINE +
+                                        "    \"extra ignored field\": \"some value\"," + NEW_LINE +
+                                        "    \"name\": \"A green door\"," + NEW_LINE +
+                                        "    \"price\": 12.50," + NEW_LINE +
+                                        "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
                                         "}"),
                         headersToIgnore)
         );
@@ -1032,12 +1033,12 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withSecure(true)
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
-                                .withBody("{" + System.getProperty("line.separator") +
-                                        "    \"id\": 1," + System.getProperty("line.separator") +
-                                        "    \"extra ignored array\": [\"one\", \"two\"]," + System.getProperty("line.separator") +
-                                        "    \"name\": \"A green door\"," + System.getProperty("line.separator") +
-                                        "    \"price\": 12.50," + System.getProperty("line.separator") +
-                                        "    \"tags\": [\"home\", \"green\"]" + System.getProperty("line.separator") +
+                                .withBody("{" + NEW_LINE +
+                                        "    \"id\": 1," + NEW_LINE +
+                                        "    \"extra ignored array\": [\"one\", \"two\"]," + NEW_LINE +
+                                        "    \"name\": \"A green door\"," + NEW_LINE +
+                                        "    \"price\": 12.50," + NEW_LINE +
+                                        "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
                                         "}"),
                         headersToIgnore)
         );
@@ -1049,11 +1050,11 @@ public abstract class AbstractClientServerIntegrationTest {
         mockServerClient
                 .when(
                         request()
-                                .withBody(json("{" + System.getProperty("line.separator") +
-                                        "    \"ταυτότητα\": 1," + System.getProperty("line.separator") +
-                                        "    \"όνομα\": \"μια πράσινη πόρτα\"," + System.getProperty("line.separator") +
-                                        "    \"τιμή\": 12.50," + System.getProperty("line.separator") +
-                                        "    \"ετικέτες\": [\"σπίτι\", \"πράσινος\"]" + System.getProperty("line.separator") +
+                                .withBody(json("{" + NEW_LINE +
+                                        "    \"ταυτότητα\": 1," + NEW_LINE +
+                                        "    \"όνομα\": \"μια πράσινη πόρτα\"," + NEW_LINE +
+                                        "    \"τιμή\": 12.50," + NEW_LINE +
+                                        "    \"ετικέτες\": [\"σπίτι\", \"πράσινος\"]" + NEW_LINE +
                                         "}", Charsets.UTF_16, MatchType.ONLY_MATCHING_FIELDS)),
                         exactly(2)
                 )
@@ -1073,12 +1074,12 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
-                                .withBody(json("{" + System.getProperty("line.separator") +
-                                        "    \"ταυτότητα\": 1," + System.getProperty("line.separator") +
-                                        "    \"επιπλέον αγνοούνται τομέα\": \"κάποια αξία\"," + System.getProperty("line.separator") +
-                                        "    \"όνομα\": \"μια πράσινη πόρτα\"," + System.getProperty("line.separator") +
-                                        "    \"τιμή\": 12.50," + System.getProperty("line.separator") +
-                                        "    \"ετικέτες\": [\"σπίτι\", \"πράσινος\"]" + System.getProperty("line.separator") +
+                                .withBody(json("{" + NEW_LINE +
+                                        "    \"ταυτότητα\": 1," + NEW_LINE +
+                                        "    \"επιπλέον αγνοούνται τομέα\": \"κάποια αξία\"," + NEW_LINE +
+                                        "    \"όνομα\": \"μια πράσινη πόρτα\"," + NEW_LINE +
+                                        "    \"τιμή\": 12.50," + NEW_LINE +
+                                        "    \"ετικέτες\": [\"σπίτι\", \"πράσινος\"]" + NEW_LINE +
                                         "}", Charsets.UTF_16, MatchType.ONLY_MATCHING_FIELDS)),
                         headersToIgnore)
         );
@@ -1092,12 +1093,12 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withSecure(true)
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
-                                .withBody(json("{" + System.getProperty("line.separator") +
-                                        "    \"ταυτότητα\": 1," + System.getProperty("line.separator") +
-                                        "    \"επιπλέον αγνοούνται σειρά\": [\"ένας\", \"δυο\"]," + System.getProperty("line.separator") +
-                                        "    \"όνομα\": \"μια πράσινη πόρτα\"," + System.getProperty("line.separator") +
-                                        "    \"τιμή\": 12.50," + System.getProperty("line.separator") +
-                                        "    \"ετικέτες\": [\"σπίτι\", \"πράσινος\"]" + System.getProperty("line.separator") +
+                                .withBody(json("{" + NEW_LINE +
+                                        "    \"ταυτότητα\": 1," + NEW_LINE +
+                                        "    \"επιπλέον αγνοούνται σειρά\": [\"ένας\", \"δυο\"]," + NEW_LINE +
+                                        "    \"όνομα\": \"μια πράσινη πόρτα\"," + NEW_LINE +
+                                        "    \"τιμή\": 12.50," + NEW_LINE +
+                                        "    \"ετικέτες\": [\"σπίτι\", \"πράσινος\"]" + NEW_LINE +
                                         "}", Charsets.UTF_16, MatchType.ONLY_MATCHING_FIELDS)),
                         headersToIgnore)
         );
@@ -1109,11 +1110,11 @@ public abstract class AbstractClientServerIntegrationTest {
         mockServerClient
                 .when(
                         request()
-                                .withBody(json("{" + System.getProperty("line.separator") +
-                                        "    \"ταυτότητα\": 1," + System.getProperty("line.separator") +
-                                        "    \"όνομα\": \"μια πράσινη πόρτα\"," + System.getProperty("line.separator") +
-                                        "    \"τιμή\": 12.50," + System.getProperty("line.separator") +
-                                        "    \"ετικέτες\": [\"σπίτι\", \"πράσινος\"]" + System.getProperty("line.separator") +
+                                .withBody(json("{" + NEW_LINE +
+                                        "    \"ταυτότητα\": 1," + NEW_LINE +
+                                        "    \"όνομα\": \"μια πράσινη πόρτα\"," + NEW_LINE +
+                                        "    \"τιμή\": 12.50," + NEW_LINE +
+                                        "    \"ετικέτες\": [\"σπίτι\", \"πράσινος\"]" + NEW_LINE +
                                         "}", Charsets.UTF_16, MatchType.ONLY_MATCHING_FIELDS)),
                         exactly(2)
                 )
@@ -1134,12 +1135,12 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_16).toString())
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
-                                .withBody(json("{" + System.getProperty("line.separator") +
-                                        "    \"ταυτότητα\": 1," + System.getProperty("line.separator") +
-                                        "    \"επιπλέον αγνοούνται τομέα\": \"κάποια αξία\"," + System.getProperty("line.separator") +
-                                        "    \"όνομα\": \"μια πράσινη πόρτα\"," + System.getProperty("line.separator") +
-                                        "    \"τιμή\": 12.50," + System.getProperty("line.separator") +
-                                        "    \"ετικέτες\": [\"σπίτι\", \"πράσινος\"]" + System.getProperty("line.separator") +
+                                .withBody(json("{" + NEW_LINE +
+                                        "    \"ταυτότητα\": 1," + NEW_LINE +
+                                        "    \"επιπλέον αγνοούνται τομέα\": \"κάποια αξία\"," + NEW_LINE +
+                                        "    \"όνομα\": \"μια πράσινη πόρτα\"," + NEW_LINE +
+                                        "    \"τιμή\": 12.50," + NEW_LINE +
+                                        "    \"ετικέτες\": [\"σπίτι\", \"πράσινος\"]" + NEW_LINE +
                                         "}")),
                         headersToIgnore)
         );
@@ -1154,12 +1155,12 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_16).toString())
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
-                                .withBody(json("{" + System.getProperty("line.separator") +
-                                        "    \"ταυτότητα\": 1," + System.getProperty("line.separator") +
-                                        "    \"επιπλέον αγνοούνται σειρά\": [\"ένας\", \"δυο\"]," + System.getProperty("line.separator") +
-                                        "    \"όνομα\": \"μια πράσινη πόρτα\"," + System.getProperty("line.separator") +
-                                        "    \"τιμή\": 12.50," + System.getProperty("line.separator") +
-                                        "    \"ετικέτες\": [\"σπίτι\", \"πράσινος\"]" + System.getProperty("line.separator") +
+                                .withBody(json("{" + NEW_LINE +
+                                        "    \"ταυτότητα\": 1," + NEW_LINE +
+                                        "    \"επιπλέον αγνοούνται σειρά\": [\"ένας\", \"δυο\"]," + NEW_LINE +
+                                        "    \"όνομα\": \"μια πράσινη πόρτα\"," + NEW_LINE +
+                                        "    \"τιμή\": 12.50," + NEW_LINE +
+                                        "    \"ετικέτες\": [\"σπίτι\", \"πράσινος\"]" + NEW_LINE +
                                         "}")),
                         headersToIgnore)
         );
@@ -1171,11 +1172,11 @@ public abstract class AbstractClientServerIntegrationTest {
         mockServerClient
                 .when(
                         request()
-                                .withBody(json("{" + System.getProperty("line.separator") +
-                                        "    \"id\": 1," + System.getProperty("line.separator") +
-                                        "    \"name\": \"A green door\"," + System.getProperty("line.separator") +
-                                        "    \"price\": 12.50," + System.getProperty("line.separator") +
-                                        "    \"tags\": [\"home\", \"green\"]" + System.getProperty("line.separator") +
+                                .withBody(json("{" + NEW_LINE +
+                                        "    \"id\": 1," + NEW_LINE +
+                                        "    \"name\": \"A green door\"," + NEW_LINE +
+                                        "    \"price\": 12.50," + NEW_LINE +
+                                        "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
                                         "}", MatchType.ONLY_MATCHING_FIELDS)),
                         exactly(2)
                 )
@@ -1192,12 +1193,12 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
-                                .withBody("{" + System.getProperty("line.separator") +
-                                        "    \"id\": 1," + System.getProperty("line.separator") +
-                                        "    \"extra field\": \"some value\"," + System.getProperty("line.separator") +
-                                        "    \"name\": \"A green door\"," + System.getProperty("line.separator") +
-                                        "    \"price\": 12.50," + System.getProperty("line.separator") +
-                                        "    \"tags\": [\"home\", \"green\"]" + System.getProperty("line.separator") +
+                                .withBody("{" + NEW_LINE +
+                                        "    \"id\": 1," + NEW_LINE +
+                                        "    \"extra field\": \"some value\"," + NEW_LINE +
+                                        "    \"name\": \"A green door\"," + NEW_LINE +
+                                        "    \"price\": 12.50," + NEW_LINE +
+                                        "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
                                         "}"),
                         headersToIgnore)
         );
@@ -1209,12 +1210,12 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withSecure(true)
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
-                                .withBody("{" + System.getProperty("line.separator") +
-                                        "    \"id\": 1," + System.getProperty("line.separator") +
-                                        "    \"extra field\": \"some value\"," + System.getProperty("line.separator") +
-                                        "    \"name\": \"A green door\"," + System.getProperty("line.separator") +
-                                        "    \"price\": 12.50," + System.getProperty("line.separator") +
-                                        "    \"tags\": [\"home\", \"green\"]" + System.getProperty("line.separator") +
+                                .withBody("{" + NEW_LINE +
+                                        "    \"id\": 1," + NEW_LINE +
+                                        "    \"extra field\": \"some value\"," + NEW_LINE +
+                                        "    \"name\": \"A green door\"," + NEW_LINE +
+                                        "    \"price\": 12.50," + NEW_LINE +
+                                        "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
                                         "}"),
                         headersToIgnore)
         );
@@ -1223,35 +1224,35 @@ public abstract class AbstractClientServerIntegrationTest {
     @Test
     public void shouldReturnResponseByMatchingBodyWithJsonSchema() {
         // when
-        mockServerClient.when(request().withBody(jsonSchema("{" + System.getProperty("line.separator") +
-                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + System.getProperty("line.separator") +
-                "    \"title\": \"Product\"," + System.getProperty("line.separator") +
-                "    \"description\": \"A product from Acme's catalog\"," + System.getProperty("line.separator") +
-                "    \"type\": \"object\"," + System.getProperty("line.separator") +
-                "    \"properties\": {" + System.getProperty("line.separator") +
-                "        \"id\": {" + System.getProperty("line.separator") +
-                "            \"description\": \"The unique identifier for a product\"," + System.getProperty("line.separator") +
-                "            \"type\": \"integer\"" + System.getProperty("line.separator") +
-                "        }," + System.getProperty("line.separator") +
-                "        \"name\": {" + System.getProperty("line.separator") +
-                "            \"description\": \"Name of the product\"," + System.getProperty("line.separator") +
-                "            \"type\": \"string\"" + System.getProperty("line.separator") +
-                "        }," + System.getProperty("line.separator") +
-                "        \"price\": {" + System.getProperty("line.separator") +
-                "            \"type\": \"number\"," + System.getProperty("line.separator") +
-                "            \"minimum\": 0," + System.getProperty("line.separator") +
-                "            \"exclusiveMinimum\": true" + System.getProperty("line.separator") +
-                "        }," + System.getProperty("line.separator") +
-                "        \"tags\": {" + System.getProperty("line.separator") +
-                "            \"type\": \"array\"," + System.getProperty("line.separator") +
-                "            \"items\": {" + System.getProperty("line.separator") +
-                "                \"type\": \"string\"" + System.getProperty("line.separator") +
-                "            }," + System.getProperty("line.separator") +
-                "            \"minItems\": 1," + System.getProperty("line.separator") +
-                "            \"uniqueItems\": true" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"required\": [\"id\", \"name\", \"price\"]" + System.getProperty("line.separator") +
+        mockServerClient.when(request().withBody(jsonSchema("{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"description\": \"A product from Acme's catalog\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"description\": \"The unique identifier for a product\"," + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"name\": {" + NEW_LINE +
+                "            \"description\": \"Name of the product\"," + NEW_LINE +
+                "            \"type\": \"string\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"price\": {" + NEW_LINE +
+                "            \"type\": \"number\"," + NEW_LINE +
+                "            \"minimum\": 0," + NEW_LINE +
+                "            \"exclusiveMinimum\": true" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"tags\": {" + NEW_LINE +
+                "            \"type\": \"array\"," + NEW_LINE +
+                "            \"items\": {" + NEW_LINE +
+                "                \"type\": \"string\"" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            \"minItems\": 1," + NEW_LINE +
+                "            \"uniqueItems\": true" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
                 "}")), exactly(2)).respond(response().withBody("some_body"));
 
         // then
@@ -1264,11 +1265,11 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
-                                .withBody("{" + System.getProperty("line.separator") +
-                                        "    \"id\": 1," + System.getProperty("line.separator") +
-                                        "    \"name\": \"A green door\"," + System.getProperty("line.separator") +
-                                        "    \"price\": 12.50," + System.getProperty("line.separator") +
-                                        "    \"tags\": [\"home\", \"green\"]" + System.getProperty("line.separator") +
+                                .withBody("{" + NEW_LINE +
+                                        "    \"id\": 1," + NEW_LINE +
+                                        "    \"name\": \"A green door\"," + NEW_LINE +
+                                        "    \"price\": 12.50," + NEW_LINE +
+                                        "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
                                         "}"),
                         headersToIgnore)
         );
@@ -1282,11 +1283,11 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withSecure(true)
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
-                                .withBody("{" + System.getProperty("line.separator") +
-                                        "    \"id\": 1," + System.getProperty("line.separator") +
-                                        "    \"name\": \"A green door\"," + System.getProperty("line.separator") +
-                                        "    \"price\": 12.50," + System.getProperty("line.separator") +
-                                        "    \"tags\": [\"home\", \"green\"]" + System.getProperty("line.separator") +
+                                .withBody("{" + NEW_LINE +
+                                        "    \"id\": 1," + NEW_LINE +
+                                        "    \"name\": \"A green door\"," + NEW_LINE +
+                                        "    \"price\": 12.50," + NEW_LINE +
+                                        "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
                                         "}"),
                         headersToIgnore)
         );
@@ -3021,11 +3022,11 @@ public abstract class AbstractClientServerIntegrationTest {
         mockServerClient
                 .when(
                         request()
-                                .withBody(Not.not(json("{" + System.getProperty("line.separator") +
-                                        "    \"id\": 1," + System.getProperty("line.separator") +
-                                        "    \"name\": \"A green door\"," + System.getProperty("line.separator") +
-                                        "    \"price\": 12.50," + System.getProperty("line.separator") +
-                                        "    \"tags\": [\"home\", \"green\"]" + System.getProperty("line.separator") +
+                                .withBody(Not.not(json("{" + NEW_LINE +
+                                        "    \"id\": 1," + NEW_LINE +
+                                        "    \"name\": \"A green door\"," + NEW_LINE +
+                                        "    \"price\": 12.50," + NEW_LINE +
+                                        "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
                                         "}"))),
                         exactly(2)
                 )
@@ -3044,12 +3045,12 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
-                                .withBody("{" + System.getProperty("line.separator") +
-                                        "    \"id\": 1," + System.getProperty("line.separator") +
-                                        "    \"extra_ignored_field\": \"some value\"," + System.getProperty("line.separator") +
-                                        "    \"name\": \"A green door\"," + System.getProperty("line.separator") +
-                                        "    \"price\": 12.50," + System.getProperty("line.separator") +
-                                        "    \"tags\": [\"home\", \"green\"]" + System.getProperty("line.separator") +
+                                .withBody("{" + NEW_LINE +
+                                        "    \"id\": 1," + NEW_LINE +
+                                        "    \"extra_ignored_field\": \"some value\"," + NEW_LINE +
+                                        "    \"name\": \"A green door\"," + NEW_LINE +
+                                        "    \"price\": 12.50," + NEW_LINE +
+                                        "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
                                         "}"),
                         headersToIgnore)
         );
@@ -3062,12 +3063,12 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withSecure(true)
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
-                                .withBody("{" + System.getProperty("line.separator") +
-                                        "    \"id\": 1," + System.getProperty("line.separator") +
-                                        "    \"extra_ignored_array\": [\"one\", \"two\"]," + System.getProperty("line.separator") +
-                                        "    \"name\": \"A green door\"," + System.getProperty("line.separator") +
-                                        "    \"price\": 12.50," + System.getProperty("line.separator") +
-                                        "    \"tags\": [\"home\", \"green\"]" + System.getProperty("line.separator") +
+                                .withBody("{" + NEW_LINE +
+                                        "    \"id\": 1," + NEW_LINE +
+                                        "    \"extra_ignored_array\": [\"one\", \"two\"]," + NEW_LINE +
+                                        "    \"name\": \"A green door\"," + NEW_LINE +
+                                        "    \"price\": 12.50," + NEW_LINE +
+                                        "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
                                         "}"),
                         headersToIgnore)
         );
@@ -3089,26 +3090,26 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
                                 .withBody(new StringBody("" +
-                                        "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + System.getProperty("line.separator") +
-                                        "<bookstore>" + System.getProperty("line.separator") +
-                                        "  <book category=\"COOKING\">" + System.getProperty("line.separator") +
-                                        "    <title lang=\"en\">Everyday Italian</title>" + System.getProperty("line.separator") +
-                                        "    <author>Giada De Laurentiis</author>" + System.getProperty("line.separator") +
-                                        "    <year>2005</year>" + System.getProperty("line.separator") +
-                                        "    <price>30.00</price>" + System.getProperty("line.separator") +
-                                        "  </book>" + System.getProperty("line.separator") +
-                                        "  <book category=\"CHILDREN\">" + System.getProperty("line.separator") +
-                                        "    <title lang=\"en\">Harry Potter</title>" + System.getProperty("line.separator") +
-                                        "    <author>J K. Rowling</author>" + System.getProperty("line.separator") +
-                                        "    <year>2005</year>" + System.getProperty("line.separator") +
-                                        "    <price>29.99</price>" + System.getProperty("line.separator") +
-                                        "  </book>" + System.getProperty("line.separator") +
-                                        "  <book category=\"WEB\">" + System.getProperty("line.separator") +
-                                        "    <title lang=\"en\">Learning XML</title>" + System.getProperty("line.separator") +
-                                        "    <author>Erik T. Ray</author>" + System.getProperty("line.separator") +
-                                        "    <year>2003</year>" + System.getProperty("line.separator") +
-                                        "    <price>31.95</price>" + System.getProperty("line.separator") +
-                                        "  </book>" + System.getProperty("line.separator") +
+                                        "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + NEW_LINE +
+                                        "<bookstore>" + NEW_LINE +
+                                        "  <book category=\"COOKING\">" + NEW_LINE +
+                                        "    <title lang=\"en\">Everyday Italian</title>" + NEW_LINE +
+                                        "    <author>Giada De Laurentiis</author>" + NEW_LINE +
+                                        "    <year>2005</year>" + NEW_LINE +
+                                        "    <price>30.00</price>" + NEW_LINE +
+                                        "  </book>" + NEW_LINE +
+                                        "  <book category=\"CHILDREN\">" + NEW_LINE +
+                                        "    <title lang=\"en\">Harry Potter</title>" + NEW_LINE +
+                                        "    <author>J K. Rowling</author>" + NEW_LINE +
+                                        "    <year>2005</year>" + NEW_LINE +
+                                        "    <price>29.99</price>" + NEW_LINE +
+                                        "  </book>" + NEW_LINE +
+                                        "  <book category=\"WEB\">" + NEW_LINE +
+                                        "    <title lang=\"en\">Learning XML</title>" + NEW_LINE +
+                                        "    <author>Erik T. Ray</author>" + NEW_LINE +
+                                        "    <year>2003</year>" + NEW_LINE +
+                                        "    <price>31.95</price>" + NEW_LINE +
+                                        "  </book>" + NEW_LINE +
                                         "</bookstore>")),
                         headersToIgnore)
         );
@@ -3122,26 +3123,26 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
                                 .withBody(new StringBody("" +
-                                        "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + System.getProperty("line.separator") +
-                                        "<bookstore>" + System.getProperty("line.separator") +
-                                        "  <book category=\"COOKING\">" + System.getProperty("line.separator") +
-                                        "    <title lang=\"en\">Everyday Italian</title>" + System.getProperty("line.separator") +
-                                        "    <author>Giada De Laurentiis</author>" + System.getProperty("line.separator") +
-                                        "    <year>2005</year>" + System.getProperty("line.separator") +
-                                        "    <price>30.00</price>" + System.getProperty("line.separator") +
-                                        "  </book>" + System.getProperty("line.separator") +
-                                        "  <book category=\"CHILDREN\">" + System.getProperty("line.separator") +
-                                        "    <title lang=\"en\">Harry Potter</title>" + System.getProperty("line.separator") +
-                                        "    <author>J K. Rowling</author>" + System.getProperty("line.separator") +
-                                        "    <year>2005</year>" + System.getProperty("line.separator") +
-                                        "    <price>29.99</price>" + System.getProperty("line.separator") +
-                                        "  </book>" + System.getProperty("line.separator") +
-                                        "  <book category=\"WEB\">" + System.getProperty("line.separator") +
-                                        "    <title lang=\"en\">Learning XML</title>" + System.getProperty("line.separator") +
-                                        "    <author>Erik T. Ray</author>" + System.getProperty("line.separator") +
-                                        "    <year>2003</year>" + System.getProperty("line.separator") +
-                                        "    <price>31.95</price>" + System.getProperty("line.separator") +
-                                        "  </book>" + System.getProperty("line.separator") +
+                                        "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + NEW_LINE +
+                                        "<bookstore>" + NEW_LINE +
+                                        "  <book category=\"COOKING\">" + NEW_LINE +
+                                        "    <title lang=\"en\">Everyday Italian</title>" + NEW_LINE +
+                                        "    <author>Giada De Laurentiis</author>" + NEW_LINE +
+                                        "    <year>2005</year>" + NEW_LINE +
+                                        "    <price>30.00</price>" + NEW_LINE +
+                                        "  </book>" + NEW_LINE +
+                                        "  <book category=\"CHILDREN\">" + NEW_LINE +
+                                        "    <title lang=\"en\">Harry Potter</title>" + NEW_LINE +
+                                        "    <author>J K. Rowling</author>" + NEW_LINE +
+                                        "    <year>2005</year>" + NEW_LINE +
+                                        "    <price>29.99</price>" + NEW_LINE +
+                                        "  </book>" + NEW_LINE +
+                                        "  <book category=\"WEB\">" + NEW_LINE +
+                                        "    <title lang=\"en\">Learning XML</title>" + NEW_LINE +
+                                        "    <author>Erik T. Ray</author>" + NEW_LINE +
+                                        "    <year>2003</year>" + NEW_LINE +
+                                        "    <price>31.95</price>" + NEW_LINE +
+                                        "  </book>" + NEW_LINE +
                                         "</bookstore>")),
                         headersToIgnore)
         );
@@ -3151,14 +3152,14 @@ public abstract class AbstractClientServerIntegrationTest {
     public void shouldNotReturnResponseForNonMatchingXmlBody() {
         // when
         mockServerClient.when(request().withBody(xml("" +
-                "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + System.getProperty("line.separator") +
-                "<bookstore>" + System.getProperty("line.separator") +
-                "  <book category=\"COOKING\" nationality=\"ITALIAN\">" + System.getProperty("line.separator") +
-                "    <title lang=\"en\">Everyday Italian</title>" + System.getProperty("line.separator") +
-                "    <author>Giada De Laurentiis</author>" + System.getProperty("line.separator") +
-                "    <year>2005</year>" + System.getProperty("line.separator") +
-                "    <price>30.00</price>" + System.getProperty("line.separator") +
-                "  </book>" + System.getProperty("line.separator") +
+                "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + NEW_LINE +
+                "<bookstore>" + NEW_LINE +
+                "  <book category=\"COOKING\" nationality=\"ITALIAN\">" + NEW_LINE +
+                "    <title lang=\"en\">Everyday Italian</title>" + NEW_LINE +
+                "    <author>Giada De Laurentiis</author>" + NEW_LINE +
+                "    <year>2005</year>" + NEW_LINE +
+                "    <price>30.00</price>" + NEW_LINE +
+                "  </book>" + NEW_LINE +
                 "</bookstore>")), exactly(2)).respond(response().withBody("some_body"));
 
         // then
@@ -3172,14 +3173,14 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
                                 .withBody(new StringBody("" +
-                                        "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + System.getProperty("line.separator") +
-                                        "<bookstore>" + System.getProperty("line.separator") +
-                                        "  <book category=\"COOKING\">" + System.getProperty("line.separator") +
-                                        "    <title lang=\"en\">Everyday Italian</title>" + System.getProperty("line.separator") +
-                                        "    <author>Giada De Laurentiis</author>" + System.getProperty("line.separator") +
-                                        "    <year>2005</year>" + System.getProperty("line.separator") +
-                                        "    <price>30.00</price>" + System.getProperty("line.separator") +
-                                        "  </book>" + System.getProperty("line.separator") +
+                                        "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + NEW_LINE +
+                                        "<bookstore>" + NEW_LINE +
+                                        "  <book category=\"COOKING\">" + NEW_LINE +
+                                        "    <title lang=\"en\">Everyday Italian</title>" + NEW_LINE +
+                                        "    <author>Giada De Laurentiis</author>" + NEW_LINE +
+                                        "    <year>2005</year>" + NEW_LINE +
+                                        "    <price>30.00</price>" + NEW_LINE +
+                                        "  </book>" + NEW_LINE +
                                         "</bookstore>")),
                         headersToIgnore)
         );
@@ -3193,14 +3194,14 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
                                 .withBody(new StringBody("" +
-                                        "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + System.getProperty("line.separator") +
-                                        "<bookstore>" + System.getProperty("line.separator") +
-                                        "  <book category=\"COOKING\">" + System.getProperty("line.separator") +
-                                        "    <title lang=\"en\">Everyday Italian</title>" + System.getProperty("line.separator") +
-                                        "    <author>Giada De Laurentiis</author>" + System.getProperty("line.separator") +
-                                        "    <year>2005</year>" + System.getProperty("line.separator") +
-                                        "    <price>30.00</price>" + System.getProperty("line.separator") +
-                                        "  </book>" + System.getProperty("line.separator") +
+                                        "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + NEW_LINE +
+                                        "<bookstore>" + NEW_LINE +
+                                        "  <book category=\"COOKING\">" + NEW_LINE +
+                                        "    <title lang=\"en\">Everyday Italian</title>" + NEW_LINE +
+                                        "    <author>Giada De Laurentiis</author>" + NEW_LINE +
+                                        "    <year>2005</year>" + NEW_LINE +
+                                        "    <price>30.00</price>" + NEW_LINE +
+                                        "  </book>" + NEW_LINE +
                                         "</bookstore>")),
                         headersToIgnore)
         );
@@ -3209,11 +3210,11 @@ public abstract class AbstractClientServerIntegrationTest {
     @Test
     public void shouldNotReturnResponseForNonMatchingJsonBody() {
         // when
-        mockServerClient.when(request().withBody(json("{" + System.getProperty("line.separator") +
-                "    \"id\": 1," + System.getProperty("line.separator") +
-                "    \"name\": \"A green door\"," + System.getProperty("line.separator") +
-                "    \"price\": 12.50," + System.getProperty("line.separator") +
-                "    \"tags\": [\"home\", \"green\"]" + System.getProperty("line.separator") +
+        mockServerClient.when(request().withBody(json("{" + NEW_LINE +
+                "    \"id\": 1," + NEW_LINE +
+                "    \"name\": \"A green door\"," + NEW_LINE +
+                "    \"price\": 12.50," + NEW_LINE +
+                "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
                 "}")), exactly(2)).respond(response().withBody("some_body"));
 
         // then
@@ -3225,11 +3226,11 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
-                                .withBody("{" + System.getProperty("line.separator") +
-                                        "    \"id\": 1," + System.getProperty("line.separator") +
-                                        "    \"name\": \"---- XXXX WRONG VALUE XXXX ----\"," + System.getProperty("line.separator") +
-                                        "    \"price\": 12.50," + System.getProperty("line.separator") +
-                                        "    \"tags\": [\"home\", \"green\"]" + System.getProperty("line.separator") +
+                                .withBody("{" + NEW_LINE +
+                                        "    \"id\": 1," + NEW_LINE +
+                                        "    \"name\": \"---- XXXX WRONG VALUE XXXX ----\"," + NEW_LINE +
+                                        "    \"price\": 12.50," + NEW_LINE +
+                                        "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
                                         "}"),
                         headersToIgnore)
         );
@@ -3242,11 +3243,11 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withSecure(true)
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
-                                .withBody("{" + System.getProperty("line.separator") +
-                                        "    \"id\": 1," + System.getProperty("line.separator") +
-                                        "    \"name\": \"---- XXXX WRONG VALUE XXXX ----\"," + System.getProperty("line.separator") +
-                                        "    \"price\": 12.50," + System.getProperty("line.separator") +
-                                        "    \"tags\": [\"home\", \"green\"]" + System.getProperty("line.separator") +
+                                .withBody("{" + NEW_LINE +
+                                        "    \"id\": 1," + NEW_LINE +
+                                        "    \"name\": \"---- XXXX WRONG VALUE XXXX ----\"," + NEW_LINE +
+                                        "    \"price\": 12.50," + NEW_LINE +
+                                        "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
                                         "}"),
                         headersToIgnore)
         );
@@ -3258,11 +3259,11 @@ public abstract class AbstractClientServerIntegrationTest {
         mockServerClient
                 .when(
                         request()
-                                .withBody(json("{" + System.getProperty("line.separator") +
-                                        "    \"id\": 1," + System.getProperty("line.separator") +
-                                        "    \"name\": \"A green door\"," + System.getProperty("line.separator") +
-                                        "    \"price\": 12.50," + System.getProperty("line.separator") +
-                                        "    \"tags\": [\"home\", \"green\"]" + System.getProperty("line.separator") +
+                                .withBody(json("{" + NEW_LINE +
+                                        "    \"id\": 1," + NEW_LINE +
+                                        "    \"name\": \"A green door\"," + NEW_LINE +
+                                        "    \"price\": 12.50," + NEW_LINE +
+                                        "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
                                         "}", MatchType.STRICT)),
                         exactly(2))
                 .respond(
@@ -3279,12 +3280,12 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
-                                .withBody("{" + System.getProperty("line.separator") +
-                                        "    \"id\": 1," + System.getProperty("line.separator") +
-                                        "    \"extra field\": \"some value\"," + System.getProperty("line.separator") +
-                                        "    \"name\": \"A green door\"," + System.getProperty("line.separator") +
-                                        "    \"price\": 12.50," + System.getProperty("line.separator") +
-                                        "    \"tags\": [\"home\", \"green\"]" + System.getProperty("line.separator") +
+                                .withBody("{" + NEW_LINE +
+                                        "    \"id\": 1," + NEW_LINE +
+                                        "    \"extra field\": \"some value\"," + NEW_LINE +
+                                        "    \"name\": \"A green door\"," + NEW_LINE +
+                                        "    \"price\": 12.50," + NEW_LINE +
+                                        "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
                                         "}"),
                         headersToIgnore)
         );
@@ -3297,12 +3298,12 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withSecure(true)
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
-                                .withBody("{" + System.getProperty("line.separator") +
-                                        "    \"id\": 1," + System.getProperty("line.separator") +
-                                        "    \"extra field\": \"some value\"," + System.getProperty("line.separator") +
-                                        "    \"name\": \"A green door\"," + System.getProperty("line.separator") +
-                                        "    \"price\": 12.50," + System.getProperty("line.separator") +
-                                        "    \"tags\": [\"home\", \"green\"]" + System.getProperty("line.separator") +
+                                .withBody("{" + NEW_LINE +
+                                        "    \"id\": 1," + NEW_LINE +
+                                        "    \"extra field\": \"some value\"," + NEW_LINE +
+                                        "    \"name\": \"A green door\"," + NEW_LINE +
+                                        "    \"price\": 12.50," + NEW_LINE +
+                                        "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
                                         "}"),
                         headersToIgnore)
         );
@@ -3311,35 +3312,35 @@ public abstract class AbstractClientServerIntegrationTest {
     @Test
     public void shouldNotReturnResponseForNonMatchingJsonSchema() {
         // when
-        mockServerClient.when(request().withBody(jsonSchema("{" + System.getProperty("line.separator") +
-                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + System.getProperty("line.separator") +
-                "    \"title\": \"Product\"," + System.getProperty("line.separator") +
-                "    \"description\": \"A product from Acme's catalog\"," + System.getProperty("line.separator") +
-                "    \"type\": \"object\"," + System.getProperty("line.separator") +
-                "    \"properties\": {" + System.getProperty("line.separator") +
-                "        \"id\": {" + System.getProperty("line.separator") +
-                "            \"description\": \"The unique identifier for a product\"," + System.getProperty("line.separator") +
-                "            \"type\": \"integer\"" + System.getProperty("line.separator") +
-                "        }," + System.getProperty("line.separator") +
-                "        \"name\": {" + System.getProperty("line.separator") +
-                "            \"description\": \"Name of the product\"," + System.getProperty("line.separator") +
-                "            \"type\": \"string\"" + System.getProperty("line.separator") +
-                "        }," + System.getProperty("line.separator") +
-                "        \"price\": {" + System.getProperty("line.separator") +
-                "            \"type\": \"number\"," + System.getProperty("line.separator") +
-                "            \"minimum\": 0," + System.getProperty("line.separator") +
-                "            \"exclusiveMinimum\": true" + System.getProperty("line.separator") +
-                "        }," + System.getProperty("line.separator") +
-                "        \"tags\": {" + System.getProperty("line.separator") +
-                "            \"type\": \"array\"," + System.getProperty("line.separator") +
-                "            \"items\": {" + System.getProperty("line.separator") +
-                "                \"type\": \"string\"" + System.getProperty("line.separator") +
-                "            }," + System.getProperty("line.separator") +
-                "            \"minItems\": 1," + System.getProperty("line.separator") +
-                "            \"uniqueItems\": true" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"required\": [\"id\", \"name\", \"price\"]" + System.getProperty("line.separator") +
+        mockServerClient.when(request().withBody(jsonSchema("{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"description\": \"A product from Acme's catalog\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"description\": \"The unique identifier for a product\"," + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"name\": {" + NEW_LINE +
+                "            \"description\": \"Name of the product\"," + NEW_LINE +
+                "            \"type\": \"string\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"price\": {" + NEW_LINE +
+                "            \"type\": \"number\"," + NEW_LINE +
+                "            \"minimum\": 0," + NEW_LINE +
+                "            \"exclusiveMinimum\": true" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"tags\": {" + NEW_LINE +
+                "            \"type\": \"array\"," + NEW_LINE +
+                "            \"items\": {" + NEW_LINE +
+                "                \"type\": \"string\"" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            \"minItems\": 1," + NEW_LINE +
+                "            \"uniqueItems\": true" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
                 "}")), exactly(2)).respond(response().withBody("some_body"));
 
         // then
@@ -3351,11 +3352,11 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
-                                .withBody("{" + System.getProperty("line.separator") +
-                                        "    \"id\": 1," + System.getProperty("line.separator") +
-                                        "    \"wrong field name\": \"A green door\"," + System.getProperty("line.separator") +
-                                        "    \"price\": 12.50," + System.getProperty("line.separator") +
-                                        "    \"tags\": [\"home\", \"green\"]" + System.getProperty("line.separator") +
+                                .withBody("{" + NEW_LINE +
+                                        "    \"id\": 1," + NEW_LINE +
+                                        "    \"wrong field name\": \"A green door\"," + NEW_LINE +
+                                        "    \"price\": 12.50," + NEW_LINE +
+                                        "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
                                         "}"),
                         headersToIgnore)
         );
@@ -3368,11 +3369,11 @@ public abstract class AbstractClientServerIntegrationTest {
                                 .withSecure(true)
                                 .withPath(calculatePath("some_path"))
                                 .withMethod("POST")
-                                .withBody("{" + System.getProperty("line.separator") +
-                                        "    \"id\": 1," + System.getProperty("line.separator") +
-                                        "    \"name\": \"A green door\"," + System.getProperty("line.separator") +
-                                        "    \"wrong field name\": 12.50," + System.getProperty("line.separator") +
-                                        "    \"tags\": [\"home\", \"green\"]" + System.getProperty("line.separator") +
+                                .withBody("{" + NEW_LINE +
+                                        "    \"id\": 1," + NEW_LINE +
+                                        "    \"name\": \"A green door\"," + NEW_LINE +
+                                        "    \"wrong field name\": 12.50," + NEW_LINE +
+                                        "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
                                         "}"),
                         headersToIgnore)
         );
@@ -4357,11 +4358,11 @@ public abstract class AbstractClientServerIntegrationTest {
                     .withPath(calculatePath("some_path")), VerificationTimes.atLeast(2));
             fail();
         } catch (AssertionError ae) {
-            assertThat(ae.getMessage(), startsWith("Request not found at least 2 times, expected:<{" + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path") + "\"" + System.getProperty("line.separator") +
-                    "}> but was:<{" + System.getProperty("line.separator") +
-                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path") + "\"," + System.getProperty("line.separator")));
+            assertThat(ae.getMessage(), startsWith("Request not found at least 2 times, expected:<{" + NEW_LINE +
+                    "  \"path\" : \"" + calculatePath("some_path") + "\"" + NEW_LINE +
+                    "}> but was:<{" + NEW_LINE +
+                    "  \"method\" : \"GET\"," + NEW_LINE +
+                    "  \"path\" : \"" + calculatePath("some_path") + "\"," + NEW_LINE));
         }
     }
 
@@ -4385,11 +4386,11 @@ public abstract class AbstractClientServerIntegrationTest {
                     .withPath(calculatePath("some_path")), VerificationTimes.exactly(0));
             fail();
         } catch (AssertionError ae) {
-            assertThat(ae.getMessage(), startsWith("Request not found exactly 0 times, expected:<{" + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path") + "\"" + System.getProperty("line.separator") +
-                    "}> but was:<{" + System.getProperty("line.separator") +
-                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path") + "\"," + System.getProperty("line.separator")));
+            assertThat(ae.getMessage(), startsWith("Request not found exactly 0 times, expected:<{" + NEW_LINE +
+                    "  \"path\" : \"" + calculatePath("some_path") + "\"" + NEW_LINE +
+                    "}> but was:<{" + NEW_LINE +
+                    "  \"method\" : \"GET\"," + NEW_LINE +
+                    "  \"path\" : \"" + calculatePath("some_path") + "\"," + NEW_LINE));
         }
     }
 
@@ -4413,11 +4414,11 @@ public abstract class AbstractClientServerIntegrationTest {
                     .withPath(calculatePath("some_other_path")), VerificationTimes.exactly(2));
             fail();
         } catch (AssertionError ae) {
-            assertThat(ae.getMessage(), startsWith("Request not found exactly 2 times, expected:<{" + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_other_path") + "\"" + System.getProperty("line.separator") +
-                    "}> but was:<{" + System.getProperty("line.separator") +
-                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path") + "\"," + System.getProperty("line.separator")));
+            assertThat(ae.getMessage(), startsWith("Request not found exactly 2 times, expected:<{" + NEW_LINE +
+                    "  \"path\" : \"" + calculatePath("some_other_path") + "\"" + NEW_LINE +
+                    "}> but was:<{" + NEW_LINE +
+                    "  \"method\" : \"GET\"," + NEW_LINE +
+                    "  \"path\" : \"" + calculatePath("some_path") + "\"," + NEW_LINE));
         }
     }
 
@@ -4449,9 +4450,9 @@ public abstract class AbstractClientServerIntegrationTest {
             mockServerClient.verifyZeroInteractions();
             fail();
         } catch (AssertionError ae) {
-            assertThat(ae.getMessage(), startsWith("Request not found exactly 0 times, expected:<{ }> but was:<{" + System.getProperty("line.separator") +
-                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path") + "\"," + System.getProperty("line.separator")));
+            assertThat(ae.getMessage(), startsWith("Request not found exactly 0 times, expected:<{ }> but was:<{" + NEW_LINE +
+                    "  \"method\" : \"GET\"," + NEW_LINE +
+                    "  \"path\" : \"" + calculatePath("some_path") + "\"," + NEW_LINE));
         }
     }
 
@@ -4480,12 +4481,12 @@ public abstract class AbstractClientServerIntegrationTest {
             );
             fail();
         } catch (AssertionError ae) {
-            assertThat(ae.getMessage(), startsWith("Request not found at least once, expected:<{" + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path") + "\"," + System.getProperty("line.separator") +
-                    "  \"secure\" : true" + System.getProperty("line.separator") +
-                    "}> but was:<{" + System.getProperty("line.separator") +
-                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path") + "\"," + System.getProperty("line.separator")));
+            assertThat(ae.getMessage(), startsWith("Request not found at least once, expected:<{" + NEW_LINE +
+                    "  \"path\" : \"" + calculatePath("some_path") + "\"," + NEW_LINE +
+                    "  \"secure\" : true" + NEW_LINE +
+                    "}> but was:<{" + NEW_LINE +
+                    "  \"method\" : \"GET\"," + NEW_LINE +
+                    "  \"path\" : \"" + calculatePath("some_path") + "\"," + NEW_LINE));
         }
 
         // - in https
@@ -4508,12 +4509,12 @@ public abstract class AbstractClientServerIntegrationTest {
             );
             fail();
         } catch (AssertionError ae) {
-            assertThat(ae.getMessage(), startsWith("Request not found at least once, expected:<{" + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_secure_path") + "\"," + System.getProperty("line.separator") +
-                    "  \"secure\" : false" + System.getProperty("line.separator") +
-                    "}> but was:<[ {" + System.getProperty("line.separator") +
-                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path") + "\"," + System.getProperty("line.separator")));
+            assertThat(ae.getMessage(), startsWith("Request not found at least once, expected:<{" + NEW_LINE +
+                    "  \"path\" : \"" + calculatePath("some_secure_path") + "\"," + NEW_LINE +
+                    "  \"secure\" : false" + NEW_LINE +
+                    "}> but was:<[ {" + NEW_LINE +
+                    "  \"method\" : \"GET\"," + NEW_LINE +
+                    "  \"path\" : \"" + calculatePath("some_path") + "\"," + NEW_LINE));
         }
 
     }
@@ -4702,35 +4703,35 @@ public abstract class AbstractClientServerIntegrationTest {
             mockServerClient.verify(request(calculatePath("some_path_two")), request(calculatePath("some_path_one")));
             fail();
         } catch (AssertionError ae) {
-            assertThat(ae.getMessage(), startsWith("Request sequence not found, expected:<[ {" + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path_two") + "\"" + System.getProperty("line.separator") +
-                    "}, {" + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path_one") + "\"" + System.getProperty("line.separator") +
-                    "} ]> but was:<[ {" + System.getProperty("line.separator") +
-                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path_one") + "\"," + System.getProperty("line.separator")));
+            assertThat(ae.getMessage(), startsWith("Request sequence not found, expected:<[ {" + NEW_LINE +
+                    "  \"path\" : \"" + calculatePath("some_path_two") + "\"" + NEW_LINE +
+                    "}, {" + NEW_LINE +
+                    "  \"path\" : \"" + calculatePath("some_path_one") + "\"" + NEW_LINE +
+                    "} ]> but was:<[ {" + NEW_LINE +
+                    "  \"method\" : \"GET\"," + NEW_LINE +
+                    "  \"path\" : \"" + calculatePath("some_path_one") + "\"," + NEW_LINE));
         }
         try {
             mockServerClient.verify(request(calculatePath("some_path_three")), request(calculatePath("some_path_two")));
             fail();
         } catch (AssertionError ae) {
-            assertThat(ae.getMessage(), startsWith("Request sequence not found, expected:<[ {" + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path_three") + "\"" + System.getProperty("line.separator") +
-                    "}, {" + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path_two") + "\"" + System.getProperty("line.separator") +
-                    "} ]> but was:<[ {" + System.getProperty("line.separator") +
-                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path_one") + "\"," + System.getProperty("line.separator")));
+            assertThat(ae.getMessage(), startsWith("Request sequence not found, expected:<[ {" + NEW_LINE +
+                    "  \"path\" : \"" + calculatePath("some_path_three") + "\"" + NEW_LINE +
+                    "}, {" + NEW_LINE +
+                    "  \"path\" : \"" + calculatePath("some_path_two") + "\"" + NEW_LINE +
+                    "} ]> but was:<[ {" + NEW_LINE +
+                    "  \"method\" : \"GET\"," + NEW_LINE +
+                    "  \"path\" : \"" + calculatePath("some_path_one") + "\"," + NEW_LINE));
         }
         try {
             mockServerClient.verify(request(calculatePath("some_path_four")));
             fail();
         } catch (AssertionError ae) {
-            assertThat(ae.getMessage(), startsWith("Request sequence not found, expected:<[ {" + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path_four") + "\"" + System.getProperty("line.separator") +
-                    "} ]> but was:<[ {" + System.getProperty("line.separator") +
-                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + calculatePath("some_path_one") + "\"," + System.getProperty("line.separator")));
+            assertThat(ae.getMessage(), startsWith("Request sequence not found, expected:<[ {" + NEW_LINE +
+                    "  \"path\" : \"" + calculatePath("some_path_four") + "\"" + NEW_LINE +
+                    "} ]> but was:<[ {" + NEW_LINE +
+                    "  \"method\" : \"GET\"," + NEW_LINE +
+                    "  \"path\" : \"" + calculatePath("some_path_one") + "\"," + NEW_LINE));
         }
     }
 
@@ -5079,26 +5080,26 @@ public abstract class AbstractClientServerIntegrationTest {
 
         // and
         StringBody xmlBody = new StringBody("" +
-                "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + System.getProperty("line.separator") +
-                "<bookstore>" + System.getProperty("line.separator") +
-                "  <book category=\"COOKING\">" + System.getProperty("line.separator") +
-                "    <title lang=\"en\">Everyday Italian</title>" + System.getProperty("line.separator") +
-                "    <author>Giada De Laurentiis</author>" + System.getProperty("line.separator") +
-                "    <year>2005</year>" + System.getProperty("line.separator") +
-                "    <price>30.00</price>" + System.getProperty("line.separator") +
-                "  </book>" + System.getProperty("line.separator") +
-                "  <book category=\"CHILDREN\">" + System.getProperty("line.separator") +
-                "    <title lang=\"en\">Harry Potter</title>" + System.getProperty("line.separator") +
-                "    <author>J K. Rowling</author>" + System.getProperty("line.separator") +
-                "    <year>2006</year>" + System.getProperty("line.separator") +
-                "    <price>29.99</price>" + System.getProperty("line.separator") +
-                "  </book>" + System.getProperty("line.separator") +
-                "  <book category=\"WEB\">" + System.getProperty("line.separator") +
-                "    <title lang=\"en\">Learning XML</title>" + System.getProperty("line.separator") +
-                "    <author>Erik T. Ray</author>" + System.getProperty("line.separator") +
-                "    <year>2003</year>" + System.getProperty("line.separator") +
-                "    <price>31.95</price>" + System.getProperty("line.separator") +
-                "  </book>" + System.getProperty("line.separator") +
+                "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + NEW_LINE +
+                "<bookstore>" + NEW_LINE +
+                "  <book category=\"COOKING\">" + NEW_LINE +
+                "    <title lang=\"en\">Everyday Italian</title>" + NEW_LINE +
+                "    <author>Giada De Laurentiis</author>" + NEW_LINE +
+                "    <year>2005</year>" + NEW_LINE +
+                "    <price>30.00</price>" + NEW_LINE +
+                "  </book>" + NEW_LINE +
+                "  <book category=\"CHILDREN\">" + NEW_LINE +
+                "    <title lang=\"en\">Harry Potter</title>" + NEW_LINE +
+                "    <author>J K. Rowling</author>" + NEW_LINE +
+                "    <year>2006</year>" + NEW_LINE +
+                "    <price>29.99</price>" + NEW_LINE +
+                "  </book>" + NEW_LINE +
+                "  <book category=\"WEB\">" + NEW_LINE +
+                "    <title lang=\"en\">Learning XML</title>" + NEW_LINE +
+                "    <author>Erik T. Ray</author>" + NEW_LINE +
+                "    <year>2003</year>" + NEW_LINE +
+                "    <price>31.95</price>" + NEW_LINE +
+                "  </book>" + NEW_LINE +
                 "</bookstore>");
 
         // then
@@ -5159,65 +5160,65 @@ public abstract class AbstractClientServerIntegrationTest {
     @Test
     public void shouldClearExpectationsWithJsonSchemaBody() {
         // given
-        JsonSchemaBody jsonSchemaBodyOne = jsonSchema("{" + System.getProperty("line.separator") +
-                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + System.getProperty("line.separator") +
-                "    \"title\": \"Product\"," + System.getProperty("line.separator") +
-                "    \"description\": \"A product from Acme's catalog\"," + System.getProperty("line.separator") +
-                "    \"type\": \"object\"," + System.getProperty("line.separator") +
-                "    \"properties\": {" + System.getProperty("line.separator") +
-                "        \"id\": {" + System.getProperty("line.separator") +
-                "            \"description\": \"The unique identifier for a product\"," + System.getProperty("line.separator") +
-                "            \"type\": \"integer\"" + System.getProperty("line.separator") +
-                "        }," + System.getProperty("line.separator") +
-                "        \"name\": {" + System.getProperty("line.separator") +
-                "            \"description\": \"Name of the product\"," + System.getProperty("line.separator") +
-                "            \"type\": \"string\"" + System.getProperty("line.separator") +
-                "        }," + System.getProperty("line.separator") +
-                "        \"price\": {" + System.getProperty("line.separator") +
-                "            \"type\": \"number\"," + System.getProperty("line.separator") +
-                "            \"minimum\": 0," + System.getProperty("line.separator") +
-                "            \"exclusiveMinimum\": true" + System.getProperty("line.separator") +
-                "        }," + System.getProperty("line.separator") +
-                "        \"tags\": {" + System.getProperty("line.separator") +
-                "            \"type\": \"array\"," + System.getProperty("line.separator") +
-                "            \"items\": {" + System.getProperty("line.separator") +
-                "                \"type\": \"string\"" + System.getProperty("line.separator") +
-                "            }," + System.getProperty("line.separator") +
-                "            \"minItems\": 1," + System.getProperty("line.separator") +
-                "            \"uniqueItems\": true" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"required\": [\"id\", \"name\", \"price\"]" + System.getProperty("line.separator") +
+        JsonSchemaBody jsonSchemaBodyOne = jsonSchema("{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"description\": \"A product from Acme's catalog\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"description\": \"The unique identifier for a product\"," + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"name\": {" + NEW_LINE +
+                "            \"description\": \"Name of the product\"," + NEW_LINE +
+                "            \"type\": \"string\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"price\": {" + NEW_LINE +
+                "            \"type\": \"number\"," + NEW_LINE +
+                "            \"minimum\": 0," + NEW_LINE +
+                "            \"exclusiveMinimum\": true" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"tags\": {" + NEW_LINE +
+                "            \"type\": \"array\"," + NEW_LINE +
+                "            \"items\": {" + NEW_LINE +
+                "                \"type\": \"string\"" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            \"minItems\": 1," + NEW_LINE +
+                "            \"uniqueItems\": true" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
                 "}");
-        JsonSchemaBody jsonSchemaBodyTwo = jsonSchema("{" + System.getProperty("line.separator") +
-                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + System.getProperty("line.separator") +
-                "    \"title\": \"Product\"," + System.getProperty("line.separator") +
-                "    \"description\": \"A product from Acme's catalog\"," + System.getProperty("line.separator") +
-                "    \"type\": \"object\"," + System.getProperty("line.separator") +
-                "    \"properties\": {" + System.getProperty("line.separator") +
-                "        \"id\": {" + System.getProperty("line.separator") +
-                "            \"description\": \"The unique identifier for a product\"," + System.getProperty("line.separator") +
-                "            \"type\": \"integer\"" + System.getProperty("line.separator") +
-                "        }," + System.getProperty("line.separator") +
-                "        \"name\": {" + System.getProperty("line.separator") +
-                "            \"description\": \"Name of the product\"," + System.getProperty("line.separator") +
-                "            \"type\": \"string\"" + System.getProperty("line.separator") +
-                "        }," + System.getProperty("line.separator") +
-                "        \"price\": {" + System.getProperty("line.separator") +
-                "            \"type\": \"number\"," + System.getProperty("line.separator") +
-                "            \"minimum\": 10," + System.getProperty("line.separator") +
-                "            \"exclusiveMinimum\": true" + System.getProperty("line.separator") +
-                "        }," + System.getProperty("line.separator") +
-                "        \"tags\": {" + System.getProperty("line.separator") +
-                "            \"type\": \"array\"," + System.getProperty("line.separator") +
-                "            \"items\": {" + System.getProperty("line.separator") +
-                "                \"type\": \"string\"" + System.getProperty("line.separator") +
-                "            }," + System.getProperty("line.separator") +
-                "            \"minItems\": 1," + System.getProperty("line.separator") +
-                "            \"uniqueItems\": true" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"required\": [\"id\", \"name\", \"price\"]" + System.getProperty("line.separator") +
+        JsonSchemaBody jsonSchemaBodyTwo = jsonSchema("{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"description\": \"A product from Acme's catalog\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"description\": \"The unique identifier for a product\"," + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"name\": {" + NEW_LINE +
+                "            \"description\": \"Name of the product\"," + NEW_LINE +
+                "            \"type\": \"string\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"price\": {" + NEW_LINE +
+                "            \"type\": \"number\"," + NEW_LINE +
+                "            \"minimum\": 10," + NEW_LINE +
+                "            \"exclusiveMinimum\": true" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"tags\": {" + NEW_LINE +
+                "            \"type\": \"array\"," + NEW_LINE +
+                "            \"items\": {" + NEW_LINE +
+                "                \"type\": \"string\"" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            \"minItems\": 1," + NEW_LINE +
+                "            \"uniqueItems\": true" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
                 "}");
         mockServerClient
                 .when(
@@ -5245,11 +5246,11 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body1"),
                 makeRequest(
                         request()
-                                .withBody("{" + System.getProperty("line.separator") +
-                                        "    \"id\": 1," + System.getProperty("line.separator") +
-                                        "    \"name\": \"A green door\"," + System.getProperty("line.separator") +
-                                        "    \"price\": 12.50," + System.getProperty("line.separator") +
-                                        "    \"tags\": [\"home\", \"green\"]" + System.getProperty("line.separator") +
+                                .withBody("{" + NEW_LINE +
+                                        "    \"id\": 1," + NEW_LINE +
+                                        "    \"name\": \"A green door\"," + NEW_LINE +
+                                        "    \"price\": 12.50," + NEW_LINE +
+                                        "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
                                         "}"),
                         headersToIgnore)
         );
@@ -5282,11 +5283,11 @@ public abstract class AbstractClientServerIntegrationTest {
                         .withBody("some_body2"),
                 makeRequest(
                         request()
-                                .withBody("{" + System.getProperty("line.separator") +
-                                        "    \"id\": 1," + System.getProperty("line.separator") +
-                                        "    \"name\": \"A green door\"," + System.getProperty("line.separator") +
-                                        "    \"price\": 12.50," + System.getProperty("line.separator") +
-                                        "    \"tags\": [\"home\", \"green\"]" + System.getProperty("line.separator") +
+                                .withBody("{" + NEW_LINE +
+                                        "    \"id\": 1," + NEW_LINE +
+                                        "    \"name\": \"A green door\"," + NEW_LINE +
+                                        "    \"price\": 12.50," + NEW_LINE +
+                                        "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
                                         "}"),
                         headersToIgnore)
         );
@@ -5298,11 +5299,11 @@ public abstract class AbstractClientServerIntegrationTest {
                 makeRequest(
                         request()
                                 .withSecure(true)
-                                .withBody("{" + System.getProperty("line.separator") +
-                                        "    \"id\": 1," + System.getProperty("line.separator") +
-                                        "    \"name\": \"A green door\"," + System.getProperty("line.separator") +
-                                        "    \"price\": 12.50," + System.getProperty("line.separator") +
-                                        "    \"tags\": [\"home\", \"green\"]" + System.getProperty("line.separator") +
+                                .withBody("{" + NEW_LINE +
+                                        "    \"id\": 1," + NEW_LINE +
+                                        "    \"name\": \"A green door\"," + NEW_LINE +
+                                        "    \"price\": 12.50," + NEW_LINE +
+                                        "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
                                         "}"),
                         headersToIgnore)
         );
@@ -5594,6 +5595,6 @@ public abstract class AbstractClientServerIntegrationTest {
                 }
             }
         }
-        throw new RuntimeException("Failed to send request:" + System.getProperty("line.separator") + httpRequest);
+        throw new RuntimeException("Failed to send request:" + NEW_LINE + httpRequest);
     }
 }

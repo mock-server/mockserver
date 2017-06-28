@@ -23,6 +23,7 @@ import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInA
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
@@ -418,8 +419,8 @@ public class MockServerHandlerGeneralOperationsTest extends MockServerHandlerTes
         HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
         assertThat(httpResponse.getStatusCode(), is(OK.code()));
         assertThat(httpResponse.getBodyAsString(), is("" +
-                "{" + System.getProperty("line.separator") +
-                "  \"ports\" : [ 1, 2, 3, 4, 5 ]" + System.getProperty("line.separator") +
+                "{" + NEW_LINE +
+                "  \"ports\" : [ 1, 2, 3, 4, 5 ]" + NEW_LINE +
                 "}"));
     }
 
@@ -427,8 +428,8 @@ public class MockServerHandlerGeneralOperationsTest extends MockServerHandlerTes
     public void shouldBindAdditionalPort() {
         // given
         HttpRequest request = request("/bind").withMethod("PUT").withBody("" +
-                "{" + System.getProperty("line.separator") +
-                "  \"ports\" : [ 1, 2, 3, 4, 5 ]" + System.getProperty("line.separator") +
+                "{" + NEW_LINE +
+                "  \"ports\" : [ 1, 2, 3, 4, 5 ]" + NEW_LINE +
                 "}");
         when(mockMockServer.bindToPorts(anyList())).thenReturn(Arrays.asList(1, 2, 3, 4, 5));
 
@@ -442,8 +443,8 @@ public class MockServerHandlerGeneralOperationsTest extends MockServerHandlerTes
         HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
         assertThat(httpResponse.getStatusCode(), is(ACCEPTED.code()));
         assertThat(httpResponse.getBodyAsString(), is("" +
-                "{" + System.getProperty("line.separator") +
-                "  \"ports\" : [ 1, 2, 3, 4, 5 ]" + System.getProperty("line.separator") +
+                "{" + NEW_LINE +
+                "  \"ports\" : [ 1, 2, 3, 4, 5 ]" + NEW_LINE +
                 "}"));
     }
 }

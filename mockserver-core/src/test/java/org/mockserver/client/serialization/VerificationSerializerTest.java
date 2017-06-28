@@ -26,6 +26,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.verify.Verification.verification;
 
@@ -103,12 +104,12 @@ public class VerificationSerializerTest {
     public void serializeHandlesException() throws IOException {
         // given
         thrown.expect(RuntimeException.class);
-        thrown.expectMessage("Exception while serializing verification to JSON with value {" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : { }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"count\" : 1," + System.getProperty("line.separator") +
-                "    \"exact\" : false" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
+        thrown.expectMessage("Exception while serializing verification to JSON with value {" + NEW_LINE +
+                "  \"httpRequest\" : { }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"count\" : 1," + NEW_LINE +
+                "    \"exact\" : false" + NEW_LINE +
+                "  }" + NEW_LINE +
                 "}");
         // and
         when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);

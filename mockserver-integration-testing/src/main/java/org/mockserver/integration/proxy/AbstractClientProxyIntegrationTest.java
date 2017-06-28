@@ -27,6 +27,7 @@ import java.net.Socket;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.core.StringStartsWith.startsWith;
 import static org.junit.Assert.*;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.test.Assert.assertContains;
 import static org.mockserver.verify.VerificationTimes.atLeast;
@@ -73,10 +74,10 @@ public abstract class AbstractClientProxyIntegrationTest {
             // when
             // - send GET request for headers only
             output.write(("" +
-                    "GET " + calculatePath("test_headers_only") + " HTTP/1.1\r\n" +
-                    "Host: localhost:" + getServerPort() + "\r\n" +
-                    "x-test: test_headers_only\r\n" +
-                    "Connection: keep-alive\r\n" +
+                    "GET " + calculatePath("test_headers_only") + " HTTP/1.1\r" + NEW_LINE +
+                    "Host: localhost:" + getServerPort() + "\r" + NEW_LINE +
+                    "x-test: test_headers_only\r" + NEW_LINE +
+                    "Connection: keep-alive\r" + NEW_LINE +
                     "\r\n"
             ).getBytes(Charsets.UTF_8));
             output.flush();
@@ -94,11 +95,11 @@ public abstract class AbstractClientProxyIntegrationTest {
 
             // - send GET request for headers and body
             output.write(("" +
-                    "GET " + calculatePath("test_headers_and_body") + " HTTP/1.1\r\n" +
-                    "Host: localhost:" + getServerPort() + "\r\n" +
-                    "Content-Length: " + "an_example_body".getBytes(Charsets.UTF_8).length + "\r\n" +
-                    "x-test: test_headers_and_body\r\n" +
-                    "\r\n" +
+                    "GET " + calculatePath("test_headers_and_body") + " HTTP/1.1\r" + NEW_LINE +
+                    "Host: localhost:" + getServerPort() + "\r" + NEW_LINE +
+                    "Content-Length: " + "an_example_body".getBytes(Charsets.UTF_8).length + "\r" + NEW_LINE +
+                    "x-test: test_headers_and_body\r" + NEW_LINE +
+                    "\r" + NEW_LINE +
                     "an_example_body"
             ).getBytes(Charsets.UTF_8));
             output.flush();
@@ -211,9 +212,9 @@ public abstract class AbstractClientProxyIntegrationTest {
             // when
             // - send GET request
             output.write(("" +
-                    "GET " + calculatePath("not_found") + " HTTP/1.1\r\n" +
-                    "Host: localhost:" + getServerPort() + "\r\n" +
-                    "Connection: close\r\n" +
+                    "GET " + calculatePath("not_found") + " HTTP/1.1\r" + NEW_LINE +
+                    "Host: localhost:" + getServerPort() + "\r" + NEW_LINE +
+                    "Connection: close\r" + NEW_LINE +
                     "\r\n"
             ).getBytes(Charsets.UTF_8));
             output.flush();
@@ -360,11 +361,11 @@ public abstract class AbstractClientProxyIntegrationTest {
                     );
             fail();
         } catch (AssertionError ae) {
-            assertThat(ae.getMessage(), startsWith("Request not found exactly 0 times, expected:<{" + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + "/test_headers_and_body" + "\"" + System.getProperty("line.separator") +
-                    "}> but was:<{" + System.getProperty("line.separator") +
-                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + "/test_headers_and_body" + "\"," + System.getProperty("line.separator")));
+            assertThat(ae.getMessage(), startsWith("Request not found exactly 0 times, expected:<{" + NEW_LINE +
+                    "  \"path\" : \"" + "/test_headers_and_body" + "\"" + NEW_LINE +
+                    "}> but was:<{" + NEW_LINE +
+                    "  \"method\" : \"GET\"," + NEW_LINE +
+                    "  \"path\" : \"" + "/test_headers_and_body" + "\"," + NEW_LINE));
         }
     }
 
@@ -395,11 +396,11 @@ public abstract class AbstractClientProxyIntegrationTest {
                     );
             fail();
         } catch (AssertionError ae) {
-            assertThat(ae.getMessage(), startsWith("Request not found exactly once, expected:<{" + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + "/other_path" + "\"" + System.getProperty("line.separator") +
-                    "}> but was:<{" + System.getProperty("line.separator") +
-                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + "/test_headers_and_body" + "\"," + System.getProperty("line.separator")));
+            assertThat(ae.getMessage(), startsWith("Request not found exactly once, expected:<{" + NEW_LINE +
+                    "  \"path\" : \"" + "/other_path" + "\"" + NEW_LINE +
+                    "}> but was:<{" + NEW_LINE +
+                    "  \"method\" : \"GET\"," + NEW_LINE +
+                    "  \"path\" : \"" + "/test_headers_and_body" + "\"," + NEW_LINE));
         }
     }
 
@@ -429,11 +430,11 @@ public abstract class AbstractClientProxyIntegrationTest {
                     );
             fail();
         } catch (AssertionError ae) {
-            assertThat(ae.getMessage(), startsWith("Request sequence not found, expected:<[ {" + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + "/other_path" + "\"" + System.getProperty("line.separator") +
-                    "} ]> but was:<[ {" + System.getProperty("line.separator") +
-                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + "/test_headers_and_body" + "\"," + System.getProperty("line.separator")));
+            assertThat(ae.getMessage(), startsWith("Request sequence not found, expected:<[ {" + NEW_LINE +
+                    "  \"path\" : \"" + "/other_path" + "\"" + NEW_LINE +
+                    "} ]> but was:<[ {" + NEW_LINE +
+                    "  \"method\" : \"GET\"," + NEW_LINE +
+                    "  \"path\" : \"" + "/test_headers_and_body" + "\"," + NEW_LINE));
         }
     }
 
@@ -474,11 +475,11 @@ public abstract class AbstractClientProxyIntegrationTest {
                     );
             fail();
         } catch (AssertionError ae) {
-            assertThat(ae.getMessage(), startsWith("Request not found at least 3 times, expected:<{" + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + "/test_headers_and_body" + "\"" + System.getProperty("line.separator") +
-                    "}> but was:<[ {" + System.getProperty("line.separator") +
-                    "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                    "  \"path\" : \"" + "/test_headers_and_body" + "\"," + System.getProperty("line.separator")));
+            assertThat(ae.getMessage(), startsWith("Request not found at least 3 times, expected:<{" + NEW_LINE +
+                    "  \"path\" : \"" + "/test_headers_and_body" + "\"" + NEW_LINE +
+                    "}> but was:<[ {" + NEW_LINE +
+                    "  \"method\" : \"GET\"," + NEW_LINE +
+                    "  \"path\" : \"" + "/test_headers_and_body" + "\"," + NEW_LINE));
         }
     }
 

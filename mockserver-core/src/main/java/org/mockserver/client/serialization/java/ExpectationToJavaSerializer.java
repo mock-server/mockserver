@@ -3,6 +3,8 @@ package org.mockserver.client.serialization.java;
 import com.google.common.base.Strings;
 import org.mockserver.mock.Expectation;
 
+import static org.mockserver.character.Character.NEW_LINE;
+
 /**
  * @author jamesdbloom
  */
@@ -45,6 +47,6 @@ public class ExpectationToJavaSerializer implements ToJavaSerializer<Expectation
     }
 
     private StringBuffer appendNewLineAndIndent(int numberOfSpacesToIndent, StringBuffer output) {
-        return output.append(System.getProperty("line.separator")).append(Strings.padStart("", numberOfSpacesToIndent, ' '));
+        return output.append(NEW_LINE).append(Strings.padStart("", numberOfSpacesToIndent, ' '));
     }
 }

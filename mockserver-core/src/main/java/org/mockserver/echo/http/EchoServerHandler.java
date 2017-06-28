@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH;
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpResponse.response;
 
 /**
@@ -39,7 +40,7 @@ public class EchoServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
     protected void channelRead0(ChannelHandlerContext ctx, HttpRequest request) {
 
-        logFormatter.traceLog("received request:{}" + System.getProperty("line.separator"), request);
+        logFormatter.traceLog("received request:{}" + NEW_LINE, request);
 
         requestLogFilter.onRequest(request);
 

@@ -13,6 +13,8 @@ import org.slf4j.LoggerFactory;
 import java.io.PrintStream;
 import java.util.*;
 
+import static org.mockserver.character.Character.NEW_LINE;
+
 /**
  * @author jamesdbloom
  */
@@ -22,34 +24,34 @@ public class Main {
     public static final String PROXY_REMOTE_PORT_KEY = "proxyRemotePort";
     public static final String PROXY_REMOTE_HOST_KEY = "proxyRemoteHost";
     public static final String USAGE = "" +
-            "   java -jar <path to mockserver-jetty-jar-with-dependencies.jar> [-serverPort <port>] [-proxyPort <port>] [-proxyRemotePort <port>] [-proxyRemoteHost <hostname>]" + System.getProperty("line.separator") +
-            "                                                                                       " + System.getProperty("line.separator") +
-            "     valid options are:                                                                " + System.getProperty("line.separator") +
-            "        -serverPort <port>           Specifies the HTTP and HTTPS port for the         " + System.getProperty("line.separator") +
-            "                                     MockServer. Port unification is used to           " + System.getProperty("line.separator") +
-            "                                     support HTTP and HTTPS on the same port.          " + System.getProperty("line.separator") +
-            "                                                                                       " + System.getProperty("line.separator") +
-            "        -proxyPort <port>            Specifies the HTTP, HTTPS, SOCKS and HTTP         " + System.getProperty("line.separator") +
-            "                                     CONNECT port for proxy. Port unification          " + System.getProperty("line.separator") +
-            "                                     supports for all protocols on the same port.      " + System.getProperty("line.separator") +
-            "                                                                                       " + System.getProperty("line.separator") +
-            "        -proxyRemotePort <port>      Specifies the port to forward all proxy           " + System.getProperty("line.separator") +
-            "                                     requests to (i.e. all requests received on        " + System.getProperty("line.separator") +
-            "                                     portPort). This setting is used to enable         " + System.getProperty("line.separator") +
-            "                                     the port forwarding mode therefore this           " + System.getProperty("line.separator") +
-            "                                     option disables the HTTP, HTTPS, SOCKS and        " + System.getProperty("line.separator") +
-            "                                     HTTP CONNECT support.                             " + System.getProperty("line.separator") +
-            "                                                                                       " + System.getProperty("line.separator") +
-            "        -proxyRemoteHost <hostname>  Specified the host to forward all proxy           " + System.getProperty("line.separator") +
-            "                                     requests to (i.e. all requests received on        " + System.getProperty("line.separator") +
-            "                                     portPort). This setting is ignored unless         " + System.getProperty("line.separator") +
-            "                                     proxyRemotePort has been specified. If no         " + System.getProperty("line.separator") +
-            "                                     value is provided for proxyRemoteHost when        " + System.getProperty("line.separator") +
-            "                                     proxyRemotePort has been specified,               " + System.getProperty("line.separator") +
-            "                                     proxyRemoteHost will default to \"localhost\".    " + System.getProperty("line.separator") +
-            "                                                                                       " + System.getProperty("line.separator") +
-            "   i.e. java -jar ./mockserver-jetty-jar-with-dependencies.jar -serverPort 1080 -proxyPort 1090 -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com" + System.getProperty("line.separator") +
-            "                                                                                       " + System.getProperty("line.separator");
+            "   java -jar <path to mockserver-jetty-jar-with-dependencies.jar> [-serverPort <port>] [-proxyPort <port>] [-proxyRemotePort <port>] [-proxyRemoteHost <hostname>]" + NEW_LINE +
+            "                                                                                       " + NEW_LINE +
+            "     valid options are:                                                                " + NEW_LINE +
+            "        -serverPort <port>           Specifies the HTTP and HTTPS port for the         " + NEW_LINE +
+            "                                     MockServer. Port unification is used to           " + NEW_LINE +
+            "                                     support HTTP and HTTPS on the same port.          " + NEW_LINE +
+            "                                                                                       " + NEW_LINE +
+            "        -proxyPort <port>            Specifies the HTTP, HTTPS, SOCKS and HTTP         " + NEW_LINE +
+            "                                     CONNECT port for proxy. Port unification          " + NEW_LINE +
+            "                                     supports for all protocols on the same port.      " + NEW_LINE +
+            "                                                                                       " + NEW_LINE +
+            "        -proxyRemotePort <port>      Specifies the port to forward all proxy           " + NEW_LINE +
+            "                                     requests to (i.e. all requests received on        " + NEW_LINE +
+            "                                     portPort). This setting is used to enable         " + NEW_LINE +
+            "                                     the port forwarding mode therefore this           " + NEW_LINE +
+            "                                     option disables the HTTP, HTTPS, SOCKS and        " + NEW_LINE +
+            "                                     HTTP CONNECT support.                             " + NEW_LINE +
+            "                                                                                       " + NEW_LINE +
+            "        -proxyRemoteHost <hostname>  Specified the host to forward all proxy           " + NEW_LINE +
+            "                                     requests to (i.e. all requests received on        " + NEW_LINE +
+            "                                     portPort). This setting is ignored unless         " + NEW_LINE +
+            "                                     proxyRemotePort has been specified. If no         " + NEW_LINE +
+            "                                     value is provided for proxyRemoteHost when        " + NEW_LINE +
+            "                                     proxyRemotePort has been specified,               " + NEW_LINE +
+            "                                     proxyRemoteHost will default to \"localhost\".    " + NEW_LINE +
+            "                                                                                       " + NEW_LINE +
+            "   i.e. java -jar ./mockserver-jetty-jar-with-dependencies.jar -serverPort 1080 -proxyPort 1090 -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com" + NEW_LINE +
+            "                                                                                       " + NEW_LINE;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
     private static final IntegerStringListParser INTEGER_STRING_LIST_PARSER = new IntegerStringListParser();
@@ -81,8 +83,8 @@ public class Main {
         Map<String, String> parsedArguments = parseArguments(arguments);
 
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(System.getProperty("line.separator") + System.getProperty("line.separator") + "Using command line options: " +
-                    Joiner.on(", ").withKeyValueSeparator("=").join(parsedArguments) + System.getProperty("line.separator"));
+            LOGGER.debug(NEW_LINE + NEW_LINE + "Using command line options: " +
+                    Joiner.on(", ").withKeyValueSeparator("=").join(parsedArguments) + NEW_LINE);
         }
 
         if (parsedArguments.size() > 0 && validateArguments(parsedArguments)) {
@@ -119,11 +121,11 @@ public class Main {
                    maxLengthMessage = errorMessage.length();
                }
             }
-            outputPrintStream.println(System.getProperty("line.separator") + "   " + Strings.padEnd("", maxLengthMessage, '='));
+            outputPrintStream.println(NEW_LINE + "   " + Strings.padEnd("", maxLengthMessage, '='));
             for (String errorMessage : errorMessages) {
                 outputPrintStream.println("   " + errorMessage);
             }
-            outputPrintStream.println("   " + Strings.padEnd("", maxLengthMessage, '=') + System.getProperty("line.separator"));
+            outputPrintStream.println("   " + Strings.padEnd("", maxLengthMessage, '=') + NEW_LINE);
             return false;
         }
         return true;

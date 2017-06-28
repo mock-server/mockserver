@@ -7,12 +7,13 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockserver.character.Character.NEW_LINE;
 
 public class ParameterToJavaSerializerTest {
 
     @Test
     public void shouldSerializeParameter() throws IOException {
-        assertEquals(System.getProperty("line.separator") +
+        assertEquals(NEW_LINE +
                         "        new Parameter(\"requestParameterNameOne\", \"requestParameterValueOneOne\", \"requestParameterValueOneTwo\")",
                 new ParameterToJavaSerializer().serializeAsJava(1, new Parameter("requestParameterNameOne", "requestParameterValueOneOne", "requestParameterValueOneTwo"))
         );
@@ -20,9 +21,9 @@ public class ParameterToJavaSerializerTest {
 
     @Test
     public void shouldSerializeMultipleParameters() throws IOException {
-        assertEquals(System.getProperty("line.separator") +
+        assertEquals(NEW_LINE +
                         "        new Parameter(\"requestParameterNameOne\", \"requestParameterValueOneOne\", \"requestParameterValueOneTwo\"),"        +
-                        System.getProperty("line.separator") +
+                        NEW_LINE +
                         "        new Parameter(\"requestParameterNameTwo\", \"requestParameterValueTwo\")",
                 new ParameterToJavaSerializer().serializeAsJava(1, new Parameter("requestParameterNameOne", "requestParameterValueOneOne", "requestParameterValueOneTwo"), new Parameter("requestParameterNameTwo", "requestParameterValueTwo"))
         );
@@ -30,9 +31,9 @@ public class ParameterToJavaSerializerTest {
 
     @Test
     public void shouldSerializeListOfParameters() throws IOException {
-        assertEquals(System.getProperty("line.separator") +
+        assertEquals(NEW_LINE +
                         "        new Parameter(\"requestParameterNameOne\", \"requestParameterValueOneOne\", \"requestParameterValueOneTwo\"),"        +
-                        System.getProperty("line.separator") +
+                        NEW_LINE +
                         "        new Parameter(\"requestParameterNameTwo\", \"requestParameterValueTwo\")",
                 new ParameterToJavaSerializer().serializeAsJava(1, Arrays.asList(
                         new Parameter("requestParameterNameOne", "requestParameterValueOneOne", "requestParameterValueOneTwo"),

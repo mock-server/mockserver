@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.NottableString.string;
 
 /**
@@ -99,6 +100,11 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
                     JsonSchemaBody jsonSchemaBody = (JsonSchemaBody) body;
                     bodyDTOMatcher = new JsonSchemaBodyDTO(jsonSchemaBody);
                     this.bodyMatcher = new JsonSchemaMatcher(jsonSchemaBody.getValue());
+                    break;
+                case XML_SCHEMA:
+                    XmlSchemaBody xmlSchemaBody = (XmlSchemaBody) body;
+                    bodyDTOMatcher = new XmlSchemaBodyDTO(xmlSchemaBody);
+                    this.bodyMatcher = new XmlSchemaMatcher(xmlSchemaBody.getValue());
                     break;
                 case BINARY:
                     BinaryBody binaryBody = (BinaryBody) body;
@@ -189,26 +195,26 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
                 if (logMatchResults && logger.isInfoEnabled()) {
                     if (!totalResultAfterNotOperatorApplied) {
                         StringBuilder becauseBuilder = new StringBuilder();
-                        becauseBuilder.append("method matches = ").append(methodMatches).append(System.getProperty("line.separator"));
-                        becauseBuilder.append("path matches = ").append(pathMatches).append(System.getProperty("line.separator"));
-                        becauseBuilder.append("query string parameters match = ").append(queryStringParametersMatches).append(System.getProperty("line.separator"));
-                        becauseBuilder.append("body matches = ").append(bodyMatches).append(System.getProperty("line.separator"));
-                        becauseBuilder.append("headers match = ").append(headersMatch).append(System.getProperty("line.separator"));
-                        becauseBuilder.append("cookies match = ").append(cookiesMatch).append(System.getProperty("line.separator"));
-                        becauseBuilder.append("keep-alive matches = ").append(keepAliveMatches).append(System.getProperty("line.separator"));
-                        becauseBuilder.append("ssl matches = ").append(sslMatches).append(System.getProperty("line.separator"));
+                        becauseBuilder.append("method matches = ").append(methodMatches).append(NEW_LINE);
+                        becauseBuilder.append("path matches = ").append(pathMatches).append(NEW_LINE);
+                        becauseBuilder.append("query string parameters match = ").append(queryStringParametersMatches).append(NEW_LINE);
+                        becauseBuilder.append("body matches = ").append(bodyMatches).append(NEW_LINE);
+                        becauseBuilder.append("headers match = ").append(headersMatch).append(NEW_LINE);
+                        becauseBuilder.append("cookies match = ").append(cookiesMatch).append(NEW_LINE);
+                        becauseBuilder.append("keep-alive matches = ").append(keepAliveMatches).append(NEW_LINE);
+                        becauseBuilder.append("ssl matches = ").append(sslMatches).append(NEW_LINE);
                         if (httpRequest.isNot()) {
-                            becauseBuilder.append("request \'not\' operator is enabled").append(System.getProperty("line.separator"));
+                            becauseBuilder.append("request \'not\' operator is enabled").append(NEW_LINE);
                         }
                         if (this.httpRequest.isNot()) {
-                            becauseBuilder.append("expectation's request \'not\' operator is enabled").append(System.getProperty("line.separator"));
+                            becauseBuilder.append("expectation's request \'not\' operator is enabled").append(NEW_LINE);
                         }
                         if (not) {
-                            becauseBuilder.append("expectation's request matcher \'not\' operator is enabled").append(System.getProperty("line.separator"));
+                            becauseBuilder.append("expectation's request matcher \'not\' operator is enabled").append(NEW_LINE);
                         }
-                        logFormatter.infoLog("request:{}" + System.getProperty("line.separator") + " did" + (totalResult ? "" : " not") + " match expectation:{}" + System.getProperty("line.separator") + " because:{}", httpRequest, this, becauseBuilder.toString());
+                        logFormatter.infoLog("request:{}" + NEW_LINE + " did" + (totalResult ? "" : " not") + " match expectation:{}" + NEW_LINE + " because:{}", httpRequest, this, becauseBuilder.toString());
                     } else {
-                        logFormatter.infoLog("request:{}" + System.getProperty("line.separator") + " matched expectation:{}", httpRequest, this);
+                        logFormatter.infoLog("request:{}" + NEW_LINE + " matched expectation:{}", httpRequest, this);
                     }
                 }
                 return totalResultAfterNotOperatorApplied;

@@ -10,6 +10,7 @@ import org.mockserver.verify.VerificationTimes;
 import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 
 /**
@@ -20,11 +21,11 @@ public class VerificationSerializerIntegrationTest {
     @Test
     public void shouldIgnoreExtraFields() throws IOException {
         // given
-        String requestBytes = "{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"path\" : \"somepath\"," + System.getProperty("line.separator") +
-                "    \"random_field\" : \"random_value\"" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
+        String requestBytes = "{" + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"somepath\"," + NEW_LINE +
+                "    \"random_field\" : \"random_value\"" + NEW_LINE +
+                "  }" + NEW_LINE +
                 "}";
 
         // when
@@ -39,15 +40,15 @@ public class VerificationSerializerIntegrationTest {
     @Test
     public void shouldDeserializeCompleteObject() throws IOException {
         // given
-        String requestBytes = "{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                "    \"path\" : \"somepath\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"count\" : 2," + System.getProperty("line.separator") +
-                "    \"exact\" : true" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
+        String requestBytes = "{" + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"method\" : \"GET\"," + NEW_LINE +
+                "    \"path\" : \"somepath\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"count\" : 2," + NEW_LINE +
+                "    \"exact\" : true" + NEW_LINE +
+                "  }" + NEW_LINE +
                 "}";
 
         // when
@@ -63,8 +64,8 @@ public class VerificationSerializerIntegrationTest {
     @Test
     public void shouldDeserializePartialObject() throws IOException {
         // given
-        String requestBytes = "{" + System.getProperty("line.separator") +
-                "    \"path\": \"somePath\"" + System.getProperty("line.separator") +
+        String requestBytes = "{" + NEW_LINE +
+                "    \"path\": \"somePath\"" + NEW_LINE +
                 "}";
 
         // when
@@ -87,15 +88,15 @@ public class VerificationSerializerIntegrationTest {
         );
 
         // then
-        assertEquals("{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                "    \"path\" : \"somepath\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"count\" : 2," + System.getProperty("line.separator") +
-                "    \"exact\" : true" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
+        assertEquals("{" + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"method\" : \"GET\"," + NEW_LINE +
+                "    \"path\" : \"somepath\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"count\" : 2," + NEW_LINE +
+                "    \"exact\" : true" + NEW_LINE +
+                "  }" + NEW_LINE +
                 "}", jsonExpectation);
     }
 
@@ -109,12 +110,12 @@ public class VerificationSerializerIntegrationTest {
         );
 
         // then
-        assertEquals("{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : { }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"count\" : 1," + System.getProperty("line.separator") +
-                "    \"exact\" : true" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
+        assertEquals("{" + NEW_LINE +
+                "  \"httpRequest\" : { }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"count\" : 1," + NEW_LINE +
+                "    \"exact\" : true" + NEW_LINE +
+                "  }" + NEW_LINE +
                 "}", jsonExpectation);
     }
 }

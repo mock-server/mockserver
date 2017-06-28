@@ -34,6 +34,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.AnyOf.anyOf;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.ConnectionOptions.connectionOptions;
 import static org.mockserver.model.Header.header;
@@ -191,8 +192,8 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
                 response()
                         .withStatusCode(OK_200.code())
                         .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                        .withBody("{" + System.getProperty("line.separator") +
-                                "  \"ports\" : [ " + getMockServerPort() + " ]" + System.getProperty("line.separator") +
+                        .withBody("{" + NEW_LINE +
+                                "  \"ports\" : [ " + getMockServerPort() + " ]" + NEW_LINE +
                                 "}"),
                 makeRequest(
                         request()
@@ -207,15 +208,15 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
                 response()
                         .withStatusCode(ACCEPTED_202.code())
                         .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                        .withBody("{" + System.getProperty("line.separator") +
-                                "  \"ports\" : [ " + firstNewPort + " ]" + System.getProperty("line.separator") +
+                        .withBody("{" + NEW_LINE +
+                                "  \"ports\" : [ " + firstNewPort + " ]" + NEW_LINE +
                                 "}"),
                 makeRequest(
                         request()
                                 .withPath(calculatePath("bind"))
                                 .withMethod("PUT")
-                                .withBody("{" + System.getProperty("line.separator") +
-                                        "  \"ports\" : [ " + firstNewPort + " ]" + System.getProperty("line.separator") +
+                                .withBody("{" + NEW_LINE +
+                                        "  \"ports\" : [ " + firstNewPort + " ]" + NEW_LINE +
                                         "}"),
                         headersToIgnore)
         );
@@ -223,8 +224,8 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
                 response()
                         .withStatusCode(OK_200.code())
                         .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                        .withBody("{" + System.getProperty("line.separator") +
-                                "  \"ports\" : [ " + getMockServerPort() + ", " + firstNewPort + " ]" + System.getProperty("line.separator") +
+                        .withBody("{" + NEW_LINE +
+                                "  \"ports\" : [ " + getMockServerPort() + ", " + firstNewPort + " ]" + NEW_LINE +
                                 "}"),
                 makeRequest(
                         request()
@@ -237,16 +238,16 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
                 response()
                         .withStatusCode(ACCEPTED_202.code())
                         .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                        .withBody("{" + System.getProperty("line.separator") +
-                                "  \"ports\" : [ " + secondNewPort + " ]" + System.getProperty("line.separator") +
+                        .withBody("{" + NEW_LINE +
+                                "  \"ports\" : [ " + secondNewPort + " ]" + NEW_LINE +
                                 "}"),
                 makeRequest(
                         request()
                                 .withSecure(true)
                                 .withPath(calculatePath("bind"))
                                 .withMethod("PUT")
-                                .withBody("{" + System.getProperty("line.separator") +
-                                        "  \"ports\" : [ " + secondNewPort + " ]" + System.getProperty("line.separator") +
+                                .withBody("{" + NEW_LINE +
+                                        "  \"ports\" : [ " + secondNewPort + " ]" + NEW_LINE +
                                         "}"),
                         headersToIgnore)
         );
@@ -254,16 +255,16 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
                 response()
                         .withStatusCode(OK_200.code())
                         .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                        .withBody("{" + System.getProperty("line.separator") +
-                                "  \"ports\" : [ " + getMockServerSecurePort() + ", " + firstNewPort + ", " + secondNewPort + " ]" + System.getProperty("line.separator") +
+                        .withBody("{" + NEW_LINE +
+                                "  \"ports\" : [ " + getMockServerSecurePort() + ", " + firstNewPort + ", " + secondNewPort + " ]" + NEW_LINE +
                                 "}"),
                 makeRequest(
                         request()
                                 .withSecure(true)
                                 .withPath(calculatePath("status"))
                                 .withMethod("PUT")
-                                .withBody("{" + System.getProperty("line.separator") +
-                                        "  \"ports\" : [ " + firstNewPort + " ]" + System.getProperty("line.separator") +
+                                .withBody("{" + NEW_LINE +
+                                        "  \"ports\" : [ " + firstNewPort + " ]" + NEW_LINE +
                                         "}"),
                         headersToIgnore)
         );
@@ -289,8 +290,8 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
                             request()
                                     .withPath(calculatePath("bind"))
                                     .withMethod("PUT")
-                                    .withBody("{" + System.getProperty("line.separator") +
-                                            "  \"ports\" : [ " + newPort + " ]" + System.getProperty("line.separator") +
+                                    .withBody("{" + NEW_LINE +
+                                            "  \"ports\" : [ " + newPort + " ]" + NEW_LINE +
                                             "}"),
                             headersToIgnore)
             );
@@ -435,16 +436,16 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
 
             // when
             output.write(("" +
-                    "GET " + calculatePath("") + " HTTP/1.1\n" +
-                    "Content-Length: 0\r\n" +
+                    "GET " + calculatePath("") + " HTTP/1.1" + NEW_LINE +
+                    "Content-Length: 0\r" + NEW_LINE +
                     "\r\n"
             ).getBytes(Charsets.UTF_8));
             output.flush();
 
             // then
             assertThat(IOStreamUtils.readInputStreamToString(socket), is("" +
-                    "HTTP/1.1 200 OK\n" +
-                    "content-type: audio/*\n" +
+                    "HTTP/1.1 200 OK" + NEW_LINE +
+                    "content-type: audio/*" + NEW_LINE +
                     "connection: close\n"
             ));
 
@@ -480,16 +481,16 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
 
             // when
             output.write(("" +
-                    "GET " + calculatePath("") + " HTTP/1.1\n" +
-                    "Content-Length: 0\r\n" +
+                    "GET " + calculatePath("") + " HTTP/1.1" + NEW_LINE +
+                    "Content-Length: 0\r" + NEW_LINE +
                     "\r\n"
             ).getBytes(Charsets.UTF_8));
             output.flush();
 
             // then
             assertThat(IOStreamUtils.readInputStreamToString(sslSocket), is("" +
-                    "HTTP/1.1 200 OK\n" +
-                    "content-type: audio/*\n" +
+                    "HTTP/1.1 200 OK" + NEW_LINE +
+                    "content-type: audio/*" + NEW_LINE +
                     "connection: close\n"
             ));
         } finally {
@@ -522,8 +523,8 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
 
             // when
             output.write(("" +
-                    "GET " + calculatePath("") + " HTTP/1.1\n" +
-                    "Content-Length: 0\r\n" +
+                    "GET " + calculatePath("") + " HTTP/1.1" + NEW_LINE +
+                    "Content-Length: 0\r" + NEW_LINE +
                     "\r\n"
             ).getBytes(Charsets.UTF_8));
             output.flush();
@@ -545,8 +546,8 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
 
             // when
             output.write(("" +
-                    "GET " + calculatePath("") + " HTTP/1.1\n" +
-                    "Content-Length: 0\r\n" +
+                    "GET " + calculatePath("") + " HTTP/1.1" + NEW_LINE +
+                    "Content-Length: 0\r" + NEW_LINE +
                     "\r\n"
             ).getBytes(Charsets.UTF_8));
             output.flush();

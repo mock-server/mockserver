@@ -7,9 +7,11 @@ import org.mockserver.client.serialization.model.HttpRequestDTO;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.JsonSchemaBody;
+import org.mockserver.model.XmlSchemaBody;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.JsonSchemaBody.jsonSchema;
@@ -18,6 +20,7 @@ import static org.mockserver.model.ParameterBody.params;
 import static org.mockserver.model.RegexBody.regex;
 import static org.mockserver.model.XPathBody.xpath;
 import static org.mockserver.model.XmlBody.xml;
+import static org.mockserver.model.XmlSchemaBody.xmlSchema;
 
 public class HttpRequestDTOSerializerTest {
 
@@ -46,24 +49,24 @@ public class HttpRequestDTOSerializerTest {
                                         .withSecure(true)
                         )
                 ),
-                is("{" + System.getProperty("line.separator") +
-                        "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                        "  \"path\" : \"/some/path\"," + System.getProperty("line.separator") +
-                        "  \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"parameterOneName\"," + System.getProperty("line.separator") +
-                        "    \"values\" : [ \"parameterOneValue\" ]" + System.getProperty("line.separator") +
-                        "  } ]," + System.getProperty("line.separator") +
-                        "  \"headers\" : [ {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"name\"," + System.getProperty("line.separator") +
-                        "    \"values\" : [ \"value\" ]" + System.getProperty("line.separator") +
-                        "  } ]," + System.getProperty("line.separator") +
-                        "  \"cookies\" : [ {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"name\"," + System.getProperty("line.separator") +
-                        "    \"value\" : \"[A-Z]{0,10}\"" + System.getProperty("line.separator") +
-                        "  } ]," + System.getProperty("line.separator") +
-                        "  \"keepAlive\" : true," + System.getProperty("line.separator") +
-                        "  \"secure\" : true," + System.getProperty("line.separator") +
-                        "  \"body\" : \"some_body\"" + System.getProperty("line.separator") +
+                is("{" + NEW_LINE +
+                        "  \"method\" : \"GET\"," + NEW_LINE +
+                        "  \"path\" : \"/some/path\"," + NEW_LINE +
+                        "  \"queryStringParameters\" : [ {" + NEW_LINE +
+                        "    \"name\" : \"parameterOneName\"," + NEW_LINE +
+                        "    \"values\" : [ \"parameterOneValue\" ]" + NEW_LINE +
+                        "  } ]," + NEW_LINE +
+                        "  \"headers\" : [ {" + NEW_LINE +
+                        "    \"name\" : \"name\"," + NEW_LINE +
+                        "    \"values\" : [ \"value\" ]" + NEW_LINE +
+                        "  } ]," + NEW_LINE +
+                        "  \"cookies\" : [ {" + NEW_LINE +
+                        "    \"name\" : \"name\"," + NEW_LINE +
+                        "    \"value\" : \"[A-Z]{0,10}\"" + NEW_LINE +
+                        "  } ]," + NEW_LINE +
+                        "  \"keepAlive\" : true," + NEW_LINE +
+                        "  \"secure\" : true," + NEW_LINE +
+                        "  \"body\" : \"some_body\"" + NEW_LINE +
                         "}"));
     }
 
@@ -80,25 +83,25 @@ public class HttpRequestDTOSerializerTest {
                                         .withCookies(new Cookie("name", "[A-Z]{0,10}"))
                         )
                 ),
-                is("{" + System.getProperty("line.separator") +
-                        "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                        "  \"path\" : \"/some/path\"," + System.getProperty("line.separator") +
-                        "  \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"parameterOneName\"," + System.getProperty("line.separator") +
-                        "    \"values\" : [ \"parameterOneValue\" ]" + System.getProperty("line.separator") +
-                        "  } ]," + System.getProperty("line.separator") +
-                        "  \"headers\" : [ {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"name\"," + System.getProperty("line.separator") +
-                        "    \"values\" : [ \"value\" ]" + System.getProperty("line.separator") +
-                        "  } ]," + System.getProperty("line.separator") +
-                        "  \"cookies\" : [ {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"name\"," + System.getProperty("line.separator") +
-                        "    \"value\" : \"[A-Z]{0,10}\"" + System.getProperty("line.separator") +
-                        "  } ]," + System.getProperty("line.separator") +
-                        "  \"body\" : {" + System.getProperty("line.separator") +
-                        "    \"type\" : \"JSON\"," + System.getProperty("line.separator") +
-                        "    \"json\" : \"{ \\\"key\\\": \\\"some_value\\\" }\"" + System.getProperty("line.separator") +
-                        "  }" + System.getProperty("line.separator") +
+                is("{" + NEW_LINE +
+                        "  \"method\" : \"GET\"," + NEW_LINE +
+                        "  \"path\" : \"/some/path\"," + NEW_LINE +
+                        "  \"queryStringParameters\" : [ {" + NEW_LINE +
+                        "    \"name\" : \"parameterOneName\"," + NEW_LINE +
+                        "    \"values\" : [ \"parameterOneValue\" ]" + NEW_LINE +
+                        "  } ]," + NEW_LINE +
+                        "  \"headers\" : [ {" + NEW_LINE +
+                        "    \"name\" : \"name\"," + NEW_LINE +
+                        "    \"values\" : [ \"value\" ]" + NEW_LINE +
+                        "  } ]," + NEW_LINE +
+                        "  \"cookies\" : [ {" + NEW_LINE +
+                        "    \"name\" : \"name\"," + NEW_LINE +
+                        "    \"value\" : \"[A-Z]{0,10}\"" + NEW_LINE +
+                        "  } ]," + NEW_LINE +
+                        "  \"body\" : {" + NEW_LINE +
+                        "    \"type\" : \"JSON\"," + NEW_LINE +
+                        "    \"json\" : \"{ \\\"key\\\": \\\"some_value\\\" }\"" + NEW_LINE +
+                        "  }" + NEW_LINE +
                         "}"));
     }
 
@@ -118,25 +121,25 @@ public class HttpRequestDTOSerializerTest {
                                         .withCookies(new Cookie("name", "[A-Z]{0,10}"))
                         )
                 ),
-                is("{" + System.getProperty("line.separator") +
-                        "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                        "  \"path\" : \"/some/path\"," + System.getProperty("line.separator") +
-                        "  \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"parameterOneName\"," + System.getProperty("line.separator") +
-                        "    \"values\" : [ \"parameterOneValue\" ]" + System.getProperty("line.separator") +
-                        "  } ]," + System.getProperty("line.separator") +
-                        "  \"headers\" : [ {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"name\"," + System.getProperty("line.separator") +
-                        "    \"values\" : [ \"value\" ]" + System.getProperty("line.separator") +
-                        "  } ]," + System.getProperty("line.separator") +
-                        "  \"cookies\" : [ {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"name\"," + System.getProperty("line.separator") +
-                        "    \"value\" : \"[A-Z]{0,10}\"" + System.getProperty("line.separator") +
-                        "  } ]," + System.getProperty("line.separator") +
-                        "  \"body\" : {" + System.getProperty("line.separator") +
-                        "    \"type\" : \"JSON_SCHEMA\"," + System.getProperty("line.separator") +
-                        "    \"jsonSchema\" : \"{\\\"type\\\": \\\"object\\\", \\\"properties\\\": {\\\"id\\\": {\\\"type\\\": \\\"integer\\\"}}, \\\"required\\\": [\\\"id\\\"]}\"" + System.getProperty("line.separator") +
-                        "  }" + System.getProperty("line.separator") +
+                is("{" + NEW_LINE +
+                        "  \"method\" : \"GET\"," + NEW_LINE +
+                        "  \"path\" : \"/some/path\"," + NEW_LINE +
+                        "  \"queryStringParameters\" : [ {" + NEW_LINE +
+                        "    \"name\" : \"parameterOneName\"," + NEW_LINE +
+                        "    \"values\" : [ \"parameterOneValue\" ]" + NEW_LINE +
+                        "  } ]," + NEW_LINE +
+                        "  \"headers\" : [ {" + NEW_LINE +
+                        "    \"name\" : \"name\"," + NEW_LINE +
+                        "    \"values\" : [ \"value\" ]" + NEW_LINE +
+                        "  } ]," + NEW_LINE +
+                        "  \"cookies\" : [ {" + NEW_LINE +
+                        "    \"name\" : \"name\"," + NEW_LINE +
+                        "    \"value\" : \"[A-Z]{0,10}\"" + NEW_LINE +
+                        "  } ]," + NEW_LINE +
+                        "  \"body\" : {" + NEW_LINE +
+                        "    \"type\" : \"JSON_SCHEMA\"," + NEW_LINE +
+                        "    \"jsonSchema\" : \"{\\\"type\\\": \\\"object\\\", \\\"properties\\\": {\\\"id\\\": {\\\"type\\\": \\\"integer\\\"}}, \\\"required\\\": [\\\"id\\\"]}\"" + NEW_LINE +
+                        "  }" + NEW_LINE +
                         "}"));
     }
 
@@ -153,25 +156,25 @@ public class HttpRequestDTOSerializerTest {
                                         .withCookies(new Cookie("name", "[A-Z]{0,10}"))
                         )
                 ),
-                is("{" + System.getProperty("line.separator") +
-                        "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                        "  \"path\" : \"/some/path\"," + System.getProperty("line.separator") +
-                        "  \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"parameterOneName\"," + System.getProperty("line.separator") +
-                        "    \"values\" : [ \"parameterOneValue\" ]" + System.getProperty("line.separator") +
-                        "  } ]," + System.getProperty("line.separator") +
-                        "  \"headers\" : [ {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"name\"," + System.getProperty("line.separator") +
-                        "    \"values\" : [ \"value\" ]" + System.getProperty("line.separator") +
-                        "  } ]," + System.getProperty("line.separator") +
-                        "  \"cookies\" : [ {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"name\"," + System.getProperty("line.separator") +
-                        "    \"value\" : \"[A-Z]{0,10}\"" + System.getProperty("line.separator") +
-                        "  } ]," + System.getProperty("line.separator") +
-                        "  \"body\" : {" + System.getProperty("line.separator") +
-                        "    \"type\" : \"XPATH\"," + System.getProperty("line.separator") +
-                        "    \"xpath\" : \"//some/xml/path\"" + System.getProperty("line.separator") +
-                        "  }" + System.getProperty("line.separator") +
+                is("{" + NEW_LINE +
+                        "  \"method\" : \"GET\"," + NEW_LINE +
+                        "  \"path\" : \"/some/path\"," + NEW_LINE +
+                        "  \"queryStringParameters\" : [ {" + NEW_LINE +
+                        "    \"name\" : \"parameterOneName\"," + NEW_LINE +
+                        "    \"values\" : [ \"parameterOneValue\" ]" + NEW_LINE +
+                        "  } ]," + NEW_LINE +
+                        "  \"headers\" : [ {" + NEW_LINE +
+                        "    \"name\" : \"name\"," + NEW_LINE +
+                        "    \"values\" : [ \"value\" ]" + NEW_LINE +
+                        "  } ]," + NEW_LINE +
+                        "  \"cookies\" : [ {" + NEW_LINE +
+                        "    \"name\" : \"name\"," + NEW_LINE +
+                        "    \"value\" : \"[A-Z]{0,10}\"" + NEW_LINE +
+                        "  } ]," + NEW_LINE +
+                        "  \"body\" : {" + NEW_LINE +
+                        "    \"type\" : \"XPATH\"," + NEW_LINE +
+                        "    \"xpath\" : \"//some/xml/path\"" + NEW_LINE +
+                        "  }" + NEW_LINE +
                         "}")
         );
     }
@@ -189,28 +192,68 @@ public class HttpRequestDTOSerializerTest {
                                         .withCookies(new Cookie("name", "[A-Z]{0,10}"))
                         )
                 ),
-                is("{" + System.getProperty("line.separator") +
-                        "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                        "  \"path\" : \"/some/path\"," + System.getProperty("line.separator") +
-                        "  \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"parameterOneName\"," + System.getProperty("line.separator") +
-                        "    \"values\" : [ \"parameterOneValue\" ]" + System.getProperty("line.separator") +
-                        "  } ]," + System.getProperty("line.separator") +
-                        "  \"headers\" : [ {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"name\"," + System.getProperty("line.separator") +
-                        "    \"values\" : [ \"value\" ]" + System.getProperty("line.separator") +
-                        "  } ]," + System.getProperty("line.separator") +
-                        "  \"cookies\" : [ {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"name\"," + System.getProperty("line.separator") +
-                        "    \"value\" : \"[A-Z]{0,10}\"" + System.getProperty("line.separator") +
-                        "  } ]," + System.getProperty("line.separator") +
-                        "  \"body\" : {" + System.getProperty("line.separator") +
-                        "    \"type\" : \"XML\"," + System.getProperty("line.separator") +
-                        "    \"xml\" : \"<some><xml></xml></some>\"" + System.getProperty("line.separator") +
-                        "  }" + System.getProperty("line.separator") +
+                is("{" + NEW_LINE +
+                        "  \"method\" : \"GET\"," + NEW_LINE +
+                        "  \"path\" : \"/some/path\"," + NEW_LINE +
+                        "  \"queryStringParameters\" : [ {" + NEW_LINE +
+                        "    \"name\" : \"parameterOneName\"," + NEW_LINE +
+                        "    \"values\" : [ \"parameterOneValue\" ]" + NEW_LINE +
+                        "  } ]," + NEW_LINE +
+                        "  \"headers\" : [ {" + NEW_LINE +
+                        "    \"name\" : \"name\"," + NEW_LINE +
+                        "    \"values\" : [ \"value\" ]" + NEW_LINE +
+                        "  } ]," + NEW_LINE +
+                        "  \"cookies\" : [ {" + NEW_LINE +
+                        "    \"name\" : \"name\"," + NEW_LINE +
+                        "    \"value\" : \"[A-Z]{0,10}\"" + NEW_LINE +
+                        "  } ]," + NEW_LINE +
+                        "  \"body\" : {" + NEW_LINE +
+                        "    \"type\" : \"XML\"," + NEW_LINE +
+                        "    \"xml\" : \"<some><xml></xml></some>\"" + NEW_LINE +
+                        "  }" + NEW_LINE +
                         "}")
         );
     }
+
+
+    @Test
+    public void shouldReturnFormattedRequestWithXmlSchemaBodyInToString() throws JsonProcessingException {
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new XmlSchemaBody("{\"type\": \"object\", \"properties\": {\"id\": {\"type\": \"integer\"}}, \"required\": [\"id\"]}")),
+                is("{\"type\":\"XML_SCHEMA\",\"xmlSchema\":\"{\\\"type\\\": \\\"object\\\", \\\"properties\\\": {\\\"id\\\": {\\\"type\\\": \\\"integer\\\"}}, \\\"required\\\": [\\\"id\\\"]}\"}"));
+
+        assertThat(ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(
+                new HttpRequestDTO(
+                        request()
+                                .withMethod("GET")
+                                .withPath("/some/path")
+                                .withQueryStringParameters(param("parameterOneName", "parameterOneValue"))
+                                .withBody(xmlSchema("{\"type\": \"object\", \"properties\": {\"id\": {\"type\": \"integer\"}}, \"required\": [\"id\"]}"))
+                                .withHeaders(new Header("name", "value"))
+                                .withCookies(new Cookie("name", "[A-Z]{0,10}"))
+                )
+                ),
+                is("{" + NEW_LINE +
+                        "  \"method\" : \"GET\"," + NEW_LINE +
+                        "  \"path\" : \"/some/path\"," + NEW_LINE +
+                        "  \"queryStringParameters\" : [ {" + NEW_LINE +
+                        "    \"name\" : \"parameterOneName\"," + NEW_LINE +
+                        "    \"values\" : [ \"parameterOneValue\" ]" + NEW_LINE +
+                        "  } ]," + NEW_LINE +
+                        "  \"headers\" : [ {" + NEW_LINE +
+                        "    \"name\" : \"name\"," + NEW_LINE +
+                        "    \"values\" : [ \"value\" ]" + NEW_LINE +
+                        "  } ]," + NEW_LINE +
+                        "  \"cookies\" : [ {" + NEW_LINE +
+                        "    \"name\" : \"name\"," + NEW_LINE +
+                        "    \"value\" : \"[A-Z]{0,10}\"" + NEW_LINE +
+                        "  } ]," + NEW_LINE +
+                        "  \"body\" : {" + NEW_LINE +
+                        "    \"type\" : \"XML_SCHEMA\"," + NEW_LINE +
+                        "    \"xmlSchema\" : \"{\\\"type\\\": \\\"object\\\", \\\"properties\\\": {\\\"id\\\": {\\\"type\\\": \\\"integer\\\"}}, \\\"required\\\": [\\\"id\\\"]}\"" + NEW_LINE +
+                        "  }" + NEW_LINE +
+                        "}"));
+    }
+
 
     @Test
     public void shouldReturnFormattedRequestWithRegexBodyInToString() throws JsonProcessingException {
@@ -225,25 +268,25 @@ public class HttpRequestDTOSerializerTest {
                                         .withCookies(new Cookie("name", "[A-Z]{0,10}"))
                         )
                 ),
-                is("{" + System.getProperty("line.separator") +
-                        "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                        "  \"path\" : \"/some/path\"," + System.getProperty("line.separator") +
-                        "  \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"parameterOneName\"," + System.getProperty("line.separator") +
-                        "    \"values\" : [ \"parameterOneValue\" ]" + System.getProperty("line.separator") +
-                        "  } ]," + System.getProperty("line.separator") +
-                        "  \"headers\" : [ {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"name\"," + System.getProperty("line.separator") +
-                        "    \"values\" : [ \"value\" ]" + System.getProperty("line.separator") +
-                        "  } ]," + System.getProperty("line.separator") +
-                        "  \"cookies\" : [ {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"name\"," + System.getProperty("line.separator") +
-                        "    \"value\" : \"[A-Z]{0,10}\"" + System.getProperty("line.separator") +
-                        "  } ]," + System.getProperty("line.separator") +
-                        "  \"body\" : {" + System.getProperty("line.separator") +
-                        "    \"type\" : \"REGEX\"," + System.getProperty("line.separator") +
-                        "    \"regex\" : \"[a-z]{1,3}\"" + System.getProperty("line.separator") +
-                        "  }" + System.getProperty("line.separator") +
+                is("{" + NEW_LINE +
+                        "  \"method\" : \"GET\"," + NEW_LINE +
+                        "  \"path\" : \"/some/path\"," + NEW_LINE +
+                        "  \"queryStringParameters\" : [ {" + NEW_LINE +
+                        "    \"name\" : \"parameterOneName\"," + NEW_LINE +
+                        "    \"values\" : [ \"parameterOneValue\" ]" + NEW_LINE +
+                        "  } ]," + NEW_LINE +
+                        "  \"headers\" : [ {" + NEW_LINE +
+                        "    \"name\" : \"name\"," + NEW_LINE +
+                        "    \"values\" : [ \"value\" ]" + NEW_LINE +
+                        "  } ]," + NEW_LINE +
+                        "  \"cookies\" : [ {" + NEW_LINE +
+                        "    \"name\" : \"name\"," + NEW_LINE +
+                        "    \"value\" : \"[A-Z]{0,10}\"" + NEW_LINE +
+                        "  } ]," + NEW_LINE +
+                        "  \"body\" : {" + NEW_LINE +
+                        "    \"type\" : \"REGEX\"," + NEW_LINE +
+                        "    \"regex\" : \"[a-z]{1,3}\"" + NEW_LINE +
+                        "  }" + NEW_LINE +
                         "}")
         );
     }
@@ -264,31 +307,31 @@ public class HttpRequestDTOSerializerTest {
                                         .withCookies(new Cookie("name", "[A-Z]{0,10}"))
                         )
                 ),
-                is("{" + System.getProperty("line.separator") +
-                        "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                        "  \"path\" : \"/some/path\"," + System.getProperty("line.separator") +
-                        "  \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"parameterOneName\"," + System.getProperty("line.separator") +
-                        "    \"values\" : [ \"parameterOneValue\" ]" + System.getProperty("line.separator") +
-                        "  } ]," + System.getProperty("line.separator") +
-                        "  \"headers\" : [ {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"name\"," + System.getProperty("line.separator") +
-                        "    \"values\" : [ \"value\" ]" + System.getProperty("line.separator") +
-                        "  } ]," + System.getProperty("line.separator") +
-                        "  \"cookies\" : [ {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"name\"," + System.getProperty("line.separator") +
-                        "    \"value\" : \"[A-Z]{0,10}\"" + System.getProperty("line.separator") +
-                        "  } ]," + System.getProperty("line.separator") +
-                        "  \"body\" : {" + System.getProperty("line.separator") +
-                        "    \"type\" : \"PARAMETERS\"," + System.getProperty("line.separator") +
-                        "    \"parameters\" : [ {" + System.getProperty("line.separator") +
-                        "      \"name\" : \"queryStringParameterOneName\"," + System.getProperty("line.separator") +
-                        "      \"values\" : [ \"queryStringParameterOneValueOne\", \"queryStringParameterOneValueTwo\" ]" + System.getProperty("line.separator") +
-                        "    }, {" + System.getProperty("line.separator") +
-                        "      \"name\" : \"queryStringParameterTwoName\"," + System.getProperty("line.separator") +
-                        "      \"values\" : [ \"queryStringParameterTwoValue\" ]" + System.getProperty("line.separator") +
-                        "    } ]" + System.getProperty("line.separator") +
-                        "  }" + System.getProperty("line.separator") +
+                is("{" + NEW_LINE +
+                        "  \"method\" : \"GET\"," + NEW_LINE +
+                        "  \"path\" : \"/some/path\"," + NEW_LINE +
+                        "  \"queryStringParameters\" : [ {" + NEW_LINE +
+                        "    \"name\" : \"parameterOneName\"," + NEW_LINE +
+                        "    \"values\" : [ \"parameterOneValue\" ]" + NEW_LINE +
+                        "  } ]," + NEW_LINE +
+                        "  \"headers\" : [ {" + NEW_LINE +
+                        "    \"name\" : \"name\"," + NEW_LINE +
+                        "    \"values\" : [ \"value\" ]" + NEW_LINE +
+                        "  } ]," + NEW_LINE +
+                        "  \"cookies\" : [ {" + NEW_LINE +
+                        "    \"name\" : \"name\"," + NEW_LINE +
+                        "    \"value\" : \"[A-Z]{0,10}\"" + NEW_LINE +
+                        "  } ]," + NEW_LINE +
+                        "  \"body\" : {" + NEW_LINE +
+                        "    \"type\" : \"PARAMETERS\"," + NEW_LINE +
+                        "    \"parameters\" : [ {" + NEW_LINE +
+                        "      \"name\" : \"queryStringParameterOneName\"," + NEW_LINE +
+                        "      \"values\" : [ \"queryStringParameterOneValueOne\", \"queryStringParameterOneValueTwo\" ]" + NEW_LINE +
+                        "    }, {" + NEW_LINE +
+                        "      \"name\" : \"queryStringParameterTwoName\"," + NEW_LINE +
+                        "      \"values\" : [ \"queryStringParameterTwoValue\" ]" + NEW_LINE +
+                        "    } ]" + NEW_LINE +
+                        "  }" + NEW_LINE +
                         "}")
         );
     }

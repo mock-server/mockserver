@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
+import static org.mockserver.character.Character.NEW_LINE;
 
 public class NettyHttpClient {
 
@@ -44,7 +45,7 @@ public class NettyHttpClient {
                                     80
             );
         } else {
-            throw new IllegalArgumentException("Host header must be provided for requests being forwarded, the following request does not include the \"Host\" header:" + System.getProperty("line.separator") + httpRequest);
+            throw new IllegalArgumentException("Host header must be provided for requests being forwarded, the following request does not include the \"Host\" header:" + NEW_LINE + httpRequest);
         }
     }
 

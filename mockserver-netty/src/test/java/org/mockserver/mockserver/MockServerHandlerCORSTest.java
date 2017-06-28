@@ -14,6 +14,7 @@ import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 
 /**
@@ -223,10 +224,10 @@ public class MockServerHandlerCORSTest extends MockServerHandlerTest {
     @Test
     public void shouldAddCORSHeadersToBindRequest() {
         // given - a request
-        HttpRequest request = request().withMethod("PUT").withPath("/bind").withBody("{\n" +
-                "    \"ports\": [\n" +
-                "        0\n" +
-                "    ]\n" +
+        HttpRequest request = request().withMethod("PUT").withPath("/bind").withBody("{" + NEW_LINE +
+                "    \"ports\": [" + NEW_LINE +
+                "        0" + NEW_LINE +
+                "    ]" + NEW_LINE +
                 "}");
 
         // when

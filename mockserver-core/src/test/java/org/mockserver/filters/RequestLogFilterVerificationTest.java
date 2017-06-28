@@ -6,6 +6,7 @@ import org.mockserver.verify.Verification;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.verify.Verification.verification;
 import static org.mockserver.verify.VerificationTimes.atLeast;
@@ -185,14 +186,14 @@ public class RequestLogFilterVerificationTest {
                                         new HttpRequest().withPath("some_non_matching_path")
                                 )
                 ),
-                is("Request not found at least once, expected:<{" + System.getProperty("line.separator") +
-                        "  \"path\" : \"some_non_matching_path\"" + System.getProperty("line.separator") +
-                        "}> but was:<[ {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"some_path\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"some_other_path\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"some_path\"" + System.getProperty("line.separator") +
+                is("Request not found at least once, expected:<{" + NEW_LINE +
+                        "  \"path\" : \"some_non_matching_path\"" + NEW_LINE +
+                        "}> but was:<[ {" + NEW_LINE +
+                        "  \"path\" : \"some_path\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"some_other_path\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"some_path\"" + NEW_LINE +
                         "} ]>"));
     }
 
@@ -216,14 +217,14 @@ public class RequestLogFilterVerificationTest {
                                 )
                                 .withTimes(atLeast(2))
                 ),
-                is("Request not found at least 2 times, expected:<{" + System.getProperty("line.separator") +
-                        "  \"path\" : \"some_other_path\"" + System.getProperty("line.separator") +
-                        "}> but was:<[ {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"some_path\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"some_other_path\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"some_path\"" + System.getProperty("line.separator") +
+                is("Request not found at least 2 times, expected:<{" + NEW_LINE +
+                        "  \"path\" : \"some_other_path\"" + NEW_LINE +
+                        "}> but was:<[ {" + NEW_LINE +
+                        "  \"path\" : \"some_path\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"some_other_path\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"some_path\"" + NEW_LINE +
                         "} ]>"));
     }
 
@@ -248,14 +249,14 @@ public class RequestLogFilterVerificationTest {
                                 )
                                 .withTimes(exactly(2))
                 ),
-                is("Request not found exactly 2 times, expected:<{" + System.getProperty("line.separator") +
-                        "  \"path\" : \"some_other_path\"" + System.getProperty("line.separator") +
-                        "}> but was:<[ {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"some_path\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"some_other_path\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"some_path\"" + System.getProperty("line.separator") +
+                is("Request not found exactly 2 times, expected:<{" + NEW_LINE +
+                        "  \"path\" : \"some_other_path\"" + NEW_LINE +
+                        "}> but was:<[ {" + NEW_LINE +
+                        "  \"path\" : \"some_path\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"some_other_path\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"some_path\"" + NEW_LINE +
                         "} ]>"));
     }
 
@@ -273,8 +274,8 @@ public class RequestLogFilterVerificationTest {
                                 )
                                 .withTimes(exactly(1))
                 ),
-                is("Request not found exactly once, expected:<{" + System.getProperty("line.separator") +
-                        "  \"path\" : \"some_other_path\"" + System.getProperty("line.separator") +
+                is("Request not found exactly once, expected:<{" + NEW_LINE +
+                        "  \"path\" : \"some_other_path\"" + NEW_LINE +
                         "}> but was:<>"));
     }
 
@@ -299,14 +300,14 @@ public class RequestLogFilterVerificationTest {
                                 )
                                 .withTimes(exactly(0))
                 ),
-                is("Request not found exactly 0 times, expected:<{" + System.getProperty("line.separator") +
-                        "  \"path\" : \"some_other_path\"" + System.getProperty("line.separator") +
-                        "}> but was:<[ {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"some_path\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"some_other_path\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"some_path\"" + System.getProperty("line.separator") +
+                is("Request not found exactly 0 times, expected:<{" + NEW_LINE +
+                        "  \"path\" : \"some_other_path\"" + NEW_LINE +
+                        "}> but was:<[ {" + NEW_LINE +
+                        "  \"path\" : \"some_path\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"some_other_path\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"some_path\"" + NEW_LINE +
                         "} ]>"));
     }
 

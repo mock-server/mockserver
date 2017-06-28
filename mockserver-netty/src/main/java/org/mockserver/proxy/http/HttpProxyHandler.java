@@ -35,6 +35,7 @@ import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderValues.CLOSE;
 import static io.netty.handler.codec.http.HttpHeaderValues.KEEP_ALIVE;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAPI;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAllResponses;
 import static org.mockserver.model.Header.header;
@@ -77,7 +78,7 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
         try {
 
-            logFormatter.traceLog("received request:{}" + System.getProperty("line.separator"), request);
+            logFormatter.traceLog("received request:{}" + NEW_LINE, request);
 
             if (request.getMethod().getValue().equals("CONNECT")) {
 
@@ -176,7 +177,7 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
                 httpResponse = notFoundResponse();
             }
             logFormatter.infoLog(
-                    "returning response:{}" + System.getProperty("line.separator") + " for request as json:{}" + System.getProperty("line.separator") + " as curl:{}",
+                    "returning response:{}" + NEW_LINE + " for request as json:{}" + NEW_LINE + " as curl:{}",
                     httpResponse,
                     httpRequest,
                     httpRequestToCurlSerializer.toCurl(httpRequest, remoteAddress)

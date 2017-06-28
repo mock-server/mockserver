@@ -10,6 +10,7 @@ import org.mockserver.model.HttpResponse;
 import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.BinaryBody.binary;
 
 /**
@@ -19,17 +20,17 @@ public class HttpResponseToJavaSerializerTest {
 
     @Test
     public void shouldSerializeFullObjectWithResponseAsJava() throws IOException {
-        assertEquals(System.getProperty("line.separator") +
-                        "        response()" + System.getProperty("line.separator") +
-                        "                .withStatusCode(304)" + System.getProperty("line.separator") +
-                        "                .withHeaders(" + System.getProperty("line.separator") +
-                        "                        new Header(\"responseHeaderNameOne\", \"responseHeaderValueOneOne\", \"responseHeaderValueOneTwo\")," + System.getProperty("line.separator") +
-                        "                        new Header(\"responseHeaderNameTwo\", \"responseHeaderValueTwo\")" + System.getProperty("line.separator") +
-                        "                )" + System.getProperty("line.separator") +
-                        "                .withCookies(" + System.getProperty("line.separator") +
-                        "                        new Cookie(\"responseCookieNameOne\", \"responseCookieValueOne\")," + System.getProperty("line.separator") +
-                        "                        new Cookie(\"responseCookieNameTwo\", \"responseCookieValueTwo\")" + System.getProperty("line.separator") +
-                        "                )" + System.getProperty("line.separator") +
+        assertEquals(NEW_LINE +
+                        "        response()" + NEW_LINE +
+                        "                .withStatusCode(304)" + NEW_LINE +
+                        "                .withHeaders(" + NEW_LINE +
+                        "                        new Header(\"responseHeaderNameOne\", \"responseHeaderValueOneOne\", \"responseHeaderValueOneTwo\")," + NEW_LINE +
+                        "                        new Header(\"responseHeaderNameTwo\", \"responseHeaderValueTwo\")" + NEW_LINE +
+                        "                )" + NEW_LINE +
+                        "                .withCookies(" + NEW_LINE +
+                        "                        new Cookie(\"responseCookieNameOne\", \"responseCookieValueOne\")," + NEW_LINE +
+                        "                        new Cookie(\"responseCookieNameTwo\", \"responseCookieValueTwo\")" + NEW_LINE +
+                        "                )" + NEW_LINE +
                         "                .withBody(\"responseBody\")",
                 new HttpResponseToJavaSerializer().serializeAsJava(1,
                         new HttpResponse()
@@ -50,8 +51,8 @@ public class HttpResponseToJavaSerializerTest {
     @Test
     public void shouldSerializeFullObjectWithBinaryBodyResponseAsJava() throws IOException {
         // when
-        assertEquals(System.getProperty("line.separator") +
-                        "        response()" + System.getProperty("line.separator") +
+        assertEquals(NEW_LINE +
+                        "        response()" + NEW_LINE +
                         "                .withBody(Base64Converter.base64StringToBytes(\"" + Base64Converter.bytesToBase64String("responseBody".getBytes()) + "\"))",
                 new HttpResponseToJavaSerializer().serializeAsJava(1,
                         new HttpResponse()
@@ -62,36 +63,36 @@ public class HttpResponseToJavaSerializerTest {
 
     @Test
     public void shouldEscapeJSONBodies() throws IOException {
-        assertEquals("" + System.getProperty("line.separator") +
-                        "        response()" + System.getProperty("line.separator") +
-                        "                .withStatusCode(304)" + System.getProperty("line.separator") +
-                        "                .withBody(\"[" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "          {" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "              \\\"id\\\": \\\"1\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "              \\\"title\\\": \\\"Xenophon's imperial fiction : on the education of Cyrus\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "              \\\"author\\\": \\\"James Tatum\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "              \\\"isbn\\\": \\\"0691067570\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "              \\\"publicationDate\\\": \\\"1989\\\"" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "          }," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "          {" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "              \\\"id\\\": \\\"2\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "              \\\"title\\\": \\\"You are here : personal geographies and other maps of the imagination\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "              \\\"author\\\": \\\"Katharine A. Harmon\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "              \\\"isbn\\\": \\\"1568984308\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "              \\\"publicationDate\\\": \\\"2004\\\"" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "          }," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "          {" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "              \\\"id\\\": \\\"3\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "              \\\"title\\\": \\\"You just don't understand : women and men in conversation\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "              \\\"author\\\": \\\"Deborah Tannen\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "              \\\"isbn\\\": \\\"0345372050\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "              \\\"publicationDate\\\": \\\"1990\\\"" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "          }" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "]\")",
+        assertEquals("" + NEW_LINE +
+                        "        response()" + NEW_LINE +
+                        "                .withStatusCode(304)" + NEW_LINE +
+                        "                .withBody(\"[" + StringEscapeUtils.escapeJava(NEW_LINE) + "          {" + StringEscapeUtils.escapeJava(NEW_LINE) + "              \\\"id\\\": \\\"1\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "              \\\"title\\\": \\\"Xenophon's imperial fiction : on the education of Cyrus\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "              \\\"author\\\": \\\"James Tatum\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "              \\\"isbn\\\": \\\"0691067570\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "              \\\"publicationDate\\\": \\\"1989\\\"" + StringEscapeUtils.escapeJava(NEW_LINE) + "          }," + StringEscapeUtils.escapeJava(NEW_LINE) + "          {" + StringEscapeUtils.escapeJava(NEW_LINE) + "              \\\"id\\\": \\\"2\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "              \\\"title\\\": \\\"You are here : personal geographies and other maps of the imagination\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "              \\\"author\\\": \\\"Katharine A. Harmon\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "              \\\"isbn\\\": \\\"1568984308\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "              \\\"publicationDate\\\": \\\"2004\\\"" + StringEscapeUtils.escapeJava(NEW_LINE) + "          }," + StringEscapeUtils.escapeJava(NEW_LINE) + "          {" + StringEscapeUtils.escapeJava(NEW_LINE) + "              \\\"id\\\": \\\"3\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "              \\\"title\\\": \\\"You just don't understand : women and men in conversation\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "              \\\"author\\\": \\\"Deborah Tannen\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "              \\\"isbn\\\": \\\"0345372050\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "              \\\"publicationDate\\\": \\\"1990\\\"" + StringEscapeUtils.escapeJava(NEW_LINE) + "          }" + StringEscapeUtils.escapeJava(NEW_LINE) + "]\")",
                 new HttpResponseToJavaSerializer().serializeAsJava(1,
 
                         new HttpResponse()
                                 .withStatusCode(304)
-                                .withBody("[" + System.getProperty("line.separator") +
-                                        "          {" + System.getProperty("line.separator") +
-                                        "              \"id\": \"1\"," + System.getProperty("line.separator") +
-                                        "              \"title\": \"Xenophon's imperial fiction : on the education of Cyrus\"," + System.getProperty("line.separator") +
-                                        "              \"author\": \"James Tatum\"," + System.getProperty("line.separator") +
-                                        "              \"isbn\": \"0691067570\"," + System.getProperty("line.separator") +
-                                        "              \"publicationDate\": \"1989\"" + System.getProperty("line.separator") +
-                                        "          }," + System.getProperty("line.separator") +
-                                        "          {" + System.getProperty("line.separator") +
-                                        "              \"id\": \"2\"," + System.getProperty("line.separator") +
-                                        "              \"title\": \"You are here : personal geographies and other maps of the imagination\"," + System.getProperty("line.separator") +
-                                        "              \"author\": \"Katharine A. Harmon\"," + System.getProperty("line.separator") +
-                                        "              \"isbn\": \"1568984308\"," + System.getProperty("line.separator") +
-                                        "              \"publicationDate\": \"2004\"" + System.getProperty("line.separator") +
-                                        "          }," + System.getProperty("line.separator") +
-                                        "          {" + System.getProperty("line.separator") +
-                                        "              \"id\": \"3\"," + System.getProperty("line.separator") +
-                                        "              \"title\": \"You just don't understand : women and men in conversation\"," + System.getProperty("line.separator") +
-                                        "              \"author\": \"Deborah Tannen\"," + System.getProperty("line.separator") +
-                                        "              \"isbn\": \"0345372050\"," + System.getProperty("line.separator") +
-                                        "              \"publicationDate\": \"1990\"" + System.getProperty("line.separator") +
-                                        "          }" + System.getProperty("line.separator") +
+                                .withBody("[" + NEW_LINE +
+                                        "          {" + NEW_LINE +
+                                        "              \"id\": \"1\"," + NEW_LINE +
+                                        "              \"title\": \"Xenophon's imperial fiction : on the education of Cyrus\"," + NEW_LINE +
+                                        "              \"author\": \"James Tatum\"," + NEW_LINE +
+                                        "              \"isbn\": \"0691067570\"," + NEW_LINE +
+                                        "              \"publicationDate\": \"1989\"" + NEW_LINE +
+                                        "          }," + NEW_LINE +
+                                        "          {" + NEW_LINE +
+                                        "              \"id\": \"2\"," + NEW_LINE +
+                                        "              \"title\": \"You are here : personal geographies and other maps of the imagination\"," + NEW_LINE +
+                                        "              \"author\": \"Katharine A. Harmon\"," + NEW_LINE +
+                                        "              \"isbn\": \"1568984308\"," + NEW_LINE +
+                                        "              \"publicationDate\": \"2004\"" + NEW_LINE +
+                                        "          }," + NEW_LINE +
+                                        "          {" + NEW_LINE +
+                                        "              \"id\": \"3\"," + NEW_LINE +
+                                        "              \"title\": \"You just don't understand : women and men in conversation\"," + NEW_LINE +
+                                        "              \"author\": \"Deborah Tannen\"," + NEW_LINE +
+                                        "              \"isbn\": \"0345372050\"," + NEW_LINE +
+                                        "              \"publicationDate\": \"1990\"" + NEW_LINE +
+                                        "          }" + NEW_LINE +
                                         "]")
                 )
         );
@@ -99,8 +100,8 @@ public class HttpResponseToJavaSerializerTest {
 
     @Test
     public void shouldSerializeMinimalObjectAsJava() throws IOException {
-        assertEquals(System.getProperty("line.separator") +
-                        "        response()" + System.getProperty("line.separator") +
+        assertEquals(NEW_LINE +
+                        "        response()" + NEW_LINE +
                         "                .withStatusCode(304)",
                 new HttpResponseToJavaSerializer().serializeAsJava(1,
                         new HttpResponse()

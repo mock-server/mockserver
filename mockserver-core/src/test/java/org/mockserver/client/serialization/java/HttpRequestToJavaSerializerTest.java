@@ -8,6 +8,7 @@ import org.mockserver.model.*;
 import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockserver.character.Character.NEW_LINE;
 
 /**
  * @author jamesdbloom
@@ -16,24 +17,24 @@ public class HttpRequestToJavaSerializerTest {
 
     @Test
     public void shouldSerializeFullObjectAsJava() throws IOException {
-        assertEquals(System.getProperty("line.separator") +
-                        "        request()" + System.getProperty("line.separator") +
-                        "                .withMethod(\"GET\")" + System.getProperty("line.separator") +
-                        "                .withPath(\"somePath\")" + System.getProperty("line.separator") +
-                        "                .withHeaders(" + System.getProperty("line.separator") +
-                        "                        new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\")," + System.getProperty("line.separator") +
-                        "                        new Header(\"requestHeaderNameTwo\", \"requestHeaderValueTwo\")" + System.getProperty("line.separator") +
-                        "                )" + System.getProperty("line.separator") +
-                        "                .withCookies(" + System.getProperty("line.separator") +
-                        "                        new Cookie(\"requestCookieNameOne\", \"requestCookieValueOne\")," + System.getProperty("line.separator") +
-                        "                        new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")" + System.getProperty("line.separator") +
-                        "                )" + System.getProperty("line.separator") +
-                        "                .withQueryStringParameters(" + System.getProperty("line.separator") +
-                        "                        new Parameter(\"requestQueryStringParameterNameOne\", \"requestQueryStringParameterValueOneOne\", \"requestQueryStringParameterValueOneTwo\")," + System.getProperty("line.separator") +
-                        "                        new Parameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")" + System.getProperty("line.separator") +
-                        "                )" + System.getProperty("line.separator") +
-                        "                .withSecure(true)" + System.getProperty("line.separator") +
-                        "                .withKeepAlive(false)" + System.getProperty("line.separator") +
+        assertEquals(NEW_LINE +
+                        "        request()" + NEW_LINE +
+                        "                .withMethod(\"GET\")" + NEW_LINE +
+                        "                .withPath(\"somePath\")" + NEW_LINE +
+                        "                .withHeaders(" + NEW_LINE +
+                        "                        new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\")," + NEW_LINE +
+                        "                        new Header(\"requestHeaderNameTwo\", \"requestHeaderValueTwo\")" + NEW_LINE +
+                        "                )" + NEW_LINE +
+                        "                .withCookies(" + NEW_LINE +
+                        "                        new Cookie(\"requestCookieNameOne\", \"requestCookieValueOne\")," + NEW_LINE +
+                        "                        new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")" + NEW_LINE +
+                        "                )" + NEW_LINE +
+                        "                .withQueryStringParameters(" + NEW_LINE +
+                        "                        new Parameter(\"requestQueryStringParameterNameOne\", \"requestQueryStringParameterValueOneOne\", \"requestQueryStringParameterValueOneTwo\")," + NEW_LINE +
+                        "                        new Parameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")" + NEW_LINE +
+                        "                )" + NEW_LINE +
+                        "                .withSecure(true)" + NEW_LINE +
+                        "                .withKeepAlive(false)" + NEW_LINE +
                         "                .withBody(new StringBody(\"responseBody\"))",
                 new HttpRequestToJavaSerializer().serializeAsJava(1,
                         new HttpRequest()
@@ -60,13 +61,13 @@ public class HttpRequestToJavaSerializerTest {
 
     @Test
     public void shouldSerializeFullObjectWithParameterBodyRequestAsJava() throws IOException {
-        assertEquals(System.getProperty("line.separator") +
-                        "        request()" + System.getProperty("line.separator") +
-                        "                .withBody(" + System.getProperty("line.separator") +
-                        "                        new ParameterBody(" + System.getProperty("line.separator") +
-                        "                                new Parameter(\"requestBodyParameterNameOne\", \"requestBodyParameterValueOneOne\", \"requestBodyParameterValueOneTwo\")," + System.getProperty("line.separator") +
-                        "                                new Parameter(\"requestBodyParameterNameTwo\", \"requestBodyParameterValueTwo\")" + System.getProperty("line.separator") +
-                        "                        )" + System.getProperty("line.separator") +
+        assertEquals(NEW_LINE +
+                        "        request()" + NEW_LINE +
+                        "                .withBody(" + NEW_LINE +
+                        "                        new ParameterBody(" + NEW_LINE +
+                        "                                new Parameter(\"requestBodyParameterNameOne\", \"requestBodyParameterValueOneOne\", \"requestBodyParameterValueOneTwo\")," + NEW_LINE +
+                        "                                new Parameter(\"requestBodyParameterNameTwo\", \"requestBodyParameterValueTwo\")" + NEW_LINE +
+                        "                        )" + NEW_LINE +
                         "                )",
                 new HttpRequestToJavaSerializer().serializeAsJava(1,
                         new HttpRequest()
@@ -83,8 +84,8 @@ public class HttpRequestToJavaSerializerTest {
     @Test
     public void shouldSerializeFullObjectWithBinaryBodyRequestAsJava() throws IOException {
         // when
-        assertEquals(System.getProperty("line.separator") +
-                        "        request()" + System.getProperty("line.separator") +
+        assertEquals(NEW_LINE +
+                        "        request()" + NEW_LINE +
                         "                .withBody(Base64Converter.base64StringToBytes(\"" + Base64Converter.bytesToBase64String("responseBody".getBytes()) + "\"))",
                 new HttpRequestToJavaSerializer().serializeAsJava(1,
                         new HttpRequest()
@@ -95,77 +96,98 @@ public class HttpRequestToJavaSerializerTest {
     }
 
     @Test
-    public void shouldEscapeJSONBodies() throws IOException {
-        assertEquals("" + System.getProperty("line.separator") +
-                        "        request()" + System.getProperty("line.separator") +
-                        "                .withPath(\"somePath\")" + System.getProperty("line.separator") +
-                        "                .withBody(new JsonBody(\"[" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    {" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"id\\\": \\\"1\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"title\\\": \\\"Xenophon's imperial fiction : on the education of Cyrus\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"author\\\": \\\"James Tatum\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"isbn\\\": \\\"0691067570\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"publicationDate\\\": \\\"1989\\\"" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    }," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    {" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"id\\\": \\\"2\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"title\\\": \\\"You are here : personal geographies and other maps of the imagination\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"author\\\": \\\"Katharine A. Harmon\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"isbn\\\": \\\"1568984308\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"publicationDate\\\": \\\"2004\\\"" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    }," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    {" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"id\\\": \\\"3\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"title\\\": \\\"You just don't understand : women and men in conversation\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"author\\\": \\\"Deborah Tannen\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"isbn\\\": \\\"0345372050\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"publicationDate\\\": \\\"1990\\\"" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    }" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "]\", JsonBodyMatchType.ONLY_MATCHING_FIELDS))",
+    public void shouldEscapeJsonBodies() throws IOException {
+        assertEquals("" + NEW_LINE +
+                        "        request()" + NEW_LINE +
+                        "                .withPath(\"somePath\")" + NEW_LINE +
+                        "                .withBody(new JsonBody(\"[" + StringEscapeUtils.escapeJava(NEW_LINE) +
+                        "    {" + StringEscapeUtils.escapeJava(NEW_LINE) +
+                        "        \\\"id\\\": \\\"1\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
+                        "        \\\"title\\\": \\\"Xenophon's imperial fiction : on the education of Cyrus\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
+                        "        \\\"author\\\": \\\"James Tatum\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
+                        "        \\\"isbn\\\": \\\"0691067570\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
+                        "        \\\"publicationDate\\\": \\\"1989\\\"" + StringEscapeUtils.escapeJava(NEW_LINE) +
+                        "    }," + StringEscapeUtils.escapeJava(NEW_LINE) +
+                        "    {" + StringEscapeUtils.escapeJava(NEW_LINE) +
+                        "        \\\"id\\\": \\\"2\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
+                        "        \\\"title\\\": \\\"You are here : personal geographies and other maps of the imagination\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
+                        "        \\\"author\\\": \\\"Katharine A. Harmon\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
+                        "        \\\"isbn\\\": \\\"1568984308\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
+                        "        \\\"publicationDate\\\": \\\"2004\\\"" + StringEscapeUtils.escapeJava(NEW_LINE) +
+                        "    }," + StringEscapeUtils.escapeJava(NEW_LINE) +
+                        "    {" + StringEscapeUtils.escapeJava(NEW_LINE) +
+                        "        \\\"id\\\": \\\"3\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
+                        "        \\\"title\\\": \\\"You just don't understand : women and men in conversation\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
+                        "        \\\"author\\\": \\\"Deborah Tannen\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
+                        "        \\\"isbn\\\": \\\"0345372050\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
+                        "        \\\"publicationDate\\\": \\\"1990\\\"" + StringEscapeUtils.escapeJava(NEW_LINE) +
+                        "    }" + StringEscapeUtils.escapeJava(NEW_LINE) +
+                        "]\", JsonBodyMatchType.ONLY_MATCHING_FIELDS))",
                 new HttpRequestToJavaSerializer().serializeAsJava(1,
                         new HttpRequest()
                                 .withPath("somePath")
-                                .withBody(new JsonBody("[" + System.getProperty("line.separator") +
-                                        "    {" + System.getProperty("line.separator") +
-                                        "        \"id\": \"1\"," + System.getProperty("line.separator") +
-                                        "        \"title\": \"Xenophon's imperial fiction : on the education of Cyrus\"," + System.getProperty("line.separator") +
-                                        "        \"author\": \"James Tatum\"," + System.getProperty("line.separator") +
-                                        "        \"isbn\": \"0691067570\"," + System.getProperty("line.separator") +
-                                        "        \"publicationDate\": \"1989\"" + System.getProperty("line.separator") +
-                                        "    }," + System.getProperty("line.separator") +
-                                        "    {" + System.getProperty("line.separator") +
-                                        "        \"id\": \"2\"," + System.getProperty("line.separator") +
-                                        "        \"title\": \"You are here : personal geographies and other maps of the imagination\"," + System.getProperty("line.separator") +
-                                        "        \"author\": \"Katharine A. Harmon\"," + System.getProperty("line.separator") +
-                                        "        \"isbn\": \"1568984308\"," + System.getProperty("line.separator") +
-                                        "        \"publicationDate\": \"2004\"" + System.getProperty("line.separator") +
-                                        "    }," + System.getProperty("line.separator") +
-                                        "    {" + System.getProperty("line.separator") +
-                                        "        \"id\": \"3\"," + System.getProperty("line.separator") +
-                                        "        \"title\": \"You just don't understand : women and men in conversation\"," + System.getProperty("line.separator") +
-                                        "        \"author\": \"Deborah Tannen\"," + System.getProperty("line.separator") +
-                                        "        \"isbn\": \"0345372050\"," + System.getProperty("line.separator") +
-                                        "        \"publicationDate\": \"1990\"" + System.getProperty("line.separator") +
-                                        "    }" + System.getProperty("line.separator") +
+                                .withBody(new JsonBody("[" + NEW_LINE +
+                                        "    {" + NEW_LINE +
+                                        "        \"id\": \"1\"," + NEW_LINE +
+                                        "        \"title\": \"Xenophon's imperial fiction : on the education of Cyrus\"," + NEW_LINE +
+                                        "        \"author\": \"James Tatum\"," + NEW_LINE +
+                                        "        \"isbn\": \"0691067570\"," + NEW_LINE +
+                                        "        \"publicationDate\": \"1989\"" + NEW_LINE +
+                                        "    }," + NEW_LINE +
+                                        "    {" + NEW_LINE +
+                                        "        \"id\": \"2\"," + NEW_LINE +
+                                        "        \"title\": \"You are here : personal geographies and other maps of the imagination\"," + NEW_LINE +
+                                        "        \"author\": \"Katharine A. Harmon\"," + NEW_LINE +
+                                        "        \"isbn\": \"1568984308\"," + NEW_LINE +
+                                        "        \"publicationDate\": \"2004\"" + NEW_LINE +
+                                        "    }," + NEW_LINE +
+                                        "    {" + NEW_LINE +
+                                        "        \"id\": \"3\"," + NEW_LINE +
+                                        "        \"title\": \"You just don't understand : women and men in conversation\"," + NEW_LINE +
+                                        "        \"author\": \"Deborah Tannen\"," + NEW_LINE +
+                                        "        \"isbn\": \"0345372050\"," + NEW_LINE +
+                                        "        \"publicationDate\": \"1990\"" + NEW_LINE +
+                                        "    }" + NEW_LINE +
                                         "]"))
                 )
         );
     }
 
-
     @Test
     public void shouldEscapeJsonSchemaBodies() throws IOException {
-        String jsonSchema = "{" + System.getProperty("line.separator") +
-                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + System.getProperty("line.separator") +
-                "    \"title\": \"Product\"," + System.getProperty("line.separator") +
-                "    \"description\": \"A product from Acme's catalog\"," + System.getProperty("line.separator") +
-                "    \"type\": \"object\"," + System.getProperty("line.separator") +
-                "    \"properties\": {" + System.getProperty("line.separator") +
-                "        \"id\": {" + System.getProperty("line.separator") +
-                "                  \"description\": \"The unique identifier for a product\"," + System.getProperty("line.separator") +
-                "                  \"type\": \"integer\"" + System.getProperty("line.separator") +
-                "        }," + System.getProperty("line.separator") +
-                "        \"name\": {" + System.getProperty("line.separator") +
-                "                  \"description\": \"Name of the product\"," + System.getProperty("line.separator") +
-                "                  \"type\": \"string\"" + System.getProperty("line.separator") +
-                "        }," + System.getProperty("line.separator") +
-                "        \"price\": {" + System.getProperty("line.separator") +
-                "                  \"type\": \"number\"," + System.getProperty("line.separator") +
-                "                  \"minimum\": 0," + System.getProperty("line.separator") +
-                "                  \"exclusiveMinimum\": true" + System.getProperty("line.separator") +
-                "        }," + System.getProperty("line.separator") +
-                "        \"tags\": {" + System.getProperty("line.separator") +
-                "                  \"type\": \"array\"," + System.getProperty("line.separator") +
-                "                  \"items\": {" + System.getProperty("line.separator") +
-                "                      \"type\": \"string\"" + System.getProperty("line.separator") +
-                "                  }," + System.getProperty("line.separator") +
-                "                  \"minItems\": 1," + System.getProperty("line.separator") +
-                "                  \"uniqueItems\": true" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"required\": [\"id\", \"name\", \"price\"]" + System.getProperty("line.separator") +
+        String jsonSchema = "{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"description\": \"A product from Acme's catalog\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "                  \"description\": \"The unique identifier for a product\"," + NEW_LINE +
+                "                  \"type\": \"integer\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"name\": {" + NEW_LINE +
+                "                  \"description\": \"Name of the product\"," + NEW_LINE +
+                "                  \"type\": \"string\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"price\": {" + NEW_LINE +
+                "                  \"type\": \"number\"," + NEW_LINE +
+                "                  \"minimum\": 0," + NEW_LINE +
+                "                  \"exclusiveMinimum\": true" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"tags\": {" + NEW_LINE +
+                "                  \"type\": \"array\"," + NEW_LINE +
+                "                  \"items\": {" + NEW_LINE +
+                "                      \"type\": \"string\"" + NEW_LINE +
+                "                  }," + NEW_LINE +
+                "                  \"minItems\": 1," + NEW_LINE +
+                "                  \"uniqueItems\": true" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
                 "}";
-        assertEquals("" + System.getProperty("line.separator") +
-                        "        request()" + System.getProperty("line.separator") +
-                        "                .withPath(\"somePath\")" + System.getProperty("line.separator") +
+        assertEquals("" + NEW_LINE +
+                        "        request()" + NEW_LINE +
+                        "                .withPath(\"somePath\")" + NEW_LINE +
                         "                .withBody(new JsonSchemaBody(\"" + StringEscapeUtils.escapeJava(jsonSchema) + "\"))",
                 new HttpRequestToJavaSerializer().serializeAsJava(1,
                         new HttpRequest()
@@ -176,10 +198,54 @@ public class HttpRequestToJavaSerializerTest {
     }
 
     @Test
+    public void shouldEscapeXmlSchemaBodies() throws IOException {
+        String xmlSchema = "{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"description\": \"A product from Acme's catalog\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "                  \"description\": \"The unique identifier for a product\"," + NEW_LINE +
+                "                  \"type\": \"integer\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"name\": {" + NEW_LINE +
+                "                  \"description\": \"Name of the product\"," + NEW_LINE +
+                "                  \"type\": \"string\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"price\": {" + NEW_LINE +
+                "                  \"type\": \"number\"," + NEW_LINE +
+                "                  \"minimum\": 0," + NEW_LINE +
+                "                  \"exclusiveMinimum\": true" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"tags\": {" + NEW_LINE +
+                "                  \"type\": \"array\"," + NEW_LINE +
+                "                  \"items\": {" + NEW_LINE +
+                "                      \"type\": \"string\"" + NEW_LINE +
+                "                  }," + NEW_LINE +
+                "                  \"minItems\": 1," + NEW_LINE +
+                "                  \"uniqueItems\": true" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                "}";
+        assertEquals("" + NEW_LINE +
+                        "        request()" + NEW_LINE +
+                        "                .withPath(\"somePath\")" + NEW_LINE +
+                        "                .withBody(new XmlSchemaBody(\"" + StringEscapeUtils.escapeJava(xmlSchema) + "\"))",
+                new HttpRequestToJavaSerializer().serializeAsJava(1,
+                        new HttpRequest()
+                                .withPath("somePath")
+                                .withBody(new XmlSchemaBody(xmlSchema))
+                )
+        );
+    }
+
+    @Test
     public void shouldSerializeMinimalObjectAsJava() throws IOException {
-        assertEquals(System.getProperty("line.separator") +
-                        "        request()" + System.getProperty("line.separator") +
-                        "                .withPath(\"somePath\")" + System.getProperty("line.separator") +
+        assertEquals(NEW_LINE +
+                        "        request()" + NEW_LINE +
+                        "                .withPath(\"somePath\")" + NEW_LINE +
                         "                .withBody(new StringBody(\"responseBody\"))",
                 new HttpRequestToJavaSerializer().serializeAsJava(1,
                         new HttpRequest()

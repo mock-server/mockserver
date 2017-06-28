@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.Delay.minutes;
 import static org.mockserver.model.Delay.seconds;
 import static org.mockserver.model.NottableString.string;
@@ -24,39 +25,39 @@ public class WebSocketMessageSerializerTest {
     @Test
     public void shouldDeserializeCompleteResponse() throws IOException, ClassNotFoundException {
         // given
-        String requestBytes = "{" + System.getProperty("line.separator") +
-                "  \"type\" : \"org.mockserver.model.HttpResponse\"," + System.getProperty("line.separator") +
-                "  \"value\" : \"{" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
+        String requestBytes = "{" + NEW_LINE +
+                "  \"type\" : \"org.mockserver.model.HttpResponse\"," + NEW_LINE +
+                "  \"value\" : \"{" + StringEscapeUtils.escapeJava(NEW_LINE) +
 
-                "  \\\"statusCode\\\" : 123," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
+                "  \\\"statusCode\\\" : 123," + StringEscapeUtils.escapeJava(NEW_LINE) +
 
-                "  \\\"headers\\\" : [ {" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
+                "  \\\"headers\\\" : [ {" + StringEscapeUtils.escapeJava(NEW_LINE) +
 
-                "    \\\"name\\\" : \\\"someHeaderName\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
+                "    \\\"name\\\" : \\\"someHeaderName\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
 
-                "    \\\"values\\\" : [ \\\"someHeaderValue\\\" ]" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
+                "    \\\"values\\\" : [ \\\"someHeaderValue\\\" ]" + StringEscapeUtils.escapeJava(NEW_LINE) +
 
-                "  } ]," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
+                "  } ]," + StringEscapeUtils.escapeJava(NEW_LINE) +
 
-                "  \\\"cookies\\\" : [ {" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
+                "  \\\"cookies\\\" : [ {" + StringEscapeUtils.escapeJava(NEW_LINE) +
 
-                "    \\\"name\\\" : \\\"someCookieName\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
+                "    \\\"name\\\" : \\\"someCookieName\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
 
-                "    \\\"value\\\" : \\\"someCookieValue\\\"" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
+                "    \\\"value\\\" : \\\"someCookieValue\\\"" + StringEscapeUtils.escapeJava(NEW_LINE) +
 
-                "  } ]," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
+                "  } ]," + StringEscapeUtils.escapeJava(NEW_LINE) +
 
-                "  \\\"body\\\" : \\\"somebody\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
+                "  \\\"body\\\" : \\\"somebody\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
 
-                "  \\\"delay\\\" : {" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
+                "  \\\"delay\\\" : {" + StringEscapeUtils.escapeJava(NEW_LINE) +
 
-                "    \\\"timeUnit\\\" : \\\"SECONDS\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
+                "    \\\"timeUnit\\\" : \\\"SECONDS\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
 
-                "    \\\"value\\\" : 5" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
+                "    \\\"value\\\" : 5" + StringEscapeUtils.escapeJava(NEW_LINE) +
 
-                "  }" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
+                "  }" + StringEscapeUtils.escapeJava(NEW_LINE) +
 
-                "}\"" + System.getProperty("line.separator") +
+                "}\"" + NEW_LINE +
                 "}";
 
         // when
@@ -86,51 +87,51 @@ public class WebSocketMessageSerializerTest {
         );
 
         // then
-        assertEquals("{" + System.getProperty("line.separator") +
-                "  \"type\" : \"org.mockserver.model.HttpResponse\"," + System.getProperty("line.separator") +
-                "  \"value\" : \"{" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "  \\\"statusCode\\\" : 123," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "  \\\"headers\\\" : [ {" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "    \\\"name\\\" : \\\"someHeaderName\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "    \\\"values\\\" : [ \\\"someHeaderValue\\\" ]" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "  } ]," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "  \\\"cookies\\\" : [ {" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "    \\\"name\\\" : \\\"someCookieName\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "    \\\"value\\\" : \\\"someCookieValue\\\"" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "  } ]," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "  \\\"body\\\" : \\\"somebody\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "  \\\"delay\\\" : {" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "    \\\"timeUnit\\\" : \\\"MINUTES\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "    \\\"value\\\" : 1" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "  }" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "}\"" + System.getProperty("line.separator") +
+        assertEquals("{" + NEW_LINE +
+                "  \"type\" : \"org.mockserver.model.HttpResponse\"," + NEW_LINE +
+                "  \"value\" : \"{" + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "  \\\"statusCode\\\" : 123," + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "  \\\"headers\\\" : [ {" + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "    \\\"name\\\" : \\\"someHeaderName\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "    \\\"values\\\" : [ \\\"someHeaderValue\\\" ]" + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "  } ]," + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "  \\\"cookies\\\" : [ {" + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "    \\\"name\\\" : \\\"someCookieName\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "    \\\"value\\\" : \\\"someCookieValue\\\"" + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "  } ]," + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "  \\\"body\\\" : \\\"somebody\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "  \\\"delay\\\" : {" + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "    \\\"timeUnit\\\" : \\\"MINUTES\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "    \\\"value\\\" : 1" + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "  }" + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "}\"" + NEW_LINE +
                 "}", jsonHttpResponse);
     }
 
     @Test
     public void shouldDeserializeCompleteRequest() throws IOException, ClassNotFoundException {
         // given
-        String requestBytes = "{" + System.getProperty("line.separator") +
-                "  \"type\" : \"org.mockserver.model.HttpRequest\"," + System.getProperty("line.separator") +
-                "  \"value\" : \"{" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "  \\\"method\\\" : \\\"someMethod\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "  \\\"path\\\" : \\\"somePath\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "  \\\"queryStringParameters\\\" : [ {" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "    \\\"name\\\" : \\\"queryParameterName\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "    \\\"values\\\" : [ \\\"queryParameterValue\\\" ]" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "  } ]," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "  \\\"headers\\\" : [ {" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "    \\\"name\\\" : \\\"someHeaderName\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "    \\\"values\\\" : [ \\\"someHeaderValue\\\" ]" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "  } ]," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "  \\\"cookies\\\" : [ {" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "    \\\"name\\\" : \\\"someCookieName\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "    \\\"value\\\" : \\\"someCookieValue\\\"" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "  } ]," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "  \\\"keepAlive\\\" : false," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "  \\\"secure\\\" : true," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "  \\\"body\\\" : \\\"somebody\\\"" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "}\"" + System.getProperty("line.separator") +
+        String requestBytes = "{" + NEW_LINE +
+                "  \"type\" : \"org.mockserver.model.HttpRequest\"," + NEW_LINE +
+                "  \"value\" : \"{" + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "  \\\"method\\\" : \\\"someMethod\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "  \\\"path\\\" : \\\"somePath\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "  \\\"queryStringParameters\\\" : [ {" + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "    \\\"name\\\" : \\\"queryParameterName\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "    \\\"values\\\" : [ \\\"queryParameterValue\\\" ]" + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "  } ]," + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "  \\\"headers\\\" : [ {" + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "    \\\"name\\\" : \\\"someHeaderName\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "    \\\"values\\\" : [ \\\"someHeaderValue\\\" ]" + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "  } ]," + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "  \\\"cookies\\\" : [ {" + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "    \\\"name\\\" : \\\"someCookieName\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "    \\\"value\\\" : \\\"someCookieValue\\\"" + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "  } ]," + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "  \\\"keepAlive\\\" : false," + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "  \\\"secure\\\" : true," + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "  \\\"body\\\" : \\\"somebody\\\"" + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "}\"" + NEW_LINE +
                 "}";
 
         // when
@@ -166,27 +167,27 @@ public class WebSocketMessageSerializerTest {
         );
 
         // then
-        assertEquals("{" + System.getProperty("line.separator") +
-                "  \"type\" : \"org.mockserver.model.HttpRequest\"," + System.getProperty("line.separator") +
-                "  \"value\" : \"{" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "  \\\"method\\\" : \\\"someMethod\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "  \\\"path\\\" : \\\"somePath\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "  \\\"queryStringParameters\\\" : [ {" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "    \\\"name\\\" : \\\"queryParameterName\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "    \\\"values\\\" : [ \\\"queryParameterValue\\\" ]" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "  } ]," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "  \\\"headers\\\" : [ {" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "    \\\"name\\\" : \\\"someHeaderName\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "    \\\"values\\\" : [ \\\"someHeaderValue\\\" ]" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "  } ]," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "  \\\"cookies\\\" : [ {" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "    \\\"name\\\" : \\\"someCookieName\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "    \\\"value\\\" : \\\"someCookieValue\\\"" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "  } ]," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "  \\\"keepAlive\\\" : false," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "  \\\"secure\\\" : true," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "  \\\"body\\\" : \\\"somebody\\\"" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) +
-                "}\"" + System.getProperty("line.separator") +
+        assertEquals("{" + NEW_LINE +
+                "  \"type\" : \"org.mockserver.model.HttpRequest\"," + NEW_LINE +
+                "  \"value\" : \"{" + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "  \\\"method\\\" : \\\"someMethod\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "  \\\"path\\\" : \\\"somePath\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "  \\\"queryStringParameters\\\" : [ {" + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "    \\\"name\\\" : \\\"queryParameterName\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "    \\\"values\\\" : [ \\\"queryParameterValue\\\" ]" + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "  } ]," + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "  \\\"headers\\\" : [ {" + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "    \\\"name\\\" : \\\"someHeaderName\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "    \\\"values\\\" : [ \\\"someHeaderValue\\\" ]" + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "  } ]," + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "  \\\"cookies\\\" : [ {" + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "    \\\"name\\\" : \\\"someCookieName\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "    \\\"value\\\" : \\\"someCookieValue\\\"" + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "  } ]," + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "  \\\"keepAlive\\\" : false," + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "  \\\"secure\\\" : true," + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "  \\\"body\\\" : \\\"somebody\\\"" + StringEscapeUtils.escapeJava(NEW_LINE) +
+                "}\"" + NEW_LINE +
                 "}", jsonHttpRequest);
     }
 

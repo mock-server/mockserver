@@ -29,6 +29,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.verify.Verification.verification;
@@ -164,9 +165,9 @@ public class ProxyClientTest {
 
         // then
         verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1090).withMethod("PUT").withPath("/clear").withBody("" +
-                "{" + System.getProperty("line.separator") +
-                "  \"path\" : \"/some_path\"," + System.getProperty("line.separator") +
-                "  \"body\" : \"some_request_body\"" + System.getProperty("line.separator") +
+                "{" + NEW_LINE +
+                "  \"path\" : \"/some_path\"," + NEW_LINE +
+                "  \"body\" : \"some_request_body\"" + NEW_LINE +
                 "}"));
     }
 
@@ -197,9 +198,9 @@ public class ProxyClientTest {
 
         // then
         verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1090).withMethod("PUT").withPath("/retrieve").withBody("" +
-                "{" + System.getProperty("line.separator") +
-                "  \"path\" : \"/some_path\"," + System.getProperty("line.separator") +
-                "  \"body\" : \"some_request_body\"" + System.getProperty("line.separator") +
+                "{" + NEW_LINE +
+                "  \"path\" : \"/some_path\"," + NEW_LINE +
+                "  \"body\" : \"some_request_body\"" + NEW_LINE +
                 "}"));
         verify(mockExpectationSerializer).deserializeArray("body");
     }
@@ -235,9 +236,9 @@ public class ProxyClientTest {
 
         // then
         verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1090).withMethod("PUT").withPath("/retrieve").withBody("" +
-                "{" + System.getProperty("line.separator") +
-                "  \"path\" : \"/some_path\"," + System.getProperty("line.separator") +
-                "  \"body\" : \"some_request_body\"" + System.getProperty("line.separator") +
+                "{" + NEW_LINE +
+                "  \"path\" : \"/some_path\"," + NEW_LINE +
+                "  \"body\" : \"some_request_body\"" + NEW_LINE +
                 "}"));
     }
 

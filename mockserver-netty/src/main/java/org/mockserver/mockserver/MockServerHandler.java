@@ -32,6 +32,7 @@ import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static io.netty.handler.codec.http.HttpHeaderValues.CLOSE;
 import static io.netty.handler.codec.http.HttpHeaderValues.KEEP_ALIVE;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAPI;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAllResponses;
 import static org.mockserver.model.ConnectionOptions.connectionOptions;
@@ -211,14 +212,14 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                     webSocketClientRegistry.registerCallbackResponseHandler(clientId, new ExpectationCallbackResponse() {
                         @Override
                         public void handle(HttpResponse response) {
-                            logFormatter.infoLog("returning response:{}" + System.getProperty("line.separator") + " for request:{}", response, request);
+                            logFormatter.infoLog("returning response:{}" + NEW_LINE + " for request:{}", response, request);
                             writeResponse(ctx, request, response.withConnectionOptions(connectionOptions().withCloseSocket(true)));
                         }
                     });
                     webSocketClientRegistry.sendClientMessage(clientId, request);
                 } else {
                     HttpResponse response = actionHandler.processAction(handle, request);
-                    logFormatter.infoLog("returning response:{}" + System.getProperty("line.separator") + " for request:{}", response, request);
+                    logFormatter.infoLog("returning response:{}" + NEW_LINE + " for request:{}", response, request);
                     writeResponse(ctx, request, response);
                 }
 

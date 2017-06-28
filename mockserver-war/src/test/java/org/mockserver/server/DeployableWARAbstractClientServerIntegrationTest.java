@@ -14,6 +14,7 @@ import org.mockserver.model.HttpStatusCode;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.ConnectionOptions.connectionOptions;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpClassCallback.callback;
@@ -167,8 +168,8 @@ public abstract class DeployableWARAbstractClientServerIntegrationTest extends S
                 response()
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                        .withBody("{" + System.getProperty("line.separator") +
-                                "  \"ports\" : [ " + getMockServerPort() + " ]" + System.getProperty("line.separator") +
+                        .withBody("{" + NEW_LINE +
+                                "  \"ports\" : [ " + getMockServerPort() + " ]" + NEW_LINE +
                                 "}"),
                 makeRequest(
                         request()
@@ -181,8 +182,8 @@ public abstract class DeployableWARAbstractClientServerIntegrationTest extends S
                 response()
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                        .withBody("{" + System.getProperty("line.separator") +
-                                "  \"ports\" : [ " + getMockServerSecurePort() + " ]" + System.getProperty("line.separator") +
+                        .withBody("{" + NEW_LINE +
+                                "  \"ports\" : [ " + getMockServerSecurePort() + " ]" + NEW_LINE +
                                 "}"),
                 makeRequest(
                         request()

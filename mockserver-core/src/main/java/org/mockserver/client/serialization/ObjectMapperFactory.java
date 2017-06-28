@@ -66,22 +66,24 @@ public class ObjectMapperFactory {
             addSerializer(HttpRequestDTO.class, new HttpRequestDTOSerializer());
             // request body
             addDeserializer(BodyDTO.class, new BodyDTODeserializer());
-            addSerializer(StringBodyDTO.class, new StringBodyDTOSerializer());
-            addSerializer(StringBody.class, new StringBodySerializer());
-            addSerializer(BinaryBodyDTO.class, new BinaryBodyDTOSerializer());
             addSerializer(BinaryBody.class, new BinaryBodySerializer());
-            addSerializer(RegexBodyDTO.class, new RegexBodyDTOSerializer());
-            addSerializer(RegexBody.class, new RegexBodySerializer());
-            addSerializer(JsonBodyDTO.class, new JsonBodyDTOSerializer());
+            addSerializer(BinaryBodyDTO.class, new BinaryBodyDTOSerializer());
             addSerializer(JsonBody.class, new JsonBodySerializer());
-            addSerializer(JsonSchemaBodyDTO.class, new JsonSchemaBodyDTOSerializer());
+            addSerializer(JsonBodyDTO.class, new JsonBodyDTOSerializer());
             addSerializer(JsonSchemaBody.class, new JsonSchemaBodySerializer());
-            addSerializer(XPathBodyDTO.class, new XPathBodyDTOSerializer());
-            addSerializer(XPathBody.class, new XPathBodySerializer());
-            addSerializer(XmlBodyDTO.class, new XmlBodyDTOSerializer());
-            addSerializer(XmlBody.class, new XmlBodySerializer());
-            addSerializer(ParameterBodyDTO.class, new ParameterBodyDTOSerializer());
+            addSerializer(JsonSchemaBodyDTO.class, new JsonSchemaBodyDTOSerializer());
             addSerializer(ParameterBody.class, new ParameterBodySerializer());
+            addSerializer(ParameterBodyDTO.class, new ParameterBodyDTOSerializer());
+            addSerializer(RegexBody.class, new RegexBodySerializer());
+            addSerializer(RegexBodyDTO.class, new RegexBodyDTOSerializer());
+            addSerializer(StringBody.class, new StringBodySerializer());
+            addSerializer(StringBodyDTO.class, new StringBodyDTOSerializer());
+            addSerializer(XmlBody.class, new XmlBodySerializer());
+            addSerializer(XmlBodyDTO.class, new XmlBodyDTOSerializer());
+            addSerializer(XPathBody.class, new XPathBodySerializer());
+            addSerializer(XPathBodyDTO.class, new XPathBodyDTOSerializer());
+            addSerializer(XmlSchemaBody.class, new XmlSchemaBodySerializer());
+            addSerializer(XmlSchemaBodyDTO.class, new XmlSchemaBodyDTOSerializer());
             // nottable string
             addSerializer(NottableString.class, new NottableStringSerializer());
             addDeserializer(NottableString.class, new NottableStringDeserializer());

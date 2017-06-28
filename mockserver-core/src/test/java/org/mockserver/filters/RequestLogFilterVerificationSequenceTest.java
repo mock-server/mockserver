@@ -5,6 +5,7 @@ import org.mockserver.verify.VerificationSequence;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 
 /**
@@ -192,18 +193,18 @@ public class RequestLogFilterVerificationSequenceTest {
                                         request("five")
                                 )
                 ),
-                is("Request sequence not found, expected:<[ {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"five\"" + System.getProperty("line.separator") +
-                        "} ]> but was:<[ {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"one\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"three\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"four\"" + System.getProperty("line.separator") +
+                is("Request sequence not found, expected:<[ {" + NEW_LINE +
+                        "  \"path\" : \"five\"" + NEW_LINE +
+                        "} ]> but was:<[ {" + NEW_LINE +
+                        "  \"path\" : \"one\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"three\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"four\"" + NEW_LINE +
                         "} ]>"));
     }
 
@@ -227,20 +228,20 @@ public class RequestLogFilterVerificationSequenceTest {
                                         request("one")
                                 )
                 ),
-                is("Request sequence not found, expected:<[ {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"one\"" + System.getProperty("line.separator") +
-                        "} ]> but was:<[ {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"one\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"three\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"four\"" + System.getProperty("line.separator") +
+                is("Request sequence not found, expected:<[ {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"one\"" + NEW_LINE +
+                        "} ]> but was:<[ {" + NEW_LINE +
+                        "  \"path\" : \"one\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"three\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"four\"" + NEW_LINE +
                         "} ]>"));
         assertThat(requestLogFilter.verify(
                         new VerificationSequence()
@@ -249,20 +250,20 @@ public class RequestLogFilterVerificationSequenceTest {
                                         request("multi")
                                 )
                 ),
-                is("Request sequence not found, expected:<[ {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"four\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "} ]> but was:<[ {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"one\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"three\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"four\"" + System.getProperty("line.separator") +
+                is("Request sequence not found, expected:<[ {" + NEW_LINE +
+                        "  \"path\" : \"four\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "} ]> but was:<[ {" + NEW_LINE +
+                        "  \"path\" : \"one\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"three\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"four\"" + NEW_LINE +
                         "} ]>"));
         // then - not next to each other
         assertThat(requestLogFilter.verify(
@@ -272,20 +273,20 @@ public class RequestLogFilterVerificationSequenceTest {
                                         request("one")
                                 )
                 ),
-                is("Request sequence not found, expected:<[ {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"three\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"one\"" + System.getProperty("line.separator") +
-                        "} ]> but was:<[ {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"one\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"three\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"four\"" + System.getProperty("line.separator") +
+                is("Request sequence not found, expected:<[ {" + NEW_LINE +
+                        "  \"path\" : \"three\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"one\"" + NEW_LINE +
+                        "} ]> but was:<[ {" + NEW_LINE +
+                        "  \"path\" : \"one\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"three\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"four\"" + NEW_LINE +
                         "} ]>"));
         assertThat(requestLogFilter.verify(
                         new VerificationSequence()
@@ -294,20 +295,20 @@ public class RequestLogFilterVerificationSequenceTest {
                                         request("one")
                                 )
                 ),
-                is("Request sequence not found, expected:<[ {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"four\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"one\"" + System.getProperty("line.separator") +
-                        "} ]> but was:<[ {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"one\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"three\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"four\"" + System.getProperty("line.separator") +
+                is("Request sequence not found, expected:<[ {" + NEW_LINE +
+                        "  \"path\" : \"four\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"one\"" + NEW_LINE +
+                        "} ]> but was:<[ {" + NEW_LINE +
+                        "  \"path\" : \"one\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"three\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"four\"" + NEW_LINE +
                         "} ]>"));
         assertThat(requestLogFilter.verify(
                         new VerificationSequence()
@@ -316,20 +317,20 @@ public class RequestLogFilterVerificationSequenceTest {
                                         request("three")
                                 )
                 ),
-                is("Request sequence not found, expected:<[ {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"four\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"three\"" + System.getProperty("line.separator") +
-                        "} ]> but was:<[ {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"one\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"three\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"four\"" + System.getProperty("line.separator") +
+                is("Request sequence not found, expected:<[ {" + NEW_LINE +
+                        "  \"path\" : \"four\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"three\"" + NEW_LINE +
+                        "} ]> but was:<[ {" + NEW_LINE +
+                        "  \"path\" : \"one\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"three\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"four\"" + NEW_LINE +
                         "} ]>"));
     }
 
@@ -353,20 +354,20 @@ public class RequestLogFilterVerificationSequenceTest {
                                         request("multi")
                                 )
                 ),
-                is("Request sequence not found, expected:<[ {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"zero\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "} ]> but was:<[ {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"one\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"three\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"four\"" + System.getProperty("line.separator") +
+                is("Request sequence not found, expected:<[ {" + NEW_LINE +
+                        "  \"path\" : \"zero\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "} ]> but was:<[ {" + NEW_LINE +
+                        "  \"path\" : \"one\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"three\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"four\"" + NEW_LINE +
                         "} ]>"));
         assertThat(requestLogFilter.verify(
                         new VerificationSequence()
@@ -375,20 +376,20 @@ public class RequestLogFilterVerificationSequenceTest {
                                         request("three")
                                 )
                 ),
-                is("Request sequence not found, expected:<[ {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"zero\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"three\"" + System.getProperty("line.separator") +
-                        "} ]> but was:<[ {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"one\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"three\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"four\"" + System.getProperty("line.separator") +
+                is("Request sequence not found, expected:<[ {" + NEW_LINE +
+                        "  \"path\" : \"zero\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"three\"" + NEW_LINE +
+                        "} ]> but was:<[ {" + NEW_LINE +
+                        "  \"path\" : \"one\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"three\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"four\"" + NEW_LINE +
                         "} ]>"));
         assertThat(requestLogFilter.verify(
                         new VerificationSequence()
@@ -397,20 +398,20 @@ public class RequestLogFilterVerificationSequenceTest {
                                         request("four")
                                 )
                 ),
-                is("Request sequence not found, expected:<[ {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"zero\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"four\"" + System.getProperty("line.separator") +
-                        "} ]> but was:<[ {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"one\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"three\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"four\"" + System.getProperty("line.separator") +
+                is("Request sequence not found, expected:<[ {" + NEW_LINE +
+                        "  \"path\" : \"zero\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"four\"" + NEW_LINE +
+                        "} ]> but was:<[ {" + NEW_LINE +
+                        "  \"path\" : \"one\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"three\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"four\"" + NEW_LINE +
                         "} ]>"));
     }
 
@@ -434,20 +435,20 @@ public class RequestLogFilterVerificationSequenceTest {
                                         request("five")
                                 )
                 ),
-                is("Request sequence not found, expected:<[ {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"one\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"five\"" + System.getProperty("line.separator") +
-                        "} ]> but was:<[ {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"one\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"three\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"four\"" + System.getProperty("line.separator") +
+                is("Request sequence not found, expected:<[ {" + NEW_LINE +
+                        "  \"path\" : \"one\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"five\"" + NEW_LINE +
+                        "} ]> but was:<[ {" + NEW_LINE +
+                        "  \"path\" : \"one\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"three\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"four\"" + NEW_LINE +
                         "} ]>"));
         assertThat(requestLogFilter.verify(
                         new VerificationSequence()
@@ -456,20 +457,20 @@ public class RequestLogFilterVerificationSequenceTest {
                                         request("five")
                                 )
                 ),
-                is("Request sequence not found, expected:<[ {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"five\"" + System.getProperty("line.separator") +
-                        "} ]> but was:<[ {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"one\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"three\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"four\"" + System.getProperty("line.separator") +
+                is("Request sequence not found, expected:<[ {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"five\"" + NEW_LINE +
+                        "} ]> but was:<[ {" + NEW_LINE +
+                        "  \"path\" : \"one\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"three\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"four\"" + NEW_LINE +
                         "} ]>"));
         assertThat(requestLogFilter.verify(
                         new VerificationSequence()
@@ -478,20 +479,20 @@ public class RequestLogFilterVerificationSequenceTest {
                                         request("five")
                                 )
                 ),
-                is("Request sequence not found, expected:<[ {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"three\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"five\"" + System.getProperty("line.separator") +
-                        "} ]> but was:<[ {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"one\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"three\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"four\"" + System.getProperty("line.separator") +
+                is("Request sequence not found, expected:<[ {" + NEW_LINE +
+                        "  \"path\" : \"three\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"five\"" + NEW_LINE +
+                        "} ]> but was:<[ {" + NEW_LINE +
+                        "  \"path\" : \"one\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"three\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"four\"" + NEW_LINE +
                         "} ]>"));
     }
 
@@ -516,22 +517,22 @@ public class RequestLogFilterVerificationSequenceTest {
                                         request("multi")
                                 )
                 ),
-                is("Request sequence not found, expected:<[ {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"one\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"four\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "} ]> but was:<[ {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"one\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"three\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"four\"" + System.getProperty("line.separator") +
+                is("Request sequence not found, expected:<[ {" + NEW_LINE +
+                        "  \"path\" : \"one\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"four\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "} ]> but was:<[ {" + NEW_LINE +
+                        "  \"path\" : \"one\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"three\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"four\"" + NEW_LINE +
                         "} ]>"));
         assertThat(requestLogFilter.verify(
                         new VerificationSequence()
@@ -541,22 +542,22 @@ public class RequestLogFilterVerificationSequenceTest {
                                         request("one")
                                 )
                 ),
-                is("Request sequence not found, expected:<[ {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"one\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"one\"" + System.getProperty("line.separator") +
-                        "} ]> but was:<[ {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"one\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"three\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"four\"" + System.getProperty("line.separator") +
+                is("Request sequence not found, expected:<[ {" + NEW_LINE +
+                        "  \"path\" : \"one\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"one\"" + NEW_LINE +
+                        "} ]> but was:<[ {" + NEW_LINE +
+                        "  \"path\" : \"one\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"three\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"four\"" + NEW_LINE +
                         "} ]>"));
         // then - not next to each other
         assertThat(requestLogFilter.verify(
@@ -567,22 +568,22 @@ public class RequestLogFilterVerificationSequenceTest {
                                         request("multi")
                                 )
                 ),
-                is("Request sequence not found, expected:<[ {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"four\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"one\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "} ]> but was:<[ {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"one\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"three\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"four\"" + System.getProperty("line.separator") +
+                is("Request sequence not found, expected:<[ {" + NEW_LINE +
+                        "  \"path\" : \"four\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"one\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "} ]> but was:<[ {" + NEW_LINE +
+                        "  \"path\" : \"one\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"three\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"four\"" + NEW_LINE +
                         "} ]>"));
         assertThat(requestLogFilter.verify(
                         new VerificationSequence()
@@ -592,22 +593,22 @@ public class RequestLogFilterVerificationSequenceTest {
                                         request("one")
                                 )
                 ),
-                is("Request sequence not found, expected:<[ {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"three\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"one\"" + System.getProperty("line.separator") +
-                        "} ]> but was:<[ {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"one\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"three\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"four\"" + System.getProperty("line.separator") +
+                is("Request sequence not found, expected:<[ {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"three\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"one\"" + NEW_LINE +
+                        "} ]> but was:<[ {" + NEW_LINE +
+                        "  \"path\" : \"one\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"three\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"four\"" + NEW_LINE +
                         "} ]>"));
 
     }
@@ -633,22 +634,22 @@ public class RequestLogFilterVerificationSequenceTest {
                                         request("multi")
                                 )
                 ),
-                is("Request sequence not found, expected:<[ {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "} ]> but was:<[ {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"one\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"three\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"multi\"" + System.getProperty("line.separator") +
-                        "}, {" + System.getProperty("line.separator") +
-                        "  \"path\" : \"four\"" + System.getProperty("line.separator") +
+                is("Request sequence not found, expected:<[ {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "} ]> but was:<[ {" + NEW_LINE +
+                        "  \"path\" : \"one\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"three\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"multi\"" + NEW_LINE +
+                        "}, {" + NEW_LINE +
+                        "  \"path\" : \"four\"" + NEW_LINE +
                         "} ]>"));
     }
 

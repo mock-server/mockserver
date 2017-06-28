@@ -17,6 +17,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.verify.VerificationTimes.exactly;
 import static org.mockserver.verify.Verification.verification;
@@ -242,7 +243,7 @@ public class MockServerClient extends AbstractClient implements Closeable {
     void sendExpectation(Expectation expectation) {
         HttpResponse httpResponse = sendRequest(request().withMethod("PUT").withPath(calculatePath("expectation")).withBody(expectation != null ? expectationSerializer.serialize(expectation) : "", Charsets.UTF_8));
         if (httpResponse != null && httpResponse.getStatusCode() != 201) {
-            throw new ClientException(formatErrorMessage(System.getProperty("line.separator") + "error: %swhile submitted expectation: %s", httpResponse.getBody() + System.getProperty("line.separator"), expectation));
+            throw new ClientException(formatErrorMessage(NEW_LINE + "error: %swhile submitted expectation: %s", httpResponse.getBody() + NEW_LINE, expectation));
         }
     }
 

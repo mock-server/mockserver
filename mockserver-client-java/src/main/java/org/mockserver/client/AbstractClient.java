@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import java.net.InetSocketAddress;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
+import static org.mockserver.character.Character.NEW_LINE;
 
 /**
  * @author jamesdbloom
@@ -74,9 +75,9 @@ public abstract class AbstractClient {
     protected String formatErrorMessage(String message, Object... objects) {
         Object[] indentedObjects = new String[objects.length];
         for (int i = 0; i < objects.length; i++) {
-            indentedObjects[i] = System.getProperty("line.separator") + System.getProperty("line.separator") + String.valueOf(objects[i]).replaceAll("(?m)^", "\t") + System.getProperty("line.separator");
+            indentedObjects[i] = NEW_LINE + NEW_LINE + String.valueOf(objects[i]).replaceAll("(?m)^", "\t") + NEW_LINE;
         }
-        return String.format(System.getProperty("line.separator") + message + System.getProperty("line.separator"), indentedObjects);
+        return String.format(NEW_LINE + message + NEW_LINE, indentedObjects);
     }
 
     public InetSocketAddress remoteAddress() {

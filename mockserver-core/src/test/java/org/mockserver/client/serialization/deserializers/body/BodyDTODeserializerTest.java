@@ -13,18 +13,19 @@ import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.NottableString.not;
 
 public class BodyDTODeserializerTest {
 
     @Test
-    public void shouldParseJSONWithInvalidBody() throws IOException {
+    public void shouldParseJsonWithInvalidBody() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -38,14 +39,14 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithMissingTypeFromBody() throws IOException {
+    public void shouldParseJsonWithMissingTypeFromBody() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"value\" : \"some_value\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"value\" : \"some_value\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -59,37 +60,14 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithMissingValueFromBody() throws IOException {
+    public void shouldParseJsonWithMissingValueFromBody() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"type\" : \"STRING\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
-                "}");
-
-        // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
-
-        // then
-        assertEquals(new ExpectationDTO()
-                .setHttpRequest(
-                        new HttpRequestDTO()
-                                .setBody(new StringBodyDTO(new StringBody("")))
-                ), expectationDTO);
-    }
-
-    @Test
-    public void shouldParseJSONWithWrongFieldInBody() throws IOException {
-        // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"type\" : \"STRING\"," + System.getProperty("line.separator") +
-                "            \"wrong_name\" : \"some_value\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"type\" : \"STRING\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -104,15 +82,15 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithWrongValueFieldTypeInStringBody() throws IOException {
+    public void shouldParseJsonWithWrongFieldInBody() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"type\" : \"STRING\"," + System.getProperty("line.separator") +
-                "            \"value\" : 1" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"type\" : \"STRING\"," + NEW_LINE +
+                "            \"wrong_name\" : \"some_value\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -127,15 +105,38 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithWrongValueFieldTypeInBinaryBody() throws IOException {
+    public void shouldParseJsonWithWrongValueFieldTypeInStringBody() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"type\" : \"BINARY\"," + System.getProperty("line.separator") +
-                "            \"value\" : 1" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"type\" : \"STRING\"," + NEW_LINE +
+                "            \"value\" : 1" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
+                "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+                .setHttpRequest(
+                        new HttpRequestDTO()
+                                .setBody(new StringBodyDTO(new StringBody("")))
+                ), expectationDTO);
+    }
+
+    @Test
+    public void shouldParseJsonWithWrongValueFieldTypeInBinaryBody() throws IOException {
+        // given
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"type\" : \"BINARY\"," + NEW_LINE +
+                "            \"value\" : 1" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -150,15 +151,15 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithWrongValueFieldTypeInParameterBody() throws IOException {
+    public void shouldParseJsonWithWrongValueFieldTypeInParameterBody() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"type\" : \"PARAMETERS\"," + System.getProperty("line.separator") +
-                "            \"value\" : 1" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"type\" : \"PARAMETERS\"," + NEW_LINE +
+                "            \"value\" : 1" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -173,15 +174,15 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithWrongTypeFieldTypeInBody() throws IOException {
+    public void shouldParseJsonWithWrongTypeFieldTypeInBody() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"type\" : 1," + System.getProperty("line.separator") +
-                "            \"value\" : \"some_value\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"type\" : 1," + NEW_LINE +
+                "            \"value\" : \"some_value\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -195,38 +196,15 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithEmptyContentType() throws IOException {
+    public void shouldParseJsonWithEmptyContentType() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"contentType\" : \"\"," + System.getProperty("line.separator") +
-                "            \"string\" : \"some_value\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
-                "}");
-
-        // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
-
-        // then
-        assertEquals(new ExpectationDTO()
-                .setHttpRequest(
-                        new HttpRequestDTO()
-                                .setBody(new StringBodyDTO(new StringBody("some_value")))
-                ), expectationDTO);
-    }
-
-    @Test
-    public void shouldParseJSONWithInvalidContentType() throws IOException {
-        // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"contentType\" : \"invalid_value\"," + System.getProperty("line.separator") +
-                "            \"string\" : \"some_value\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"contentType\" : \"\"," + NEW_LINE +
+                "            \"string\" : \"some_value\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -241,15 +219,15 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithEmptyCharset() throws IOException {
+    public void shouldParseJsonWithInvalidContentType() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"charset\" : \"\"," + System.getProperty("line.separator") +
-                "            \"string\" : \"some_value\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"contentType\" : \"invalid_value\"," + NEW_LINE +
+                "            \"string\" : \"some_value\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -264,15 +242,15 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithInvalidCharset() throws IOException {
+    public void shouldParseJsonWithEmptyCharset() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"charset\" : \"invalid_value\"," + System.getProperty("line.separator") +
-                "            \"string\" : \"some_value\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"charset\" : \"\"," + NEW_LINE +
+                "            \"string\" : \"some_value\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -287,21 +265,44 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithParametersBody() throws IOException {
+    public void shouldParseJsonWithInvalidCharset() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"type\" : \"PARAMETERS\"," + System.getProperty("line.separator") +
-                "            \"parameters\" : [ {" + System.getProperty("line.separator") +
-                "                    \"name\" : \"parameterOneName\"," + System.getProperty("line.separator") +
-                "                    \"values\" : [ \"parameterOneValueOne\", \"parameterOneValueTwo\" ]" + System.getProperty("line.separator") +
-                "                }, {" + System.getProperty("line.separator") +
-                "                    \"name\" : \"parameterTwoName\"," + System.getProperty("line.separator") +
-                "                    \"values\" : [ \"parameterTwoValue\" ]" + System.getProperty("line.separator") +
-                "            } ]" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"charset\" : \"invalid_value\"," + NEW_LINE +
+                "            \"string\" : \"some_value\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
+                "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+                .setHttpRequest(
+                        new HttpRequestDTO()
+                                .setBody(new StringBodyDTO(new StringBody("some_value")))
+                ), expectationDTO);
+    }
+
+    @Test
+    public void shouldParseJsonWithParametersBody() throws IOException {
+        // given
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"type\" : \"PARAMETERS\"," + NEW_LINE +
+                "            \"parameters\" : [ {" + NEW_LINE +
+                "                    \"name\" : \"parameterOneName\"," + NEW_LINE +
+                "                    \"values\" : [ \"parameterOneValueOne\", \"parameterOneValueTwo\" ]" + NEW_LINE +
+                "                }, {" + NEW_LINE +
+                "                    \"name\" : \"parameterTwoName\"," + NEW_LINE +
+                "                    \"values\" : [ \"parameterTwoValue\" ]" + NEW_LINE +
+                "            } ]" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -319,22 +320,22 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithParametersBodyWithNot() throws IOException {
+    public void shouldParseJsonWithParametersBodyWithNot() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"not\" : true," + System.getProperty("line.separator") +
-                "            \"type\" : \"PARAMETERS\"," + System.getProperty("line.separator") +
-                "            \"parameters\" : [ {" + System.getProperty("line.separator") +
-                "                    \"name\" : \"parameterOneName\"," + System.getProperty("line.separator") +
-                "                    \"values\" : [ \"parameterOneValueOne\", \"parameterOneValueTwo\" ]" + System.getProperty("line.separator") +
-                "                }, {" + System.getProperty("line.separator") +
-                "                    \"name\" : \"parameterTwoName\"," + System.getProperty("line.separator") +
-                "                    \"values\" : [ \"parameterTwoValue\" ]" + System.getProperty("line.separator") +
-                "            } ]" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"not\" : true," + NEW_LINE +
+                "            \"type\" : \"PARAMETERS\"," + NEW_LINE +
+                "            \"parameters\" : [ {" + NEW_LINE +
+                "                    \"name\" : \"parameterOneName\"," + NEW_LINE +
+                "                    \"values\" : [ \"parameterOneValueOne\", \"parameterOneValueTwo\" ]" + NEW_LINE +
+                "                }, {" + NEW_LINE +
+                "                    \"name\" : \"parameterTwoName\"," + NEW_LINE +
+                "                    \"values\" : [ \"parameterTwoValue\" ]" + NEW_LINE +
+                "            } ]" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -352,30 +353,30 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithParametersBodyWithNotParameter() throws IOException {
+    public void shouldParseJsonWithParametersBodyWithNotParameter() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"body\" : {" + System.getProperty("line.separator") +
-                "      \"type\" : \"PARAMETERS\"," + System.getProperty("line.separator") +
-                "      \"parameters\" : [ {" + System.getProperty("line.separator") +
-                "        \"name\" : {" + System.getProperty("line.separator") +
-                "          \"not\" : true," + System.getProperty("line.separator") +
-                "          \"value\" : \"parameterOneName\"" + System.getProperty("line.separator") +
-                "        }," + System.getProperty("line.separator") +
-                "        \"values\" : [ {" + System.getProperty("line.separator") +
-                "          \"not\" : true," + System.getProperty("line.separator") +
-                "          \"value\" : \"parameterOneValueOne\"" + System.getProperty("line.separator") +
-                "        }, {" + System.getProperty("line.separator") +
-                "          \"not\" : true," + System.getProperty("line.separator") +
-                "          \"value\" : \"parameterOneValueTwo\"" + System.getProperty("line.separator") +
-                "        } ]" + System.getProperty("line.separator") +
-                "      }, {" + System.getProperty("line.separator") +
-                "        \"name\" : \"parameterTwoName\"," + System.getProperty("line.separator") +
-                "        \"values\" : [ \"parameterTwoValue\" ]" + System.getProperty("line.separator") +
-                "      } ]" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"body\" : {" + NEW_LINE +
+                "      \"type\" : \"PARAMETERS\"," + NEW_LINE +
+                "      \"parameters\" : [ {" + NEW_LINE +
+                "        \"name\" : {" + NEW_LINE +
+                "          \"not\" : true," + NEW_LINE +
+                "          \"value\" : \"parameterOneName\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"values\" : [ {" + NEW_LINE +
+                "          \"not\" : true," + NEW_LINE +
+                "          \"value\" : \"parameterOneValueOne\"" + NEW_LINE +
+                "        }, {" + NEW_LINE +
+                "          \"not\" : true," + NEW_LINE +
+                "          \"value\" : \"parameterOneValueTwo\"" + NEW_LINE +
+                "        } ]" + NEW_LINE +
+                "      }, {" + NEW_LINE +
+                "        \"name\" : \"parameterTwoName\"," + NEW_LINE +
+                "        \"values\" : [ \"parameterTwoValue\" ]" + NEW_LINE +
+                "      } ]" + NEW_LINE +
+                "    }" + NEW_LINE +
+                "  }" + NEW_LINE +
                 "}");
 
         // when
@@ -395,21 +396,21 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithParametersBodyWithNotParameterWithExclamationMark() throws IOException {
+    public void shouldParseJsonWithParametersBodyWithNotParameterWithExclamationMark() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"type\" : \"PARAMETERS\"," + System.getProperty("line.separator") +
-                "            \"parameters\" : [ {" + System.getProperty("line.separator") +
-                "                    \"name\" : \"!parameterOneName\"," + System.getProperty("line.separator") +
-                "                    \"values\" : [ \"!parameterOneValueOne\", \"!parameterOneValueTwo\" ]" + System.getProperty("line.separator") +
-                "                }, {" + System.getProperty("line.separator") +
-                "                    \"name\" : \"parameterTwoName\"," + System.getProperty("line.separator") +
-                "                    \"values\" : [ \"parameterTwoValue\" ]" + System.getProperty("line.separator") +
-                "            } ]" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"type\" : \"PARAMETERS\"," + NEW_LINE +
+                "            \"parameters\" : [ {" + NEW_LINE +
+                "                    \"name\" : \"!parameterOneName\"," + NEW_LINE +
+                "                    \"values\" : [ \"!parameterOneValueOne\", \"!parameterOneValueTwo\" ]" + NEW_LINE +
+                "                }, {" + NEW_LINE +
+                "                    \"name\" : \"parameterTwoName\"," + NEW_LINE +
+                "                    \"values\" : [ \"parameterTwoValue\" ]" + NEW_LINE +
+                "            } ]" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -429,12 +430,12 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithExactStringBodyAsString() throws IOException {
+    public void shouldParseJsonWithExactStringBodyAsString() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : \"some_value\"" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : \"some_value\"" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -449,15 +450,15 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithExactStringBodyWithContentType() throws IOException {
+    public void shouldParseJsonWithExactStringBodyWithContentType() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"contentType\" : \"text/plain; charset=utf-8\"," + System.getProperty("line.separator") +
-                "            \"string\" : \"some_value\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"contentType\" : \"text/plain; charset=utf-8\"," + NEW_LINE +
+                "            \"string\" : \"some_value\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -472,15 +473,15 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithExactStringBodyWithCharset() throws IOException {
+    public void shouldParseJsonWithExactStringBodyWithCharset() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"charset\" : \"utf-8\"," + System.getProperty("line.separator") +
-                "            \"string\" : \"some_value\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"charset\" : \"utf-8\"," + NEW_LINE +
+                "            \"string\" : \"some_value\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -495,14 +496,14 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithExactStringBodyWithoutType() throws IOException {
+    public void shouldParseJsonWithExactStringBodyWithoutType() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"string\" : \"some_value\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"string\" : \"some_value\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -517,16 +518,16 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithExactStringBodyUsingStringPropertyWithNot() throws IOException {
+    public void shouldParseJsonWithExactStringBodyUsingStringPropertyWithNot() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"not\" : true," + System.getProperty("line.separator") +
-                "            \"type\" : \"STRING\"," + System.getProperty("line.separator") +
-                "            \"string\" : \"some_value\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"not\" : true," + NEW_LINE +
+                "            \"type\" : \"STRING\"," + NEW_LINE +
+                "            \"string\" : \"some_value\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -541,15 +542,15 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithExactStringBodyUsingValueProperty() throws IOException {
+    public void shouldParseJsonWithExactStringBodyUsingValueProperty() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"type\" : \"STRING\"," + System.getProperty("line.separator") +
-                "            \"value\" : \"some_value\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"type\" : \"STRING\"," + NEW_LINE +
+                "            \"value\" : \"some_value\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -564,15 +565,15 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithExactStringBodyUsingStringProperty() throws IOException {
+    public void shouldParseJsonWithExactStringBodyUsingStringProperty() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"type\" : \"STRING\"," + System.getProperty("line.separator") +
-                "            \"string\" : \"some_value\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"type\" : \"STRING\"," + NEW_LINE +
+                "            \"string\" : \"some_value\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -587,14 +588,14 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithRegexBodyWithoutType() throws IOException {
+    public void shouldParseJsonWithRegexBodyWithoutType() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"regex\" : \"some[a-zA-Z]*\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"regex\" : \"some[a-zA-Z]*\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -609,15 +610,15 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithRegexBodyWithNot() throws IOException {
+    public void shouldParseJsonWithRegexBodyWithNot() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"not\" : true," + System.getProperty("line.separator") +
-                "            \"regex\" : \"some[a-zA-Z]*\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"not\" : true," + NEW_LINE +
+                "            \"regex\" : \"some[a-zA-Z]*\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -632,15 +633,15 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithRegexBodyUsingRegexProperty() throws IOException {
+    public void shouldParseJsonWithRegexBodyUsingRegexProperty() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"type\" : \"REGEX\"," + System.getProperty("line.separator") +
-                "            \"regex\" : \"some[a-zA-Z]*\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"type\" : \"REGEX\"," + NEW_LINE +
+                "            \"regex\" : \"some[a-zA-Z]*\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -655,15 +656,15 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithRegexBodyUsingValueProperty() throws IOException {
+    public void shouldParseJsonWithRegexBodyUsingValueProperty() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"type\" : \"REGEX\"," + System.getProperty("line.separator") +
-                "            \"value\" : \"some[a-zA-Z]*\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"type\" : \"REGEX\"," + NEW_LINE +
+                "            \"value\" : \"some[a-zA-Z]*\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -678,14 +679,14 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithJsonBodyWithoutType() throws IOException {
+    public void shouldParseJsonWithJsonBodyWithoutType() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"json\" : \"{'employees':[{'firstName':'John', 'lastName':'Doe'}]}\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"json\" : \"{'employees':[{'firstName':'John', 'lastName':'Doe'}]}\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -700,15 +701,15 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithJsonBodyWithNot() throws IOException {
+    public void shouldParseJsonWithJsonBodyWithNot() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"not\" : true," + System.getProperty("line.separator") +
-                "            \"json\" : \"{'employees':[{'firstName':'John', 'lastName':'Doe'}]}\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"not\" : true," + NEW_LINE +
+                "            \"json\" : \"{'employees':[{'firstName':'John', 'lastName':'Doe'}]}\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -723,15 +724,15 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithJsonBodyUsingJsonProperty() throws IOException {
+    public void shouldParseJsonWithJsonBodyUsingJsonProperty() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"type\" : \"JSON\"," + System.getProperty("line.separator") +
-                "            \"json\" : \"{'employees':[{'firstName':'John', 'lastName':'Doe'}]}\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"type\" : \"JSON\"," + NEW_LINE +
+                "            \"json\" : \"{'employees':[{'firstName':'John', 'lastName':'Doe'}]}\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -746,17 +747,17 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithJsonBodyWithMatchTypeAndContentType() throws IOException {
+    public void shouldParseJsonWithJsonBodyWithMatchTypeAndContentType() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"type\" : \"JSON\"," + System.getProperty("line.separator") +
-                "            \"matchType\" : \"STRICT\"," + System.getProperty("line.separator") +
-                "            \"contentType\" : \"application/json; charset=utf-8\"," + System.getProperty("line.separator") +
-                "            \"json\" : \"{'employees':[{'firstName':'John', 'lastName':'Doe'}]}\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"type\" : \"JSON\"," + NEW_LINE +
+                "            \"matchType\" : \"STRICT\"," + NEW_LINE +
+                "            \"contentType\" : \"application/json; charset=utf-8\"," + NEW_LINE +
+                "            \"json\" : \"{'employees':[{'firstName':'John', 'lastName':'Doe'}]}\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -771,16 +772,16 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithJsonBodyWithContentType() throws IOException {
+    public void shouldParseJsonWithJsonBodyWithContentType() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"type\" : \"JSON\"," + System.getProperty("line.separator") +
-                "            \"charset\" : \"" + Charsets.ISO_8859_1 + "\"," + System.getProperty("line.separator") +
-                "            \"json\" : \"{'employees':[{'firstName':'John', 'lastName':'Doe'}]}\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"type\" : \"JSON\"," + NEW_LINE +
+                "            \"charset\" : \"" + Charsets.ISO_8859_1 + "\"," + NEW_LINE +
+                "            \"json\" : \"{'employees':[{'firstName':'John', 'lastName':'Doe'}]}\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -795,15 +796,15 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithJsonBodyUsingValueProperty() throws IOException {
+    public void shouldParseJsonWithJsonBodyUsingValueProperty() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"type\" : \"JSON\"," + System.getProperty("line.separator") +
-                "            \"value\" : \"{'employees':[{'firstName':'John', 'lastName':'Doe'}]}\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"type\" : \"JSON\"," + NEW_LINE +
+                "            \"value\" : \"{'employees':[{'firstName':'John', 'lastName':'Doe'}]}\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -818,28 +819,28 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithJsonSchemaBodyWithNot() throws IOException {
+    public void shouldParseJsonWithJsonSchemaBodyWithNot() throws IOException {
         // given
-        String jsonSchema = "{" + System.getProperty("line.separator") +
-                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + System.getProperty("line.separator") +
-                "    \"title\": \"Product\"," + System.getProperty("line.separator") +
-                "    \"description\": \"A product from Acme's catalog\"," + System.getProperty("line.separator") +
-                "    \"type\": \"object\"," + System.getProperty("line.separator") +
-                "    \"properties\": {" + System.getProperty("line.separator") +
-                "        \"id\": {" + System.getProperty("line.separator") +
-                "            \"description\": \"The unique identifier for a product\"," + System.getProperty("line.separator") +
-                "            \"type\": \"integer\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"required\": [\"id\"]" + System.getProperty("line.separator") +
+        String jsonSchema = "{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"description\": \"A product from Acme's catalog\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"description\": \"The unique identifier for a product\"," + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\"]" + NEW_LINE +
                 "}";
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"not\" : true," + System.getProperty("line.separator") +
-                "            \"jsonSchema\" : \"" + StringEscapeUtils.escapeJava(jsonSchema) + "\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"not\" : true," + NEW_LINE +
+                "            \"jsonSchema\" : \"" + StringEscapeUtils.escapeJava(jsonSchema) + "\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -854,27 +855,27 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithJsonSchemaBodyWithoutType() throws IOException {
+    public void shouldParseJsonWithJsonSchemaBodyWithoutType() throws IOException {
         // given
-        String jsonSchema = "{" + System.getProperty("line.separator") +
-                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + System.getProperty("line.separator") +
-                "    \"title\": \"Product\"," + System.getProperty("line.separator") +
-                "    \"description\": \"A product from Acme's catalog\"," + System.getProperty("line.separator") +
-                "    \"type\": \"object\"," + System.getProperty("line.separator") +
-                "    \"properties\": {" + System.getProperty("line.separator") +
-                "        \"id\": {" + System.getProperty("line.separator") +
-                "            \"description\": \"The unique identifier for a product\"," + System.getProperty("line.separator") +
-                "            \"type\": \"integer\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"required\": [\"id\"]" + System.getProperty("line.separator") +
+        String jsonSchema = "{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"description\": \"A product from Acme's catalog\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"description\": \"The unique identifier for a product\"," + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\"]" + NEW_LINE +
                 "}";
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"jsonSchema\" : \"" + StringEscapeUtils.escapeJava(jsonSchema) + "\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"jsonSchema\" : \"" + StringEscapeUtils.escapeJava(jsonSchema) + "\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -889,28 +890,28 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithJsonSchemaBodyUsingJsonProperty() throws IOException {
+    public void shouldParseJsonWithJsonSchemaBodyUsingJsonProperty() throws IOException {
         // given
-        String jsonSchema = "{" + System.getProperty("line.separator") +
-                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + System.getProperty("line.separator") +
-                "    \"title\": \"Product\"," + System.getProperty("line.separator") +
-                "    \"description\": \"A product from Acme's catalog\"," + System.getProperty("line.separator") +
-                "    \"type\": \"object\"," + System.getProperty("line.separator") +
-                "    \"properties\": {" + System.getProperty("line.separator") +
-                "        \"id\": {" + System.getProperty("line.separator") +
-                "            \"description\": \"The unique identifier for a product\"," + System.getProperty("line.separator") +
-                "            \"type\": \"integer\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"required\": [\"id\"]" + System.getProperty("line.separator") +
+        String jsonSchema = "{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"description\": \"A product from Acme's catalog\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"description\": \"The unique identifier for a product\"," + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\"]" + NEW_LINE +
                 "}";
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"type\" : \"JSON_SCHEMA\"," + System.getProperty("line.separator") +
-                "            \"jsonSchema\" : \"" + StringEscapeUtils.escapeJava(jsonSchema) + "\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"type\" : \"JSON_SCHEMA\"," + NEW_LINE +
+                "            \"jsonSchema\" : \"" + StringEscapeUtils.escapeJava(jsonSchema) + "\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -925,28 +926,28 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithJsonSchemaBodyUsingValueProperty() throws IOException {
+    public void shouldParseJsonWithJsonSchemaBodyUsingValueProperty() throws IOException {
         // given
-        String jsonSchema = "{" + System.getProperty("line.separator") +
-                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + System.getProperty("line.separator") +
-                "    \"title\": \"Product\"," + System.getProperty("line.separator") +
-                "    \"description\": \"A product from Acme's catalog\"," + System.getProperty("line.separator") +
-                "    \"type\": \"object\"," + System.getProperty("line.separator") +
-                "    \"properties\": {" + System.getProperty("line.separator") +
-                "        \"id\": {" + System.getProperty("line.separator") +
-                "            \"description\": \"The unique identifier for a product\"," + System.getProperty("line.separator") +
-                "            \"type\": \"integer\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"required\": [\"id\"]" + System.getProperty("line.separator") +
+        String jsonSchema = "{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"description\": \"A product from Acme's catalog\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"description\": \"The unique identifier for a product\"," + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\"]" + NEW_LINE +
                 "}";
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"type\" : \"JSON_SCHEMA\"," + System.getProperty("line.separator") +
-                "            \"value\" : \"" + StringEscapeUtils.escapeJava(jsonSchema) + "\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"type\" : \"JSON_SCHEMA\"," + NEW_LINE +
+                "            \"value\" : \"" + StringEscapeUtils.escapeJava(jsonSchema) + "\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -961,14 +962,158 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithXPathBodyWithoutType() throws IOException {
+    public void shouldParseJsonWithXmlSchemaBodyWithNot() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"xpath\" : \"\\\\some\\\\xpath\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String xmlSchema = "{" + NEW_LINE +
+                "    \"$schema\": \"http://xml-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"description\": \"A product from Acme's catalog\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"description\": \"The unique identifier for a product\"," + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\"]" + NEW_LINE +
+                "}";
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"not\" : true," + NEW_LINE +
+                "            \"xmlSchema\" : \"" + StringEscapeUtils.escapeJava(xmlSchema) + "\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
+                "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+                .setHttpRequest(
+                        new HttpRequestDTO()
+                                .setBody(new XmlSchemaBodyDTO(new XmlSchemaBody(xmlSchema), true))
+                ), expectationDTO);
+    }
+
+    @Test
+    public void shouldParseJsonWithXmlSchemaBodyWithoutType() throws IOException {
+        // given
+        String xmlSchema = "{" + NEW_LINE +
+                "    \"$schema\": \"http://xml-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"description\": \"A product from Acme's catalog\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"description\": \"The unique identifier for a product\"," + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\"]" + NEW_LINE +
+                "}";
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"xmlSchema\" : \"" + StringEscapeUtils.escapeJava(xmlSchema) + "\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
+                "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+                .setHttpRequest(
+                        new HttpRequestDTO()
+                                .setBody(new XmlSchemaBodyDTO(new XmlSchemaBody(xmlSchema)))
+                ), expectationDTO);
+    }
+
+    @Test
+    public void shouldParseJsonWithXmlSchemaBodyUsingJsonProperty() throws IOException {
+        // given
+        String xmlSchema = "{" + NEW_LINE +
+                "    \"$schema\": \"http://xml-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"description\": \"A product from Acme's catalog\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"description\": \"The unique identifier for a product\"," + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\"]" + NEW_LINE +
+                "}";
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"type\" : \"XML_SCHEMA\"," + NEW_LINE +
+                "            \"xmlSchema\" : \"" + StringEscapeUtils.escapeJava(xmlSchema) + "\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
+                "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        final ExpectationDTO expected = new ExpectationDTO()
+                .setHttpRequest(
+                        new HttpRequestDTO()
+                                .setBody(new XmlSchemaBodyDTO(new XmlSchemaBody(xmlSchema)))
+                );
+        assertEquals(expected, expectationDTO);
+    }
+
+    @Test
+    public void shouldParseJsonWithXmlSchemaBodyUsingValueProperty() throws IOException {
+        // given
+        String xmlSchema = "{" + NEW_LINE +
+                "    \"$schema\": \"http://xml-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"description\": \"A product from Acme's catalog\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"description\": \"The unique identifier for a product\"," + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\"]" + NEW_LINE +
+                "}";
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"type\" : \"XML_SCHEMA\"," + NEW_LINE +
+                "            \"value\" : \"" + StringEscapeUtils.escapeJava(xmlSchema) + "\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
+                "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+                .setHttpRequest(
+                        new HttpRequestDTO()
+                                .setBody(new XmlSchemaBodyDTO(new XmlSchemaBody(xmlSchema)))
+                ), expectationDTO);
+    }
+
+    @Test
+    public void shouldParseJsonWithXPathBodyWithoutType() throws IOException {
+        // given
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"xpath\" : \"\\\\some\\\\xpath\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -983,15 +1128,15 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithXPathBodyWithNot() throws IOException {
+    public void shouldParseJsonWithXPathBodyWithNot() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"not\" : true," + System.getProperty("line.separator") +
-                "            \"xpath\" : \"\\\\some\\\\xpath\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"not\" : true," + NEW_LINE +
+                "            \"xpath\" : \"\\\\some\\\\xpath\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -1006,15 +1151,15 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithXPathBodyUsingXpathProperty() throws IOException {
+    public void shouldParseJsonWithXPathBodyUsingXpathProperty() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"type\" : \"XPATH\"," + System.getProperty("line.separator") +
-                "            \"xpath\" : \"\\\\some\\\\xpath\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"type\" : \"XPATH\"," + NEW_LINE +
+                "            \"xpath\" : \"\\\\some\\\\xpath\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -1029,15 +1174,15 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithXPathBodyUsingValueProperty() throws IOException {
+    public void shouldParseJsonWithXPathBodyUsingValueProperty() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"type\" : \"XPATH\"," + System.getProperty("line.separator") +
-                "            \"value\" : \"\\\\some\\\\xpath\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"type\" : \"XPATH\"," + NEW_LINE +
+                "            \"value\" : \"\\\\some\\\\xpath\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -1052,14 +1197,14 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithXmlBodyWithoutType() throws IOException {
+    public void shouldParseJsonWithXmlBodyWithoutType() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"xml\" : \"<some><xml></xml></some>\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"xml\" : \"<some><xml></xml></some>\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -1074,15 +1219,15 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithXmlBodyWithNot() throws IOException {
+    public void shouldParseJsonWithXmlBodyWithNot() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"not\" : true," + System.getProperty("line.separator") +
-                "            \"xml\" : \"<some><xml></xml></some>\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"not\" : true," + NEW_LINE +
+                "            \"xml\" : \"<some><xml></xml></some>\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -1097,15 +1242,15 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithXmlBodyWithContentType() throws IOException {
+    public void shouldParseJsonWithXmlBodyWithContentType() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"contentType\" : \"text/xml; charset=utf-8\"," + System.getProperty("line.separator") +
-                "            \"xml\" : \"<some><xml></xml></some>\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"contentType\" : \"text/xml; charset=utf-8\"," + NEW_LINE +
+                "            \"xml\" : \"<some><xml></xml></some>\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -1120,15 +1265,15 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithXmlBodyWithCharset() throws IOException {
+    public void shouldParseJsonWithXmlBodyWithCharset() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"charset\" : \"" + Charsets.US_ASCII + "\"," + System.getProperty("line.separator") +
-                "            \"xml\" : \"<some><xml></xml></some>\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"charset\" : \"" + Charsets.US_ASCII + "\"," + NEW_LINE +
+                "            \"xml\" : \"<some><xml></xml></some>\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -1143,15 +1288,15 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithXmlBodyUsingXpathProperty() throws IOException {
+    public void shouldParseJsonWithXmlBodyUsingXpathProperty() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"type\" : \"XPATH\"," + System.getProperty("line.separator") +
-                "            \"xml\" : \"<some><xml></xml></some>\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"type\" : \"XPATH\"," + NEW_LINE +
+                "            \"xml\" : \"<some><xml></xml></some>\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -1166,15 +1311,15 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithXmlBodyUsingValueProperty() throws IOException {
+    public void shouldParseJsonWithXmlBodyUsingValueProperty() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"type\" : \"XML\"," + System.getProperty("line.separator") +
-                "            \"value\" : \"<some><xml></xml></some>\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"type\" : \"XML\"," + NEW_LINE +
+                "            \"value\" : \"<some><xml></xml></some>\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -1189,14 +1334,14 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithBinaryBodyWithoutType() throws IOException {
+    public void shouldParseJsonWithBinaryBodyWithoutType() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"bytes\" : \"" + DatatypeConverter.printBase64Binary("some_value".getBytes()) + "\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"bytes\" : \"" + DatatypeConverter.printBase64Binary("some_value".getBytes()) + "\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -1211,15 +1356,15 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithBinaryBodyWithNot() throws IOException {
+    public void shouldParseJsonWithBinaryBodyWithNot() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"not\" : true," + System.getProperty("line.separator") +
-                "            \"bytes\" : \"" + DatatypeConverter.printBase64Binary("some_value".getBytes()) + "\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"not\" : true," + NEW_LINE +
+                "            \"bytes\" : \"" + DatatypeConverter.printBase64Binary("some_value".getBytes()) + "\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -1234,15 +1379,15 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithBinaryBodyWithContentType() throws IOException {
+    public void shouldParseJsonWithBinaryBodyWithContentType() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"contentType\" : \"" + MediaType.ANY_VIDEO_TYPE + "\"," + System.getProperty("line.separator") +
-                "            \"bytes\" : \"" + DatatypeConverter.printBase64Binary("some_value".getBytes()) + "\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"contentType\" : \"" + MediaType.ANY_VIDEO_TYPE + "\"," + NEW_LINE +
+                "            \"bytes\" : \"" + DatatypeConverter.printBase64Binary("some_value".getBytes()) + "\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -1258,15 +1403,15 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithBinaryBodyUsingBytesProperty() throws IOException {
+    public void shouldParseJsonWithBinaryBodyUsingBytesProperty() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"type\" : \"BINARY\"," + System.getProperty("line.separator") +
-                "            \"bytes\" : \"" + DatatypeConverter.printBase64Binary("some_value".getBytes()) + "\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"type\" : \"BINARY\"," + NEW_LINE +
+                "            \"bytes\" : \"" + DatatypeConverter.printBase64Binary("some_value".getBytes()) + "\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -1281,15 +1426,15 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithBinaryBodyUsingValueProperty() throws IOException {
+    public void shouldParseJsonWithBinaryBodyUsingValueProperty() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"type\" : \"BINARY\"," + System.getProperty("line.separator") +
-                "            \"value\" : \"" + DatatypeConverter.printBase64Binary("some_value".getBytes()) + "\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"type\" : \"BINARY\"," + NEW_LINE +
+                "            \"value\" : \"" + DatatypeConverter.printBase64Binary("some_value".getBytes()) + "\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -1304,21 +1449,21 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithParameterBodyWithoutType() throws IOException {
+    public void shouldParseJsonWithParameterBodyWithoutType() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"type\" : \"PARAMETERS\"," + System.getProperty("line.separator") +
-                "            \"parameters\" : [ {" + System.getProperty("line.separator") +
-                "                    \"name\" : \"parameterOneName\"," + System.getProperty("line.separator") +
-                "                    \"values\" : [ \"parameterOneValueOne\", \"parameterOneValueTwo\" ]" + System.getProperty("line.separator") +
-                "                }, {" + System.getProperty("line.separator") +
-                "                    \"name\" : \"parameterTwoName\"," + System.getProperty("line.separator") +
-                "                    \"values\" : [ \"parameterTwoValue\" ]" + System.getProperty("line.separator") +
-                "            } ]" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"type\" : \"PARAMETERS\"," + NEW_LINE +
+                "            \"parameters\" : [ {" + NEW_LINE +
+                "                    \"name\" : \"parameterOneName\"," + NEW_LINE +
+                "                    \"values\" : [ \"parameterOneValueOne\", \"parameterOneValueTwo\" ]" + NEW_LINE +
+                "                }, {" + NEW_LINE +
+                "                    \"name\" : \"parameterTwoName\"," + NEW_LINE +
+                "                    \"values\" : [ \"parameterTwoValue\" ]" + NEW_LINE +
+                "            } ]" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -1336,21 +1481,21 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithParameterBodyUsingParametersProperty() throws IOException {
+    public void shouldParseJsonWithParameterBodyUsingParametersProperty() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"type\" : \"PARAMETERS\"," + System.getProperty("line.separator") +
-                "            \"parameters\" : [ {" + System.getProperty("line.separator") +
-                "                    \"name\" : \"parameterOneName\"," + System.getProperty("line.separator") +
-                "                    \"values\" : [ \"parameterOneValueOne\", \"parameterOneValueTwo\" ]" + System.getProperty("line.separator") +
-                "                }, {" + System.getProperty("line.separator") +
-                "                    \"name\" : \"parameterTwoName\"," + System.getProperty("line.separator") +
-                "                    \"values\" : [ \"parameterTwoValue\" ]" + System.getProperty("line.separator") +
-                "            } ]" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"type\" : \"PARAMETERS\"," + NEW_LINE +
+                "            \"parameters\" : [ {" + NEW_LINE +
+                "                    \"name\" : \"parameterOneName\"," + NEW_LINE +
+                "                    \"values\" : [ \"parameterOneValueOne\", \"parameterOneValueTwo\" ]" + NEW_LINE +
+                "                }, {" + NEW_LINE +
+                "                    \"name\" : \"parameterTwoName\"," + NEW_LINE +
+                "                    \"values\" : [ \"parameterTwoValue\" ]" + NEW_LINE +
+                "            } ]" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -1368,21 +1513,21 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithParameterBodyUsingValueProperty() throws IOException {
+    public void shouldParseJsonWithParameterBodyUsingValueProperty() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"type\" : \"PARAMETERS\"," + System.getProperty("line.separator") +
-                "            \"value\" : [ {" + System.getProperty("line.separator") +
-                "                    \"name\" : \"parameterOneName\"," + System.getProperty("line.separator") +
-                "                    \"values\" : [ \"parameterOneValueOne\", \"parameterOneValueTwo\" ]" + System.getProperty("line.separator") +
-                "                }, {" + System.getProperty("line.separator") +
-                "                    \"name\" : \"parameterTwoName\"," + System.getProperty("line.separator") +
-                "                    \"values\" : [ \"parameterTwoValue\" ]" + System.getProperty("line.separator") +
-                "            } ]" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"type\" : \"PARAMETERS\"," + NEW_LINE +
+                "            \"value\" : [ {" + NEW_LINE +
+                "                    \"name\" : \"parameterOneName\"," + NEW_LINE +
+                "                    \"values\" : [ \"parameterOneValueOne\", \"parameterOneValueTwo\" ]" + NEW_LINE +
+                "                }, {" + NEW_LINE +
+                "                    \"name\" : \"parameterTwoName\"," + NEW_LINE +
+                "                    \"values\" : [ \"parameterTwoValue\" ]" + NEW_LINE +
+                "            } ]" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -1400,18 +1545,18 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJSONWithInvalidArrayParameterBody() throws IOException {
+    public void shouldParseJsonWithInvalidArrayParameterBody() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"type\" : \"PARAMETERS\"," + System.getProperty("line.separator") +
-                "            \"parameters\" : {" + System.getProperty("line.separator") +
-                "                    \"name\" : \"parameterOneName\"," + System.getProperty("line.separator") +
-                "                    \"values\" : [ \"parameterOneValueOne\", \"parameterOneValueTwo\" ]" + System.getProperty("line.separator") +
-                "                }" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"type\" : \"PARAMETERS\"," + NEW_LINE +
+                "            \"parameters\" : {" + NEW_LINE +
+                "                    \"name\" : \"parameterOneName\"," + NEW_LINE +
+                "                    \"values\" : [ \"parameterOneValueOne\", \"parameterOneValueTwo\" ]" + NEW_LINE +
+                "                }" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when

@@ -34,14 +34,15 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
     private static Map<String, Body.Type> fieldNameToType = new HashMap<String, Body.Type>();
 
     static {
-        fieldNameToType.put("string".toLowerCase(), Body.Type.STRING);
-        fieldNameToType.put("regex".toLowerCase(), Body.Type.REGEX);
+        fieldNameToType.put("bytes".toLowerCase(), Body.Type.BINARY);
         fieldNameToType.put("json".toLowerCase(), Body.Type.JSON);
         fieldNameToType.put("jsonSchema".toLowerCase(), Body.Type.JSON_SCHEMA);
-        fieldNameToType.put("xpath".toLowerCase(), Body.Type.XPATH);
-        fieldNameToType.put("xml".toLowerCase(), Body.Type.XML);
-        fieldNameToType.put("bytes".toLowerCase(), Body.Type.BINARY);
         fieldNameToType.put("parameters".toLowerCase(), Body.Type.PARAMETERS);
+        fieldNameToType.put("regex".toLowerCase(), Body.Type.REGEX);
+        fieldNameToType.put("string".toLowerCase(), Body.Type.STRING);
+        fieldNameToType.put("xml".toLowerCase(), Body.Type.XML);
+        fieldNameToType.put("xmlSchema".toLowerCase(), Body.Type.XML_SCHEMA);
+        fieldNameToType.put("xpath".toLowerCase(), Body.Type.XPATH);
     }
 
     public BodyDTODeserializer() {
@@ -69,7 +70,7 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         logger.debug("Ignoring invalid value for \"type\" field of \"" + jsonParser.getText() + "\"");
                     }
                 }
-                if (jsonParser.getCurrentToken() == JsonToken.FIELD_NAME && containsIgnoreCase(jsonParser.getText(), "string", "regex", "json", "jsonSchema", "xpath", "xml", "bytes", "value") && type != Body.Type.PARAMETERS) {
+                if (jsonParser.getCurrentToken() == JsonToken.FIELD_NAME && containsIgnoreCase(jsonParser.getText(), "string", "regex", "json", "jsonSchema", "xpath", "xml", "xmlSchema", "bytes", "value") && type != Body.Type.PARAMETERS) {
                     String fieldName = jsonParser.getText().toLowerCase();
                     if (fieldNameToType.containsKey(fieldName)) {
                         type = fieldNameToType.get(fieldName);
@@ -157,16 +158,12 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
             }
             if (type != null) {
                 switch (type) {
-                    case STRING:
+                    case BINARY:
                         if (contentType != null) {
-                            return new StringBodyDTO(new StringBody(valueJsonValue, contentType), not);
-                        } else if (charset != null) {
-                            return new StringBodyDTO(new StringBody(valueJsonValue, charset), not);
+                            return new BinaryBodyDTO(new BinaryBody(Base64Converter.base64StringToBytes(valueJsonValue), contentType), not);
                         } else {
-                            return new StringBodyDTO(new StringBody(valueJsonValue), not);
+                            return new BinaryBodyDTO(new BinaryBody(Base64Converter.base64StringToBytes(valueJsonValue)), not);
                         }
-                    case REGEX:
-                        return new RegexBodyDTO(new RegexBody(valueJsonValue), not);
                     case JSON:
                         if (contentType != null) {
                             return new JsonBodyDTO(new JsonBody(valueJsonValue, contentType, matchType), not);
@@ -177,8 +174,18 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         }
                     case JSON_SCHEMA:
                         return new JsonSchemaBodyDTO(new JsonSchemaBody(valueJsonValue), not);
-                    case XPATH:
-                        return new XPathBodyDTO(new XPathBody(valueJsonValue), not);
+                    case PARAMETERS:
+                        return new ParameterBodyDTO(new ParameterBody(parameters), not);
+                    case REGEX:
+                        return new RegexBodyDTO(new RegexBody(valueJsonValue), not);
+                    case STRING:
+                        if (contentType != null) {
+                            return new StringBodyDTO(new StringBody(valueJsonValue, contentType), not);
+                        } else if (charset != null) {
+                            return new StringBodyDTO(new StringBody(valueJsonValue, charset), not);
+                        } else {
+                            return new StringBodyDTO(new StringBody(valueJsonValue), not);
+                        }
                     case XML:
                         if (contentType != null) {
                             return new XmlBodyDTO(new XmlBody(valueJsonValue, contentType), not);
@@ -187,14 +194,10 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         } else {
                             return new XmlBodyDTO(new XmlBody(valueJsonValue), not);
                         }
-                    case BINARY:
-                        if (contentType != null) {
-                            return new BinaryBodyDTO(new BinaryBody(Base64Converter.base64StringToBytes(valueJsonValue), contentType), not);
-                        } else {
-                            return new BinaryBodyDTO(new BinaryBody(Base64Converter.base64StringToBytes(valueJsonValue)), not);
-                        }
-                    case PARAMETERS:
-                        return new ParameterBodyDTO(new ParameterBody(parameters), not);
+                    case XML_SCHEMA:
+                        return new XmlSchemaBodyDTO(new XmlSchemaBody(valueJsonValue), not);
+                    case XPATH:
+                        return new XPathBodyDTO(new XPathBody(valueJsonValue), not);
                 }
             }
         } else if (currentToken == JsonToken.VALUE_STRING) {

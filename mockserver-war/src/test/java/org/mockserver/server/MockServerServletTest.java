@@ -33,6 +33,7 @@ import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.ConnectionOptions.connectionOptions;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.verify.Verification.verification;
@@ -595,8 +596,8 @@ public class MockServerServletTest {
 
         // then
         assertThat(httpServletResponse.getContentAsString(), is("" +
-                "{" + System.getProperty("line.separator") +
-                "  \"ports\" : [ 1080 ]" + System.getProperty("line.separator") +
+                "{" + NEW_LINE +
+                "  \"ports\" : [ 1080 ]" + NEW_LINE +
                 "}"));
         assertThat(httpServletResponse.getStatus(), is(HttpStatusCode.OK_200.code()));
     }

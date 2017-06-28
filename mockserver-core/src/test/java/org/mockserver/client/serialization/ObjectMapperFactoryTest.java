@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.NottableString.string;
 
 /**
@@ -24,50 +25,50 @@ public class ObjectMapperFactoryTest {
     @Test
     public void shouldDeserializeCompleteObject() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"method\" : \"someMethod\"," + System.getProperty("line.separator") +
-                "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
-                "    \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"queryStringParameterNameOne\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + System.getProperty("line.separator") +
-                "    }, {" + System.getProperty("line.separator") +
-                "      \"name\" : \"queryStringParameterNameTwo\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"body\" : {" + System.getProperty("line.separator") +
-                "      \"type\" : \"STRING\"," + System.getProperty("line.separator") +
-                "      \"string\" : \"someBody\"" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"cookies\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
-                "      \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"headers\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
-                "    } ]" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"httpResponse\" : {" + System.getProperty("line.separator") +
-                "    \"statusCode\" : 304," + System.getProperty("line.separator") +
-                "    \"body\" : \"someBody\"," + System.getProperty("line.separator") +
-                "    \"cookies\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
-                "      \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"headers\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"delay\" : {" + System.getProperty("line.separator") +
-                "      \"timeUnit\" : \"MICROSECONDS\"," + System.getProperty("line.separator") +
-                "      \"value\" : 1" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"method\" : \"someMethod\"," + NEW_LINE +
+                "    \"path\" : \"somePath\"," + NEW_LINE +
+                "    \"queryStringParameters\" : [ {" + NEW_LINE +
+                "      \"name\" : \"queryStringParameterNameOne\"," + NEW_LINE +
+                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
+                "    }, {" + NEW_LINE +
+                "      \"name\" : \"queryStringParameterNameTwo\"," + NEW_LINE +
+                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+                "    } ]," + NEW_LINE +
+                "    \"body\" : {" + NEW_LINE +
+                "      \"type\" : \"STRING\"," + NEW_LINE +
+                "      \"string\" : \"someBody\"" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"cookies\" : [ {" + NEW_LINE +
+                "      \"name\" : \"someCookieName\"," + NEW_LINE +
+                "      \"value\" : \"someCookieValue\"" + NEW_LINE +
+                "    } ]," + NEW_LINE +
+                "    \"headers\" : [ {" + NEW_LINE +
+                "      \"name\" : \"someHeaderName\"," + NEW_LINE +
+                "      \"values\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+                "    } ]" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"statusCode\" : 304," + NEW_LINE +
+                "    \"body\" : \"someBody\"," + NEW_LINE +
+                "    \"cookies\" : [ {" + NEW_LINE +
+                "      \"name\" : \"someCookieName\"," + NEW_LINE +
+                "      \"value\" : \"someCookieValue\"" + NEW_LINE +
+                "    } ]," + NEW_LINE +
+                "    \"headers\" : [ {" + NEW_LINE +
+                "      \"name\" : \"someHeaderName\"," + NEW_LINE +
+                "      \"values\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+                "    } ]," + NEW_LINE +
+                "    \"delay\" : {" + NEW_LINE +
+                "      \"timeUnit\" : \"MICROSECONDS\"," + NEW_LINE +
+                "      \"value\" : 1" + NEW_LINE +
+                "    }" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"remainingTimes\" : 5," + NEW_LINE +
+                "    \"unlimited\" : false" + NEW_LINE +
+                "  }" + NEW_LINE +
                 "}");
 
         // when

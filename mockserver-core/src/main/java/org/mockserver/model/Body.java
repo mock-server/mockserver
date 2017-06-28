@@ -47,13 +47,14 @@ public abstract class Body<T> extends Not {
     }
 
     public enum Type {
-        PARAMETERS,
-        XPATH,
-        XML,
+        BINARY,
         JSON,
         JSON_SCHEMA,
+        PARAMETERS,
         REGEX,
         STRING,
-        BINARY
+        XML,
+        XML_SCHEMA,
+        XPATH,
     }
 }

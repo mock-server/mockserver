@@ -5,6 +5,7 @@ import org.mockserver.client.serialization.Base64Converter;
 import org.mockserver.model.ConnectionOptions;
 import org.mockserver.model.HttpError;
 
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.client.serialization.java.ExpectationToJavaSerializer.INDENT_SIZE;
 
 /**
@@ -37,6 +38,6 @@ public class ConnectionOptionsToJavaSerializer implements ToJavaSerializer<Conne
     }
 
     private StringBuffer appendNewLineAndIndent(int numberOfSpacesToIndent, StringBuffer output) {
-        return output.append(System.getProperty("line.separator")).append(Strings.padStart("", numberOfSpacesToIndent, ' '));
+        return output.append(NEW_LINE).append(Strings.padStart("", numberOfSpacesToIndent, ' '));
     }
 }

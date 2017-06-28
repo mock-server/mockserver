@@ -18,6 +18,7 @@ import java.util.Arrays;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsCollectionContaining.hasItems;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.client.server.MockServerClient.TYPE.LOG;
 import static org.mockserver.matchers.Times.exactly;
 import static org.mockserver.matchers.Times.unlimited;
@@ -94,25 +95,25 @@ public class MockServerClientIntegrationTest {
                         .withSecure(false)
                         .withKeepAlive(true)
                         .withBody(new StringBody("" +
-                                "{\n" +
-                                "  \"httpRequest\" : {\n" +
-                                "    \"path\" : \"/some_path\",\n" +
-                                "    \"body\" : \"some_request_body\"\n" +
-                                "  },\n" +
-                                "  \"httpResponse\" : {\n" +
-                                "    \"headers\" : [ {\n" +
-                                "      \"name\" : \"responseName\",\n" +
-                                "      \"values\" : [ \"responseValue\" ]\n" +
-                                "    } ],\n" +
-                                "    \"body\" : \"some_response_body\"\n" +
-                                "  },\n" +
-                                "  \"times\" : {\n" +
-                                "    \"remainingTimes\" : 0,\n" +
-                                "    \"unlimited\" : true\n" +
-                                "  },\n" +
-                                "  \"timeToLive\" : {\n" +
-                                "    \"unlimited\" : true\n" +
-                                "  }\n" +
+                                "{" + NEW_LINE +
+                                "  \"httpRequest\" : {" + NEW_LINE +
+                                "    \"path\" : \"/some_path\"," + NEW_LINE +
+                                "    \"body\" : \"some_request_body\"" + NEW_LINE +
+                                "  }," + NEW_LINE +
+                                "  \"httpResponse\" : {" + NEW_LINE +
+                                "    \"headers\" : [ {" + NEW_LINE +
+                                "      \"name\" : \"responseName\"," + NEW_LINE +
+                                "      \"values\" : [ \"responseValue\" ]" + NEW_LINE +
+                                "    } ]," + NEW_LINE +
+                                "    \"body\" : \"some_response_body\"" + NEW_LINE +
+                                "  }," + NEW_LINE +
+                                "  \"times\" : {" + NEW_LINE +
+                                "    \"remainingTimes\" : 0," + NEW_LINE +
+                                "    \"unlimited\" : true" + NEW_LINE +
+                                "  }," + NEW_LINE +
+                                "  \"timeToLive\" : {" + NEW_LINE +
+                                "    \"unlimited\" : true" + NEW_LINE +
+                                "  }" + NEW_LINE +
                                 "}"))
         ));
         if (result != null && !result.isEmpty()) {
@@ -154,23 +155,23 @@ public class MockServerClientIntegrationTest {
                         .withSecure(false)
                         .withKeepAlive(true)
                         .withBody(new StringBody("" +
-                                "{\n" +
-                                "  \"httpRequest\" : {\n" +
-                                "    \"path\" : \"/some_path\",\n" +
-                                "    \"body\" : \"some_request_body\"\n" +
-                                "  },\n" +
-                                "  \"httpForward\" : {\n" +
-                                "    \"host\" : \"some_host\",\n" +
-                                "    \"port\" : 9090,\n" +
-                                "    \"scheme\" : \"HTTPS\"\n" +
-                                "  },\n" +
-                                "  \"times\" : {\n" +
-                                "    \"remainingTimes\" : 0,\n" +
-                                "    \"unlimited\" : true\n" +
-                                "  },\n" +
-                                "  \"timeToLive\" : {\n" +
-                                "    \"unlimited\" : true\n" +
-                                "  }\n" +
+                                "{" + NEW_LINE +
+                                "  \"httpRequest\" : {" + NEW_LINE +
+                                "    \"path\" : \"/some_path\"," + NEW_LINE +
+                                "    \"body\" : \"some_request_body\"" + NEW_LINE +
+                                "  }," + NEW_LINE +
+                                "  \"httpForward\" : {" + NEW_LINE +
+                                "    \"host\" : \"some_host\"," + NEW_LINE +
+                                "    \"port\" : 9090," + NEW_LINE +
+                                "    \"scheme\" : \"HTTPS\"" + NEW_LINE +
+                                "  }," + NEW_LINE +
+                                "  \"times\" : {" + NEW_LINE +
+                                "    \"remainingTimes\" : 0," + NEW_LINE +
+                                "    \"unlimited\" : true" + NEW_LINE +
+                                "  }," + NEW_LINE +
+                                "  \"timeToLive\" : {" + NEW_LINE +
+                                "    \"unlimited\" : true" + NEW_LINE +
+                                "  }" + NEW_LINE +
                                 "}"))
         ));
         if (result != null && !result.isEmpty()) {
@@ -211,20 +212,20 @@ public class MockServerClientIntegrationTest {
                         .withSecure(false)
                         .withKeepAlive(true)
                         .withBody(new StringBody("" +
-                                "{\n" +
-                                "  \"httpRequest\" : {\n" +
-                                "    \"path\" : \"/some_path\",\n" +
-                                "    \"body\" : \"some_request_body\"\n" +
-                                "  },\n  \"httpError\" : {\n" +
-                                "    \"dropConnection\" : true,\n" +
-                                "    \"responseBytes\" : \"c2lsbHlfYnl0ZXM=\"\n" +
-                                "  },\n  \"times\" : {\n" +
-                                "    \"remainingTimes\" : 0,\n" +
-                                "    \"unlimited\" : true\n" +
-                                "  },\n" +
-                                "  \"timeToLive\" : {\n" +
-                                "    \"unlimited\" : true\n" +
-                                "  }\n" +
+                                "{" + NEW_LINE +
+                                "  \"httpRequest\" : {" + NEW_LINE +
+                                "    \"path\" : \"/some_path\"," + NEW_LINE +
+                                "    \"body\" : \"some_request_body\"" + NEW_LINE +
+                                "  },\n  \"httpError\" : {" + NEW_LINE +
+                                "    \"dropConnection\" : true," + NEW_LINE +
+                                "    \"responseBytes\" : \"c2lsbHlfYnl0ZXM=\"" + NEW_LINE +
+                                "  },\n  \"times\" : {" + NEW_LINE +
+                                "    \"remainingTimes\" : 0," + NEW_LINE +
+                                "    \"unlimited\" : true" + NEW_LINE +
+                                "  }," + NEW_LINE +
+                                "  \"timeToLive\" : {" + NEW_LINE +
+                                "    \"unlimited\" : true" + NEW_LINE +
+                                "  }" + NEW_LINE +
                                 "}"))
         ));
         if (result != null && !result.isEmpty()) {
@@ -264,21 +265,21 @@ public class MockServerClientIntegrationTest {
                         .withSecure(false)
                         .withKeepAlive(true)
                         .withBody(new StringBody("" +
-                                "{\n" +
-                                "  \"httpRequest\" : {\n" +
-                                "    \"path\" : \"/some_path\",\n" +
-                                "    \"body\" : \"some_request_body\"\n" +
-                                "  },\n" +
-                                "  \"httpClassCallback\" : {\n" +
-                                "    \"callbackClass\" : \"some_class\"\n" +
-                                "  },\n" +
-                                "  \"times\" : {\n" +
-                                "    \"remainingTimes\" : 0,\n" +
-                                "    \"unlimited\" : true\n" +
-                                "  },\n" +
-                                "  \"timeToLive\" : {\n" +
-                                "    \"unlimited\" : true\n" +
-                                "  }\n" +
+                                "{" + NEW_LINE +
+                                "  \"httpRequest\" : {" + NEW_LINE +
+                                "    \"path\" : \"/some_path\"," + NEW_LINE +
+                                "    \"body\" : \"some_request_body\"" + NEW_LINE +
+                                "  }," + NEW_LINE +
+                                "  \"httpClassCallback\" : {" + NEW_LINE +
+                                "    \"callbackClass\" : \"some_class\"" + NEW_LINE +
+                                "  }," + NEW_LINE +
+                                "  \"times\" : {" + NEW_LINE +
+                                "    \"remainingTimes\" : 0," + NEW_LINE +
+                                "    \"unlimited\" : true" + NEW_LINE +
+                                "  }," + NEW_LINE +
+                                "  \"timeToLive\" : {" + NEW_LINE +
+                                "    \"unlimited\" : true" + NEW_LINE +
+                                "  }" + NEW_LINE +
                                 "}"))
         ));
         if (result != null && !result.isEmpty()) {
@@ -320,26 +321,26 @@ public class MockServerClientIntegrationTest {
                         .withSecure(false)
                         .withKeepAlive(true)
                         .withBody(new StringBody("" +
-                                "{\n" +
-                                "  \"httpRequest\" : {\n" +
-                                "    \"path\" : \"/some_path\",\n" +
-                                "    \"body\" : \"some_request_body\"\n" +
-                                "  },\n" +
-                                "  \"httpResponse\" : {\n" +
-                                "    \"headers\" : [ {\n" +
-                                "      \"name\" : \"responseName\",\n" +
+                                "{" + NEW_LINE +
+                                "  \"httpRequest\" : {" + NEW_LINE +
+                                "    \"path\" : \"/some_path\"," + NEW_LINE +
+                                "    \"body\" : \"some_request_body\"" + NEW_LINE +
+                                "  }," + NEW_LINE +
+                                "  \"httpResponse\" : {" + NEW_LINE +
+                                "    \"headers\" : [ {" + NEW_LINE +
+                                "      \"name\" : \"responseName\"," + NEW_LINE +
                                 "" +
-                                "      \"values\" : [ \"responseValue\" ]\n" +
-                                "    } ],\n" +
-                                "    \"body\" : \"some_response_body\"\n" +
-                                "  },\n" +
-                                "  \"times\" : {\n" +
-                                "    \"remainingTimes\" : 3,\n" +
-                                "    \"unlimited\" : false\n" +
-                                "  },\n" +
-                                "  \"timeToLive\" : {\n" +
-                                "    \"unlimited\" : true\n" +
-                                "  }\n" +
+                                "      \"values\" : [ \"responseValue\" ]" + NEW_LINE +
+                                "    } ]," + NEW_LINE +
+                                "    \"body\" : \"some_response_body\"" + NEW_LINE +
+                                "  }," + NEW_LINE +
+                                "  \"times\" : {" + NEW_LINE +
+                                "    \"remainingTimes\" : 3," + NEW_LINE +
+                                "    \"unlimited\" : false" + NEW_LINE +
+                                "  }," + NEW_LINE +
+                                "  \"timeToLive\" : {" + NEW_LINE +
+                                "    \"unlimited\" : true" + NEW_LINE +
+                                "  }" + NEW_LINE +
                                 "}"))
         ));
         if (result != null && !result.isEmpty()) {
@@ -531,9 +532,9 @@ public class MockServerClientIntegrationTest {
                         .withSecure(false)
                         .withKeepAlive(true)
                         .withBody(new StringBody("" +
-                                "{\n" +
-                                "  \"path\" : \"/some_path\",\n" +
-                                "  \"body\" : \"some_request_body\"\n" +
+                                "{" + NEW_LINE +
+                                "  \"path\" : \"/some_path\"," + NEW_LINE +
+                                "  \"body\" : \"some_request_body\"" + NEW_LINE +
                                 "}"))
         ));
         if (result != null && !result.isEmpty()) {
@@ -570,9 +571,9 @@ public class MockServerClientIntegrationTest {
                         .withSecure(false)
                         .withKeepAlive(true)
                         .withBody(new StringBody("" +
-                                "{\n" +
-                                "  \"path\" : \"/some_path\",\n" +
-                                "  \"body\" : \"some_request_body\"\n" +
+                                "{" + NEW_LINE +
+                                "  \"path\" : \"/some_path\"," + NEW_LINE +
+                                "  \"body\" : \"some_request_body\"" + NEW_LINE +
                                 "}"))
         ));
         if (result != null && !result.isEmpty()) {
@@ -646,9 +647,9 @@ public class MockServerClientIntegrationTest {
                         )
                         .withSecure(false)
                         .withKeepAlive(true)
-                        .withBody(new StringBody("{\n" +
-                                "  \"path\" : \"/some_path\",\n" +
-                                "  \"body\" : \"some_request_body\"\n" +
+                        .withBody(new StringBody("{" + NEW_LINE +
+                                "  \"path\" : \"/some_path\"," + NEW_LINE +
+                                "  \"body\" : \"some_request_body\"" + NEW_LINE +
                                 "}"))
         ));
         if (result != null && !result.isEmpty()) {
@@ -736,9 +737,9 @@ public class MockServerClientIntegrationTest {
                         )
                         .withSecure(false)
                         .withKeepAlive(true)
-                        .withBody(new StringBody("{\n" +
-                                "  \"path\" : \"/some_path\",\n" +
-                                "  \"body\" : \"some_request_body\"\n" +
+                        .withBody(new StringBody("{" + NEW_LINE +
+                                "  \"path\" : \"/some_path\"," + NEW_LINE +
+                                "  \"body\" : \"some_request_body\"" + NEW_LINE +
                                 "}"))
         ));
         if (result != null && !result.isEmpty()) {
@@ -819,11 +820,11 @@ public class MockServerClientIntegrationTest {
                         .withSecure(false)
                         .withKeepAlive(true)
                         .withBody(new StringBody("" +
-                                "{\n" +
-                                "  \"httpRequests\" : [ {\n" +
-                                "    \"path\" : \"/some_path\",\n" +
-                                "    \"body\" : \"some_request_body\"\n" +
-                                "  } ]\n" +
+                                "{" + NEW_LINE +
+                                "  \"httpRequests\" : [ {" + NEW_LINE +
+                                "    \"path\" : \"/some_path\"," + NEW_LINE +
+                                "    \"body\" : \"some_request_body\"" + NEW_LINE +
+                                "  } ]" + NEW_LINE +
                                 "}"))
         ));
         if (result != null && !result.isEmpty()) {
@@ -864,14 +865,14 @@ public class MockServerClientIntegrationTest {
                         .withSecure(false)
                         .withKeepAlive(true)
                         .withBody(new StringBody("" +
-                                "{\n" +
-                                "  \"httpRequests\" : [ {\n" +
-                                "    \"path\" : \"/some_path\",\n" +
-                                "    \"body\" : \"some_request_body\"\n" +
-                                "  }, {\n" +
-                                "    \"path\" : \"/some_path\",\n" +
-                                "    \"body\" : \"some_request_body\"\n" +
-                                "  } ]\n" +
+                                "{" + NEW_LINE +
+                                "  \"httpRequests\" : [ {" + NEW_LINE +
+                                "    \"path\" : \"/some_path\"," + NEW_LINE +
+                                "    \"body\" : \"some_request_body\"" + NEW_LINE +
+                                "  }, {" + NEW_LINE +
+                                "    \"path\" : \"/some_path\"," + NEW_LINE +
+                                "    \"body\" : \"some_request_body\"" + NEW_LINE +
+                                "  } ]" + NEW_LINE +
                                 "}"))
         ));
         if (result != null && !result.isEmpty()) {
@@ -910,15 +911,15 @@ public class MockServerClientIntegrationTest {
                         .withSecure(false)
                         .withKeepAlive(true)
                         .withBody(new StringBody("" +
-                                "{\n" +
-                                "  \"httpRequest\" : {\n" +
-                                "    \"path\" : \"/some_path\",\n" +
-                                "    \"body\" : \"some_request_body\"\n" +
-                                "  },\n" +
-                                "  \"times\" : {\n" +
-                                "    \"count\" : 1,\n" +
-                                "    \"exact\" : true\n" +
-                                "  }\n" +
+                                "{" + NEW_LINE +
+                                "  \"httpRequest\" : {" + NEW_LINE +
+                                "    \"path\" : \"/some_path\"," + NEW_LINE +
+                                "    \"body\" : \"some_request_body\"" + NEW_LINE +
+                                "  }," + NEW_LINE +
+                                "  \"times\" : {" + NEW_LINE +
+                                "    \"count\" : 1," + NEW_LINE +
+                                "    \"exact\" : true" + NEW_LINE +
+                                "  }" + NEW_LINE +
                                 "}"))
         ));
         if (result != null && !result.isEmpty()) {

@@ -20,6 +20,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.NottableString.string;
 
@@ -73,8 +74,8 @@ public class HttpResponseSerializerTest {
     @Test
     public void deserializeHttpResponseAsField() throws IOException {
         // given
-        String input = "{" + System.getProperty("line.separator") +
-                "    \"httpResponse\": \"responseBytes\"," + System.getProperty("line.separator") +
+        String input = "{" + NEW_LINE +
+                "    \"httpResponse\": \"responseBytes\"," + NEW_LINE +
                 "}";
         when(objectMapper.readValue(eq(input), same(ExpectationDTO.class))).thenReturn(new ExpectationDTO().setHttpResponse(fullHttpResponseDTO));
 

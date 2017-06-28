@@ -6,6 +6,7 @@ import org.mockserver.model.HttpForward;
 import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockserver.character.Character.NEW_LINE;
 
 /**
  * @author jamesdbloom
@@ -14,10 +15,10 @@ public class HttpForwardToJavaSerializerTest {
 
     @Test
     public void shouldSerializeFullObjectWithForwardAsJava() throws IOException {
-        assertEquals(System.getProperty("line.separator") +
-                        "        forward()" + System.getProperty("line.separator") +
-                        "                .withHost(\"some_host\")" + System.getProperty("line.separator") +
-                        "                .withPort(9090)" + System.getProperty("line.separator") +
+        assertEquals(NEW_LINE +
+                        "        forward()" + NEW_LINE +
+                        "                .withHost(\"some_host\")" + NEW_LINE +
+                        "                .withPort(9090)" + NEW_LINE +
                         "                .withScheme(HttpForward.Scheme.HTTPS)",
                 new HttpForwardToJavaSerializer().serializeAsJava(1,
                         new HttpForward()

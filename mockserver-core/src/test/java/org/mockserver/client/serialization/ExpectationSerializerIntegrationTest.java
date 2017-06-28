@@ -14,6 +14,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.NottableString.string;
 
 /**
@@ -24,15 +25,15 @@ public class ExpectationSerializerIntegrationTest {
     @Test
     public void shouldIgnoreExtraFields() throws IOException {
         // given
-        String requestBytes = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"path\": \"somePath\"," + System.getProperty("line.separator") +
-                "        \"extra_field\": \"extra_value\"" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"httpResponse\": {" + System.getProperty("line.separator") +
-                "        \"body\": \"someBody\"," + System.getProperty("line.separator") +
-                "        \"extra_field\": \"extra_value\"" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String requestBytes = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"path\": \"somePath\"," + NEW_LINE +
+                "        \"extra_field\": \"extra_value\"" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"httpResponse\": {" + NEW_LINE +
+                "        \"body\": \"someBody\"," + NEW_LINE +
+                "        \"extra_field\": \"extra_value\"" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -54,11 +55,11 @@ public class ExpectationSerializerIntegrationTest {
     @Test
     public void shouldIgnoreEmptyStringObjects() throws IOException {
         // given
-        String requestBytes = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"path\": \"somePath\"" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"httpResponse\": \"\"" + System.getProperty("line.separator") +
+        String requestBytes = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"path\": \"somePath\"" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"httpResponse\": \"\"" + NEW_LINE +
                 "}");
 
         // when
@@ -76,17 +77,17 @@ public class ExpectationSerializerIntegrationTest {
     @Test
     public void shouldHandleNullPrimitives() throws IOException {
         // given
-        String requestBytes = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"path\": \"somePath\"" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"httpResponse\": {" + System.getProperty("line.separator") +
-                "        \"body\": \"someBody\"" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"times\": {" + System.getProperty("line.separator") +
-                "        \"remainingTimes\": null," + System.getProperty("line.separator") +
-                "        \"unlimited\": false" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String requestBytes = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"path\": \"somePath\"" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"httpResponse\": {" + NEW_LINE +
+                "        \"body\": \"someBody\"" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"times\": {" + NEW_LINE +
+                "        \"remainingTimes\": null," + NEW_LINE +
+                "        \"unlimited\": false" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -109,17 +110,17 @@ public class ExpectationSerializerIntegrationTest {
     @Test
     public void shouldHandleEmptyPrimitives() throws IOException {
         // given
-        String requestBytes = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"path\": \"somePath\"" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"httpResponse\": {" + System.getProperty("line.separator") +
-                "        \"body\": \"someBody\"" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"times\": {" + System.getProperty("line.separator") +
-                "        \"remainingTimes\": \"\"," + System.getProperty("line.separator") +
-                "        \"unlimited\": false" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String requestBytes = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"path\": \"somePath\"" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"httpResponse\": {" + NEW_LINE +
+                "        \"body\": \"someBody\"" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"times\": {" + NEW_LINE +
+                "        \"remainingTimes\": \"\"," + NEW_LINE +
+                "        \"unlimited\": false" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -142,17 +143,17 @@ public class ExpectationSerializerIntegrationTest {
     @Test
     public void shouldHandleNullEnums() throws IOException {
         // given
-        String requestBytes = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"path\": \"somePath\"" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"httpResponse\": {" + System.getProperty("line.separator") +
-                "        \"body\": \"someBody\"," + System.getProperty("line.separator") +
-                "        \"delay\": {" + System.getProperty("line.separator") +
-                "            \"timeUnit\": null," + System.getProperty("line.separator") +
-                "            \"value\": null" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String requestBytes = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"path\": \"somePath\"" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"httpResponse\": {" + NEW_LINE +
+                "        \"body\": \"someBody\"," + NEW_LINE +
+                "        \"delay\": {" + NEW_LINE +
+                "            \"timeUnit\": null," + NEW_LINE +
+                "            \"value\": null" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -175,15 +176,15 @@ public class ExpectationSerializerIntegrationTest {
     @Test
     public void shouldAllowSingleObjectForArray() throws IOException {
         // given
-        String requestBytes = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"path\": \"somePath\"," + System.getProperty("line.separator") +
-                "        \"extra_field\": \"extra_value\"" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"httpResponse\": {" + System.getProperty("line.separator") +
-                "        \"body\": \"someBody\"," + System.getProperty("line.separator") +
-                "        \"extra_field\": \"extra_value\"" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String requestBytes = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"path\": \"somePath\"," + NEW_LINE +
+                "        \"extra_field\": \"extra_value\"" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"httpResponse\": {" + NEW_LINE +
+                "        \"body\": \"someBody\"," + NEW_LINE +
+                "        \"extra_field\": \"extra_value\"" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -208,35 +209,35 @@ public class ExpectationSerializerIntegrationTest {
     public void shouldAllowMultipleObjectsForArray() throws IOException {
         // given
         String requestBytes = ("[" +
-                "  {" + System.getProperty("line.separator") +
-                "      \"httpRequest\": {" + System.getProperty("line.separator") +
-                "          \"path\": \"somePath\"," + System.getProperty("line.separator") +
-                "          \"extra_field\": \"extra_value\"" + System.getProperty("line.separator") +
-                "      }," + System.getProperty("line.separator") +
-                "      \"httpResponse\": {" + System.getProperty("line.separator") +
-                "          \"body\": \"someBody\"," + System.getProperty("line.separator") +
-                "          \"extra_field\": \"extra_value\"" + System.getProperty("line.separator") +
-                "      }" + System.getProperty("line.separator") +
+                "  {" + NEW_LINE +
+                "      \"httpRequest\": {" + NEW_LINE +
+                "          \"path\": \"somePath\"," + NEW_LINE +
+                "          \"extra_field\": \"extra_value\"" + NEW_LINE +
+                "      }," + NEW_LINE +
+                "      \"httpResponse\": {" + NEW_LINE +
+                "          \"body\": \"someBody\"," + NEW_LINE +
+                "          \"extra_field\": \"extra_value\"" + NEW_LINE +
+                "      }" + NEW_LINE +
                 "  }," +
-                "  {" + System.getProperty("line.separator") +
-                "      \"httpRequest\": {" + System.getProperty("line.separator") +
-                "          \"path\": \"somePath\"," + System.getProperty("line.separator") +
-                "          \"extra_field\": \"extra_value\"" + System.getProperty("line.separator") +
-                "      }," + System.getProperty("line.separator") +
-                "      \"httpResponse\": {" + System.getProperty("line.separator") +
-                "          \"body\": \"someBody\"," + System.getProperty("line.separator") +
-                "          \"extra_field\": \"extra_value\"" + System.getProperty("line.separator") +
-                "      }" + System.getProperty("line.separator") +
+                "  {" + NEW_LINE +
+                "      \"httpRequest\": {" + NEW_LINE +
+                "          \"path\": \"somePath\"," + NEW_LINE +
+                "          \"extra_field\": \"extra_value\"" + NEW_LINE +
+                "      }," + NEW_LINE +
+                "      \"httpResponse\": {" + NEW_LINE +
+                "          \"body\": \"someBody\"," + NEW_LINE +
+                "          \"extra_field\": \"extra_value\"" + NEW_LINE +
+                "      }" + NEW_LINE +
                 "  }," +
-                "  {" + System.getProperty("line.separator") +
-                "      \"httpRequest\": {" + System.getProperty("line.separator") +
-                "          \"path\": \"somePath\"," + System.getProperty("line.separator") +
-                "          \"extra_field\": \"extra_value\"" + System.getProperty("line.separator") +
-                "      }," + System.getProperty("line.separator") +
-                "      \"httpResponse\": {" + System.getProperty("line.separator") +
-                "          \"body\": \"someBody\"," + System.getProperty("line.separator") +
-                "          \"extra_field\": \"extra_value\"" + System.getProperty("line.separator") +
-                "      }" + System.getProperty("line.separator") +
+                "  {" + NEW_LINE +
+                "      \"httpRequest\": {" + NEW_LINE +
+                "          \"path\": \"somePath\"," + NEW_LINE +
+                "          \"extra_field\": \"extra_value\"" + NEW_LINE +
+                "      }," + NEW_LINE +
+                "      \"httpResponse\": {" + NEW_LINE +
+                "          \"body\": \"someBody\"," + NEW_LINE +
+                "          \"extra_field\": \"extra_value\"" + NEW_LINE +
+                "      }" + NEW_LINE +
                 "  }" +
                 "]");
         Expectation expectation = new ExpectationDTO()
@@ -264,57 +265,57 @@ public class ExpectationSerializerIntegrationTest {
     @Test
     public void shouldDeserializeCompleteObjectWithResponse() throws IOException {
         // given
-        String requestBytes = ("{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"method\" : \"someMethod\"," + System.getProperty("line.separator") +
-                "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
-                "    \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"queryStringParameterNameOne\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + System.getProperty("line.separator") +
-                "    }, {" + System.getProperty("line.separator") +
-                "      \"name\" : \"queryStringParameterNameTwo\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"body\" : {" + System.getProperty("line.separator") +
-                "      \"type\" : \"STRING\"," + System.getProperty("line.separator") +
-                "      \"value\" : \"someBody\"" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"cookies\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
-                "      \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"headers\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
-                "    } ]" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"httpResponse\" : {" + System.getProperty("line.separator") +
-                "    \"statusCode\" : 304," + System.getProperty("line.separator") +
-                "    \"body\" : \"someBody\"," + System.getProperty("line.separator") +
-                "    \"cookies\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
-                "      \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"headers\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"delay\" : {" + System.getProperty("line.separator") +
-                "      \"timeUnit\" : \"MICROSECONDS\"," + System.getProperty("line.separator") +
-                "      \"value\" : 1" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"connectionOptions\" : {" + System.getProperty("line.separator") +
-                "      \"suppressContentLengthHeader\" : true," + System.getProperty("line.separator") +
-                "      \"contentLengthHeaderOverride\" : 50," + System.getProperty("line.separator") +
-                "      \"suppressConnectionHeader\" : true," + System.getProperty("line.separator") +
-                "      \"keepAliveOverride\" : true," + System.getProperty("line.separator") +
-                "      \"closeSocket\" : true" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
+        String requestBytes = ("{" + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"method\" : \"someMethod\"," + NEW_LINE +
+                "    \"path\" : \"somePath\"," + NEW_LINE +
+                "    \"queryStringParameters\" : [ {" + NEW_LINE +
+                "      \"name\" : \"queryStringParameterNameOne\"," + NEW_LINE +
+                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
+                "    }, {" + NEW_LINE +
+                "      \"name\" : \"queryStringParameterNameTwo\"," + NEW_LINE +
+                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+                "    } ]," + NEW_LINE +
+                "    \"body\" : {" + NEW_LINE +
+                "      \"type\" : \"STRING\"," + NEW_LINE +
+                "      \"value\" : \"someBody\"" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"cookies\" : [ {" + NEW_LINE +
+                "      \"name\" : \"someCookieName\"," + NEW_LINE +
+                "      \"value\" : \"someCookieValue\"" + NEW_LINE +
+                "    } ]," + NEW_LINE +
+                "    \"headers\" : [ {" + NEW_LINE +
+                "      \"name\" : \"someHeaderName\"," + NEW_LINE +
+                "      \"values\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+                "    } ]" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"statusCode\" : 304," + NEW_LINE +
+                "    \"body\" : \"someBody\"," + NEW_LINE +
+                "    \"cookies\" : [ {" + NEW_LINE +
+                "      \"name\" : \"someCookieName\"," + NEW_LINE +
+                "      \"value\" : \"someCookieValue\"" + NEW_LINE +
+                "    } ]," + NEW_LINE +
+                "    \"headers\" : [ {" + NEW_LINE +
+                "      \"name\" : \"someHeaderName\"," + NEW_LINE +
+                "      \"values\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+                "    } ]," + NEW_LINE +
+                "    \"delay\" : {" + NEW_LINE +
+                "      \"timeUnit\" : \"MICROSECONDS\"," + NEW_LINE +
+                "      \"value\" : 1" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"connectionOptions\" : {" + NEW_LINE +
+                "      \"suppressContentLengthHeader\" : true," + NEW_LINE +
+                "      \"contentLengthHeaderOverride\" : 50," + NEW_LINE +
+                "      \"suppressConnectionHeader\" : true," + NEW_LINE +
+                "      \"keepAliveOverride\" : true," + NEW_LINE +
+                "      \"closeSocket\" : true" + NEW_LINE +
+                "    }" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"remainingTimes\" : 5," + NEW_LINE +
+                "    \"unlimited\" : false" + NEW_LINE +
+                "  }" + NEW_LINE +
                 "}");
 
         // when
@@ -362,39 +363,39 @@ public class ExpectationSerializerIntegrationTest {
     @Test
     public void shouldDeserializeCompleteObjectWithForward() throws IOException {
         // given
-        String requestBytes = ("{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"method\" : \"someMethod\"," + System.getProperty("line.separator") +
-                "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
-                "    \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"queryStringParameterNameOne\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + System.getProperty("line.separator") +
-                "    }, {" + System.getProperty("line.separator") +
-                "      \"name\" : \"queryStringParameterNameTwo\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"body\" : {" + System.getProperty("line.separator") +
-                "      \"type\" : \"STRING\"," + System.getProperty("line.separator") +
-                "      \"value\" : \"someBody\"" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"cookies\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
-                "      \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"headers\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
-                "    } ]" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"httpForward\" : {" + System.getProperty("line.separator") +
-                "    \"host\" : \"someHost\"," + System.getProperty("line.separator") +
-                "    \"port\" : 1234," + System.getProperty("line.separator") +
+        String requestBytes = ("{" + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"method\" : \"someMethod\"," + NEW_LINE +
+                "    \"path\" : \"somePath\"," + NEW_LINE +
+                "    \"queryStringParameters\" : [ {" + NEW_LINE +
+                "      \"name\" : \"queryStringParameterNameOne\"," + NEW_LINE +
+                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
+                "    }, {" + NEW_LINE +
+                "      \"name\" : \"queryStringParameterNameTwo\"," + NEW_LINE +
+                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+                "    } ]," + NEW_LINE +
+                "    \"body\" : {" + NEW_LINE +
+                "      \"type\" : \"STRING\"," + NEW_LINE +
+                "      \"value\" : \"someBody\"" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"cookies\" : [ {" + NEW_LINE +
+                "      \"name\" : \"someCookieName\"," + NEW_LINE +
+                "      \"value\" : \"someCookieValue\"" + NEW_LINE +
+                "    } ]," + NEW_LINE +
+                "    \"headers\" : [ {" + NEW_LINE +
+                "      \"name\" : \"someHeaderName\"," + NEW_LINE +
+                "      \"values\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+                "    } ]" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpForward\" : {" + NEW_LINE +
+                "    \"host\" : \"someHost\"," + NEW_LINE +
+                "    \"port\" : 1234," + NEW_LINE +
                 "    \"scheme\" : \"HTTPS\"" +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"remainingTimes\" : 5," + NEW_LINE +
+                "    \"unlimited\" : false" + NEW_LINE +
+                "  }" + NEW_LINE +
                 "}");
 
         // when
@@ -428,42 +429,42 @@ public class ExpectationSerializerIntegrationTest {
     @Test
     public void shouldDeserializeCompleteObjectWithError() throws IOException {
         // given
-        String requestBytes = ("{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"method\" : \"someMethod\"," + System.getProperty("line.separator") +
-                "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
-                "    \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"queryStringParameterNameOne\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + System.getProperty("line.separator") +
-                "    }, {" + System.getProperty("line.separator") +
-                "      \"name\" : \"queryStringParameterNameTwo\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"body\" : {" + System.getProperty("line.separator") +
-                "      \"type\" : \"STRING\"," + System.getProperty("line.separator") +
-                "      \"value\" : \"someBody\"" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"cookies\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
-                "      \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"headers\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
-                "    } ]" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"httpError\" : {" + System.getProperty("line.separator") +
-                "    \"delay\" : {" + System.getProperty("line.separator") +
-                "      \"timeUnit\" : \"HOURS\"," + System.getProperty("line.separator") +
-                "      \"value\" : 1" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"dropConnection\" : true," + System.getProperty("line.separator") +
-                "    \"responseBytes\" : \"c29tZV9ieXRlcw==\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
+        String requestBytes = ("{" + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"method\" : \"someMethod\"," + NEW_LINE +
+                "    \"path\" : \"somePath\"," + NEW_LINE +
+                "    \"queryStringParameters\" : [ {" + NEW_LINE +
+                "      \"name\" : \"queryStringParameterNameOne\"," + NEW_LINE +
+                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
+                "    }, {" + NEW_LINE +
+                "      \"name\" : \"queryStringParameterNameTwo\"," + NEW_LINE +
+                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+                "    } ]," + NEW_LINE +
+                "    \"body\" : {" + NEW_LINE +
+                "      \"type\" : \"STRING\"," + NEW_LINE +
+                "      \"value\" : \"someBody\"" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"cookies\" : [ {" + NEW_LINE +
+                "      \"name\" : \"someCookieName\"," + NEW_LINE +
+                "      \"value\" : \"someCookieValue\"" + NEW_LINE +
+                "    } ]," + NEW_LINE +
+                "    \"headers\" : [ {" + NEW_LINE +
+                "      \"name\" : \"someHeaderName\"," + NEW_LINE +
+                "      \"values\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+                "    } ]" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpError\" : {" + NEW_LINE +
+                "    \"delay\" : {" + NEW_LINE +
+                "      \"timeUnit\" : \"HOURS\"," + NEW_LINE +
+                "      \"value\" : 1" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"dropConnection\" : true," + NEW_LINE +
+                "    \"responseBytes\" : \"c29tZV9ieXRlcw==\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"remainingTimes\" : 5," + NEW_LINE +
+                "    \"unlimited\" : false" + NEW_LINE +
+                "  }" + NEW_LINE +
                 "}");
 
         // when
@@ -497,37 +498,37 @@ public class ExpectationSerializerIntegrationTest {
     @Test
     public void shouldDeserializeCompleteObjectWithClassCallback() throws IOException {
         // given
-        String requestBytes = ("{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"method\" : \"someMethod\"," + System.getProperty("line.separator") +
-                "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
-                "    \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"queryStringParameterNameOne\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + System.getProperty("line.separator") +
-                "    }, {" + System.getProperty("line.separator") +
-                "      \"name\" : \"queryStringParameterNameTwo\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"body\" : {" + System.getProperty("line.separator") +
-                "      \"type\" : \"STRING\"," + System.getProperty("line.separator") +
-                "      \"value\" : \"someBody\"" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"cookies\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
-                "      \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"headers\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
-                "    } ]" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"httpClassCallback\" : {" + System.getProperty("line.separator") +
-                "    \"callbackClass\" : \"someClass\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
+        String requestBytes = ("{" + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"method\" : \"someMethod\"," + NEW_LINE +
+                "    \"path\" : \"somePath\"," + NEW_LINE +
+                "    \"queryStringParameters\" : [ {" + NEW_LINE +
+                "      \"name\" : \"queryStringParameterNameOne\"," + NEW_LINE +
+                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
+                "    }, {" + NEW_LINE +
+                "      \"name\" : \"queryStringParameterNameTwo\"," + NEW_LINE +
+                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+                "    } ]," + NEW_LINE +
+                "    \"body\" : {" + NEW_LINE +
+                "      \"type\" : \"STRING\"," + NEW_LINE +
+                "      \"value\" : \"someBody\"" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"cookies\" : [ {" + NEW_LINE +
+                "      \"name\" : \"someCookieName\"," + NEW_LINE +
+                "      \"value\" : \"someCookieValue\"" + NEW_LINE +
+                "    } ]," + NEW_LINE +
+                "    \"headers\" : [ {" + NEW_LINE +
+                "      \"name\" : \"someHeaderName\"," + NEW_LINE +
+                "      \"values\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+                "    } ]" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpClassCallback\" : {" + NEW_LINE +
+                "    \"callbackClass\" : \"someClass\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"remainingTimes\" : 5," + NEW_LINE +
+                "    \"unlimited\" : false" + NEW_LINE +
+                "  }" + NEW_LINE +
                 "}");
 
         // when
@@ -558,37 +559,37 @@ public class ExpectationSerializerIntegrationTest {
     @Test
     public void shouldDeserializeCompleteObjectWithObjectCallback() throws IOException {
         // given
-        String requestBytes = ("{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"method\" : \"someMethod\"," + System.getProperty("line.separator") +
-                "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
-                "    \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"queryStringParameterNameOne\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + System.getProperty("line.separator") +
-                "    }, {" + System.getProperty("line.separator") +
-                "      \"name\" : \"queryStringParameterNameTwo\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"body\" : {" + System.getProperty("line.separator") +
-                "      \"type\" : \"STRING\"," + System.getProperty("line.separator") +
-                "      \"value\" : \"someBody\"" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"cookies\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
-                "      \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"headers\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
-                "    } ]" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"httpObjectCallback\" : {" + System.getProperty("line.separator") +
-                "    \"clientId\" : \"someClientId\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
+        String requestBytes = ("{" + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"method\" : \"someMethod\"," + NEW_LINE +
+                "    \"path\" : \"somePath\"," + NEW_LINE +
+                "    \"queryStringParameters\" : [ {" + NEW_LINE +
+                "      \"name\" : \"queryStringParameterNameOne\"," + NEW_LINE +
+                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
+                "    }, {" + NEW_LINE +
+                "      \"name\" : \"queryStringParameterNameTwo\"," + NEW_LINE +
+                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+                "    } ]," + NEW_LINE +
+                "    \"body\" : {" + NEW_LINE +
+                "      \"type\" : \"STRING\"," + NEW_LINE +
+                "      \"value\" : \"someBody\"" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"cookies\" : [ {" + NEW_LINE +
+                "      \"name\" : \"someCookieName\"," + NEW_LINE +
+                "      \"value\" : \"someCookieValue\"" + NEW_LINE +
+                "    } ]," + NEW_LINE +
+                "    \"headers\" : [ {" + NEW_LINE +
+                "      \"name\" : \"someHeaderName\"," + NEW_LINE +
+                "      \"values\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+                "    } ]" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpObjectCallback\" : {" + NEW_LINE +
+                "    \"clientId\" : \"someClientId\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"remainingTimes\" : 5," + NEW_LINE +
+                "    \"unlimited\" : false" + NEW_LINE +
+                "  }" + NEW_LINE +
                 "}");
 
         // when
@@ -619,13 +620,13 @@ public class ExpectationSerializerIntegrationTest {
     @Test
     public void shouldDeserializePartialObject() throws IOException {
         // given
-        String requestBytes = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"path\": \"somePath\"" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"httpResponse\": {" + System.getProperty("line.separator") +
-                "        \"body\": \"someBody\"" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String requestBytes = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"path\": \"somePath\"" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"httpResponse\": {" + NEW_LINE +
+                "        \"body\": \"someBody\"" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -647,17 +648,17 @@ public class ExpectationSerializerIntegrationTest {
     @Test
     public void shouldDeserializeStringRegexBody() throws IOException {
         // given
-        String requestBytes = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"path\": \"somePath\"," + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"type\" : \"REGEX\"," + System.getProperty("line.separator") +
-                "            \"value\" : \"some[a-zA-Z]*\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"httpResponse\": {" + System.getProperty("line.separator") +
-                "        \"body\": \"someBody\"" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String requestBytes = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"path\": \"somePath\"," + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"type\" : \"REGEX\"," + NEW_LINE +
+                "            \"value\" : \"some[a-zA-Z]*\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"httpResponse\": {" + NEW_LINE +
+                "        \"body\": \"someBody\"" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -680,23 +681,23 @@ public class ExpectationSerializerIntegrationTest {
     @Test
     public void shouldDeserializeParameterBody() throws IOException {
         // given
-        String requestBytes = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"path\": \"somePath\"," + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"type\" : \"PARAMETERS\"," + System.getProperty("line.separator") +
-                "            \"parameters\" : [ {" + System.getProperty("line.separator") +
-                "                    \"name\" : \"parameterOneName\"," + System.getProperty("line.separator") +
-                "                    \"values\" : [ \"parameterOneValueOne\", \"parameterOneValueTwo\" ]" + System.getProperty("line.separator") +
-                "                }, {" + System.getProperty("line.separator") +
-                "                    \"name\" : \"parameterTwoName\"," + System.getProperty("line.separator") +
-                "                    \"values\" : [ \"parameterTwoValue\" ]" + System.getProperty("line.separator") +
-                "            } ]" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"httpResponse\": {" + System.getProperty("line.separator") +
-                "        \"body\": \"someBody\"" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String requestBytes = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"path\": \"somePath\"," + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"type\" : \"PARAMETERS\"," + NEW_LINE +
+                "            \"parameters\" : [ {" + NEW_LINE +
+                "                    \"name\" : \"parameterOneName\"," + NEW_LINE +
+                "                    \"values\" : [ \"parameterOneValueOne\", \"parameterOneValueTwo\" ]" + NEW_LINE +
+                "                }, {" + NEW_LINE +
+                "                    \"name\" : \"parameterTwoName\"," + NEW_LINE +
+                "                    \"values\" : [ \"parameterTwoValue\" ]" + NEW_LINE +
+                "            } ]" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"httpResponse\": {" + NEW_LINE +
+                "        \"body\": \"someBody\"" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -762,57 +763,57 @@ public class ExpectationSerializerIntegrationTest {
         );
 
         // then
-        assertEquals("{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"method\" : \"someMethod\"," + System.getProperty("line.separator") +
-                "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
-                "    \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"queryStringParameterNameOne\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + System.getProperty("line.separator") +
-                "    }, {" + System.getProperty("line.separator") +
-                "      \"name\" : \"queryStringParameterNameTwo\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"headers\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"cookies\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
-                "      \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"body\" : \"someBody\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"httpResponse\" : {" + System.getProperty("line.separator") +
-                "    \"statusCode\" : 304," + System.getProperty("line.separator") +
-                "    \"headers\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"cookies\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
-                "      \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"body\" : \"someBody\"," + System.getProperty("line.separator") +
-                "    \"delay\" : {" + System.getProperty("line.separator") +
-                "      \"timeUnit\" : \"MICROSECONDS\"," + System.getProperty("line.separator") +
-                "      \"value\" : 1" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"connectionOptions\" : {" + System.getProperty("line.separator") +
-                "      \"suppressContentLengthHeader\" : true," + System.getProperty("line.separator") +
-                "      \"contentLengthHeaderOverride\" : 50," + System.getProperty("line.separator") +
-                "      \"suppressConnectionHeader\" : true," + System.getProperty("line.separator") +
-                "      \"keepAliveOverride\" : true," + System.getProperty("line.separator") +
-                "      \"closeSocket\" : true" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
-                "    \"unlimited\" : true" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
+        assertEquals("{" + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"method\" : \"someMethod\"," + NEW_LINE +
+                "    \"path\" : \"somePath\"," + NEW_LINE +
+                "    \"queryStringParameters\" : [ {" + NEW_LINE +
+                "      \"name\" : \"queryStringParameterNameOne\"," + NEW_LINE +
+                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
+                "    }, {" + NEW_LINE +
+                "      \"name\" : \"queryStringParameterNameTwo\"," + NEW_LINE +
+                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+                "    } ]," + NEW_LINE +
+                "    \"headers\" : [ {" + NEW_LINE +
+                "      \"name\" : \"someHeaderName\"," + NEW_LINE +
+                "      \"values\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+                "    } ]," + NEW_LINE +
+                "    \"cookies\" : [ {" + NEW_LINE +
+                "      \"name\" : \"someCookieName\"," + NEW_LINE +
+                "      \"value\" : \"someCookieValue\"" + NEW_LINE +
+                "    } ]," + NEW_LINE +
+                "    \"body\" : \"someBody\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"statusCode\" : 304," + NEW_LINE +
+                "    \"headers\" : [ {" + NEW_LINE +
+                "      \"name\" : \"someHeaderName\"," + NEW_LINE +
+                "      \"values\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+                "    } ]," + NEW_LINE +
+                "    \"cookies\" : [ {" + NEW_LINE +
+                "      \"name\" : \"someCookieName\"," + NEW_LINE +
+                "      \"value\" : \"someCookieValue\"" + NEW_LINE +
+                "    } ]," + NEW_LINE +
+                "    \"body\" : \"someBody\"," + NEW_LINE +
+                "    \"delay\" : {" + NEW_LINE +
+                "      \"timeUnit\" : \"MICROSECONDS\"," + NEW_LINE +
+                "      \"value\" : 1" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"connectionOptions\" : {" + NEW_LINE +
+                "      \"suppressContentLengthHeader\" : true," + NEW_LINE +
+                "      \"contentLengthHeaderOverride\" : 50," + NEW_LINE +
+                "      \"suppressConnectionHeader\" : true," + NEW_LINE +
+                "      \"keepAliveOverride\" : true," + NEW_LINE +
+                "      \"closeSocket\" : true" + NEW_LINE +
+                "    }" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"remainingTimes\" : 5," + NEW_LINE +
+                "    \"unlimited\" : false" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }" + NEW_LINE +
                 "}", jsonExpectation);
     }
 
@@ -844,41 +845,41 @@ public class ExpectationSerializerIntegrationTest {
         );
 
         // then
-        assertEquals("{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"method\" : \"someMethod\"," + System.getProperty("line.separator") +
-                "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
-                "    \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"queryStringParameterNameOne\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + System.getProperty("line.separator") +
-                "    }, {" + System.getProperty("line.separator") +
-                "      \"name\" : \"queryStringParameterNameTwo\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"headers\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"cookies\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
-                "      \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"body\" : \"someBody\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"httpForward\" : {" + System.getProperty("line.separator") +
-                "    \"host\" : \"someHost\"," + System.getProperty("line.separator") +
-                "    \"port\" : 1234," + System.getProperty("line.separator") +
-                "    \"scheme\" : \"HTTPS\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
-                "    \"timeUnit\" : \"HOURS\"," + System.getProperty("line.separator") +
-                "    \"timeToLive\" : 2," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
+        assertEquals("{" + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"method\" : \"someMethod\"," + NEW_LINE +
+                "    \"path\" : \"somePath\"," + NEW_LINE +
+                "    \"queryStringParameters\" : [ {" + NEW_LINE +
+                "      \"name\" : \"queryStringParameterNameOne\"," + NEW_LINE +
+                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
+                "    }, {" + NEW_LINE +
+                "      \"name\" : \"queryStringParameterNameTwo\"," + NEW_LINE +
+                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+                "    } ]," + NEW_LINE +
+                "    \"headers\" : [ {" + NEW_LINE +
+                "      \"name\" : \"someHeaderName\"," + NEW_LINE +
+                "      \"values\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+                "    } ]," + NEW_LINE +
+                "    \"cookies\" : [ {" + NEW_LINE +
+                "      \"name\" : \"someCookieName\"," + NEW_LINE +
+                "      \"value\" : \"someCookieValue\"" + NEW_LINE +
+                "    } ]," + NEW_LINE +
+                "    \"body\" : \"someBody\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpForward\" : {" + NEW_LINE +
+                "    \"host\" : \"someHost\"," + NEW_LINE +
+                "    \"port\" : 1234," + NEW_LINE +
+                "    \"scheme\" : \"HTTPS\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"remainingTimes\" : 5," + NEW_LINE +
+                "    \"unlimited\" : false" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"timeUnit\" : \"HOURS\"," + NEW_LINE +
+                "    \"timeToLive\" : 2," + NEW_LINE +
+                "    \"unlimited\" : false" + NEW_LINE +
+                "  }" + NEW_LINE +
                 "}", jsonExpectation);
     }
 
@@ -910,44 +911,44 @@ public class ExpectationSerializerIntegrationTest {
         );
 
         // then
-        assertEquals("{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"method\" : \"someMethod\"," + System.getProperty("line.separator") +
-                "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
-                "    \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"queryStringParameterNameOne\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + System.getProperty("line.separator") +
-                "    }, {" + System.getProperty("line.separator") +
-                "      \"name\" : \"queryStringParameterNameTwo\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"headers\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"cookies\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
-                "      \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"body\" : \"someBody\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"httpError\" : {" + System.getProperty("line.separator") +
-                "    \"delay\" : {" + System.getProperty("line.separator") +
-                "      \"timeUnit\" : \"HOURS\"," + System.getProperty("line.separator") +
-                "      \"value\" : 1" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"dropConnection\" : false," + System.getProperty("line.separator") +
-                "    \"responseBytes\" : \"" + Base64Converter.bytesToBase64String("some_bytes".getBytes()) + "\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
-                "    \"timeUnit\" : \"HOURS\"," + System.getProperty("line.separator") +
-                "    \"timeToLive\" : 2," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
+        assertEquals("{" + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"method\" : \"someMethod\"," + NEW_LINE +
+                "    \"path\" : \"somePath\"," + NEW_LINE +
+                "    \"queryStringParameters\" : [ {" + NEW_LINE +
+                "      \"name\" : \"queryStringParameterNameOne\"," + NEW_LINE +
+                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
+                "    }, {" + NEW_LINE +
+                "      \"name\" : \"queryStringParameterNameTwo\"," + NEW_LINE +
+                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+                "    } ]," + NEW_LINE +
+                "    \"headers\" : [ {" + NEW_LINE +
+                "      \"name\" : \"someHeaderName\"," + NEW_LINE +
+                "      \"values\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+                "    } ]," + NEW_LINE +
+                "    \"cookies\" : [ {" + NEW_LINE +
+                "      \"name\" : \"someCookieName\"," + NEW_LINE +
+                "      \"value\" : \"someCookieValue\"" + NEW_LINE +
+                "    } ]," + NEW_LINE +
+                "    \"body\" : \"someBody\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpError\" : {" + NEW_LINE +
+                "    \"delay\" : {" + NEW_LINE +
+                "      \"timeUnit\" : \"HOURS\"," + NEW_LINE +
+                "      \"value\" : 1" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"dropConnection\" : false," + NEW_LINE +
+                "    \"responseBytes\" : \"" + Base64Converter.bytesToBase64String("some_bytes".getBytes()) + "\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"remainingTimes\" : 5," + NEW_LINE +
+                "    \"unlimited\" : false" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"timeUnit\" : \"HOURS\"," + NEW_LINE +
+                "    \"timeToLive\" : 2," + NEW_LINE +
+                "    \"unlimited\" : false" + NEW_LINE +
+                "  }" + NEW_LINE +
                 "}", jsonExpectation);
     }
 
@@ -977,39 +978,39 @@ public class ExpectationSerializerIntegrationTest {
         );
 
         // then
-        assertEquals("{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"method\" : \"someMethod\"," + System.getProperty("line.separator") +
-                "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
-                "    \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"queryStringParameterNameOne\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + System.getProperty("line.separator") +
-                "    }, {" + System.getProperty("line.separator") +
-                "      \"name\" : \"queryStringParameterNameTwo\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"headers\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"cookies\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
-                "      \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"body\" : \"someBody\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"httpClassCallback\" : {" + System.getProperty("line.separator") +
-                "    \"callbackClass\" : \"someClass\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
-                "    \"timeUnit\" : \"HOURS\"," + System.getProperty("line.separator") +
-                "    \"timeToLive\" : 2," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
+        assertEquals("{" + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"method\" : \"someMethod\"," + NEW_LINE +
+                "    \"path\" : \"somePath\"," + NEW_LINE +
+                "    \"queryStringParameters\" : [ {" + NEW_LINE +
+                "      \"name\" : \"queryStringParameterNameOne\"," + NEW_LINE +
+                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
+                "    }, {" + NEW_LINE +
+                "      \"name\" : \"queryStringParameterNameTwo\"," + NEW_LINE +
+                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+                "    } ]," + NEW_LINE +
+                "    \"headers\" : [ {" + NEW_LINE +
+                "      \"name\" : \"someHeaderName\"," + NEW_LINE +
+                "      \"values\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+                "    } ]," + NEW_LINE +
+                "    \"cookies\" : [ {" + NEW_LINE +
+                "      \"name\" : \"someCookieName\"," + NEW_LINE +
+                "      \"value\" : \"someCookieValue\"" + NEW_LINE +
+                "    } ]," + NEW_LINE +
+                "    \"body\" : \"someBody\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpClassCallback\" : {" + NEW_LINE +
+                "    \"callbackClass\" : \"someClass\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"remainingTimes\" : 5," + NEW_LINE +
+                "    \"unlimited\" : false" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"timeUnit\" : \"HOURS\"," + NEW_LINE +
+                "    \"timeToLive\" : 2," + NEW_LINE +
+                "    \"unlimited\" : false" + NEW_LINE +
+                "  }" + NEW_LINE +
                 "}", jsonExpectation);
     }
 
@@ -1039,39 +1040,39 @@ public class ExpectationSerializerIntegrationTest {
         );
 
         // then
-        assertEquals("{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"method\" : \"someMethod\"," + System.getProperty("line.separator") +
-                "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
-                "    \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"queryStringParameterNameOne\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + System.getProperty("line.separator") +
-                "    }, {" + System.getProperty("line.separator") +
-                "      \"name\" : \"queryStringParameterNameTwo\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"headers\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"cookies\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
-                "      \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"body\" : \"someBody\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"httpObjectCallback\" : {" + System.getProperty("line.separator") +
-                "    \"clientId\" : \"someClientId\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
-                "    \"timeUnit\" : \"HOURS\"," + System.getProperty("line.separator") +
-                "    \"timeToLive\" : 2," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
+        assertEquals("{" + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"method\" : \"someMethod\"," + NEW_LINE +
+                "    \"path\" : \"somePath\"," + NEW_LINE +
+                "    \"queryStringParameters\" : [ {" + NEW_LINE +
+                "      \"name\" : \"queryStringParameterNameOne\"," + NEW_LINE +
+                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
+                "    }, {" + NEW_LINE +
+                "      \"name\" : \"queryStringParameterNameTwo\"," + NEW_LINE +
+                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+                "    } ]," + NEW_LINE +
+                "    \"headers\" : [ {" + NEW_LINE +
+                "      \"name\" : \"someHeaderName\"," + NEW_LINE +
+                "      \"values\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+                "    } ]," + NEW_LINE +
+                "    \"cookies\" : [ {" + NEW_LINE +
+                "      \"name\" : \"someCookieName\"," + NEW_LINE +
+                "      \"value\" : \"someCookieValue\"" + NEW_LINE +
+                "    } ]," + NEW_LINE +
+                "    \"body\" : \"someBody\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpObjectCallback\" : {" + NEW_LINE +
+                "    \"clientId\" : \"someClientId\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"remainingTimes\" : 5," + NEW_LINE +
+                "    \"unlimited\" : false" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"timeUnit\" : \"HOURS\"," + NEW_LINE +
+                "    \"timeToLive\" : 2," + NEW_LINE +
+                "    \"unlimited\" : false" + NEW_LINE +
+                "  }" + NEW_LINE +
                 "}", jsonExpectation);
     }
 
@@ -1093,22 +1094,22 @@ public class ExpectationSerializerIntegrationTest {
         );
 
         // then
-        assertEquals("{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"path\" : \"somePath\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"httpResponse\" : {" + System.getProperty("line.separator") +
-                "    \"body\" : \"someBody\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
-                "    \"timeUnit\" : \"HOURS\"," + System.getProperty("line.separator") +
-                "    \"timeToLive\" : 2," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
+        assertEquals("{" + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"somePath\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"someBody\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"remainingTimes\" : 5," + NEW_LINE +
+                "    \"unlimited\" : false" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"timeUnit\" : \"HOURS\"," + NEW_LINE +
+                "    \"timeToLive\" : 2," + NEW_LINE +
+                "    \"unlimited\" : false" + NEW_LINE +
+                "  }" + NEW_LINE +
                 "}", jsonExpectation);
     }
 
@@ -1131,49 +1132,112 @@ public class ExpectationSerializerIntegrationTest {
         );
 
         // then
-        assertEquals("{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
-                "    \"body\" : {" + System.getProperty("line.separator") +
-                "      \"type\" : \"XPATH\"," + System.getProperty("line.separator") +
-                "      \"xpath\" : \"/bookstore/book[price>35]/price\"" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"httpResponse\" : {" + System.getProperty("line.separator") +
-                "    \"body\" : \"someBody\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
-                "    \"timeUnit\" : \"HOURS\"," + System.getProperty("line.separator") +
-                "    \"timeToLive\" : 2," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
+        assertEquals("{" + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"somePath\"," + NEW_LINE +
+                "    \"body\" : {" + NEW_LINE +
+                "      \"type\" : \"XPATH\"," + NEW_LINE +
+                "      \"xpath\" : \"/bookstore/book[price>35]/price\"" + NEW_LINE +
+                "    }" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"someBody\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"remainingTimes\" : 5," + NEW_LINE +
+                "    \"unlimited\" : false" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"timeUnit\" : \"HOURS\"," + NEW_LINE +
+                "    \"timeToLive\" : 2," + NEW_LINE +
+                "    \"unlimited\" : false" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "}", jsonExpectation);
+    }
+
+    @Test
+    public void shouldSerializeStringXmlSchemaBody() throws IOException {
+        // when
+        String xmlSchema = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + NEW_LINE +
+                "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" attributeFormDefault=\"unqualified\">" + NEW_LINE +
+                "    <!-- XML Schema Generated from XML Document on Wed Jun 28 2017 21:52:45 GMT+0100 (BST) -->" + NEW_LINE +
+                "    <!-- with XmlGrid.net Free Online Service http://xmlgrid.net -->" + NEW_LINE +
+                "    <xs:element name=\"notes\">" + NEW_LINE +
+                "        <xs:complexType>" + NEW_LINE +
+                "            <xs:sequence>" + NEW_LINE +
+                "                <xs:element name=\"note\" maxOccurs=\"unbounded\">" + NEW_LINE +
+                "                    <xs:complexType>" + NEW_LINE +
+                "                        <xs:sequence>" + NEW_LINE +
+                "                            <xs:element name=\"to\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"from\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"heading\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"body\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                        </xs:sequence>" + NEW_LINE +
+                "                    </xs:complexType>" + NEW_LINE +
+                "                </xs:element>" + NEW_LINE +
+                "            </xs:sequence>" + NEW_LINE +
+                "        </xs:complexType>" + NEW_LINE +
+                "    </xs:element>" + NEW_LINE +
+                "</xs:schema>";
+        String jsonExpectation = new ExpectationSerializer().serialize(new ExpectationDTO()
+                .setHttpRequest(
+                        new HttpRequestDTO()
+                                .setPath(string("somePath"))
+                                .setBody(new XmlSchemaBodyDTO(new XmlSchemaBody(xmlSchema)))
+                )
+                .setHttpResponse(
+                        new HttpResponseDTO()
+                                .setBody(new JsonBodyDTO(new JsonBody("{fieldOne: \"valueOne\", \"fieldTwo\": \"valueTwo\"}")))
+                )
+                .setTimes(new TimesDTO(Times.exactly(5)))
+                .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2l)))
+                .buildObject()
+        );
+
+        // then
+        assertEquals("{" + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"somePath\"," + NEW_LINE +
+                "    \"body\" : {" + NEW_LINE +
+                "      \"type\" : \"XML_SCHEMA\"," + NEW_LINE +
+                "      \"xmlSchema\" : \"" + StringEscapeUtils.escapeJava(xmlSchema) + "\"" + NEW_LINE +
+                "    }" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"{fieldOne: \\\"valueOne\\\", \\\"fieldTwo\\\": \\\"valueTwo\\\"}\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"remainingTimes\" : 5," + NEW_LINE +
+                "    \"unlimited\" : false" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"timeUnit\" : \"HOURS\"," + NEW_LINE +
+                "    \"timeToLive\" : 2," + NEW_LINE +
+                "    \"unlimited\" : false" + NEW_LINE +
+                "  }" + NEW_LINE +
                 "}", jsonExpectation);
     }
 
     @Test
     public void shouldSerializeStringJsonSchemaBody() throws IOException {
         // when
-        String jsonSchema = "{" + System.getProperty("line.separator") +
-                "  \"title\": \"Example Schema\"," + System.getProperty("line.separator") +
-                "  \"type\": \"object\"," + System.getProperty("line.separator") +
-                "  \"properties\": {" + System.getProperty("line.separator") +
-                "    \"firstName\": {" + System.getProperty("line.separator") +
-                "      \"type\": \"string\"" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"lastName\": {" + System.getProperty("line.separator") +
-                "      \"type\": \"string\"" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"age\": {" + System.getProperty("line.separator") +
-                "      \"description\": \"Age in years\"," + System.getProperty("line.separator") +
-                "      \"type\": \"integer\"," + System.getProperty("line.separator") +
-                "      \"minimum\": 0" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"required\": [\"firstName\", \"lastName\"]" + System.getProperty("line.separator") +
+        String jsonSchema = "{" + NEW_LINE +
+                "  \"title\": \"Example Schema\"," + NEW_LINE +
+                "  \"type\": \"object\"," + NEW_LINE +
+                "  \"properties\": {" + NEW_LINE +
+                "    \"firstName\": {" + NEW_LINE +
+                "      \"type\": \"string\"" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"lastName\": {" + NEW_LINE +
+                "      \"type\": \"string\"" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"age\": {" + NEW_LINE +
+                "      \"description\": \"Age in years\"," + NEW_LINE +
+                "      \"type\": \"integer\"," + NEW_LINE +
+                "      \"minimum\": 0" + NEW_LINE +
+                "    }" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"required\": [\"firstName\", \"lastName\"]" + NEW_LINE +
                 "}";
         String jsonExpectation = new ExpectationSerializer().serialize(new ExpectationDTO()
                         .setHttpRequest(
@@ -1191,26 +1255,26 @@ public class ExpectationSerializerIntegrationTest {
         );
 
         // then
-        assertEquals("{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
-                "    \"body\" : {" + System.getProperty("line.separator") +
-                "      \"type\" : \"JSON_SCHEMA\"," + System.getProperty("line.separator") +
-                "      \"jsonSchema\" : \"" + StringEscapeUtils.escapeJava(jsonSchema) + "\"" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"httpResponse\" : {" + System.getProperty("line.separator") +
-                "    \"body\" : \"{fieldOne: \\\"valueOne\\\", \\\"fieldTwo\\\": \\\"valueTwo\\\"}\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
-                "    \"timeUnit\" : \"HOURS\"," + System.getProperty("line.separator") +
-                "    \"timeToLive\" : 2," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
+        assertEquals("{" + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"somePath\"," + NEW_LINE +
+                "    \"body\" : {" + NEW_LINE +
+                "      \"type\" : \"JSON_SCHEMA\"," + NEW_LINE +
+                "      \"jsonSchema\" : \"" + StringEscapeUtils.escapeJava(jsonSchema) + "\"" + NEW_LINE +
+                "    }" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"{fieldOne: \\\"valueOne\\\", \\\"fieldTwo\\\": \\\"valueTwo\\\"}\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"remainingTimes\" : 5," + NEW_LINE +
+                "    \"unlimited\" : false" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"timeUnit\" : \"HOURS\"," + NEW_LINE +
+                "    \"timeToLive\" : 2," + NEW_LINE +
+                "    \"unlimited\" : false" + NEW_LINE +
+                "  }" + NEW_LINE +
                 "}", jsonExpectation);
     }
 
@@ -1233,24 +1297,24 @@ public class ExpectationSerializerIntegrationTest {
         );
 
         // then
-        assertEquals("{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
-                "    \"body\" : {" + System.getProperty("line.separator") +
-                "      \"type\" : \"JSON\"," + System.getProperty("line.separator") +
-                "      \"json\" : \"" + StringEscapeUtils.escapeJava(jsonBody) + "\"" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"httpResponse\" : {" + System.getProperty("line.separator") +
-                "    \"body\" : \"" + StringEscapeUtils.escapeJava(jsonBody) + "\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
-                "    \"unlimited\" : true" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
+        assertEquals("{" + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"somePath\"," + NEW_LINE +
+                "    \"body\" : {" + NEW_LINE +
+                "      \"type\" : \"JSON\"," + NEW_LINE +
+                "      \"json\" : \"" + StringEscapeUtils.escapeJava(jsonBody) + "\"" + NEW_LINE +
+                "    }" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"" + StringEscapeUtils.escapeJava(jsonBody) + "\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"remainingTimes\" : 5," + NEW_LINE +
+                "    \"unlimited\" : false" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }" + NEW_LINE +
                 "}", jsonExpectation);
     }
 
@@ -1272,24 +1336,24 @@ public class ExpectationSerializerIntegrationTest {
         );
 
         // then
-        assertEquals("{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
-                "    \"body\" : {" + System.getProperty("line.separator") +
-                "      \"type\" : \"REGEX\"," + System.getProperty("line.separator") +
-                "      \"regex\" : \"some[a-zA-Z]*\"" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"httpResponse\" : {" + System.getProperty("line.separator") +
-                "    \"body\" : \"someBody\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
-                "    \"unlimited\" : true" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
+        assertEquals("{" + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"somePath\"," + NEW_LINE +
+                "    \"body\" : {" + NEW_LINE +
+                "      \"type\" : \"REGEX\"," + NEW_LINE +
+                "      \"regex\" : \"some[a-zA-Z]*\"" + NEW_LINE +
+                "    }" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"someBody\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"remainingTimes\" : 5," + NEW_LINE +
+                "    \"unlimited\" : false" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }" + NEW_LINE +
                 "}", jsonExpectation);
     }
 
@@ -1314,30 +1378,30 @@ public class ExpectationSerializerIntegrationTest {
         );
 
         // then
-        assertEquals("{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
-                "    \"body\" : {" + System.getProperty("line.separator") +
-                "      \"type\" : \"PARAMETERS\"," + System.getProperty("line.separator") +
-                "      \"parameters\" : [ {" + System.getProperty("line.separator") +
-                "        \"name\" : \"parameterOneName\"," + System.getProperty("line.separator") +
-                "        \"values\" : [ \"parameterOneValueOne\", \"parameterOneValueTwo\" ]" + System.getProperty("line.separator") +
-                "      }, {" + System.getProperty("line.separator") +
-                "        \"name\" : \"parameterTwoName\"," + System.getProperty("line.separator") +
-                "        \"values\" : [ \"parameterTwoValue\" ]" + System.getProperty("line.separator") +
-                "      } ]" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"httpResponse\" : {" + System.getProperty("line.separator") +
-                "    \"body\" : \"someBody\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
-                "    \"unlimited\" : true" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
+        assertEquals("{" + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"somePath\"," + NEW_LINE +
+                "    \"body\" : {" + NEW_LINE +
+                "      \"type\" : \"PARAMETERS\"," + NEW_LINE +
+                "      \"parameters\" : [ {" + NEW_LINE +
+                "        \"name\" : \"parameterOneName\"," + NEW_LINE +
+                "        \"values\" : [ \"parameterOneValueOne\", \"parameterOneValueTwo\" ]" + NEW_LINE +
+                "      }, {" + NEW_LINE +
+                "        \"name\" : \"parameterTwoName\"," + NEW_LINE +
+                "        \"values\" : [ \"parameterTwoValue\" ]" + NEW_LINE +
+                "      } ]" + NEW_LINE +
+                "    }" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"someBody\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"remainingTimes\" : 5," + NEW_LINE +
+                "    \"unlimited\" : false" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }" + NEW_LINE +
                 "}", jsonExpectation);
     }
 
@@ -1357,20 +1421,20 @@ public class ExpectationSerializerIntegrationTest {
         );
 
         // then
-        assertEquals("{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"path\" : \"somePath\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"httpResponse\" : {" + System.getProperty("line.separator") +
-                "    \"body\" : \"someBody\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"remainingTimes\" : 1," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
-                "    \"unlimited\" : true" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
+        assertEquals("{" + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"somePath\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"someBody\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"remainingTimes\" : 1," + NEW_LINE +
+                "    \"unlimited\" : false" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }" + NEW_LINE +
                 "}", jsonExpectation);
     }
 
@@ -1394,48 +1458,48 @@ public class ExpectationSerializerIntegrationTest {
         });
 
         // then
-        assertEquals("[ {" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"path\" : \"somePath\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"httpResponse\" : {" + System.getProperty("line.separator") +
-                "    \"body\" : \"someBody\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"remainingTimes\" : 1," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
-                "    \"unlimited\" : true" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
-                "}, {" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"path\" : \"somePath\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"httpResponse\" : {" + System.getProperty("line.separator") +
-                "    \"body\" : \"someBody\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"remainingTimes\" : 1," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
-                "    \"unlimited\" : true" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
-                "}, {" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"path\" : \"somePath\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"httpResponse\" : {" + System.getProperty("line.separator") +
-                "    \"body\" : \"someBody\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"remainingTimes\" : 1," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
-                "    \"unlimited\" : true" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
+        assertEquals("[ {" + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"somePath\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"someBody\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"remainingTimes\" : 1," + NEW_LINE +
+                "    \"unlimited\" : false" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "}, {" + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"somePath\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"someBody\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"remainingTimes\" : 1," + NEW_LINE +
+                "    \"unlimited\" : false" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "}, {" + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"somePath\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"someBody\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"remainingTimes\" : 1," + NEW_LINE +
+                "    \"unlimited\" : false" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }" + NEW_LINE +
                 "} ]", jsonExpectation);
     }
 }

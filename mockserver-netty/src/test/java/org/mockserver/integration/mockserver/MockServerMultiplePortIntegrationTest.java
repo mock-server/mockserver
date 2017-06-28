@@ -15,6 +15,7 @@ import java.util.concurrent.ExecutionException;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static org.junit.Assert.assertEquals;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -79,8 +80,8 @@ public class MockServerMultiplePortIntegrationTest extends AbstractRestartableMo
                 response()
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                        .withBody("{" + System.getProperty("line.separator") +
-                                "  \"ports\" : [ " + Joiner.on(", ").join(severHttpPort) + " ]" + System.getProperty("line.separator") +
+                        .withBody("{" + NEW_LINE +
+                                "  \"ports\" : [ " + Joiner.on(", ").join(severHttpPort) + " ]" + NEW_LINE +
                                 "}"),
                 makeRequest(
                         request()
@@ -93,8 +94,8 @@ public class MockServerMultiplePortIntegrationTest extends AbstractRestartableMo
                 response()
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                        .withBody("{" + System.getProperty("line.separator") +
-                                "  \"ports\" : [ " + Joiner.on(", ").join(severHttpPort) + " ]" + System.getProperty("line.separator") +
+                        .withBody("{" + NEW_LINE +
+                                "  \"ports\" : [ " + Joiner.on(", ").join(severHttpPort) + " ]" + NEW_LINE +
                                 "}"),
                 makeRequest(
                         request()
@@ -117,15 +118,15 @@ public class MockServerMultiplePortIntegrationTest extends AbstractRestartableMo
                 response()
                         .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
                         .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                        .withBody("{" + System.getProperty("line.separator") +
-                                "  \"ports\" : [ " + firstNewPort + " ]" + System.getProperty("line.separator") +
+                        .withBody("{" + NEW_LINE +
+                                "  \"ports\" : [ " + firstNewPort + " ]" + NEW_LINE +
                                 "}"),
                 makeRequest(
                         request()
                                 .withPath(calculatePath("bind"))
                                 .withMethod("PUT")
-                                .withBody("{" + System.getProperty("line.separator") +
-                                        "  \"ports\" : [ " + firstNewPort + " ]" + System.getProperty("line.separator") +
+                                .withBody("{" + NEW_LINE +
+                                        "  \"ports\" : [ " + firstNewPort + " ]" + NEW_LINE +
                                         "}"),
                         headersToIgnore)
         );
@@ -133,8 +134,8 @@ public class MockServerMultiplePortIntegrationTest extends AbstractRestartableMo
                 response()
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                        .withBody("{" + System.getProperty("line.separator") +
-                                "  \"ports\" : [ " + Joiner.on(", ").join(severHttpPort) + ", " + firstNewPort + " ]" + System.getProperty("line.separator") +
+                        .withBody("{" + NEW_LINE +
+                                "  \"ports\" : [ " + Joiner.on(", ").join(severHttpPort) + ", " + firstNewPort + " ]" + NEW_LINE +
                                 "}"),
                 makeRequest(
                         request()
@@ -147,16 +148,16 @@ public class MockServerMultiplePortIntegrationTest extends AbstractRestartableMo
                 response()
                         .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
                         .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                        .withBody("{" + System.getProperty("line.separator") +
-                                "  \"ports\" : [ " + secondNewPort + " ]" + System.getProperty("line.separator") +
+                        .withBody("{" + NEW_LINE +
+                                "  \"ports\" : [ " + secondNewPort + " ]" + NEW_LINE +
                                 "}"),
                 makeRequest(
                         request()
                                 .withSecure(true)
                                 .withPath(calculatePath("bind"))
                                 .withMethod("PUT")
-                                .withBody("{" + System.getProperty("line.separator") +
-                                        "  \"ports\" : [ " + secondNewPort + " ]" + System.getProperty("line.separator") +
+                                .withBody("{" + NEW_LINE +
+                                        "  \"ports\" : [ " + secondNewPort + " ]" + NEW_LINE +
                                         "}"),
                         headersToIgnore)
         );
@@ -164,16 +165,16 @@ public class MockServerMultiplePortIntegrationTest extends AbstractRestartableMo
                 response()
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                        .withBody("{" + System.getProperty("line.separator") +
-                                "  \"ports\" : [ " + Joiner.on(", ").join(severHttpPort) + ", " + firstNewPort + ", " + secondNewPort + " ]" + System.getProperty("line.separator") +
+                        .withBody("{" + NEW_LINE +
+                                "  \"ports\" : [ " + Joiner.on(", ").join(severHttpPort) + ", " + firstNewPort + ", " + secondNewPort + " ]" + NEW_LINE +
                                 "}"),
                 makeRequest(
                         request()
                                 .withSecure(true)
                                 .withPath(calculatePath("status"))
                                 .withMethod("PUT")
-                                .withBody("{" + System.getProperty("line.separator") +
-                                        "  \"ports\" : [ " + firstNewPort + " ]" + System.getProperty("line.separator") +
+                                .withBody("{" + NEW_LINE +
+                                        "  \"ports\" : [ " + firstNewPort + " ]" + NEW_LINE +
                                         "}"),
                         headersToIgnore)
         );

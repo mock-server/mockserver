@@ -14,6 +14,7 @@ import java.nio.ByteBuffer;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
+import static org.mockserver.character.Character.NEW_LINE;
 
 /**
  * @author jamesdbloom
@@ -39,14 +40,14 @@ public class IOStreamUtilsTest {
         // given
         Socket socket = mock(Socket.class);
         when(socket.getInputStream()).thenReturn(IOUtils.toInputStream("" +
-                        "Cache-Control:public, max-age=60\r\n" +
-                        "Content-Length:10\r\n" +
-                        "Content-Type:text/html; charset=utf-8\r\n" +
-                        "Date:Sat, 04 Jan 2014 17:18:54 GMT\r\n" +
-                        "Expires:Sat, 04 Jan 2014 17:19:54 GMT\r\n" +
-                        "Last-Modified:Sat, 04 Jan 2014 17:18:54 GMT\r\n" +
-                        "Vary:*\n" +
-                        "\r\n" +
+                        "Cache-Control:public, max-age=60\r" + NEW_LINE +
+                        "Content-Length:10\r" + NEW_LINE +
+                        "Content-Type:text/html; charset=utf-8\r" + NEW_LINE +
+                        "Date:Sat, 04 Jan 2014 17:18:54 GMT\r" + NEW_LINE +
+                        "Expires:Sat, 04 Jan 2014 17:19:54 GMT\r" + NEW_LINE +
+                        "Last-Modified:Sat, 04 Jan 2014 17:18:54 GMT\r" + NEW_LINE +
+                        "Vary:*" + NEW_LINE +
+                        "\r" + NEW_LINE +
                         "1234567890"
         ));
 
@@ -55,14 +56,14 @@ public class IOStreamUtilsTest {
 
         // then
         assertEquals("" +
-                "Cache-Control:public, max-age=60\n" +
-                "Content-Length:10\n" +
-                "Content-Type:text/html; charset=utf-8\n" +
-                "Date:Sat, 04 Jan 2014 17:18:54 GMT\n" +
-                "Expires:Sat, 04 Jan 2014 17:19:54 GMT\n" +
-                "Last-Modified:Sat, 04 Jan 2014 17:18:54 GMT\n" +
-                "Vary:*\n" +
-                "\n" +
+                "Cache-Control:public, max-age=60" + NEW_LINE +
+                "Content-Length:10" + NEW_LINE +
+                "Content-Type:text/html; charset=utf-8" + NEW_LINE +
+                "Date:Sat, 04 Jan 2014 17:18:54 GMT" + NEW_LINE +
+                "Expires:Sat, 04 Jan 2014 17:19:54 GMT" + NEW_LINE +
+                "Last-Modified:Sat, 04 Jan 2014 17:18:54 GMT" + NEW_LINE +
+                "Vary:*" + NEW_LINE +
+                "" + NEW_LINE +
                 "1234567890", result);
     }
 
@@ -71,14 +72,14 @@ public class IOStreamUtilsTest {
         // given
         Socket socket = mock(Socket.class);
         when(socket.getInputStream()).thenReturn(IOUtils.toInputStream("" +
-                        "cache-control:public, max-age=60\r\n" +
-                        "content-length:10\r\n" +
-                        "content-type:text/html; charset=utf-8\r\n" +
-                        "date:Sat, 04 Jan 2014 17:18:54 GMT\r\n" +
-                        "expires:Sat, 04 Jan 2014 17:19:54 GMT\r\n" +
-                        "last-modified:Sat, 04 Jan 2014 17:18:54 GMT\r\n" +
-                        "vary:*\n" +
-                        "\r\n" +
+                        "cache-control:public, max-age=60\r" + NEW_LINE +
+                        "content-length:10\r" + NEW_LINE +
+                        "content-type:text/html; charset=utf-8\r" + NEW_LINE +
+                        "date:Sat, 04 Jan 2014 17:18:54 GMT\r" + NEW_LINE +
+                        "expires:Sat, 04 Jan 2014 17:19:54 GMT\r" + NEW_LINE +
+                        "last-modified:Sat, 04 Jan 2014 17:18:54 GMT\r" + NEW_LINE +
+                        "vary:*" + NEW_LINE +
+                        "\r" + NEW_LINE +
                         "1234567890"
         ));
 
@@ -87,14 +88,14 @@ public class IOStreamUtilsTest {
 
         // then
         assertEquals("" +
-                "cache-control:public, max-age=60\n" +
-                "content-length:10\n" +
-                "content-type:text/html; charset=utf-8\n" +
-                "date:Sat, 04 Jan 2014 17:18:54 GMT\n" +
-                "expires:Sat, 04 Jan 2014 17:19:54 GMT\n" +
-                "last-modified:Sat, 04 Jan 2014 17:18:54 GMT\n" +
-                "vary:*\n" +
-                "\n" +
+                "cache-control:public, max-age=60" + NEW_LINE +
+                "content-length:10" + NEW_LINE +
+                "content-type:text/html; charset=utf-8" + NEW_LINE +
+                "date:Sat, 04 Jan 2014 17:18:54 GMT" + NEW_LINE +
+                "expires:Sat, 04 Jan 2014 17:19:54 GMT" + NEW_LINE +
+                "last-modified:Sat, 04 Jan 2014 17:18:54 GMT" + NEW_LINE +
+                "vary:*" + NEW_LINE +
+                "" + NEW_LINE +
                 "1234567890", result);
     }
 

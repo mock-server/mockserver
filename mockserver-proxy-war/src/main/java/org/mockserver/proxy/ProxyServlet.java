@@ -26,6 +26,7 @@ import java.net.InetSocketAddress;
 import static com.google.common.net.MediaType.JSON_UTF_8;
 import static com.google.common.net.MediaType.PLAIN_TEXT_UTF_8;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAPI;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAllResponses;
 import static org.mockserver.model.HttpRequest.request;
@@ -192,7 +193,7 @@ public class ProxyServlet extends HttpServlet {
             addCORSHeadersForAllResponses(httpServletResponse);
             mockServerResponseToHttpServletResponseEncoder.mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
         } else {
-            logger.error("Host header must be provided for requests being forwarded, the following request does not include the \"Host\" header:" + System.getProperty("line.separator") + httpRequest);
+            logger.error("Host header must be provided for requests being forwarded, the following request does not include the \"Host\" header:" + NEW_LINE + httpRequest);
             throw new IllegalArgumentException("Host header must be provided for requests being forwarded");
         }
     }
@@ -217,7 +218,7 @@ public class ProxyServlet extends HttpServlet {
                 httpResponse = notFoundResponse();
             }
             logFormatter.infoLog(
-                    "returning response:{}" + System.getProperty("line.separator") + " for request as json:{}" + System.getProperty("line.separator") + " as curl:{}",
+                    "returning response:{}" + NEW_LINE + " for request as json:{}" + NEW_LINE + " as curl:{}",
                     httpResponse,
                     httpRequest,
                     httpRequestToCurlSerializer.toCurl(httpRequest, remoteAddress)

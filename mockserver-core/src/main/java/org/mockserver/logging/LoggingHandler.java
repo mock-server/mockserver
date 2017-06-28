@@ -13,6 +13,8 @@ import org.slf4j.LoggerFactory;
 
 import java.net.SocketAddress;
 
+import static org.mockserver.character.Character.NEW_LINE;
+
 @Sharable
 public class LoggingHandler extends ChannelDuplexHandler {
 
@@ -218,7 +220,7 @@ public class LoggingHandler extends ChannelDuplexHandler {
             if (relIdxMod16 == 15) {
                 dump.append(" |");
                 if (i > 15 && buf.readableBytes() > i) {
-                    dump.append(buf.toString(i - 15, 16, Charsets.UTF_8).replaceAll("" + System.getProperty("line.separator"), "/").replaceAll("\r", "/"));
+                    dump.append(buf.toString(i - 15, 16, Charsets.UTF_8).replaceAll("" + NEW_LINE, "/").replaceAll("\r", "/"));
                 } else {
                     for (int j = i - 15; j <= i; j++) {
                         dump.append(BYTE2CHAR[buf.getUnsignedByte(j)]);

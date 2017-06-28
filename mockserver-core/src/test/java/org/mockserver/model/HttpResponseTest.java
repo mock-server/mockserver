@@ -15,6 +15,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 import static org.mockito.Mockito.*;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpResponse.response;
 
 /**
@@ -164,16 +165,16 @@ public class HttpResponseTest {
 
     @Test
     public void shouldReturnFormattedRequestInToString() {
-        assertEquals("{" + System.getProperty("line.separator") +
-                        "  \"headers\" : [ {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"name\"," + System.getProperty("line.separator") +
-                        "    \"values\" : [ \"value\" ]" + System.getProperty("line.separator") +
-                        "  } ]," + System.getProperty("line.separator") +
-                        "  \"cookies\" : [ {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"name\"," + System.getProperty("line.separator") +
-                        "    \"value\" : \"[A-Z]{0,10}\"" + System.getProperty("line.separator") +
-                        "  } ]," + System.getProperty("line.separator") +
-                        "  \"body\" : \"some_body\"" + System.getProperty("line.separator") +
+        assertEquals("{" + NEW_LINE +
+                        "  \"headers\" : [ {" + NEW_LINE +
+                        "    \"name\" : \"name\"," + NEW_LINE +
+                        "    \"values\" : [ \"value\" ]" + NEW_LINE +
+                        "  } ]," + NEW_LINE +
+                        "  \"cookies\" : [ {" + NEW_LINE +
+                        "    \"name\" : \"name\"," + NEW_LINE +
+                        "    \"value\" : \"[A-Z]{0,10}\"" + NEW_LINE +
+                        "  } ]," + NEW_LINE +
+                        "  \"body\" : \"some_body\"" + NEW_LINE +
                         "}",
                 response()
                         .withBody("some_body")

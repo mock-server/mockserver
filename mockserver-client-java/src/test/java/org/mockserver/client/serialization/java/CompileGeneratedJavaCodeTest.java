@@ -20,6 +20,7 @@ import java.net.URISyntaxException;
 import java.util.Arrays;
 
 import static org.junit.Assert.assertTrue;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
@@ -71,16 +72,16 @@ public class CompileGeneratedJavaCodeTest {
         );
 
         assertTrue(compileJavaCode("" +
-                        "import org.mockserver.client.server.MockServerClient;" + System.getProperty("line.separator") +
-                        "import org.mockserver.matchers.Times;" + System.getProperty("line.separator") +
-                        "import org.mockserver.mock.Expectation;" + System.getProperty("line.separator") +
-                        "import org.mockserver.model.*;" + System.getProperty("line.separator") +
-                        "import static org.mockserver.model.HttpRequest.request;" + System.getProperty("line.separator") +
-                        "import static org.mockserver.model.HttpResponse.response;" + System.getProperty("line.separator") + System.getProperty("line.separator") +
-                        "class TestClass {" + System.getProperty("line.separator") +
+                        "import org.mockserver.client.server.MockServerClient;" + NEW_LINE +
+                        "import org.mockserver.matchers.Times;" + NEW_LINE +
+                        "import org.mockserver.mock.Expectation;" + NEW_LINE +
+                        "import org.mockserver.model.*;" + NEW_LINE +
+                        "import static org.mockserver.model.HttpRequest.request;" + NEW_LINE +
+                        "import static org.mockserver.model.HttpResponse.response;" + NEW_LINE + NEW_LINE +
+                        "class TestClass {" + NEW_LINE +
                         "   static {" +
-                        "      " + expectationAsJavaCode + "" + System.getProperty("line.separator") +
-                        "   }" + System.getProperty("line.separator") +
+                        "      " + expectationAsJavaCode + "" + NEW_LINE +
+                        "   }" + NEW_LINE +
                         "}")
         );
     }

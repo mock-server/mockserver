@@ -8,6 +8,7 @@ import org.mockserver.model.*;
 
 import java.util.List;
 
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.client.serialization.java.ExpectationToJavaSerializer.INDENT_SIZE;
 
 /**
@@ -58,6 +59,12 @@ public class HttpRequestToJavaSerializer implements ToJavaSerializer<HttpRequest
                     output.append(".withBody(");
                     XPathBody xPathBody = (XPathBody) httpRequest.getBody();
                     output.append("new XPathBody(\"").append(StringEscapeUtils.escapeJava(xPathBody.getValue())).append("\")");
+                    output.append(")");
+                } else if (httpRequest.getBody() instanceof XmlSchemaBody) {
+                    appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
+                    output.append(".withBody(");
+                    XmlSchemaBody xmlSchemaBody = (XmlSchemaBody) httpRequest.getBody();
+                    output.append("new XmlSchemaBody(\"").append(StringEscapeUtils.escapeJava(xmlSchemaBody.getValue())).append("\")");
                     output.append(")");
                 } else if (httpRequest.getBody() instanceof RegexBody) {
                     appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
@@ -122,6 +129,6 @@ public class HttpRequestToJavaSerializer implements ToJavaSerializer<HttpRequest
     }
 
     private StringBuffer appendNewLineAndIndent(int numberOfSpacesToIndent, StringBuffer output) {
-        return output.append(System.getProperty("line.separator")).append(Strings.padStart("", numberOfSpacesToIndent, ' '));
+        return output.append(NEW_LINE).append(Strings.padStart("", numberOfSpacesToIndent, ' '));
     }
 }

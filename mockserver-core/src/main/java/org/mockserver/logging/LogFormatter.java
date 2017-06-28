@@ -2,6 +2,8 @@ package org.mockserver.logging;
 
 import org.slf4j.Logger;
 
+import static org.mockserver.character.Character.NEW_LINE;
+
 /**
  * @author jamesdbloom
  */
@@ -17,9 +19,9 @@ public class LogFormatter {
         if (logger.isTraceEnabled()) {
             Object[] indentedObjects = new String[objects.length];
             for (int i = 0; i < objects.length; i++) {
-                indentedObjects[i] = System.getProperty("line.separator") + System.getProperty("line.separator") + String.valueOf(objects[i]).replaceAll("(?m)^", "\t") + System.getProperty("line.separator");
+                indentedObjects[i] = NEW_LINE + NEW_LINE + String.valueOf(objects[i]).replaceAll("(?m)^", "\t") + NEW_LINE;
             }
-            logger.trace(message + System.getProperty("line.separator"), indentedObjects);
+            logger.trace(message + NEW_LINE, indentedObjects);
         }
     }
 
@@ -27,9 +29,9 @@ public class LogFormatter {
         if (logger.isInfoEnabled()) {
             Object[] indentedObjects = new String[objects.length];
             for (int i = 0; i < objects.length; i++) {
-                indentedObjects[i] = System.getProperty("line.separator") + System.getProperty("line.separator") + String.valueOf(objects[i]).replaceAll("(?m)^", "\t") + System.getProperty("line.separator");
+                indentedObjects[i] = NEW_LINE + NEW_LINE + String.valueOf(objects[i]).replaceAll("(?m)^", "\t") + NEW_LINE;
             }
-            logger.info(message + System.getProperty("line.separator"), indentedObjects);
+            logger.info(message + NEW_LINE, indentedObjects);
         }
     }
 }

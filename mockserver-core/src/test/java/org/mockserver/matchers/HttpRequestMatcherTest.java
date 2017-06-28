@@ -8,6 +8,7 @@ import org.mockserver.model.*;
 import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.matchers.NotMatcher.not;
 import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.HttpRequest.request;
@@ -19,6 +20,7 @@ import static org.mockserver.model.RegexBody.regex;
 import static org.mockserver.model.StringBody.exact;
 import static org.mockserver.model.XPathBody.xpath;
 import static org.mockserver.model.XmlBody.xml;
+import static org.mockserver.model.XmlSchemaBody.xmlSchema;
 
 /**
  * @author jamesdbloom
@@ -460,6 +462,166 @@ public class HttpRequestMatcherTest {
     }
 
     @Test
+    public void matchesMatchingBodyByXmlSchema() {
+        String matcher = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + NEW_LINE +
+                "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" attributeFormDefault=\"unqualified\">" + NEW_LINE +
+                "    <!-- XML Schema Generated from XML Document on Wed Jun 28 2017 21:52:45 GMT+0100 (BST) -->" + NEW_LINE +
+                "    <!-- with XmlGrid.net Free Online Service http://xmlgrid.net -->" + NEW_LINE +
+                "    <xs:element name=\"notes\">" + NEW_LINE +
+                "        <xs:complexType>" + NEW_LINE +
+                "            <xs:sequence>" + NEW_LINE +
+                "                <xs:element name=\"note\" maxOccurs=\"unbounded\">" + NEW_LINE +
+                "                    <xs:complexType>" + NEW_LINE +
+                "                        <xs:sequence>" + NEW_LINE +
+                "                            <xs:element name=\"to\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"from\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"heading\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"body\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                        </xs:sequence>" + NEW_LINE +
+                "                    </xs:complexType>" + NEW_LINE +
+                "                </xs:element>" + NEW_LINE +
+                "            </xs:sequence>" + NEW_LINE +
+                "        </xs:complexType>" + NEW_LINE +
+                "    </xs:element>" + NEW_LINE +
+                "</xs:schema>";
+        assertTrue(new HttpRequestMatcher(new HttpRequest().withBody(xmlSchema(matcher))).matches(new HttpRequest().withBody("<?xml version=\"1.0\" encoding=\"utf-8\"?>" + NEW_LINE +
+                "<notes>" + NEW_LINE +
+                "    <note>" + NEW_LINE +
+                "        <to>Bob</to>" + NEW_LINE +
+                "        <from>Bill</from>" + NEW_LINE +
+                "        <heading>Reminder</heading>" + NEW_LINE +
+                "        <body>Buy Bread</body>" + NEW_LINE +
+                "    </note>" + NEW_LINE +
+                "    <note>" + NEW_LINE +
+                "        <to>Jack</to>" + NEW_LINE +
+                "        <from>Jill</from>" + NEW_LINE +
+                "        <heading>Reminder</heading>" + NEW_LINE +
+                "        <body>Wash Shirts</body>" + NEW_LINE +
+                "    </note>" + NEW_LINE +
+                "</notes>")));
+    }
+
+    @Test
+    public void matchesMatchingBodyXmlSchemaBodyDTO() {
+        String matcher = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + NEW_LINE +
+                "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" attributeFormDefault=\"unqualified\">" + NEW_LINE +
+                "    <!-- XML Schema Generated from XML Document on Wed Jun 28 2017 21:52:45 GMT+0100 (BST) -->" + NEW_LINE +
+                "    <!-- with XmlGrid.net Free Online Service http://xmlgrid.net -->" + NEW_LINE +
+                "    <xs:element name=\"notes\">" + NEW_LINE +
+                "        <xs:complexType>" + NEW_LINE +
+                "            <xs:sequence>" + NEW_LINE +
+                "                <xs:element name=\"note\" maxOccurs=\"unbounded\">" + NEW_LINE +
+                "                    <xs:complexType>" + NEW_LINE +
+                "                        <xs:sequence>" + NEW_LINE +
+                "                            <xs:element name=\"to\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"from\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"heading\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"body\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                        </xs:sequence>" + NEW_LINE +
+                "                    </xs:complexType>" + NEW_LINE +
+                "                </xs:element>" + NEW_LINE +
+                "            </xs:sequence>" + NEW_LINE +
+                "        </xs:complexType>" + NEW_LINE +
+                "    </xs:element>" + NEW_LINE +
+                "</xs:schema>";
+        assertTrue(new HttpRequestMatcher(new HttpRequest().withBody(xmlSchema(matcher))).matches(new HttpRequest().withBody(xml("<?xml version=\"1.0\" encoding=\"utf-8\"?>" + NEW_LINE +
+                "<notes>" + NEW_LINE +
+                "    <note>" + NEW_LINE +
+                "        <to>Bob</to>" + NEW_LINE +
+                "        <from>Bill</from>" + NEW_LINE +
+                "        <heading>Reminder</heading>" + NEW_LINE +
+                "        <body>Buy Bread</body>" + NEW_LINE +
+                "    </note>" + NEW_LINE +
+                "    <note>" + NEW_LINE +
+                "        <to>Jack</to>" + NEW_LINE +
+                "        <from>Jill</from>" + NEW_LINE +
+                "        <heading>Reminder</heading>" + NEW_LINE +
+                "        <body>Wash Shirts</body>" + NEW_LINE +
+                "    </note>" + NEW_LINE +
+                "</notes>"))));
+    }
+
+    @Test
+    public void doesNotMatchIncorrectBodyByXmlSchema() {
+        String matcher = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + NEW_LINE +
+                "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" attributeFormDefault=\"unqualified\">" + NEW_LINE +
+                "    <!-- XML Schema Generated from XML Document on Wed Jun 28 2017 21:52:45 GMT+0100 (BST) -->" + NEW_LINE +
+                "    <!-- with XmlGrid.net Free Online Service http://xmlgrid.net -->" + NEW_LINE +
+                "    <xs:element name=\"notes\">" + NEW_LINE +
+                "        <xs:complexType>" + NEW_LINE +
+                "            <xs:sequence>" + NEW_LINE +
+                "                <xs:element name=\"note\" maxOccurs=\"unbounded\">" + NEW_LINE +
+                "                    <xs:complexType>" + NEW_LINE +
+                "                        <xs:sequence>" + NEW_LINE +
+                "                            <xs:element name=\"to\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"from\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"heading\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"body\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                        </xs:sequence>" + NEW_LINE +
+                "                    </xs:complexType>" + NEW_LINE +
+                "                </xs:element>" + NEW_LINE +
+                "            </xs:sequence>" + NEW_LINE +
+                "        </xs:complexType>" + NEW_LINE +
+                "    </xs:element>" + NEW_LINE +
+                "</xs:schema>";
+        assertFalse(new HttpRequestMatcher(new HttpRequest().withBody(xmlSchema(matcher))).matches(new HttpRequest().withBody("<?xml version=\"1.0\" encoding=\"utf-8\"?>" + NEW_LINE +
+                "<notes>" + NEW_LINE +
+                "    <note>" + NEW_LINE +
+                "        <to>Bob</to>" + NEW_LINE +
+                "        <heading>Reminder</heading>" + NEW_LINE +
+                "        <body>Buy Bread</body>" + NEW_LINE +
+                "    </note>" + NEW_LINE +
+                "    <note>" + NEW_LINE +
+                "        <to>Jack</to>" + NEW_LINE +
+                "        <from>Jill</from>" + NEW_LINE +
+                "        <heading>Reminder</heading>" + NEW_LINE +
+                "        <body>Wash Shirts</body>" + NEW_LINE +
+                "    </note>" + NEW_LINE +
+                "</notes>")));
+    }
+
+    @Test
+    public void doesNotMatchIncorrectBodyXmlSchemaBodyDTO() {
+        String matcher = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + NEW_LINE +
+                "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" attributeFormDefault=\"unqualified\">" + NEW_LINE +
+                "    <!-- XML Schema Generated from XML Document on Wed Jun 28 2017 21:52:45 GMT+0100 (BST) -->" + NEW_LINE +
+                "    <!-- with XmlGrid.net Free Online Service http://xmlgrid.net -->" + NEW_LINE +
+                "    <xs:element name=\"notes\">" + NEW_LINE +
+                "        <xs:complexType>" + NEW_LINE +
+                "            <xs:sequence>" + NEW_LINE +
+                "                <xs:element name=\"note\" maxOccurs=\"unbounded\">" + NEW_LINE +
+                "                    <xs:complexType>" + NEW_LINE +
+                "                        <xs:sequence>" + NEW_LINE +
+                "                            <xs:element name=\"to\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"from\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"heading\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"body\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                        </xs:sequence>" + NEW_LINE +
+                "                    </xs:complexType>" + NEW_LINE +
+                "                </xs:element>" + NEW_LINE +
+                "            </xs:sequence>" + NEW_LINE +
+                "        </xs:complexType>" + NEW_LINE +
+                "    </xs:element>" + NEW_LINE +
+                "</xs:schema>";
+        assertFalse(new HttpRequestMatcher(new HttpRequest().withBody(xmlSchema(matcher))).matches(new HttpRequest().withBody(xml("<?xml version=\"1.0\" encoding=\"utf-8\"?>" + NEW_LINE +
+                "<notes>" + NEW_LINE +
+                "    <note>" + NEW_LINE +
+                "        <to>Bob</to>" + NEW_LINE +
+                "        <from>Bill</from>" + NEW_LINE +
+                "        <from>Bill</from>" + NEW_LINE +
+                "        <heading>Reminder</heading>" + NEW_LINE +
+                "        <body>Buy Bread</body>" + NEW_LINE +
+                "    </note>" + NEW_LINE +
+                "    <note>" + NEW_LINE +
+                "        <to>Jack</to>" + NEW_LINE +
+                "        <from>Jill</from>" + NEW_LINE +
+                "        <heading>Reminder</heading>" + NEW_LINE +
+                "        <body>Wash Shirts</body>" + NEW_LINE +
+                "    </note>" + NEW_LINE +
+                "</notes>"))));
+    }
+
+    @Test
     public void matchesMatchingJSONBody() {
         String matched = "" +
                 "{ " +
@@ -518,75 +680,75 @@ public class HttpRequestMatcherTest {
     @Test
     public void matchesMatchingJSONSchemaBody() {
         String matched = "" +
-                "{" + System.getProperty("line.separator") +
-                "    \"id\": 1," + System.getProperty("line.separator") +
-                "    \"name\": \"A green door\"," + System.getProperty("line.separator") +
-                "    \"price\": 12.50," + System.getProperty("line.separator") +
-                "    \"tags\": [\"home\", \"green\"]" + System.getProperty("line.separator") +
+                "{" + NEW_LINE +
+                "    \"id\": 1," + NEW_LINE +
+                "    \"name\": \"A green door\"," + NEW_LINE +
+                "    \"price\": 12.50," + NEW_LINE +
+                "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
                 "}";
-        assertTrue(new HttpRequestMatcher(new HttpRequest().withBody(jsonSchema("{" + System.getProperty("line.separator") +
-                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + System.getProperty("line.separator") +
-                "    \"title\": \"Product\"," + System.getProperty("line.separator") +
-                "    \"description\": \"A product from Acme's catalog\"," + System.getProperty("line.separator") +
-                "    \"type\": \"object\"," + System.getProperty("line.separator") +
-                "    \"properties\": {" + System.getProperty("line.separator") +
-                "        \"id\": {" + System.getProperty("line.separator") +
-                "            \"description\": \"The unique identifier for a product\"," + System.getProperty("line.separator") +
-                "            \"type\": \"integer\"" + System.getProperty("line.separator") +
-                "        }," + System.getProperty("line.separator") +
-                "        \"name\": {" + System.getProperty("line.separator") +
-                "            \"description\": \"Name of the product\"," + System.getProperty("line.separator") +
-                "            \"type\": \"string\"" + System.getProperty("line.separator") +
-                "        }," + System.getProperty("line.separator") +
-                "        \"price\": {" + System.getProperty("line.separator") +
-                "            \"type\": \"number\"," + System.getProperty("line.separator") +
-                "            \"minimum\": 0," + System.getProperty("line.separator") +
-                "            \"exclusiveMinimum\": true" + System.getProperty("line.separator") +
-                "        }," + System.getProperty("line.separator") +
-                "        \"tags\": {" + System.getProperty("line.separator") +
-                "            \"type\": \"array\"," + System.getProperty("line.separator") +
-                "            \"items\": {" + System.getProperty("line.separator") +
-                "                \"type\": \"string\"" + System.getProperty("line.separator") +
-                "            }," + System.getProperty("line.separator") +
-                "            \"minItems\": 1," + System.getProperty("line.separator") +
-                "            \"uniqueItems\": true" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"required\": [\"id\", \"name\", \"price\"]" + System.getProperty("line.separator") +
+        assertTrue(new HttpRequestMatcher(new HttpRequest().withBody(jsonSchema("{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"description\": \"A product from Acme's catalog\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"description\": \"The unique identifier for a product\"," + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"name\": {" + NEW_LINE +
+                "            \"description\": \"Name of the product\"," + NEW_LINE +
+                "            \"type\": \"string\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"price\": {" + NEW_LINE +
+                "            \"type\": \"number\"," + NEW_LINE +
+                "            \"minimum\": 0," + NEW_LINE +
+                "            \"exclusiveMinimum\": true" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"tags\": {" + NEW_LINE +
+                "            \"type\": \"array\"," + NEW_LINE +
+                "            \"items\": {" + NEW_LINE +
+                "                \"type\": \"string\"" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            \"minItems\": 1," + NEW_LINE +
+                "            \"uniqueItems\": true" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
                 "}"))).matches(new HttpRequest().withBody(matched)));
     }
 
     @Test
     public void matchesMatchingJSONSchemaBodyDTO() {
-        JsonSchemaBody jsonSchemaBody = jsonSchema("{" + System.getProperty("line.separator") +
-                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + System.getProperty("line.separator") +
-                "    \"title\": \"Product\"," + System.getProperty("line.separator") +
-                "    \"description\": \"A product from Acme's catalog\"," + System.getProperty("line.separator") +
-                "    \"type\": \"object\"," + System.getProperty("line.separator") +
-                "    \"properties\": {" + System.getProperty("line.separator") +
-                "        \"id\": {" + System.getProperty("line.separator") +
-                "            \"description\": \"The unique identifier for a product\"," + System.getProperty("line.separator") +
-                "            \"type\": \"integer\"" + System.getProperty("line.separator") +
-                "        }," + System.getProperty("line.separator") +
-                "        \"name\": {" + System.getProperty("line.separator") +
-                "            \"description\": \"Name of the product\"," + System.getProperty("line.separator") +
-                "            \"type\": \"string\"" + System.getProperty("line.separator") +
-                "        }," + System.getProperty("line.separator") +
-                "        \"price\": {" + System.getProperty("line.separator") +
-                "            \"type\": \"number\"," + System.getProperty("line.separator") +
-                "            \"minimum\": 0," + System.getProperty("line.separator") +
-                "            \"exclusiveMinimum\": true" + System.getProperty("line.separator") +
-                "        }," + System.getProperty("line.separator") +
-                "        \"tags\": {" + System.getProperty("line.separator") +
-                "            \"type\": \"array\"," + System.getProperty("line.separator") +
-                "            \"items\": {" + System.getProperty("line.separator") +
-                "                \"type\": \"string\"" + System.getProperty("line.separator") +
-                "            }," + System.getProperty("line.separator") +
-                "            \"minItems\": 1," + System.getProperty("line.separator") +
-                "            \"uniqueItems\": true" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"required\": [\"id\", \"name\", \"price\"]" + System.getProperty("line.separator") +
+        JsonSchemaBody jsonSchemaBody = jsonSchema("{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"description\": \"A product from Acme's catalog\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"description\": \"The unique identifier for a product\"," + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"name\": {" + NEW_LINE +
+                "            \"description\": \"Name of the product\"," + NEW_LINE +
+                "            \"type\": \"string\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"price\": {" + NEW_LINE +
+                "            \"type\": \"number\"," + NEW_LINE +
+                "            \"minimum\": 0," + NEW_LINE +
+                "            \"exclusiveMinimum\": true" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"tags\": {" + NEW_LINE +
+                "            \"type\": \"array\"," + NEW_LINE +
+                "            \"items\": {" + NEW_LINE +
+                "                \"type\": \"string\"" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            \"minItems\": 1," + NEW_LINE +
+                "            \"uniqueItems\": true" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
                 "}");
         assertTrue(new HttpRequestMatcher(
                         new HttpRequest().withBody(jsonSchemaBody)
@@ -598,41 +760,41 @@ public class HttpRequestMatcherTest {
     @Test
     public void doesNotMatchIncorrectJSONSchemaBody() {
         String matched = "" +
-                "{" + System.getProperty("line.separator") +
-                "    \"id\": 1," + System.getProperty("line.separator") +
-                "    \"name\": \"A green door\"," + System.getProperty("line.separator") +
-                "    \"price\": 12.50," + System.getProperty("line.separator") +
-                "    \"tags\": []" + System.getProperty("line.separator") +
+                "{" + NEW_LINE +
+                "    \"id\": 1," + NEW_LINE +
+                "    \"name\": \"A green door\"," + NEW_LINE +
+                "    \"price\": 12.50," + NEW_LINE +
+                "    \"tags\": []" + NEW_LINE +
                 "}";
-        assertFalse(new HttpRequestMatcher(new HttpRequest().withBody(jsonSchema("{" + System.getProperty("line.separator") +
-                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + System.getProperty("line.separator") +
-                "    \"title\": \"Product\"," + System.getProperty("line.separator") +
-                "    \"description\": \"A product from Acme's catalog\"," + System.getProperty("line.separator") +
-                "    \"type\": \"object\"," + System.getProperty("line.separator") +
-                "    \"properties\": {" + System.getProperty("line.separator") +
-                "        \"id\": {" + System.getProperty("line.separator") +
-                "            \"description\": \"The unique identifier for a product\"," + System.getProperty("line.separator") +
-                "            \"type\": \"integer\"" + System.getProperty("line.separator") +
-                "        }," + System.getProperty("line.separator") +
-                "        \"name\": {" + System.getProperty("line.separator") +
-                "            \"description\": \"Name of the product\"," + System.getProperty("line.separator") +
-                "            \"type\": \"string\"" + System.getProperty("line.separator") +
-                "        }," + System.getProperty("line.separator") +
-                "        \"price\": {" + System.getProperty("line.separator") +
-                "            \"type\": \"number\"," + System.getProperty("line.separator") +
-                "            \"minimum\": 0," + System.getProperty("line.separator") +
-                "            \"exclusiveMinimum\": true" + System.getProperty("line.separator") +
-                "        }," + System.getProperty("line.separator") +
-                "        \"tags\": {" + System.getProperty("line.separator") +
-                "            \"type\": \"array\"," + System.getProperty("line.separator") +
-                "            \"items\": {" + System.getProperty("line.separator") +
-                "                \"type\": \"string\"" + System.getProperty("line.separator") +
-                "            }," + System.getProperty("line.separator") +
-                "            \"minItems\": 1," + System.getProperty("line.separator") +
-                "            \"uniqueItems\": true" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"required\": [\"id\", \"name\", \"price\"]" + System.getProperty("line.separator") +
+        assertFalse(new HttpRequestMatcher(new HttpRequest().withBody(jsonSchema("{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"description\": \"A product from Acme's catalog\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"description\": \"The unique identifier for a product\"," + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"name\": {" + NEW_LINE +
+                "            \"description\": \"Name of the product\"," + NEW_LINE +
+                "            \"type\": \"string\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"price\": {" + NEW_LINE +
+                "            \"type\": \"number\"," + NEW_LINE +
+                "            \"minimum\": 0," + NEW_LINE +
+                "            \"exclusiveMinimum\": true" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"tags\": {" + NEW_LINE +
+                "            \"type\": \"array\"," + NEW_LINE +
+                "            \"items\": {" + NEW_LINE +
+                "                \"type\": \"string\"" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            \"minItems\": 1," + NEW_LINE +
+                "            \"uniqueItems\": true" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
                 "}"))).matches(new HttpRequest().withBody(matched)));
     }
 
@@ -718,22 +880,22 @@ public class HttpRequestMatcherTest {
 
     @Test
     public void shouldReturnFormattedRequestWithStringBodyInToString() {
-        assertEquals("{" + System.getProperty("line.separator") +
-                        "  \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                        "  \"path\" : \"/some/path\"," + System.getProperty("line.separator") +
-                        "  \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"parameterOneName\"," + System.getProperty("line.separator") +
-                        "    \"values\" : [ \"parameterOneValue\" ]" + System.getProperty("line.separator") +
-                        "  } ]," + System.getProperty("line.separator") +
-                        "  \"headers\" : [ {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"name\"," + System.getProperty("line.separator") +
-                        "    \"values\" : [ \"value\" ]" + System.getProperty("line.separator") +
-                        "  } ]," + System.getProperty("line.separator") +
-                        "  \"cookies\" : [ {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"name\"," + System.getProperty("line.separator") +
-                        "    \"value\" : \"[A-Z]{0,10}\"" + System.getProperty("line.separator") +
-                        "  } ]," + System.getProperty("line.separator") +
-                        "  \"body\" : \"some_body\"" + System.getProperty("line.separator") +
+        assertEquals("{" + NEW_LINE +
+                        "  \"method\" : \"GET\"," + NEW_LINE +
+                        "  \"path\" : \"/some/path\"," + NEW_LINE +
+                        "  \"queryStringParameters\" : [ {" + NEW_LINE +
+                        "    \"name\" : \"parameterOneName\"," + NEW_LINE +
+                        "    \"values\" : [ \"parameterOneValue\" ]" + NEW_LINE +
+                        "  } ]," + NEW_LINE +
+                        "  \"headers\" : [ {" + NEW_LINE +
+                        "    \"name\" : \"name\"," + NEW_LINE +
+                        "    \"values\" : [ \"value\" ]" + NEW_LINE +
+                        "  } ]," + NEW_LINE +
+                        "  \"cookies\" : [ {" + NEW_LINE +
+                        "    \"name\" : \"name\"," + NEW_LINE +
+                        "    \"value\" : \"[A-Z]{0,10}\"" + NEW_LINE +
+                        "  } ]," + NEW_LINE +
+                        "  \"body\" : \"some_body\"" + NEW_LINE +
                         "}",
                 new HttpRequestMatcher(
                         request()

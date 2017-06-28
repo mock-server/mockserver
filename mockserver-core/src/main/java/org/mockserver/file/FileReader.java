@@ -3,10 +3,8 @@ package org.mockserver.file;
 import com.google.common.base.Charsets;
 import org.apache.commons.io.IOUtils;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.net.URL;
 
 /**
  * @author jamesdbloom
@@ -28,6 +26,10 @@ public class FileReader {
             inputStream = new FileInputStream(filename);
         }
         return inputStream;
+    }
+
+    public static Reader openReaderToFileFromClassPathOrPath(String filename) throws FileNotFoundException {
+        return new InputStreamReader(openStreamToFileFromClassPathOrPath(filename));
     }
 
 

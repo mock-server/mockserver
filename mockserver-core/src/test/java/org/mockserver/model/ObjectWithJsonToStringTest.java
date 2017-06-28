@@ -4,6 +4,7 @@ import org.junit.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.mockserver.character.Character.NEW_LINE;
 
 public class ObjectWithJsonToStringTest {
 
@@ -30,9 +31,9 @@ public class ObjectWithJsonToStringTest {
 
     @Test
     public void shouldConvertObjectToJSON() {
-        assertThat(new TestObject().toString(), is("{" + System.getProperty("line.separator") +
-                "  \"stringField\" : \"stringField\"," + System.getProperty("line.separator") +
-                "  \"intField\" : 100" + System.getProperty("line.separator") +
+        assertThat(new TestObject().toString(), is("{" + NEW_LINE +
+                "  \"stringField\" : \"stringField\"," + NEW_LINE +
+                "  \"intField\" : 100" + NEW_LINE +
                 "}"));
     }
 
