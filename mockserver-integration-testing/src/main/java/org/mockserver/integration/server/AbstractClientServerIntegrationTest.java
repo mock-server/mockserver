@@ -49,6 +49,7 @@ import static org.mockserver.model.HttpForward.forward;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.HttpStatusCode.NOT_FOUND_404;
 import static org.mockserver.model.HttpStatusCode.OK_200;
 import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.JsonSchemaBody.jsonSchema;
@@ -60,6 +61,7 @@ import static org.mockserver.model.RegexBody.regex;
 import static org.mockserver.model.StringBody.exact;
 import static org.mockserver.model.XPathBody.xpath;
 import static org.mockserver.model.XmlBody.xml;
+import static org.mockserver.model.XmlSchemaBody.xmlSchema;
 
 /**
  * @author jamesdbloom
@@ -1289,6 +1291,206 @@ public abstract class AbstractClientServerIntegrationTest {
                                         "    \"price\": 12.50," + NEW_LINE +
                                         "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
                                         "}"),
+                        headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingBodyWithXmlSchema() {
+        // when
+        mockServerClient.when(request()
+                .withBody(
+                        xmlSchema("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + NEW_LINE +
+                                "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" attributeFormDefault=\"unqualified\">" + NEW_LINE +
+                                "    <!-- XML Schema Generated from XML Document on Wed Jun 28 2017 21:52:45 GMT+0100 (BST) -->" + NEW_LINE +
+                                "    <!-- with XmlGrid.net Free Online Service http://xmlgrid.net -->" + NEW_LINE +
+                                "    <xs:element name=\"notes\">" + NEW_LINE +
+                                "        <xs:complexType>" + NEW_LINE +
+                                "            <xs:sequence>" + NEW_LINE +
+                                "                <xs:element name=\"note\" maxOccurs=\"unbounded\">" + NEW_LINE +
+                                "                    <xs:complexType>" + NEW_LINE +
+                                "                        <xs:sequence>" + NEW_LINE +
+                                "                            <xs:element name=\"to\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                                "                            <xs:element name=\"from\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                                "                            <xs:element name=\"heading\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                                "                            <xs:element name=\"body\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                                "                        </xs:sequence>" + NEW_LINE +
+                                "                    </xs:complexType>" + NEW_LINE +
+                                "                </xs:element>" + NEW_LINE +
+                                "            </xs:sequence>" + NEW_LINE +
+                                "        </xs:complexType>" + NEW_LINE +
+                                "    </xs:element>" + NEW_LINE +
+                                "</xs:schema>")), exactly(2)
+        )
+                .respond(
+                        response()
+                                .withBody("some_body")
+                );
+
+        // then
+        // - in http
+        assertEquals(
+                response()
+                        .withStatusCode(NOT_FOUND_404.code()),
+                makeRequest(
+                        request()
+                                .withMethod("POST")
+                                .withBody("<?xml version=\"1.0\" encoding=\"utf-8\"?>" + NEW_LINE +
+                                        "<notes>" + NEW_LINE +
+                                        "    <note>" + NEW_LINE +
+                                        "        <to>Bob</to>" + NEW_LINE +
+                                        "        <heading>Reminder</heading>" + NEW_LINE +
+                                        "        <body>Buy Bread</body>" + NEW_LINE +
+                                        "    </note>" + NEW_LINE +
+                                        "    <note>" + NEW_LINE +
+                                        "        <to>Jack</to>" + NEW_LINE +
+                                        "        <from>Jill</from>" + NEW_LINE +
+                                        "        <heading>Reminder</heading>" + NEW_LINE +
+                                        "        <body>Wash Shirts</body>" + NEW_LINE +
+                                        "    </note>" + NEW_LINE +
+                                        "</notes>"),
+                        headersToIgnore)
+        );
+        assertEquals(
+                response()
+                        .withStatusCode(OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("some_path"))
+                                .withMethod("POST")
+                                .withBody("<?xml version=\"1.0\" encoding=\"utf-8\"?>" + NEW_LINE +
+                                        "<notes>" + NEW_LINE +
+                                        "    <note>" + NEW_LINE +
+                                        "        <to>Bob</to>" + NEW_LINE +
+                                        "        <from>Bill</from>" + NEW_LINE +
+                                        "        <heading>Reminder</heading>" + NEW_LINE +
+                                        "        <body>Buy Bread</body>" + NEW_LINE +
+                                        "    </note>" + NEW_LINE +
+                                        "    <note>" + NEW_LINE +
+                                        "        <to>Jack</to>" + NEW_LINE +
+                                        "        <from>Jill</from>" + NEW_LINE +
+                                        "        <heading>Reminder</heading>" + NEW_LINE +
+                                        "        <body>Wash Shirts</body>" + NEW_LINE +
+                                        "    </note>" + NEW_LINE +
+                                        "</notes>"),
+                        headersToIgnore)
+        );
+        // - in https
+        assertEquals(
+                response()
+                        .withStatusCode(OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        request()
+                                .withSecure(true)
+                                .withPath(calculatePath("some_path"))
+                                .withMethod("POST")
+                                .withBody("<?xml version=\"1.0\" encoding=\"utf-8\"?>" + NEW_LINE +
+                                        "<notes>" + NEW_LINE +
+                                        "    <note>" + NEW_LINE +
+                                        "        <to>Bob</to>" + NEW_LINE +
+                                        "        <from>Bill</from>" + NEW_LINE +
+                                        "        <heading>Reminder</heading>" + NEW_LINE +
+                                        "        <body>Buy Bread</body>" + NEW_LINE +
+                                        "    </note>" + NEW_LINE +
+                                        "    <note>" + NEW_LINE +
+                                        "        <to>Jack</to>" + NEW_LINE +
+                                        "        <from>Jill</from>" + NEW_LINE +
+                                        "        <heading>Reminder</heading>" + NEW_LINE +
+                                        "        <body>Wash Shirts</body>" + NEW_LINE +
+                                        "    </note>" + NEW_LINE +
+                                        "</notes>"),
+                        headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingBodyWithXmlSchemaByClasspath() {
+        // when
+        mockServerClient.when(request()
+                .withBody(
+                        xmlSchema("org/mockserver/model/testXmlSchema.xsd")), exactly(2)
+        )
+                .respond(
+                        response()
+                                .withBody("some_body")
+                );
+
+        // then
+        // - in http
+        assertEquals(
+                response()
+                        .withStatusCode(NOT_FOUND_404.code()),
+                makeRequest(
+                        request()
+                                .withMethod("POST")
+                                .withBody("<?xml version=\"1.0\" encoding=\"utf-8\"?>" + NEW_LINE +
+                                        "<notes>" + NEW_LINE +
+                                        "    <note>" + NEW_LINE +
+                                        "        <to>Bob</to>" + NEW_LINE +
+                                        "        <heading>Reminder</heading>" + NEW_LINE +
+                                        "        <body>Buy Bread</body>" + NEW_LINE +
+                                        "    </note>" + NEW_LINE +
+                                        "    <note>" + NEW_LINE +
+                                        "        <to>Jack</to>" + NEW_LINE +
+                                        "        <from>Jill</from>" + NEW_LINE +
+                                        "        <heading>Reminder</heading>" + NEW_LINE +
+                                        "        <body>Wash Shirts</body>" + NEW_LINE +
+                                        "    </note>" + NEW_LINE +
+                                        "</notes>"),
+                        headersToIgnore)
+        );
+        assertEquals(
+                response()
+                        .withStatusCode(OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("some_path"))
+                                .withMethod("POST")
+                                .withBody("<?xml version=\"1.0\" encoding=\"utf-8\"?>" + NEW_LINE +
+                                        "<notes>" + NEW_LINE +
+                                        "    <note>" + NEW_LINE +
+                                        "        <to>Bob</to>" + NEW_LINE +
+                                        "        <from>Bill</from>" + NEW_LINE +
+                                        "        <heading>Reminder</heading>" + NEW_LINE +
+                                        "        <body>Buy Bread</body>" + NEW_LINE +
+                                        "    </note>" + NEW_LINE +
+                                        "    <note>" + NEW_LINE +
+                                        "        <to>Jack</to>" + NEW_LINE +
+                                        "        <from>Jill</from>" + NEW_LINE +
+                                        "        <heading>Reminder</heading>" + NEW_LINE +
+                                        "        <body>Wash Shirts</body>" + NEW_LINE +
+                                        "    </note>" + NEW_LINE +
+                                        "</notes>"),
+                        headersToIgnore)
+        );
+        // - in https
+        assertEquals(
+                response()
+                        .withStatusCode(OK_200.code())
+                        .withBody("some_body"),
+                makeRequest(
+                        request()
+                                .withSecure(true)
+                                .withPath(calculatePath("some_path"))
+                                .withMethod("POST")
+                                .withBody("<?xml version=\"1.0\" encoding=\"utf-8\"?>" + NEW_LINE +
+                                        "<notes>" + NEW_LINE +
+                                        "    <note>" + NEW_LINE +
+                                        "        <to>Bob</to>" + NEW_LINE +
+                                        "        <from>Bill</from>" + NEW_LINE +
+                                        "        <heading>Reminder</heading>" + NEW_LINE +
+                                        "        <body>Buy Bread</body>" + NEW_LINE +
+                                        "    </note>" + NEW_LINE +
+                                        "    <note>" + NEW_LINE +
+                                        "        <to>Jack</to>" + NEW_LINE +
+                                        "        <from>Jill</from>" + NEW_LINE +
+                                        "        <heading>Reminder</heading>" + NEW_LINE +
+                                        "        <body>Wash Shirts</body>" + NEW_LINE +
+                                        "    </note>" + NEW_LINE +
+                                        "</notes>"),
                         headersToIgnore)
         );
     }
