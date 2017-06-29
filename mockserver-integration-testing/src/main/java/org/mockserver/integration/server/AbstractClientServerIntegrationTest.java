@@ -7,6 +7,7 @@ import com.google.common.util.concurrent.Uninterruptibles;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.netty.SocketConnectionException;
@@ -1406,6 +1407,7 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
+    @Ignore
     public void shouldReturnResponseByMatchingBodyWithXmlSchemaByClasspath() {
         // when
         mockServerClient.when(request()
