@@ -464,7 +464,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
                 IOStreamUtils.readInputStreamToString(socket);
                 fail("Expected socket read to fail because the socket was closed / reset");
             } catch (SocketException se) {
-                assertThat(se.getMessage(), anyOf(containsString("Broken pipe"), containsString("Connection reset"), containsString("Protocol wrong type")));
+                assertThat(se.getMessage(), anyOf(containsString("Broken pipe"), containsString("(broken pipe)"), containsString("Connection reset"), containsString("Protocol wrong type")));
             }
         } finally {
             if (socket != null) {

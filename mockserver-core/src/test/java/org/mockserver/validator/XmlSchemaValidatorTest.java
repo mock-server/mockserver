@@ -6,7 +6,10 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mock;
 import org.slf4j.Logger;
-import org.xml.sax.SAXParseException;
+
+import java.text.MessageFormat;
+import java.util.PropertyResourceBundle;
+import java.util.ResourceBundle;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -17,9 +20,6 @@ import static org.mockserver.character.Character.NEW_LINE;
  * @author jamesdbloom
  */
 public class XmlSchemaValidatorTest {
-
-    @Rule
-    public final ExpectedException exception = ExpectedException.none();
 
     public static final String XML_SCHEMA = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + NEW_LINE +
             "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" attributeFormDefault=\"unqualified\">" + NEW_LINE +
@@ -42,9 +42,13 @@ public class XmlSchemaValidatorTest {
             "        </xs:complexType>" + NEW_LINE +
             "    </xs:element>" + NEW_LINE +
             "</xs:schema>";
-
+    @Rule
+    public final ExpectedException exception = ExpectedException.none();
     @Mock
     protected Logger logger;
+
+    private ResourceBundle xmlMessagesResourceBundle = PropertyResourceBundle.getBundle("com.sun.org.apache.xerces.internal.impl.msg.XMLMessages");
+    private ResourceBundle xmlSchemaMessagesResourceBundle = PropertyResourceBundle.getBundle("com.sun.org.apache.xerces.internal.impl.msg.XMLSchemaMessages");
 
     @Before
     public void createMocks() {
@@ -73,25 +77,29 @@ public class XmlSchemaValidatorTest {
     @Test
     public void shouldHandleXmlMissingRequiredFields() {
         // then
-        assertThat(new XmlSchemaValidator(XML_SCHEMA).isValid( "<?xml version=\"1.0\" encoding=\"utf-8\"?>" + NEW_LINE +
-                "<notes>" + NEW_LINE +
-                "    <note>" + NEW_LINE +
-                "        <to>Bob</to>" + NEW_LINE +
-                "        <heading>Reminder</heading>" + NEW_LINE +
-                "        <body>Buy Bread</body>" + NEW_LINE +
-                "    </note>" + NEW_LINE +
-                "    <note>" + NEW_LINE +
-                "        <to>Jack</to>" + NEW_LINE +
-                "        <from>Jill</from>" + NEW_LINE +
-                "        <heading>Reminder</heading>" + NEW_LINE +
-                "        <body>Wash Shirts</body>" + NEW_LINE +
-                "    </note>" + NEW_LINE +
-                "</notes>"), is("cvc-complex-type.2.4.a: Invalid content was found starting with element 'heading'. One of '{from}' is expected."));
+        assertThat(
+                new XmlSchemaValidator(XML_SCHEMA).isValid("<?xml version=\"1.0\" encoding=\"utf-8\"?>" + NEW_LINE +
+                        "<notes>" + NEW_LINE +
+                        "    <note>" + NEW_LINE +
+                        "        <to>Bob</to>" + NEW_LINE +
+                        "        <heading>Reminder</heading>" + NEW_LINE +
+                        "        <body>Buy Bread</body>" + NEW_LINE +
+                        "    </note>" + NEW_LINE +
+                        "    <note>" + NEW_LINE +
+                        "        <to>Jack</to>" + NEW_LINE +
+                        "        <from>Jill</from>" + NEW_LINE +
+                        "        <heading>Reminder</heading>" + NEW_LINE +
+                        "        <body>Wash Shirts</body>" + NEW_LINE +
+                        "    </note>" + NEW_LINE +
+                        "</notes>"),
+                is(MessageFormat.format(xmlSchemaMessagesResourceBundle.getString("cvc-complex-type.2.4.a"), "heading", "{from}"))
+        );
     }
 
     @Test
     public void shouldHandleXmlExtraField() {
-        assertThat(new XmlSchemaValidator(XML_SCHEMA).isValid( "<?xml version=\"1.0\" encoding=\"utf-8\"?>" + NEW_LINE +
+        assertThat(
+                new XmlSchemaValidator(XML_SCHEMA).isValid("<?xml version=\"1.0\" encoding=\"utf-8\"?>" + NEW_LINE +
                         "<notes>" + NEW_LINE +
                         "    <note>" + NEW_LINE +
                         "        <to>Bob</to>" + NEW_LINE +
@@ -107,7 +115,8 @@ public class XmlSchemaValidatorTest {
                         "        <body>Wash Shirts</body>" + NEW_LINE +
                         "    </note>" + NEW_LINE +
                         "</notes>"),
-                is("cvc-complex-type.2.4.a: Invalid content was found starting with element 'to'. One of '{from}' is expected."));
+                is(MessageFormat.format(xmlSchemaMessagesResourceBundle.getString("cvc-complex-type.2.4.a"), "to", "{from}"))
+        );
     }
 
     @Test
@@ -148,6 +157,6 @@ public class XmlSchemaValidatorTest {
     @Test
     public void shouldHandleEmptyTest() {
         // given
-        assertThat(new XmlSchemaValidator(XML_SCHEMA).isValid( ""), is("Premature end of file."));
+        assertThat(new XmlSchemaValidator(XML_SCHEMA).isValid(""), is(xmlMessagesResourceBundle.getString("PrematureEOF")));
     }
 }
