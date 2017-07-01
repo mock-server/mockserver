@@ -114,25 +114,4 @@ public class HttpResponseSerializerTest {
         );
     }
 
-    @Test
-    public void shouldReturnFormattedResponseWithInvalidBody() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(
-                        response()
-                                .withBody(xpath("//some/xml/path"))
-                                .withHeaders(new Header("header_name", "header_value"))
-                                .withCookies(new Cookie("cookie_name", "cookie_value"))
-                ),
-                is("{" + NEW_LINE +
-                        "  \"headers\" : [ {" + NEW_LINE +
-                        "    \"name\" : \"header_name\"," + NEW_LINE +
-                        "    \"values\" : [ \"header_value\" ]" + NEW_LINE +
-                        "  } ]," + NEW_LINE +
-                        "  \"cookies\" : [ {" + NEW_LINE +
-                        "    \"name\" : \"cookie_name\"," + NEW_LINE +
-                        "    \"value\" : \"cookie_value\"" + NEW_LINE +
-                        "  } ]" + NEW_LINE +
-                        "}")
-        );
-    }
-
 }

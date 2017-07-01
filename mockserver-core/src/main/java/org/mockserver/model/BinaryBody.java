@@ -6,7 +6,7 @@ import org.mockserver.client.serialization.Base64Converter;
 /**
  * @author jamesdbloom
  */
-public class BinaryBody extends Body<byte[]> {
+public class BinaryBody extends BodyWithContentType<byte[]> {
 
     private final byte[] bytes;
 

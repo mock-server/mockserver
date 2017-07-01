@@ -3,6 +3,7 @@ package org.mockserver.client.netty.codec;
 import com.google.common.base.Charsets;
 import com.google.common.net.MediaType;
 import io.netty.handler.codec.http.FullHttpRequest;
+import org.hamcrest.collection.IsEmptyCollection;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.mappers.ContentTypeMapper;
@@ -309,7 +310,7 @@ public class MockServerRequestEncoderContentTypeTest {
     }
 
     @Test
-    public void shouldReturnContentTypeForJsonSchemaBody() {
+    public void shouldNotReturnContentTypeForJsonSchemaBody() {
         // given
         httpRequest.withBody(jsonSchema("somebody"));
 
@@ -318,7 +319,7 @@ public class MockServerRequestEncoderContentTypeTest {
 
         // then
         FullHttpRequest fullHttpResponse = (FullHttpRequest) output.get(0);
-        assertThat(fullHttpResponse.headers().getAll("Content-Type"), containsInAnyOrder("application/json"));
+        assertThat(fullHttpResponse.headers().getAll("Content-Type"), empty());
     }
 
     @Test

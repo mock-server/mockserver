@@ -8,7 +8,7 @@ import java.nio.charset.Charset;
 /**
  * @author jamesdbloom
  */
-public class StringBodyDTO extends BodyDTO {
+public class StringBodyDTO extends BodyWithContentTypeDTO {
 
     private String string;
 

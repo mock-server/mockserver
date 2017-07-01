@@ -9,7 +9,7 @@ import org.mockserver.validator.JsonSchemaValidator;
  */
 public class JsonSchemaMatcher extends BodyMatcher<String> {
     private final String schema;
-    private final JsonSchemaValidator jsonSchemaValidator;
+    private JsonSchemaValidator jsonSchemaValidator;
 
     public JsonSchemaMatcher(String schema) {
         this.schema = schema;

@@ -8,11 +8,10 @@ import org.mockserver.file.FileReader;
  */
 public class JsonSchemaBody extends Body {
 
-    public static final MediaType DEFAULT_CONTENT_TYPE = MediaType.create("application", "json");
     private final String jsonSchema;
 
     public JsonSchemaBody(String jsonSchema) {
-        super(Type.JSON_SCHEMA, DEFAULT_CONTENT_TYPE);
+        super(Type.JSON_SCHEMA);
         this.jsonSchema = jsonSchema;
     }
 

@@ -29,14 +29,12 @@ public class HttpResponseDTOSerializer extends StdSerializer<HttpResponseDTO> {
         if (httpResponseDTO.getCookies() != null && !httpResponseDTO.getCookies().isEmpty()) {
             jgen.writeObjectField("cookies", httpResponseDTO.getCookies());
         }
-        BodyDTO body = httpResponseDTO.getBody();
+        BodyWithContentTypeDTO body = httpResponseDTO.getBody();
         if (body != null) {
             if (body instanceof StringBodyDTO && !((StringBodyDTO) body).getString().isEmpty()) {
                 jgen.writeObjectField("body", body);
             } else if (body instanceof JsonBodyDTO && !((JsonBodyDTO) body).getJson().isEmpty()) {
                 jgen.writeObjectField("body", ((JsonBodyDTO) body).getJson());
-            } else if (body instanceof JsonSchemaBodyDTO && !((JsonSchemaBodyDTO) body).getJson().isEmpty()) {
-                jgen.writeObjectField("body", ((JsonSchemaBodyDTO) body).getJson());
             } else if (body instanceof XmlBodyDTO && !((XmlBodyDTO) body).getXml().isEmpty()) {
                 jgen.writeObjectField("body", ((XmlBodyDTO) body).getXml());
             } else if (body instanceof ParameterBodyDTO && !((ParameterBodyDTO) body).getParameters().isEmpty()) {

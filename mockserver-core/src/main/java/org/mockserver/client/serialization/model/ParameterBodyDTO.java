@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * @author jamesdbloom
  */
-public class ParameterBodyDTO extends BodyDTO {
+public class ParameterBodyDTO extends BodyWithContentTypeDTO {
 
     private List<ParameterDTO> parameters;
 

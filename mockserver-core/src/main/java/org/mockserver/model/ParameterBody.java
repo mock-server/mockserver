@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * @author jamesdbloom
  */
-public class ParameterBody extends Body<List<Parameter>> {
+public class ParameterBody extends BodyWithContentType<List<Parameter>> {
 
     public static final MediaType DEFAULT_CONTENT_TYPE = MediaType.FORM_DATA;
     private final List<Parameter> parameters;

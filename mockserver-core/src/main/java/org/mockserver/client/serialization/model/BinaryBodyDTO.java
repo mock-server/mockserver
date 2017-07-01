@@ -8,7 +8,7 @@ import javax.xml.bind.DatatypeConverter;
 /**
  * @author jamesdbloom
  */
-public class BinaryBodyDTO extends BodyDTO {
+public class BinaryBodyDTO extends BodyWithContentTypeDTO {
 
     private String value;
 

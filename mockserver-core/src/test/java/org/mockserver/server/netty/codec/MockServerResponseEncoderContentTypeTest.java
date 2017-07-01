@@ -310,19 +310,6 @@ public class MockServerResponseEncoderContentTypeTest {
     }
 
     @Test
-    public void shouldReturnContentTypeForJsonSchemaBody() {
-        // given
-        httpResponse.withBody(jsonSchema("somebody"));
-
-        // when
-        new MockServerResponseEncoder().encode(null, httpResponse, output);
-
-        // then
-        FullHttpResponse fullHttpResponse = (FullHttpResponse) output.get(0);
-        assertThat(fullHttpResponse.headers().getAll("Content-Type"), containsInAnyOrder("application/json"));
-    }
-
-    @Test
     public void shouldReturnContentTypeForParameterBody() {
         // given
         httpResponse.withBody(params(param("key", "value")));
@@ -338,7 +325,7 @@ public class MockServerResponseEncoderContentTypeTest {
     @Test
     public void shouldReturnNoContentTypeForBodyWithNoAssociatedContentType() {
         // given
-        httpResponse.withBody(regex("some_value"));
+        httpResponse.withBody(xml("some_value", (MediaType) null));
 
         // when
         new MockServerResponseEncoder().encode(null, httpResponse, output);

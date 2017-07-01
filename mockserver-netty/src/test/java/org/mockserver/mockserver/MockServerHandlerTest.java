@@ -18,8 +18,13 @@ import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.mockserver.callback.WebSocketClientRegistry;
 import org.mockserver.model.*;
+import org.mockserver.validator.JsonSchemaValidator;
+import org.mockserver.validator.Validator;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
+
+import java.util.Arrays;
+import java.util.Collections;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -67,6 +72,8 @@ public class MockServerHandlerTest {
     VerificationSerializer mockVerificationSerializer;
     @Mock
     VerificationSequenceSerializer mockVerificationSequenceSerializer;
+    @Mock
+    JsonSchemaValidator expectationValidator;
     // netty
     @Mock
     ChannelHandlerContext mockChannelHandlerContext;
@@ -88,7 +95,9 @@ public class MockServerHandlerTest {
         initMocks(this);
 
         // given - serializers
-        when(mockExpectationSerializer.deserializeArray(anyString())).thenReturn(new Expectation[]{mockExpectation});
+        when(mockExpectationSerializer.deserialize(anyString())).thenReturn(mockExpectation);
+        when(mockExpectationSerializer.returnJSONObjects(anyString())).thenReturn(Collections.singletonList("some_content"));
+        when(expectationValidator.isValid(anyString())).thenReturn("");
         when(mockHttpRequestSerializer.deserialize(anyString())).thenReturn(mockHttpRequest);
         when(mockVerificationSerializer.deserialize(anyString())).thenReturn(mockVerification);
         when(mockVerificationSequenceSerializer.deserialize(anyString())).thenReturn(mockVerificationSequence);

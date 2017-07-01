@@ -26,11 +26,11 @@ public class StringBodyDTOSerializer extends StdSerializer<StringBodyDTO> {
             if (notFieldSetAndNonDefault) {
                 jgen.writeBooleanField("not", true);
             }
+            jgen.writeStringField("type", stringBodyDTO.getType().name());
+            jgen.writeStringField("string", stringBodyDTO.getString());
             if (contentTypeFieldSet) {
                 jgen.writeStringField("contentType", stringBodyDTO.getContentType());
             }
-            jgen.writeStringField("type", stringBodyDTO.getType().name());
-            jgen.writeStringField("string", stringBodyDTO.getString());
             jgen.writeEndObject();
         } else {
             jgen.writeString(stringBodyDTO.getString());

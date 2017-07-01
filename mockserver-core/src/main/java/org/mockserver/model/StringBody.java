@@ -10,7 +10,7 @@ import static org.mockserver.mappers.ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SE
 /**
  * @author jamesdbloom
  */
-public class StringBody extends Body<String> {
+public class StringBody extends BodyWithContentType<String> {
 
     private final String value;
     private final byte[] rawBinaryData;

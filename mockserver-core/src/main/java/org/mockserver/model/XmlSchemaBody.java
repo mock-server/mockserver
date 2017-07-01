@@ -8,11 +8,10 @@ import org.mockserver.file.FileReader;
  */
 public class XmlSchemaBody extends Body {
 
-    public static final MediaType DEFAULT_CONTENT_TYPE = MediaType.create("application", "xml");
     private final String xmlSchema;
 
     public XmlSchemaBody(String xmlSchema) {
-        super(Type.XML_SCHEMA, DEFAULT_CONTENT_TYPE);
+        super(Type.XML_SCHEMA);
         this.xmlSchema = xmlSchema;
     }
 

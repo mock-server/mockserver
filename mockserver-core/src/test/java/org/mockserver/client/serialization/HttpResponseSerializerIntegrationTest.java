@@ -72,7 +72,7 @@ public class HttpResponseSerializerIntegrationTest {
         // then
         assertEquals(new HttpResponseDTO()
                 .setStatusCode(123)
-                .setBody(BodyDTO.createDTO(new StringBody("somebody")))
+                .setBody(BodyWithContentTypeDTO.createDTO(new StringBody("somebody")))
                 .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
                 .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
                 .setDelay(new DelayDTO(seconds(5)))
@@ -91,7 +91,7 @@ public class HttpResponseSerializerIntegrationTest {
 
         // then
         assertEquals(new HttpResponseDTO()
-                .setBody(BodyDTO.createDTO(exact("somebody")))
+                .setBody(BodyWithContentTypeDTO.createDTO(exact("somebody")))
                 .buildObject(), httpResponse);
     }
 
@@ -110,7 +110,7 @@ public class HttpResponseSerializerIntegrationTest {
 
         // then
         assertEquals(new HttpResponseDTO()
-                .setBody(BodyDTO.createDTO(exact("somebody")))
+                .setBody(BodyWithContentTypeDTO.createDTO(exact("somebody")))
                 .buildObject(), httpResponse);
     }
 
@@ -129,7 +129,7 @@ public class HttpResponseSerializerIntegrationTest {
 
         // then
         HttpResponse expected = new HttpResponseDTO()
-                .setBody(BodyDTO.createDTO(json("{ \"key\": \"value\" }")))
+                .setBody(BodyWithContentTypeDTO.createDTO(json("{ \"key\": \"value\" }")))
                 .buildObject();
         assertEquals(expected, httpResponse);
     }
@@ -155,7 +155,7 @@ public class HttpResponseSerializerIntegrationTest {
 
         // then
         assertEquals(new HttpResponseDTO()
-                .setBody(BodyDTO.createDTO(params(
+                .setBody(BodyWithContentTypeDTO.createDTO(params(
                         new Parameter("nameOne", "valueOne"),
                         new Parameter("nameTwo", "valueTwo_One", "valueTwo_Two")
                 )))
@@ -207,7 +207,7 @@ public class HttpResponseSerializerIntegrationTest {
         String jsonHttpResponse = new HttpResponseSerializer().serialize(
                 new HttpResponseDTO()
                         .setStatusCode(123)
-                        .setBody(BodyDTO.createDTO(new StringBody("somebody")))
+                        .setBody(BodyWithContentTypeDTO.createDTO(new StringBody("somebody")))
                         .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
                         .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
                         .setDelay(new DelayDTO(minutes(1)))
@@ -240,14 +240,14 @@ public class HttpResponseSerializerIntegrationTest {
                 new HttpResponse[]{
                         new HttpResponseDTO()
                                 .setStatusCode(123)
-                                .setBody(BodyDTO.createDTO(new StringBody("somebody_one")))
+                                .setBody(BodyWithContentTypeDTO.createDTO(new StringBody("somebody_one")))
                                 .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
                                 .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
                                 .setDelay(new DelayDTO(minutes(1)))
                                 .buildObject(),
                         new HttpResponseDTO()
                                 .setStatusCode(456)
-                                .setBody(BodyDTO.createDTO(new StringBody("somebody_two")))
+                                .setBody(BodyWithContentTypeDTO.createDTO(new StringBody("somebody_two")))
                                 .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
                                 .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
                                 .setDelay(new DelayDTO(minutes(1)))
@@ -296,14 +296,14 @@ public class HttpResponseSerializerIntegrationTest {
                 Arrays.asList(
                         new HttpResponseDTO()
                                 .setStatusCode(123)
-                                .setBody(BodyDTO.createDTO(new StringBody("somebody_one")))
+                                .setBody(BodyWithContentTypeDTO.createDTO(new StringBody("somebody_one")))
                                 .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
                                 .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
                                 .setDelay(new DelayDTO(minutes(1)))
                                 .buildObject(),
                         new HttpResponseDTO()
                                 .setStatusCode(456)
-                                .setBody(BodyDTO.createDTO(new StringBody("somebody_two")))
+                                .setBody(BodyWithContentTypeDTO.createDTO(new StringBody("somebody_two")))
                                 .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
                                 .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
                                 .setDelay(new DelayDTO(minutes(1)))
@@ -350,7 +350,7 @@ public class HttpResponseSerializerIntegrationTest {
         // when
         String jsonHttpResponse = new HttpResponseSerializer().serialize(
                 new HttpResponseDTO()
-                        .setBody(BodyDTO.createDTO(exact("somebody")))
+                        .setBody(BodyWithContentTypeDTO.createDTO(exact("somebody")))
                         .buildObject()
         );
 
@@ -365,22 +365,7 @@ public class HttpResponseSerializerIntegrationTest {
         // when
         String jsonHttpResponse = new HttpResponseSerializer().serialize(
                 new HttpResponseDTO()
-                        .setBody(BodyDTO.createDTO(json("{ \"key\": \"value\" }")))
-                        .buildObject()
-        );
-
-        // then
-        assertEquals("{" + NEW_LINE +
-                "  \"body\" : \"{ \\\"key\\\": \\\"value\\\" }\"" + NEW_LINE +
-                "}", jsonHttpResponse);
-    }
-
-    @Test
-    public void shouldSerializeJsonSchemaBody() throws IOException {
-        // when
-        String jsonHttpResponse = new HttpResponseSerializer().serialize(
-                new HttpResponseDTO()
-                        .setBody(BodyDTO.createDTO(jsonSchema("{ \"key\": \"value\" }")))
+                        .setBody(BodyWithContentTypeDTO.createDTO(json("{ \"key\": \"value\" }")))
                         .buildObject()
         );
 
@@ -395,7 +380,7 @@ public class HttpResponseSerializerIntegrationTest {
         // when
         String jsonHttpResponse = new HttpResponseSerializer().serialize(
                 new HttpResponseDTO()
-                        .setBody(BodyDTO.createDTO(xml("<some><xml></xml></some>")))
+                        .setBody(BodyWithContentTypeDTO.createDTO(xml("<some><xml></xml></some>")))
                         .buildObject()
         );
 
@@ -410,7 +395,7 @@ public class HttpResponseSerializerIntegrationTest {
         // when
         String jsonHttpResponse = new HttpResponseSerializer().serialize(
                 new HttpResponseDTO()
-                        .setBody(BodyDTO.createDTO(params(
+                        .setBody(BodyWithContentTypeDTO.createDTO(params(
                                 new Parameter("nameOne", "valueOne"),
                                 new Parameter("nameTwo", "valueTwo_One", "valueTwo_Two")
                         )))

@@ -6,7 +6,7 @@ import org.mockserver.model.XmlBody;
 /**
  * @author jamesdbloom
  */
-public class XmlBodyDTO extends BodyDTO {
+public class XmlBodyDTO extends BodyWithContentTypeDTO {
 
     private String xml;
 
