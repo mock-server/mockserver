@@ -48,13 +48,10 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
                     .getValidator()
                     .validate(objectMapper.readTree(schema), objectMapper.readTree(json), true);
 
-            System.out.println("json = " + json);
-            System.out.println("validate = " + validate);
             if (validate.isSuccess()) {
                 return "";
             } else {
                 for (ProcessingMessage processingMessage : validate) {
-                    System.out.println("processingMessage.getMessage() = " + processingMessage.getMessage());
                     if (String.valueOf(processingMessage.asJson().get("keyword")).equals("\"oneOf\"")) {
                         StringBuilder oneOfErrorMessage = new StringBuilder("oneOf of the following must be specified ");
                         for (JsonNode jsonNode : processingMessage.asJson().get("reports")) {
