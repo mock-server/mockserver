@@ -28,6 +28,7 @@ import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.ParameterBody.params;
 import static org.mockserver.model.RegexBody.regex;
 import static org.mockserver.model.StringBody.exact;
+import static org.mockserver.model.XmlBody.xml;
 
 /**
  * @author jamesdbloom
@@ -100,19 +101,6 @@ public class MockServerResponseToHttpServletResponseEncoderContentTypeTest {
     }
 
     @Test
-    public void shouldReturnContentTypeForJsonSchemaBody() {
-        // given
-        HttpResponse httpResponse = response().withBody(jsonSchema("somebody"));
-        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-
-        // when
-        new MockServerResponseToHttpServletResponseEncoder().mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
-
-        // then
-        assertEquals("application/json", httpServletResponse.getHeader("Content-Type"));
-    }
-
-    @Test
     public void shouldReturnContentTypeForParameterBody() {
         // given
         HttpResponse httpResponse = response().withBody(params(param("key", "value")));
@@ -128,7 +116,7 @@ public class MockServerResponseToHttpServletResponseEncoderContentTypeTest {
     @Test
     public void shouldReturnNoContentTypeForBodyWithNoAssociatedContentType() {
         // given
-        HttpResponse httpResponse = response().withBody(regex("some_value"));
+        HttpResponse httpResponse = response().withBody(xml("some_value", (MediaType) null));
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
 
         // when

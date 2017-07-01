@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.Test;
 import org.mockserver.client.serialization.ObjectMapperFactory;
 import org.mockserver.client.serialization.model.HttpResponseDTO;
+import org.mockserver.model.Body;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Delay;
 import org.mockserver.model.Header;
@@ -112,29 +113,6 @@ public class HttpResponseDTOSerializerTest {
                 ),
                 is("{" + NEW_LINE +
                         "  \"statusCode\" : 200," + NEW_LINE +
-                        "  \"headers\" : [ {" + NEW_LINE +
-                        "    \"name\" : \"header_name\"," + NEW_LINE +
-                        "    \"values\" : [ \"header_value\" ]" + NEW_LINE +
-                        "  } ]," + NEW_LINE +
-                        "  \"cookies\" : [ {" + NEW_LINE +
-                        "    \"name\" : \"cookie_name\"," + NEW_LINE +
-                        "    \"value\" : \"cookie_value\"" + NEW_LINE +
-                        "  } ]" + NEW_LINE +
-                        "}")
-        );
-    }
-
-    @Test
-    public void shouldReturnFormattedResponseWithInvalidBody() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(
-                        new HttpResponseDTO(
-                                response()
-                                        .withBody(xpath("//some/xml/path"))
-                                        .withHeaders(new Header("header_name", "header_value"))
-                                        .withCookies(new Cookie("cookie_name", "cookie_value"))
-                        )
-                ),
-                is("{" + NEW_LINE +
                         "  \"headers\" : [ {" + NEW_LINE +
                         "    \"name\" : \"header_name\"," + NEW_LINE +
                         "    \"values\" : [ \"header_value\" ]" + NEW_LINE +

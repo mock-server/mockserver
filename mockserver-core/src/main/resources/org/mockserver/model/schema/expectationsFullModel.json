@@ -18,6 +18,9 @@
     "httpObjectCallback": {
       "$ref": "#/definitions/httpObjectCallback"
     },
+    "httpError": {
+      "$ref": "#/definitions/httpError"
+    },
     "times": {
       "$ref": "#/definitions/times"
     },
@@ -43,6 +46,11 @@
     },
     {
       "required": [
+        "httpError"
+      ]
+    },
+    {
+      "required": [
         "httpObjectCallback"
       ]
     }
@@ -57,19 +65,22 @@
           "$ref": "#/definitions/body"
         },
         "headers": {
-          "$ref": "#/definitions/headers"
+          "$ref": "#/definitions/keyToMultiValue"
         },
         "cookies": {
-          "$ref": "#/definitions/cookies"
+          "$ref": "#/definitions/keyToValue"
         },
         "queryStringParameters": {
-          "$ref": "#/definitions/queryStringParameters"
+          "$ref": "#/definitions/keyToMultiValue"
         },
         "path": {
           "type": "string"
         },
         "method": {
           "type": "string"
+        },
+        "secure": {
+          "type": "boolean"
         }
       }
     },
@@ -79,19 +90,19 @@
       "additionalProperties": false,
       "properties": {
         "body": {
-          "type": "string"
+          "$ref": "#/definitions/bodyWithContentType"
         },
         "delay": {
           "$ref": "#/definitions/delay"
         },
         "cookies": {
-          "$ref": "#/definitions/cookies"
+          "$ref": "#/definitions/keyToValue"
         },
         "connectionOptions": {
           "$ref": "#/definitions/connectionOptions"
         },
         "headers": {
-          "$ref": "#/definitions/headers"
+          "$ref": "#/definitions/keyToMultiValue"
         },
         "statusCode": {
           "type": "integer"
@@ -137,6 +148,22 @@
         }
       }
     },
+    "httpError": {
+      "title": "error behaviour",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "delay": {
+          "$ref": "#/definitions/delay"
+        },
+        "dropConnection": {
+          "type": "boolean"
+        },
+        "responseBytes": {
+          "type": "string"
+        }
+      }
+    },
     "times": {
       "title": "number of responses",
       "type": "object",
@@ -174,83 +201,294 @@
       }
     },
     "body": {
-      "title": "body",
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "not" : {
-          "type": "boolean"
+      "title": "request body matcher",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "not": {
+              "type": "boolean"
+            },
+            "type": {
+              "enum": [
+                "BINARY"
+              ]
+            },
+            "value": {
+              "type": "string"
+            },
+            "contentType": {
+              "type": "string"
+            }
+          }
         },
-        "type": {
-          "enum": [
-            "PARAMETERS",
-            "XPATH",
-            "XML",
-            "JSON",
-            "JSON_SCHEMA",
-            "REGEX",
-            "STRING",
-            "BINARY"
-          ]
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "not": {
+              "type": "boolean"
+            },
+            "type": {
+              "enum": [
+                "JSON"
+              ]
+            },
+            "json": {
+              "type": "string"
+            },
+            "contentType": {
+              "type": "string"
+            },
+            "matchType": {
+              "enum": [
+                "STRICT",
+                "ONLY_MATCHING_FIELDS"
+              ]
+            }
+          }
         },
-        "value": {
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "not": {
+              "type": "boolean"
+            },
+            "type": {
+              "enum": [
+                "JSON_SCHEMA"
+              ]
+            },
+            "jsonSchema": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "not": {
+              "type": "boolean"
+            },
+            "type": {
+              "enum": [
+                "PARAMETERS"
+              ]
+            },
+            "parameters": {
+              "$ref": "#/definitions/keyToMultiValue"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "not": {
+              "type": "boolean"
+            },
+            "type": {
+              "enum": [
+                "REGEX"
+              ]
+            },
+            "regex": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "not": {
+              "type": "boolean"
+            },
+            "type": {
+              "enum": [
+                "STRING"
+              ]
+            },
+            "string": {
+              "type": "string"
+            },
+            "contentType": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "not": {
+              "type": "boolean"
+            },
+            "type": {
+              "enum": [
+                "XML"
+              ]
+            },
+            "xml": {
+              "type": "string"
+            },
+            "contentType": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "not": {
+              "type": "boolean"
+            },
+            "type": {
+              "enum": [
+                "XML_SCHEMA"
+              ]
+            },
+            "xmlSchema": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "not": {
+              "type": "boolean"
+            },
+            "type": {
+              "enum": [
+                "XPATH"
+              ]
+            },
+            "xpath": {
+              "type": "string"
+            }
+          }
+        },
+        {
           "type": "string"
         }
-      }
+      ]
     },
-    "headers": {
-      "title": "headers",
-      "type": "array",
-      "additionalProperties": false,
-      "items": {
-        "type": "object",
-        "properties": {
-          "values": {
-            "items": {
+    "bodyWithContentType": {
+      "title": "response body",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "not": {
+              "type": "boolean"
+            },
+            "type": {
+              "enum": [
+                "BINARY"
+              ]
+            },
+            "value": {
               "type": "string"
             },
-            "type": "array"
-          },
-          "name": {
-            "type": "string"
+            "contentType": {
+              "type": "string"
+            }
           }
-        }
-      }
-    },
-    "cookies": {
-      "title": "cookies",
-      "type": "array",
-      "additionalProperties": false,
-      "items": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "value": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "queryStringParameters": {
-      "title": "parameters",
-      "type": "array",
-      "additionalProperties": false,
-      "items": {
-        "type": "object",
-        "properties": {
-          "values": {
-            "items": {
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "not": {
+              "type": "boolean"
+            },
+            "type": {
+              "enum": [
+                "JSON"
+              ]
+            },
+            "json": {
               "type": "string"
             },
-            "type": "array"
-          },
-          "name": {
-            "type": "string"
+            "contentType": {
+              "type": "string"
+            },
+            "matchType": {
+              "enum": [
+                "STRICT",
+                "ONLY_MATCHING_FIELDS"
+              ]
+            }
           }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "not": {
+              "type": "boolean"
+            },
+            "type": {
+              "enum": [
+                "PARAMETERS"
+              ]
+            },
+            "parameters": {
+              "$ref": "#/definitions/keyToMultiValue"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "not": {
+              "type": "boolean"
+            },
+            "type": {
+              "enum": [
+                "STRING"
+              ]
+            },
+            "string": {
+              "type": "string"
+            },
+            "contentType": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "not": {
+              "type": "boolean"
+            },
+            "type": {
+              "enum": [
+                "XML"
+              ]
+            },
+            "xml": {
+              "type": "string"
+            },
+            "contentType": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "string"
         }
-      }
+      ]
     },
     "delay": {
       "title": "response delay",
@@ -284,6 +522,39 @@
         },
         "keepAliveOverride": {
           "type": "boolean"
+        }
+      }
+    },
+    "keyToMultiValue": {
+      "type": "array",
+      "additionalProperties": false,
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "keyToValue": {
+      "type": "array",
+      "additionalProperties": false,
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
         }
       }
     }

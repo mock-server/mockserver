@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-function finish {
-  sudo dmesg | grep -E -i -B100 'killed process'
-}
-trap finish ERR
+#function finish {
+#  sudo dmesg | grep -E -i -B100 'killed process'
+#}
+#trap finish ERR
 
 # java 1.6 build
 export MAVEN_OPTS="$MAVEN_OPTS -XX:MaxPermSize=1024m -Xmx2048m"

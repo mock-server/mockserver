@@ -14,7 +14,7 @@ import static org.mockserver.mappers.ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SE
 /**
  * @author jamesdbloom
  */
-public class JsonBody extends Body {
+public class JsonBody extends BodyWithContentType {
 
     public static final MatchType DEFAULT_MATCH_TYPE = MatchType.ONLY_MATCHING_FIELDS;
     public static final MediaType DEFAULT_CONTENT_TYPE = MediaType.create("application", "json");

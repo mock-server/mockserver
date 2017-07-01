@@ -66,7 +66,7 @@ public class WebSocketMessageSerializerTest {
         // then
         assertEquals(new HttpResponseDTO()
                 .setStatusCode(123)
-                .setBody(BodyDTO.createDTO(new StringBody("somebody")))
+                .setBody(BodyWithContentTypeDTO.createDTO(new StringBody("somebody")))
                 .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
                 .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
                 .setDelay(new DelayDTO(seconds(5)))
@@ -79,7 +79,7 @@ public class WebSocketMessageSerializerTest {
         String jsonHttpResponse = new WebSocketMessageSerializer().serialize(
                 new HttpResponseDTO()
                         .setStatusCode(123)
-                        .setBody(BodyDTO.createDTO(new StringBody("somebody")))
+                        .setBody(BodyWithContentTypeDTO.createDTO(new StringBody("somebody")))
                         .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
                         .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
                         .setDelay(new DelayDTO(minutes(1)))

@@ -21,7 +21,7 @@ public class XmlBodyDTOSerializerTest {
     @Test
     public void shouldSerializeXmlBodyDTOWithContentType() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new XmlBodyDTO(new XmlBody("<some><xml></xml></some>", MediaType.XML_UTF_8))),
-                is("{\"contentType\":\"text/xml; charset=utf-8\",\"type\":\"XML\",\"xml\":\"<some><xml></xml></some>\"}"));
+                is("{\"type\":\"XML\",\"xml\":\"<some><xml></xml></some>\",\"contentType\":\"text/xml; charset=utf-8\"}"));
     }
 
     @Test
@@ -33,7 +33,7 @@ public class XmlBodyDTOSerializerTest {
     @Test
     public void shouldSerializeXmlBodyDTOWithNotWithContentType() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new XmlBodyDTO(new XmlBody("<some><xml></xml></some>", MediaType.XML_UTF_8), true)),
-                is("{\"not\":true,\"contentType\":\"text/xml; charset=utf-8\",\"type\":\"XML\",\"xml\":\"<some><xml></xml></some>\"}"));
+                is("{\"not\":true,\"type\":\"XML\",\"xml\":\"<some><xml></xml></some>\",\"contentType\":\"text/xml; charset=utf-8\"}"));
     }
 
 }

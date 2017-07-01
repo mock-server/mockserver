@@ -102,7 +102,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
             } else if (request.matches("PUT", "/expectation")) {
 
-                final List<String> strings = expectationSerializer.returnJSONObjects(request.getBodyAsString());
+                List<String> strings = expectationSerializer.returnJSONObjects(request.getBodyAsString());
                 if (strings.isEmpty()) {
                     writeResponse(ctx, request, NOT_ACCEPTABLE, "1 error:\n - an expectation or array of expectations is required", MediaType.create("text", "plain").toString());
                 } else {

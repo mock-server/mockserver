@@ -9,7 +9,7 @@ import static org.mockserver.mappers.ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SE
 /**
  * @author jamesdbloom
  */
-public class XmlBody extends Body<String> {
+public class XmlBody extends BodyWithContentType<String> {
 
     public static final MediaType DEFAULT_CONTENT_TYPE = MediaType.create("application", "xml");
     private final String xml;

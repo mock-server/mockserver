@@ -11,11 +11,9 @@ import java.nio.charset.Charset;
 public abstract class Body<T> extends Not {
 
     private final Type type;
-    protected final MediaType contentType;
 
-    public Body(Type type, MediaType contentType) {
+    public Body(Type type) {
         this.type = type;
-        this.contentType = contentType;
     }
 
     public Type getType() {
@@ -30,20 +28,18 @@ public abstract class Body<T> extends Not {
     }
 
     @JsonIgnore
-    Charset determineCharacterSet(MediaType contentType, Charset defaultCharset) {
-        if (contentType != null && contentType.charset().isPresent()) {
-            return contentType.charset().get();
-        }
-        return defaultCharset;
-    }
-
-    @JsonIgnore
     public Charset getCharset(Charset defaultIfNotSet) {
-        return determineCharacterSet(contentType, defaultIfNotSet);
+        if (this instanceof BodyWithContentType) {
+            return this.getCharset(defaultIfNotSet);
+        }
+        return defaultIfNotSet;
     }
 
     public String getContentType() {
-        return (contentType != null ? contentType.toString() : null);
+        if (this instanceof BodyWithContentType) {
+            return this.getContentType();
+        }
+        return null;
     }
 
     public enum Type {

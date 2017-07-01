@@ -12,7 +12,7 @@ import java.util.List;
  */
 public class HttpResponseDTO extends ObjectWithReflectiveEqualsHashCodeToString {
     private Integer statusCode;
-    private BodyDTO body;
+    private BodyWithContentTypeDTO body;
     private List<CookieDTO> cookies = new ArrayList<CookieDTO>();
     private List<HeaderDTO> headers = new ArrayList<HeaderDTO>();
     private DelayDTO delay;
@@ -21,7 +21,7 @@ public class HttpResponseDTO extends ObjectWithReflectiveEqualsHashCodeToString 
     public HttpResponseDTO(HttpResponse httpResponse) {
         if (httpResponse != null) {
             statusCode = httpResponse.getStatusCode();
-            body = BodyDTO.createDTO(httpResponse.getBody());
+            body = BodyWithContentTypeDTO.createDTO(httpResponse.getBody());
             headers = Lists.transform(httpResponse.getHeaders(), new Function<Header, HeaderDTO>() {
                 public HeaderDTO apply(Header header) {
                     return new HeaderDTO(header);
@@ -67,11 +67,11 @@ public class HttpResponseDTO extends ObjectWithReflectiveEqualsHashCodeToString 
         return this;
     }
 
-    public BodyDTO getBody() {
+    public BodyWithContentTypeDTO getBody() {
         return body;
     }
 
-    public HttpResponseDTO setBody(BodyDTO body) {
+    public HttpResponseDTO setBody(BodyWithContentTypeDTO body) {
         this.body = body;
         return this;
     }

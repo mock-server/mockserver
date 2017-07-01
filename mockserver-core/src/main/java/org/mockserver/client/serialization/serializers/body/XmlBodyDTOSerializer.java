@@ -23,11 +23,11 @@ public class XmlBodyDTOSerializer extends StdSerializer<XmlBodyDTO> {
         if (xmlBodyDTO.getNot() != null && xmlBodyDTO.getNot()) {
             jgen.writeBooleanField("not", true);
         }
+        jgen.writeStringField("type", xmlBodyDTO.getType().name());
+        jgen.writeStringField("xml", xmlBodyDTO.getXml());
         if (xmlBodyDTO.getContentType() != null && !xmlBodyDTO.getContentType().equals(XmlBody.DEFAULT_CONTENT_TYPE.toString())) {
             jgen.writeStringField("contentType", xmlBodyDTO.getContentType());
         }
-        jgen.writeStringField("type", xmlBodyDTO.getType().name());
-        jgen.writeStringField("xml", xmlBodyDTO.getXml());
         jgen.writeEndObject();
     }
 }

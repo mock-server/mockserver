@@ -23,7 +23,7 @@ public class StringBodyDTOSerializerTest {
     @Test
     public void shouldSerializeStringBodyDTOWithCharset() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new StringBodyDTO(new StringBody("string_body", MediaType.PLAIN_TEXT_UTF_8))),
-                is("{\"contentType\":\"text/plain; charset=utf-8\",\"type\":\"STRING\",\"string\":\"string_body\"}"));
+                is("{\"type\":\"STRING\",\"string\":\"string_body\",\"contentType\":\"text/plain; charset=utf-8\"}"));
     }
 
     @Test
@@ -35,7 +35,7 @@ public class StringBodyDTOSerializerTest {
     @Test
     public void shouldSerializeStringBodyDTOWithCharsetAndNot() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new StringBodyDTO(not(new StringBody("string_body", MediaType.PLAIN_TEXT_UTF_8)))),
-                is("{\"not\":true,\"contentType\":\"text/plain; charset=utf-8\",\"type\":\"STRING\",\"string\":\"string_body\"}"));
+                is("{\"not\":true,\"type\":\"STRING\",\"string\":\"string_body\",\"contentType\":\"text/plain; charset=utf-8\"}"));
     }
 
 }

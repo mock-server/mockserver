@@ -79,7 +79,7 @@ public class HttpResponseDTOTest {
     @Test
     public void shouldReturnValuesSetInSetter() {
         // given
-        BodyDTO body = BodyDTO.createDTO(exact("body"));
+        BodyWithContentTypeDTO body = BodyWithContentTypeDTO.createDTO(exact("body"));
         List<CookieDTO> cookies = Arrays.asList(new CookieDTO());
         List<HeaderDTO> headers = Arrays.asList(new HeaderDTO());
         Integer statusCode = 200;

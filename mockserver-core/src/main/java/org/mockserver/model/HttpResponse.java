@@ -15,7 +15,7 @@ import static org.mockserver.model.NottableString.string;
  */
 public class HttpResponse extends Action {
     private Integer statusCode;
-    private Body body;
+    private BodyWithContentType body;
     private Map<NottableString, Header> headers = new LinkedHashMap<NottableString, Header>();
     private Map<NottableString, Cookie> cookies = new LinkedHashMap<NottableString, Cookie>();
     private Delay delay;
@@ -117,12 +117,12 @@ public class HttpResponse extends Action {
      *
      * @param body an instance of one of the Body subclasses including StringBody or BinaryBody
      */
-    public HttpResponse withBody(Body body) {
+    public HttpResponse withBody(BodyWithContentType body) {
         this.body = body;
         return this;
     }
 
-    public Body getBody() {
+    public BodyWithContentType getBody() {
         return body;
     }
 

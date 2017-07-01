@@ -1,7 +1,9 @@
 package org.mockserver.validator;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.mockito.Mock;
 import org.slf4j.Logger;
 
@@ -14,6 +16,9 @@ import static org.mockserver.character.Character.NEW_LINE;
  * @author jamesdbloom
  */
 public class JsonSchemaValidatorTest {
+
+    @Rule
+    public final ExpectedException exception = ExpectedException.none();
 
     public static final String JSON_SCHEMA = "{" + NEW_LINE +
             "    \"type\": \"object\"," + NEW_LINE +
@@ -68,18 +73,8 @@ public class JsonSchemaValidatorTest {
     @Test
     public void shouldHandleJsonMissingRequiredFields() {
         // then
-        assertThat(new JsonSchemaValidator(JSON_SCHEMA).isValid( "{}"), is("com.github.fge.jsonschema.core.report.ListProcessingReport: failure" + NEW_LINE +
-                "--- BEGIN MESSAGES ---" + NEW_LINE +
-                "error: object has missing required properties ([\"arrayField\",\"enumField\"])" + NEW_LINE +
-                "    level: \"error\"" + NEW_LINE +
-                "    schema: {\"loadingURI\":\"#\",\"pointer\":\"\"}" + NEW_LINE +
-                "    instance: {\"pointer\":\"\"}" + NEW_LINE +
-                "    domain: \"validation\"" + NEW_LINE +
-                "    keyword: \"required\"" + NEW_LINE +
-                "    required: [\"arrayField\",\"enumField\"]" + NEW_LINE +
-                "    missing: [\"arrayField\",\"enumField\"]" + NEW_LINE +
-                "---  END MESSAGES  ---" + NEW_LINE +
-                ""));
+        assertThat(new JsonSchemaValidator(JSON_SCHEMA).isValid( "{}"), is("1 error:\n" +
+                " - object has missing required properties ([\"arrayField\",\"enumField\"])"));
     }
 
     @Test
@@ -137,44 +132,44 @@ public class JsonSchemaValidatorTest {
 
     @Test
     public void shouldHandleIllegalJson() {
-        // given
-        assertThat(new JsonSchemaValidator("illegal_json").isValid("illegal_json"),
-                is("JsonParseException - Unrecognized token 'illegal_json': was expecting ('true', 'false' or 'null')" + NEW_LINE +
-                " at [Source: illegal_json; line: 1, column: 25]"));
+        // then
+        exception.expect(IllegalArgumentException.class);
+        exception.expectMessage("Schema must either be a path reference to a *.json file or a json string");
 
-        // and
-        assertThat(new JsonSchemaValidator("illegal_json").isValid("some_other_illegal_json"),
-                is("JsonParseException - Unrecognized token 'illegal_json': was expecting ('true', 'false' or 'null')" + NEW_LINE +
-                " at [Source: illegal_json; line: 1, column: 25]"));
+        // given
+        new JsonSchemaValidator("illegal_json").isValid("illegal_json");
     }
 
     @Test
     public void shouldHandleNullExpectation() {
+        // then
+        exception.expect(NullPointerException.class);
+
         // given
-        assertThat(new JsonSchemaValidator(null).isValid("some_value"), is("NullPointerException - null"));
+        new JsonSchemaValidator(null).isValid("some_value");
     }
 
     @Test
     public void shouldHandleEmptyExpectation() {
+        // then
+        exception.expect(IllegalArgumentException.class);
+        exception.expectMessage("Schema must either be a path reference to a *.json file or a json string");
+
         // given
-        assertThat(new JsonSchemaValidator("").isValid("some_value"),
-                is("JsonMappingException - No content to map due to end-of-input" + NEW_LINE +
-                " at [Source: ; line: 1, column: 0]"));
+        new JsonSchemaValidator("").isValid("some_value");
     }
 
     @Test
     public void shouldHandleNullTest() {
         // given
-        assertThat(new JsonSchemaValidator("some_value").isValid(null),
-                is("JsonParseException - Unrecognized token 'some_value': was expecting ('true', 'false' or 'null')" + NEW_LINE +
-                " at [Source: some_value; line: 1, column: 21]"));
+        assertThat(new JsonSchemaValidator(JSON_SCHEMA).isValid(null),
+                is("NullPointerException - null"));
     }
 
     @Test
     public void shouldHandleEmptyTest() {
         // given
-        assertThat(new JsonSchemaValidator("some_value").isValid( ""),
-                is("JsonParseException - Unrecognized token 'some_value': was expecting ('true', 'false' or 'null')" + NEW_LINE +
-                " at [Source: some_value; line: 1, column: 21]"));
+        assertThat(new JsonSchemaValidator(JSON_SCHEMA).isValid( ""),
+                is("JsonMappingException - No content to map due to end-of-input\n at [Source: ; line: 1, column: 0]"));
     }
 }

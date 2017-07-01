@@ -8,12 +8,10 @@ import org.mockserver.model.*;
 public abstract class BodyDTO extends NotDTO {
 
     private Body.Type type;
-    protected String contentType;
 
-    public BodyDTO(Body.Type type, Boolean not, String contentType) {
+    public BodyDTO(Body.Type type, Boolean not) {
         super(not);
         this.type = type;
-        this.contentType = contentType;
     }
 
     public BodyDTO() {
@@ -56,10 +54,6 @@ public abstract class BodyDTO extends NotDTO {
 
     public Body.Type getType() {
         return type;
-    }
-
-    public String getContentType() {
-        return contentType;
     }
 
     public abstract Body buildObject();

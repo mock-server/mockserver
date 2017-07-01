@@ -39,7 +39,7 @@ public class HttpResponseSerializerTest {
     private final HttpResponseDTO fullHttpResponseDTO =
             new HttpResponseDTO()
                     .setStatusCode(123)
-                    .setBody(BodyDTO.createDTO(new StringBody("somebody")))
+                    .setBody(BodyWithContentTypeDTO.createDTO(new StringBody("somebody")))
                     .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("headerName", Arrays.asList("headerValue")))))
                     .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("cookieName", "cookieValue"))))
                     .setDelay(new DelayDTO(new Delay(TimeUnit.MICROSECONDS, 3)));

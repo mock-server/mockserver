@@ -6,6 +6,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import org.mockserver.filters.RequestLogFilter;
 import org.mockserver.logging.LogFormatter;
+import org.mockserver.model.BodyWithContentType;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.server.netty.codec.MockServerResponseEncoder;
@@ -52,8 +53,13 @@ public class EchoServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
             HttpResponse httpResponse =
                     response()
                             .withStatusCode(request.getPath().equalsIgnoreCase("/not_found") ? NOT_FOUND.code() : OK.code())
-                            .withBody(request.getBody())
                             .withHeaders(request.getHeaders());
+
+            if (request.getBody() instanceof BodyWithContentType) {
+                httpResponse.withBody((BodyWithContentType) request.getBody());
+            } else {
+                httpResponse.withBody(request.getBodyAsString());
+            }
 
             // set hop-by-hop headers
             final int length = httpResponse.getBodyAsString() != null ? httpResponse.getBodyAsString().length() : 0;

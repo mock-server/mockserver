@@ -19,6 +19,9 @@ public class BinaryBodyDTOSerializer extends StdSerializer<BinaryBodyDTO> {
     @Override
     public void serialize(BinaryBodyDTO binaryBodyDTO, JsonGenerator jgen, SerializerProvider provider) throws IOException {
         jgen.writeStartObject();
+        if (binaryBodyDTO.getNot() != null && binaryBodyDTO.getNot()) {
+            jgen.writeBooleanField("not", binaryBodyDTO.getNot());
+        }
         if (binaryBodyDTO.getContentType() != null) {
             jgen.writeStringField("contentType", binaryBodyDTO.getContentType());
         }

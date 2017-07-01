@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.mockserver.client.serialization.deserializers.body.BodyDTODeserializer;
+import org.mockserver.client.serialization.deserializers.body.BodyWithContentTypeDTODeserializer;
 import org.mockserver.client.serialization.deserializers.string.NottableStringDeserializer;
 import org.mockserver.client.serialization.model.*;
 import org.mockserver.client.serialization.serializers.body.*;
@@ -66,6 +67,7 @@ public class ObjectMapperFactory {
             addSerializer(HttpRequestDTO.class, new HttpRequestDTOSerializer());
             // request body
             addDeserializer(BodyDTO.class, new BodyDTODeserializer());
+            addDeserializer(BodyWithContentTypeDTO.class, new BodyWithContentTypeDTODeserializer());
             addSerializer(BinaryBody.class, new BinaryBodySerializer());
             addSerializer(BinaryBodyDTO.class, new BinaryBodyDTOSerializer());
             addSerializer(JsonBody.class, new JsonBodySerializer());
