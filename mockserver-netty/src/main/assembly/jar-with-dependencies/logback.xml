@@ -51,13 +51,13 @@
         <encoder>
             <pattern>%date %level %logger{20} %msg%n</pattern>
         </encoder>
-        <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
-            <evaluator>
-                <expression>level &gt;= INFO &amp;&amp; level &lt; WARN</expression>
-            </evaluator>
-            <OnMismatch>DENY</OnMismatch>
-            <OnMatch>NEUTRAL</OnMatch>
-        </filter>
+        <!--<filter class="ch.qos.logback.core.filter.EvaluatorFilter">-->
+            <!--<evaluator>-->
+                <!--<expression>level &gt;= INFO &amp;&amp; level &lt; WARN</expression>-->
+            <!--</evaluator>-->
+            <!--<OnMismatch>DENY</OnMismatch>-->
+            <!--<OnMatch>NEUTRAL</OnMatch>-->
+        <!--</filter>-->
     </appender>
 
     <!-- make console log asynchronous -->

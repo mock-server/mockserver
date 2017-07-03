@@ -72,8 +72,6 @@ public class MockServerHandlerTest {
     VerificationSerializer mockVerificationSerializer;
     @Mock
     VerificationSequenceSerializer mockVerificationSequenceSerializer;
-    @Mock
-    JsonSchemaValidator expectationValidator;
     // netty
     @Mock
     ChannelHandlerContext mockChannelHandlerContext;
@@ -95,9 +93,7 @@ public class MockServerHandlerTest {
         initMocks(this);
 
         // given - serializers
-        when(mockExpectationSerializer.deserialize(anyString())).thenReturn(mockExpectation);
-        when(mockExpectationSerializer.returnJSONObjects(anyString())).thenReturn(Collections.singletonList("some_content"));
-        when(expectationValidator.isValid(anyString())).thenReturn("");
+        when(mockExpectationSerializer.deserializeArray(anyString())).thenReturn(new Expectation[]{mockExpectation});
         when(mockHttpRequestSerializer.deserialize(anyString())).thenReturn(mockHttpRequest);
         when(mockVerificationSerializer.deserialize(anyString())).thenReturn(mockVerification);
         when(mockVerificationSequenceSerializer.deserialize(anyString())).thenReturn(mockVerificationSequence);

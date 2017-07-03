@@ -1,5 +1,4 @@
 {
-  "title": "cookies",
   "type": "array",
   "additionalProperties": false,
   "items": {
@@ -8,8 +7,11 @@
       "name": {
         "type": "string"
       },
-      "value": {
-        "type": "string"
+      "values": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
       }
     }
   }

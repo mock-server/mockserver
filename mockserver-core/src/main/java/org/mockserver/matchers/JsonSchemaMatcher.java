@@ -17,7 +17,7 @@ public class JsonSchemaMatcher extends BodyMatcher<String> {
     }
 
     protected String[] fieldsExcludedFromEqualsAndHashCode() {
-        return new String[]{"logger", "objectMapper"};
+        return new String[]{"logger", "jsonSchemaValidator"};
     }
 
     public boolean matches(String matched) {

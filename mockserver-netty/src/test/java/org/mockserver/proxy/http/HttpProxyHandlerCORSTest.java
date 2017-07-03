@@ -30,7 +30,7 @@ public class HttpProxyHandlerCORSTest extends HttpProxyHandlerTest {
         embeddedChannel.writeInbound(request);
 
         // then - correct response written to ChannelHandlerContext
-        HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
+        HttpResponse httpResponse = embeddedChannel.readOutbound();
         assertThat(httpResponse.getStatusCode(), is(200));
         assertThat(httpResponse.getHeader("Access-Control-Allow-Origin"), contains("*"));
         assertThat(httpResponse.getHeader("Access-Control-Allow-Methods"), contains("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"));
@@ -49,7 +49,7 @@ public class HttpProxyHandlerCORSTest extends HttpProxyHandlerTest {
         embeddedChannel.writeInbound(request);
 
         // then - correct response written to ChannelHandlerContext
-        HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
+        HttpResponse httpResponse = embeddedChannel.readOutbound();
         assertThat(httpResponse.getStatusCode(), is(404));
         assertThat(httpResponse.getHeader("Access-Control-Allow-Origin"), empty());
         assertThat(httpResponse.getHeader("Access-Control-Allow-Methods"), empty());
@@ -72,7 +72,7 @@ public class HttpProxyHandlerCORSTest extends HttpProxyHandlerTest {
             embeddedChannel.writeInbound(request);
 
             // then - correct response written to ChannelHandlerContext
-            HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
+            HttpResponse httpResponse = embeddedChannel.readOutbound();
             assertThat(httpResponse.getStatusCode(), is(404));
             assertThat(httpResponse.getHeader("Access-Control-Allow-Origin"), empty());
             assertThat(httpResponse.getHeader("Access-Control-Allow-Methods"), empty());
@@ -102,7 +102,7 @@ public class HttpProxyHandlerCORSTest extends HttpProxyHandlerTest {
             embeddedChannel.writeInbound(request);
 
             // then - correct response written to ChannelHandlerContext
-            HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
+            HttpResponse httpResponse = embeddedChannel.readOutbound();
             assertThat(httpResponse.getStatusCode(), is(200));
             assertThat(httpResponse.getHeader("Access-Control-Allow-Origin"), contains("*"));
             assertThat(httpResponse.getHeader("Access-Control-Allow-Methods"), contains("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"));
@@ -125,7 +125,7 @@ public class HttpProxyHandlerCORSTest extends HttpProxyHandlerTest {
         embeddedChannel.writeInbound(request);
 
         // then - correct response written to ChannelHandlerContext
-        HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
+        HttpResponse httpResponse = embeddedChannel.readOutbound();
         assertThat(httpResponse.getHeader("Access-Control-Allow-Origin"), empty());
         assertThat(httpResponse.getHeader("Access-Control-Allow-Methods"), empty());
         assertThat(httpResponse.getHeader("Access-Control-Expose-Headers"), empty());
@@ -147,7 +147,7 @@ public class HttpProxyHandlerCORSTest extends HttpProxyHandlerTest {
             embeddedChannel.writeInbound(request);
 
             // then - correct response written to ChannelHandlerContext
-            HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
+            HttpResponse httpResponse = embeddedChannel.readOutbound();
             assertThat(httpResponse.getHeader("Access-Control-Allow-Origin"), contains("*"));
             assertThat(httpResponse.getHeader("Access-Control-Allow-Methods"), contains("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"));
             assertThat(httpResponse.getHeader("Access-Control-Allow-Headers"), contains("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
@@ -168,7 +168,7 @@ public class HttpProxyHandlerCORSTest extends HttpProxyHandlerTest {
         embeddedChannel.writeInbound(request);
 
         // then - correct response written to ChannelHandlerContext
-        HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
+        HttpResponse httpResponse = embeddedChannel.readOutbound();
         assertThat(httpResponse.getHeader("Access-Control-Allow-Origin"), contains("*"));
         assertThat(httpResponse.getHeader("Access-Control-Allow-Methods"), contains("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"));
         assertThat(httpResponse.getHeader("Access-Control-Allow-Headers"), contains("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
@@ -191,7 +191,7 @@ public class HttpProxyHandlerCORSTest extends HttpProxyHandlerTest {
             embeddedChannel.writeInbound(request);
 
             // then - correct response written to ChannelHandlerContext
-            HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
+            HttpResponse httpResponse = embeddedChannel.readOutbound();
             assertThat(httpResponse.getHeader("Access-Control-Allow-Origin"), empty());
             assertThat(httpResponse.getHeader("Access-Control-Allow-Methods"), empty());
             assertThat(httpResponse.getHeader("Access-Control-Expose-Headers"), empty());
@@ -211,7 +211,7 @@ public class HttpProxyHandlerCORSTest extends HttpProxyHandlerTest {
         embeddedChannel.writeInbound(request);
 
         // then - correct response written to ChannelHandlerContext
-        HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
+        HttpResponse httpResponse = embeddedChannel.readOutbound();
         assertThat(httpResponse.getHeader("Access-Control-Allow-Origin"), contains("*"));
         assertThat(httpResponse.getHeader("Access-Control-Allow-Methods"), contains("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"));
         assertThat(httpResponse.getHeader("Access-Control-Allow-Headers"), contains("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
@@ -229,7 +229,7 @@ public class HttpProxyHandlerCORSTest extends HttpProxyHandlerTest {
         embeddedChannel.writeInbound(request);
 
         // then - correct response written to ChannelHandlerContext
-        HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
+        HttpResponse httpResponse = embeddedChannel.readOutbound();
         assertThat(httpResponse.getHeader("Access-Control-Allow-Origin"), contains("*"));
         assertThat(httpResponse.getHeader("Access-Control-Allow-Methods"), contains("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"));
         assertThat(httpResponse.getHeader("Access-Control-Allow-Headers"), contains("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
@@ -247,7 +247,7 @@ public class HttpProxyHandlerCORSTest extends HttpProxyHandlerTest {
         embeddedChannel.writeInbound(request);
 
         // then - correct response written to ChannelHandlerContext
-        HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
+        HttpResponse httpResponse = embeddedChannel.readOutbound();
         assertThat(httpResponse.getHeader("Access-Control-Allow-Origin"), contains("*"));
         assertThat(httpResponse.getHeader("Access-Control-Allow-Methods"), contains("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"));
         assertThat(httpResponse.getHeader("Access-Control-Allow-Headers"), contains("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
@@ -266,7 +266,7 @@ public class HttpProxyHandlerCORSTest extends HttpProxyHandlerTest {
         embeddedChannel.writeInbound(request);
 
         // then - correct response written to ChannelHandlerContext
-        HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
+        HttpResponse httpResponse = embeddedChannel.readOutbound();
         assertThat(httpResponse.getHeader("Access-Control-Allow-Origin"), contains("*"));
         assertThat(httpResponse.getHeader("Access-Control-Allow-Methods"), contains("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"));
         assertThat(httpResponse.getHeader("Access-Control-Allow-Headers"), contains("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
@@ -285,7 +285,7 @@ public class HttpProxyHandlerCORSTest extends HttpProxyHandlerTest {
         embeddedChannel.writeInbound(request);
 
         // then - correct response written to ChannelHandlerContext
-        HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
+        HttpResponse httpResponse = embeddedChannel.readOutbound();
         assertThat(httpResponse.getHeader("Access-Control-Allow-Origin"), contains("*"));
         assertThat(httpResponse.getHeader("Access-Control-Allow-Methods"), contains("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"));
         assertThat(httpResponse.getHeader("Access-Control-Allow-Headers"), contains("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));

@@ -7,6 +7,7 @@ import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.client.serialization.VerificationSequenceSerializer;
 import org.mockserver.client.serialization.VerificationSerializer;
+import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.slf4j.Logger;
@@ -15,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import java.net.InetSocketAddress;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
+import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static org.mockserver.character.Character.NEW_LINE;
 
 /**
@@ -68,8 +70,13 @@ public abstract class AbstractClient {
     }
 
     protected HttpResponse sendRequest(HttpRequest httpRequest) {
-        httpRequest.withHeader(HOST.toString(), host + ":" + port);
-        return nettyHttpClient.sendRequest(httpRequest);
+        HttpResponse httpResponse = nettyHttpClient.sendRequest(
+                httpRequest.withHeader(HOST.toString(), host + ":" + port)
+        );
+        if (httpResponse.getStatusCode() == BAD_REQUEST.code()) {
+            throw new IllegalArgumentException(httpResponse.getBodyAsString());
+        }
+        return httpResponse;
     }
 
     protected String formatErrorMessage(String message, Object... objects) {

@@ -142,7 +142,7 @@ public class MockServerHandlerGeneralOperationsTest extends MockServerHandlerTes
         embeddedChannel.writeInbound(request);
 
         // then - request deserialized
-        verify(mockExpectationSerializer).deserialize("some_content");
+        verify(mockExpectationSerializer).deserializeArray("some_content");
 
         // and - expectation correctly setup
         verify(mockMockServerMatcher).when(any(HttpRequest.class), any(Times.class), any(TimeToLive.class));

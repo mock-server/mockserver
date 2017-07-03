@@ -73,7 +73,7 @@ public class VerificationSequenceSerializerTest {
     public void deserializeHandleException() throws IOException {
         // given
         thrown.expect(RuntimeException.class);
-        thrown.expectMessage("Exception while parsing response [requestBytes] for verificationSequence");
+        thrown.expectMessage("Exception while parsing [requestBytes] for verificationSequence");
         // and
         when(objectMapper.readValue(eq("requestBytes"), same(VerificationSequenceDTO.class))).thenThrow(new RuntimeException("TEST EXCEPTION"));
 

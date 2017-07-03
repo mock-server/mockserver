@@ -8,6 +8,7 @@ import org.mockserver.client.serialization.PortBindingSerializer;
 import org.mockserver.client.serialization.VerificationSequenceSerializer;
 import org.mockserver.client.serialization.VerificationSerializer;
 import org.mockserver.client.serialization.curl.HttpRequestToCurlSerializer;
+import org.mockserver.cors.CORSHeaders;
 import org.mockserver.filters.*;
 import org.mockserver.logging.LogFormatter;
 import org.mockserver.mappers.HttpServletRequestToMockServerRequestDecoder;
@@ -56,6 +57,8 @@ public class ProxyServlet extends HttpServlet {
     private PortBindingSerializer portBindingSerializer = new PortBindingSerializer();
     private VerificationSerializer verificationSerializer = new VerificationSerializer();
     private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer();
+    // CORS
+    private CORSHeaders addCORSHeaders = new CORSHeaders();
 
     public ProxyServlet() {
         filters.withFilter(request(), requestLogFilter);
@@ -151,7 +154,7 @@ public class ProxyServlet extends HttpServlet {
 
     private void addCORSHeadersForAPI(HttpServletResponse httpServletResponse) {
         if (enableCORSForAPI()) {
-            addCORSHeaders(httpServletResponse);
+            addCORSHeaders.addCORSHeaders(httpServletResponse);
         } else {
             addCORSHeadersForAllResponses(httpServletResponse);
         }
@@ -159,30 +162,7 @@ public class ProxyServlet extends HttpServlet {
 
     private void addCORSHeadersForAllResponses(HttpServletResponse httpServletResponse) {
         if (enableCORSForAllResponses()) {
-            addCORSHeaders(httpServletResponse);
-        }
-    }
-
-    private void addCORSHeaders(HttpServletResponse httpServletResponse) {
-        String methods = "CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE";
-        String headers = "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary";
-        if (httpServletResponse.getHeaders("Access-Control-Allow-Origin").isEmpty()) {
-            httpServletResponse.setHeader("Access-Control-Allow-Origin", "*");
-        }
-        if (httpServletResponse.getHeaders("Access-Control-Allow-Methods").isEmpty()) {
-            httpServletResponse.setHeader("Access-Control-Allow-Methods", methods);
-        }
-        if (httpServletResponse.getHeaders("Access-Control-Allow-Headers").isEmpty()) {
-            httpServletResponse.setHeader("Access-Control-Allow-Headers", headers);
-        }
-        if (httpServletResponse.getHeaders("Access-Control-Expose-Headers").isEmpty()) {
-            httpServletResponse.setHeader("Access-Control-Expose-Headers", headers);
-        }
-        if (httpServletResponse.getHeaders("Access-Control-Max-Age").isEmpty()) {
-            httpServletResponse.setHeader("Access-Control-Max-Age", "1");
-        }
-        if (httpServletResponse.getHeaders("X-CORS").isEmpty()) {
-            httpServletResponse.setHeader("X-CORS", "MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORSForAPI(false) or -Dmockserver.disableCORS=false");
+            addCORSHeaders.addCORSHeaders(httpServletResponse);
         }
     }
 

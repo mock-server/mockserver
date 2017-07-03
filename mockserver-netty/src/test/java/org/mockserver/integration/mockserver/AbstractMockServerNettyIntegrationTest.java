@@ -3,16 +3,13 @@ package org.mockserver.integration.mockserver;
 import com.google.common.base.Charsets;
 import com.google.common.net.MediaType;
 import org.apache.commons.io.IOUtils;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.mockserver.integration.server.SameJVMAbstractClientServerIntegrationTest;
 import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.mock.action.ExpectationCallback;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.server.TestClasspathTestExpectationCallback;
-import org.mockserver.socket.KeyStoreFactory;
 import org.mockserver.socket.PortFactory;
 import org.mockserver.streams.IOStreamUtils;
 
@@ -27,9 +24,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static io.netty.handler.codec.http.HttpHeaderNames.CONNECTION;
-import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH;
-import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
+import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.AnyOf.anyOf;
 import static org.hamcrest.core.Is.is;
@@ -43,9 +38,7 @@ import static org.mockserver.model.HttpError.error;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
-import static org.mockserver.model.HttpStatusCode.ACCEPTED_202;
-import static org.mockserver.model.HttpStatusCode.NOT_ACCEPTABLE_406;
-import static org.mockserver.model.HttpStatusCode.OK_200;
+import static org.mockserver.model.HttpStatusCode.*;
 import static org.mockserver.socket.SSLSocketFactory.sslSocketFactory;
 
 /**
@@ -131,7 +124,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
 
     @Test
     public void shouldCallbackToSpecifiedObjectForVeryLargeRequestAndResponses() {
-        int bytes = 65536*10;
+        int bytes = 65536 * 10;
         char[] chars = new char[bytes];
         Arrays.fill(chars, 'a');
         final String veryLargeString = new String(chars);
@@ -283,7 +276,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
             // - in http
             assertEquals(
                     response()
-                            .withStatusCode(NOT_ACCEPTABLE_406.code())
+                            .withStatusCode(BAD_REQUEST_400.code())
                             .withHeader(CONTENT_TYPE.toString(), "text/plain; charset=utf-8")
                             .withBody("Exception while binding MockServer to port " + newPort + " port already in use"),
                     makeRequest(
