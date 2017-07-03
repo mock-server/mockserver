@@ -1,25 +1,27 @@
 {
-  "title": "response",
+  "title": "response to return",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "body": {
-      "type": "string"
+      "$ref": "#/definitions/bodyWithContentType"
     },
     "delay": {
-      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/delay.json"
+      "$ref": "#/definitions/delay"
     },
     "cookies": {
-      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/cookies.json"
+      "$ref": "#/definitions/keyToValue"
     },
     "connectionOptions": {
-      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/connectionOptions.json"
+      "$ref": "#/definitions/connectionOptions"
     },
     "headers": {
-      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/headers.json"
+      "$ref": "#/definitions/keyToMultiValue"
     },
     "statusCode": {
       "type": "integer"
     }
+  },
+  "definitions": {
   }
 }

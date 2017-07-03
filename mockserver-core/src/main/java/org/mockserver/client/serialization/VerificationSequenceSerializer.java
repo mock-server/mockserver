@@ -35,8 +35,8 @@ public class VerificationSequenceSerializer implements Serializer<VerificationSe
                     verificationSequence = verificationDTO.buildObject();
                 }
             } catch (Exception ioe) {
-                logger.info("Exception while parsing response [" + jsonVerification + "] for verificationSequence", ioe);
-                throw new RuntimeException("Exception while parsing response [" + jsonVerification + "] for verificationSequence", ioe);
+                logger.info("Exception while parsing [" + jsonVerification + "] for verificationSequence", ioe);
+                throw new RuntimeException("Exception while parsing [" + jsonVerification + "] for verificationSequence", ioe);
             }
         }
         return verificationSequence;

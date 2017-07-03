@@ -1,6 +1,7 @@
 package org.mockserver.client.server;
 
 import com.google.common.base.Charsets;
+import joptsimple.internal.Strings;
 import org.mockserver.client.AbstractClient;
 import org.mockserver.client.netty.SocketConnectionException;
 import org.mockserver.matchers.TimeToLive;
@@ -19,8 +20,8 @@ import java.util.concurrent.TimeUnit;
 
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
-import static org.mockserver.verify.VerificationTimes.exactly;
 import static org.mockserver.verify.Verification.verification;
+import static org.mockserver.verify.VerificationTimes.exactly;
 
 /**
  * @author jamesdbloom
@@ -30,8 +31,8 @@ public class MockServerClient extends AbstractClient implements Closeable {
     /**
      * Start the client communicating to a MockServer at the specified host and port
      * for example:
-     *
-     *   MockServerClient mockServerClient = new MockServerClient("localhost", 1080);
+     * <p>
+     * MockServerClient mockServerClient = new MockServerClient("localhost", 1080);
      *
      * @param host the host for the MockServer to communicate with
      * @param port the port for the MockServer to communicate with
@@ -43,11 +44,11 @@ public class MockServerClient extends AbstractClient implements Closeable {
     /**
      * Start the client communicating to a MockServer at the specified host and port
      * and contextPath for example:
+     * <p>
+     * MockServerClient mockServerClient = new MockServerClient("localhost", 1080, "/mockserver");
      *
-     *   MockServerClient mockServerClient = new MockServerClient("localhost", 1080, "/mockserver");
-     *
-     * @param host the host for the MockServer to communicate with
-     * @param port the port for the MockServer to communicate with
+     * @param host        the host for the MockServer to communicate with
+     * @param port        the port for the MockServer to communicate with
      * @param contextPath the context path that the MockServer war is deployed to
      */
     public MockServerClient(String host, int port, String contextPath) {
@@ -57,20 +58,20 @@ public class MockServerClient extends AbstractClient implements Closeable {
     /**
      * Specify an unlimited expectation that will respond regardless of the number of matching http
      * for example:
-     *
-     *   mockServerClient
-     *           .when(
-     *                   request()
-     *                           .withPath("/some_path")
-     *                           .withBody("some_request_body")
-     *           )
-     *           .respond(
-     *                   response()
-     *                           .withBody("some_response_body")
-     *                           .withHeaders(
-     *                                   new Header("responseName", "responseValue")
-     *                           )
-     *           );
+     * <p>
+     * mockServerClient
+     * .when(
+     * request()
+     * .withPath("/some_path")
+     * .withBody("some_request_body")
+     * )
+     * .respond(
+     * response()
+     * .withBody("some_response_body")
+     * .withHeaders(
+     * new Header("responseName", "responseValue")
+     * )
+     * );
      *
      * @param httpRequest the http request that must be matched for this expectation to respond
      * @return an Expectation object that can be used to specify the response
@@ -82,21 +83,21 @@ public class MockServerClient extends AbstractClient implements Closeable {
     /**
      * Specify an limited expectation that will respond a specified number of times when the http is matched
      * for example:
-     *
-     *   mockServerClient
-     *           .when(
-     *                   new HttpRequest()
-     *                           .withPath("/some_path")
-     *                           .withBody("some_request_body"),
-     *                   Times.exactly(5)
-     *           )
-     *           .respond(
-     *                   new HttpResponse()
-     *                           .withBody("some_response_body")
-     *                           .withHeaders(
-     *                                   new Header("responseName", "responseValue")
-     *                           )
-     *           );
+     * <p>
+     * mockServerClient
+     * .when(
+     * new HttpRequest()
+     * .withPath("/some_path")
+     * .withBody("some_request_body"),
+     * Times.exactly(5)
+     * )
+     * .respond(
+     * new HttpResponse()
+     * .withBody("some_response_body")
+     * .withHeaders(
+     * new Header("responseName", "responseValue")
+     * )
+     * );
      *
      * @param httpRequest the http request that must be matched for this expectation to respond
      * @param times       the number of times to respond when this http is matched
@@ -109,22 +110,22 @@ public class MockServerClient extends AbstractClient implements Closeable {
     /**
      * Specify an limited expectation that will respond a specified number of times when the http is matched
      * for example:
-     *
-     *   mockServerClient
-     *           .when(
-     *                   new HttpRequest()
-     *                           .withPath("/some_path")
-     *                           .withBody("some_request_body"),
-     *                   Times.exactly(5),
-     *                   TimeToLive.exactly(TimeUnit.SECONDS, 120),
-     *           )
-     *           .respond(
-     *                   new HttpResponse()
-     *                           .withBody("some_response_body")
-     *                           .withHeaders(
-     *                                   new Header("responseName", "responseValue")
-     *                           )
-     *           );
+     * <p>
+     * mockServerClient
+     * .when(
+     * new HttpRequest()
+     * .withPath("/some_path")
+     * .withBody("some_request_body"),
+     * Times.exactly(5),
+     * TimeToLive.exactly(TimeUnit.SECONDS, 120),
+     * )
+     * .respond(
+     * new HttpResponse()
+     * .withBody("some_response_body")
+     * .withHeaders(
+     * new Header("responseName", "responseValue")
+     * )
+     * );
      *
      * @param httpRequest the http request that must be matched for this expectation to respond
      * @param times       the number of times to respond when this http is matched
@@ -162,7 +163,7 @@ public class MockServerClient extends AbstractClient implements Closeable {
     /**
      * Returns whether MockServer is running, by polling the MockServer a configurable amount of times
      */
-    public boolean isRunning(int attempts, long  timeout, TimeUnit timeUnit) {
+    public boolean isRunning(int attempts, long timeout, TimeUnit timeUnit) {
         try {
             HttpResponse httpResponse = sendRequest(request().withMethod("PUT").withPath(calculatePath("status")));
             if (httpResponse.getStatusCode() == HttpStatusCode.OK_200.code()) {
@@ -175,7 +176,7 @@ public class MockServerClient extends AbstractClient implements Closeable {
                 } catch (InterruptedException e) {
                     // ignore interrupted exception
                 }
-                return isRunning(attempts  - 1, timeout, timeUnit);
+                return isRunning(attempts - 1, timeout, timeUnit);
             }
         } catch (SocketConnectionException sce) {
             return false;
@@ -344,7 +345,11 @@ public class MockServerClient extends AbstractClient implements Closeable {
      */
     public HttpRequest[] retrieveRecordedRequests(HttpRequest httpRequest) {
         HttpResponse httpResponse = sendRequest(request().withMethod("PUT").withPath(calculatePath("retrieve")).withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", Charsets.UTF_8));
-        return httpRequestSerializer.deserializeArray(httpResponse.getBodyAsString());
+        if (!Strings.isNullOrEmpty(httpResponse.getBodyAsString())) {
+            return httpRequestSerializer.deserializeArray(httpResponse.getBodyAsString());
+        } else {
+            return new HttpRequest[0];
+        }
     }
 
     /**
@@ -355,6 +360,10 @@ public class MockServerClient extends AbstractClient implements Closeable {
      */
     public Expectation[] retrieveExistingExpectations(HttpRequest httpRequest) {
         HttpResponse httpResponse = sendRequest(request().withMethod("PUT").withPath(calculatePath("retrieve")).withQueryStringParameter("type", "expectation").withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", Charsets.UTF_8));
-        return expectationSerializer.deserializeArray(httpResponse.getBodyAsString());
+        if (!Strings.isNullOrEmpty(httpResponse.getBodyAsString())) {
+            return expectationSerializer.deserializeArray(httpResponse.getBodyAsString());
+        } else {
+            return new Expectation[0];
+        }
     }
 }

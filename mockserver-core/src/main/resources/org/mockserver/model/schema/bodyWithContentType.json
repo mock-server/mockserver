@@ -1,5 +1,5 @@
 {
-  "title": "request body matcher",
+  "title": "response body",
   "oneOf": [
     {
       "type": "object",
@@ -56,45 +56,11 @@
         },
         "type": {
           "enum": [
-            "JSON_SCHEMA"
-          ]
-        },
-        "jsonSchema": {
-          "type": "string"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "not": {
-          "type": "boolean"
-        },
-        "type": {
-          "enum": [
             "PARAMETERS"
           ]
         },
         "parameters": {
           "$ref": "#/definitions/keyToMultiValue"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "not": {
-          "type": "boolean"
-        },
-        "type": {
-          "enum": [
-            "REGEX"
-          ]
-        },
-        "regex": {
-          "type": "string"
         }
       }
     },
@@ -134,40 +100,6 @@
           "type": "string"
         },
         "contentType": {
-          "type": "string"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "not": {
-          "type": "boolean"
-        },
-        "type": {
-          "enum": [
-            "XML_SCHEMA"
-          ]
-        },
-        "xmlSchema": {
-          "type": "string"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "not": {
-          "type": "boolean"
-        },
-        "type": {
-          "enum": [
-            "XPATH"
-          ]
-        },
-        "xpath": {
           "type": "string"
         }
       }

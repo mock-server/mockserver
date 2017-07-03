@@ -35,8 +35,8 @@ public class VerificationSerializer implements Serializer<Verification> {
                     verification = verificationDTO.buildObject();
                 }
             } catch (Exception e) {
-                logger.info("Exception while parsing response [" + jsonVerification + "] for verification", e);
-                throw new RuntimeException("Exception while parsing response [" + jsonVerification + "] for verification", e);
+                logger.info("Exception while parsing [" + jsonVerification + "] for verification", e);
+                throw new RuntimeException("Exception while parsing [" + jsonVerification + "] for verification", e);
             }
         }
         return verification;

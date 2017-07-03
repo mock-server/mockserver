@@ -94,7 +94,7 @@ public class HttpRequestSerializationErrorsTest {
     public void shouldHandleExceptionWhileDeserializingArray() throws IOException {
         // given
         thrown.expect(RuntimeException.class);
-        thrown.expectMessage("Exception while parsing response [requestBytes] for HttpRequest[]");
+        thrown.expectMessage("Exception while parsing [requestBytes] for HttpRequest[]");
         // and
         when(objectMapper.readValue(eq("requestBytes"), same(HttpRequestDTO[].class))).thenThrow(new IOException("TEST EXCEPTION"));
 

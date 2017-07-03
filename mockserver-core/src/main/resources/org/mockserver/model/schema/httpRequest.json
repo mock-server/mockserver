@@ -4,22 +4,30 @@
   "additionalProperties": false,
   "properties": {
     "body": {
-      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/body.json"
+      "$ref": "#/definitions/body"
     },
     "headers": {
-      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/headers.json"
+      "$ref": "#/definitions/keyToMultiValue"
     },
     "cookies": {
-      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/cookies.json"
+      "$ref": "#/definitions/keyToValue"
     },
     "queryStringParameters": {
-      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/queryStringParameters.json"
+      "$ref": "#/definitions/keyToMultiValue"
     },
     "path": {
       "type": "string"
     },
     "method": {
       "type": "string"
+    },
+    "secure": {
+      "type": "boolean"
+    },
+    "keepAlive": {
+      "type": "boolean"
     }
+  },
+  "definitions": {
   }
 }

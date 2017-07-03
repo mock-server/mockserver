@@ -4,13 +4,57 @@
   "additionalProperties": false,
   "properties": {
     "httpRequest": {
-      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/httpRequest.json"
+      "$ref": "#/definitions/httpRequest"
     },
     "httpResponse": {
-      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/httpResponse.json"
+      "$ref": "#/definitions/httpResponse"
+    },
+    "httpForward": {
+      "$ref": "#/definitions/httpForward"
+    },
+    "httpClassCallback": {
+      "$ref": "#/definitions/httpClassCallback"
+    },
+    "httpObjectCallback": {
+      "$ref": "#/definitions/httpObjectCallback"
+    },
+    "httpError": {
+      "$ref": "#/definitions/httpError"
     },
     "times": {
-      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/times.json"
+      "$ref": "#/definitions/times"
+    },
+    "timeToLive": {
+      "$ref": "#/definitions/timeToLive"
     }
+  },
+  "oneOf": [
+    {
+      "required": [
+        "httpResponse"
+      ]
+    },
+    {
+      "required": [
+        "httpForward"
+      ]
+    },
+    {
+      "required": [
+        "httpClassCallback"
+      ]
+    },
+    {
+      "required": [
+        "httpError"
+      ]
+    },
+    {
+      "required": [
+        "httpObjectCallback"
+      ]
+    }
+  ],
+  "definitions": {
   }
 }

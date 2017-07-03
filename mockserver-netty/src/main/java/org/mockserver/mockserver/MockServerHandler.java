@@ -1,5 +1,6 @@
 package org.mockserver.mockserver;
 
+import com.google.common.base.Strings;
 import com.google.common.net.MediaType;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
@@ -9,6 +10,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpServerCodec;
 import org.mockserver.client.serialization.*;
+import org.mockserver.cors.CORSHeaders;
 import org.mockserver.file.FileReader;
 import org.mockserver.filters.RequestLogFilter;
 import org.mockserver.logging.LogFormatter;
@@ -27,7 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.BindException;
-import java.util.ArrayList;
 import java.util.List;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
@@ -63,6 +64,8 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
     private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer();
     // validators
     private Validator<String> expectationValidator = new JsonSchemaValidator(FileReader.readFileFromClassPathOrPath("org/mockserver/model/schema/expectationsFullModel.json"));
+    // CORS
+    private CORSHeaders addCORSHeaders = new CORSHeaders();
 
     public MockServerHandler(MockServer server, MockServerMatcher mockServerMatcher, WebSocketClientRegistry webSocketClientRegistry, RequestLogFilter requestLogFilter) {
         this.server = server;
@@ -94,7 +97,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                     writeResponse(ctx, request, OK, portBindingSerializer.serialize(portBinding(actualPortBindings)), "application/json");
                 } catch (RuntimeException e) {
                     if (e.getCause() instanceof BindException) {
-                        writeResponse(ctx, request, NOT_ACCEPTABLE, e.getMessage() + " port already in use", MediaType.create("text", "plain").toString());
+                        writeResponse(ctx, request, BAD_REQUEST, e.getMessage() + " port already in use", MediaType.create("text", "plain").toString());
                     } else {
                         throw e;
                     }
@@ -102,37 +105,26 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
             } else if (request.matches("PUT", "/expectation")) {
 
-                List<String> strings = expectationSerializer.returnJSONObjects(request.getBodyAsString());
-                if (strings.isEmpty()) {
-                    writeResponse(ctx, request, NOT_ACCEPTABLE, "1 error:\n - an expectation or array of expectations is required", MediaType.create("text", "plain").toString());
-                } else {
-                    List<String> validationErrorsList = new ArrayList<String>();
-                    for (String expectationJson : strings) {
-                        String validationErrors = expectationValidator.isValid(expectationJson);
-                        if (validationErrors.isEmpty()) {
-                            Expectation expectation = expectationSerializer.deserialize(expectationJson);
-                            KeyAndCertificateFactory.addSubjectAlternativeName(expectation.getHttpRequest().getFirstHeader(HOST.toString()));
-                            mockServerMatcher
-                                    .when(expectation.getHttpRequest(), expectation.getTimes(), expectation.getTimeToLive())
-                                    .thenRespond(expectation.getHttpResponse())
-                                    .thenForward(expectation.getHttpForward())
-                                    .thenError(expectation.getHttpError())
-                                    .thenCallback(expectation.getHttpClassCallback())
-                                    .thenCallback(expectation.getHttpObjectCallback());
-                            logFormatter.infoLog("creating expectation:{}", expectation);
-                            writeResponse(ctx, request, CREATED);
-                        } else {
-                            validationErrorsList.add(validationErrors);
-                        }
-                    }
-                    writeResponse(ctx, request, NOT_ACCEPTABLE,
-                            (validationErrorsList.size() > 1 ? "[" : "") + Joiner.on(",\n").join(validationErrorsList) + (validationErrorsList.size() > 1 ? "]" : ""),
-                            MediaType.create("text", "plain").toString());
+                Expectation[] expectations = expectationSerializer.deserializeArray(request.getBodyAsString());
+                for (Expectation expectation : expectations) {
+                    KeyAndCertificateFactory.addSubjectAlternativeName(expectation.getHttpRequest().getFirstHeader(HOST.toString()));
+                    mockServerMatcher
+                            .when(expectation.getHttpRequest(), expectation.getTimes(), expectation.getTimeToLive())
+                            .thenRespond(expectation.getHttpResponse())
+                            .thenForward(expectation.getHttpForward())
+                            .thenError(expectation.getHttpError())
+                            .thenCallback(expectation.getHttpClassCallback())
+                            .thenCallback(expectation.getHttpObjectCallback());
+                    logFormatter.infoLog("creating expectation:{}", expectation);
                 }
+                writeResponse(ctx, request, CREATED);
 
             } else if (request.matches("PUT", "/clear")) {
 
-                org.mockserver.model.HttpRequest httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
+                HttpRequest httpRequest = null;
+                if (!Strings.isNullOrEmpty(request.getBodyAsString())) {
+                    httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
+                }
                 if (request.hasQueryStringParameter("type", "expectation")) {
                     logFormatter.infoLog("clearing expectations that match:{}", httpRequest);
                     mockServerMatcher.clear(httpRequest);
@@ -156,12 +148,19 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
             } else if (request.matches("PUT", "/dumpToLog")) {
 
-                mockServerMatcher.dumpToLog(httpRequestSerializer.deserialize(request.getBodyAsString()));
+                HttpRequest httpRequest = null;
+                if (!Strings.isNullOrEmpty(request.getBodyAsString())) {
+                    httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
+                }
+                mockServerMatcher.dumpToLog(httpRequest);
                 writeResponse(ctx, request, OK);
 
             } else if (request.matches("PUT", "/retrieve")) {
 
-                HttpRequest httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
+                HttpRequest httpRequest = null;
+                if (!Strings.isNullOrEmpty(request.getBodyAsString())) {
+                    httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
+                }
                 if (request.hasQueryStringParameter("type", "expectation")) {
                     Expectation[] expectations = mockServerMatcher.retrieveExpectations(httpRequest);
                     logFormatter.infoLog("retrieving expectations that match:{}", httpRequest);
@@ -236,6 +235,8 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                 }
 
             }
+        } catch (IllegalArgumentException iae) {
+            writeResponse(ctx, request, BAD_REQUEST, iae.getMessage(), MediaType.create("text", "plain").toString());
         } catch (Exception e) {
             logger.error("Exception processing " + request, e);
             writeResponse(ctx, request, response().withStatusCode(BAD_REQUEST.code()).withBody(e.getMessage()));
@@ -255,7 +256,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
             response.updateHeader(header(CONTENT_TYPE.toString(), contentType + "; charset=utf-8"));
         }
         if (enableCORSForAPI()) {
-            addCORSHeaders(response);
+            addCORSHeaders.addCORSHeaders(response);
         }
         writeResponse(ctx, request, response);
     }
@@ -265,35 +266,12 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
             response = notFoundResponse();
         }
         if (enableCORSForAllResponses()) {
-            addCORSHeaders(response);
+            addCORSHeaders.addCORSHeaders(response);
         }
 
         addConnectionHeader(request, response);
 
         writeAndCloseSocket(ctx, request, response);
-    }
-
-    private void addCORSHeaders(HttpResponse response) {
-        String methods = "CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE";
-        String headers = "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary";
-        if (response.getFirstHeader("Access-Control-Allow-Origin").isEmpty()) {
-            response.withHeader("Access-Control-Allow-Origin", "*");
-        }
-        if (response.getFirstHeader("Access-Control-Allow-Methods").isEmpty()) {
-            response.withHeader("Access-Control-Allow-Methods", methods);
-        }
-        if (response.getFirstHeader("Access-Control-Allow-Headers").isEmpty()) {
-            response.withHeader("Access-Control-Allow-Headers", headers);
-        }
-        if (response.getFirstHeader("Access-Control-Expose-Headers").isEmpty()) {
-            response.withHeader("Access-Control-Expose-Headers", headers);
-        }
-        if (response.getFirstHeader("Access-Control-Max-Age").isEmpty()) {
-            response.withHeader("Access-Control-Max-Age", "1");
-        }
-        if (response.getFirstHeader("X-CORS").isEmpty()) {
-            response.withHeader("X-CORS", "MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORSForAPI(false) or -Dmockserver.disableCORS=false");
-        }
     }
 
     private void addConnectionHeader(HttpRequest request, HttpResponse response) {
