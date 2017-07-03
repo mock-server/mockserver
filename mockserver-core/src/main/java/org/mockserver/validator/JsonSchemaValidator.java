@@ -63,6 +63,7 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
     private String formatProcessingReport(ProcessingReport validate) {
         List<String> validationErrors = new ArrayList<String>();
         for (ProcessingMessage processingMessage : validate) {
+            System.out.println("processingMessage = " + processingMessage);
             if (String.valueOf(processingMessage.asJson().get("keyword")).equals("\"oneOf\"")) {
                 StringBuilder oneOfErrorMessage = new StringBuilder("oneOf of the following must be specified ");
                 for (JsonNode jsonNode : processingMessage.asJson().get("reports")) {

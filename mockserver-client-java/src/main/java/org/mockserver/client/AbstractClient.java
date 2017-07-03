@@ -7,7 +7,6 @@ import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.client.serialization.VerificationSequenceSerializer;
 import org.mockserver.client.serialization.VerificationSerializer;
-import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.slf4j.Logger;
@@ -73,7 +72,9 @@ public abstract class AbstractClient {
         HttpResponse httpResponse = nettyHttpClient.sendRequest(
                 httpRequest.withHeader(HOST.toString(), host + ":" + port)
         );
-        if (httpResponse.getStatusCode() == BAD_REQUEST.code()) {
+        if (httpResponse != null &&
+                httpResponse.getStatusCode() != null &&
+                httpResponse.getStatusCode() == BAD_REQUEST.code()) {
             throw new IllegalArgumentException(httpResponse.getBodyAsString());
         }
         return httpResponse;
