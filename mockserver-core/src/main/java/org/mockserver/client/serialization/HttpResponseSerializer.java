@@ -1,5 +1,6 @@
 package org.mockserver.client.serialization;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
 import joptsimple.internal.Strings;
@@ -61,6 +62,17 @@ public class HttpResponseSerializer implements Serializer<HttpResponse> {
         if (Strings.isNullOrEmpty(jsonHttpResponse)) {
             throw new IllegalArgumentException("1 error:\n - a response is required but value was \"" + String.valueOf(jsonHttpResponse) + "\"");
         } else {
+            if (jsonHttpResponse.contains("\"httpResponse\"")) {
+                try {
+                    JsonNode jsonNode = objectMapper.readTree(jsonHttpResponse);
+                    if (jsonNode.has("httpResponse")) {
+                        jsonHttpResponse = jsonNode.get("httpResponse").toString();
+                    }
+                } catch (Exception e) {
+                    logger.error("Exception while parsing [" + jsonHttpResponse + "] for HttpResponse", e);
+                    throw new RuntimeException("Exception while parsing [" + jsonHttpResponse + "] for HttpResponse", e);
+                }
+            }
             String validationErrors = httpResponseValidator.isValid(jsonHttpResponse);
             if (validationErrors.isEmpty()) {
                 HttpResponse httpResponse = null;
@@ -91,12 +103,12 @@ public class HttpResponseSerializer implements Serializer<HttpResponse> {
         if (Strings.isNullOrEmpty(jsonHttpResponses)) {
             throw new IllegalArgumentException("1 error:\n - a response or response array is required but value was \"" + String.valueOf(jsonHttpResponses) + "\"");
         } else {
-            List<String> jsonRequestList = jsonArraySerializer.returnJSONObjects(jsonHttpResponses);
-            if (jsonRequestList.isEmpty()) {
+            List<String> jsonResponseList = jsonArraySerializer.returnJSONObjects(jsonHttpResponses);
+            if (jsonResponseList.isEmpty()) {
                 throw new IllegalArgumentException("1 error:\n - a response or array of response is required");
             } else {
                 List<String> validationErrorsList = new ArrayList<String>();
-                for (String jsonExpecation : jsonRequestList) {
+                for (String jsonExpecation : jsonResponseList) {
                     try {
                         httpResponses.add(deserialize(jsonExpecation));
                     } catch (IllegalArgumentException iae) {

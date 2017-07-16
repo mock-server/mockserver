@@ -1,7 +1,9 @@
 package org.mockserver.client.serialization;
 
 import org.apache.commons.lang3.StringEscapeUtils;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.mockserver.client.serialization.model.*;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
@@ -22,168 +24,18 @@ import static org.mockserver.model.NottableString.string;
  */
 public class ExpectationSerializerIntegrationTest {
 
-    @Test
-    public void shouldIgnoreExtraFields() throws IOException {
-        // given
-        String requestBytes = ("{" + NEW_LINE +
-                "    \"httpRequest\": {" + NEW_LINE +
-                "        \"path\": \"somePath\"," + NEW_LINE +
-                "        \"extra_field\": \"extra_value\"" + NEW_LINE +
-                "    }," + NEW_LINE +
-                "    \"httpResponse\": {" + NEW_LINE +
-                "        \"body\": \"someBody\"," + NEW_LINE +
-                "        \"extra_field\": \"extra_value\"" + NEW_LINE +
-                "    }" + NEW_LINE +
-                "}");
-
-        // when
-        Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
-
-        // then
-        assertEquals(new ExpectationDTO()
-                .setHttpRequest(
-                        new HttpRequestDTO()
-                                .setPath(string("somePath"))
-                )
-                .setHttpResponse(
-                        new HttpResponseDTO()
-                                .setBody(new StringBodyDTO(new StringBody("someBody")))
-                )
-                .buildObject(), expectation);
-    }
-
-    @Test
-    public void shouldIgnoreEmptyStringObjects() throws IOException {
-        // given
-        String requestBytes = ("{" + NEW_LINE +
-                "    \"httpRequest\": {" + NEW_LINE +
-                "        \"path\": \"somePath\"" + NEW_LINE +
-                "    }," + NEW_LINE +
-                "    \"httpResponse\": \"\"" + NEW_LINE +
-                "}");
-
-        // when
-        Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
-
-        // then
-        assertEquals(new ExpectationDTO()
-                .setHttpRequest(
-                        new HttpRequestDTO()
-                                .setPath(string("somePath"))
-                )
-                .buildObject(), expectation);
-    }
-
-    @Test
-    public void shouldHandleNullPrimitives() throws IOException {
-        // given
-        String requestBytes = ("{" + NEW_LINE +
-                "    \"httpRequest\": {" + NEW_LINE +
-                "        \"path\": \"somePath\"" + NEW_LINE +
-                "    }," + NEW_LINE +
-                "    \"httpResponse\": {" + NEW_LINE +
-                "        \"body\": \"someBody\"" + NEW_LINE +
-                "    }," + NEW_LINE +
-                "    \"times\": {" + NEW_LINE +
-                "        \"remainingTimes\": null," + NEW_LINE +
-                "        \"unlimited\": false" + NEW_LINE +
-                "    }" + NEW_LINE +
-                "}");
-
-        // when
-        Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
-
-        // then
-        assertEquals(new ExpectationDTO()
-                .setHttpRequest(
-                        new HttpRequestDTO()
-                                .setPath(string("somePath"))
-                )
-                .setHttpResponse(
-                        new HttpResponseDTO()
-                                .setBody(new StringBodyDTO(new StringBody("someBody")))
-                )
-                .setTimes(new TimesDTO(Times.exactly(0)))
-                .buildObject(), expectation);
-    }
-
-    @Test
-    public void shouldHandleEmptyPrimitives() throws IOException {
-        // given
-        String requestBytes = ("{" + NEW_LINE +
-                "    \"httpRequest\": {" + NEW_LINE +
-                "        \"path\": \"somePath\"" + NEW_LINE +
-                "    }," + NEW_LINE +
-                "    \"httpResponse\": {" + NEW_LINE +
-                "        \"body\": \"someBody\"" + NEW_LINE +
-                "    }," + NEW_LINE +
-                "    \"times\": {" + NEW_LINE +
-                "        \"remainingTimes\": \"\"," + NEW_LINE +
-                "        \"unlimited\": false" + NEW_LINE +
-                "    }" + NEW_LINE +
-                "}");
-
-        // when
-        Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
-
-        // then
-        assertEquals(new ExpectationDTO()
-                .setHttpRequest(
-                        new HttpRequestDTO()
-                                .setPath(string("somePath"))
-                )
-                .setHttpResponse(
-                        new HttpResponseDTO()
-                                .setBody(new StringBodyDTO(new StringBody("someBody")))
-                )
-                .setTimes(new TimesDTO(Times.exactly(0)))
-                .buildObject(), expectation);
-    }
-
-    @Test
-    public void shouldHandleNullEnums() throws IOException {
-        // given
-        String requestBytes = ("{" + NEW_LINE +
-                "    \"httpRequest\": {" + NEW_LINE +
-                "        \"path\": \"somePath\"" + NEW_LINE +
-                "    }," + NEW_LINE +
-                "    \"httpResponse\": {" + NEW_LINE +
-                "        \"body\": \"someBody\"," + NEW_LINE +
-                "        \"delay\": {" + NEW_LINE +
-                "            \"timeUnit\": null," + NEW_LINE +
-                "            \"value\": null" + NEW_LINE +
-                "        }" + NEW_LINE +
-                "    }" + NEW_LINE +
-                "}");
-
-        // when
-        Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
-
-        // then
-        assertEquals(new ExpectationDTO()
-                .setHttpRequest(
-                        new HttpRequestDTO()
-                                .setPath(string("somePath"))
-                )
-                .setHttpResponse(
-                        new HttpResponseDTO()
-                                .setBody(new StringBodyDTO(new StringBody("someBody")))
-                                .setDelay(new DelayDTO(new Delay(null, 0)))
-                )
-                .buildObject(), expectation);
-    }
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
 
     @Test
     public void shouldAllowSingleObjectForArray() throws IOException {
         // given
         String requestBytes = ("{" + NEW_LINE +
                 "    \"httpRequest\": {" + NEW_LINE +
-                "        \"path\": \"somePath\"," + NEW_LINE +
-                "        \"extra_field\": \"extra_value\"" + NEW_LINE +
+                "        \"path\": \"somePath\"" + NEW_LINE +
                 "    }," + NEW_LINE +
                 "    \"httpResponse\": {" + NEW_LINE +
-                "        \"body\": \"someBody\"," + NEW_LINE +
-                "        \"extra_field\": \"extra_value\"" + NEW_LINE +
+                "        \"body\": \"someBody\"" + NEW_LINE +
                 "    }" + NEW_LINE +
                 "}");
 
@@ -206,7 +58,82 @@ public class ExpectationSerializerIntegrationTest {
     }
 
     @Test
+    public void shouldValidateSingleObjectForArray() throws IOException {
+        // given
+        String requestBytes = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"path\": \"somePath\"," + NEW_LINE +
+                "        \"extra_field\": \"extra_value\"" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"httpResponse\": {" + NEW_LINE +
+                "        \"body\": \"someBody\"," + NEW_LINE +
+                "        \"extra_field\": \"extra_value\"" + NEW_LINE +
+                "    }" + NEW_LINE +
+                "}");
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("" +
+                "2 errors:" + NEW_LINE +
+                " - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpRequest\"" + NEW_LINE +
+                " - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpResponse\"");
+
+        // when
+        new ExpectationSerializer().deserializeArray(requestBytes);
+    }
+
+    @Test
     public void shouldAllowMultipleObjectsForArray() throws IOException {
+        // given
+        // given
+        String requestBytes = ("[" +
+                "  {" + NEW_LINE +
+                "      \"httpRequest\": {" + NEW_LINE +
+                "          \"path\": \"somePath\"" + NEW_LINE +
+                "      }," + NEW_LINE +
+                "      \"httpResponse\": {" + NEW_LINE +
+                "          \"body\": \"someBody\"" + NEW_LINE +
+                "      }" + NEW_LINE +
+                "  }," +
+                "  {" + NEW_LINE +
+                "      \"httpRequest\": {" + NEW_LINE +
+                "          \"path\": \"somePath\"" + NEW_LINE +
+                "      }," + NEW_LINE +
+                "      \"httpResponse\": {" + NEW_LINE +
+                "          \"body\": \"someBody\"" + NEW_LINE +
+                "      }" + NEW_LINE +
+                "  }," +
+                "  {" + NEW_LINE +
+                "      \"httpRequest\": {" + NEW_LINE +
+                "          \"path\": \"somePath\"" + NEW_LINE +
+                "      }," + NEW_LINE +
+                "      \"httpResponse\": {" + NEW_LINE +
+                "          \"body\": \"someBody\"" + NEW_LINE +
+                "      }" + NEW_LINE +
+                "  }" +
+                "]");
+        Expectation expectation = new ExpectationDTO()
+                .setHttpRequest(
+                        new HttpRequestDTO()
+                                .setPath(string("somePath"))
+                )
+                .setHttpResponse(
+                        new HttpResponseDTO()
+                                .setBody(new StringBodyDTO(new StringBody("someBody")))
+                )
+                .buildObject();
+
+        // when
+        Expectation[] expectations = new ExpectationSerializer().deserializeArray(requestBytes);
+
+        // then
+        assertArrayEquals(new Expectation[]{
+                expectation,
+                expectation,
+                expectation
+        }, expectations);
+    }
+
+    @Test
+    public void shouldValidateMultipleObjectsForArray() throws IOException {
         // given
         String requestBytes = ("[" +
                 "  {" + NEW_LINE +
@@ -240,26 +167,22 @@ public class ExpectationSerializerIntegrationTest {
                 "      }" + NEW_LINE +
                 "  }" +
                 "]");
-        Expectation expectation = new ExpectationDTO()
-                .setHttpRequest(
-                        new HttpRequestDTO()
-                                .setPath(string("somePath"))
-                )
-                .setHttpResponse(
-                        new HttpResponseDTO()
-                                .setBody(new StringBodyDTO(new StringBody("someBody")))
-                )
-                .buildObject();
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("" +
+                "[" + NEW_LINE +
+                "  2 errors:" + NEW_LINE +
+                "   - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpRequest\"" + NEW_LINE +
+                "   - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpResponse\"," + NEW_LINE +
+                "  2 errors:" + NEW_LINE +
+                "   - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpRequest\"" + NEW_LINE +
+                "   - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpResponse\"," + NEW_LINE +
+                "  2 errors:" + NEW_LINE +
+                "   - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpRequest\"" + NEW_LINE +
+                "   - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpResponse\"" + NEW_LINE +
+                "]");
 
         // when
-        Expectation[] expectations = new ExpectationSerializer().deserializeArray(requestBytes);
-
-        // then
-        assertArrayEquals(new Expectation[]{
-                expectation,
-                expectation,
-                expectation
-        }, expectations);
+        new ExpectationSerializer().deserializeArray(requestBytes);
     }
 
     @Test
@@ -278,7 +201,7 @@ public class ExpectationSerializerIntegrationTest {
                 "    } ]," + NEW_LINE +
                 "    \"body\" : {" + NEW_LINE +
                 "      \"type\" : \"STRING\"," + NEW_LINE +
-                "      \"value\" : \"someBody\"" + NEW_LINE +
+                "      \"string\" : \"someBody\"" + NEW_LINE +
                 "    }," + NEW_LINE +
                 "    \"cookies\" : [ {" + NEW_LINE +
                 "      \"name\" : \"someCookieName\"," + NEW_LINE +
@@ -376,7 +299,7 @@ public class ExpectationSerializerIntegrationTest {
                 "    } ]," + NEW_LINE +
                 "    \"body\" : {" + NEW_LINE +
                 "      \"type\" : \"STRING\"," + NEW_LINE +
-                "      \"value\" : \"someBody\"" + NEW_LINE +
+                "      \"string\" : \"someBody\"" + NEW_LINE +
                 "    }," + NEW_LINE +
                 "    \"cookies\" : [ {" + NEW_LINE +
                 "      \"name\" : \"someCookieName\"," + NEW_LINE +
@@ -442,7 +365,7 @@ public class ExpectationSerializerIntegrationTest {
                 "    } ]," + NEW_LINE +
                 "    \"body\" : {" + NEW_LINE +
                 "      \"type\" : \"STRING\"," + NEW_LINE +
-                "      \"value\" : \"someBody\"" + NEW_LINE +
+                "      \"string\" : \"someBody\"" + NEW_LINE +
                 "    }," + NEW_LINE +
                 "    \"cookies\" : [ {" + NEW_LINE +
                 "      \"name\" : \"someCookieName\"," + NEW_LINE +
@@ -511,7 +434,7 @@ public class ExpectationSerializerIntegrationTest {
                 "    } ]," + NEW_LINE +
                 "    \"body\" : {" + NEW_LINE +
                 "      \"type\" : \"STRING\"," + NEW_LINE +
-                "      \"value\" : \"someBody\"" + NEW_LINE +
+                "      \"string\" : \"someBody\"" + NEW_LINE +
                 "    }," + NEW_LINE +
                 "    \"cookies\" : [ {" + NEW_LINE +
                 "      \"name\" : \"someCookieName\"," + NEW_LINE +
@@ -572,7 +495,7 @@ public class ExpectationSerializerIntegrationTest {
                 "    } ]," + NEW_LINE +
                 "    \"body\" : {" + NEW_LINE +
                 "      \"type\" : \"STRING\"," + NEW_LINE +
-                "      \"value\" : \"someBody\"" + NEW_LINE +
+                "      \"string\" : \"someBody\"" + NEW_LINE +
                 "    }," + NEW_LINE +
                 "    \"cookies\" : [ {" + NEW_LINE +
                 "      \"name\" : \"someCookieName\"," + NEW_LINE +
@@ -653,7 +576,7 @@ public class ExpectationSerializerIntegrationTest {
                 "        \"path\": \"somePath\"," + NEW_LINE +
                 "        \"body\" : {" + NEW_LINE +
                 "            \"type\" : \"REGEX\"," + NEW_LINE +
-                "            \"value\" : \"some[a-zA-Z]*\"" + NEW_LINE +
+                "            \"regex\" : \"some[a-zA-Z]*\"" + NEW_LINE +
                 "        }" + NEW_LINE +
                 "    }," + NEW_LINE +
                 "    \"httpResponse\": {" + NEW_LINE +

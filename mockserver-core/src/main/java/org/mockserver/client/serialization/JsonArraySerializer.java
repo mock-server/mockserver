@@ -27,7 +27,7 @@ public class JsonArraySerializer {
                 arrayItems.add(JacksonUtils.prettyPrint(jsonNode));
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new IllegalArgumentException(e);
         }
         return arrayItems;
     }

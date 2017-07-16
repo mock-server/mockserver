@@ -10,6 +10,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.serialization.model.*;
 import org.mockserver.model.*;
+import org.mockserver.validator.JsonSchemaHttpRequestValidator;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -60,6 +61,8 @@ public class HttpRequestSerializerTest {
     private ObjectMapper objectMapper;
     @Mock
     private ObjectWriter objectWriter;
+    @Mock
+    private JsonSchemaHttpRequestValidator httpRequestValidator;
     @InjectMocks
     private HttpRequestSerializer httpRequestSerializer;
 
@@ -73,6 +76,7 @@ public class HttpRequestSerializerTest {
     @Test
     public void deserialize() throws IOException {
         // given
+        when(httpRequestValidator.isValid(eq("requestBytes"))).thenReturn("");
         when(objectMapper.readValue(eq("requestBytes"), same(HttpRequestDTO.class))).thenReturn(fullHttpRequestDTO);
 
         // when
@@ -80,33 +84,6 @@ public class HttpRequestSerializerTest {
 
         // then
         assertEquals(fullHttpRequest, httpRequest);
-    }
-
-    @Test
-    public void deserializeHttpRequestAsField() throws IOException {
-        // given
-        String input = "{" + NEW_LINE +
-                "    \"httpRequest\": \"requestBytes\"," + NEW_LINE +
-                "}";
-        when(objectMapper.readValue(eq(input), same(ExpectationDTO.class))).thenReturn(new ExpectationDTO().setHttpRequest(fullHttpRequestDTO));
-
-        // when
-        HttpRequest httpRequest = httpRequestSerializer.deserialize(input);
-
-        // then
-        assertEquals(fullHttpRequest, httpRequest);
-    }
-
-    @Test
-    public void deserializeHandleException() throws IOException {
-        // given
-        thrown.expect(RuntimeException.class);
-        thrown.expectMessage("Exception while parsing HttpRequest for [requestBytes]");
-        // and
-        when(objectMapper.readValue(eq("requestBytes"), same(HttpRequestDTO.class))).thenThrow(new RuntimeException("TEST EXCEPTION"));
-
-        // when
-        httpRequestSerializer.deserialize("requestBytes");
     }
 
     @Test
@@ -122,7 +99,6 @@ public class HttpRequestSerializerTest {
         verify(objectWriter).writeValueAsString(fullHttpRequestDTO);
     }
 
-
     @Test
     public void shouldSerializeArray() throws IOException {
         // given
@@ -137,30 +113,4 @@ public class HttpRequestSerializerTest {
         verify(objectWriter).writeValueAsString(new HttpRequestDTO[]{fullHttpRequestDTO, fullHttpRequestDTO});
     }
 
-    @Test
-    public void serializeObjectHandlesException() throws IOException {
-        // given
-        thrown.expect(RuntimeException.class);
-        thrown.expectMessage("Exception while serializing httpRequest to JSON with value { }");
-        // and
-        when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
-        when(objectWriter.writeValueAsString(any(HttpRequestDTO.class))).thenThrow(new RuntimeException("TEST EXCEPTION"));
-
-        // when
-        httpRequestSerializer.serialize(request());
-    }
-
-
-    @Test
-    public void serializeArrayHandlesException() throws IOException {
-        // given
-        thrown.expect(RuntimeException.class);
-        thrown.expectMessage("Exception while serializing HttpRequest to JSON with value [{ }]");
-        // and
-        when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
-        when(objectWriter.writeValueAsString(any(HttpRequestDTO.class))).thenThrow(new RuntimeException("TEST EXCEPTION"));
-
-        // when
-        httpRequestSerializer.serialize(new HttpRequest[]{request()});
-    }
 }

@@ -1,11 +1,14 @@
 package org.mockserver.client.serialization;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.mockserver.client.serialization.model.*;
 import org.mockserver.model.*;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.character.Character.NEW_LINE;
@@ -23,6 +26,8 @@ import static org.mockserver.model.XmlBody.xml;
  */
 public class HttpRequestSerializerIntegrationTest {
 
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
 
     @Test
     public void shouldIgnoreExtraFields() throws IOException {
@@ -32,13 +37,13 @@ public class HttpRequestSerializerIntegrationTest {
                 "    \"extra_field\": \"extra_value\"" + NEW_LINE +
                 "}";
 
-        // when
-        HttpRequest httpRequest = new HttpRequestSerializer().deserialize(requestBytes);
-
         // then
-        assertEquals(new HttpRequestDTO()
-                .setPath(string("somePath"))
-                .buildObject(), httpRequest);
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("1 error:\n" +
+                " - object instance has properties which are not allowed by the schema: [\"extra_field\"]");
+
+        // when
+        new HttpRequestSerializer().deserialize(requestBytes);
     }
 
     @Test
@@ -53,7 +58,7 @@ public class HttpRequestSerializerIntegrationTest {
                 "  } ]," + NEW_LINE +
                 "  \"body\" : {" + NEW_LINE +
                 "    \"type\" : \"STRING\"," + NEW_LINE +
-                "    \"value\" : \"somebody\"" + NEW_LINE +
+                "    \"string\" : \"somebody\"" + NEW_LINE +
                 "  }," + NEW_LINE +
                 "  \"cookies\" : [ {" + NEW_LINE +
                 "    \"name\" : \"someCookieName\"," + NEW_LINE +
@@ -76,8 +81,8 @@ public class HttpRequestSerializerIntegrationTest {
                 .setPath(string("somePath"))
                 .setQueryStringParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")))))
                 .setBody(BodyDTO.createDTO(new StringBody("somebody")))
-                .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
-                .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
+                .setHeaders(Collections.<HeaderDTO>singletonList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
+                .setCookies(Collections.<CookieDTO>singletonList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
                 .setSecure(true)
                 .setKeepAlive(false)
                 .buildObject(), httpRequest);
@@ -105,7 +110,7 @@ public class HttpRequestSerializerIntegrationTest {
         String requestBytes = "{" + NEW_LINE +
                 "  \"body\" : {" + NEW_LINE +
                 "    \"type\" : \"STRING\"," + NEW_LINE +
-                "    \"value\" : \"somebody\"" + NEW_LINE +
+                "    \"string\" : \"somebody\"" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}";
 
@@ -124,7 +129,7 @@ public class HttpRequestSerializerIntegrationTest {
         String requestBytes = "{" + NEW_LINE +
                 "  \"body\" : {" + NEW_LINE +
                 "    \"type\" : \"JSON\"," + NEW_LINE +
-                "    \"value\" : \"{ \\\"key\\\": \\\"value\\\" }\"" + NEW_LINE +
+                "    \"json\" : \"{ \\\"key\\\": \\\"value\\\" }\"" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}";
 
@@ -144,7 +149,7 @@ public class HttpRequestSerializerIntegrationTest {
         String requestBytes = "{" + NEW_LINE +
                 "  \"body\" : {" + NEW_LINE +
                 "    \"type\" : \"JSON_SCHEMA\"," + NEW_LINE +
-                "    \"value\" : \"{ \\\"key\\\": \\\"value\\\" }\"" + NEW_LINE +
+                "    \"jsonSchema\" : \"{ \\\"key\\\": \\\"value\\\" }\"" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}";
 
@@ -163,7 +168,7 @@ public class HttpRequestSerializerIntegrationTest {
         String requestBytes = "{" + NEW_LINE +
                 "  \"body\" : {" + NEW_LINE +
                 "    \"type\" : \"REGEX\"," + NEW_LINE +
-                "    \"value\" : \"some[a-z]{3}\"" + NEW_LINE +
+                "    \"regex\" : \"some[a-z]{3}\"" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}";
 
@@ -182,7 +187,7 @@ public class HttpRequestSerializerIntegrationTest {
         String requestBytes = "{" + NEW_LINE +
                 "  \"body\" : {" + NEW_LINE +
                 "    \"type\" : \"XPATH\"," + NEW_LINE +
-                "    \"value\" : \"/element[key = 'some_key' and value = 'some_value']\"" + NEW_LINE +
+                "    \"xpath\" : \"/element[key = 'some_key' and value = 'some_value']\"" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}";
 
@@ -271,8 +276,8 @@ public class HttpRequestSerializerIntegrationTest {
                         .setPath(string("somePath"))
                         .setQueryStringParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")))))
                         .setBody(BodyDTO.createDTO(new StringBody("somebody")))
-                        .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
-                        .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
+                        .setHeaders(Collections.<HeaderDTO>singletonList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
+                        .setCookies(Collections.<CookieDTO>singletonList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
                         .buildObject()
         );
 

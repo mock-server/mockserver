@@ -105,7 +105,11 @@ public class ExpectationSerializer implements Serializer<Expectation> {
                     }
                 }
                 if (!validationErrorsList.isEmpty()) {
-                    throw new IllegalArgumentException((validationErrorsList.size() > 1 ? "[" : "") + Joiner.on(",\n").join(validationErrorsList) + (validationErrorsList.size() > 1 ? "]" : ""));
+                    if (validationErrorsList.size() > 1) {
+                        throw new IllegalArgumentException(("[\n" + Joiner.on(",\n").join(validationErrorsList)).replaceAll("\n", "\n  ") + "\n]");
+                    } else {
+                        throw new IllegalArgumentException(validationErrorsList.get(0));
+                    }
                 }
             }
         }

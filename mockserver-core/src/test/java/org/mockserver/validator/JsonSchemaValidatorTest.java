@@ -162,8 +162,7 @@ public class JsonSchemaValidatorTest {
     @Test
     public void shouldHandleNullTest() {
         // given
-        assertThat(new JsonSchemaValidator(JSON_SCHEMA).isValid(null),
-                is("NullPointerException - null"));
+        assertThat(new JsonSchemaValidator(JSON_SCHEMA).isValid(null), is(""));
     }
 
     @Test

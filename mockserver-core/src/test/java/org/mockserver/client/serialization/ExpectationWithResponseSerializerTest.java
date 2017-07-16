@@ -3,7 +3,9 @@ package org.mockserver.client.serialization;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.serialization.model.*;
@@ -11,6 +13,7 @@ import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
+import org.mockserver.validator.JsonSchemaExpectationValidator;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -18,11 +21,11 @@ import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.NottableString.string;
 
 /**
@@ -71,10 +74,18 @@ public class ExpectationWithResponseSerializerTest {
             .setTimes(new TimesDTO(Times.once()))
             .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2l)));
 
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
+
     @Mock
     private ObjectMapper objectMapper;
     @Mock
     private ObjectWriter objectWriter;
+    @Mock
+    private JsonArraySerializer jsonArraySerializer;
+    @Mock
+    private JsonSchemaExpectationValidator expectationValidator;
+
     @InjectMocks
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
 
@@ -102,7 +113,6 @@ public class ExpectationWithResponseSerializerTest {
         // given
         when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
 
-
         // when
         expectationSerializer.serialize(new Expectation[]{fullExpectation, fullExpectation});
 
@@ -115,6 +125,7 @@ public class ExpectationWithResponseSerializerTest {
     public void shouldDeserializeObject() throws IOException {
         // given
         when(objectMapper.readValue(eq("requestBytes"), same(ExpectationDTO.class))).thenReturn(fullExpectationDTO);
+        when(expectationValidator.isValid("requestBytes")).thenReturn("");
 
         // when
         Expectation expectation = expectationSerializer.deserialize("requestBytes");
@@ -126,12 +137,47 @@ public class ExpectationWithResponseSerializerTest {
     @Test
     public void shouldDeserializeArray() throws IOException {
         // given
-        when(objectMapper.readValue(eq("requestBytes"), same(ExpectationDTO[].class))).thenReturn(new ExpectationDTO[]{fullExpectationDTO, fullExpectationDTO});
+        when(jsonArraySerializer.returnJSONObjects("requestBytes")).thenReturn(Arrays.asList("requestBytes", "requestBytes"));
+        when(expectationValidator.isValid("requestBytes")).thenReturn("");
+        when(objectMapper.readValue(eq("requestBytes"), same(ExpectationDTO.class))).thenReturn(fullExpectationDTO);
 
         // when
         Expectation[] expectations = expectationSerializer.deserializeArray("requestBytes");
 
         // then
         assertArrayEquals(new Expectation[]{fullExpectation, fullExpectation}, expectations);
+    }
+
+    @Test
+    public void shouldDeserializeObjectWithError() throws IOException {
+        // given
+        when(objectMapper.readValue(eq("requestBytes"), same(ExpectationDTO.class))).thenReturn(fullExpectationDTO);
+        when(expectationValidator.isValid("requestBytes")).thenReturn("an error");
+
+        // then
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("an error");
+
+        // when
+        expectationSerializer.deserialize("requestBytes");
+    }
+
+    @Test
+    public void shouldDeserializeArrayWithError() throws IOException {
+        // given
+        when(jsonArraySerializer.returnJSONObjects("requestBytes")).thenReturn(Arrays.asList("requestBytes", "requestBytes"));
+        when(expectationValidator.isValid("requestBytes")).thenReturn("an error");
+        when(objectMapper.readValue(eq("requestBytes"), same(ExpectationDTO.class))).thenReturn(fullExpectationDTO);
+
+        // then
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("" +
+                "[" + NEW_LINE +
+                "  an error," + NEW_LINE +
+                "  an error" + NEW_LINE +
+                "]");
+
+        // when
+        expectationSerializer.deserializeArray("requestBytes");
     }
 }

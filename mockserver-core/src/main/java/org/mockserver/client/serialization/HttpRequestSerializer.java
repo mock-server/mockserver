@@ -1,12 +1,12 @@
 package org.mockserver.client.serialization;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
 import joptsimple.internal.Strings;
 import org.mockserver.client.serialization.model.HttpRequestDTO;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.validator.JsonSchemaHttpRequestValidator;
-import org.mockserver.validator.Validator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,6 +62,17 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
         if (Strings.isNullOrEmpty(jsonHttpRequest)) {
             throw new IllegalArgumentException("1 error:\n - a request is required but value was \"" + String.valueOf(jsonHttpRequest) + "\"");
         } else {
+            if (jsonHttpRequest.contains("\"httpRequest\"")) {
+                try {
+                    JsonNode jsonNode = objectMapper.readTree(jsonHttpRequest);
+                    if (jsonNode.has("httpRequest")) {
+                        jsonHttpRequest = jsonNode.get("httpRequest").toString();
+                    }
+                } catch (Exception e) {
+                    logger.error("Exception while parsing [" + jsonHttpRequest + "] for HttpRequest", e);
+                    throw new RuntimeException("Exception while parsing [" + jsonHttpRequest + "] for HttpRequest", e);
+                }
+            }
             String validationErrors = httpRequestValidator.isValid(jsonHttpRequest);
             if (validationErrors.isEmpty()) {
                 HttpRequest httpRequest = null;

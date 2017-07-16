@@ -10,11 +10,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.serialization.model.*;
 import org.mockserver.model.*;
+import org.mockserver.validator.JsonSchemaHttpResponseValidator;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.same;
@@ -49,6 +51,8 @@ public class HttpResponseSerializerTest {
     private ObjectMapper objectMapper;
     @Mock
     private ObjectWriter objectWriter;
+    @Mock
+    private JsonSchemaHttpResponseValidator httpResponseValidator;
     @InjectMocks
     private HttpResponseSerializer httpResponseSerializer;
 
@@ -62,6 +66,7 @@ public class HttpResponseSerializerTest {
     @Test
     public void deserialize() throws IOException {
         // given
+        when(httpResponseValidator.isValid(eq("responseBytes"))).thenReturn("");
         when(objectMapper.readValue(eq("responseBytes"), same(HttpResponseDTO.class))).thenReturn(fullHttpResponseDTO);
 
         // when
@@ -69,33 +74,6 @@ public class HttpResponseSerializerTest {
 
         // then
         assertEquals(fullHttpResponse, httpResponse);
-    }
-
-    @Test
-    public void deserializeHttpResponseAsField() throws IOException {
-        // given
-        String input = "{" + NEW_LINE +
-                "    \"httpResponse\": \"responseBytes\"," + NEW_LINE +
-                "}";
-        when(objectMapper.readValue(eq(input), same(ExpectationDTO.class))).thenReturn(new ExpectationDTO().setHttpResponse(fullHttpResponseDTO));
-
-        // when
-        HttpResponse httpResponse = httpResponseSerializer.deserialize(input);
-
-        // then
-        assertEquals(fullHttpResponse, httpResponse);
-    }
-
-    @Test
-    public void deserializeHandleException() throws IOException {
-        // given
-        thrown.expect(RuntimeException.class);
-        thrown.expectMessage("Exception while parsing HttpResponse for [responseBytes]");
-        // and
-        when(objectMapper.readValue(eq("responseBytes"), same(HttpResponseDTO.class))).thenThrow(new RuntimeException("TEST EXCEPTION"));
-
-        // when
-        httpResponseSerializer.deserialize("responseBytes");
     }
 
     @Test
@@ -126,30 +104,4 @@ public class HttpResponseSerializerTest {
         verify(objectWriter).writeValueAsString(new HttpResponseDTO[]{fullHttpResponseDTO, fullHttpResponseDTO});
     }
 
-    @Test
-    public void serializeObjectHandlesException() throws IOException {
-        // given
-        thrown.expect(RuntimeException.class);
-        thrown.expectMessage("Exception while serializing httpResponse to JSON with value { }");
-        // and
-        when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
-        when(objectWriter.writeValueAsString(any(HttpResponseDTO.class))).thenThrow(new RuntimeException("TEST EXCEPTION"));
-
-        // when
-        httpResponseSerializer.serialize(response());
-    }
-
-
-    @Test
-    public void serializeArrayHandlesException() throws IOException {
-        // given
-        thrown.expect(RuntimeException.class);
-        thrown.expectMessage("Exception while serializing HttpResponse to JSON with value [{ }]");
-        // and
-        when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
-        when(objectWriter.writeValueAsString(any(HttpResponseDTO.class))).thenThrow(new RuntimeException("TEST EXCEPTION"));
-
-        // when
-        httpResponseSerializer.serialize(new HttpResponse[]{response()});
-    }
 }
