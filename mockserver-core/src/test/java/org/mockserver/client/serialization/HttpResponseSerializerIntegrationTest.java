@@ -1,11 +1,14 @@
 package org.mockserver.client.serialization;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.mockserver.client.serialization.model.*;
 import org.mockserver.model.*;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.character.Character.NEW_LINE;
@@ -25,36 +28,38 @@ import static org.mockserver.model.XmlBody.xml;
  */
 public class HttpResponseSerializerIntegrationTest {
 
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
 
     @Test
     public void shouldIgnoreExtraFields() throws IOException {
         // given
         String requestBytes = "{" + NEW_LINE +
-                "    \"statusCode\": \"123\"," + NEW_LINE +
+                "    \"statusCode\": 123," + NEW_LINE +
                 "    \"extra_field\": \"extra_value\"" + NEW_LINE +
                 "}";
 
-        // when
-        HttpResponse httpResponse = new HttpResponseSerializer().deserialize(requestBytes);
-
         // then
-        assertEquals(new HttpResponseDTO()
-                .setStatusCode(123)
-                .buildObject(), httpResponse);
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("1 error:\n" +
+                " - object instance has properties which are not allowed by the schema: [\"extra_field\"]");
+
+        // when
+        new HttpResponseSerializer().deserialize(requestBytes);
     }
 
     @Test
     public void shouldDeserializeCompleteObject() throws IOException {
         // given
         String requestBytes = "{" + NEW_LINE +
-                "  \"statusCode\" : \"123\"," + NEW_LINE +
+                "  \"statusCode\" : 123," + NEW_LINE +
                 "  \"delay\" : {" + NEW_LINE +
                 "    \"timeUnit\" : \"SECONDS\"," + NEW_LINE +
                 "    \"value\" : 5" + NEW_LINE +
                 "  }," + NEW_LINE +
                 "  \"body\" : {" + NEW_LINE +
                 "    \"type\" : \"STRING\"," + NEW_LINE +
-                "    \"value\" : \"somebody\"" + NEW_LINE +
+                "    \"string\" : \"somebody\"" + NEW_LINE +
                 "  }," + NEW_LINE +
                 "  \"cookies\" : [ {" + NEW_LINE +
                 "    \"name\" : \"someCookieName\"," + NEW_LINE +
@@ -73,8 +78,8 @@ public class HttpResponseSerializerIntegrationTest {
         assertEquals(new HttpResponseDTO()
                 .setStatusCode(123)
                 .setBody(BodyWithContentTypeDTO.createDTO(new StringBody("somebody")))
-                .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
-                .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
+                .setHeaders(Collections.<HeaderDTO>singletonList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
+                .setCookies(Collections.<CookieDTO>singletonList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
                 .setDelay(new DelayDTO(seconds(5)))
                 .buildObject(), httpResponse);
     }
@@ -101,7 +106,7 @@ public class HttpResponseSerializerIntegrationTest {
         String requestBytes = "{" + NEW_LINE +
                 "  \"body\" : {" + NEW_LINE +
                 "    \"type\" : \"STRING\"," + NEW_LINE +
-                "    \"value\" : \"somebody\"" + NEW_LINE +
+                "    \"string\" : \"somebody\"" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}";
 
@@ -120,7 +125,7 @@ public class HttpResponseSerializerIntegrationTest {
         String requestBytes = "{" + NEW_LINE +
                 "  \"body\" : {" + NEW_LINE +
                 "    \"type\" : \"JSON\"," + NEW_LINE +
-                "    \"value\" : \"{ \\\"key\\\": \\\"value\\\" }\"" + NEW_LINE +
+                "    \"json\" : \"{ \\\"key\\\": \\\"value\\\" }\"" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}";
 
@@ -166,7 +171,7 @@ public class HttpResponseSerializerIntegrationTest {
     public void shouldDeserializePartialObject() throws IOException {
         // given
         String requestBytes = "{" + NEW_LINE +
-                "    \"statusCode\": \"123\"" + NEW_LINE +
+                "    \"statusCode\": 123" + NEW_LINE +
                 "}";
 
         // when
@@ -183,10 +188,10 @@ public class HttpResponseSerializerIntegrationTest {
         // given
         String requestBytes = "{" + NEW_LINE +
                 "    \"httpResponse\": {" + NEW_LINE +
-                "        \"statusCode\": \"123\"," + NEW_LINE +
+                "        \"statusCode\": 123," + NEW_LINE +
                 "        \"body\" : {" + NEW_LINE +
                 "          \"type\" : \"STRING\"," + NEW_LINE +
-                "          \"value\" : \"somebody\"" + NEW_LINE +
+                "          \"string\" : \"somebody\"" + NEW_LINE +
                 "        }" + NEW_LINE +
                 "    }" + NEW_LINE +
                 "}";
@@ -208,8 +213,8 @@ public class HttpResponseSerializerIntegrationTest {
                 new HttpResponseDTO()
                         .setStatusCode(123)
                         .setBody(BodyWithContentTypeDTO.createDTO(new StringBody("somebody")))
-                        .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
-                        .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
+                        .setHeaders(Collections.<HeaderDTO>singletonList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
+                        .setCookies(Collections.<CookieDTO>singletonList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
                         .setDelay(new DelayDTO(minutes(1)))
                         .buildObject()
         );

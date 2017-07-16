@@ -1,10 +1,12 @@
 package org.mockserver.server;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.google.common.net.MediaType;
 import org.mockserver.client.serialization.*;
 import org.mockserver.cors.CORSHeaders;
 import org.mockserver.filters.RequestLogFilter;
+import org.mockserver.logging.LogFormatter;
 import org.mockserver.mappers.HttpServletRequestToMockServerRequestDecoder;
 import org.mockserver.mappers.MockServerResponseToHttpServletResponseEncoder;
 import org.mockserver.mock.Expectation;
@@ -12,7 +14,10 @@ import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.mock.action.ExpectationCallback;
 import org.mockserver.model.*;
+import org.mockserver.socket.KeyAndCertificateFactory;
 import org.mockserver.streams.IOStreamUtils;
+import org.mockserver.verify.Verification;
+import org.mockserver.verify.VerificationSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +27,9 @@ import javax.servlet.http.HttpServletResponse;
 import java.nio.charset.Charset;
 
 import static com.google.common.net.MediaType.JSON_UTF_8;
+import static com.google.common.net.MediaType.PLAIN_TEXT_UTF_8;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
+import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAPI;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAllResponses;
 import static org.mockserver.model.Header.header;
@@ -37,6 +44,7 @@ public class MockServerServlet extends HttpServlet {
 
     private static final String NOT_SUPPORTED_MESSAGE = " is not supported by MockServer deployable WAR due to limitations in the JEE specification; use mockserver-netty to enable these features";
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private LogFormatter logFormatter = new LogFormatter(logger);
     // mockserver
     private MockServerMatcher mockServerMatcher = new MockServerMatcher();
     private RequestLogFilter requestLogFilter = new RequestLogFilter();
@@ -83,23 +91,35 @@ public class MockServerServlet extends HttpServlet {
 
             } else if (request.matches("PUT", "/expectation")) {
 
-                addCORSHeadersForAPI(httpServletResponse);
                 for (Expectation expectation : expectationSerializer.deserializeArray(request.getBodyAsString())) {
                     Action action = expectation.getAction();
                     if (validateSupportedFeatures(action, httpServletResponse)) {
-                        mockServerMatcher.when(expectation.getHttpRequest(), expectation.getTimes(), expectation.getTimeToLive()).thenRespond(expectation.getHttpResponse()).thenForward(expectation.getHttpForward()).thenCallback(expectation.getHttpClassCallback());
+                        KeyAndCertificateFactory.addSubjectAlternativeName(expectation.getHttpRequest().getFirstHeader(HOST.toString()));
+                        mockServerMatcher
+                                .when(expectation.getHttpRequest(), expectation.getTimes(), expectation.getTimeToLive())
+                                .thenRespond(expectation.getHttpResponse())
+                                .thenForward(expectation.getHttpForward())
+                                .thenCallback(expectation.getHttpClassCallback());
+                        logFormatter.infoLog("creating expectation:{}", expectation);
                     }
                 }
                 httpServletResponse.setStatus(CREATED_201.code());
+                addCORSHeadersForAPI(httpServletResponse);
 
             } else if (request.matches("PUT", "/clear")) {
 
-                HttpRequest httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
+                HttpRequest httpRequest = null;
+                if (!Strings.isNullOrEmpty(request.getBodyAsString())) {
+                    httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
+                }
                 if (request.hasQueryStringParameter("type", "expectation")) {
+                    logFormatter.infoLog("clearing expectations that match:{}", httpRequest);
                     mockServerMatcher.clear(httpRequest);
                 } else if (request.hasQueryStringParameter("type", "log")) {
+                    logFormatter.infoLog("clearing request logs that match:{}", httpRequest);
                     requestLogFilter.clear(httpRequest);
                 } else {
+                    logFormatter.infoLog("clearing expectations and request logs that match:{}", httpRequest);
                     requestLogFilter.clear(httpRequest);
                     mockServerMatcher.clear(httpRequest);
                 }
@@ -110,41 +130,56 @@ public class MockServerServlet extends HttpServlet {
 
                 requestLogFilter.reset();
                 mockServerMatcher.reset();
+                logFormatter.infoLog("resetting all expectations and request logs");
                 httpServletResponse.setStatus(OK_200.code());
                 addCORSHeadersForAPI(httpServletResponse);
 
             } else if (request.matches("PUT", "/dumpToLog")) {
 
-                mockServerMatcher.dumpToLog(httpRequestSerializer.deserialize(request.getBodyAsString()));
+                HttpRequest httpRequest = null;
+                if (!Strings.isNullOrEmpty(request.getBodyAsString())) {
+                    httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
+                }
+                mockServerMatcher.dumpToLog(httpRequest);
                 httpServletResponse.setStatus(OK_200.code());
                 addCORSHeadersForAPI(httpServletResponse);
 
             } else if (request.matches("PUT", "/retrieve")) {
 
-                addCORSHeadersForAPI(httpServletResponse);
+                HttpRequest httpRequest = null;
+                if (!Strings.isNullOrEmpty(request.getBodyAsString())) {
+                    httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
+                }
                 if (request.hasQueryStringParameter("type", "expectation")) {
-                    Expectation[] expectations = mockServerMatcher.retrieveExpectations(httpRequestSerializer.deserialize(request.getBodyAsString()));
+                    Expectation[] expectations = mockServerMatcher.retrieveExpectations(httpRequest);
+                    logFormatter.infoLog("retrieving expectations that match:{}", httpRequest);
                     httpServletResponse.setStatus(OK_200.code());
                     httpServletResponse.setHeader(CONTENT_TYPE.toString(), JSON_UTF_8.toString());
                     IOStreamUtils.writeToOutputStream(expectationSerializer.serialize(expectations).getBytes(), httpServletResponse);
                 } else {
-                    HttpRequest[] requests = requestLogFilter.retrieve(httpRequestSerializer.deserialize(request.getBodyAsString()));
+                    HttpRequest[] requests = requestLogFilter.retrieve(httpRequest);
+                    logFormatter.infoLog("retrieving requests that match:{}", httpRequest);
                     httpServletResponse.setStatus(OK_200.code());
                     httpServletResponse.setHeader(CONTENT_TYPE.toString(), JSON_UTF_8.toString());
                     IOStreamUtils.writeToOutputStream(httpRequestSerializer.serialize(requests).getBytes(), httpServletResponse);
                 }
+                addCORSHeadersForAPI(httpServletResponse);
 
             } else if (request.matches("PUT", "/verify")) {
 
-                String result = requestLogFilter.verify(verificationSerializer.deserialize(request.getBodyAsString()));
-                addCORSHeadersForAPI(httpServletResponse);
+                Verification verification = verificationSerializer.deserialize(request.getBodyAsString());
+                String result = requestLogFilter.verify(verification);
+                logFormatter.infoLog("verifying requests that match:{}", verification);
                 verifyResponse(httpServletResponse, result);
+                addCORSHeadersForAPI(httpServletResponse);
 
             } else if (request.matches("PUT", "/verifySequence")) {
 
-                String result = requestLogFilter.verify(verificationSequenceSerializer.deserialize(request.getBodyAsString()));
-                addCORSHeadersForAPI(httpServletResponse);
+                VerificationSequence verificationSequence = verificationSequenceSerializer.deserialize(request.getBodyAsString());
+                String result = requestLogFilter.verify(verificationSequence);
+                logFormatter.infoLog("verifying sequence that match:{}", verificationSequence);
                 verifyResponse(httpServletResponse, result);
+                addCORSHeadersForAPI(httpServletResponse);
 
             } else if (request.matches("PUT", "/stop")) {
 
@@ -161,6 +196,10 @@ public class MockServerServlet extends HttpServlet {
                 }
 
             }
+        } catch (IllegalArgumentException iae) {
+            httpServletResponse.setStatus(BAD_REQUEST_400.code());
+            httpServletResponse.setHeader(CONTENT_TYPE.toString(), PLAIN_TEXT_UTF_8.toString());
+            IOStreamUtils.writeToOutputStream(iae.getMessage().getBytes(Charsets.UTF_8), httpServletResponse);
         } catch (Exception e) {
             logger.error("Exception processing " + (request != null ? request : httpServletRequest), e);
             httpServletResponse.setStatus(BAD_REQUEST_400.code());
@@ -172,7 +211,7 @@ public class MockServerServlet extends HttpServlet {
             httpServletResponse.setStatus(ACCEPTED_202.code());
         } else {
             httpServletResponse.setStatus(HttpStatusCode.NOT_ACCEPTABLE_406.code());
-            httpServletResponse.setHeader(CONTENT_TYPE.toString(), MediaType.PLAIN_TEXT_UTF_8.toString());
+            httpServletResponse.setHeader(CONTENT_TYPE.toString(), PLAIN_TEXT_UTF_8.toString());
             IOStreamUtils.writeToOutputStream(result.getBytes(), httpServletResponse);
         }
     }

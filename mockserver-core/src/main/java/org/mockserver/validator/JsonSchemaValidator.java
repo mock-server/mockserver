@@ -64,19 +64,21 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
         List<String> validationErrors = new ArrayList<String>();
         for (ProcessingMessage processingMessage : validate) {
             System.out.println("processingMessage = " + processingMessage);
-            if (String.valueOf(processingMessage.asJson().get("keyword")).equals("\"oneOf\"")) {
+            String fieldPointer = "";
+            if (processingMessage.asJson().get("instance") != null && processingMessage.asJson().get("instance").get("pointer") != null) {
+                fieldPointer = String.valueOf(processingMessage.asJson().get("instance").get("pointer")).replaceAll("\"", "");
+            }
+            if (fieldPointer.endsWith("/body")) {
+                validationErrors.add("oneOf of the following body types must be specified BINARY, JSON, JSON_SCHEMA, PARAMETERS, REGEX, STRING, XML, XML_SCHEMA, XPATH for field \"" + fieldPointer + "\"");
+            } else if (String.valueOf(processingMessage.asJson().get("keyword")).equals("\"oneOf\"")) {
                 StringBuilder oneOfErrorMessage = new StringBuilder("oneOf of the following must be specified ");
                 for (JsonNode jsonNode : processingMessage.asJson().get("reports")) {
                     if (jsonNode.get(0) != null && jsonNode.get(0).get("required") != null && jsonNode.get(0).get("required").get(0) != null) {
                         oneOfErrorMessage.append(String.valueOf(jsonNode.get(0).get("required").get(0))).append(" ");
                     }
                 }
-                validationErrors.add(oneOfErrorMessage.toString());
+                validationErrors.add(oneOfErrorMessage.toString() + (fieldPointer.isEmpty() ? "" : " for field \"" + fieldPointer + "\""));
             } else {
-                String fieldPointer = "";
-                if (processingMessage.asJson().get("instance") != null && processingMessage.asJson().get("instance").get("pointer") != null) {
-                    fieldPointer = String.valueOf(processingMessage.asJson().get("instance").get("pointer")).replaceAll("\"", "");
-                }
                 validationErrors.add(processingMessage.getMessage() + (fieldPointer.isEmpty() ? "" : " for field \"" + fieldPointer + "\""));
             }
         }

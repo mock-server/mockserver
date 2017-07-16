@@ -18,7 +18,12 @@ public class JsonSchemaHttpResponseValidatorIntegrationTest {
     public void shouldValidateValidCompleteRequestWithStringBody() {
         // when
         assertThat(jsonSchemaValidator.isValid("{" + NEW_LINE +
-                "    \"statusCode\" : 304," + NEW_LINE +
+                "    \"method\" : \"POST\"," + NEW_LINE +
+                "    \"path\" : \"POST\"," + NEW_LINE +
+                "    \"queryStringParameters\" : [ {" + NEW_LINE +
+                "      \"name\" : \"someParameterName\"," + NEW_LINE +
+                "      \"values\" : [ \"someParameterValue\" ]" + NEW_LINE +
+                "    } ]," + NEW_LINE +
                 "    \"body\" : \"someBody\"," + NEW_LINE +
                 "    \"cookies\" : [ {" + NEW_LINE +
                 "      \"name\" : \"someCookieName\"," + NEW_LINE +
@@ -28,17 +33,8 @@ public class JsonSchemaHttpResponseValidatorIntegrationTest {
                 "      \"name\" : \"someHeaderName\"," + NEW_LINE +
                 "      \"values\" : [ \"someHeaderValue\" ]" + NEW_LINE +
                 "    } ]," + NEW_LINE +
-                "    \"delay\" : {" + NEW_LINE +
-                "      \"timeUnit\" : \"MICROSECONDS\"," + NEW_LINE +
-                "      \"value\" : 1" + NEW_LINE +
-                "    }," + NEW_LINE +
-                "    \"connectionOptions\" : {" + NEW_LINE +
-                "      \"suppressContentLengthHeader\" : true," + NEW_LINE +
-                "      \"contentLengthHeaderOverride\" : 50," + NEW_LINE +
-                "      \"suppressConnectionHeader\" : true," + NEW_LINE +
-                "      \"keepAliveOverride\" : true," + NEW_LINE +
-                "      \"closeSocket\" : true" + NEW_LINE +
-                "    }" + NEW_LINE +
+                "    \"keepAlive\" : true," + NEW_LINE +
+                "    \"secure\" : true" + NEW_LINE +
                 "  }"), is(""));
     }
 

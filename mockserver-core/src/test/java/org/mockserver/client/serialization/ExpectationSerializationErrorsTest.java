@@ -57,14 +57,17 @@ public class ExpectationSerializationErrorsTest {
     public void shouldValidateInputForObject() throws IOException {
         // given
         thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("Expected an JSON Expectation object but http body is empty");
+        thrown.expectMessage("1 error:\n - an expectation is required but value was \"\"");
         // when
         expectationSerializer.deserialize("");
     }
 
     @Test
     public void shouldValidateInputForArray() throws IOException {
+        // given
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("1 error:\n - an expectation or expectation array is required but value was \"\"");
         // when
-        assertArrayEquals(new Expectation[]{}, expectationSerializer.deserializeArray(""));
+        expectationSerializer.deserializeArray("");
     }
 }

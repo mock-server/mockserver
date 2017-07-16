@@ -12,6 +12,9 @@ import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.filters.RequestLogFilter;
 import org.mockserver.mappers.HttpServletRequestToMockServerRequestDecoder;
 import org.mockserver.mappers.MockServerResponseToHttpServletResponseEncoder;
+import org.mockserver.matchers.TimeToLive;
+import org.mockserver.matchers.Times;
+import org.mockserver.mock.Expectation;
 import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.model.HttpRequest;
@@ -27,9 +30,12 @@ import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockserver.matchers.TimeToLive.unlimited;
+import static org.mockserver.matchers.Times.once;
 import static org.mockserver.model.HttpRequest.request;
 
 /**
@@ -281,6 +287,7 @@ public class MockServerServletCORSTest {
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
         HttpRequest request = request().withMethod("PUT").withPath("/expectation");
         when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class))).thenReturn(request);
+        when(mockExpectationSerializer.deserializeArray(anyString())).thenReturn(new Expectation[]{});
 
         // when
         mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
@@ -338,6 +345,7 @@ public class MockServerServletCORSTest {
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
         HttpRequest request = request().withMethod("PUT").withPath("/retrieve");
         when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class))).thenReturn(request);
+        when(mockHttpRequestSerializer.serialize(any(HttpRequest[].class))).thenReturn("some_request");
 
         // when
         mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
