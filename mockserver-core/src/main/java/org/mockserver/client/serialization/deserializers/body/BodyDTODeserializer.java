@@ -34,7 +34,7 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
     private static Map<String, Body.Type> fieldNameToType = new HashMap<String, Body.Type>();
 
     static {
-        fieldNameToType.put("bytes".toLowerCase(), Body.Type.BINARY);
+        fieldNameToType.put("base64Bytes".toLowerCase(), Body.Type.BINARY);
         fieldNameToType.put("json".toLowerCase(), Body.Type.JSON);
         fieldNameToType.put("jsonSchema".toLowerCase(), Body.Type.JSON_SCHEMA);
         fieldNameToType.put("parameters".toLowerCase(), Body.Type.PARAMETERS);
@@ -70,7 +70,7 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         logger.debug("Ignoring invalid value for \"type\" field of \"" + jsonParser.getText() + "\"");
                     }
                 }
-                if (jsonParser.getCurrentToken() == JsonToken.FIELD_NAME && containsIgnoreCase(jsonParser.getText(), "string", "regex", "json", "jsonSchema", "xpath", "xml", "xmlSchema", "bytes", "value") && type != Body.Type.PARAMETERS) {
+                if (jsonParser.getCurrentToken() == JsonToken.FIELD_NAME && containsIgnoreCase(jsonParser.getText(), "string", "regex", "json", "jsonSchema", "xpath", "xml", "xmlSchema", "base64Bytes") && type != Body.Type.PARAMETERS) {
                     String fieldName = jsonParser.getText().toLowerCase();
                     if (fieldNameToType.containsKey(fieldName)) {
                         type = fieldNameToType.get(fieldName);

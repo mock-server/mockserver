@@ -230,7 +230,6 @@ public class MockServerServlet extends HttpServlet {
         }
     }
 
-
     private boolean validateSupportedFeatures(Action action, HttpServletResponse httpServletResponse) {
         boolean valid = true;
         if (action instanceof HttpResponse && ((HttpResponse) action).getConnectionOptions() != null) {

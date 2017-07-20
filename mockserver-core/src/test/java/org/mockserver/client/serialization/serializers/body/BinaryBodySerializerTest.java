@@ -16,12 +16,12 @@ public class BinaryBodySerializerTest {
     @Test
     public void shouldSerializeBinaryBody() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new BinaryBody("some_bytes".getBytes())),
-                is("{\"type\":\"BINARY\",\"value\":\"c29tZV9ieXRlcw==\"}"));
+                is("{\"type\":\"BINARY\",\"base64Bytes\":\"c29tZV9ieXRlcw==\"}"));
     }
 
     @Test
     public void shouldSerializeBinaryBodyWithContentType() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new BinaryBody("some_bytes".getBytes(), MediaType.APPLICATION_BINARY)),
-                is("{\"contentType\":\"application/binary\",\"type\":\"BINARY\",\"value\":\"c29tZV9ieXRlcw==\"}"));
+                is("{\"contentType\":\"application/binary\",\"type\":\"BINARY\",\"base64Bytes\":\"c29tZV9ieXRlcw==\"}"));
     }
 }
