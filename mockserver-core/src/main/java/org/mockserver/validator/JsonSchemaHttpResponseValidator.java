@@ -17,33 +17,15 @@ import java.util.List;
 public class JsonSchemaHttpResponseValidator extends JsonSchemaValidator {
 
     public static Logger logger = LoggerFactory.getLogger(JsonSchemaHttpResponseValidator.class);
-    private static String jsonSchema = "";
-
-    static {
-        try {
-            ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
-            final JsonNode jsonSchema = objectMapper.readTree(FileReader.readFileFromClassPathOrPath("org/mockserver/model/schema/httpResponse.json"));
-            final JsonNode definitions = jsonSchema.get("definitions");
-            List<String> definitionNames = Arrays.asList(
-                    "bodyWithContentType",
-                    "delay",
-                    "connectionOptions",
-                    "keyToMultiValue",
-                    "keyToValue"
-            );
-            for (String definitionName : definitionNames) {
-                if (definitions != null && definitions instanceof ObjectNode) {
-                    ((ObjectNode) definitions).set(definitionName, objectMapper.readTree(FileReader.readFileFromClassPathOrPath("org/mockserver/model/schema/" + definitionName + ".json")));
-                }
-            }
-            JsonSchemaHttpResponseValidator.jsonSchema = ObjectMapperFactory
-                    .createObjectMapper()
-                    .writerWithDefaultPrettyPrinter()
-                    .writeValueAsString(jsonSchema);
-        } catch (Exception e) {
-            logger.error("Exception loading JSON Schema for Exceptions", e);
-        }
-    }
+    private static String jsonSchema = addReferencesIntoSchema(
+            "org/mockserver/model/schema/",
+            "httpResponse",
+            "bodyWithContentType",
+            "delay",
+            "connectionOptions",
+            "keyToMultiValue",
+            "keyToValue"
+    );
 
     public JsonSchemaHttpResponseValidator() {
         super(jsonSchema);
