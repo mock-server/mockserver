@@ -1,5 +1,6 @@
 package org.mockserver.proxy;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.google.common.net.MediaType;
 import org.mockserver.client.netty.NettyHttpClient;
@@ -16,6 +17,8 @@ import org.mockserver.mappers.MockServerResponseToHttpServletResponseEncoder;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.streams.IOStreamUtils;
+import org.mockserver.verify.Verification;
+import org.mockserver.verify.VerificationSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -92,41 +95,60 @@ public class ProxyServlet extends HttpServlet {
 
             } else if (request.matches("PUT", "/clear")) {
 
-                requestLogFilter.clear(httpRequestSerializer.deserialize(request.getBodyAsString()));
+                HttpRequest httpRequest = null;
+                if (!Strings.isNullOrEmpty(request.getBodyAsString())) {
+                    httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
+                }
+                requestLogFilter.clear(httpRequest);
+                logFormatter.infoLog("clearing expectations and request logs that match:{}", httpRequest);
                 httpServletResponse.setStatus(OK_200.code());
                 addCORSHeadersForAPI(httpServletResponse);
 
             } else if (request.matches("PUT", "/reset")) {
 
                 requestLogFilter.reset();
+                logFormatter.infoLog("resetting all expectations and request logs");
                 httpServletResponse.setStatus(OK_200.code());
                 addCORSHeadersForAPI(httpServletResponse);
 
             } else if (request.matches("PUT", "/dumpToLog")) {
 
-                requestResponseLogFilter.dumpToLog(httpRequestSerializer.deserialize(request.getBodyAsString()), request.hasQueryStringParameter("type", "java"));
+                HttpRequest httpRequest = null;
+                if (!Strings.isNullOrEmpty(request.getBodyAsString())) {
+                    httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
+                }
+                requestResponseLogFilter.dumpToLog(httpRequest, request.hasQueryStringParameter("type", "java"));
                 httpServletResponse.setStatus(OK_200.code());
                 addCORSHeadersForAPI(httpServletResponse);
 
             } else if (request.matches("PUT", "/retrieve")) {
 
-                addCORSHeadersForAPI(httpServletResponse);
-                HttpRequest[] requests = requestLogFilter.retrieve(httpRequestSerializer.deserialize(request.getBodyAsString()));
+                HttpRequest httpRequest = null;
+                if (!Strings.isNullOrEmpty(request.getBodyAsString())) {
+                    httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
+                }
+                HttpRequest[] requests = requestLogFilter.retrieve(httpRequest);
+                logFormatter.infoLog("retrieving requests that match:{}", httpRequest);
                 httpServletResponse.setStatus(OK_200.code());
                 httpServletResponse.setHeader(CONTENT_TYPE.toString(), JSON_UTF_8.toString());
                 IOStreamUtils.writeToOutputStream(httpRequestSerializer.serialize(requests).getBytes(), httpServletResponse);
+                addCORSHeadersForAPI(httpServletResponse);
 
             } else if (request.matches("PUT", "/verify")) {
 
-                String result = requestLogFilter.verify(verificationSerializer.deserialize(request.getBodyAsString()));
-                addCORSHeadersForAPI(httpServletResponse);
+                Verification verification = verificationSerializer.deserialize(request.getBodyAsString());
+                String result = requestLogFilter.verify(verification);
+                logFormatter.infoLog("verifying requests that match:{}", verification);
                 verifyResponse(httpServletResponse, result);
+                addCORSHeadersForAPI(httpServletResponse);
 
             } else if (request.matches("PUT", "/verifySequence")) {
 
-                String result = requestLogFilter.verify(verificationSequenceSerializer.deserialize(request.getBodyAsString()));
-                addCORSHeadersForAPI(httpServletResponse);
+                VerificationSequence verificationSequence = verificationSequenceSerializer.deserialize(request.getBodyAsString());
+                String result = requestLogFilter.verify(verificationSequence);
+                logFormatter.infoLog("verifying sequence that match:{}", verificationSequence);
                 verifyResponse(httpServletResponse, result);
+                addCORSHeadersForAPI(httpServletResponse);
 
             } else if (request.matches("PUT", "/stop")) {
 
@@ -136,6 +158,10 @@ public class ProxyServlet extends HttpServlet {
             } else {
                 forwardRequest(request, httpServletResponse);
             }
+        } catch (IllegalArgumentException iae) {
+            httpServletResponse.setStatus(BAD_REQUEST_400.code());
+            httpServletResponse.setHeader(CONTENT_TYPE.toString(), PLAIN_TEXT_UTF_8.toString());
+            IOStreamUtils.writeToOutputStream(iae.getMessage().getBytes(Charsets.UTF_8), httpServletResponse);
         } catch (Exception e) {
             logger.error("Exception processing " + (request != null ? request : httpServletRequest), e);
             httpServletResponse.setStatus(BAD_REQUEST_400.code());

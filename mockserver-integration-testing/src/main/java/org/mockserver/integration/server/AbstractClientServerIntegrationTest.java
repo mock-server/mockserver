@@ -41,7 +41,6 @@ import static org.junit.Assert.fail;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.matchers.Times.exactly;
 import static org.mockserver.matchers.Times.once;
-import static org.mockserver.matchers.Times.unlimited;
 import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.Cookie.cookie;
 import static org.mockserver.model.Header.header;
@@ -96,16 +95,16 @@ public abstract class AbstractClientServerIntegrationTest {
         return new Expectation(httpRequest, Times.unlimited(), TimeToLive.unlimited());
     }
 
+    @BeforeClass
+    public static void resetServletContext() throws Exception {
+        servletContext = "";
+    }
+
     public abstract int getMockServerPort();
 
     public abstract int getMockServerSecurePort();
 
     public abstract int getTestServerPort();
-
-    @BeforeClass
-    public static void resetServletContext() throws Exception {
-        servletContext = "";
-    }
 
     @Before
     public void resetServer() {
@@ -5729,6 +5728,61 @@ public abstract class AbstractClientServerIntegrationTest {
 
         assertThat("Slow request takes less than expected", slowRequestElapsedMillis, is(greaterThan(5 * 1000L)));
         assertThat("Fast request takes longer than expected", fastRequestElapsedMillis, is(lessThan(3 * 1000L)));
+    }
+
+    @Test
+    public void shouldReturnErrorForInvalidExpectation() {
+        // when
+        HttpResponse httpResponse = new NettyHttpClient().sendRequest(
+                request()
+                        .withMethod("PUT")
+                        .withHeader(HOST.toString(), "localhost:" + getMockServerPort())
+                        .withPath(addContextToPath("/expectation"))
+                        .withBody("{" + NEW_LINE +
+                                "  \"httpRequest\" : {" + NEW_LINE +
+                                "    \"path\" : \"/path_one\"" + NEW_LINE +
+                                "  }," + NEW_LINE +
+                                "  \"incorrectField\" : {" + NEW_LINE +
+                                "    \"body\" : \"some_body_one\"" + NEW_LINE +
+                                "  }," + NEW_LINE +
+                                "  \"times\" : {" + NEW_LINE +
+                                "    \"remainingTimes\" : 1," + NEW_LINE +
+                                "    \"unlimited\" : false" + NEW_LINE +
+                                "  }," + NEW_LINE +
+                                "  \"timeToLive\" : {" + NEW_LINE +
+                                "    \"unlimited\" : true" + NEW_LINE +
+                                "  }" + NEW_LINE +
+                                "}")
+        );
+
+        // then
+        assertThat(httpResponse.getStatusCode(), is(400));
+        assertThat(httpResponse.getBodyAsString(), is("2 errors:" + NEW_LINE +
+                " - object instance has properties which are not allowed by the schema: [\"incorrectField\"]" + NEW_LINE +
+                " - oneOf of the following must be specified \"httpResponse\" \"httpForward\" \"httpClassCallback\" \"httpError\" \"httpObjectCallback\" "));
+    }
+
+    @Test
+    public void shouldReturnErrorForInvalidRequest() {
+        // when
+        HttpResponse httpResponse = new NettyHttpClient().sendRequest(
+                request()
+                        .withMethod("PUT")
+                        .withHeader(HOST.toString(), "localhost:" + getMockServerPort())
+                        .withPath(addContextToPath("/clear"))
+                        .withBody("{" + NEW_LINE +
+                                "    \"path\" : 500," + NEW_LINE +
+                                "    \"method\" : true," + NEW_LINE +
+                                "    \"keepAlive\" : \"false\"" + NEW_LINE +
+                                "  }")
+        );
+
+        // then
+        assertThat(httpResponse.getStatusCode(), is(400));
+        assertThat(httpResponse.getBodyAsString(), is("3 errors:" + NEW_LINE +
+                " - instance type (string) does not match any allowed primitive type (allowed: [\"boolean\"]) for field \"/keepAlive\"" + NEW_LINE +
+                " - instance type (boolean) does not match any allowed primitive type (allowed: [\"string\"]) for field \"/method\"" + NEW_LINE +
+                " - instance type (integer) does not match any allowed primitive type (allowed: [\"string\"]) for field \"/path\""));
     }
 
     protected void verifyRequestMatches(HttpRequest[] httpRequests, HttpRequest... httpRequestMatchers) {

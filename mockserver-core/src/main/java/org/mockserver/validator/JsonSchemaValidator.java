@@ -17,6 +17,8 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.mockserver.character.Character.NEW_LINE;
+
 /**
  * @author jamesdbloom
  */
@@ -89,13 +91,61 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
     private String formatProcessingReport(ProcessingReport validate) {
         List<String> validationErrors = new ArrayList<String>();
         for (ProcessingMessage processingMessage : validate) {
-            System.out.println("processingMessage = " + processingMessage);
             String fieldPointer = "";
             if (processingMessage.asJson().get("instance") != null && processingMessage.asJson().get("instance").get("pointer") != null) {
                 fieldPointer = String.valueOf(processingMessage.asJson().get("instance").get("pointer")).replaceAll("\"", "");
             }
             if (fieldPointer.endsWith("/body")) {
-                validationErrors.add("oneOf of the following body types must be specified BINARY, JSON, JSON_SCHEMA, PARAMETERS, REGEX, STRING, XML, XML_SCHEMA, XPATH for field \"" + fieldPointer + "\"");
+                validationErrors.add("for field \"" + fieldPointer + "\" a plain string or one of the following example bodies must be specified " + NEW_LINE +
+                                "   {" + NEW_LINE +
+                                "     \"not\": false," + NEW_LINE +
+                                "     \"type\": \"BINARY\"," + NEW_LINE +
+                                "     \"base64Bytes\": \"\"," + NEW_LINE +
+                                "     \"contentType\": \"\"" + NEW_LINE +
+                                "   }, " + NEW_LINE +
+                                "   {" + NEW_LINE +
+                                "     \"not\": false," + NEW_LINE +
+                                "     \"type\": \"JSON\"," + NEW_LINE +
+                                "     \"json\": \"\"," + NEW_LINE +
+                                "     \"contentType\": \"\"," + NEW_LINE +
+                                "     \"matchType\": \"ONLY_MATCHING_FIELDS\"" + NEW_LINE +
+                                "   }," + NEW_LINE +
+                                "   {" + NEW_LINE +
+                                "     \"not\": false," + NEW_LINE +
+                                "     \"type\": \"JSON_SCHEMA\"," + NEW_LINE +
+                                "     \"jsonSchema\": \"\"" + NEW_LINE +
+                                "   }," + NEW_LINE +
+                                "   {" + NEW_LINE +
+                                "     \"not\": false," + NEW_LINE +
+                                "     \"type\": \"PARAMETERS\"," + NEW_LINE +
+                                "     \"parameters\": \"TO DO\"" + NEW_LINE +
+                                "   }," + NEW_LINE +
+                                "   {" + NEW_LINE +
+                                "     \"not\": false," + NEW_LINE +
+                                "     \"type\": \"REGEX\"," + NEW_LINE +
+                                "     \"regex\": \"\"" + NEW_LINE +
+                                "   }," + NEW_LINE +
+                                "   {" + NEW_LINE +
+                                "     \"not\": false," + NEW_LINE +
+                                "     \"type\": \"STRING\"," + NEW_LINE +
+                                "     \"string\": \"\"" + NEW_LINE +
+                                "   }," + NEW_LINE +
+                                "   {" + NEW_LINE +
+                                "     \"not\": false," + NEW_LINE +
+                                "     \"type\": \"XML\"," + NEW_LINE +
+                                "     \"xml\": \"\"," + NEW_LINE +
+                                "     \"contentType\": \"\"" + NEW_LINE +
+                                "   }," + NEW_LINE +
+                                "   {" + NEW_LINE +
+                                "     \"not\": false," + NEW_LINE +
+                                "     \"type\": \"XML_SCHEMA\"," + NEW_LINE +
+                                "     \"xmlSchema\": \"\"" + NEW_LINE +
+                                "   }," + NEW_LINE +
+                                "   {" + NEW_LINE +
+                                "     \"not\": false," + NEW_LINE +
+                                "     \"type\": \"XPATH\"," + NEW_LINE +
+                                "     \"xpath\": \"\"" + NEW_LINE +
+                                "   }");
             } else if (String.valueOf(processingMessage.asJson().get("keyword")).equals("\"oneOf\"")) {
                 StringBuilder oneOfErrorMessage = new StringBuilder("oneOf of the following must be specified ");
                 for (JsonNode jsonNode : processingMessage.asJson().get("reports")) {

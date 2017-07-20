@@ -15,7 +15,10 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.util.EntityUtils;
+import org.hamcrest.core.Is;
+import org.junit.Ignore;
 import org.junit.Test;
+import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.proxy.ProxyClient;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.socket.KeyStoreFactory;
@@ -24,6 +27,8 @@ import org.mockserver.streams.IOStreamUtils;
 import java.io.OutputStream;
 import java.net.Socket;
 
+import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.core.StringStartsWith.startsWith;
 import static org.junit.Assert.*;
@@ -59,7 +64,7 @@ public abstract class AbstractClientProxyIntegrationTest {
     public abstract int getServerPort();
 
     protected String calculatePath(String path) {
-        return ("/" + servletContext + "/" + path).replaceAll("//", "/");
+        return ("/" + servletContext + "/" + path).replaceAll("///|//", "/");
     }
 
     @Test
@@ -530,6 +535,29 @@ public abstract class AbstractClientProxyIntegrationTest {
                                 .withPath("/test_headers_.*"),
                         exactly(1)
                 );
+    }
+
+    @Test
+    public void shouldReturnErrorForInvalidRequest() {
+        // when
+        org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient().sendRequest(
+                request()
+                        .withMethod("PUT")
+                        .withHeader(HOST.toString(), "localhost:" + getProxyPort())
+                        .withPath(calculatePath("/clear"))
+                        .withBody("{" + NEW_LINE +
+                                "    \"path\" : 500," + NEW_LINE +
+                                "    \"method\" : true," + NEW_LINE +
+                                "    \"keepAlive\" : \"false\"" + NEW_LINE +
+                                "  }")
+        );
+
+        // then
+        assertThat(httpResponse.getStatusCode(), Is.is(400));
+        assertThat(httpResponse.getBodyAsString(), Is.is("3 errors:" + NEW_LINE +
+                " - instance type (string) does not match any allowed primitive type (allowed: [\"boolean\"]) for field \"/keepAlive\"" + NEW_LINE +
+                " - instance type (boolean) does not match any allowed primitive type (allowed: [\"string\"]) for field \"/method\"" + NEW_LINE +
+                " - instance type (integer) does not match any allowed primitive type (allowed: [\"string\"]) for field \"/path\""));
     }
 
     @Test

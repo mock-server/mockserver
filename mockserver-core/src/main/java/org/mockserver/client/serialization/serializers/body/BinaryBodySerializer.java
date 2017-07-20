@@ -24,7 +24,7 @@ public class BinaryBodySerializer extends StdSerializer<BinaryBody> {
             jgen.writeStringField("contentType", binaryBody.getContentType());
         }
         jgen.writeStringField("type", binaryBody.getType().name());
-        jgen.writeStringField("value", binaryBody.toString());
+        jgen.writeStringField("base64Bytes", binaryBody.toString());
         jgen.writeEndObject();
     }
 }

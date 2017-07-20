@@ -293,4 +293,89 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
                                 " - oneOf of the following must be specified \"httpResponse\" \"httpForward\" \"httpClassCallback\" \"httpError\" \"httpObjectCallback\" "
                 ));
     }
+
+    @Test
+    public void shouldValidateInvalidExtraField() {
+        // when
+        assertThat(jsonSchemaValidator.isValid("{" + NEW_LINE +
+                        "    \"invalidField\" : \"randomValue\"" + NEW_LINE +
+                        "  }"),
+                is(
+                        "2 errors:" + NEW_LINE +
+                                " - object instance has properties which are not allowed by the schema: [\"invalidField\"]" + NEW_LINE +
+                                " - oneOf of the following must be specified \"httpResponse\" \"httpForward\" \"httpClassCallback\" \"httpError\" \"httpObjectCallback\" "
+                ));
+    }
+
+    @Test
+    public void shouldValidateMultipleInvalidFieldTypes() {
+        // when
+        assertThat(jsonSchemaValidator.isValid("{" + NEW_LINE +
+                        "    \"httpRequest\" : \"100\"," + NEW_LINE +
+                        "    \"httpResponse\" : false" + NEW_LINE +
+                        "  }"),
+                is(
+                        "2 errors:" + NEW_LINE +
+                                " - instance type (string) does not match any allowed primitive type (allowed: [\"object\"]) for field \"/httpRequest\"" + NEW_LINE +
+                                " - instance type (boolean) does not match any allowed primitive type (allowed: [\"object\"]) for field \"/httpResponse\""
+                ));
+    }
+
+    @Test
+    public void shouldValidateInvalidListItemType() {
+        // when
+        assertThat(jsonSchemaValidator.isValid("{" + NEW_LINE +
+                        "  \"httpRequest\" : {" + NEW_LINE +
+                        "    \"method\" : \"someMethod\"," + NEW_LINE +
+                        "    \"path\" : \"somePath\"," + NEW_LINE +
+                        "    \"queryStringParameters\" : [ {" + NEW_LINE +
+                        "      \"name\" : \"queryStringParameterNameOne\"," + NEW_LINE +
+                        "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
+                        "    }, {" + NEW_LINE +
+                        "      \"name\" : \"queryStringParameterNameTwo\"," + NEW_LINE +
+                        "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+                        "    } ]," + NEW_LINE +
+                        "    \"body\" : {" + NEW_LINE +
+                        "      \"type\" : \"STRING\"," + NEW_LINE +
+                        "      \"string\" : \"someBody\"" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"cookies\" : [ {" + NEW_LINE +
+                        "      \"name\" : \"someCookieName\"," + NEW_LINE +
+                        "      \"value\" : \"someCookieValue\"" + NEW_LINE +
+                        "    } ]," + NEW_LINE +
+                        "    \"headers\" : [ \"invalidValueOne\", \"invalidValueTwo\" ]" + NEW_LINE +
+                        "  }," + NEW_LINE +
+                        "  \"httpResponse\" : {" + NEW_LINE +
+                        "    \"statusCode\" : 304," + NEW_LINE +
+                        "    \"body\" : \"someBody\"," + NEW_LINE +
+                        "    \"cookies\" : [ {" + NEW_LINE +
+                        "      \"name\" : \"someCookieName\"," + NEW_LINE +
+                        "      \"value\" : \"someCookieValue\"" + NEW_LINE +
+                        "    } ]," + NEW_LINE +
+                        "    \"headers\" : [ \"invalidValueOne\", \"invalidValueTwo\" ]," + NEW_LINE +
+                        "    \"delay\" : {" + NEW_LINE +
+                        "      \"timeUnit\" : \"MICROSECONDS\"," + NEW_LINE +
+                        "      \"value\" : 1" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"connectionOptions\" : {" + NEW_LINE +
+                        "      \"suppressContentLengthHeader\" : true," + NEW_LINE +
+                        "      \"contentLengthHeaderOverride\" : 50," + NEW_LINE +
+                        "      \"suppressConnectionHeader\" : true," + NEW_LINE +
+                        "      \"keepAliveOverride\" : true," + NEW_LINE +
+                        "      \"closeSocket\" : true" + NEW_LINE +
+                        "    }" + NEW_LINE +
+                        "  }," + NEW_LINE +
+                        "  \"times\" : {" + NEW_LINE +
+                        "    \"remainingTimes\" : 5," + NEW_LINE +
+                        "    \"unlimited\" : false" + NEW_LINE +
+                        "  }" + NEW_LINE +
+                        "}"),
+                is(
+                        "4 errors:" + NEW_LINE +
+                                " - instance type (string) does not match any allowed primitive type (allowed: [\"object\"]) for field \"/httpRequest/headers/0\"" + NEW_LINE +
+                                " - instance type (string) does not match any allowed primitive type (allowed: [\"object\"]) for field \"/httpRequest/headers/1\"" + NEW_LINE +
+                                " - instance type (string) does not match any allowed primitive type (allowed: [\"object\"]) for field \"/httpResponse/headers/0\"" + NEW_LINE +
+                                " - instance type (string) does not match any allowed primitive type (allowed: [\"object\"]) for field \"/httpResponse/headers/1\""
+                ));
+    }
 }

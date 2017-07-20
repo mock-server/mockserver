@@ -13,7 +13,7 @@
             "BINARY"
           ]
         },
-        "value": {
+        "base64Bytes": {
           "type": "string"
         },
         "contentType": {
