@@ -21,6 +21,7 @@ import org.mockserver.mockserver.callback.ExpectationCallbackResponse;
 import org.mockserver.mockserver.callback.WebSocketClientRegistry;
 import org.mockserver.model.*;
 import org.mockserver.socket.KeyAndCertificateFactory;
+import org.mockserver.validator.JsonSchemaExpectationValidator;
 import org.mockserver.validator.JsonSchemaValidator;
 import org.mockserver.validator.Validator;
 import org.mockserver.streams.IOStreamUtils;
@@ -65,8 +66,6 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
     private PortBindingSerializer portBindingSerializer = new PortBindingSerializer();
     private VerificationSerializer verificationSerializer = new VerificationSerializer();
     private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer();
-    // validators
-    private Validator<String> expectationValidator = new JsonSchemaValidator(FileReader.readFileFromClassPathOrPath("org/mockserver/model/schema/expectationsFullModel.json"));
     // CORS
     private CORSHeaders addCORSHeaders = new CORSHeaders();
 
