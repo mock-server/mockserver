@@ -19,7 +19,7 @@ for commit in $COMMIT_LIST; do
     cp ../Dockerfile_mockserver docker/Dockerfile
     runCommand "sed -i '' -e 's/3\.10\.8/$VERSION/g' docker/Dockerfile"
     runCommand "docker build -t jamesdbloom/mockserver:mockserver-$VERSION ./docker"
-#    runCommand "docker push jamesdbloom/mockserver:mockserver-$VERSION"
+    runCommand "docker push jamesdbloom/mockserver:mockserver-$VERSION"
     git reset HEAD --hard
     echo
 done
