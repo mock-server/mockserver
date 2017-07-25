@@ -1,12 +1,16 @@
 package org.mockserver.client.serialization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import joptsimple.internal.Strings;
 import org.mockserver.client.serialization.model.VerificationDTO;
+import org.mockserver.validator.JsonSchemaVerificationValidator;
 import org.mockserver.verify.Verification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+
+import static org.mockserver.character.Character.NEW_LINE;
 
 /**
  * @author jamesdbloom
@@ -14,6 +18,7 @@ import java.io.IOException;
 public class VerificationSerializer implements Serializer<Verification> {
     private Logger logger = LoggerFactory.getLogger(this.getClass());
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
+    private JsonSchemaVerificationValidator verificationValidator = new JsonSchemaVerificationValidator();
 
     public String serialize(Verification verification) {
         try {
@@ -27,19 +32,27 @@ public class VerificationSerializer implements Serializer<Verification> {
     }
 
     public Verification deserialize(String jsonVerification) {
-        Verification verification = null;
-        if (jsonVerification != null && !jsonVerification.isEmpty()) {
-            try {
-                VerificationDTO verificationDTO = objectMapper.readValue(jsonVerification, VerificationDTO.class);
-                if (verificationDTO != null) {
-                    verification = verificationDTO.buildObject();
+        if (Strings.isNullOrEmpty(jsonVerification)) {
+            throw new IllegalArgumentException("1 error:\n - a verification is required but value was \"" + String.valueOf(jsonVerification) + "\"");
+        } else {
+            String validationErrors = verificationValidator.isValid(jsonVerification);
+            if (validationErrors.isEmpty()) {
+                Verification verification = null;
+                try {
+                    VerificationDTO verificationDTO = objectMapper.readValue(jsonVerification, VerificationDTO.class);
+                    if (verificationDTO != null) {
+                        verification = verificationDTO.buildObject();
+                    }
+                } catch (Exception e) {
+                    logger.info("Exception while parsing [" + jsonVerification + "] for Verification", e);
+                    throw new RuntimeException("Exception while parsing [" + jsonVerification + "] for Verification", e);
                 }
-            } catch (Exception e) {
-                logger.info("Exception while parsing [" + jsonVerification + "] for verification", e);
-                throw new RuntimeException("Exception while parsing [" + jsonVerification + "] for verification", e);
+                return verification;
+            } else {
+                logger.info("Validation failed:" + NEW_LINE + validationErrors + NEW_LINE + "-- Expectation:" + NEW_LINE + jsonVerification + NEW_LINE + "-- Schema:" + NEW_LINE + verificationValidator.getSchema());
+                throw new IllegalArgumentException(validationErrors);
             }
         }
-        return verification;
     }
 
     @Override

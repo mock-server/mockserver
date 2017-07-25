@@ -18,28 +18,6 @@ import static org.mockserver.model.HttpRequest.request;
 public class VerificationSequenceSerializerIntegrationTest {
 
     @Test
-    public void shouldIgnoreExtraFields() throws IOException {
-        // given
-        String requestBytes = "{" + NEW_LINE +
-                "  \"httpRequests\" : [ {" + NEW_LINE +
-                "    \"path\" : \"some_path_one\"," + NEW_LINE +
-                "    \"random_field\" : \"random_value\"" + NEW_LINE +
-                "  } ]," + NEW_LINE +
-                "  \"random_field\" : \"random_value\"" + NEW_LINE +
-                "}";
-
-        // when
-        VerificationSequence verificationSequence = new VerificationSequenceSerializer().deserialize(requestBytes);
-
-        // then
-        assertEquals(new VerificationSequenceDTO()
-                .setHttpRequests(Arrays.asList(
-                        new HttpRequestDTO(request("some_path_one"))
-                ))
-                .buildObject(), verificationSequence);
-    }
-
-    @Test
     public void shouldDeserializeCompleteObject() throws IOException {
         // given
         String requestBytes = "{" + NEW_LINE +
@@ -76,7 +54,7 @@ public class VerificationSequenceSerializerIntegrationTest {
     public void shouldDeserializeEmptyObject() throws IOException {
         // given
         String requestBytes = "{" + NEW_LINE +
-                "    \"path\": \"somePath\"" + NEW_LINE +
+                "  \"httpRequests\" : [ ]" + NEW_LINE +
                 "}";
 
         // when

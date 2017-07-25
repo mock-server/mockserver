@@ -16,7 +16,6 @@ import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.util.EntityUtils;
 import org.hamcrest.core.Is;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.proxy.ProxyClient;
@@ -31,7 +30,8 @@ import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.core.StringStartsWith.startsWith;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.test.Assert.assertContains;
@@ -303,6 +303,45 @@ public abstract class AbstractClientProxyIntegrationTest {
     }
 
     @Test
+    public void shouldVerifyRequestsSequence() throws Exception {
+        // given
+        HttpClient httpClient = createHttpClient();
+
+        // when
+        httpClient.execute(
+                new HttpGet(
+                        new URIBuilder()
+                                .setScheme("http")
+                                .setHost("localhost")
+                                .setPort(getServerPort())
+                                .setPath(calculatePath("test_headers_and_body"))
+                                .build()
+                )
+        );
+        httpClient.execute(
+                new HttpGet(
+                        new URIBuilder()
+                                .setScheme("http")
+                                .setHost("localhost")
+                                .setPort(getServerPort())
+                                .setPath(calculatePath("test_headers_only"))
+                                .build()
+                )
+        );
+
+        // then
+        getProxyClient()
+                .verify(
+                        request()
+                                .withMethod("GET")
+                                .withPath("/test_headers_and_body"),
+                        request()
+                                .withMethod("GET")
+                                .withPath("/test_headers_only")
+                );
+    }
+
+    @Test
     public void shouldVerifyRequestsWithHopByHopHeaders() throws Exception {
         // given
         HttpClient httpClient = createHttpClient();
@@ -489,6 +528,59 @@ public abstract class AbstractClientProxyIntegrationTest {
     }
 
     @Test
+    public void shouldVerifyRequestsSequenceNotFound() throws Exception {
+        // given
+        HttpClient httpClient = createHttpClient();
+
+        // when
+        httpClient.execute(
+                new HttpGet(
+                        new URIBuilder()
+                                .setScheme("http")
+                                .setHost("localhost")
+                                .setPort(getServerPort())
+                                .setPath(calculatePath("test_headers_and_body"))
+                                .build()
+                )
+        );
+        httpClient.execute(
+                new HttpGet(
+                        new URIBuilder()
+                                .setScheme("http")
+                                .setHost("localhost")
+                                .setPort(getServerPort())
+                                .setPath(calculatePath("test_headers_only"))
+                                .build()
+                )
+        );
+
+        // then
+        try {
+            getProxyClient()
+                    .verify(
+                            request()
+                                    .withMethod("GET")
+                                    .withPath("/test_headers_only"),
+                            request()
+                                    .withMethod("GET")
+                                    .withPath("/test_headers_and_body")
+                    );
+            fail();
+        } catch (AssertionError ae) {
+            assertThat(ae.getMessage(), startsWith("Request sequence not found, expected:<[ {" + NEW_LINE +
+                    "  \"method\" : \"GET\"," + NEW_LINE +
+                    "  \"path\" : \"/test_headers_only\"" + NEW_LINE +
+                    "}, {" + NEW_LINE +
+                    "  \"method\" : \"GET\"," + NEW_LINE +
+                    "  \"path\" : \"/test_headers_and_body\"" + NEW_LINE +
+                    "} ]> but was:<[ {" + NEW_LINE +
+                    "  \"method\" : \"GET\"," + NEW_LINE +
+                    "  \"path\" : \"/test_headers_and_body\"," + NEW_LINE +
+                    "  \"headers\" : [ {"));
+        }
+    }
+
+    @Test
     public void shouldClearRequests() throws Exception {
         // given
         HttpClient httpClient = createHttpClient();
@@ -535,29 +627,6 @@ public abstract class AbstractClientProxyIntegrationTest {
                                 .withPath("/test_headers_.*"),
                         exactly(1)
                 );
-    }
-
-    @Test
-    public void shouldReturnErrorForInvalidRequest() {
-        // when
-        org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient().sendRequest(
-                request()
-                        .withMethod("PUT")
-                        .withHeader(HOST.toString(), "localhost:" + getProxyPort())
-                        .withPath(calculatePath("/clear"))
-                        .withBody("{" + NEW_LINE +
-                                "    \"path\" : 500," + NEW_LINE +
-                                "    \"method\" : true," + NEW_LINE +
-                                "    \"keepAlive\" : \"false\"" + NEW_LINE +
-                                "  }")
-        );
-
-        // then
-        assertThat(httpResponse.getStatusCode(), Is.is(400));
-        assertThat(httpResponse.getBodyAsString(), Is.is("3 errors:" + NEW_LINE +
-                " - instance type (string) does not match any allowed primitive type (allowed: [\"boolean\"]) for field \"/keepAlive\"" + NEW_LINE +
-                " - instance type (boolean) does not match any allowed primitive type (allowed: [\"string\"]) for field \"/method\"" + NEW_LINE +
-                " - instance type (integer) does not match any allowed primitive type (allowed: [\"string\"]) for field \"/path\""));
     }
 
     @Test
@@ -608,5 +677,74 @@ public abstract class AbstractClientProxyIntegrationTest {
                                 .withPath("/test_headers_.*"),
                         exactly(0)
                 );
+    }
+
+    @Test
+    public void shouldReturnErrorForInvalidRequestToClear() {
+        // when
+        org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient().sendRequest(
+                request()
+                        .withMethod("PUT")
+                        .withHeader(HOST.toString(), "localhost:" + getProxyPort())
+                        .withPath(calculatePath("/clear"))
+                        .withBody("{" + NEW_LINE +
+                                "    \"path\" : 500," + NEW_LINE +
+                                "    \"method\" : true," + NEW_LINE +
+                                "    \"keepAlive\" : \"false\"" + NEW_LINE +
+                                "  }")
+        );
+
+        // then
+        assertThat(httpResponse.getStatusCode(), Is.is(400));
+        assertThat(httpResponse.getBodyAsString(), Is.is("3 errors:" + NEW_LINE +
+                " - instance type (string) does not match any allowed primitive type (allowed: [\"boolean\"]) for field \"/keepAlive\"" + NEW_LINE +
+                " - instance type (boolean) does not match any allowed primitive type (allowed: [\"string\"]) for field \"/method\"" + NEW_LINE +
+                " - instance type (integer) does not match any allowed primitive type (allowed: [\"string\"]) for field \"/path\""));
+    }
+
+    @Test
+    public void shouldReturnErrorForInvalidRequestToVerify() {
+        // when
+        org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient().sendRequest(
+                request()
+                        .withMethod("PUT")
+                        .withHeader(HOST.toString(), "localhost:" + getProxyPort())
+                        .withPath(calculatePath("/verify"))
+                        .withBody("{" + NEW_LINE +
+                                "    \"httpRequest\": {" + NEW_LINE +
+                                "        \"path\": \"/simple\"" + NEW_LINE +
+                                "    }, " + NEW_LINE +
+                                "    \"times\": 1" + NEW_LINE +
+                                "}")
+        );
+
+        // then
+        assertThat(httpResponse.getStatusCode(), Is.is(400));
+        assertThat(httpResponse.getBodyAsString(), Is.is("1 error:" + NEW_LINE +
+                " - instance type (integer) does not match any allowed primitive type (allowed: [\"object\"]) for field \"/times\""));
+    }
+
+    @Test
+    public void shouldReturnErrorForInvalidRequestToVerifySequence() {
+        // when
+        org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient().sendRequest(
+                request()
+                        .withMethod("PUT")
+                        .withHeader(HOST.toString(), "localhost:" + getProxyPort())
+                        .withPath(calculatePath("/verifySequence"))
+                        .withBody("{" + NEW_LINE +
+                                "    \"httpRequest\": {" + NEW_LINE +
+                                "        \"path\": false" + NEW_LINE +
+                                "    }," + NEW_LINE +
+                                "    \"httpRequest\": {" + NEW_LINE +
+                                "        \"path\": 10" + NEW_LINE +
+                                "    }" + NEW_LINE +
+                                "}")
+        );
+
+        // then
+        assertThat(httpResponse.getStatusCode(), Is.is(400));
+        assertThat(httpResponse.getBodyAsString(), Is.is("1 error:" + NEW_LINE +
+                " - object instance has properties which are not allowed by the schema: [\"httpRequest\"]"));
     }
 }

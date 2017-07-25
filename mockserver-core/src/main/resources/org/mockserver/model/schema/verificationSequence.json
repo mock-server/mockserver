@@ -6,7 +6,7 @@
     "httpRequests": {
       "type": "array",
       "items": {
-        "$ref": "org/mockserver/model/schema/httpRequest.json"
+        "$ref": "#/definitions/httpRequest"
       }
     }
   },
