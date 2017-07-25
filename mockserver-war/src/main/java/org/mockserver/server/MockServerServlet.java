@@ -113,15 +113,15 @@ public class MockServerServlet extends HttpServlet {
                     httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
                 }
                 if (request.hasQueryStringParameter("type", "expectation")) {
+                    mockServerMatcher.clear(httpRequest);
                     logFormatter.infoLog("clearing expectations that match:{}", httpRequest);
-                    mockServerMatcher.clear(httpRequest);
                 } else if (request.hasQueryStringParameter("type", "log")) {
-                    logFormatter.infoLog("clearing request logs that match:{}", httpRequest);
                     requestLogFilter.clear(httpRequest);
+                    logFormatter.infoLog("clearing request logs that match:{}", httpRequest);
                 } else {
-                    logFormatter.infoLog("clearing expectations and request logs that match:{}", httpRequest);
                     requestLogFilter.clear(httpRequest);
                     mockServerMatcher.clear(httpRequest);
+                    logFormatter.infoLog("clearing expectations and request logs that match:{}", httpRequest);
                 }
                 httpServletResponse.setStatus(OK_200.code());
                 addCORSHeadersForAPI(httpServletResponse);
@@ -130,9 +130,9 @@ public class MockServerServlet extends HttpServlet {
 
                 requestLogFilter.reset();
                 mockServerMatcher.reset();
-                logFormatter.infoLog("resetting all expectations and request logs");
                 httpServletResponse.setStatus(OK_200.code());
                 addCORSHeadersForAPI(httpServletResponse);
+                logFormatter.infoLog("resetting all expectations and request logs");
 
             } else if (request.matches("PUT", "/dumpToLog")) {
 
@@ -152,16 +152,16 @@ public class MockServerServlet extends HttpServlet {
                 }
                 if (request.hasQueryStringParameter("type", "expectation")) {
                     Expectation[] expectations = mockServerMatcher.retrieveExpectations(httpRequest);
-                    logFormatter.infoLog("retrieving expectations that match:{}", httpRequest);
                     httpServletResponse.setStatus(OK_200.code());
                     httpServletResponse.setHeader(CONTENT_TYPE.toString(), JSON_UTF_8.toString());
                     IOStreamUtils.writeToOutputStream(expectationSerializer.serialize(expectations).getBytes(), httpServletResponse);
+                    logFormatter.infoLog("retrieving expectations that match:{}", httpRequest);
                 } else {
                     HttpRequest[] requests = requestLogFilter.retrieve(httpRequest);
-                    logFormatter.infoLog("retrieving requests that match:{}", httpRequest);
                     httpServletResponse.setStatus(OK_200.code());
                     httpServletResponse.setHeader(CONTENT_TYPE.toString(), JSON_UTF_8.toString());
                     IOStreamUtils.writeToOutputStream(httpRequestSerializer.serialize(requests).getBytes(), httpServletResponse);
+                    logFormatter.infoLog("retrieving requests that match:{}", httpRequest);
                 }
                 addCORSHeadersForAPI(httpServletResponse);
 
@@ -169,17 +169,17 @@ public class MockServerServlet extends HttpServlet {
 
                 Verification verification = verificationSerializer.deserialize(request.getBodyAsString());
                 String result = requestLogFilter.verify(verification);
-                logFormatter.infoLog("verifying requests that match:{}", verification);
                 verifyResponse(httpServletResponse, result);
                 addCORSHeadersForAPI(httpServletResponse);
+                logFormatter.infoLog("verifying requests that match:{}", verification);
 
             } else if (request.matches("PUT", "/verifySequence")) {
 
                 VerificationSequence verificationSequence = verificationSequenceSerializer.deserialize(request.getBodyAsString());
                 String result = requestLogFilter.verify(verificationSequence);
-                logFormatter.infoLog("verifying sequence that match:{}", verificationSequence);
                 verifyResponse(httpServletResponse, result);
                 addCORSHeadersForAPI(httpServletResponse);
+                logFormatter.infoLog("verifying sequence that match:{}", verificationSequence);
 
             } else if (request.matches("PUT", "/stop")) {
 
