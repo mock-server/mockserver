@@ -128,25 +128,24 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                     httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
                 }
                 if (request.hasQueryStringParameter("type", "expectation")) {
+                    mockServerMatcher.clear(httpRequest);
                     logFormatter.infoLog("clearing expectations that match:{}", httpRequest);
-                    mockServerMatcher.clear(httpRequest);
                 } else if (request.hasQueryStringParameter("type", "log")) {
-                    logFormatter.infoLog("clearing request logs that match:{}", httpRequest);
                     requestLogFilter.clear(httpRequest);
+                    logFormatter.infoLog("clearing request logs that match:{}", httpRequest);
                 } else {
-                    logFormatter.infoLog("clearing expectations and request logs that match:{}", httpRequest);
                     requestLogFilter.clear(httpRequest);
                     mockServerMatcher.clear(httpRequest);
+                    logFormatter.infoLog("clearing expectations and request logs that match:{}", httpRequest);
                 }
-                logFormatter.infoLog("clearing expectations and request logs that match:{}", httpRequest);
                 writeResponse(ctx, request, OK);
 
             } else if (request.matches("PUT", "/reset")) {
 
                 requestLogFilter.reset();
                 mockServerMatcher.reset();
-                logFormatter.infoLog("resetting all expectations and request logs");
                 writeResponse(ctx, request, OK);
+                logFormatter.infoLog("resetting all expectations and request logs");
 
             } else if (request.matches("PUT", "/dumpToLog")) {
 
@@ -165,27 +164,27 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                 }
                 if (request.hasQueryStringParameter("type", "expectation")) {
                     Expectation[] expectations = mockServerMatcher.retrieveExpectations(httpRequest);
-                    logFormatter.infoLog("retrieving expectations that match:{}", httpRequest);
                     writeResponse(ctx, request, OK, expectationSerializer.serialize(expectations), "application/json");
+                    logFormatter.infoLog("retrieving expectations that match:{}", httpRequest);
                 } else {
                     HttpRequest[] requests = requestLogFilter.retrieve(httpRequest);
-                    logFormatter.infoLog("retrieving requests that match:{}", httpRequest);
                     writeResponse(ctx, request, OK, httpRequestSerializer.serialize(requests), "application/json");
+                    logFormatter.infoLog("retrieving requests that match:{}", httpRequest);
                 }
 
             } else if (request.matches("PUT", "/verify")) {
 
                 Verification verification = verificationSerializer.deserialize(request.getBodyAsString());
                 String result = requestLogFilter.verify(verification);
-                logFormatter.infoLog("verifying requests that match:{}", verification);
                 verifyResponse(ctx, request, result);
+                logFormatter.infoLog("verifying requests that match:{}", verification);
 
             } else if (request.matches("PUT", "/verifySequence")) {
 
                 VerificationSequence verificationSequence = verificationSequenceSerializer.deserialize(request.getBodyAsString());
                 String result = requestLogFilter.verify(verificationSequence);
-                logFormatter.infoLog("verifying sequence that match:{}", verificationSequence);
                 verifyResponse(ctx, request, result);
+                logFormatter.infoLog("verifying sequence that match:{}", verificationSequence);
 
             } else if (request.matches("PUT", "/stop")) {
 
@@ -217,15 +216,15 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                     webSocketClientRegistry.registerCallbackResponseHandler(clientId, new ExpectationCallbackResponse() {
                         @Override
                         public void handle(HttpResponse response) {
-                            logFormatter.infoLog("returning response:{}" + NEW_LINE + " for request:{}", response, request);
                             writeResponse(ctx, request, response.withConnectionOptions(connectionOptions().withCloseSocket(true)));
+                            logFormatter.infoLog("returning response:{}" + NEW_LINE + " for request:{}", response, request);
                         }
                     });
                     webSocketClientRegistry.sendClientMessage(clientId, request);
                 } else {
                     HttpResponse response = actionHandler.processAction(handle, request);
-                    logFormatter.infoLog("returning response:{}" + NEW_LINE + " for request:{}", response, request);
                     writeResponse(ctx, request, response);
+                    logFormatter.infoLog("returning response:{}" + NEW_LINE + " for request:{}", response, request);
                 }
 
             }
