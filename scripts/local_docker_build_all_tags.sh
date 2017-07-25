@@ -17,10 +17,10 @@ for commit in $COMMIT_LIST; do
     cp docker/Dockerfile ../Dockerfile_mockserver
     git checkout "$commit"
     cp ../Dockerfile_mockserver docker/Dockerfile
-    git reset HEAD --hard
 #    sed -i '' -e 's/FROM java/FROM openjdk\:alpine/g' docker/Dockerfile
 
     runCommand "docker build -t jamesdbloom/mockserver:mockserver-$VERSION ./docker"
 #    runCommand "docker push jamesdbloom/mockserver:mockserver-$VERSION"
+    git reset HEAD --hard
     echo
 done
