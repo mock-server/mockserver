@@ -15,6 +15,7 @@ for commit in $COMMIT_LIST; do
 	VERSION=`git show $commit:docker/Dockerfile | awk '/mockserver\-netty\-.*\-jar\-with\-dependencies\.jar/{ print $0 }' | grep -o '/mockserver\-netty\-[0-9][0-9\.]*\-jar\-with\-dependencies\.jar' | egrep -o '[0-9][0-9\.]*'`
     echo $commit, $VERSION;
     git checkout "$commit"
+    sed -i '' -e 's/FROM java/FROM openjdk\:alpine/g' docker/Dockerfile
     runCommand "docker build -t jamesdbloom/mockserver:mockserver-$VERSION ./docker"
 #    runCommand "docker push jamesdbloom/mockserver:mockserver-$VERSION"
     echo
