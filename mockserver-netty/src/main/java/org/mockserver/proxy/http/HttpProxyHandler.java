@@ -103,18 +103,18 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
                 org.mockserver.model.HttpRequest httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
                 requestLogFilter.clear(httpRequest);
                 logFormatter.infoLog("clearing expectations and request logs that match:{}", httpRequest);
-                writeResponse(ctx, request, ACCEPTED);
+                writeResponse(ctx, request, OK);
 
             } else if (request.matches("PUT", "/reset")) {
 
                 requestLogFilter.reset();
                 logFormatter.infoLog("resetting all expectations and request logs");
-                writeResponse(ctx, request, ACCEPTED);
+                writeResponse(ctx, request, OK);
 
             } else if (request.matches("PUT", "/dumpToLog")) {
 
                 requestResponseLogFilter.dumpToLog(httpRequestSerializer.deserialize(request.getBodyAsString()), request.hasQueryStringParameter("type", "java"));
-                writeResponse(ctx, request, ACCEPTED);
+                writeResponse(ctx, request, OK);
 
             } else if (request.matches("PUT", "/retrieve")) {
 
@@ -126,26 +126,18 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
                 Verification verification = verificationSerializer.deserialize(request.getBodyAsString());
                 logFormatter.infoLog("verifying:{}", verification);
                 String result = requestLogFilter.verify(verification);
-                if (result.isEmpty()) {
-                    writeResponse(ctx, request, ACCEPTED);
-                } else {
-                    writeResponse(ctx, request, NOT_ACCEPTABLE, result, MediaType.create("text", "plain").toString());
-                }
+                verifyResponse(ctx, request, result);
 
             } else if (request.matches("PUT", "/verifySequence")) {
 
                 VerificationSequence verificationSequence = verificationSequenceSerializer.deserialize(request.getBodyAsString());
                 String result = requestLogFilter.verify(verificationSequence);
                 logFormatter.infoLog("verifying sequence:{}", verificationSequence);
-                if (result.isEmpty()) {
-                    writeResponse(ctx, request, ACCEPTED);
-                } else {
-                    writeResponse(ctx, request, NOT_ACCEPTABLE, result, MediaType.create("text", "plain").toString());
-                }
+                verifyResponse(ctx, request, result);
 
             } else if (request.matches("PUT", "/stop")) {
 
-                ctx.writeAndFlush(response().withStatusCode(ACCEPTED.code()));
+                ctx.writeAndFlush(response().withStatusCode(OK.code()));
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -164,7 +156,14 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
             logger.error("Exception processing " + request, e);
             writeResponse(ctx, request, response().withStatusCode(BAD_REQUEST.code()).withBody(e.getMessage()));
         }
+    }
 
+    private void verifyResponse(ChannelHandlerContext ctx, HttpRequest request, String result) {
+        if (result.isEmpty()) {
+            writeResponse(ctx, request, ACCEPTED);
+        } else {
+            writeResponse(ctx, request, NOT_ACCEPTABLE, result, MediaType.create("text", "plain").toString());
+        }
     }
 
     private HttpResponse sendRequest(HttpRequest httpRequest, InetSocketAddress remoteAddress) {

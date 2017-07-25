@@ -23,6 +23,8 @@ import org.mockserver.verify.VerificationSequence;
 
 import java.util.concurrent.TimeUnit;
 
+import static io.netty.handler.codec.http.HttpResponseStatus.ACCEPTED;
+import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
@@ -51,7 +53,7 @@ public class HttpProxyHandlerGeneralOperationsTest extends HttpProxyHandlerTest 
 
         // and - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse)embeddedChannel.readOutbound();
-        assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.ACCEPTED.code()));
+        assertThat(httpResponse.getStatusCode(), is(OK.code()));
         assertThat(httpResponse.getBodyAsString(), is(""));
     }
 
@@ -71,7 +73,7 @@ public class HttpProxyHandlerGeneralOperationsTest extends HttpProxyHandlerTest 
 
         // and - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse)embeddedChannel.readOutbound();
-        assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.ACCEPTED.code()));
+        assertThat(httpResponse.getStatusCode(), is(OK.code()));
         assertThat(httpResponse.getBodyAsString(), is(""));
     }
 
@@ -91,7 +93,7 @@ public class HttpProxyHandlerGeneralOperationsTest extends HttpProxyHandlerTest 
 
         // and - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse)embeddedChannel.readOutbound();
-        assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.ACCEPTED.code()));
+        assertThat(httpResponse.getStatusCode(), is(OK.code()));
         assertThat(httpResponse.getBodyAsString(), is(""));
     }
 
@@ -111,7 +113,7 @@ public class HttpProxyHandlerGeneralOperationsTest extends HttpProxyHandlerTest 
 
         // and - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse)embeddedChannel.readOutbound();
-        assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.ACCEPTED.code()));
+        assertThat(httpResponse.getStatusCode(), is(OK.code()));
         assertThat(httpResponse.getBodyAsString(), is(""));
     }
 
@@ -134,7 +136,7 @@ public class HttpProxyHandlerGeneralOperationsTest extends HttpProxyHandlerTest 
 
         // and - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
-        assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.OK.code()));
+        assertThat(httpResponse.getStatusCode(), is(OK.code()));
         assertThat(httpResponse.getBodyAsString(), is("requests"));
     }
 
@@ -187,7 +189,7 @@ public class HttpProxyHandlerGeneralOperationsTest extends HttpProxyHandlerTest 
 
         // and - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse)embeddedChannel.readOutbound();
-        assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.ACCEPTED.code()));
+        assertThat(httpResponse.getStatusCode(), is(ACCEPTED.code()));
         assertThat(httpResponse.getBodyAsString(), is(""));
     }
 
@@ -233,7 +235,7 @@ public class HttpProxyHandlerGeneralOperationsTest extends HttpProxyHandlerTest 
 
         // and - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse)embeddedChannel.readOutbound();
-        assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.ACCEPTED.code()));
+        assertThat(httpResponse.getStatusCode(), is(ACCEPTED.code()));
         assertThat(httpResponse.getBodyAsString(), is(""));
     }
 
@@ -276,6 +278,6 @@ public class HttpProxyHandlerGeneralOperationsTest extends HttpProxyHandlerTest 
 
         // and - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse)embeddedChannel.readOutbound();
-        assertThat(httpResponse.getStatusCode(), is(HttpResponseStatus.ACCEPTED.code()));
+        assertThat(httpResponse.getStatusCode(), is(OK.code()));
     }
 }

@@ -90,19 +90,19 @@ public class ProxyServlet extends HttpServlet {
             } else if (request.matches("PUT", "/clear")) {
 
                 requestLogFilter.clear(httpRequestSerializer.deserialize(request.getBodyAsString()));
-                httpServletResponse.setStatus(ACCEPTED_202.code());
+                httpServletResponse.setStatus(OK_200.code());
                 addCORSHeadersForAPI(httpServletResponse);
 
             } else if (request.matches("PUT", "/reset")) {
 
                 requestLogFilter.reset();
-                httpServletResponse.setStatus(ACCEPTED_202.code());
+                httpServletResponse.setStatus(OK_200.code());
                 addCORSHeadersForAPI(httpServletResponse);
 
             } else if (request.matches("PUT", "/dumpToLog")) {
 
                 requestResponseLogFilter.dumpToLog(httpRequestSerializer.deserialize(request.getBodyAsString()), request.hasQueryStringParameter("type", "java"));
-                httpServletResponse.setStatus(ACCEPTED_202.code());
+                httpServletResponse.setStatus(OK_200.code());
                 addCORSHeadersForAPI(httpServletResponse);
 
             } else if (request.matches("PUT", "/retrieve")) {

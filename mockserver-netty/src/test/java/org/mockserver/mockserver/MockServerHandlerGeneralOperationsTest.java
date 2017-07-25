@@ -46,7 +46,7 @@ public class MockServerHandlerGeneralOperationsTest extends MockServerHandlerTes
 
         // and - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
-        assertThat(httpResponse.getStatusCode(), is(ACCEPTED.code()));
+        assertThat(httpResponse.getStatusCode(), is(OK.code()));
         assertThat(httpResponse.getBodyAsString(), is(""));
     }
 
@@ -67,7 +67,7 @@ public class MockServerHandlerGeneralOperationsTest extends MockServerHandlerTes
 
         // and - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
-        assertThat(httpResponse.getStatusCode(), is(ACCEPTED.code()));
+        assertThat(httpResponse.getStatusCode(), is(OK.code()));
         assertThat(httpResponse.getBodyAsString(), is(""));
     }
 
@@ -88,7 +88,7 @@ public class MockServerHandlerGeneralOperationsTest extends MockServerHandlerTes
 
         // and - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
-        assertThat(httpResponse.getStatusCode(), is(ACCEPTED.code()));
+        assertThat(httpResponse.getStatusCode(), is(OK.code()));
         assertThat(httpResponse.getBodyAsString(), is(""));
     }
 
@@ -109,7 +109,7 @@ public class MockServerHandlerGeneralOperationsTest extends MockServerHandlerTes
 
         // and - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
-        assertThat(httpResponse.getStatusCode(), is(ACCEPTED.code()));
+        assertThat(httpResponse.getStatusCode(), is(OK.code()));
         assertThat(httpResponse.getBodyAsString(), is(""));
     }
 
@@ -129,7 +129,7 @@ public class MockServerHandlerGeneralOperationsTest extends MockServerHandlerTes
 
         // and - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
-        assertThat(httpResponse.getStatusCode(), is(ACCEPTED.code()));
+        assertThat(httpResponse.getStatusCode(), is(OK.code()));
         assertThat(httpResponse.getBodyAsString(), is(""));
     }
 
@@ -400,7 +400,7 @@ public class MockServerHandlerGeneralOperationsTest extends MockServerHandlerTes
 
         // and - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
-        assertThat(httpResponse.getStatusCode(), is(ACCEPTED.code()));
+        assertThat(httpResponse.getStatusCode(), is(OK.code()));
     }
 
     @Test
@@ -441,7 +441,7 @@ public class MockServerHandlerGeneralOperationsTest extends MockServerHandlerTes
 
         // and - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = (HttpResponse) embeddedChannel.readOutbound();
-        assertThat(httpResponse.getStatusCode(), is(ACCEPTED.code()));
+        assertThat(httpResponse.getStatusCode(), is(OK.code()));
         assertThat(httpResponse.getBodyAsString(), is("" +
                 "{" + NEW_LINE +
                 "  \"ports\" : [ 1, 2, 3, 4, 5 ]" + NEW_LINE +

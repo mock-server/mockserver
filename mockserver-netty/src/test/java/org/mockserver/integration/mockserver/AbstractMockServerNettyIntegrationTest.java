@@ -206,7 +206,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
         // - in http
         assertEquals(
                 response()
-                        .withStatusCode(ACCEPTED_202.code())
+                        .withStatusCode(OK_200.code())
                         .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
                         .withBody("{" + NEW_LINE +
                                 "  \"ports\" : [ " + firstNewPort + " ]" + NEW_LINE +
@@ -236,7 +236,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
         // - in https
         assertEquals(
                 response()
-                        .withStatusCode(ACCEPTED_202.code())
+                        .withStatusCode(OK_200.code())
                         .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
                         .withBody("{" + NEW_LINE +
                                 "  \"ports\" : [ " + secondNewPort + " ]" + NEW_LINE +

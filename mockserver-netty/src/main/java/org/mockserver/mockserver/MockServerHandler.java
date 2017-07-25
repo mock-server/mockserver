@@ -1,6 +1,5 @@
 package org.mockserver.mockserver;
 
-import com.google.common.base.Joiner;
 import com.google.common.net.MediaType;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
@@ -89,7 +88,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                 PortBinding requestedPortBindings = portBindingSerializer.deserialize(request.getBodyAsString());
                 try {
                     List<Integer> actualPortBindings = server.bindToPorts(requestedPortBindings.getPorts());
-                    writeResponse(ctx, request, ACCEPTED, portBindingSerializer.serialize(portBinding(actualPortBindings)), "application/json");
+                    writeResponse(ctx, request, OK, portBindingSerializer.serialize(portBinding(actualPortBindings)), "application/json");
                 } catch (RuntimeException e) {
                     if (e.getCause() instanceof BindException) {
                         writeResponse(ctx, request, NOT_ACCEPTABLE, e.getMessage() + " port already in use", MediaType.create("text", "plain").toString());
@@ -133,19 +132,19 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                     mockServerMatcher.clear(httpRequest);
                 }
                 logFormatter.infoLog("clearing expectations and request logs that match:{}", httpRequest);
-                writeResponse(ctx, request, ACCEPTED);
+                writeResponse(ctx, request, OK);
 
             } else if (request.matches("PUT", "/reset")) {
 
                 requestLogFilter.reset();
                 mockServerMatcher.reset();
                 logFormatter.infoLog("resetting all expectations and request logs");
-                writeResponse(ctx, request, ACCEPTED);
+                writeResponse(ctx, request, OK);
 
             } else if (request.matches("PUT", "/dumpToLog")) {
 
                 mockServerMatcher.dumpToLog(httpRequestSerializer.deserialize(request.getBodyAsString()));
-                writeResponse(ctx, request, ACCEPTED);
+                writeResponse(ctx, request, OK);
 
             } else if (request.matches("PUT", "/retrieve")) {
 
@@ -184,7 +183,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
             } else if (request.matches("PUT", "/stop")) {
 
-                ctx.writeAndFlush(response().withStatusCode(ACCEPTED.code()));
+                ctx.writeAndFlush(response().withStatusCode(OK.code()));
                 new Thread(new Runnable() {
                     @Override
                     public void run() {

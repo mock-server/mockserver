@@ -206,7 +206,7 @@ public class ProxyServletTest {
 
         // then
         verify(requestResponseLogFilter).dumpToLog(httpRequest, false);
-        assertEquals(ACCEPTED_202.code(), mockHttpServletResponse.getStatus());
+        assertEquals(OK_200.code(), mockHttpServletResponse.getStatus());
     }
 
     @Test
@@ -224,7 +224,7 @@ public class ProxyServletTest {
 
         // then
         verify(requestResponseLogFilter).dumpToLog(httpRequest, true);
-        assertEquals(ACCEPTED_202.code(), mockHttpServletResponse.getStatus());
+        assertEquals(OK_200.code(), mockHttpServletResponse.getStatus());
     }
 
     @Test
@@ -380,7 +380,7 @@ public class ProxyServletTest {
 
         // then
         verify(requestLogFilter).reset();
-        assertEquals(ACCEPTED_202.code(), mockHttpServletResponse.getStatus());
+        assertEquals(OK_200.code(), mockHttpServletResponse.getStatus());
     }
 
     @Test
@@ -397,6 +397,6 @@ public class ProxyServletTest {
 
         // then
         verify(requestLogFilter).clear(httpRequest);
-        assertEquals(ACCEPTED_202.code(), mockHttpServletResponse.getStatus());
+        assertEquals(OK_200.code(), mockHttpServletResponse.getStatus());
     }
 }

@@ -116,7 +116,7 @@ public class MockServerMultiplePortIntegrationTest extends AbstractRestartableMo
         // - in http
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withStatusCode(HttpStatusCode.OK_200.code())
                         .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
                         .withBody("{" + NEW_LINE +
                                 "  \"ports\" : [ " + firstNewPort + " ]" + NEW_LINE +
@@ -146,7 +146,7 @@ public class MockServerMultiplePortIntegrationTest extends AbstractRestartableMo
         // - in https
         assertEquals(
                 response()
-                        .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                        .withStatusCode(HttpStatusCode.OK_200.code())
                         .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
                         .withBody("{" + NEW_LINE +
                                 "  \"ports\" : [ " + secondNewPort + " ]" + NEW_LINE +

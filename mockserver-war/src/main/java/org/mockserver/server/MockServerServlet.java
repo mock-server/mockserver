@@ -100,20 +100,20 @@ public class MockServerServlet extends HttpServlet {
                     requestLogFilter.clear(httpRequest);
                     mockServerMatcher.clear(httpRequest);
                 }
-                httpServletResponse.setStatus(ACCEPTED_202.code());
+                httpServletResponse.setStatus(OK_200.code());
                 addCORSHeadersForAPI(httpServletResponse);
 
             } else if (request.matches("PUT", "/reset")) {
 
                 requestLogFilter.reset();
                 mockServerMatcher.reset();
-                httpServletResponse.setStatus(ACCEPTED_202.code());
+                httpServletResponse.setStatus(OK_200.code());
                 addCORSHeadersForAPI(httpServletResponse);
 
             } else if (request.matches("PUT", "/dumpToLog")) {
 
                 mockServerMatcher.dumpToLog(httpRequestSerializer.deserialize(request.getBodyAsString()));
-                httpServletResponse.setStatus(ACCEPTED_202.code());
+                httpServletResponse.setStatus(OK_200.code());
                 addCORSHeadersForAPI(httpServletResponse);
 
             } else if (request.matches("PUT", "/retrieve")) {
