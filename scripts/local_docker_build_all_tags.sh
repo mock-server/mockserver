@@ -17,6 +17,7 @@ for commit in $COMMIT_LIST; do
     echo $commit, $VERSION;
     git checkout "$commit"
     cp ../Dockerfile_mockserver docker/Dockerfile
+    sed -i '' -e 's/3\.10\.8/$VERSION/g' docker/Dockerfile
     runCommand "docker build -t jamesdbloom/mockserver:mockserver-$VERSION ./docker"
 #    runCommand "docker push jamesdbloom/mockserver:mockserver-$VERSION"
     git reset HEAD --hard
