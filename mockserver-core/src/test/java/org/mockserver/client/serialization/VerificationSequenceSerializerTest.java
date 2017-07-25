@@ -12,6 +12,7 @@ import org.mockserver.client.serialization.model.VerificationSequenceDTO;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.StringBody;
+import org.mockserver.validator.JsonSchemaVerificationSequenceValidator;
 import org.mockserver.verify.VerificationSequence;
 
 import java.io.IOException;
@@ -22,6 +23,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 
 public class VerificationSequenceSerializerTest {
@@ -44,6 +46,8 @@ public class VerificationSequenceSerializerTest {
     private ObjectMapper objectMapper;
     @Mock
     private ObjectWriter objectWriter;
+    @Mock
+    private JsonSchemaVerificationSequenceValidator verificationSequenceValidator;
     @InjectMocks
     private VerificationSequenceSerializer verificationSequenceSerializer;
 
@@ -60,6 +64,7 @@ public class VerificationSequenceSerializerTest {
     @Test
     public void deserialize() throws IOException {
         // given
+        when(verificationSequenceValidator.isValid(eq("requestBytes"))).thenReturn("");
         when(objectMapper.readValue(eq("requestBytes"), same(VerificationSequenceDTO.class))).thenReturn(fullVerificationSequenceDTO);
 
         // when
@@ -67,18 +72,6 @@ public class VerificationSequenceSerializerTest {
 
         // then
         assertEquals(fullVerificationSequence, verification);
-    }
-
-    @Test
-    public void deserializeHandleException() throws IOException {
-        // given
-        thrown.expect(RuntimeException.class);
-        thrown.expectMessage("Exception while parsing [requestBytes] for verificationSequence");
-        // and
-        when(objectMapper.readValue(eq("requestBytes"), same(VerificationSequenceDTO.class))).thenThrow(new RuntimeException("TEST EXCEPTION"));
-
-        // when
-        verificationSequenceSerializer.deserialize("requestBytes");
     }
 
     @Test
@@ -98,7 +91,7 @@ public class VerificationSequenceSerializerTest {
     public void serializeHandlesException() throws IOException {
         // given
         thrown.expect(RuntimeException.class);
-        thrown.expectMessage("Exception while serializing verificationSequence to JSON with valueVerificationSequence[httpRequests=[]]");
+        thrown.expectMessage("Exception while serializing verificationSequence to JSON with value { }");
         // and
         when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
         when(objectWriter.writeValueAsString(any(VerificationSequenceDTO.class))).thenThrow(new RuntimeException("TEST EXCEPTION"));
@@ -106,4 +99,5 @@ public class VerificationSequenceSerializerTest {
         // when
         verificationSequenceSerializer.serialize(new VerificationSequence());
     }
+
 }

@@ -16,6 +16,7 @@ import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.StringBody;
 import org.mockserver.verify.Verification;
+import org.mockserver.validator.JsonSchemaVerificationValidator;
 import org.mockserver.verify.VerificationTimes;
 
 import java.io.IOException;
@@ -50,6 +51,8 @@ public class VerificationSerializerTest {
     private ObjectMapper objectMapper;
     @Mock
     private ObjectWriter objectWriter;
+    @Mock
+    private JsonSchemaVerificationValidator verificationValidator;
     @InjectMocks
     private VerificationSerializer verificationSerializer;
 
@@ -66,6 +69,7 @@ public class VerificationSerializerTest {
     @Test
     public void deserialize() throws IOException {
         // given
+        when(verificationValidator.isValid(eq("requestBytes"))).thenReturn("");
         when(objectMapper.readValue(eq("requestBytes"), same(VerificationDTO.class))).thenReturn(fullVerificationDTO);
 
         // when
@@ -73,18 +77,6 @@ public class VerificationSerializerTest {
 
         // then
         assertEquals(fullVerification, verification);
-    }
-
-    @Test
-    public void deserializeHandleException() throws IOException {
-        // given
-        thrown.expect(RuntimeException.class);
-        thrown.expectMessage("Exception while parsing [requestBytes] for verification");
-        // and
-        when(objectMapper.readValue(eq("requestBytes"), same(VerificationDTO.class))).thenThrow(new IOException("TEST EXCEPTION"));
-
-        // when
-        verificationSerializer.deserialize("requestBytes");
     }
 
     @Test

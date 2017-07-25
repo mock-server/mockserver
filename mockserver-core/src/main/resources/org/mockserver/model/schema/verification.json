@@ -4,10 +4,10 @@
   "additionalProperties": false,
   "properties": {
     "httpRequest": {
-      "$ref": "org/mockserver/model/schema/httpRequest.json"
+      "$ref": "#/definitions/httpRequest"
     },
     "times": {
-      "$ref": "org/mockserver/model/schema/verificationTimes.json"
+      "$ref": "#/definitions/verificationTimes"
     }
   },
   "definitions": {
