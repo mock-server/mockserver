@@ -104,6 +104,7 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
             } else if (request.matches("PUT", "/clear")) {
 
                 org.mockserver.model.HttpRequest httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
+                requestResponseLogFilter.clear(httpRequest);
                 requestLogFilter.clear(httpRequest);
                 logFormatter.infoLog("clearing expectations and request logs that match:{}", httpRequest);
                 writeResponse(ctx, request, OK);
