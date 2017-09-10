@@ -1,10 +1,10 @@
-openapi: 3.0.0-rc2
+openapi: 3.0.0
 servers:
   - url: 'http://localhost:1080/'
   - url: 'https://localhost:1080/'
 info:
   title: Mock Server API
-  version: '10.8'
+  version: '10.9'
   description: >-
     MockServer enables easy mocking of any system you integrate with via HTTP or
     HTTPS with clients written in Java, JavaScript and Ruby.  MockServer also
@@ -15,8 +15,6 @@ info:
   license:
     url: 'https://github.com/jamesdbloom/mockserver/blob/master/LICENSE.md'
     name: Apache 2.0
-  contact:
-    email: mockserver@noreply.github.com
 tags:
   - name: expectation
     description: Create expectations
@@ -30,21 +28,20 @@ paths:
       tags:
         - control
       summary: return listening ports
-      description: ''
       responses:
         '200':
           description: MockServer is running and listening on the listed ports
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Ports'
+                $ref: >-
+                  https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/ports.json
   /bind:
     put:
       tags:
         - control
       summary: bind additional listening ports
       description: only supported on Netty version
-      parameters: []
       responses:
         '202':
           description: >-
@@ -53,7 +50,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Ports'
+                $ref: >-
+                  https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/ports.json
         '400':
           description: incorrect request format
         '406':
@@ -64,7 +62,8 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Ports'
+              $ref: >-
+                https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/ports.json
         description: >-
           list of ports to bind to, where 0 indicates dynamically bind to any
           available port
@@ -83,7 +82,6 @@ paths:
       tags:
         - expectation
       summary: create expectation
-      parameters: []
       responses:
         '201':
           description: expectation created
@@ -95,7 +93,12 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Expectations'
+              title: list of expectations
+              type: array
+              additionalProperties: false
+              items:
+                $ref: >-
+                  https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/expectation.json
         description: expectation to create
         required: true
   /clear:
@@ -103,7 +106,6 @@ paths:
       tags:
         - expectation
       summary: clears expectations and recorded requests that match the request matcher
-      parameters: []
       responses:
         '202':
           description: expectations and recorded requests cleared
@@ -113,7 +115,8 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/HttpRequest'
+              $ref: >-
+                https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/httpRequest.json
         description: request used to match expectations and recored requests to clear
   /reset:
     put:
@@ -128,7 +131,6 @@ paths:
       tags:
         - expectation
       summary: write all requests to the request log that match the request matcher
-      parameters: []
       responses:
         '202':
           description: recorded requests written to request log
@@ -138,16 +140,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/HttpRequest'
+              $ref: >-
+                https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/httpRequest.json
         description: >-
           request used to match which recored requests to write to the request
           log
   /verify:
     put:
       tags:
-        - expectation
+        - verify
       summary: verify a request has been received a specific number of times
-      parameters: []
       responses:
         '202':
           description: matching request has been received specified number of times
@@ -164,14 +166,15 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Verification'
+              $ref: >-
+                https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/verification.json
         description: request matcher and the number of times to match
+        required: true
   /verifySequence:
     put:
       tags:
-        - expectation
+        - verify
       summary: verify a sequence of request has been received in the specific order
-      parameters: []
       responses:
         '202':
           description: request sequence has been received in specified order
@@ -188,190 +191,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/VerificationSequence'
+              $ref: >-
+                https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/verificationSequence.json
         description: the sequence of requests matchers
+        required: true
 components:
-  schemas:
-    Expectations:
-      title: list of expectations
-      type: array
-      additionalProperties: false
-      items:
-        $ref: '#/components/schemas/Expectation'
-    Expectation:
-      title: expectation
-      type: object
-      additionalProperties: false
-      properties:
-        httpRequest:
-          $ref: '#/components/schemas/HttpRequest'
-        httpResponse:
-          $ref: '#/components/schemas/HttpResponse'
-        times:
-          $ref: '#/components/schemas/Times'
-    HttpRequest:
-      title: request matcher
-      type: object
-      additionalProperties: false
-      properties:
-        body:
-          $ref: '#/components/schemas/Body'
-        headers:
-          $ref: '#/components/schemas/Headers'
-        cookies:
-          $ref: '#/components/schemas/Cookies'
-        queryStringParameters:
-          $ref: '#/components/schemas/QueryStringParameters'
-        path:
-          type: string
-        method:
-          type: string
-    HttpResponse:
-      title: response
-      type: object
-      additionalProperties: false
-      properties:
-        body:
-          type: string
-        delay:
-          $ref: '#/components/schemas/Delay'
-        cookies:
-          $ref: '#/components/schemas/Cookies'
-        connectionOptions:
-          $ref: '#/components/schemas/ConnectionOptions'
-        headers:
-          $ref: '#/components/schemas/Headers'
-        statusCode:
-          type: integer
-    Times:
-      title: number of responses
-      type: object
-      additionalProperties: false
-      properties:
-        remainingTimes:
-          type: integer
-        unlimited:
-          type: boolean
-    Headers:
-      title: headers
-      type: array
-      additionalProperties: false
-      items:
-        type: object
-        properties:
-          values:
-            items:
-              type: string
-            type: array
-          name:
-            type: string
-    Cookies:
-      title: cookies
-      type: array
-      additionalProperties: false
-      items:
-        type: object
-        properties:
-          name:
-            type: string
-          value:
-            type: string
-    QueryStringParameters:
-      title: parameters
-      type: array
-      additionalProperties: false
-      items:
-        type: object
-        properties:
-          values:
-            items:
-              type: string
-            type: array
-          name:
-            type: string
-    Body:
-      title: body
-      type: object
-      additionalProperties: false
-      properties:
-        type:
-          type: string
-        value:
-          type: string
-    Delay:
-      title: response delay
-      type: object
-      additionalProperties: false
-      properties:
-        timeUnit:
-          type: string
-        value:
-          type: integer
-    ConnectionOptions:
-      title: connection options
-      type: object
-      additionalProperties: false
-      properties:
-        closeSocket:
-          type: boolean
-        contentLengthHeaderOverride:
-          type: integer
-        suppressContentLengthHeader:
-          type: boolean
-        suppressConnectionHeader:
-          type: boolean
-        keepAliveOverride:
-          type: boolean
-    Error:
-      title: verification
-      type: object
-      properties:
-        delay:
-          $ref: '#/components/schemas/Delay'
-        dropConnection:
-          type: boolean
-        responseBytes:
-          description: Base64 encoded bytes
-          type: string
-    Verification:
-      title: verification
-      type: object
-      additionalProperties: false
-      properties:
-        httpRequest:
-          $ref: '#/components/schemas/HttpRequest'
-        times:
-          $ref: '#/components/schemas/VerificationTimes'
-    VerificationTimes:
-      title: number of request to verify
-      type: object
-      additionalProperties: false
-      properties:
-        count:
-          type: integer
-        exact:
-          type: boolean
-    VerificationSequence:
-      title: verification sequence
-      type: object
-      additionalProperties: false
-      properties:
-        httpRequests:
-          type: array
-          items:
-            $ref: '#/components/schemas/HttpRequest'
-    Ports:
-      title: list of ports
-      type: object
-      additionalProperties: false
-      properties:
-        ports:
-          items:
-            type: number
-          type: array
-  responses: {}
-  parameters: {}
-  examples: {}
-  requestBodies: {}
-  securitySchemes: {}
-  headers: {}
+  schemas: {}

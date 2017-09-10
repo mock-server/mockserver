@@ -275,6 +275,8 @@
                 <artifactId>jsonassert</artifactId>
                 <version>1.2.3</version>
             </dependency>
+
+            <!-- json validation -->
             <dependency>
                 <groupId>com.github.fge</groupId>
                 <artifactId>json-schema-validator</artifactId>

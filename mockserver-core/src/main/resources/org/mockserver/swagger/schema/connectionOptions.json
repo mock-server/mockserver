@@ -1,0 +1,22 @@
+{
+  "title": "connection options",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "closeSocket": {
+      "type": "boolean"
+    },
+    "contentLengthHeaderOverride": {
+      "type": "integer"
+    },
+    "suppressContentLengthHeader": {
+      "type": "boolean"
+    },
+    "suppressConnectionHeader": {
+      "type": "boolean"
+    },
+    "keepAliveOverride": {
+      "type": "boolean"
+    }
+  }
+}

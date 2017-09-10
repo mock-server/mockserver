@@ -16,7 +16,7 @@ import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.StringBody;
 import org.mockserver.verify.Verification;
-import org.mockserver.validator.JsonSchemaVerificationValidator;
+import org.mockserver.validator.jsonschema.JsonSchemaVerificationValidator;
 import org.mockserver.verify.VerificationTimes;
 
 import java.io.IOException;

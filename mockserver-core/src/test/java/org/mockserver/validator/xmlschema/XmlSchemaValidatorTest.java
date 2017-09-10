@@ -1,4 +1,4 @@
-package org.mockserver.validator;
+package org.mockserver.validator.xmlschema;
 
 import org.junit.Before;
 import org.junit.Rule;

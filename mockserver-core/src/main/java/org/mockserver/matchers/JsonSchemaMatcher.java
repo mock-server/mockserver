@@ -1,6 +1,6 @@
 package org.mockserver.matchers;
 
-import org.mockserver.validator.JsonSchemaValidator;
+import org.mockserver.validator.jsonschema.JsonSchemaValidator;
 
 /**
  * See http://json-schema.org/

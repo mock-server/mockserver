@@ -4,7 +4,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockserver.validator.JsonSchemaValidator;
+import org.mockserver.validator.jsonschema.JsonSchemaValidator;
 import org.slf4j.Logger;
 
 import static org.junit.Assert.*;

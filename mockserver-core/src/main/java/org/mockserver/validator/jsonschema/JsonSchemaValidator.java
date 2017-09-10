@@ -1,4 +1,4 @@
-package org.mockserver.validator;
+package org.mockserver.validator.jsonschema;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -11,6 +11,7 @@ import com.google.common.base.Joiner;
 import org.mockserver.client.serialization.ObjectMapperFactory;
 import org.mockserver.file.FileReader;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
+import org.mockserver.validator.Validator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

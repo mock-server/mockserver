@@ -1,10 +1,5 @@
-package org.mockserver.validator;
+package org.mockserver.validator.jsonschema;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.mockserver.client.serialization.ObjectMapperFactory;
-import org.mockserver.file.FileReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

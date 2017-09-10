@@ -1,0 +1,60 @@
+{
+  "title": "expectation",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "httpRequest": {
+      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/swagger/schema/httpRequest.json"
+    },
+    "httpResponse": {
+      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/swagger/schema/httpResponse.json"
+    },
+    "httpForward": {
+      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/swagger/schema/httpForward.json"
+    },
+    "httpClassCallback": {
+      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/swagger/schema/httpClassCallback.json"
+    },
+    "httpObjectCallback": {
+      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/swagger/schema/httpObjectCallback.json"
+    },
+    "httpError": {
+      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/swagger/schema/httpError.json"
+    },
+    "times": {
+      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/swagger/schema/times.json"
+    },
+    "timeToLive": {
+      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/swagger/schema/timeToLive.json"
+    }
+  },
+  "oneOf": [
+    {
+      "required": [
+        "httpResponse"
+      ]
+    },
+    {
+      "required": [
+        "httpForward"
+      ]
+    },
+    {
+      "required": [
+        "httpClassCallback"
+      ]
+    },
+    {
+      "required": [
+        "httpError"
+      ]
+    },
+    {
+      "required": [
+        "httpObjectCallback"
+      ]
+    }
+  ],
+  "definitions": {
+  }
+}

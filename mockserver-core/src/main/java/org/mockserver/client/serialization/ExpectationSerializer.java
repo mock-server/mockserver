@@ -5,8 +5,7 @@ import com.google.common.base.Joiner;
 import joptsimple.internal.Strings;
 import org.mockserver.client.serialization.model.ExpectationDTO;
 import org.mockserver.mock.Expectation;
-import org.mockserver.validator.JsonSchemaExpectationValidator;
-import org.mockserver.validator.Validator;
+import org.mockserver.validator.jsonschema.JsonSchemaExpectationValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

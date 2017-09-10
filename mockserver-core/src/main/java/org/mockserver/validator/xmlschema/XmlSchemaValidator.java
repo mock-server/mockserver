@@ -1,10 +1,11 @@
-package org.mockserver.validator;
+package org.mockserver.validator.xmlschema;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import joptsimple.internal.Strings;
 import org.mockserver.client.serialization.ObjectMapperFactory;
 import org.mockserver.file.FileReader;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
+import org.mockserver.validator.Validator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;

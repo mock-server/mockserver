@@ -10,18 +10,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.serialization.model.*;
 import org.mockserver.model.*;
-import org.mockserver.validator.JsonSchemaHttpRequestValidator;
+import org.mockserver.validator.jsonschema.JsonSchemaHttpRequestValidator;
 
 import java.io.IOException;
 import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
-import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.NottableString.string;
 
 /**

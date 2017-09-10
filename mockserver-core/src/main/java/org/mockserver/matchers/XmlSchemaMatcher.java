@@ -1,6 +1,6 @@
 package org.mockserver.matchers;
 
-import org.mockserver.validator.XmlSchemaValidator;
+import org.mockserver.validator.xmlschema.XmlSchemaValidator;
 
 /**
  * See http://xml-schema.org/

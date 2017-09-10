@@ -6,7 +6,7 @@ import com.google.common.base.Joiner;
 import joptsimple.internal.Strings;
 import org.mockserver.client.serialization.model.HttpResponseDTO;
 import org.mockserver.model.HttpResponse;
-import org.mockserver.validator.JsonSchemaHttpResponseValidator;
+import org.mockserver.validator.jsonschema.JsonSchemaHttpResponseValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

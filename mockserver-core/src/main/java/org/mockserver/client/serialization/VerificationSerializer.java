@@ -3,12 +3,10 @@ package org.mockserver.client.serialization;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import joptsimple.internal.Strings;
 import org.mockserver.client.serialization.model.VerificationDTO;
-import org.mockserver.validator.JsonSchemaVerificationValidator;
+import org.mockserver.validator.jsonschema.JsonSchemaVerificationValidator;
 import org.mockserver.verify.Verification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
 
 import static org.mockserver.character.Character.NEW_LINE;
 

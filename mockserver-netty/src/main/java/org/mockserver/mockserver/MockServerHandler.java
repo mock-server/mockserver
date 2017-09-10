@@ -11,7 +11,6 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpServerCodec;
 import org.mockserver.client.serialization.*;
 import org.mockserver.cors.CORSHeaders;
-import org.mockserver.file.FileReader;
 import org.mockserver.filters.RequestLogFilter;
 import org.mockserver.logging.LogFormatter;
 import org.mockserver.mock.Expectation;
@@ -21,16 +20,11 @@ import org.mockserver.mockserver.callback.ExpectationCallbackResponse;
 import org.mockserver.mockserver.callback.WebSocketClientRegistry;
 import org.mockserver.model.*;
 import org.mockserver.socket.KeyAndCertificateFactory;
-import org.mockserver.validator.JsonSchemaExpectationValidator;
-import org.mockserver.validator.JsonSchemaValidator;
-import org.mockserver.validator.Validator;
-import org.mockserver.streams.IOStreamUtils;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.http.HttpServletResponse;
 import java.net.BindException;
 import java.util.List;
 
@@ -46,7 +40,6 @@ import static org.mockserver.model.ConnectionOptions.isFalseOrNull;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
-import static org.mockserver.model.HttpStatusCode.ACCEPTED_202;
 import static org.mockserver.model.PortBinding.portBinding;
 
 @ChannelHandler.Sharable

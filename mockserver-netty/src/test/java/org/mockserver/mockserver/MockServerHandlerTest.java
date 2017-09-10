@@ -18,13 +18,8 @@ import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.mockserver.callback.WebSocketClientRegistry;
 import org.mockserver.model.*;
-import org.mockserver.validator.JsonSchemaValidator;
-import org.mockserver.validator.Validator;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
-
-import java.util.Arrays;
-import java.util.Collections;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;

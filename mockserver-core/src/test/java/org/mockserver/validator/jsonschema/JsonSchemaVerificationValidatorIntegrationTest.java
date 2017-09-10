@@ -1,4 +1,4 @@
-package org.mockserver.validator;
+package org.mockserver.validator.jsonschema;
 
 import org.junit.Test;
 
@@ -9,7 +9,7 @@ import static org.mockserver.character.Character.NEW_LINE;
 /**
  * @author jamesdbloom
  */
-public class JsonSchemaHttpRequestValidatorIntegrationTest {
+public class JsonSchemaVerificationValidatorIntegrationTest {
 
     private JsonSchemaValidator jsonSchemaValidator = new JsonSchemaHttpRequestValidator();
 

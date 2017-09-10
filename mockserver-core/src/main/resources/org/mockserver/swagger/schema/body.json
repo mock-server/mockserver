@@ -1,0 +1,179 @@
+{
+  "title": "request body matcher",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "not": {
+          "type": "boolean"
+        },
+        "type": {
+          "enum": [
+            "BINARY"
+          ]
+        },
+        "base64Bytes": {
+          "type": "string"
+        },
+        "contentType": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "not": {
+          "type": "boolean"
+        },
+        "type": {
+          "enum": [
+            "JSON"
+          ]
+        },
+        "json": {
+          "type": "string"
+        },
+        "contentType": {
+          "type": "string"
+        },
+        "matchType": {
+          "enum": [
+            "STRICT",
+            "ONLY_MATCHING_FIELDS"
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "not": {
+          "type": "boolean"
+        },
+        "type": {
+          "enum": [
+            "JSON_SCHEMA"
+          ]
+        },
+        "jsonSchema": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "not": {
+          "type": "boolean"
+        },
+        "type": {
+          "enum": [
+            "PARAMETERS"
+          ]
+        },
+        "parameters": {
+          "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/swagger/schema/keyToMultiValue.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "not": {
+          "type": "boolean"
+        },
+        "type": {
+          "enum": [
+            "REGEX"
+          ]
+        },
+        "regex": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "not": {
+          "type": "boolean"
+        },
+        "type": {
+          "enum": [
+            "STRING"
+          ]
+        },
+        "string": {
+          "type": "string"
+        },
+        "contentType": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "not": {
+          "type": "boolean"
+        },
+        "type": {
+          "enum": [
+            "XML"
+          ]
+        },
+        "xml": {
+          "type": "string"
+        },
+        "contentType": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "not": {
+          "type": "boolean"
+        },
+        "type": {
+          "enum": [
+            "XML_SCHEMA"
+          ]
+        },
+        "xmlSchema": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "not": {
+          "type": "boolean"
+        },
+        "type": {
+          "enum": [
+            "XPATH"
+          ]
+        },
+        "xpath": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "type": "string"
+    }
+  ]
+}

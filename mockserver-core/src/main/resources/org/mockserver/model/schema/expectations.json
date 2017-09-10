@@ -3,6 +3,6 @@
   "type": "array",
   "additionalProperties": false,
   "items": {
-    "$ref": "org/mockserver/model/schema/expectation.json"
+    "$ref": "#/definitions/expectation"
   }
 }

@@ -12,7 +12,7 @@ import org.mockserver.client.serialization.model.VerificationSequenceDTO;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.StringBody;
-import org.mockserver.validator.JsonSchemaVerificationSequenceValidator;
+import org.mockserver.validator.jsonschema.JsonSchemaVerificationSequenceValidator;
 import org.mockserver.verify.VerificationSequence;
 
 import java.io.IOException;
@@ -23,7 +23,6 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
-import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 
 public class VerificationSequenceSerializerTest {

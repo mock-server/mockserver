@@ -4,7 +4,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockserver.validator.XmlSchemaValidator;
+import org.mockserver.validator.xmlschema.XmlSchemaValidator;
 import org.slf4j.Logger;
 
 import static org.junit.Assert.*;

@@ -1,4 +1,4 @@
-package org.mockserver.validator;
+package org.mockserver.validator.jsonschema;
 
 import org.junit.Test;
 

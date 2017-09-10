@@ -1,4 +1,4 @@
-package org.mockserver.validator;
+package org.mockserver.validator.jsonschema;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

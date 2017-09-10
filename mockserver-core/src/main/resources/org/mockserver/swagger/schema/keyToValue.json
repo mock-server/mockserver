@@ -1,0 +1,15 @@
+{
+  "type": "array",
+  "additionalProperties": false,
+  "items": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "value": {
+        "type": "string"
+      }
+    }
+  }
+}

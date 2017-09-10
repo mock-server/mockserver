@@ -10,21 +10,16 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.serialization.model.*;
 import org.mockserver.model.*;
-import org.mockserver.validator.JsonSchemaHttpResponseValidator;
+import org.mockserver.validator.jsonschema.JsonSchemaHttpResponseValidator;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
-import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.model.HttpResponse.response;
-import static org.mockserver.model.NottableString.string;
 
 /**
  * @author jamesdbloom
