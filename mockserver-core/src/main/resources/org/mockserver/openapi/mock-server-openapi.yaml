@@ -35,7 +35,7 @@ paths:
             application/json:
               schema:
                 $ref: >-
-                  https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/ports.json
+                  https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/openapi/schema/ports.json
   /bind:
     put:
       tags:
@@ -51,7 +51,7 @@ paths:
             application/json:
               schema:
                 $ref: >-
-                  https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/ports.json
+                  https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/openapi/schema/ports.json
         '400':
           description: incorrect request format
         '406':
@@ -63,7 +63,7 @@ paths:
           application/json:
             schema:
               $ref: >-
-                https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/ports.json
+                https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/openapi/schema/ports.json
         description: >-
           list of ports to bind to, where 0 indicates dynamically bind to any
           available port
@@ -98,7 +98,7 @@ paths:
               additionalProperties: false
               items:
                 $ref: >-
-                  https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/expectation.json
+                  https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/openapi/schema/expectation.json
         description: expectation to create
         required: true
   /clear:
@@ -116,7 +116,7 @@ paths:
           application/json:
             schema:
               $ref: >-
-                https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/httpRequest.json
+                https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/openapi/schema/httpRequest.json
         description: request used to match expectations and recored requests to clear
   /reset:
     put:
@@ -141,7 +141,7 @@ paths:
           application/json:
             schema:
               $ref: >-
-                https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/httpRequest.json
+                https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/openapi/schema/httpRequest.json
         description: >-
           request used to match which recored requests to write to the request
           log
@@ -167,7 +167,7 @@ paths:
           application/json:
             schema:
               $ref: >-
-                https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/verification.json
+                https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/openapi/schema/verification.json
         description: request matcher and the number of times to match
         required: true
   /verifySequence:
@@ -192,8 +192,6 @@ paths:
           application/json:
             schema:
               $ref: >-
-                https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/verificationSequence.json
+                https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/openapi/schema/verificationSequence.json
         description: the sequence of requests matchers
         required: true
-components:
-  schemas: {}

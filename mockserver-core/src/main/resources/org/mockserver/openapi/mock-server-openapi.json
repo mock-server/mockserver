@@ -1,8 +1,16 @@
 {
-  "swagger": "2.0",
+  "openapi": "3.0.0",
+  "servers": [
+    {
+      "url": "http://localhost:1080/"
+    },
+    {
+      "url": "https://localhost:1080/"
+    }
+  ],
   "info": {
     "title": "Mock Server API",
-    "version": "10.8",
+    "version": "10.9",
     "description": "MockServer enables easy mocking of any system you integrate with via HTTP or HTTPS with clients written in Java, JavaScript and Ruby.  MockServer also includes a proxy that introspects all proxied traffic including encrypted SSL traffic and supports Port Forwarding, Web Proxying (i.e. HTTP proxy), HTTPS Tunneling Proxying (using HTTP CONNECT) and SOCKS Proxying (i.e. dynamic port forwarding).",
     "license": {
       "url": "https://github.com/jamesdbloom/mockserver/blob/master/LICENSE.md",
@@ -12,10 +20,6 @@
       "email": "mockserver@noreply.github.com"
     }
   },
-  "schemes": [
-    "http",
-    "https"
-  ],
   "tags": [
     {
       "name": "expectation",
@@ -30,8 +34,6 @@
       "description": "Manage MockServer process"
     }
   ],
-  "basePath": "/",
-  "host": "localhost:1080",
   "paths": {
     "/status": {
       "put": {
@@ -39,18 +41,15 @@
           "control"
         ],
         "summary": "return listening ports",
-        "description": "",
-        "produces": [
-          "application/json"
-        ],
-        "consumes": [
-          "application/json"
-        ],
         "responses": {
           "200": {
             "description": "MockServer is running and listening on the listed ports",
-            "schema": {
-              "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/ports.json"
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/openapi/schema/ports.json"
+                }
+              }
             }
           }
         }
@@ -63,28 +62,15 @@
         ],
         "summary": "bind additional listening ports",
         "description": "only supported on Netty version",
-        "produces": [
-          "application/json"
-        ],
-        "consumes": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "in": "body",
-            "name": "ports",
-            "required": true,
-            "description": "list of ports to bind to, where 0 indicates dynamically bind to any available port",
-            "schema": {
-              "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/ports.json"
-            }
-          }
-        ],
         "responses": {
           "202": {
             "description": "listening on additional requested ports, note: the response ony contains ports added for the request, to list all ports use /status",
-            "schema": {
-              "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/ports.json"
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/openapi/schema/ports.json"
+                }
+              }
             }
           },
           "400": {
@@ -93,6 +79,17 @@
           "406": {
             "description": "unable to bind to ports (i.e. already bound or JVM process doesn't have permission)"
           }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/openapi/schema/ports.json"
+              }
+            }
+          },
+          "description": "list of ports to bind to, where 0 indicates dynamically bind to any available port",
+          "required": true
         }
       }
     },
@@ -116,23 +113,6 @@
           "expectation"
         ],
         "summary": "create expectation",
-        "produces": [
-          "application/json"
-        ],
-        "consumes": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "in": "body",
-            "name": "expectation",
-            "required": true,
-            "description": "expectation to create",
-            "schema": {
-              "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/expectations.json"
-            }
-          }
-        ],
         "responses": {
           "201": {
             "description": "expectation created"
@@ -143,6 +123,22 @@
           "406": {
             "description": "invalid expectation"
           }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "title": "list of expectations",
+                "type": "array",
+                "additionalProperties": false,
+                "items": {
+                  "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/openapi/schema/expectation.json"
+                }
+              }
+            }
+          },
+          "description": "expectation to create",
+          "required": true
         }
       }
     },
@@ -152,20 +148,6 @@
           "expectation"
         ],
         "summary": "clears expectations and recorded requests that match the request matcher",
-        "consumes": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "in": "body",
-            "name": "request_matcher",
-            "required": false,
-            "description": "request used to match expectations and recored requests to clear",
-            "schema": {
-              "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/httpRequest.json"
-            }
-          }
-        ],
         "responses": {
           "202": {
             "description": "expectations and recorded requests cleared"
@@ -173,6 +155,16 @@
           "400": {
             "description": "incorrect request format"
           }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/openapi/schema/httpRequest.json"
+              }
+            }
+          },
+          "description": "request used to match expectations and recored requests to clear"
         }
       }
     },
@@ -195,20 +187,6 @@
           "expectation"
         ],
         "summary": "write all requests to the request log that match the request matcher",
-        "consumes": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "in": "body",
-            "name": "request_matcher",
-            "required": false,
-            "description": "request used to match which recored requests to write to the request log",
-            "schema": {
-              "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/httpRequest.json"
-            }
-          }
-        ],
         "responses": {
           "202": {
             "description": "recorded requests written to request log"
@@ -216,32 +194,25 @@
           "400": {
             "description": "incorrect request format"
           }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/openapi/schema/httpRequest.json"
+              }
+            }
+          },
+          "description": "request used to match which recored requests to write to the request log"
         }
       }
     },
     "/verify": {
       "put": {
         "tags": [
-          "expectation"
+          "verify"
         ],
         "summary": "verify a request has been received a specific number of times",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "text/plain"
-        ],
-        "parameters": [
-          {
-            "in": "body",
-            "name": "request_matcher",
-            "required": false,
-            "description": "request matcher and the number of times to match",
-            "schema": {
-              "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/verification.json"
-            }
-          }
-        ],
         "responses": {
           "202": {
             "description": "matching request has been received specified number of times"
@@ -251,37 +222,35 @@
           },
           "406": {
             "description": "request has not been received specified numbers of times",
-            "schema": {
-              "type": "string",
-              "description": "JUnit expected:<...> but was:<...> format"
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "description": "JUnit expected:<...> but was:<...> format"
+                }
+              }
             }
           }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/openapi/schema/verification.json"
+              }
+            }
+          },
+          "description": "request matcher and the number of times to match",
+          "required": true
         }
       }
     },
     "/verifySequence": {
       "put": {
         "tags": [
-          "expectation"
+          "verify"
         ],
         "summary": "verify a sequence of request has been received in the specific order",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "text/plain"
-        ],
-        "parameters": [
-          {
-            "in": "body",
-            "name": "request_matcher",
-            "required": false,
-            "description": "the sequence of requests matchers",
-            "schema": {
-              "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/verificationSequence.json"
-            }
-          }
-        ],
         "responses": {
           "202": {
             "description": "request sequence has been received in specified order"
@@ -291,11 +260,26 @@
           },
           "406": {
             "description": "request sequence has not been received in specified order",
-            "schema": {
-              "type": "string",
-              "description": "JUnit expected:<...> but was:<...> format"
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "description": "JUnit expected:<...> but was:<...> format"
+                }
+              }
             }
           }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/openapi/schema/verificationSequence.json"
+              }
+            }
+          },
+          "description": "the sequence of requests matchers",
+          "required": true
         }
       }
     }
