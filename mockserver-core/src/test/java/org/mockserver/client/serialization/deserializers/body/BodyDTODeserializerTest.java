@@ -1271,6 +1271,34 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
+    public void shouldParseJsonWithParameterBodyInWrongOrder() throws IOException {
+        // given
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"body\" : {" + NEW_LINE +
+                "            \"parameters\" : [ {" + NEW_LINE +
+                "                    \"name\" : \"parameterOneName\"," + NEW_LINE +
+                "                    \"values\" : [ \"parameterOneValueOne\" ]" + NEW_LINE +
+                "            } ]," + NEW_LINE +
+                "            \"type\" : \"PARAMETERS\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
+                "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+                .setHttpRequest(
+                        new HttpRequestDTO()
+                                .setBody(new ParameterBodyDTO(new ParameterBody(
+                                        new Parameter("parameterOneName", "parameterOneValueOne")
+                                )))
+                ), expectationDTO);
+    }
+
+    @Test
     public void shouldParseJsonWithParameterBodyUsingParametersProperty() throws IOException {
         // given
         String json = ("{" + NEW_LINE +

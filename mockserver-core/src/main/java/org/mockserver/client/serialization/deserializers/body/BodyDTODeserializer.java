@@ -121,6 +121,9 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                             switch (token) {
                                 case START_ARRAY:
                                     break;
+                                case END_ARRAY:
+                                    objectDepth--;
+                                    break;
                                 case START_OBJECT:
                                     objectDepth++;
                                     parameterName = string("");
