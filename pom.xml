@@ -283,13 +283,6 @@
                 <version>2.2.6</version>
             </dependency>
 
-            <!-- xml -->
-            <dependency>
-                <groupId>xerces</groupId>
-                <artifactId>xerces</artifactId>
-                <version>2.4.0</version>
-            </dependency>
-
             <!-- commons & guava -->
             <dependency>
                 <groupId>org.apache.commons</groupId>

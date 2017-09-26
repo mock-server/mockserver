@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
 import java.io.IOException;
 
 import static org.mockserver.model.NottableString.string;
@@ -34,7 +35,7 @@ public class XmlStringMatcher extends BodyMatcher<NottableString> {
         }
     }
 
-    public String normaliseXmlString(final String input) throws ParserConfigurationException, SAXException, IOException {
+    public String normaliseXmlString(final String input) throws ParserConfigurationException, SAXException, IOException, TransformerException {
         return stringToXmlDocumentParser.normaliseXmlString(input, new StringToXmlDocumentParser.ErrorLogger() {
             @Override
             public void logError(final String matched, final Exception exception) {
@@ -43,7 +44,8 @@ public class XmlStringMatcher extends BodyMatcher<NottableString> {
         });
     }
 
-    public NottableString normaliseXmlNottableString(final NottableString input) throws IOException, SAXException, ParserConfigurationException {
+    public NottableString normaliseXmlNottableString(final NottableString input)
+            throws IOException, SAXException, ParserConfigurationException, TransformerException {
         return string(normaliseXmlString(input.getValue()), input.getNot());
     }
 
