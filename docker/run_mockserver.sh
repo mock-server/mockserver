@@ -74,6 +74,7 @@ do
         -proxyRemotePort) proxyRemotePort="$2"; shift;;
         -proxyRemoteHost) proxyRemoteHost="$2"; shift;;
         -genericJVMOptions) genericJVMOptions="$2"; shift;;
+		-mockserverLogLevel) mockserverLogLevel="$2"; shift;;
         -*) notset="true"; break;;
         *) break;;
     esac
@@ -119,5 +120,11 @@ if [ -n "$genericJVMOptions" ]
 then
     GENERIC_JVM_OPTIONS="$genericJVMOptions"
 fi
+if [ -n "$mockserverLogLevel" ]
+then
+    MOCKSERVER_LOG_LEVEL="-Dmockserver.logLevel=$mockserverLogLevel"
+else 
+    MOCKSERVER_LOG_LEVEL="-Dmockserver.logLevel=$LOG_LEVEL"
+fi
 
-runCommand "java $GENERIC_JVM_OPTIONS -Dfile.encoding=UTF-8 -Dmockserver.logLevel=$LOG_LEVEL -jar /opt/mockserver/mockserver-netty-jar-with-dependencies.jar$COMMAND_LINE_OPTS"
+runCommand "java $GENERIC_JVM_OPTIONS -Dfile.encoding=UTF-8 $MOCKSERVER_LOG_LEVEL -jar /opt/mockserver/mockserver-netty-jar-with-dependencies.jar$COMMAND_LINE_OPTS"
