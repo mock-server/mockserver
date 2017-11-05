@@ -2,7 +2,7 @@ package org.mockserver.maven;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.maven.artifact.Artifact;
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -27,6 +27,11 @@ import java.util.List;
  */
 public abstract class MockServerAbstractMojo extends AbstractMojo {
 
+    /**
+     * Holds reference to jetty across plugin execution
+     */
+    @VisibleForTesting
+    protected static InstanceHolder embeddedJettyHolder;
     /**
      * The port to run MockServer on
      */
@@ -85,17 +90,8 @@ public abstract class MockServerAbstractMojo extends AbstractMojo {
     @Parameter(property = "pluginDescriptor.plugin.dependencies", required = true, readonly = true)
     protected List<Dependency> dependencies;
 
-    /**
-     * The plugin dependencies
-     */
-    @Parameter(property = "pluginDescriptor.artifacts", required = true, readonly = true)
-    protected List<Artifact> pluginArtifacts;
-
-    /**
-     * Holds reference to jetty across plugin execution
-     */
-    @VisibleForTesting
-    protected static InstanceHolder embeddedJettyHolder;
+    @Parameter(defaultValue = "${session}", readonly = true, required = true)
+    MavenSession session;
 
     protected InstanceHolder getEmbeddedJettyHolder() {
         if (embeddedJettyHolder == null) {

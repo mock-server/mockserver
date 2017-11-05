@@ -4,14 +4,15 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.artifact.Artifact;
-import org.apache.maven.artifact.resolver.ArtifactResolutionRequest;
-import org.apache.maven.artifact.resolver.ArtifactResolver;
+import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.repository.RepositorySystem;
+import org.apache.maven.shared.artifact.resolve.ArtifactResolver;
+import org.apache.maven.shared.artifact.resolve.ArtifactResolverException;
 import org.mockserver.cli.Main;
 import org.mockserver.configuration.ConfigurationProperties;
 
@@ -19,7 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -80,19 +81,19 @@ public class MockServerRunForkedMojo extends MockServerAbstractMojo {
                                 + (proxyPort != -1 ? " proxyPort " + proxyPort : "")
                 );
             }
-            List<String> arguments = new ArrayList<String>(Arrays.asList(getJavaBin()));
+            List<String> arguments = new ArrayList<String>(Collections.singletonList(getJavaBin()));
 //            arguments.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5010");
             arguments.add("-Dfile.encoding=UTF-8");
             arguments.add("-Dmockserver.logLevel=" + logLevel);
             arguments.add("-cp");
-            String classPath = resolveJarWithDependenciesPath();
+            StringBuilder classPath = new StringBuilder(resolvePathForJarWithDependencies());
             if (dependencies != null && !dependencies.isEmpty()) {
                 for (Dependency dependency : dependencies) {
-                    classPath += System.getProperty("path.separator");
-                    classPath += resolvePluginDependencyJarPath(dependency);
+                    classPath.append(System.getProperty("path.separator"));
+                    classPath.append(resolvePathForDependencyJar(dependency));
                 }
             }
-            arguments.add(classPath);
+            arguments.add(classPath.toString());
             arguments.add(Main.class.getName());
             if (serverPort != -1) {
                 arguments.add("-serverPort");
@@ -145,18 +146,29 @@ public class MockServerRunForkedMojo extends MockServerAbstractMojo {
         return javaBinary;
     }
 
-    @VisibleForTesting
-    String resolvePluginDependencyJarPath(Dependency dependency) {
-        Artifact dependencyArtifact = repositorySystem.createArtifactWithClassifier(dependency.getGroupId(), dependency.getArtifactId(), dependency.getVersion(), dependency.getType(), dependency.getClassifier());
-        artifactResolver.resolve(new ArtifactResolutionRequest().setArtifact(dependencyArtifact));
-        return dependencyArtifact.getFile().getAbsolutePath();
+    private String resolvePathForDependencyJar(Dependency dependency) {
+        String path = "";
+        try {
+            Artifact dependencyArtifact = repositorySystem.createArtifactWithClassifier(dependency.getGroupId(), dependency.getArtifactId(), dependency.getVersion(), dependency.getType(), dependency.getClassifier());
+            artifactResolver.resolveArtifact(session.getProjectBuildingRequest(), dependencyArtifact);
+            if (dependencyArtifact != null) {
+                ArtifactRepository localRepository = session.getLocalRepository();
+                path = localRepository.getBasedir() + "/" + localRepository.pathOf(dependencyArtifact);
+            }
+        } catch (ArtifactResolverException e) {
+            getLog().warn("Exception while resolving file path for dependency " + dependency, e);
+        }
+        return path;
     }
 
-    @VisibleForTesting
-    String resolveJarWithDependenciesPath() {
-        Artifact jarWithDependencies = repositorySystem.createArtifactWithClassifier("org.mock-server", "mockserver-netty", getVersion(), "jar", "jar-with-dependencies");
-        artifactResolver.resolve(new ArtifactResolutionRequest().setArtifact(jarWithDependencies));
-        return jarWithDependencies.getFile().getAbsolutePath();
+    private String resolvePathForJarWithDependencies() {
+        Dependency dependency = new Dependency();
+        dependency.setGroupId("org.mock-server");
+        dependency.setArtifactId("mockserver-netty");
+        dependency.setVersion(getVersion());
+        dependency.setType("jar");
+        dependency.setClassifier("jar-with-dependencies");
+        return resolvePathForDependencyJar(dependency);
     }
 
     @VisibleForTesting

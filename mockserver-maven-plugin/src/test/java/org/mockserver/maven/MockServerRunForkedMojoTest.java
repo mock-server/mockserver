@@ -1,20 +1,19 @@
 package org.mockserver.maven;
 
 import org.apache.maven.artifact.Artifact;
-import org.apache.maven.artifact.resolver.ArtifactResolver;
+import org.apache.maven.artifact.repository.ArtifactRepository;
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.repository.RepositorySystem;
+import org.apache.maven.shared.artifact.resolve.ArtifactResolver;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.List;
+import java.util.Collections;
 import java.util.concurrent.ExecutionException;
 
 import static org.junit.Assert.*;
@@ -26,15 +25,20 @@ import static org.mockito.MockitoAnnotations.initMocks;
  */
 public class MockServerRunForkedMojoTest {
 
-    public final String level = "LEVEL";
-    private final String jarWithDependenciesPath = new File("jarWithDependenciesPath.jar").getAbsolutePath();
-    private String javaBinaryPath = "java";
+    private final String level = "LEVEL";
+    private final String repositoryBaseDir = "repositoryBaseDir";
+    private final String repositoryPathOfArtifact = "repositoryPathOfArtifact";
+    private final String jarWithDependenciesPath = repositoryBaseDir + "/" + repositoryPathOfArtifact;
+    private String javaBinaryPath;
     @Mock
-    protected RepositorySystem mockRepositorySystem;
+    private RepositorySystem mockRepositorySystem;
     @Mock
-    protected ArtifactResolver mockArtifactResolver;
+    private MavenSession mockSession;
     @Mock
-    private InstanceHolder mockEmbeddedJettyHolder;
+    private ArtifactResolver mockArtifactResolver;
+    @Mock
+    private ArtifactRepository mockArtifactRepository;
+
     @Mock
     private ProcessBuildFactory mockProcessBuildFactory;
     @InjectMocks
@@ -52,7 +56,9 @@ public class MockServerRunForkedMojoTest {
         initMocks(this);
 
         when(mockRepositorySystem.createArtifactWithClassifier("org.mock-server", "mockserver-netty", mockServerRunForkedMojo.getVersion(), "jar", "jar-with-dependencies")).thenReturn(mockArtifact);
-        when(mockArtifact.getFile()).thenReturn(new File(jarWithDependenciesPath));
+        when(mockSession.getLocalRepository()).thenReturn(mockArtifactRepository);
+        when(mockArtifactRepository.getBasedir()).thenReturn(repositoryBaseDir);
+        when(mockArtifactRepository.pathOf(mockArtifact)).thenReturn(repositoryPathOfArtifact);
         mockServerRunForkedMojo.logLevel = level;
     }
 
@@ -110,8 +116,8 @@ public class MockServerRunForkedMojoTest {
         mockServerRunForkedMojo.pipeLogToConsole = true;
         mockServerRunForkedMojo.initializationClass = "org.mockserver.maven.ExampleInitializationClass";
         String classLocation = "org/mockserver/maven/ExampleInitializationClass.class";
-        mockServerRunForkedMojo.compileClasspath = Arrays.asList(ExampleInitializationClass.class.getClassLoader().getResource(classLocation).getFile().replaceAll(classLocation, ""));
-        mockServerRunForkedMojo.testClasspath = Arrays.asList();
+        mockServerRunForkedMojo.compileClasspath = Collections.singletonList(ExampleInitializationClass.class.getClassLoader().getResource(classLocation).getFile().replaceAll(classLocation, ""));
+        mockServerRunForkedMojo.testClasspath = Collections.emptyList();
         when(mockProcessBuildFactory.create(anyListOf(String.class))).thenReturn(processBuilder);
 
 
@@ -137,8 +143,8 @@ public class MockServerRunForkedMojoTest {
         mockServerRunForkedMojo.pipeLogToConsole = true;
         mockServerRunForkedMojo.initializationClass = "org.mockserver.maven.ExampleInitializationClass";
         String classLocation = "org/mockserver/maven/ExampleInitializationClass.class";
-        mockServerRunForkedMojo.compileClasspath = Arrays.asList(ExampleInitializationClass.class.getClassLoader().getResource(classLocation).getFile().replaceAll(classLocation, ""));
-        mockServerRunForkedMojo.testClasspath = Arrays.asList();
+        mockServerRunForkedMojo.compileClasspath = Collections.singletonList(ExampleInitializationClass.class.getClassLoader().getResource(classLocation).getFile().replaceAll(classLocation, ""));
+        mockServerRunForkedMojo.testClasspath = Collections.emptyList();
         when(mockProcessBuildFactory.create(anyListOf(String.class))).thenReturn(processBuilder);
 
 
