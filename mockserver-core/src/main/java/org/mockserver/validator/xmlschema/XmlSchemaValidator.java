@@ -1,28 +1,20 @@
 package org.mockserver.validator.xmlschema;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import joptsimple.internal.Strings;
-import org.mockserver.client.serialization.ObjectMapperFactory;
 import org.mockserver.file.FileReader;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 import org.mockserver.validator.Validator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
-import sun.nio.cs.StandardCharsets;
 
 import javax.xml.XMLConstants;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.Source;
-import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
-import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.ByteArrayInputStream;
+import java.io.FileNotFoundException;
+import java.io.StringReader;
 
 import static org.apache.commons.lang3.CharEncoding.UTF_8;
 
@@ -31,9 +23,9 @@ import static org.apache.commons.lang3.CharEncoding.UTF_8;
  */
 public class XmlSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToString implements Validator<String> {
 
+    private final static SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
     private final Schema schema;
     public Logger logger = LoggerFactory.getLogger(this.getClass());
-    private final static SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
 
     public XmlSchemaValidator(String schema) {
         try {
