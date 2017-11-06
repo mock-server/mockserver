@@ -88,6 +88,18 @@ i.e. run_mockserver.sh -logLevel INFO -serverPort 1080 -proxyPort 1090 \
                        -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com
 ```
 
+The `logLevel` can also be modified by passing environment variable through docker-compose.yml file. The following is a sample docker-compose.yml file for changing logLevel:
+ ```
+ mockServer:
+   image: jamesdbloom/mockserver:latest
+   ports:
+   - 1080:1080
+   environment:
+   - LOG_LEVEL=WARN
+ ```
+If no `LOG_LEVEL` value is passed in docker-compose, the default value will be `INFO` unless you run the container with other logLevel value on command line.  
+
+
 ### What is MockServer
 
 MockServer is for mocking of any system you integrate with via HTTP or HTTPS (i.e. services, web sites, etc).
