@@ -467,6 +467,7 @@ public class MockServerClientTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void shouldQueryRunningStatusWhenSocketConnectionException() throws Exception {
         // given
         when(mockHttpClient.sendRequest(any(HttpRequest.class))).thenThrow(SocketConnectionException.class);

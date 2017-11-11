@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
  * &lt;plugin&gt;
  *  &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
  *  &lt;artifactId&gt;maven-surefire-plugin&lt;/artifactId&gt;
- *  &lt;version&gt;2.17&lt;/version&gt;
+ *  &lt;version&gt;2.19.1&lt;/version&gt;
  *  &lt;configuration&gt;
  *      &lt;properties&gt;
  *          &lt;property&gt;

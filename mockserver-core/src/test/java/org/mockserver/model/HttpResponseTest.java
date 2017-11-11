@@ -1,5 +1,6 @@
 package org.mockserver.model;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockserver.client.serialization.Base64Converter;
 
@@ -142,6 +143,7 @@ public class HttpResponseTest {
     }
 
     @Test
+    @Ignore
     public void appliesDelay() throws InterruptedException {
         // given
         TimeUnit timeUnit = mock(TimeUnit.class);

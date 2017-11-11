@@ -41,7 +41,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.19.1</version>
+                <version>2.20.1</version>
                 <configuration>
                     <!-- allow debugging tests -->
                     <forkCount>0</forkCount>
@@ -55,8 +55,9 @@
             </plugin>
             <!-- tests run after mock server stopped (to check it has been stopped) -->
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
-                <version>2.19.1</version>
+                <version>2.20.1</version>
                 <configuration>
                     <!-- allow debugging tests -->
                     <forkCount>0</forkCount>

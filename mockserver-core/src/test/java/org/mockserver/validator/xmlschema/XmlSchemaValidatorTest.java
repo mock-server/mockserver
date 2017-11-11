@@ -8,8 +8,6 @@ import org.mockito.Mock;
 import org.slf4j.Logger;
 
 import java.text.MessageFormat;
-import java.util.PropertyResourceBundle;
-import java.util.ResourceBundle;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -44,11 +42,9 @@ public class XmlSchemaValidatorTest {
             "</xs:schema>";
     @Rule
     public final ExpectedException exception = ExpectedException.none();
+    private final String message_cvc_complex_type_2_4_a = "cvc-complex-type.2.4.a: Invalid content was found starting with element ''{0}''. One of ''{1}'' is expected.";
     @Mock
     protected Logger logger;
-
-    private ResourceBundle xmlMessagesResourceBundle = PropertyResourceBundle.getBundle("com.sun.org.apache.xerces.internal.impl.msg.XMLMessages");
-    private ResourceBundle xmlSchemaMessagesResourceBundle = PropertyResourceBundle.getBundle("com.sun.org.apache.xerces.internal.impl.msg.XMLSchemaMessages");
 
     @Before
     public void createMocks() {
@@ -92,7 +88,7 @@ public class XmlSchemaValidatorTest {
                         "        <body>Wash Shirts</body>" + NEW_LINE +
                         "    </note>" + NEW_LINE +
                         "</notes>"),
-                is(MessageFormat.format(xmlSchemaMessagesResourceBundle.getString("cvc-complex-type.2.4.a"), "heading", "{from}"))
+                is(MessageFormat.format(message_cvc_complex_type_2_4_a, "heading", "{from}"))
         );
     }
 
@@ -115,7 +111,7 @@ public class XmlSchemaValidatorTest {
                         "        <body>Wash Shirts</body>" + NEW_LINE +
                         "    </note>" + NEW_LINE +
                         "</notes>"),
-                is(MessageFormat.format(xmlSchemaMessagesResourceBundle.getString("cvc-complex-type.2.4.a"), "to", "{from}"))
+                is(MessageFormat.format(message_cvc_complex_type_2_4_a, "to", "{from}"))
         );
     }
 
@@ -157,6 +153,6 @@ public class XmlSchemaValidatorTest {
     @Test
     public void shouldHandleEmptyTest() {
         // given
-        assertThat(new XmlSchemaValidator(XML_SCHEMA).isValid(""), is(xmlMessagesResourceBundle.getString("PrematureEOF")));
+        assertThat(new XmlSchemaValidator(XML_SCHEMA).isValid(""), is("Premature end of file."));
     }
 }

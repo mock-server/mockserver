@@ -91,6 +91,12 @@
             <artifactId>json-schema-validator</artifactId>
         </dependency>
 
+        <!-- xml -->
+        <dependency>
+            <groupId>javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
+        </dependency>
+
         <!-- commons & guava -->
         <dependency>
             <groupId>org.apache.commons</groupId>

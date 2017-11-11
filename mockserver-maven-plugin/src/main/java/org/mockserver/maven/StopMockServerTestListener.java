@@ -1,6 +1,8 @@
 package org.mockserver.maven;
 
+import org.junit.runner.Description;
 import org.junit.runner.Result;
+import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunListener;
 import org.mockserver.client.server.MockServerClient;
 import org.mockserver.configuration.ConfigurationProperties;
@@ -18,7 +20,7 @@ import org.slf4j.LoggerFactory;
  * &lt;plugin&gt;
  *  &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
  *  &lt;artifactId&gt;maven-surefire-plugin&lt;/artifactId&gt;
- *  &lt;version&gt;2.17&lt;/version&gt;
+ *  &lt;version&gt;2.19.1&lt;/version&gt;
  *  &lt;configuration&gt;
  *      &lt;properties&gt;
  *          &lt;property&gt;
@@ -62,6 +64,36 @@ import org.slf4j.LoggerFactory;
 public class StopMockServerTestListener extends RunListener {
 
     private static final Logger logger = LoggerFactory.getLogger(StopMockServerTestListener.class);
+
+    @Override
+    public void testRunStarted(Description description) throws Exception {
+        super.testRunStarted(description);
+    }
+
+    @Override
+    public void testStarted(Description description) throws Exception {
+        super.testStarted(description);
+    }
+
+    @Override
+    public void testFinished(Description description) throws Exception {
+        super.testFinished(description);
+    }
+
+    @Override
+    public void testFailure(Failure failure) throws Exception {
+        super.testFailure(failure);
+    }
+
+    @Override
+    public void testAssumptionFailure(Failure failure) {
+        super.testAssumptionFailure(failure);
+    }
+
+    @Override
+    public void testIgnored(Description description) throws Exception {
+        super.testIgnored(description);
+    }
 
     @Override
     public void testRunFinished(Result result) throws Exception {
