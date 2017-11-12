@@ -125,6 +125,21 @@ public class HttpRequestMatcherTest {
     }
 
     @Test
+    public void matchesMatchingEncodedMatcherPath() {
+        assertTrue(new HttpRequestMatcher(new HttpRequest().withPath("/dWM%2FdWM+ZA==")).matches(new HttpRequest().withPath("/dWM/dWM+ZA==")));
+    }
+
+    @Test
+    public void matchesMatchingEncodedRequestPath() {
+        assertTrue(new HttpRequestMatcher(new HttpRequest().withPath("/dWM/dWM+ZA==")).matches(new HttpRequest().withPath("/dWM%2FdWM+ZA==")));
+    }
+
+    @Test
+    public void matchesMatchingEncodedMatcherAndRequestPath() {
+        assertTrue(new HttpRequestMatcher(new HttpRequest().withPath("/dWM%2FdWM+ZA==")).matches(new HttpRequest().withPath("/dWM%2FdWM+ZA==")));
+    }
+
+    @Test
     public void matchesMatchingPathRegex() {
         assertTrue(new HttpRequestMatcher(new HttpRequest().withPath("someP[a-z]{3}")).matches(new HttpRequest().withPath("somePath")));
     }

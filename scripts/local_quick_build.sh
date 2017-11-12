@@ -18,5 +18,6 @@ echo
 java -version
 echo
 
+export PATH=/usr/local/Cellar/maven@3.2/3.2.5/bin:$PATH
+
 mvn clean install $1 -Dmaven-invoker-parallel-threads=4 -Djava.security.egd=file:/dev/./urandom
-#/usr/local/Cellar/maven@3.2/3.2.5/bin/mvn clean install $1 -Dmaven-invoker-parallel-threads=4 -Djava.security.egd=file:/dev/./urandom

@@ -2,6 +2,7 @@ package org.mockserver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Strings;
+import io.netty.handler.codec.http.QueryStringDecoder;
 
 import java.nio.charset.Charset;
 import java.util.*;
@@ -114,7 +115,9 @@ public class HttpRequest extends Not {
      * @param path the path to not match on such as not("/some_mocked_path") or not(".*_path")
      */
     public HttpRequest withPath(NottableString path) {
-        this.path = path;
+        // QueryStringDecoder is used to ensure any encoding / decoding of URL
+        // parameters is performed the same way as when requests are received
+        this.path = string(new QueryStringDecoder(path.getValue()).path(), path.not);
         return this;
     }
 
