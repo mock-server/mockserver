@@ -193,6 +193,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                 Action handle = mockServerMatcher.retrieveAction(request);
                 if (handle instanceof HttpError) {
                     HttpError httpError = ((HttpError) handle).applyDelay();
+                    requestLogFilter.onRequest(request);
                     if (httpError.getResponseBytes() != null) {
                         // write byte directly by skipping over HTTP codec
                         ChannelHandlerContext httpCodecContext = ctx.pipeline().context(HttpServerCodec.class);
@@ -208,10 +209,12 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                     webSocketClientRegistry.registerCallbackResponseHandler(clientId, new ExpectationCallbackResponse() {
                         @Override
                         public void handle(HttpResponse response) {
+                            requestLogFilter.onResponse(request, response);
                             writeResponse(ctx, request, response.withConnectionOptions(connectionOptions().withCloseSocket(true)));
                             logFormatter.infoLog("returning response:{}" + NEW_LINE + " for request:{}", response, request);
                         }
                     });
+                    requestLogFilter.onRequest(request);
                     webSocketClientRegistry.sendClientMessage(clientId, request);
                 } else {
                     HttpResponse response = actionHandler.processAction(handle, request);

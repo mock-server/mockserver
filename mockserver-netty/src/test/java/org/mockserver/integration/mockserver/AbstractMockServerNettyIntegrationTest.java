@@ -12,6 +12,7 @@ import org.mockserver.model.HttpResponse;
 import org.mockserver.server.TestClasspathTestExpectationCallback;
 import org.mockserver.socket.PortFactory;
 import org.mockserver.streams.IOStreamUtils;
+import org.mockserver.verify.VerificationTimes;
 
 import javax.net.ssl.SSLSocket;
 import java.io.IOException;
@@ -30,6 +31,7 @@ import static org.hamcrest.core.AnyOf.anyOf;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.matchers.Times.exactly;
 import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.ConnectionOptions.connectionOptions;
 import static org.mockserver.model.Header.header;
@@ -40,6 +42,7 @@ import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpStatusCode.*;
 import static org.mockserver.socket.SSLSocketFactory.sslSocketFactory;
+import static org.mockserver.verify.VerificationTimes.once;
 
 /**
  * @author jamesdbloom
@@ -120,6 +123,54 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
                         headersToIgnore
                 )
         );
+    }
+
+    @Test
+    public void shouldCallbackToSpecifiedObjectAndVerifyRequests() {
+        // when
+        mockServerClient
+                .when(
+                        request()
+                                .withPath(calculatePath("object_callback")),
+                        exactly(1)
+                )
+                .callback(
+                        new ExpectationCallback() {
+                            @Override
+                            public HttpResponse handle(HttpRequest httpRequest) {
+                                return response()
+                                        .withStatusCode(ACCEPTED_202.code())
+                                        .withBody("an_object_callback_response");
+                            }
+                        }
+                );
+
+        // then - return response
+        assertEquals(
+                response()
+                        .withStatusCode(ACCEPTED_202.code())
+                        .withBody("an_object_callback_response"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("object_callback")),
+                        headersToIgnore
+                )
+        );
+
+        // then - verify request
+        mockServerClient
+                .verify(
+                        request()
+                                .withPath(calculatePath("object_callback")),
+                        VerificationTimes.once()
+                );
+        // then - verify no request
+        mockServerClient
+                .verify(
+                        request()
+                                .withPath(calculatePath("some_other_path")),
+                        VerificationTimes.exactly(0)
+                );
     }
 
     @Test
@@ -552,6 +603,58 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
                 sslSocket.close();
             }
         }
+    }
+
+    @Test
+    public void shouldReturnErrorResponseForExpectationWithHttpErrorAndVerifyRequests() throws Exception {
+        // when
+        mockServerClient
+                .when(
+                        request(calculatePath("http_error"))
+                )
+                .error(
+                        error()
+                                .withDropConnection(true)
+                                .withResponseBytes("some_random_bytes".getBytes())
+                );
+
+        // then
+        Socket socket = null;
+        try {
+            // given
+            socket = new Socket("localhost", getMockServerPort());
+            OutputStream output = socket.getOutputStream();
+
+            // when
+            output.write(("" +
+                    "GET " + calculatePath("http_error") + " HTTP/1.1" + NEW_LINE +
+                    "Content-Length: 0\r" + NEW_LINE +
+                    "\r\n"
+            ).getBytes(Charsets.UTF_8));
+            output.flush();
+
+            // then
+            assertThat(IOUtils.toString(socket.getInputStream(), Charsets.UTF_8.name()), is("some_random_bytes"));
+        } finally {
+            if (socket != null) {
+                socket.close();
+            }
+        }
+
+        // then - verify request
+        mockServerClient
+                .verify(
+                        request()
+                                .withPath(calculatePath("http_error")),
+                        VerificationTimes.once()
+                );
+        // then - verify no request
+        mockServerClient
+                .verify(
+                        request()
+                                .withPath(calculatePath("some_other_path")),
+                        VerificationTimes.exactly(0)
+                );
     }
 
     @Test
