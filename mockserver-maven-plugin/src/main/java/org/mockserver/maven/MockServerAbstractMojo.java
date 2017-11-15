@@ -1,6 +1,7 @@
 package org.mockserver.maven;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Splitter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Dependency;
@@ -13,15 +14,15 @@ import java.lang.reflect.Constructor;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * @author jamesdbloom
- *
  * @plexus.component role="org.codehaus.plexus.component.configurator.ComponentConfigurator"
- *                   role-hint="include-project-dependencies"
+ * role-hint="include-project-dependencies"
  * @plexus.requirement role="org.codehaus.plexus.component.configurator.converters.lookup.ConverterLookup"
- *                     role-hint="default"
+ * role-hint="default"
  * @requiresDependencyCollection
  * @requiresDependencyResolution
  */
@@ -35,18 +36,18 @@ public abstract class MockServerAbstractMojo extends AbstractMojo {
     /**
      * The port to run MockServer on
      */
-    @Parameter(property = "mockserver.serverPort", defaultValue = "-1")
-    protected int serverPort = -1;
+    @Parameter(property = "mockserver.serverPort", defaultValue = "")
+    protected String serverPort = "";
     /**
      * The port to run the proxy on
      */
     @Parameter(property = "mockserver.proxyPort", defaultValue = "-1")
-    protected int proxyPort = -1;
+    protected Integer proxyPort = -1;
     /**
      * Timeout to wait before stopping MockServer, to run MockServer indefinitely do not set a value
      */
     @Parameter(property = "mockserver.timeout")
-    protected int timeout;
+    protected Integer timeout;
     /**
      * Logging level
      */
@@ -92,6 +93,19 @@ public abstract class MockServerAbstractMojo extends AbstractMojo {
 
     @Parameter(defaultValue = "${session}", readonly = true, required = true)
     MavenSession session;
+
+    private Integer[] serverPorts;
+
+    protected Integer[] getServerPorts() {
+        if (serverPorts == null && StringUtils.isNotEmpty(serverPort)) {
+            List<Integer> ports = new ArrayList<Integer>();
+            for (String port : Splitter.on(',').split(serverPort)) {
+                ports.add(Integer.parseInt(port));
+            }
+            serverPorts = ports.toArray(new Integer[ports.size()]);
+        }
+        return serverPorts;
+    }
 
     protected InstanceHolder getEmbeddedJettyHolder() {
         if (embeddedJettyHolder == null) {

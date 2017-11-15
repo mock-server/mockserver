@@ -39,7 +39,7 @@ public class MockServerRunAndWaitMojoTest {
     @Test
     public void shouldRunMockServerAndWaitIndefinitely() throws MojoExecutionException, ExecutionException, InterruptedException {
         // given
-        mockServerRunAndWaitMojo.serverPort = 1;
+        mockServerRunAndWaitMojo.serverPort = "1,2";
         mockServerRunAndWaitMojo.proxyPort = 3;
         mockServerRunAndWaitMojo.timeout = 0;
         mockServerRunAndWaitMojo.initializationClass = "org.mockserver.maven.ExampleInitializationClass";
@@ -48,14 +48,14 @@ public class MockServerRunAndWaitMojoTest {
         mockServerRunAndWaitMojo.execute();
 
         // then
-        verify(mockEmbeddedJettyHolder).start(eq(1), eq(3), any(ExampleInitializationClass.class));
+        verify(mockEmbeddedJettyHolder).start(eq(new Integer[]{1,2}), eq(3), any(ExampleInitializationClass.class));
         verify(objectSettableFuture).get();
     }
 
     @Test
     public void shouldRunMockServerAndWaitIndefinitelyAndHandleInterruptedException() throws MojoExecutionException, ExecutionException, InterruptedException {
         // given
-        mockServerRunAndWaitMojo.serverPort = 1;
+        mockServerRunAndWaitMojo.serverPort = "1";
         mockServerRunAndWaitMojo.proxyPort = 3;
         mockServerRunAndWaitMojo.timeout = 0;
         doThrow(new InterruptedException("TEST EXCEPTION")).when(objectSettableFuture).get();
@@ -67,7 +67,7 @@ public class MockServerRunAndWaitMojoTest {
     @Test
     public void shouldRunMockServerAndWaitForFixedPeriod() throws MojoExecutionException, ExecutionException, InterruptedException, TimeoutException {
         // given
-        mockServerRunAndWaitMojo.serverPort = 1;
+        mockServerRunAndWaitMojo.serverPort = "1,2";
         mockServerRunAndWaitMojo.proxyPort = 3;
         mockServerRunAndWaitMojo.timeout = 2;
         mockServerRunAndWaitMojo.initializationClass = "org.mockserver.maven.ExampleInitializationClass";
@@ -76,14 +76,14 @@ public class MockServerRunAndWaitMojoTest {
         mockServerRunAndWaitMojo.execute();
 
         // then
-        verify(mockEmbeddedJettyHolder).start(eq(1), eq(3), any(ExampleInitializationClass.class));
+        verify(mockEmbeddedJettyHolder).start(eq(new Integer[]{1,2}), eq(3), any(ExampleInitializationClass.class));
         verify(objectSettableFuture).get(2, TimeUnit.SECONDS);
     }
 
     @Test
     public void shouldRunMockServerAndWaitForFixedPeriodAndHandleInterruptedException() throws MojoExecutionException, ExecutionException, InterruptedException, TimeoutException {
         // given
-        mockServerRunAndWaitMojo.serverPort = 1;
+        mockServerRunAndWaitMojo.serverPort = "1";
         mockServerRunAndWaitMojo.proxyPort = 3;
         mockServerRunAndWaitMojo.timeout = 2;
         when(objectSettableFuture.get(2, TimeUnit.SECONDS)).thenThrow(new InterruptedException("TEST EXCEPTION"));

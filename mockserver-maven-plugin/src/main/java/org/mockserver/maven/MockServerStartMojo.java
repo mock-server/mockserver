@@ -6,6 +6,8 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.mockserver.configuration.ConfigurationProperties;
 
+import java.util.Arrays;
+
 /**
  * Start the MockServer in the initialize phase of the build and continue build so that tests can run that rely on the MockServer
  *
@@ -26,11 +28,11 @@ public class MockServerStartMojo extends MockServerAbstractMojo {
         } else {
             if (getLog().isInfoEnabled()) {
                 getLog().info("mockserver:start about to start MockServer on: "
-                        + (serverPort != -1 ? " serverPort " + serverPort : "")
+                        + (getServerPorts() != null ? " serverPort " + Arrays.toString(getServerPorts()) : "")
                         + (proxyPort != -1 ? " proxyPort " + proxyPort : "")
                 );
             }
-            getEmbeddedJettyHolder().start(serverPort, proxyPort, createInitializer());
+            getEmbeddedJettyHolder().start(getServerPorts(), proxyPort, createInitializer());
         }
 
     }

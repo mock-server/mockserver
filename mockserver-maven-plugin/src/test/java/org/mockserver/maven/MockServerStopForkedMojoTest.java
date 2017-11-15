@@ -28,14 +28,14 @@ public class MockServerStopForkedMojoTest {
     @Test
     public void shouldStopMockServerAndProxySuccessfully() throws MojoExecutionException {
         // given
-        mockServerStopForkedMojo.serverPort = 1;
+        mockServerStopForkedMojo.serverPort = "1,2";
         mockServerStopForkedMojo.proxyPort = 2;
 
         // when
         mockServerStopForkedMojo.execute();
 
         // then
-        verify(mockEmbeddedJettyHolder).stop(1, 2, false);
+        verify(mockEmbeddedJettyHolder).stop(new Integer[]{1,2}, 2, false);
     }
 
     @Test

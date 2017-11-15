@@ -33,7 +33,7 @@ public class MockServerStartMojoTest {
     @Test
     public void shouldStartMockServer() throws MojoExecutionException {
         // given
-        mockServerStartMojo.serverPort = 1;
+        mockServerStartMojo.serverPort = "1,2";
         mockServerStartMojo.proxyPort = 3;
         mockServerStartMojo.initializationClass = "org.mockserver.maven.ExampleInitializationClass";
 
@@ -41,7 +41,7 @@ public class MockServerStartMojoTest {
         mockServerStartMojo.execute();
 
         // then
-        verify(mockEmbeddedJettyHolder).start(eq(1), eq(3), any(ExampleInitializationClass.class));
+        verify(mockEmbeddedJettyHolder).start(eq(new Integer[]{1,2}), eq(3), any(ExampleInitializationClass.class));
     }
 
     @Test

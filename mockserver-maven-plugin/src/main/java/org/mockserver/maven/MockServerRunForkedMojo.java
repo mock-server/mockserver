@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -69,7 +70,7 @@ public class MockServerRunForkedMojo extends MockServerAbstractMojo {
         if (skip) {
             getLog().info("Skipping plugin execution");
         } else {
-            getEmbeddedJettyHolder().stop(serverPort, proxyPort, true);
+            getEmbeddedJettyHolder().stop(getServerPorts(), proxyPort, true);
             try {
                 TimeUnit.SECONDS.sleep(1);
             } catch (InterruptedException e) {
@@ -77,7 +78,7 @@ public class MockServerRunForkedMojo extends MockServerAbstractMojo {
             }
             if (getLog().isInfoEnabled()) {
                 getLog().info("mockserver:runForked about to start MockServer on: "
-                                + (serverPort != -1 ? " serverPort " + serverPort : "")
+                                + (getServerPorts() != null ? " serverPort " + Arrays.toString(getServerPorts()) : "")
                                 + (proxyPort != -1 ? " proxyPort " + proxyPort : "")
                 );
             }
@@ -95,10 +96,10 @@ public class MockServerRunForkedMojo extends MockServerAbstractMojo {
             }
             arguments.add(classPath.toString());
             arguments.add(Main.class.getName());
-            if (serverPort != -1) {
+            if (getServerPorts() != null) {
                 arguments.add("-serverPort");
-                arguments.add("" + serverPort);
-                ConfigurationProperties.mockServerPort(serverPort);
+                arguments.add("" + Joiner.on(",").join(getServerPorts()));
+                ConfigurationProperties.mockServerPort(getServerPorts());
             }
             if (proxyPort != -1) {
                 arguments.add("-proxyPort");
@@ -121,11 +122,11 @@ public class MockServerRunForkedMojo extends MockServerAbstractMojo {
                 getLog().error("Exception while starting MockServer", e);
             }
             try {
-                TimeUnit.SECONDS.sleep((timeout == 0 ? 2 : timeout));
+                TimeUnit.SECONDS.sleep((timeout == null ? 2 : timeout));
             } catch (InterruptedException e) {
                 throw new RuntimeException("Exception while waiting for mock server JVM to start", e);
             }
-            InstanceHolder.runInitializationClass(serverPort, createInitializer());
+            InstanceHolder.runInitializationClass(getServerPorts(), createInitializer());
         }
 
     }

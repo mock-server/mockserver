@@ -4,6 +4,8 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.mockserver.configuration.ConfigurationProperties;
 
+import java.util.Arrays;
+
 
 /**
  * Stop the a forked instance of the MockServer
@@ -22,9 +24,9 @@ public class MockServerStopForkedMojo extends MockServerAbstractMojo {
         if (skip) {
             getLog().info("Skipping plugin execution");
         } else {
-            getEmbeddedJettyHolder().stop(serverPort, proxyPort, false);
-            if (serverPort != -1) {
-                getLog().info("Stopped MockServer running on port [" + serverPort + "]");
+            getEmbeddedJettyHolder().stop(getServerPorts(), proxyPort, false);
+            if (getServerPorts() != null) {
+                getLog().info("Stopped MockServer running on port [" + Arrays.toString(getServerPorts()) + "]");
             }
             if (proxyPort != -1) {
                 getLog().info("Stopped the proxy running on port [" + proxyPort + "]");

@@ -13,7 +13,6 @@ import org.mockserver.proxy.Proxy;
 import org.mockserver.proxy.ProxyBuilder;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.AnyOf.anyOf;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.Is.isA;
 import static org.junit.Assert.assertNotNull;
@@ -50,7 +49,7 @@ public class InstanceHolderTest {
 
         initMocks(this);
 
-        when(mockMockServerBuilder.withHTTPPort(anyInt())).thenReturn(mockMockServerBuilder);
+        when(mockMockServerBuilder.withHTTPPort(anyInt(), anyInt())).thenReturn(mockMockServerBuilder);
         when(mockProxyBuilder.withLocalPort(anyInt())).thenReturn(mockProxyBuilder);
 
         when(mockProxy.isRunning()).thenReturn(false);
@@ -67,20 +66,20 @@ public class InstanceHolderTest {
     @Test
     public void shouldStartServerAndProxyOnBothPorts() {
         // when
-        instanceHolder.start(1, 3, null);
+        instanceHolder.start(new Integer[]{1,2}, 3, null);
 
         // then
-        verify(mockMockServerBuilder).withHTTPPort(1);
+        verify(mockMockServerBuilder).withHTTPPort(1,2);
         verify(mockProxyBuilder).withLocalPort(3);
     }
 
     @Test
     public void shouldStartOnlyServerOnBothPorts() {
         // when
-        instanceHolder.start(1, -1, null);
+        instanceHolder.start(new Integer[]{1,2}, -1, null);
 
         // then
-        verify(mockMockServerBuilder).withHTTPPort(1);
+        verify(mockMockServerBuilder).withHTTPPort(1,2);
         verifyNoMoreInteractions(mockProxyBuilder);
     }
 
@@ -88,10 +87,10 @@ public class InstanceHolderTest {
     public void shouldStartOnlyServerOnHttpPort() {
         // when
         ExampleInitializationClass.mockServerClient = null;
-        instanceHolder.start(1, -1, new ExampleInitializationClass());
+        instanceHolder.start(new Integer[]{1,2}, -1, new ExampleInitializationClass());
 
         // then
-        verify(mockMockServerBuilder).withHTTPPort(1);
+        verify(mockMockServerBuilder).withHTTPPort(1,2);
         verifyNoMoreInteractions(mockProxyBuilder);
         assertNotNull(ExampleInitializationClass.mockServerClient);
     }
@@ -100,7 +99,7 @@ public class InstanceHolderTest {
     public void shouldStartOnlyProxyOnBothPorts() {
         // when
         ExampleInitializationClass.mockServerClient = null;
-        instanceHolder.start(-1, 3, new ExampleInitializationClass());
+        instanceHolder.start(new Integer[0], 3, new ExampleInitializationClass());
 
         // then
         verifyNoMoreInteractions(mockMockServerBuilder);
@@ -114,7 +113,7 @@ public class InstanceHolderTest {
         ExampleInitializationClass.mockServerClient = null;
 
         // when
-        instanceHolder.start(1, -1, new ExampleInitializationClass());
+        instanceHolder.start(new Integer[]{1,2}, -1, new ExampleInitializationClass());
 
         // then
         assertNotNull(ExampleInitializationClass.mockServerClient);
@@ -124,7 +123,7 @@ public class InstanceHolderTest {
     public void shouldNotStartServerOrProxy() {
         // when
         ExampleInitializationClass.mockServerClient = null;
-        instanceHolder.start(-1, -1, new ExampleInitializationClass());
+        instanceHolder.start(new Integer[0], -1, new ExampleInitializationClass());
 
         // then
         verifyNoMoreInteractions(mockMockServerBuilder);
@@ -138,7 +137,7 @@ public class InstanceHolderTest {
         when(mockMockServer.isRunning()).thenReturn(true);
 
         // when
-        instanceHolder.start(1, 3, null);
+        instanceHolder.start(new Integer[]{1,2}, 3, null);
     }
 
     @Test(expected = IllegalStateException.class)
@@ -147,7 +146,7 @@ public class InstanceHolderTest {
         when(mockProxy.isRunning()).thenReturn(true);
 
         // when
-        instanceHolder.start(1, 3, null);
+        instanceHolder.start(new Integer[]{1,2}, 3, null);
     }
 
     @Test
@@ -171,7 +170,7 @@ public class InstanceHolderTest {
         InstanceHolder.proxyClients.put(2, mockProxyClient);
 
         // when
-        instanceHolder.stop(1, 2, false);
+        instanceHolder.stop(new Integer[]{1,2}, 2, false);
 
         // then
         verify(mockMockServerClient).stop(false);
@@ -189,7 +188,7 @@ public class InstanceHolderTest {
         InstanceHolder.proxyClients.put(2, mockProxyClient);
 
         // when
-        instanceHolder.stop(1, 2, true);
+        instanceHolder.stop(new Integer[]{1,2}, 2, true);
 
         // then
         verify(mockMockServerClient).stop(true);
@@ -207,7 +206,7 @@ public class InstanceHolderTest {
         InstanceHolder.proxyClients.put(2, mockProxyClient);
 
         // when
-        instanceHolder.stop(1, -1, false);
+        instanceHolder.stop(new Integer[]{1,2}, -1, false);
 
         // then
         verify(mockMockServerClient).stop(false);
@@ -225,7 +224,7 @@ public class InstanceHolderTest {
         InstanceHolder.proxyClients.put(2, mockProxyClient);
 
         // when
-        instanceHolder.stop(-1, 2, false);
+        instanceHolder.stop(new Integer[0], 2, false);
 
         // then
         verify(mockMockServerClient, times(0)).stop(anyBoolean());
@@ -243,7 +242,7 @@ public class InstanceHolderTest {
         InstanceHolder.proxyClients.put(2, mockProxyClient);
 
         // when
-        instanceHolder.stop(-1, -1, false);
+        instanceHolder.stop(new Integer[0], -1, false);
 
         // then
         verify(mockMockServerClient, times(0)).stop(anyBoolean());
@@ -257,7 +256,7 @@ public class InstanceHolderTest {
     @Test
     public void shouldStopMockServerAndProxyWhenNoClientExist() {
         // when
-        instanceHolder.stop(1, 2, false);
+        instanceHolder.stop(new Integer[]{1,2}, 2, false);
 
         // then
         assertThat(InstanceHolder.mockServerClients.get(1), isA(MockServerClient.class));

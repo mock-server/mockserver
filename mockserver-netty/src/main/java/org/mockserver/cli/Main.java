@@ -27,9 +27,9 @@ public class Main {
             "   java -jar <path to mockserver-jetty-jar-with-dependencies.jar> [-serverPort <port>] [-proxyPort <port>] [-proxyRemotePort <port>] [-proxyRemoteHost <hostname>]" + NEW_LINE +
             "                                                                                       " + NEW_LINE +
             "     valid options are:                                                                " + NEW_LINE +
-            "        -serverPort <port>           Specifies the HTTP and HTTPS port for the         " + NEW_LINE +
+            "        -serverPort <port>           Specifies the HTTP and HTTPS port(s) for the      " + NEW_LINE +
             "                                     MockServer. Port unification is used to           " + NEW_LINE +
-            "                                     support HTTP and HTTPS on the same port.          " + NEW_LINE +
+            "                                     support HTTP and HTTPS on the same port(s).       " + NEW_LINE +
             "                                                                                       " + NEW_LINE +
             "        -proxyPort <port>            Specifies the HTTP, HTTPS, SOCKS and HTTP         " + NEW_LINE +
             "                                     CONNECT port for proxy. Port unification          " + NEW_LINE +

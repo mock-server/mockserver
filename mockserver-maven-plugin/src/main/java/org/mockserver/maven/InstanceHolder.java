@@ -27,9 +27,9 @@ public class InstanceHolder extends ObjectWithReflectiveEqualsHashCodeToString {
     private Proxy proxy;
     private MockServer mockServer;
 
-    public static void runInitializationClass(int mockServerPort, ExpectationInitializer expectationInitializer) {
-        if (mockServerPort != -1 && expectationInitializer != null) {
-            expectationInitializer.initializeExpectations(getMockServerClient(mockServerPort));
+    public static void runInitializationClass(Integer[] mockServerPorts, ExpectationInitializer expectationInitializer) {
+        if (mockServerPorts != null && mockServerPorts.length > 0 && expectationInitializer != null) {
+            expectationInitializer.initializeExpectations(getMockServerClient(mockServerPorts[0]));
         }
     }
 
@@ -47,12 +47,12 @@ public class InstanceHolder extends ObjectWithReflectiveEqualsHashCodeToString {
         return mockServerClients.get(mockServerPort);
     }
 
-    public void start(final int mockServerPort, final int proxyPort, ExpectationInitializer expectationInitializer) {
+    public void start(final Integer[] mockServerPorts, final Integer proxyPort, ExpectationInitializer expectationInitializer) {
         if (mockServer == null || !mockServer.isRunning()) {
-            if (mockServerPort != -1) {
-                mockServer = mockServerBuilder.withHTTPPort(mockServerPort).build();
+            if (mockServerPorts != null && mockServerPorts.length > 0) {
+                mockServer = mockServerBuilder.withHTTPPort(mockServerPorts).build();
             }
-            runInitializationClass(mockServerPort, expectationInitializer);
+            runInitializationClass(mockServerPorts, expectationInitializer);
         } else {
             throw new IllegalStateException("MockServer is already running!");
         }
@@ -65,9 +65,9 @@ public class InstanceHolder extends ObjectWithReflectiveEqualsHashCodeToString {
         }
     }
 
-    public void stop(final int mockServerPort, final int proxyPort, boolean ignoreFailure) {
-        if (mockServerPort != -1) {
-            getMockServerClient(mockServerPort).stop(ignoreFailure);
+    public void stop(final Integer[] mockServerPorts, final int proxyPort, boolean ignoreFailure) {
+        if (mockServerPorts != null && mockServerPorts.length > 0) {
+            getMockServerClient(mockServerPorts[0]).stop(ignoreFailure);
         }
         if (proxyPort != -1) {
             getProxyClient(proxyPort).stop(ignoreFailure);
