@@ -17,15 +17,12 @@ import static org.mockserver.socket.KeyAndCertificateFactory.keyAndCertificateFa
  */
 public class NettySslContextFactory {
 
-    private static final Logger logger = LoggerFactory.getLogger(KeyStoreFactory.class);
-
+    private static final NettySslContextFactory NETTY_SSL_CONTEXT_FACTORY = new NettySslContextFactory();
     private SslContext clientSslContext = null;
     private SslContext serverSslContext = null;
 
-    private static final NettySslContextFactory NETTY_SSL_CONTEXT_FACTORY = new NettySslContextFactory();
-
     private NettySslContextFactory() {
-
+        System.setProperty("https.protocols", "SSLv3,TLSv1,TLSv1.1,TLSv1.2");
     }
 
     public static NettySslContextFactory nettySslContextFactory() {
