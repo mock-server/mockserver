@@ -104,7 +104,7 @@ public class NettyHttpClient {
             } else if (cause instanceof IOException) {
                 throw new SocketConnectionException(cause.getMessage(), cause);
             } else {
-                throw new RuntimeException("Exception while sending request", e);
+                throw new RuntimeException("Exception while sending request - " + e.getMessage(), e);
             }
         } catch (InterruptedException e) {
             throw new RuntimeException("Exception while sending request", e);

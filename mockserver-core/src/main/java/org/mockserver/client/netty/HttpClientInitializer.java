@@ -35,6 +35,8 @@ public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
     public void initChannel(SocketChannel channel) throws SSLException {
         ChannelPipeline pipeline = channel.pipeline();
 
+        pipeline.addLast(new HttpClientConnectionHandler(httpClientHandler.getResponseFuture()));
+
         if (secure) {
             pipeline.addLast(nettySslContextFactory().createClientSslContext().newHandler(channel.alloc(), remoteAddress.getHostName(), remoteAddress.getPort()));
         }

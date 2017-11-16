@@ -311,7 +311,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        if (!cause.getMessage().contains("Connection reset by peer")) {
+        if (!cause.getMessage().contains("reset by peer") || !cause.getMessage().contains("connection was aborted")) {
             logger.warn("Exception caught by MockServer handler -> closing pipeline", cause);
         }
         ctx.close();

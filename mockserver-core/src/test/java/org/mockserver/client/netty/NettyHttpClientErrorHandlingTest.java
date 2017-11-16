@@ -48,7 +48,7 @@ public class NettyHttpClientErrorHandlingTest {
         new NettyHttpClient().sendRequest(request().withHeader(HOST.toString(), "127.0.0.1:" + freePort));
     }
 
-    @Ignore
+    @Test
     public void shouldHandleConnectionClosure() {
         // given
         EchoServer echoServer = new EchoServer(freePort, true, EchoServer.Error.CLOSE_CONNECTION);
@@ -56,7 +56,7 @@ public class NettyHttpClientErrorHandlingTest {
         try {
             // then
             exception.expect(RuntimeException.class);
-            exception.expectMessage(containsString("Connection reset by peer"));
+            exception.expectMessage(containsString("Channel set as inactive before valid response has been received"));
 
             // when
             new NettyHttpClient().sendRequest(request().withSecure(true).withHeader(HOST.toString(), "127.0.0.1:" + freePort));
