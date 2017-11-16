@@ -1,6 +1,6 @@
 steps:
   - label: "update docker image"
-    command: "docker pull jamesdbloom/mockserver:build"
+    command: "docker pull jamesdbloom/mockserver:maven"
 
   - wait
 
