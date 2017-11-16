@@ -56,7 +56,7 @@ public class NettyHttpClientErrorHandlingTest {
         try {
             // then
             exception.expect(RuntimeException.class);
-            exception.expectMessage(containsString("Channel set as inactive before valid response has been received"));
+            exception.expectMessage(containsString("before valid response has been received"));
 
             // when
             new NettyHttpClient().sendRequest(request().withSecure(true).withHeader(HOST.toString(), "127.0.0.1:" + freePort));
