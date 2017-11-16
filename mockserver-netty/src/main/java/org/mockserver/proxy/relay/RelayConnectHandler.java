@@ -78,7 +78,7 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
                                             upstreamPipeline.addLast(new LoggingHandler("upstream <-- "));
                                         }
 
-                                        upstreamPipeline.addLast(new HttpServerCodec());
+                                        upstreamPipeline.addLast(new HttpServerCodec(8192, 8192, 8192));
 
                                         upstreamPipeline.addLast(new HttpContentDecompressor());
 

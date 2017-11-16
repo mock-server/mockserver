@@ -171,7 +171,7 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
     private void switchToHttp(ChannelHandlerContext ctx, ByteBuf msg) {
         ChannelPipeline pipeline = ctx.pipeline();
 
-        addLastIfNotPresent(pipeline, new HttpServerCodec());
+        addLastIfNotPresent(pipeline, new HttpServerCodec(8192, 8192, 8192));
         addLastIfNotPresent(pipeline, new HttpContentDecompressor());
         addLastIfNotPresent(pipeline, new HttpObjectAggregator(Integer.MAX_VALUE));
 
