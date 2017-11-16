@@ -11,7 +11,7 @@ import org.mockserver.socket.PortFactory;
 /**
  * @author jamesdbloom
  */
-public class ClientServerMavenPluginTest extends AbstractClientServerIntegrationTest {
+public class ClientServerMavenPluginTestPort1086 extends AbstractClientServerIntegrationTest {
 
     private final static int ECHO_SERVER_HTTP_PORT = PortFactory.findFreePort();
     private final static int SERVER_HTTP_PORT = 1086;

@@ -18,10 +18,9 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author jamesdbloom
  */
-public class InitializerMavenPluginTest {
+public class InitializerMavenPluginTestPort1080 {
 
     private final static int SERVER_HTTP_PORT = 1080;
-    private final static int SERVER_HTTPS_PORT = 1081;
     protected List<String> headersToIgnore = Arrays.asList(
             "server",
             "expires",
@@ -69,9 +68,7 @@ public class InitializerMavenPluginTest {
     }
 
     protected HttpResponse makeRequest(HttpRequest httpRequest, Collection<String> headersToIgnore) {
-        boolean isSsl = httpRequest.isSecure() != null && httpRequest.isSecure();
-        int port = (isSsl ? SERVER_HTTPS_PORT : SERVER_HTTP_PORT);
-        HttpResponse httpResponse = httpClient.sendRequest(httpRequest, new InetSocketAddress("localhost", port));
+        HttpResponse httpResponse = httpClient.sendRequest(httpRequest, new InetSocketAddress("localhost", SERVER_HTTP_PORT));
         List<Header> headers = new ArrayList<Header>();
         for (Header header : httpResponse.getHeaders()) {
             if (!headersToIgnore.contains(header.getName().getValue().toLowerCase())) {
