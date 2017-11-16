@@ -89,6 +89,7 @@
     </logger>
 
     <logger name="org.mockserver" level="${mockserver.logLevel:-WARN}"/>
+    <logger name="io.netty.handler.ssl.SslHandler" level="WARN"/>
 
     <root level="${root.logLevel:-WARN}">
         <appender-ref ref="ASYNC_FILE"/>
