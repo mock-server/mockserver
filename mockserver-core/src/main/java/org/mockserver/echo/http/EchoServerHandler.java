@@ -27,14 +27,12 @@ public class EchoServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final EchoServer.Error error;
-    private final boolean isSecure;
     private final RequestLogFilter requestLogFilter;
     private final EchoServer.NextResponse nextResponse;
     private LogFormatter logFormatter = new LogFormatter(logger);
 
-    public EchoServerHandler(EchoServer.Error error, boolean isSecure, RequestLogFilter requestLogFilter, EchoServer.NextResponse nextResponse) {
+    public EchoServerHandler(EchoServer.Error error, RequestLogFilter requestLogFilter, EchoServer.NextResponse nextResponse) {
         this.error = error;
-        this.isSecure = isSecure;
         this.requestLogFilter = requestLogFilter;
         this.nextResponse = nextResponse;
     }
