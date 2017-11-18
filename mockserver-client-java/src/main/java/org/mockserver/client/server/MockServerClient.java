@@ -244,7 +244,7 @@ public class MockServerClient extends AbstractClient implements Closeable {
     void sendExpectation(Expectation expectation) {
         HttpResponse httpResponse = sendRequest(request().withMethod("PUT").withPath(calculatePath("expectation")).withBody(expectation != null ? expectationSerializer.serialize(expectation) : "", Charsets.UTF_8));
         if (httpResponse != null && httpResponse.getStatusCode() != 201) {
-            throw new ClientException(formatErrorMessage(NEW_LINE + "error: %swhile submitted expectation: %s", httpResponse.getBody() + NEW_LINE, expectation));
+            throw new ClientException(formatErrorMessage(NEW_LINE + "error:%s" + NEW_LINE + "while submitted expectation:%s", httpResponse.getBody(), expectation));
         }
     }
 
