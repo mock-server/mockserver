@@ -39,7 +39,7 @@ Run commands:
     
     gpg --keyserver hkp://pool.sks-keyservers.net --send-keys 7E0E8A0A 
     
-    export JAVA_HOME=`/usr/libexec/java_home -v 1.6`
+    export JAVA_HOME=`/usr/libexec/java_home -v 1.7`
     mvn release:clean -Dgpg.passphrase=my_pass_phrase -Drelease.arguments="-DnonReleaseBuild=false -Dmaven.test.skip=true -DskipTests=true" && \
     mvn release:prepare -Dgpg.passphrase=my_pass_phrase -Drelease.arguments="-DnonReleaseBuild=false -Dmaven.test.skip=true -DskipTests=true" && \
     mvn release:perform -Dgpg.passphrase=my_pass_phrase -Drelease.arguments="-DnonReleaseBuild=false -Dmaven.test.skip=true -DskipTests=true"

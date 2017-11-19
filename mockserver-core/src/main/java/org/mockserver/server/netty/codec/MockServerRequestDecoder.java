@@ -20,7 +20,6 @@ import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderNames.COOKIE;
 import static io.netty.handler.codec.http.HttpUtil.isKeepAlive;
 import static org.mockserver.mappers.ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET;
-import static org.mockserver.mappers.ContentTypeMapper.determineCharsetForMessage;
 
 /**
  * @author jamesdbloom
@@ -81,7 +80,7 @@ public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
                 if (ContentTypeMapper.isBinary(fullHttpRequest.headers().get(CONTENT_TYPE))) {
                     httpRequest.withBody(new BinaryBody(bodyBytes));
                 } else {
-                    Charset requestCharset = determineCharsetForMessage(fullHttpRequest);
+                    Charset requestCharset = ContentTypeMapper.getCharsetFromContentTypeHeader(fullHttpRequest.headers().get(CONTENT_TYPE));
                     httpRequest.withBody(new StringBody(new String(bodyBytes, requestCharset), DEFAULT_HTTP_CHARACTER_SET.equals(requestCharset) ? null : requestCharset));
                 }
             }

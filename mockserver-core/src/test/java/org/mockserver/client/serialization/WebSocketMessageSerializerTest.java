@@ -1,6 +1,6 @@
 package org.mockserver.client.serialization;
 
-import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.junit.Test;
 import org.mockserver.client.serialization.model.*;
 import org.mockserver.model.Cookie;

@@ -18,6 +18,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderNames.UPGRADE;
 import static io.netty.handler.codec.http.HttpHeaderValues.WEBSOCKET;
 
@@ -87,7 +88,7 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
         if (fullHttpResponse.content().readableBytes() > 0) {
             byte[] bodyBytes = new byte[fullHttpResponse.content().readableBytes()];
             fullHttpResponse.content().readBytes(bodyBytes);
-            Charset requestCharset = ContentTypeMapper.determineCharsetForMessage(fullHttpResponse);
+            Charset requestCharset = ContentTypeMapper.getCharsetFromContentTypeHeader(fullHttpResponse.headers().get(CONTENT_TYPE));
             return new String(bodyBytes, requestCharset);
         }
         return "";

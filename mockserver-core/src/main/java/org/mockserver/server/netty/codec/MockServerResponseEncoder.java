@@ -50,7 +50,7 @@ public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpRespo
         Body body = response.getBody();
         if (body != null) {
             Object bodyContents = body.getValue();
-            Charset bodyCharset = body.getCharset(ContentTypeMapper.determineCharsetForMessage(response));
+            Charset bodyCharset = body.getCharset(ContentTypeMapper.getCharsetFromContentTypeHeader(response.getFirstHeader(CONTENT_TYPE.toString())));
             if (bodyContents instanceof byte[]) {
                 content = Unpooled.copiedBuffer((byte[]) bodyContents);
             } else if (bodyContents instanceof String) {
@@ -91,7 +91,7 @@ public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpRespo
                 byte[] bodyBytes = new byte[0];
                 if (body != null) {
                     Object bodyContents = body.getValue();
-                    Charset bodyCharset = body.getCharset(ContentTypeMapper.determineCharsetForMessage(response));
+                    Charset bodyCharset = body.getCharset(ContentTypeMapper.getCharsetFromContentTypeHeader(response.getFirstHeader(CONTENT_TYPE.toString())));
                     if (bodyContents instanceof byte[]) {
                         bodyBytes = (byte[]) bodyContents;
                     } else if (bodyContents instanceof String) {

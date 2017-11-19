@@ -54,7 +54,7 @@ public class MockServerHttpRequestToFullHttpRequest {
         Body body = httpRequest.getBody();
         if (body != null) {
             Object bodyContents = body.getValue();
-            Charset bodyCharset = body.getCharset(ContentTypeMapper.determineCharsetForMessage(httpRequest));
+            Charset bodyCharset = body.getCharset(ContentTypeMapper.getCharsetFromContentTypeHeader(httpRequest.getFirstHeader(CONTENT_TYPE.toString())));
             if (bodyContents instanceof byte[]) {
                 content = Unpooled.copiedBuffer((byte[]) bodyContents);
             } else if (bodyContents instanceof String) {

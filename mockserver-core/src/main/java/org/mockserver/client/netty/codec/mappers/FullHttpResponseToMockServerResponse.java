@@ -75,7 +75,7 @@ public class FullHttpResponseToMockServerResponse {
                 if (ContentTypeMapper.isBinary(fullHttpResponse.headers().get(CONTENT_TYPE))) {
                     httpResponse.withBody(new BinaryBody(bodyBytes));
                 } else {
-                    Charset requestCharset = ContentTypeMapper.determineCharsetForMessage(fullHttpResponse);
+                    Charset requestCharset = ContentTypeMapper.getCharsetFromContentTypeHeader(fullHttpResponse.headers().get(CONTENT_TYPE));
                     httpResponse.withBody(new String(bodyBytes, requestCharset));
                 }
             }

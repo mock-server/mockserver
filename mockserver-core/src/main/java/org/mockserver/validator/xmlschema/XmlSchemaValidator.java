@@ -16,7 +16,7 @@ import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.StringReader;
 
-import static org.apache.commons.lang3.CharEncoding.UTF_8;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * @author jamesdbloom

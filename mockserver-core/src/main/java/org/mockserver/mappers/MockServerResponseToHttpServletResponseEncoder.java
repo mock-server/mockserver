@@ -78,7 +78,7 @@ public class MockServerResponseToHttpServletResponseEncoder {
             if (httpResponse.getBody() instanceof BinaryBody) {
                 IOStreamUtils.writeToOutputStream(Base64Converter.base64StringToBytes(httpResponse.getBodyAsString()), httpServletResponse);
             } else {
-                Charset bodyCharset = httpResponse.getBody().getCharset(ContentTypeMapper.determineCharsetForMessage(httpResponse));
+                Charset bodyCharset = httpResponse.getBody().getCharset(ContentTypeMapper.getCharsetFromContentTypeHeader(httpResponse.getFirstHeader(CONTENT_TYPE.toString())));
                 IOStreamUtils.writeToOutputStream(httpResponse.getBodyAsString().getBytes(bodyCharset), httpServletResponse);
             }
         }

@@ -2,7 +2,7 @@ package org.mockserver.client.serialization.deserializers.body;
 
 import com.google.common.base.Charsets;
 import com.google.common.net.MediaType;
-import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.junit.Test;
 import org.mockserver.client.serialization.ObjectMapperFactory;
 import org.mockserver.client.serialization.model.*;

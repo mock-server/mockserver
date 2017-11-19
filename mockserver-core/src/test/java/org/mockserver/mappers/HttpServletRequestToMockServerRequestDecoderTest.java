@@ -47,8 +47,14 @@ public class HttpServletRequestToMockServerRequestDecoderTest {
                 new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
                 new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
         ), httpRequest.getQueryStringParameters());
-        assertEquals(Lists.newArrayList(new Header("headerName1", "headerValue1_1", "headerValue1_2"), new Header("headerName2", "headerValue2")), httpRequest.getHeaders());
-        assertEquals(Lists.newArrayList(new Cookie("cookieName1", "cookieValue1"), new Cookie("cookieName2", "cookieValue2")), httpRequest.getCookies());
+        assertEquals(Lists.newArrayList(
+                new Header("headerName1", "headerValue1_1", "headerValue1_2"),
+                new Header("headerName2", "headerValue2")
+        ), httpRequest.getHeaders());
+        assertEquals(Lists.newArrayList(
+                new Cookie("cookieName1", "cookieValue1"),
+                new Cookie("cookieName2", "cookieValue2")
+        ), httpRequest.getCookies());
     }
 
     @Test

@@ -62,6 +62,10 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-test</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+        </dependency>
 
         <!-- Tomcat Server (integration testing) -->
         <dependency>

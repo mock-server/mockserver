@@ -1,6 +1,6 @@
 package org.mockserver.client.serialization.java;
 
-import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.junit.Test;
 import org.mockserver.client.serialization.Base64Converter;
 import org.mockserver.model.*;

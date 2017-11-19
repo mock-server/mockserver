@@ -1,25 +1,18 @@
 package org.mockserver.mappers;
 
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import io.netty.handler.codec.http.HttpConstants;
-import io.netty.handler.codec.http.HttpMessage;
 import io.netty.util.CharsetUtil;
 import org.apache.commons.lang3.StringUtils;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.http.HttpServletRequest;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
-import java.util.Map;
 import java.util.Set;
 
-import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderValues.CHARSET;
 
 /**
@@ -105,23 +98,7 @@ public class ContentTypeMapper {
         return binary;
     }
 
-    public static Charset determineCharsetForMessage(HttpMessage httpMessage) {
-        return getCharsetFromContentTypeHeader(httpMessage.headers().get(CONTENT_TYPE));
-    }
-
-    public static Charset determineCharsetForMessage(HttpServletRequest servletRequest) {
-        return getCharsetFromContentTypeHeader(servletRequest.getHeader(CONTENT_TYPE.toString()));
-    }
-
-    public static Charset determineCharsetForMessage(HttpResponse httpResponse) {
-        return getCharsetFromContentTypeHeader(httpResponse.getFirstHeader(CONTENT_TYPE.toString()));
-    }
-
-    public static Charset determineCharsetForMessage(HttpRequest httpRequest) {
-        return getCharsetFromContentTypeHeader(httpRequest.getFirstHeader(CONTENT_TYPE.toString()));
-    }
-
-    private static Charset getCharsetFromContentTypeHeader(String contentType) {
+    public static Charset getCharsetFromContentTypeHeader(String contentType) {
         Charset charset = DEFAULT_HTTP_CHARACTER_SET;
         if (contentType != null) {
             String charsetName = StringUtils.substringAfterLast(contentType, CHARSET.toString() + (char) HttpConstants.EQUALS);
