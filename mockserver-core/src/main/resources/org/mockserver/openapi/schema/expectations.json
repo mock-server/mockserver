@@ -1,8 +1,15 @@
 {
   "title": "list of expectations",
-  "type": "array",
-  "additionalProperties": false,
-  "items": {
-    "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/swagger/schema/expectation.json"
-  }
+  "oneOf": [
+    {
+      "type": "array",
+      "additionalProperties": false,
+      "items": {
+        "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/swagger/schema/expectation.json"
+      }
+    },
+    {
+      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/swagger/schema/expectation.json"
+    }
+  ]
 }
