@@ -23,8 +23,6 @@ RUN apt-get install -y software-properties-common
 RUN apt-get install -y curl git htop man unzip vim wget pkg-config
 
 # install java
-RUN add-apt-repository -y ppa:webupd8team/java
+RUN add-apt-repository -y ppa:openjdk-r/ppa
 RUN apt-get update
-RUN echo debconf shared/accepted-oracle-license-v1-1 select true | debconf-set-selections
-RUN echo debconf shared/accepted-oracle-license-v1-1 seen true | debconf-set-selections
-RUN apt-get install -y oracle-java6-installer maven
+RUN apt-get install -y openjdk-7-jdk maven
