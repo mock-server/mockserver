@@ -11,7 +11,7 @@
     <artifactId>mockserver-examples</artifactId>
     <packaging>war</packaging>
 
-    <name>MockServer Example</name>
+    <name>MockServer Examples</name>
     <description>An example project demonstration tests using the mock server and proxy</description>
     <url>http://www.mock-server.com</url>
 
