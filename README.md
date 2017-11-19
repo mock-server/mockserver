@@ -52,7 +52,7 @@ Vert.X Module Registry contains the following artifacts:
 
 # REST API
 
-https://app.swaggerhub.com/apis/jamesdbloom/mock-server_api/10.8
+https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/4.0.0
 
 # Issues
 
