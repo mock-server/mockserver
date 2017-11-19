@@ -47,8 +47,7 @@
         <project.build.sourceEncoding>UTF8</project.build.sourceEncoding>
         <jetty.version>8.1.16.v20140903</jetty.version>
         <slf4j.version>1.7.25</slf4j.version>
-        <!-- tomcat version &gt; 7.0.56 causes SSL to fail -->
-        <tomcat.version>7.0.56</tomcat.version>
+        <tomcat.version>8.0.47</tomcat.version>
         <jackson.version>2.7.8</jackson.version>
         <!-- netty version 4.1.9.Final appears to have bug with SSL -->
         <netty.version>4.1.12.Final</netty.version>
