@@ -103,7 +103,6 @@ public class DirectProxyUnificationHandlerTest {
                     "SocksMessageEncoder#0",
                     "SocksProxyHandler#0",
                     "HttpProxyUnificationHandler#0",
-
                     "DefaultChannelPipeline$TailContext#0"
             ));
         } else {
@@ -166,7 +165,6 @@ public class DirectProxyUnificationHandlerTest {
 
         // then - should add no handlers
         assertThat(embeddedChannel.pipeline().names(), contains(
-                "HttpProxyUnificationHandler#0",
                 "DefaultChannelPipeline$TailContext#0"
         ));
 

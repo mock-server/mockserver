@@ -3,20 +3,20 @@ package org.mockserver.proxy.http;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.handler.codec.DecoderException;
-import io.netty.handler.ssl.NotSslRecordException;
 import io.netty.handler.ssl.SslHandler;
+import org.junit.Rule;
 import org.junit.Test;
-import org.slf4j.Logger;
+import org.junit.rules.ExpectedException;
 
 import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 
 public class HttpProxyUnificationHandlerSslErrorsTest {
+
+    @Rule
+    public ExpectedException exception = ExpectedException.none();
 
     /*
     Format of an SSL record
@@ -95,8 +95,11 @@ public class HttpProxyUnificationHandlerSslErrorsTest {
 
     @Test
     public void shouldHandleCloseDuringSslHandshake() {
+        // then
+        exception.expect(DecoderException.class);
+        exception.expectMessage(containsString("ciphertext sanity check failed"));
+
         // given
-        HttpProxyUnificationHandler.logger = mock(Logger.class);
         EmbeddedChannel embeddedChannel = new EmbeddedChannel(new HttpProxyUnificationHandler());
 
         // and - no SSL handler
@@ -193,16 +196,15 @@ public class HttpProxyUnificationHandlerSslErrorsTest {
         }));
         // add - channel is closed
         embeddedChannel.close();
-
-        // then
-        verify(HttpProxyUnificationHandler.logger).warn(eq("Exception caught by port unification handler -> closing pipeline " + embeddedChannel), any(DecoderException.class));
-        assertThat(embeddedChannel.isOpen(), is(false));
     }
 
     @Test
     public void shouldHandleErrorDuringSslHandshake() {
+        // then
+        exception.expect(DecoderException.class);
+        exception.expectMessage(containsString("Illegal server handshake"));
+
         // given
-        HttpProxyUnificationHandler.logger = mock(Logger.class);
         EmbeddedChannel embeddedChannel = new EmbeddedChannel(new HttpProxyUnificationHandler());
 
         // and - no SSL handler
@@ -221,8 +223,7 @@ public class HttpProxyUnificationHandlerSslErrorsTest {
                 (byte) 0x01, (byte) 0x00    // package length (256-byte)
         }));
 
-        // then
-        verify(HttpProxyUnificationHandler.logger).warn(eq("Exception caught by port unification handler -> closing pipeline " + embeddedChannel), any(NotSslRecordException.class));
+        // and then
         assertThat(embeddedChannel.isOpen(), is(false));
     }
 

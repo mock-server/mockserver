@@ -1,20 +1,29 @@
 package org.mockserver.proxy.error;
 
+import io.netty.buffer.Unpooled;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.util.internal.PlatformDependent;
 
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SocketChannel;
 import java.util.regex.Pattern;
 
-/**
- * @author jamesdbloom
- */
-public class Logging {
+public class ExceptionHandler {
 
     private static final Pattern IGNORABLE_CLASS_IN_STACK = Pattern.compile(
             "^.*(?:Socket|Datagram|Sctp|Udt)Channel.*$");
     private static final Pattern IGNORABLE_ERROR_MESSAGE = Pattern.compile(
             "^.*(?:connection.*(?:reset|closed|abort|broken)|broken.*pipe).*$", Pattern.CASE_INSENSITIVE);
+
+    /**
+     * Closes the specified channel after all queued write requests are flushed.
+     */
+    public static void closeOnFlush(Channel ch) {
+        if (ch != null && ch.isActive()) {
+            ch.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+        }
+    }
 
     /**
      * returns true is the exception was caused by the connection being closed
@@ -54,7 +63,7 @@ public class Logging {
                 // No match by now.. Try to load the class via classloader and inspect it.
                 // This is mainly done as other JDK implementations may differ in name of
                 // the impl.
-                Class<?> clazz = PlatformDependent.getClassLoader(Logging.class).loadClass(classname);
+                Class<?> clazz = PlatformDependent.getClassLoader(ExceptionHandler.class).loadClass(classname);
 
                 if (SocketChannel.class.isAssignableFrom(clazz)
                         || DatagramChannel.class.isAssignableFrom(clazz)) {

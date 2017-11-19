@@ -15,11 +15,11 @@ import io.netty.handler.ssl.SslHandler;
 import io.netty.util.AttributeKey;
 import org.mockserver.logging.LoggingHandler;
 import org.mockserver.proxy.socks.SocksProxyHandler;
-import org.mockserver.socket.NettySslContextFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.mockserver.proxy.error.Logging.shouldIgnoreException;
+import static org.mockserver.proxy.error.ExceptionHandler.closeOnFlush;
+import static org.mockserver.proxy.error.ExceptionHandler.shouldIgnoreException;
 import static org.mockserver.socket.NettySslContextFactory.nettySslContextFactory;
 
 /**
@@ -64,15 +64,6 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
             return channel.attr(SSL_ENABLED_DOWNSTREAM).get();
         } else {
             return false;
-        }
-    }
-
-    /**
-     * Closes the specified channel after all queued write requests are flushed.
-     */
-    public static void closeOnFlush(Channel ch) {
-        if (ch != null && ch.isActive()) {
-            ch.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
         }
     }
 

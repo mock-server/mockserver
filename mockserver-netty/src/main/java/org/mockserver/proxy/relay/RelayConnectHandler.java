@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 
-import static org.mockserver.proxy.error.Logging.shouldIgnoreException;
+import static org.mockserver.proxy.error.ExceptionHandler.shouldIgnoreException;
 import static org.mockserver.socket.NettySslContextFactory.nettySslContextFactory;
 
 @ChannelHandler.Sharable

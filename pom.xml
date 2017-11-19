@@ -50,7 +50,7 @@
         <tomcat.version>8.0.47</tomcat.version>
         <jackson.version>2.7.8</jackson.version>
         <!-- netty version 4.1.9.Final appears to have bug with SSL -->
-        <netty.version>4.1.12.Final</netty.version>
+        <netty.version>4.1.17.Final</netty.version>
         <httpcomponents.version>4.4.1</httpcomponents.version>
         <boucycastle.verion>1.58</boucycastle.verion>
         <spring.version>4.3.12.RELEASE</spring.version>

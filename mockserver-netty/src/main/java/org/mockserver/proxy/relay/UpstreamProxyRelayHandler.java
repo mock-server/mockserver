@@ -10,7 +10,8 @@ import org.slf4j.Logger;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.ClosedSelectorException;
 
-import static org.mockserver.proxy.error.Logging.shouldIgnoreException;
+import static org.mockserver.proxy.error.ExceptionHandler.closeOnFlush;
+import static org.mockserver.proxy.error.ExceptionHandler.shouldIgnoreException;
 import static org.mockserver.socket.NettySslContextFactory.nettySslContextFactory;
 
 public class UpstreamProxyRelayHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
@@ -24,15 +25,6 @@ public class UpstreamProxyRelayHandler extends SimpleChannelInboundHandler<FullH
         this.upstreamChannel = upstreamChannel;
         this.downstreamChannel = downstreamChannel;
         this.logger = logger;
-    }
-
-    /**
-     * Closes the specified channel after all queued write requests are flushed.
-     */
-    public static void closeOnFlush(Channel ch) {
-        if (ch != null && ch.isActive()) {
-            ch.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
-        }
     }
 
     @Override

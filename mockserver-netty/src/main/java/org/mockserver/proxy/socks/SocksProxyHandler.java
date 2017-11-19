@@ -6,11 +6,10 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.socks.*;
 import org.mockserver.proxy.unification.PortUnificationHandler;
 import org.mockserver.socket.KeyAndCertificateFactory;
-import org.mockserver.socket.KeyStoreFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.mockserver.proxy.error.Logging.shouldIgnoreException;
+import static org.mockserver.proxy.error.ExceptionHandler.shouldIgnoreException;
 
 public class SocksProxyHandler extends SimpleChannelInboundHandler<SocksRequest> {
 

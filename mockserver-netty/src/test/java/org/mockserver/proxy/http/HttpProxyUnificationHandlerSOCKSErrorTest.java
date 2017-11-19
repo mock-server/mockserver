@@ -155,7 +155,6 @@ public class HttpProxyUnificationHandlerSOCKSErrorTest {
 
         // then - should add no handlers
         assertThat(embeddedChannel.pipeline().names(), contains(
-                "HttpProxyUnificationHandler#0",
                 "DefaultChannelPipeline$TailContext#0"
         ));
 

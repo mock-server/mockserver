@@ -5,7 +5,8 @@ import io.netty.channel.*;
 import io.netty.handler.codec.http.HttpMessage;
 import org.slf4j.Logger;
 
-import static org.mockserver.proxy.error.Logging.shouldIgnoreException;
+import static org.mockserver.proxy.error.ExceptionHandler.closeOnFlush;
+import static org.mockserver.proxy.error.ExceptionHandler.shouldIgnoreException;
 
 public class ProxyRelayHandler<T extends HttpMessage> extends SimpleChannelInboundHandler<T> {
 
@@ -16,15 +17,6 @@ public class ProxyRelayHandler<T extends HttpMessage> extends SimpleChannelInbou
         super(false);
         this.channel = channel;
         this.logger = logger;
-    }
-
-    /**
-     * Closes the specified channel after all queued write requests are flushed.
-     */
-    public static void closeOnFlush(Channel ch) {
-        if (ch != null && ch.isActive()) {
-            ch.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
-        }
     }
 
     @Override
