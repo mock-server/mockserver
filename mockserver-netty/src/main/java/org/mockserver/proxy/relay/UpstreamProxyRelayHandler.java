@@ -10,8 +10,8 @@ import org.slf4j.Logger;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.ClosedSelectorException;
 
-import static org.mockserver.proxy.error.ExceptionHandler.closeOnFlush;
-import static org.mockserver.proxy.error.ExceptionHandler.shouldIgnoreException;
+import static org.mockserver.exception.ExceptionHandler.closeOnFlush;
+import static org.mockserver.exception.ExceptionHandler.shouldIgnoreException;
 import static org.mockserver.socket.NettySslContextFactory.nettySslContextFactory;
 
 public class UpstreamProxyRelayHandler extends SimpleChannelInboundHandler<FullHttpRequest> {

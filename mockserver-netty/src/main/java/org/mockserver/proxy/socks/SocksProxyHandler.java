@@ -9,7 +9,7 @@ import org.mockserver.socket.KeyAndCertificateFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.mockserver.proxy.error.ExceptionHandler.shouldIgnoreException;
+import static org.mockserver.exception.ExceptionHandler.shouldIgnoreException;
 
 public class SocksProxyHandler extends SimpleChannelInboundHandler<SocksRequest> {
 

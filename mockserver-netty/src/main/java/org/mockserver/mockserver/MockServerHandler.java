@@ -35,6 +35,8 @@ import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAPI;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAllResponses;
+import static org.mockserver.exception.ExceptionHandler.closeOnFlush;
+import static org.mockserver.exception.ExceptionHandler.shouldIgnoreException;
 import static org.mockserver.model.ConnectionOptions.connectionOptions;
 import static org.mockserver.model.ConnectionOptions.isFalseOrNull;
 import static org.mockserver.model.Header.header;
@@ -310,10 +312,10 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
     }
 
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        if (!cause.getMessage().contains("reset by peer") || !cause.getMessage().contains("connection was aborted")) {
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        if (!shouldIgnoreException(cause)) {
             logger.warn("Exception caught by MockServer handler -> closing pipeline", cause);
         }
-        ctx.close();
+        closeOnFlush(ctx.channel());
     }
 }

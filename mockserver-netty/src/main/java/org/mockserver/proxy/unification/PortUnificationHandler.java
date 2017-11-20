@@ -2,7 +2,6 @@ package org.mockserver.proxy.unification;
 
 import com.google.common.annotations.VisibleForTesting;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
@@ -18,8 +17,8 @@ import org.mockserver.proxy.socks.SocksProxyHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.mockserver.proxy.error.ExceptionHandler.closeOnFlush;
-import static org.mockserver.proxy.error.ExceptionHandler.shouldIgnoreException;
+import static org.mockserver.exception.ExceptionHandler.closeOnFlush;
+import static org.mockserver.exception.ExceptionHandler.shouldIgnoreException;
 import static org.mockserver.socket.NettySslContextFactory.nettySslContextFactory;
 
 /**

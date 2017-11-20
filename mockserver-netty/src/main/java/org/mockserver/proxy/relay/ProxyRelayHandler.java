@@ -5,8 +5,8 @@ import io.netty.channel.*;
 import io.netty.handler.codec.http.HttpMessage;
 import org.slf4j.Logger;
 
-import static org.mockserver.proxy.error.ExceptionHandler.closeOnFlush;
-import static org.mockserver.proxy.error.ExceptionHandler.shouldIgnoreException;
+import static org.mockserver.exception.ExceptionHandler.closeOnFlush;
+import static org.mockserver.exception.ExceptionHandler.shouldIgnoreException;
 
 public class ProxyRelayHandler<T extends HttpMessage> extends SimpleChannelInboundHandler<T> {
 

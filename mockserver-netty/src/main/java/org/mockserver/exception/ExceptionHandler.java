@@ -1,4 +1,4 @@
-package org.mockserver.proxy.error;
+package org.mockserver.exception;
 
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;

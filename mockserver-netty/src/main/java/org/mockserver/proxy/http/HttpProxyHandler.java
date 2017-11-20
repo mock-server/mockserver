@@ -43,7 +43,7 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.proxy.Proxy.REMOTE_SOCKET;
-import static org.mockserver.proxy.error.ExceptionHandler.shouldIgnoreException;
+import static org.mockserver.exception.ExceptionHandler.shouldIgnoreException;
 
 @ChannelHandler.Sharable
 public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
