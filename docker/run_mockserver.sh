@@ -74,7 +74,7 @@ do
         -proxyRemotePort) proxyRemotePort="$2"; shift;;
         -proxyRemoteHost) proxyRemoteHost="$2"; shift;;
         -genericJVMOptions) genericJVMOptions="$2"; shift;;
-		-*) notset="true"; break;;
+        -*) notset="true"; break;;
         *) break;;
     esac
     shift
