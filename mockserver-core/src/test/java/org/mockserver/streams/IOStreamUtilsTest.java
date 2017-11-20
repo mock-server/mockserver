@@ -3,15 +3,13 @@ package org.mockserver.streams;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
-import javax.servlet.ServletInputStream;
-import javax.servlet.ServletOutputStream;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
+import javax.servlet.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
 import static org.mockserver.character.Character.NEW_LINE;
@@ -26,7 +24,7 @@ public class IOStreamUtilsTest {
     public void shouldReadSocketInputStreamToString() throws IOException {
         // given
         Socket socket = mock(Socket.class);
-        when(socket.getInputStream()).thenReturn(IOUtils.toInputStream("bytes"));
+        when(socket.getInputStream()).thenReturn(IOUtils.toInputStream("bytes", UTF_8));
 
         // when
         String result = new IOStreamUtils().readInputStreamToString(socket);
@@ -48,8 +46,8 @@ public class IOStreamUtilsTest {
                         "Last-Modified:Sat, 04 Jan 2014 17:18:54 GMT\r" + NEW_LINE +
                         "Vary:*" + NEW_LINE +
                         "\r" + NEW_LINE +
-                        "1234567890"
-        ));
+                        "1234567890",
+                UTF_8));
 
         // when
         String result = IOStreamUtils.readInputStreamToString(socket);
@@ -80,8 +78,8 @@ public class IOStreamUtilsTest {
                         "last-modified:Sat, 04 Jan 2014 17:18:54 GMT\r" + NEW_LINE +
                         "vary:*" + NEW_LINE +
                         "\r" + NEW_LINE +
-                        "1234567890"
-        ));
+                        "1234567890",
+                UTF_8));
 
         // when
         String result = IOStreamUtils.readInputStreamToString(socket);
@@ -103,7 +101,9 @@ public class IOStreamUtilsTest {
     public void shouldReadServletRequestInputStreamToString() throws IOException {
         // given
         ServletRequest servletRequest = mock(ServletRequest.class);
-        when(servletRequest.getInputStream()).thenReturn(new DelegatingServletInputStream(IOUtils.toInputStream("bytes")));
+        when(servletRequest.getInputStream()).thenReturn(
+                new DelegatingServletInputStream(IOUtils.toInputStream("bytes", UTF_8))
+        );
 
         // when
         String result = IOStreamUtils.readInputStreamToString(servletRequest);
@@ -126,7 +126,9 @@ public class IOStreamUtilsTest {
     public void shouldReadInputStreamToByteArray() throws IOException {
         // given
         ServletRequest servletRequest = mock(ServletRequest.class);
-        when(servletRequest.getInputStream()).thenReturn(new DelegatingServletInputStream(IOUtils.toInputStream("bytes")));
+        when(servletRequest.getInputStream()).thenReturn(
+                new DelegatingServletInputStream(IOUtils.toInputStream("bytes", UTF_8))
+        );
 
         // when
         byte[] result = IOStreamUtils.readInputStreamToByteArray(servletRequest);
@@ -199,6 +201,21 @@ public class IOStreamUtilsTest {
         public void close() throws IOException {
             super.close();
             this.inputStream.close();
+        }
+
+        @Override
+        public boolean isFinished() {
+            return false;
+        }
+
+        @Override
+        public boolean isReady() {
+            return true;
+        }
+
+        @Override
+        public void setReadListener(ReadListener readListener) {
+
         }
     }
 }

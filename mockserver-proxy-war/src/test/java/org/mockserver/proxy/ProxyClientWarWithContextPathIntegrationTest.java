@@ -44,7 +44,7 @@ public class ProxyClientWarWithContextPathIntegrationTest extends AbstractClient
         // add servlet
         Context ctx = tomcat.addContext("/" + servletContext, new File(".").getAbsolutePath());
         tomcat.addServlet("/" + servletContext, "mockServerServlet", new ProxyServlet());
-        ctx.addServletMapping("/*", "mockServerServlet");
+        ctx.addServletMappingDecoded("/*", "mockServerServlet");
 
         // start server
         tomcat.start();

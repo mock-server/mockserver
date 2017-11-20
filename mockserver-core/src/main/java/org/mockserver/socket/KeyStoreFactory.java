@@ -1,8 +1,6 @@
 package org.mockserver.socket;
 
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,8 +10,6 @@ import javax.net.ssl.SSLContext;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.security.Key;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -104,13 +100,9 @@ public class KeyStoreFactory {
 
             // save as JKS file
             File keyStoreFile = new File(keyStoreFileName);
-            FileOutputStream fileOutputStream = null;
-            try {
-                fileOutputStream = new FileOutputStream(keyStoreFile);
+            try (FileOutputStream fileOutputStream = new FileOutputStream(keyStoreFile)) {
                 keyStore.store(fileOutputStream, keyStorePassword);
                 logger.trace("Saving key store to file [" + keyStoreFileName + "]");
-            } finally {
-                IOUtils.closeQuietly(fileOutputStream);
             }
             if (deleteOnExit) {
                 keyStoreFile.deleteOnExit();
@@ -152,15 +144,11 @@ public class KeyStoreFactory {
         KeyStore keystore = null;
         File keyStoreFile = new File(ConfigurationProperties.javaKeyStoreFilePath());
         if (keyStoreFile.exists()) {
-            FileInputStream fileInputStream = null;
-            try {
-                fileInputStream = new FileInputStream(keyStoreFile);
+            try (FileInputStream fileInputStream = new FileInputStream(keyStoreFile)) {
                 keystore = KeyStore.getInstance(KeyStore.getDefaultType());
                 keystore.load(fileInputStream, ConfigurationProperties.javaKeyStorePassword().toCharArray());
             } catch (Exception e) {
                 throw new RuntimeException("Exception while loading KeyStore from " + keyStoreFile.getAbsolutePath(), e);
-            } finally {
-                IOUtils.closeQuietly(fileInputStream);
             }
         }
         System.setProperty("javax.net.ssl.trustStore", keyStoreFile.getAbsolutePath());

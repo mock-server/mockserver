@@ -56,7 +56,7 @@ public class ClientServerWarNoContextPathIntegrationTest extends DeployableWARAb
         // add servlet
         Context ctx = tomcat.addContext("/" + servletContext, new File(".").getAbsolutePath());
         tomcat.addServlet("/" + servletContext, "mockServerServlet", new MockServerServlet());
-        ctx.addServletMapping("/*", "mockServerServlet");
+        ctx.addServletMappingDecoded("/*", "mockServerServlet");
 
         // start server
         tomcat.start();

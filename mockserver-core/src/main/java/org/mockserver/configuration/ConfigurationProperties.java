@@ -2,7 +2,6 @@ package org.mockserver.configuration;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Sets;
-import org.apache.commons.io.IOUtils;
 import org.mockserver.socket.KeyStoreFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -128,7 +127,7 @@ public class ConfigurationProperties {
             }
         }
         if (subjectAlternativeDomainsModified) {
-            System.setProperty("mockserver.sslSubjectAlternativeNameDomains", Joiner.on(",").join(new TreeSet(ALL_SUBJECT_ALTERNATIVE_DOMAINS)));
+            System.setProperty("mockserver.sslSubjectAlternativeNameDomains", Joiner.on(",").join(new TreeSet<>(ALL_SUBJECT_ALTERNATIVE_DOMAINS)));
             rebuildKeyStore(true);
         }
     }
@@ -153,7 +152,7 @@ public class ConfigurationProperties {
             }
         }
         if (subjectAlternativeIpsModified) {
-            System.setProperty("mockserver.sslSubjectAlternativeNameIps", Joiner.on(",").join(new TreeSet(ALL_SUBJECT_ALTERNATIVE_IPS)));
+            System.setProperty("mockserver.sslSubjectAlternativeNameIps", Joiner.on(",").join(new TreeSet<>(ALL_SUBJECT_ALTERNATIVE_IPS)));
             rebuildKeyStore(true);
         }
     }
@@ -199,7 +198,7 @@ public class ConfigurationProperties {
             return INTEGER_STRING_LIST_PARSER.toList(readPropertyHierarchically(key, "" + defaultValue));
         } catch (NumberFormatException nfe) {
             LOGGER.error("NumberFormatException converting " + key + " with value [" + readPropertyHierarchically(key, "" + defaultValue) + "]", nfe);
-            return Arrays.asList();
+            return Collections.emptyList();
         }
     }
 
@@ -212,32 +211,34 @@ public class ConfigurationProperties {
         }
     }
 
-    public static Properties readPropertyFile() {
+    private static Properties readPropertyFile() {
 
         Properties properties = new Properties();
 
-        InputStream inputStream = ConfigurationProperties.class.getClassLoader().getResourceAsStream(propertyFile());
-        if (inputStream != null) {
-            try {
-                properties.load(inputStream);
-            } catch (IOException e) {
-                e.printStackTrace();
-                LOGGER.error("Exception loading property file [" + propertyFile() + "]", e);
+        try (InputStream inputStream = ConfigurationProperties.class.getClassLoader().getResourceAsStream(propertyFile())) {
+            if (inputStream != null) {
+                try {
+                    properties.load(inputStream);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    LOGGER.error("Exception loading property file [" + propertyFile() + "]", e);
+                }
+            } else {
+                LOGGER.debug("Property file not found on classpath using path [" + propertyFile() + "]");
+                try {
+                    properties.load(new FileInputStream(propertyFile()));
+                } catch (FileNotFoundException e) {
+                    LOGGER.debug("Property file not found using path [" + propertyFile() + "]");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    LOGGER.error("Exception loading property file [" + propertyFile() + "]", e);
+                }
             }
-        } else {
-            LOGGER.debug("Property file not found on classpath using path [" + propertyFile() + "]");
-            try {
-                properties.load(new FileInputStream(propertyFile()));
-            } catch (FileNotFoundException e) {
-                LOGGER.debug("Property file not found using path [" + propertyFile() + "]");
-            } catch (IOException e) {
-                e.printStackTrace();
-                LOGGER.error("Exception loading property file [" + propertyFile() + "]", e);
-            }
+        } catch (IOException ioe) {
+            // ignore
         }
 
         if (!properties.isEmpty()) {
-            IOUtils.closeQuietly(inputStream);
             Enumeration<?> propertyNames = properties.propertyNames();
 
             StringBuilder propertiesLogDump = new StringBuilder();
@@ -252,7 +253,7 @@ public class ConfigurationProperties {
         return properties;
     }
 
-    public static String readPropertyHierarchically(String key, String defaultValue) {
+    private static String readPropertyHierarchically(String key, String defaultValue) {
         return System.getProperty(key, PROPERTIES.getProperty(key, defaultValue));
     }
 

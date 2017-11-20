@@ -25,7 +25,7 @@ public class Filters {
         return this;
     }
 
-    public <T extends HttpRequest> T applyOnRequestFilters(T httpRequest) {
+    public HttpRequest applyOnRequestFilters(HttpRequest httpRequest) {
         for (HttpRequestMatcher httpRequestMatcher : requestFilters.keySet()) {
             if (httpRequestMatcher.matches(httpRequest)) {
                 for (RequestFilter requestFilter : requestFilters.getAll(httpRequestMatcher)) {
@@ -38,7 +38,7 @@ public class Filters {
         return httpRequest;
     }
 
-    public <T extends HttpRequest> HttpResponse applyOnResponseFilters(T httpRequest, HttpResponse httpResponse) {
+    public HttpResponse applyOnResponseFilters(HttpRequest httpRequest, HttpResponse httpResponse) {
         if (httpResponse != null) {
             for (HttpRequestMatcher httpRequestMatcher : responseFilters.keySet()) {
                 if (httpRequestMatcher.matches(httpRequest)) {

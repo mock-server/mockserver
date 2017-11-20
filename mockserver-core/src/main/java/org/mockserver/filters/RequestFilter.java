@@ -7,6 +7,6 @@ import org.mockserver.model.HttpRequest;
  */
 public interface RequestFilter extends Filter {
 
-    public <T extends HttpRequest> T onRequest(T httpRequest);
+    HttpRequest onRequest(HttpRequest httpRequest);
 
 }
