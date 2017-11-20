@@ -45,7 +45,7 @@
         <maven.compiler.source>1.7</maven.compiler.source>
         <maven.compiler.target>1.7</maven.compiler.target>
         <project.build.sourceEncoding>UTF8</project.build.sourceEncoding>
-        <jetty.version>8.1.16.v20140903</jetty.version>
+        <jetty.version>8.2.0.v20160908</jetty.version>
         <slf4j.version>1.7.25</slf4j.version>
         <tomcat.version>8.0.47</tomcat.version>
         <jackson.version>2.7.8</jackson.version>
