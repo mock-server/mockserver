@@ -252,6 +252,13 @@
                 <version>${boucycastle.verion}</version>
             </dependency>
 
+            <!-- templating -->
+            <dependency>
+                <groupId>org.jtwig</groupId>
+                <artifactId>jtwig-web</artifactId>
+                <version>5.86.1.RELEASE</version>
+            </dependency>
+
             <!-- json (object serialisation) -->
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
