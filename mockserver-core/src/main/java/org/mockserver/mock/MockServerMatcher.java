@@ -57,7 +57,7 @@ public class MockServerMatcher extends ObjectWithReflectiveEqualsHashCodeToStrin
     }
 
     public Action retrieveAction(HttpRequest httpRequest) {
-        for (Expectation expectation : new ArrayList<Expectation>(this.expectations)) {
+        for (Expectation expectation : new ArrayList<>(this.expectations)) {
             if (expectation.matches(httpRequest)) {
                 expectation.decrementRemainingMatches();
                 if (!expectation.hasRemainingMatches()) {

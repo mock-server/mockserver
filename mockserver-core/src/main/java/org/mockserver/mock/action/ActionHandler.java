@@ -16,6 +16,7 @@ public class ActionHandler {
     private HttpForwardActionHandler httpForwardActionHandler = new HttpForwardActionHandler();
     private HttpCallbackActionHandler httpCallbackActionHandler = new HttpCallbackActionHandler();
     private HttpResponseActionHandler httpResponseActionHandler = new HttpResponseActionHandler();
+    private HttpResponseTemplateActionHandler httpResponseTemplateActionHandler = new HttpResponseTemplateActionHandler();
     private Filters filters = new Filters();
 
     public ActionHandler(RequestLogFilter requestLogFilter) {
@@ -36,6 +37,9 @@ public class ActionHandler {
                     break;
                 case RESPONSE:
                     httpResponse = httpResponseActionHandler.handle((HttpResponse) action);
+                    break;
+                case RESPONSE_TEMPLATE:
+                    httpResponse = httpResponseTemplateActionHandler.handle((HttpTemplate) action, httpRequest);
                     break;
             }
         }
