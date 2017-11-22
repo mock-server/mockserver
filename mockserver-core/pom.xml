@@ -70,7 +70,15 @@
         <!-- templating -->
         <dependency>
             <groupId>org.jtwig</groupId>
-            <artifactId>jtwig-web</artifactId>
+            <artifactId>jtwig-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.velocity</groupId>
+            <artifactId>velocity-engine-scripting</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.velocity</groupId>
+            <artifactId>velocity-engine-core</artifactId>
         </dependency>
 
         <!-- json (object serialisation) -->
