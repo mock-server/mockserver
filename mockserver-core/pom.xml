@@ -67,6 +67,12 @@
             <artifactId>bcpkix-jdk15on</artifactId>
         </dependency>
 
+        <!-- templating -->
+        <dependency>
+            <groupId>org.jtwig</groupId>
+            <artifactId>jtwig-web</artifactId>
+        </dependency>
+
         <!-- json (object serialisation) -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
