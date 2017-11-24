@@ -97,7 +97,7 @@ public class ActionHandlerTest {
     @Test
     public void shouldProcessResponseTemplateAction() {
         // given
-        HttpTemplate httpTemplate = template();
+        HttpTemplate httpTemplate = template(HttpTemplate.TemplateType.JAVASCRIPT, "");
         when(mockHttpResponseTemplateActionHandler.handle(httpTemplate, httpRequest)).thenReturn(httpResponse);
 
         // when

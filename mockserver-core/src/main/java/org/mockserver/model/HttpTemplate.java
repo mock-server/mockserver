@@ -2,8 +2,6 @@ package org.mockserver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import java.nio.charset.Charset;
-import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static org.mockserver.model.Cookie.cookie;
@@ -16,12 +14,17 @@ import static org.mockserver.model.NottableString.string;
 public class HttpTemplate extends Action {
     private String template;
     private Delay delay;
+    private final TemplateType templateType;
+
+    public HttpTemplate(TemplateType type) {
+        this.templateType = type;
+    }
 
     /**
      * Static builder to create an template for responding or forwarding requests.
      */
-    public static HttpTemplate template() {
-        return new HttpTemplate();
+    public static HttpTemplate template(TemplateType type) {
+        return new HttpTemplate(type);
     }
 
     /**
@@ -29,8 +32,12 @@ public class HttpTemplate extends Action {
      *
      * @param template the template for the response or request
      */
-    public static HttpTemplate template(String template) {
-        return new HttpTemplate().withTemplate(template);
+    public static HttpTemplate template(TemplateType type, String template) {
+        return new HttpTemplate(type).withTemplate(template);
+    }
+
+    public TemplateType getTemplateType() {
+        return templateType;
     }
 
     public HttpTemplate withTemplate(String template) {
@@ -82,9 +89,14 @@ public class HttpTemplate extends Action {
     }
 
     public HttpTemplate shallowClone() {
-        return template()
+        return template(getTemplateType())
                 .withTemplate(getTemplate())
                 .withDelay(getDelay());
+    }
+
+    public enum TemplateType {
+        JAVASCRIPT,
+        VELOCITY
     }
 }
 

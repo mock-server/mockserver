@@ -24,6 +24,12 @@ public class MockServerStartMojoTest {
     @InjectMocks
     private MockServerStartMojo mockServerStartMojo;
 
+    @Before
+    public void setupMocks() {
+        initMocks(this);
+        MockServerAbstractMojo.embeddedJettyHolder = mockEmbeddedJettyHolder;
+    }
+
     @Test
     public void shouldStartMockServer() throws MojoExecutionException {
         // given
