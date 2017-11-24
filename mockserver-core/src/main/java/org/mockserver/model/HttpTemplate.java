@@ -95,6 +95,7 @@ public class HttpTemplate extends Action {
     }
 
     public enum TemplateType {
+        GROOVY,
         JAVASCRIPT,
         VELOCITY
     }

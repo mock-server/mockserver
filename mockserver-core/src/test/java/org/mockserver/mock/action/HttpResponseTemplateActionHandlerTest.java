@@ -54,6 +54,7 @@ public class HttpResponseTemplateActionHandlerTest {
             ));
         }
     }
+
     @Test
     public void shouldHandleHttpRequestsWithJavaScriptTemplateSecondExample() {
         // given
@@ -118,6 +119,7 @@ public class HttpResponseTemplateActionHandlerTest {
                         .withBody("{'name': 'value'}")
         ));
     }
+
     @Test
     public void shouldHandleHttpRequestsWithVelocityTemplateSecondExample() {
         // given
@@ -132,6 +134,28 @@ public class HttpResponseTemplateActionHandlerTest {
                 "        'body': $request.body\n" +
                 "    }\n" +
                 "#end");
+
+        // when
+        HttpResponse actualHttpResponse = new HttpResponseTemplateActionHandler().handle(template, request()
+                .withPath("/someOtherPath")
+                .withBody("some_body")
+        );
+
+        // then
+        assertThat(actualHttpResponse, is(
+                response()
+                        .withStatusCode(406)
+                        .withBody("some_body")
+        ));
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithGroovyTemplateSecondExample() {
+        // given
+        HttpTemplate template = template(HttpTemplate.TemplateType.GROOVY, "{\n" +
+                "    'statusCode': 406,\n" +
+                "    'body': '$request.body'\n" +
+                "}");
 
         // when
         HttpResponse actualHttpResponse = new HttpResponseTemplateActionHandler().handle(template, request()

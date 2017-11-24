@@ -4,6 +4,7 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpTemplate;
 import org.mockserver.templates.engine.TemplateEngine;
+import org.mockserver.templates.engine.groovy.GroovyTemplateEngine;
 import org.mockserver.templates.engine.javascript.JavaScriptTemplateEngine;
 import org.mockserver.templates.engine.velocity.VelocityTemplateEngine;
 
@@ -17,6 +18,7 @@ import static org.mockserver.model.HttpTemplate.template;
 public class HttpResponseTemplateActionHandler {
 
     private JavaScriptTemplateEngine javaScriptTemplateEngine = new JavaScriptTemplateEngine();
+    private GroovyTemplateEngine groovyTemplateEngine = new GroovyTemplateEngine();
     private VelocityTemplateEngine velocityTemplateEngine = new VelocityTemplateEngine();
 
     public static void main(String[] args) {
@@ -77,6 +79,11 @@ public class HttpResponseTemplateActionHandler {
             case JAVASCRIPT:
                 templateEngine = javaScriptTemplateEngine;
                 break;
+            case GROOVY:
+                templateEngine = groovyTemplateEngine;
+                break;
+            default:
+                throw new RuntimeException("Unknown no template engine available for " + httpTemplate.getTemplateType());
         }
         if (templateEngine != null) {
             HttpResponse stringifiedResponse = templateEngine.executeTemplate(httpTemplate.getTemplate(), httpRequest);
