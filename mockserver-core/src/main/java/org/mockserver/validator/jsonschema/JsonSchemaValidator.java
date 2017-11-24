@@ -8,6 +8,7 @@ import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.github.fge.jsonschema.main.JsonValidator;
 import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 import org.mockserver.client.serialization.ObjectMapperFactory;
 import org.mockserver.file.FileReader;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
@@ -68,7 +69,7 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
     @Override
     public String isValid(String json) {
         String validationResult = "";
-        if (json != null) {
+        if (!Strings.isNullOrEmpty(json)) {
             try {
 
                 ProcessingReport processingReport = validator

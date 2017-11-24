@@ -1,6 +1,5 @@
 package org.mockserver.client.serialization;
 
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import org.junit.Before;
@@ -9,21 +8,17 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockserver.client.serialization.model.ExpectationDTO;
 import org.mockserver.client.serialization.model.HttpRequestDTO;
-import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
 
 import java.io.IOException;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.same;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
-import static org.mockserver.model.HttpRequest.request;
 
 /**
  * @author jamesdbloom
@@ -95,7 +90,7 @@ public class HttpRequestSerializationErrorsTest {
         // given
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("com.fasterxml.jackson.core.JsonParseException: Unrecognized token 'requestBytes': was expecting ('true', 'false' or 'null')\n" +
-                " at [Source: requestBytes; line: 1, column: 25]");
+                " at [Source: (String)\"requestBytes\"; line: 1, column: 25]");
 
         // when
         httpRequestSerializer.deserializeArray("requestBytes");

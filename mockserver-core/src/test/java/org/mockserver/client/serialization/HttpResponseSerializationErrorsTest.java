@@ -90,7 +90,7 @@ public class HttpResponseSerializationErrorsTest {
         // given
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("com.fasterxml.jackson.core.JsonParseException: Unrecognized token 'responseBytes': was expecting ('true', 'false' or 'null')\n" +
-                " at [Source: responseBytes; line: 1, column: 27]");
+                " at [Source: (String)\"responseBytes\"; line: 1, column: 27]");
 
         // when
         httpResponseSerializer.deserializeArray("responseBytes");
