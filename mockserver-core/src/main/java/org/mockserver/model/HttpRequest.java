@@ -15,14 +15,14 @@ import static org.mockserver.model.Parameter.param;
  * @author jamesdbloom
  */
 public class HttpRequest extends Not {
-    NottableString method = string("");
-    NottableString path = string("");
-    Map<NottableString, Parameter> queryStringParameters = new LinkedHashMap<NottableString, Parameter>();
-    Body body = null;
-    Map<NottableString, Header> headers = new LinkedHashMap<NottableString, Header>();
-    Map<NottableString, Cookie> cookies = new LinkedHashMap<NottableString, Cookie>();
-    Boolean keepAlive = null;
-    Boolean secure = null;
+    private NottableString method = string("");
+    private NottableString path = string("");
+    private Map<NottableString, Parameter> queryStringParameters = new LinkedHashMap<NottableString, Parameter>();
+    private Body body = null;
+    private Map<NottableString, Header> headers = new LinkedHashMap<NottableString, Header>();
+    private Map<NottableString, Cookie> cookies = new LinkedHashMap<NottableString, Cookie>();
+    private Boolean keepAlive = null;
+    private Boolean secure = null;
 
     public static HttpRequest request() {
         return new HttpRequest();

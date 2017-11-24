@@ -67,6 +67,20 @@
             <artifactId>bcpkix-jdk15on</artifactId>
         </dependency>
 
+        <!-- templating -->
+        <dependency>
+            <groupId>org.codehaus.groovy</groupId>
+            <artifactId>groovy-all</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.velocity</groupId>
+            <artifactId>velocity-engine-scripting</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.velocity</groupId>
+            <artifactId>velocity-engine-core</artifactId>
+        </dependency>
+
         <!-- json (object serialisation) -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>

@@ -364,6 +364,7 @@ public class HttpResponse extends Action {
                 .withBody(getBody())
                 .withHeaders(getHeaders())
                 .withCookies(getCookies())
+                .withDelay(getDelay())
                 .withConnectionOptions(getConnectionOptions());
     }
 }

@@ -192,9 +192,9 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
             } else {
 
-                Action handle = mockServerMatcher.retrieveAction(request);
-                if (handle instanceof HttpError) {
-                    HttpError httpError = ((HttpError) handle).applyDelay();
+                Action action = mockServerMatcher.retrieveAction(request);
+                if (action instanceof HttpError) {
+                    HttpError httpError = ((HttpError) action).applyDelay();
                     requestLogFilter.onRequest(request);
                     if (httpError.getResponseBytes() != null) {
                         // write byte directly by skipping over HTTP codec
@@ -206,8 +206,8 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                     if (httpError.getDropConnection()) {
                         ctx.close();
                     }
-                } else if (handle instanceof HttpObjectCallback) {
-                    String clientId = ((HttpObjectCallback) handle).getClientId();
+                } else if (action instanceof HttpObjectCallback) {
+                    String clientId = ((HttpObjectCallback) action).getClientId();
                     webSocketClientRegistry.registerCallbackResponseHandler(clientId, new ExpectationCallbackResponse() {
                         @Override
                         public void handle(HttpResponse response) {
@@ -219,7 +219,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                     requestLogFilter.onRequest(request);
                     webSocketClientRegistry.sendClientMessage(clientId, request);
                 } else {
-                    HttpResponse response = actionHandler.processAction(handle, request);
+                    HttpResponse response = actionHandler.processAction(action, request);
                     writeResponse(ctx, request, response);
                     logFormatter.infoLog("returning response:{}" + NEW_LINE + " for request:{}", response, request);
                 }

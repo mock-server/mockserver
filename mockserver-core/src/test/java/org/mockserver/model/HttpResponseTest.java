@@ -143,7 +143,7 @@ public class HttpResponseTest {
     }
 
     @Test
-    @Ignore
+    @Ignore("TimeUnit in Java 9 is final so it is not possible to mock it")
     public void appliesDelay() throws InterruptedException {
         // given
         TimeUnit timeUnit = mock(TimeUnit.class);

@@ -18,7 +18,7 @@ public class HttpCallbackActionHandler {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public HttpResponse handle(HttpClassCallback httpClassCallback, HttpRequest httpRequest) {
-        return sendRequest(httpClassCallback, httpRequest);
+        return invokeCallbackMethod(httpClassCallback, httpRequest);
     }
 
     private ExpectationCallback instantiateCallback(HttpClassCallback httpClassCallback) {
@@ -42,7 +42,7 @@ public class HttpCallbackActionHandler {
         return null;
     }
 
-    private HttpResponse sendRequest(HttpClassCallback httpClassCallback, HttpRequest httpRequest) {
+    private HttpResponse invokeCallbackMethod(HttpClassCallback httpClassCallback, HttpRequest httpRequest) {
         if (httpRequest != null) {
             ExpectationCallback expectationCallback = instantiateCallback(httpClassCallback);
             if (expectationCallback != null) {

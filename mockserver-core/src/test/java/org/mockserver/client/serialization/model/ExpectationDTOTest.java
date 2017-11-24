@@ -161,7 +161,7 @@ public class ExpectationDTOTest {
     @Test
     public void shouldBuildObjectWithNulls() {
         // when
-        Expectation expectation = new ExpectationDTO(new Expectation(null, null, TimeToLive.unlimited()).thenRespond(null).thenForward(null).thenError(null).thenCallback((HttpClassCallback)null).thenCallback((HttpObjectCallback)null)).buildObject();
+        Expectation expectation = new ExpectationDTO(new Expectation(null, null, TimeToLive.unlimited()).thenRespond((HttpResponse)null).thenForward(null).thenError(null).thenCallback((HttpClassCallback)null).thenCallback((HttpObjectCallback)null)).buildObject();
 
         // then
         assertThat(expectation.getHttpRequest(), is(nullValue()));
