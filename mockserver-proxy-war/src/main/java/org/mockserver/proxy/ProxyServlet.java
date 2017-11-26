@@ -1,12 +1,12 @@
 package org.mockserver.proxy;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
+import com.google.common.net.MediaType;
 import org.mockserver.client.netty.NettyHttpClient;
-import org.mockserver.client.serialization.*;
+import org.mockserver.client.serialization.PortBindingSerializer;
+import org.mockserver.client.serialization.VerificationSequenceSerializer;
+import org.mockserver.client.serialization.VerificationSerializer;
 import org.mockserver.client.serialization.curl.HttpRequestToCurlSerializer;
-import org.mockserver.client.serialization.java.ExpectationToJavaSerializer;
-import org.mockserver.client.serialization.java.HttpRequestToJavaSerializer;
 import org.mockserver.cors.CORSHeaders;
 import org.mockserver.filters.Filters;
 import org.mockserver.filters.HopByHopHeaderFilter;
@@ -15,10 +15,10 @@ import org.mockserver.filters.RequestResponseLogFilter;
 import org.mockserver.logging.LogFormatter;
 import org.mockserver.mappers.HttpServletRequestToMockServerRequestDecoder;
 import org.mockserver.mappers.MockServerResponseToHttpServletResponseEncoder;
-import org.mockserver.mock.Expectation;
+import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
-import org.mockserver.streams.IOStreamUtils;
+import org.mockserver.model.HttpStatusCode;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.slf4j.Logger;
@@ -28,17 +28,16 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.net.InetSocketAddress;
-import java.util.List;
 
-import static com.google.common.base.Charsets.UTF_8;
 import static com.google.common.net.MediaType.JSON_UTF_8;
-import static com.google.common.net.MediaType.PLAIN_TEXT_UTF_8;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAPI;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAllResponses;
+import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
+import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpStatusCode.*;
 import static org.mockserver.model.PortBinding.portBinding;
 
@@ -51,29 +50,26 @@ public class ProxyServlet extends HttpServlet {
     private final LogFormatter logFormatter = new LogFormatter(logger);
     // mockserver
     private RequestLogFilter requestLogFilter = new RequestLogFilter();
-    private RequestResponseLogFilter requestResponseLogFilter = new RequestResponseLogFilter();
     private Filters filters = new Filters();
-    // http client
     private NettyHttpClient httpClient = new NettyHttpClient();
+    private HttpStateHandler httpStateHandler;
     // mappers
     private HttpServletRequestToMockServerRequestDecoder httpServletRequestToMockServerRequestDecoder = new HttpServletRequestToMockServerRequestDecoder();
     private MockServerResponseToHttpServletResponseEncoder mockServerResponseToHttpServletResponseEncoder = new MockServerResponseToHttpServletResponseEncoder();
     // serializers
     private HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer();
-    private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
-    private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
     private PortBindingSerializer portBindingSerializer = new PortBindingSerializer();
     private VerificationSerializer verificationSerializer = new VerificationSerializer();
     private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer();
-    private HttpRequestToJavaSerializer httpRequestToJavaSerializer = new HttpRequestToJavaSerializer();
-    private ExpectationToJavaSerializer expectationToJavaSerializer = new ExpectationToJavaSerializer();
     // CORS
     private CORSHeaders addCORSHeaders = new CORSHeaders();
 
     public ProxyServlet() {
         filters.withFilter(request(), requestLogFilter);
+        RequestResponseLogFilter requestResponseLogFilter = new RequestResponseLogFilter();
         filters.withFilter(request(), requestResponseLogFilter);
         filters.withFilter(request(), new HopByHopHeaderFilter());
+        httpStateHandler = new HttpStateHandler(requestLogFilter, requestResponseLogFilter, null);
     }
 
     @Override
@@ -81,93 +77,48 @@ public class ProxyServlet extends HttpServlet {
 
         HttpRequest request = null;
         try {
+
             request = httpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(httpServletRequest);
+            logFormatter.traceLog("received request:{}" + NEW_LINE, request);
 
             if ((enableCORSForAPI() || enableCORSForAllResponses()) && request.getMethod().getValue().equals("OPTIONS") && !request.getFirstHeader("Origin").isEmpty()) {
 
-                httpServletResponse.setStatus(OK_200.code());
-                addCORSHeadersForAPI(httpServletResponse);
+                writeResponse(httpServletResponse, OK_200);
 
             } else if (request.matches("PUT", "/status")) {
 
-                httpServletResponse.setStatus(OK_200.code());
-                httpServletResponse.setHeader(CONTENT_TYPE.toString(), JSON_UTF_8.toString());
-                IOStreamUtils.writeToOutputStream(portBindingSerializer.serialize(portBinding(httpServletRequest.getLocalPort())).getBytes(UTF_8), httpServletResponse);
-                addCORSHeadersForAPI(httpServletResponse);
+                writeResponse(httpServletResponse, OK_200, portBindingSerializer.serialize(portBinding(httpServletRequest.getLocalPort())), "application/json");
 
             } else if (request.matches("PUT", "/bind")) {
 
-                httpServletResponse.setStatus(NOT_IMPLEMENTED_501.code());
-                addCORSHeadersForAPI(httpServletResponse);
+                writeResponse(httpServletResponse, NOT_IMPLEMENTED_501);
 
             } else if (request.matches("PUT", "/clear")) {
 
-                HttpRequest httpRequest = null;
-                if (!Strings.isNullOrEmpty(request.getBodyAsString())) {
-                    httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
-                }
-                requestResponseLogFilter.clear(httpRequest);
-                requestLogFilter.clear(httpRequest);
-                logFormatter.infoLog("clearing expectations and request logs that match:{}", httpRequest);
-                httpServletResponse.setStatus(OK_200.code());
-                addCORSHeadersForAPI(httpServletResponse);
+                httpStateHandler.clear(request);
+                writeResponse(httpServletResponse, OK_200);
 
             } else if (request.matches("PUT", "/reset")) {
 
-                requestResponseLogFilter.reset();
-                requestLogFilter.reset();
-                httpServletResponse.setStatus(OK_200.code());
-                addCORSHeadersForAPI(httpServletResponse);
-                logFormatter.infoLog("resetting all expectations and request logs");
+                httpStateHandler.reset();
+                writeResponse(httpServletResponse, OK_200);
 
             } else if (request.matches("PUT", "/dumpToLog")) {
 
-                HttpRequest httpRequest = null;
-                if (!Strings.isNullOrEmpty(request.getBodyAsString())) {
-                    httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
-                }
-                boolean asJava = request.hasQueryStringParameter("type", "java") || request.hasQueryStringParameter("format", "java");
-                requestResponseLogFilter.dumpToLog(httpRequest, asJava);
-                httpServletResponse.setStatus(OK_200.code());
-                addCORSHeadersForAPI(httpServletResponse);
-                logFormatter.infoLog("dumped all active expectations to the log in " + (asJava ? "java" : "json") + " that match:{}", httpRequest);
+                httpStateHandler.dumpRecordedRequestResponsesToLog(request);
+                writeResponse(httpServletResponse, OK_200);
 
             } else if (request.matches("PUT", "/retrieve")) {
 
-                HttpRequest httpRequest = null;
-                if (!Strings.isNullOrEmpty(request.getBodyAsString())) {
-                    httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
-                }
-                StringBuilder responseBody = new StringBuilder();
-                boolean asJava = request.hasQueryStringParameter("format", "java");
-                boolean asExpectations = request.hasQueryStringParameter("type", "expectation");
-                if (asExpectations) {
-                    List<Expectation> expectations = requestResponseLogFilter.retrieveExpectations(httpRequest);
-                    if (asJava) {
-                        responseBody.append(expectationToJavaSerializer.serializeAsJava(0, expectations));
-                    } else {
-                        responseBody.append(expectationSerializer.serialize(expectations));
-                    }
-                } else {
-                    HttpRequest[] httpRequests = requestLogFilter.retrieve(httpRequest);
-                    if (asJava) {
-                        responseBody.append(httpRequestToJavaSerializer.serializeAsJava(0, httpRequests));
-                    } else {
-                        responseBody.append(httpRequestSerializer.serialize(httpRequests));
-                    }
-                }
-                httpServletResponse.setStatus(OK_200.code());
-                addCORSHeadersForAPI(httpServletResponse);
-                httpServletResponse.setHeader(CONTENT_TYPE.toString(), JSON_UTF_8.toString().replace(asJava ? "json" : "", "java"));
-                IOStreamUtils.writeToOutputStream(responseBody.toString().getBytes(UTF_8), httpServletResponse);
-                logFormatter.infoLog("retrieving " + (asExpectations ? "expectations" : "requests") + " that match:{}", httpRequest);
+                writeResponse(httpServletResponse, OK_200, httpStateHandler.retrieve(request),
+                        JSON_UTF_8.toString().replace(request.hasQueryStringParameter("format", "java") ? "json" : "", "java")
+                );
 
             } else if (request.matches("PUT", "/verify")) {
 
                 Verification verification = verificationSerializer.deserialize(request.getBodyAsString());
                 String result = requestLogFilter.verify(verification);
                 verifyResponse(httpServletResponse, result);
-                addCORSHeadersForAPI(httpServletResponse);
                 logFormatter.infoLog("verifying requests that match:{}", verification);
 
             } else if (request.matches("PUT", "/verifySequence")) {
@@ -175,71 +126,64 @@ public class ProxyServlet extends HttpServlet {
                 VerificationSequence verificationSequence = verificationSequenceSerializer.deserialize(request.getBodyAsString());
                 String result = requestLogFilter.verify(verificationSequence);
                 verifyResponse(httpServletResponse, result);
-                addCORSHeadersForAPI(httpServletResponse);
                 logFormatter.infoLog("verifying sequence that match:{}", verificationSequence);
 
             } else if (request.matches("PUT", "/stop")) {
 
-                httpServletResponse.setStatus(NOT_IMPLEMENTED_501.code());
-                addCORSHeadersForAPI(httpServletResponse);
+                writeResponse(httpServletResponse, NOT_IMPLEMENTED_501);
 
             } else {
-                forwardRequest(request, httpServletResponse);
+
+                String hostHeader = request.getFirstHeader("Host");
+                if (!Strings.isNullOrEmpty(hostHeader)) {
+                    writeResponse(httpServletResponse, sendRequest(request, determineRemoteAddress(request.isSecure(), hostHeader)));
+                } else {
+                    logger.error("Host header must be provided for requests being forwarded, the following request does not include the \"Host\" header:" + NEW_LINE + request);
+                    throw new IllegalArgumentException("Host header must be provided for requests being forwarded");
+                }
+
             }
         } catch (IllegalArgumentException iae) {
-            httpServletResponse.setStatus(BAD_REQUEST_400.code());
-            httpServletResponse.setHeader(CONTENT_TYPE.toString(), PLAIN_TEXT_UTF_8.toString());
-            IOStreamUtils.writeToOutputStream(iae.getMessage().getBytes(Charsets.UTF_8), httpServletResponse);
+            logger.error("Exception processing " + request, iae);
+            // send request without API CORS headers
+            writeResponse(httpServletResponse, BAD_REQUEST_400, iae.getMessage(), MediaType.create("text", "plain").toString());
         } catch (Exception e) {
-            logger.error("Exception processing " + (request != null ? request : httpServletRequest), e);
-            httpServletResponse.setStatus(BAD_REQUEST_400.code());
+            logger.error("Exception processing " + request, e);
+            writeResponse(httpServletResponse, response().withStatusCode(BAD_REQUEST_400.code()).withBody(e.getMessage()));
         }
     }
 
     private void verifyResponse(HttpServletResponse httpServletResponse, String result) {
         if (result.isEmpty()) {
-            httpServletResponse.setStatus(ACCEPTED_202.code());
+            writeResponse(httpServletResponse, ACCEPTED_202);
         } else {
-            httpServletResponse.setStatus(NOT_ACCEPTABLE_406.code());
-            httpServletResponse.setHeader(CONTENT_TYPE.toString(), PLAIN_TEXT_UTF_8.toString());
-            IOStreamUtils.writeToOutputStream(result.getBytes(UTF_8), httpServletResponse);
+            writeResponse(httpServletResponse, NOT_ACCEPTABLE_406, result, MediaType.create("text", "plain").toString());
         }
     }
 
-    private void addCORSHeadersForAPI(HttpServletResponse httpServletResponse) {
+    private void writeResponse(HttpServletResponse httpServletResponse, HttpStatusCode responseStatus) {
+        writeResponse(httpServletResponse, responseStatus, "", "application/json");
+    }
+
+    private void writeResponse(HttpServletResponse httpServletResponse, HttpStatusCode responseStatus, String body, String contentType) {
+        HttpResponse response = response()
+                .withStatusCode(responseStatus.code())
+                .withBody(body);
+        if (body != null && !body.isEmpty()) {
+            response.updateHeader(header(CONTENT_TYPE.toString(), contentType + "; charset=utf-8"));
+        }
         if (enableCORSForAPI()) {
-            addCORSHeaders.addCORSHeaders(httpServletResponse);
-        } else {
-            addCORSHeadersForAllResponses(httpServletResponse);
+            addCORSHeaders.addCORSHeaders(response);
         }
+        writeResponse(httpServletResponse, response);
     }
 
-    private void addCORSHeadersForAllResponses(HttpServletResponse httpServletResponse) {
+    private void writeResponse(HttpServletResponse httpServletResponse, HttpResponse response) {
         if (enableCORSForAllResponses()) {
-            addCORSHeaders.addCORSHeaders(httpServletResponse);
+            addCORSHeaders.addCORSHeaders(response);
         }
-    }
 
-    private void forwardRequest(HttpRequest httpRequest, HttpServletResponse httpServletResponse) {
-        String hostHeader = httpRequest.getFirstHeader("Host");
-        if (!Strings.isNullOrEmpty(hostHeader)) {
-            HttpResponse httpResponse = sendRequest(httpRequest, determineRemoteAddress(httpRequest.isSecure(), hostHeader));
-            addCORSHeadersForAllResponses(httpServletResponse);
-            mockServerResponseToHttpServletResponseEncoder.mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
-        } else {
-            logger.error("Host header must be provided for requests being forwarded, the following request does not include the \"Host\" header:" + NEW_LINE + httpRequest);
-            throw new IllegalArgumentException("Host header must be provided for requests being forwarded");
-        }
-    }
-
-    private InetSocketAddress determineRemoteAddress(Boolean isSecure, String hostHeader) {
-        String[] hostHeaderParts = hostHeader.split(":");
-        boolean isSsl = isSecure != null && isSecure;
-        Integer port = (isSsl ? 443 : 80); // default
-        if (hostHeaderParts.length > 1) {
-            port = Integer.parseInt(hostHeaderParts[1]);  // non-default
-        }
-        return new InetSocketAddress(hostHeaderParts[0], port);
+        mockServerResponseToHttpServletResponseEncoder.mapMockServerResponseToHttpServletResponse(response, httpServletResponse);
     }
 
     private HttpResponse sendRequest(HttpRequest httpRequest, InetSocketAddress remoteAddress) {
@@ -259,5 +203,15 @@ public class ProxyServlet extends HttpServlet {
             );
         }
         return httpResponse;
+    }
+
+    private InetSocketAddress determineRemoteAddress(Boolean isSecure, String hostHeader) {
+        String[] hostHeaderParts = hostHeader.split(":");
+        boolean isSsl = isSecure != null && isSecure;
+        Integer port = (isSsl ? 443 : 80); // default
+        if (hostHeaderParts.length > 1) {
+            port = Integer.parseInt(hostHeaderParts[1]);  // non-default
+        }
+        return new InetSocketAddress(hostHeaderParts[0], port);
     }
 }

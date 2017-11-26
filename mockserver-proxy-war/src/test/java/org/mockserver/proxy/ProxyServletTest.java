@@ -5,6 +5,7 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.client.serialization.VerificationSequenceSerializer;
@@ -13,11 +14,13 @@ import org.mockserver.filters.RequestLogFilter;
 import org.mockserver.filters.RequestResponseLogFilter;
 import org.mockserver.mappers.HttpServletRequestToMockServerRequestDecoder;
 import org.mockserver.mappers.MockServerResponseToHttpServletResponseEncoder;
+import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
@@ -30,6 +33,7 @@ import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpStatusCode.*;
 import static org.mockserver.verify.Verification.verification;
 import static org.mockserver.verify.VerificationSequence.verificationSequence;
@@ -38,14 +42,16 @@ public class ProxyServletTest {
 
     @Mock
     private HttpServletRequestToMockServerRequestDecoder mockHttpServletRequestToMockServerRequestDecoder;
-    @Mock
-    private MockServerResponseToHttpServletResponseEncoder mockServerResponseToHttpServletResponseEncoder;
+    @Spy
+    private MockServerResponseToHttpServletResponseEncoder mockServerResponseToHttpServletResponseEncoder = new MockServerResponseToHttpServletResponseEncoder();
     @Mock
     private NettyHttpClient mockNettyHttpClient;
     @Mock
     private RequestLogFilter requestLogFilter;
     @Mock
     private RequestResponseLogFilter requestResponseLogFilter;
+    @Mock
+    private HttpStateHandler httpStateHandler;
     @Mock
     private HttpRequestSerializer mockHttpRequestSerializer;
     @Mock
@@ -81,6 +87,72 @@ public class ProxyServletTest {
                         any(InetSocketAddress.class)
                 )
         ).thenReturn(httpResponse);
+    }
+
+    @Test
+    public void shouldReset() throws IOException {
+        // given
+        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class)))
+                .thenReturn(
+                        request()
+                                .withMethod("PUT")
+                                .withPath("/reset")
+                                .withBody("requestBytes")
+                );
+
+        // when
+        proxyServlet.service(new MockHttpServletRequest(), new MockHttpServletResponse());
+
+        // then - http state handler is called
+        verify(httpStateHandler).reset();
+    }
+
+    @Test
+    public void shouldClear() throws IOException {
+        // given
+        HttpRequest request = request()
+                .withMethod("PUT")
+                .withPath("/clear")
+                .withBody("requestBytes");
+        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class))).thenReturn(request);
+
+        // when
+        proxyServlet.service(new MockHttpServletRequest(), new MockHttpServletResponse());
+
+        // then - http state handler is called
+        verify(httpStateHandler).clear(request);
+    }
+
+    @Test
+    public void shouldDumpExpectationsToLog() throws IOException {
+        // given
+        HttpRequest request = request()
+                .withMethod("PUT")
+                .withPath("/dumpToLog")
+                .withBody("requestBytes");
+        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class))).thenReturn(request);
+
+        // when
+        proxyServlet.service(new MockHttpServletRequest(), new MockHttpServletResponse());
+
+        // then - http state handler is called
+        verify(httpStateHandler).dumpRecordedRequestResponsesToLog(request);
+    }
+
+    @Test
+    public void shouldReturnRecordedRequestsOrExpectations() throws IOException {
+        // given
+        HttpRequest request = request()
+                .withMethod("PUT")
+                .withPath("/retrieve")
+                .withBody("requestBytes");
+        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class))).thenReturn(request);
+
+        // when
+        proxyServlet.service(new MockHttpServletRequest(), new MockHttpServletResponse());
+
+        // then - http state handler is called
+        verify(httpStateHandler).retrieve(request);
     }
 
     @Test
@@ -193,81 +265,7 @@ public class ProxyServletTest {
     }
 
     @Test
-    public void shouldDumpToLogAsJSON() {
-        // given
-        httpRequest
-                .withPath("/dumpToLog")
-                .withMethod("PUT")
-                .withBody("body");
-        when(mockHttpRequestSerializer.deserialize("body")).thenReturn(httpRequest);
-
-        // when
-        proxyServlet.service(mockHttpServletRequest, mockHttpServletResponse);
-
-        // then
-        verify(requestResponseLogFilter).dumpToLog(httpRequest, false);
-        assertEquals(OK_200.code(), mockHttpServletResponse.getStatus());
-    }
-
-    @Test
-    public void shouldDumpToLogAsJava() {
-        // given
-        httpRequest
-                .withPath("/dumpToLog")
-                .withMethod("PUT")
-                .withBody("body")
-                .withQueryStringParameter("type", "java");
-        when(mockHttpRequestSerializer.deserialize("body")).thenReturn(httpRequest);
-
-        // when
-        proxyServlet.service(mockHttpServletRequest, mockHttpServletResponse);
-
-        // then
-        verify(requestResponseLogFilter).dumpToLog(httpRequest, true);
-        assertEquals(OK_200.code(), mockHttpServletResponse.getStatus());
-    }
-
-    @Test
-    public void shouldReturnRecordedRequests() throws IOException {
-        // given
-        httpRequest
-                .withPath("/some_request")
-                .withBody("body");
-        when(mockHttpRequestSerializer.deserialize("body")).thenReturn(httpRequest);
-
-        // when
-        proxyServlet.service(mockHttpServletRequest, mockHttpServletResponse);
-
-        // given
-        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-        httpRequest
-                .withMethod("PUT")
-                .withPath("/retrieve")
-                .withBody("retrieve_body");
-        when(mockHttpRequestSerializer.deserialize("retrieve_body")).thenReturn(request("request_matcher"));
-        when(requestLogFilter.retrieve(request("request_matcher"))).thenReturn(new HttpRequest[]{request("retrieved_request")});
-        when(mockHttpRequestSerializer.serialize(new HttpRequest[]{request("retrieved_request")})).thenReturn("request_response");
-
-        // when
-        proxyServlet.service(mockHttpServletRequest, httpServletResponse);
-
-        // then
-        verify(requestLogFilter).retrieve(request("request_matcher"));
-        assertThat(httpServletResponse.getContentAsString(), is("request_response"));
-        assertThat(httpServletResponse.getStatus(), is(OK_200.code()));
-    }
-
-    @Test
     public void shouldVerifyRequestNotMatching() throws IOException {
-        // given
-        httpRequest
-                .withPath("/some_request")
-                .withBody("body");
-        when(mockHttpRequestSerializer.deserialize("body")).thenReturn(httpRequest);
-
-        // when
-        proxyServlet.service(mockHttpServletRequest, mockHttpServletResponse);
-
         // given
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
         httpRequest
@@ -288,15 +286,6 @@ public class ProxyServletTest {
     @Test
     public void shouldVerifyRequestMatching() throws IOException {
         // given
-        httpRequest
-                .withPath("/some_request")
-                .withBody("body");
-        when(mockHttpRequestSerializer.deserialize("body")).thenReturn(httpRequest);
-
-        // when
-        proxyServlet.service(mockHttpServletRequest, mockHttpServletResponse);
-
-        // given
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
         httpRequest
                 .withMethod("PUT")
@@ -316,15 +305,6 @@ public class ProxyServletTest {
     @Test
     public void shouldVerifySequenceRequestNotMatching() throws IOException {
         // given
-        httpRequest
-                .withPath("/some_request")
-                .withBody("body");
-        when(mockHttpRequestSerializer.deserialize("body")).thenReturn(httpRequest);
-
-        // when
-        proxyServlet.service(mockHttpServletRequest, mockHttpServletResponse);
-
-        // given
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
         httpRequest
                 .withMethod("PUT")
@@ -343,12 +323,6 @@ public class ProxyServletTest {
 
     @Test
     public void shouldVerifySequenceRequestMatching() throws IOException {
-        // given
-        httpRequest
-                .withPath("/some_request")
-                .withBody("body");
-        when(mockHttpRequestSerializer.deserialize("body")).thenReturn(httpRequest);
-
         // when
         proxyServlet.service(mockHttpServletRequest, mockHttpServletResponse);
 
@@ -367,36 +341,5 @@ public class ProxyServletTest {
         // then
         assertThat(httpServletResponse.getContentAsString(), is(""));
         assertThat(httpServletResponse.getStatus(), is(ACCEPTED_202.code()));
-    }
-
-    @Test
-    public void shouldReset() {
-        // given
-        httpRequest
-                .withPath("/reset")
-                .withMethod("PUT");
-        // when
-        proxyServlet.service(mockHttpServletRequest, mockHttpServletResponse);
-
-        // then
-        verify(requestLogFilter).reset();
-        assertEquals(OK_200.code(), mockHttpServletResponse.getStatus());
-    }
-
-    @Test
-    public void shouldClear() {
-        // given
-        httpRequest
-                .withPath("/clear")
-                .withMethod("PUT")
-                .withBody("body");
-        when(mockHttpRequestSerializer.deserialize("body")).thenReturn(httpRequest);
-
-        // when
-        proxyServlet.service(mockHttpServletRequest, mockHttpServletResponse);
-
-        // then
-        verify(requestLogFilter).clear(httpRequest);
-        assertEquals(OK_200.code(), mockHttpServletResponse.getStatus());
     }
 }

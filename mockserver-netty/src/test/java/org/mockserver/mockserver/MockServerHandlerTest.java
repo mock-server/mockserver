@@ -1,20 +1,18 @@
 package org.mockserver.mockserver;
 
-import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.embedded.EmbeddedChannel;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.serialization.ExpectationSerializer;
-import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.client.serialization.VerificationSequenceSerializer;
 import org.mockserver.client.serialization.VerificationSerializer;
 import org.mockserver.filters.RequestLogFilter;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
+import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.mockserver.callback.WebSocketClientRegistry;
@@ -35,12 +33,15 @@ import static org.mockito.MockitoAnnotations.initMocks;
  */
 public class MockServerHandlerTest {
 
+    // model objects
     @Mock
     Expectation mockExpectation;
     @Mock
     HttpRequest mockHttpRequest;
     @Mock
     HttpResponse mockHttpResponse;
+    @Mock
+    HttpTemplate mockHttpTemplate;
     @Mock
     HttpForward mockHttpForward;
     @Mock
@@ -57,19 +58,16 @@ public class MockServerHandlerTest {
     WebSocketClientRegistry webSocketClientRegistry;
     RequestLogFilter mockRequestLogFilter;
     @Mock
+    HttpStateHandler httpStateHandler;
+    @Mock
     ActionHandler mockActionHandler;
     // serializers
     @Mock
     ExpectationSerializer mockExpectationSerializer;
     @Mock
-    HttpRequestSerializer mockHttpRequestSerializer;
-    @Mock
     VerificationSerializer mockVerificationSerializer;
     @Mock
     VerificationSequenceSerializer mockVerificationSequenceSerializer;
-    // netty
-    @Mock
-    ChannelHandlerContext mockChannelHandlerContext;
 
     @InjectMocks
     MockServerHandler mockServerHandler;
@@ -89,7 +87,6 @@ public class MockServerHandlerTest {
 
         // given - serializers
         when(mockExpectationSerializer.deserializeArray(anyString())).thenReturn(new Expectation[]{mockExpectation});
-        when(mockHttpRequestSerializer.deserialize(anyString())).thenReturn(mockHttpRequest);
         when(mockVerificationSerializer.deserialize(anyString())).thenReturn(mockVerification);
         when(mockVerificationSequenceSerializer.deserialize(anyString())).thenReturn(mockVerificationSequence);
 
@@ -105,6 +102,7 @@ public class MockServerHandlerTest {
         when(mockExpectation.getHttpRequest()).thenReturn(mockHttpRequest);
         when(mockExpectation.getTimes()).thenReturn(Times.once());
         when(mockExpectation.getHttpResponse()).thenReturn(mockHttpResponse);
+        when(mockExpectation.getHttpResponseTemplate()).thenReturn(mockHttpTemplate);
         when(mockExpectation.getHttpForward()).thenReturn(mockHttpForward);
         when(mockExpectation.getHttpError()).thenReturn(mockHttpError);
         when(mockExpectation.getHttpClassCallback()).thenReturn(mockHttpClassCallback);

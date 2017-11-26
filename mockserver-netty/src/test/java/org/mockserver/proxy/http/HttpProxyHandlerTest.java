@@ -5,14 +5,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockserver.client.serialization.ExpectationSerializer;
-import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.client.serialization.VerificationSequenceSerializer;
 import org.mockserver.client.serialization.VerificationSerializer;
 import org.mockserver.filters.RequestLogFilter;
 import org.mockserver.filters.RequestResponseLogFilter;
-import org.mockserver.mock.Expectation;
-import org.mockserver.mock.action.ActionHandler;
+import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.proxy.Proxy;
@@ -31,10 +28,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
  */
 public class HttpProxyHandlerTest {
 
-
     // model objects
-    @Mock
-    Expectation mockExpectation;
     @Mock
     HttpRequest mockHttpRequest;
     @Mock
@@ -48,12 +42,8 @@ public class HttpProxyHandlerTest {
     Proxy mockHttpProxy;
     RequestLogFilter mockRequestLogFilter;
     @Mock
-    ActionHandler mockActionHandler;
+    HttpStateHandler httpStateHandler;
     // serializers
-    @Mock
-    ExpectationSerializer mockExpectationSerializer;
-    @Mock
-    HttpRequestSerializer mockHttpRequestSerializer;
     @Mock
     VerificationSerializer mockVerificationSerializer;
     @Mock
@@ -75,8 +65,6 @@ public class HttpProxyHandlerTest {
         initMocks(this);
 
         // given - serializers
-        when(mockExpectationSerializer.deserialize(anyString())).thenReturn(mockExpectation);
-        when(mockHttpRequestSerializer.deserialize(anyString())).thenReturn(mockHttpRequest);
         when(mockVerificationSerializer.deserialize(anyString())).thenReturn(mockVerification);
         when(mockVerificationSequenceSerializer.deserialize(anyString())).thenReturn(mockVerificationSequence);
     }

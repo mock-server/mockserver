@@ -7,6 +7,6 @@ import java.util.concurrent.Future;
  */
 public interface Stoppable {
 
-    public Future<?> stop();
+    Future<?> stop();
 
 }

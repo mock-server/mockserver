@@ -2,11 +2,12 @@ package org.mockserver.mockserver;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
-import org.mockserver.server.netty.codec.MockServerServerCodec;
+import org.mockserver.filters.RequestLogFilter;
 import org.mockserver.logging.LoggingHandler;
 import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.mockserver.callback.WebSocketClientRegistry;
 import org.mockserver.mockserver.callback.WebSocketServerHandler;
+import org.mockserver.server.netty.codec.MockServerServerCodec;
 import org.mockserver.server.unification.PortUnificationHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,14 +15,13 @@ import org.slf4j.LoggerFactory;
 public class MockServerInitializer extends PortUnificationHandler {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private final MockServerMatcher mockServerMatcher;
+    private final MockServerMatcher mockServerMatcher = new MockServerMatcher();
+    private final RequestLogFilter requestLogFilter = new RequestLogFilter();
+    private final WebSocketClientRegistry webSocketClientRegistry = new WebSocketClientRegistry();
     private final MockServer mockServer;
-    private final WebSocketClientRegistry webSocketClientRegistry;
 
-    public MockServerInitializer(MockServerMatcher mockServerMatcher, MockServer mockServer, WebSocketClientRegistry webSocketClientRegistry) {
-        this.mockServerMatcher = mockServerMatcher;
+    MockServerInitializer(MockServer mockServer) {
         this.mockServer = mockServer;
-        this.webSocketClientRegistry = webSocketClientRegistry;
     }
 
     @Override
@@ -39,6 +39,6 @@ public class MockServerInitializer extends PortUnificationHandler {
         pipeline.addLast(new MockServerServerCodec(isSecure));
 
         // add mock server handlers
-        pipeline.addLast(new MockServerHandler(mockServer, mockServerMatcher, webSocketClientRegistry, ctx.channel().attr(MockServer.REQUEST_LOG_FILTER).get()));
+        pipeline.addLast(new MockServerHandler(mockServer, mockServerMatcher, webSocketClientRegistry, requestLogFilter));
     }
 }

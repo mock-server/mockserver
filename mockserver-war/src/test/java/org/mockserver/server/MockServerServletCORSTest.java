@@ -1,22 +1,8 @@
 package org.mockserver.server;
 
-import org.junit.Before;
 import org.junit.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockserver.client.serialization.ExpectationSerializer;
-import org.mockserver.client.serialization.HttpRequestSerializer;
-import org.mockserver.client.serialization.VerificationSequenceSerializer;
-import org.mockserver.client.serialization.VerificationSerializer;
 import org.mockserver.configuration.ConfigurationProperties;
-import org.mockserver.filters.RequestLogFilter;
-import org.mockserver.mappers.HttpServletRequestToMockServerRequestDecoder;
-import org.mockserver.mappers.MockServerResponseToHttpServletResponseEncoder;
-import org.mockserver.matchers.TimeToLive;
-import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
-import org.mockserver.mock.MockServerMatcher;
-import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
@@ -26,50 +12,16 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.collection.IsEmptyCollection.empty;
-import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
-import static org.mockserver.matchers.TimeToLive.unlimited;
-import static org.mockserver.matchers.Times.once;
+import static org.mockito.Mockito.*;
 import static org.mockserver.model.HttpRequest.request;
 
 /**
  * @author jamesdbloom
  */
-public class MockServerServletCORSTest {
-
-    @Mock
-    private MockServerMatcher mockMockServerMatcher;
-    @Mock
-    private HttpServletRequestToMockServerRequestDecoder mockHttpServletRequestToMockServerRequestDecoder;
-    @Mock
-    private MockServerResponseToHttpServletResponseEncoder mockServerResponseToHttpServletResponseEncoder;
-    @Mock
-    private ExpectationSerializer mockExpectationSerializer;
-    @Mock
-    private HttpRequestSerializer mockHttpRequestSerializer;
-    @Mock
-    private VerificationSerializer mockVerificationSerializer;
-    @Mock
-    private VerificationSequenceSerializer mockVerificationSequenceSerializer;
-    @Mock
-    private ActionHandler mockActionHandler;
-    @Mock
-    private RequestLogFilter mockRequestLogFilter;
-    @InjectMocks
-    private MockServerServlet mockServerServlet;
-
-    @Before
-    public void setupTestFixture() {
-        mockServerServlet = new MockServerServlet();
-
-        initMocks(this);
-    }
+public class MockServerServletCORSTest extends MockServerServletTest {
 
     @Test
     public void shouldAddCORSHeadersForOptionsRequest() {
@@ -102,7 +54,7 @@ public class MockServerServletCORSTest {
         mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
 
         // then
-        assertThat(httpServletResponse.getStatus(), is(200));
+        assertThat(httpServletResponse.getStatus(), is(404));
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Origin"), nullValue());
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Methods"), nullValue());
         assertThat(httpServletResponse.getHeader("Access-Control-Expose-Methods"), nullValue());
@@ -125,8 +77,8 @@ public class MockServerServletCORSTest {
             // when
             mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
 
-            // then - correct response written to ChannelHandlerContext
-            assertThat(httpServletResponse.getStatus(), is(200));
+            // then - correct CORS headers added
+            assertThat(httpServletResponse.getStatus(), is(404));
             assertThat(httpServletResponse.getHeader("Access-Control-Allow-Origin"), nullValue());
             assertThat(httpServletResponse.getHeader("Access-Control-Allow-Methods"), nullValue());
             assertThat(httpServletResponse.getHeader("Access-Control-Expose-Methods"), nullValue());
@@ -156,7 +108,7 @@ public class MockServerServletCORSTest {
             // when
             mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
 
-            // then - correct response written to ChannelHandlerContext
+            // then - correct CORS headers added
             assertThat(httpServletResponse.getStatus(), is(200));
             assertThat(httpServletResponse.getHeader("Access-Control-Allow-Origin"), is("*"));
             assertThat(httpServletResponse.getHeader("Access-Control-Allow-Methods"), is("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"));
@@ -171,7 +123,7 @@ public class MockServerServletCORSTest {
     }
 
     @Test
-    public void shouldAddCORSHeadersToRandomRequestIfDisabledForAllRequest() {
+    public void shouldNotAddCORSHeadersToRandomRequestIfDisabledForAllRequest() {
         // given - a request
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
         HttpRequest request = request().withPath("/randomPath");
@@ -180,8 +132,7 @@ public class MockServerServletCORSTest {
         // when
         mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
 
-        // then - correct response written to ChannelHandlerContext
-        assertThat(httpServletResponse.getStatus(), is(200));
+        // then - correct CORS headers added
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Origin"), nullValue());
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Methods"), nullValue());
         assertThat(httpServletResponse.getHeader("Access-Control-Expose-Headers"), nullValue());
@@ -204,8 +155,7 @@ public class MockServerServletCORSTest {
             // when
             mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
 
-            // then - correct response written to ChannelHandlerContext
-            assertThat(httpServletResponse.getStatus(), is(200));
+            // then - correct CORS headers added
             assertThat(httpServletResponse.getHeader("Access-Control-Allow-Origin"), is("*"));
             assertThat(httpServletResponse.getHeader("Access-Control-Allow-Methods"), is("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"));
             assertThat(httpServletResponse.getHeader("Access-Control-Allow-Headers"), is("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
@@ -227,7 +177,7 @@ public class MockServerServletCORSTest {
         // when
         mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
 
-        // then - correct response written to ChannelHandlerContext
+        // then - correct CORS headers added
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Origin"), is("*"));
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Methods"), is("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"));
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Headers"), is("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
@@ -251,7 +201,7 @@ public class MockServerServletCORSTest {
             // when
             mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
 
-            // then - correct response written to ChannelHandlerContext
+            // then - correct CORS headers added
             assertThat(httpServletResponse.getHeader("Access-Control-Allow-Origin"), nullValue());
             assertThat(httpServletResponse.getHeader("Access-Control-Allow-Methods"), nullValue());
             assertThat(httpServletResponse.getHeader("Access-Control-Expose-Methods"), nullValue());
@@ -272,7 +222,7 @@ public class MockServerServletCORSTest {
         // when
         mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
 
-        // then - correct response written to ChannelHandlerContext
+        // then - correct CORS headers added
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Origin"), is("*"));
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Methods"), is("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"));
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Headers"), is("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
@@ -292,7 +242,7 @@ public class MockServerServletCORSTest {
         // when
         mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
 
-        // then - correct response written to ChannelHandlerContext
+        // then - correct CORS headers added
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Origin"), is("*"));
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Methods"), is("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"));
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Headers"), is("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
@@ -311,7 +261,7 @@ public class MockServerServletCORSTest {
         // when
         mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
 
-        // then - correct response written to ChannelHandlerContext
+        // then - correct CORS headers added
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Origin"), is("*"));
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Methods"), is("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"));
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Headers"), is("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
@@ -330,7 +280,7 @@ public class MockServerServletCORSTest {
         // when
         mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
 
-        // then - correct response written to ChannelHandlerContext
+        // then - correct CORS headers added
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Origin"), is("*"));
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Methods"), is("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"));
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Headers"), is("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
@@ -341,16 +291,21 @@ public class MockServerServletCORSTest {
 
     @Test
     public void shouldAddCORSHeadersToRetriveRequest() {
-        // given - a request
+        // given
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-        HttpRequest request = request().withMethod("PUT").withPath("/retrieve");
+        HttpRequest request = request()
+                .withMethod("PUT")
+                .withPath("/retrieve")
+                .withBody("requestBytes");
         when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class))).thenReturn(request);
-        when(mockHttpRequestSerializer.serialize(any(HttpRequest[].class))).thenReturn("some_request");
 
         // when
         mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
 
-        // then - correct response written to ChannelHandlerContext
+        // then - http state handler is called
+        verify(httpStateHandler).retrieve(request);
+
+        // then - correct CORS headers added
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Origin"), is("*"));
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Methods"), is("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"));
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Headers"), is("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
@@ -370,7 +325,7 @@ public class MockServerServletCORSTest {
         // when
         mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
 
-        // then - correct response written to ChannelHandlerContext
+        // then - correct CORS headers added
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Origin"), is("*"));
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Methods"), is("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"));
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Headers"), is("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
@@ -390,7 +345,7 @@ public class MockServerServletCORSTest {
         // when
         mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
 
-        // then - correct response written to ChannelHandlerContext
+        // then - correct CORS headers added
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Origin"), is("*"));
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Methods"), is("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"));
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Headers"), is("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
@@ -409,7 +364,8 @@ public class MockServerServletCORSTest {
         // when
         mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
 
-        // then - correct response written to ChannelHandlerContext
+        // then - correct CORS headers added
+        assertThat(httpServletResponse.getStatus(), is(501));
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Origin"), is("*"));
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Methods"), is("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"));
         assertThat(httpServletResponse.getHeader("Access-Control-Allow-Headers"), is("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
